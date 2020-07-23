@@ -390,25 +390,46 @@ void PSHybridTester::CheckHybridVoltages()
         << fVoltageMeasurement.first << " mV on average " 
         << fVoltageMeasurement.second << " mV rms. " << RESET;
 
+    fillSummaryTree("TestCardGroundavg", fVoltageMeasurement.first );
+    fillSummaryTree("TestCardGroundrms", fVoltageMeasurement.second );
+
+
     ReadHybridVoltage("PanasonicGround");
     LOG (INFO) << BOLDBLUE << "Panasonic connector ground : "
         << fVoltageMeasurement.first << " mV on average " 
         << fVoltageMeasurement.second << " mV rms. " << RESET;
+
+    fillSummaryTree("PanasonicGroundavg", fVoltageMeasurement.first );
+    fillSummaryTree("PanasonicGroundrms", fVoltageMeasurement.second );
+
 
     ReadHybridVoltage("Hybrid3V3");
     LOG (INFO) << BOLDBLUE << "Hybrid 3V30 : "
         << fVoltageMeasurement.first << " mV on average " 
         << fVoltageMeasurement.second << " mV rms. " << RESET;
 
+    fillSummaryTree("Hybrid3V3avg", fVoltageMeasurement.first );
+    fillSummaryTree("Hybrid3V3rms", fVoltageMeasurement.second );
+
+
     ReadHybridVoltage("Hybrid1V00");
     LOG (INFO) << BOLDBLUE << "Hybrid 1V00 : "
         << fVoltageMeasurement.first << " mV on average " 
         << fVoltageMeasurement.second << " mV rms. " << RESET;
 
+    fillSummaryTree("Hybrid1V00avg", fVoltageMeasurement.first );
+    fillSummaryTree("Hybrid1V00rms", fVoltageMeasurement.second );
+
+
     ReadHybridVoltage("Hybrid1V25");
     LOG (INFO) << BOLDBLUE << "Hybrid 1V25 : "
         << fVoltageMeasurement.first << " mV on average " 
         << fVoltageMeasurement.second << " mV rms. " << RESET;
+
+    fillSummaryTree("Hybrid1V25avg", fVoltageMeasurement.first );
+    fillSummaryTree("Hybrid1V25rms", fVoltageMeasurement.second );
+ 
+
     if( fVoltageMeasurement.first*1e-3 >= PSHYBRIDMAXV)
     {    
         throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH"));
