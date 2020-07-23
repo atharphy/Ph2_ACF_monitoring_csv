@@ -22,6 +22,7 @@
     #include "TFile.h"
     #include "TObject.h"
     #include "TCanvas.h"
+    #include "TTree.h"
 #endif
 
 
@@ -82,6 +83,20 @@ class Tool : public Ph2_System::SystemController
     void SoftDestroy  ();
 
     #ifdef __USE_ROOT__
+        /*!
+        * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+        */
+        void bookSummaryTree();
+
+        /*!
+        * \brief Insert data into the summary tree
+        * \param cParameter : Name of the measurement to be stored
+        * \param cValue: Value of the measurement to be stored
+        */
+        void fillSummaryTree( TString cParameter, Double_t cValue);
+
+        TString getDirectoryName();
+
         void bookHistogram ( ChipContainer* pChip, std::string pName, TObject* pObject );
 
         void bookHistogram ( ModuleContainer* pModule, std::string pName, TObject* pObject );
@@ -363,7 +378,11 @@ private:
         CanvasMap              fCanvasMap;
         ChipHistogramMap       fChipHistMap;
         ModuleHistogramMap     fModuleHistMap;
-        BeBoardHistogramMap    fBeBoardHistMap;
+        BeBoardHistogramMap    fBeBoardHistMap;        
+        TTree*                 fSummaryTree;               /*< TTree for summary of results*/
+    static TString             fSummaryTreeParameter;
+    static Double_t            fSummaryTreeValue;
+
     #endif
 
     FrontEndType           fType;

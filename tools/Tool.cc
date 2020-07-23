@@ -22,7 +22,8 @@ SystemController            (),
 #ifdef __USE_ROOT__
 	fCanvasMap                  (),
 	fChipHistMap                (),
-	fModuleHistMap              (),
+	fModuleHistMap              (),	
+	fSummaryTree				(nullptr),
 #endif
 fType                       (),
 fTestGroupChannelMap        (),
@@ -88,7 +89,8 @@ void Tool::Inherit (const Tool* pTool)
 	#endif
 	fType                        = pTool->fType;
 	fDirectoryName                   = pTool->fDirectoryName;
-	#ifdef __USE_ROOT__
+	#ifdef __USE_ROOT__		
+		fSummaryTree 				 = pTool->fSummaryTree;
 		fCanvasMap                   = pTool->fCanvasMap;
 		fChipHistMap                 = pTool->fChipHistMap;
 		fModuleHistMap               = pTool->fModuleHistMap;
@@ -191,6 +193,41 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
+	TString Tool::fSummaryTreeParameter = ""; //Is this ok here?
+	Double_t Tool::fSummaryTreeValue = 0.0;
+
+	/*!
+	* \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+	*/
+	void Tool::bookSummaryTree() //MINE
+	{
+		fResultFile->cd();
+		fSummaryTreeParameter = "";
+		fSummaryTreeValue = 0;  
+		fSummaryTree = new TTree("summaryTree", "Most relevant results");
+		fSummaryTree->Branch("Parameter", &fSummaryTreeParameter);
+		fSummaryTree->Branch("Value", &fSummaryTreeValue);
+	}
+
+	/*!
+	* \brief Insert data into the summary tree
+	* \param cParameter : Name of the measurement to be stored
+	* \param cValue: Value of the measurement to be stored
+	*/
+	void Tool::fillSummaryTree(TString cParameter,	Double_t cValue) //MINE
+	{
+		fResultFile->cd();
+		fSummaryTreeParameter.Clear();
+		fSummaryTreeParameter = cParameter;
+		fSummaryTreeValue = cValue;
+		if(fSummaryTree)
+			fSummaryTree->Fill();
+	}
+
+	TString Tool::getDirectoryName() 
+	{
+		return fDirectoryName.c_str();
+	}
 
 	void Tool::bookHistogram ( ChipContainer* pChip, std::string pName, TObject* pObject )
 	{
@@ -408,6 +445,12 @@ void Tool::SaveResults()
 			std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
 			cCanvas.second->SaveAs ( cPdfName.c_str() );
 		}
+
+		fResultFile->cd();
+		// Save summary TTree
+		fSummaryTree->Write();
+
+
 	#endif
 
 	// fResultFile->Write();
