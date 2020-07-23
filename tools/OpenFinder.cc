@@ -541,6 +541,15 @@ void OpenFinder::FindOpensPS()
         {
           for(auto cHybrid : *cOpticalGroup)
           {
+            #ifdef __USE_ROOT__
+              fResultFile->cd();
+              TString fOpensTreeParameter = "";
+              std::vector<double_t> fOpensTreeValue = {2.0};  
+              TTree* fOpensTree = new TTree("opensTree", "Opens in hybrid");
+              fOpensTree->Branch("Chip", &fOpensTreeParameter);
+              fOpensTree->Branch("Value", &fOpensTreeValue);
+            #endif
+
             for(auto cChip : *cHybrid)
             {
               if( cChip->getFrontEndType() != FrontEndType::SSA)
@@ -551,6 +560,10 @@ void OpenFinder::FindOpensPS()
               LOG (INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << RESET;
               //auto cNhits = cEvent->GetNHits( cHybrid->getId(), cChip->getId());
               auto cHitVector = cEvent->GetHits( cHybrid->getId(), cChip->getId() );
+
+              std::vector<double_t> opens; 
+              TString tmpParameter = "";
+
               for(uint32_t iChannel=0; iChannel<cChip->size(); ++iChannel)
               {
                 if( iChannel%2 != cPosition ) 
@@ -586,6 +599,8 @@ void OpenFinder::FindOpensPS()
                       << +fParameters.nTriggers 
                       << " were expected."
                       << RESET;
+                      opens.push_back(iChannel);
+
                   }
                   else
                   {
@@ -600,9 +615,25 @@ void OpenFinder::FindOpensPS()
                       << " were expected."
                       << RESET;
                   }
+
                 }
-              }//chnl
+              }//chnl                  
+              tmpParameter.Clear();
+              tmpParameter = "opens_" + std::to_string(cChip->getId());
+              fillSummaryTree(tmpParameter, opens.size());
+              #ifdef __USE_ROOT__
+                fResultFile->cd();
+                fOpensTreeParameter.Clear();
+                fOpensTreeParameter = "Chip_" + std::to_string(cChip->getId());;
+                fOpensTreeValue = opens;
+                fOpensTree->Fill();
+              #endif
             }//chip
+            #ifdef __USE_ROOT__
+              fResultFile->cd();
+              fOpensTree->Write();
+            #endif
+
           }//hybrid
         }//module
       }
