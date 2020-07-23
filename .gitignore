@@ -24,3 +24,4 @@ consoledump.log
 src/test.cc
 build/
 rundir*
+ReadRootFile.py
