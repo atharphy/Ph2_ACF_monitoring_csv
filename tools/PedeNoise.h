@@ -17,7 +17,8 @@
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/CommonVisitors.h"
 #ifdef __USE_ROOT__
-  #include "../DQMUtils/DQMHistogramPedeNoise.h"
+  #include "../DQMUtils/DQMHistogramPedeNoise.h"  
+  #include "TH1.h"
 #endif
 
 
