@@ -25,3 +25,4 @@ src/test.cc
 build/
 rundir*
 ReadRootFile.py
+core.*
