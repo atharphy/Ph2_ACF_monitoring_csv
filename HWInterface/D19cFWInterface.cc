@@ -1411,7 +1411,87 @@ namespace Ph2_HwInterface
         this->WriteReg("fc7_daq_cnfg.stub_debug.enable",0x00);
         this->ResetReadout();
     }
-    
+    void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, std::vector<std::vector<std::string>> &cReadLines)
+    {
+        // enable stub debug - allows you to 'scope' the stub output
+        this->WriteReg("fc7_daq_cnfg.stub_debug.enable",0x01);
+
+        if( pWithTestPulse )
+            this->ChipTestPulse();
+        else
+            this->Trigger(0);
+
+        auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+        std::vector<std::string> cLines(0);
+        size_t cLine=0;
+        //int cStrLength=0;
+        do
+        {
+          std::vector<std::string> cOutputWords(0);
+          for( size_t cIndex=0; cIndex < 5; cIndex++)
+          {
+            auto cWord = cWords[cLine*10+cIndex];
+            auto cString=std::bitset<32>(cWord).to_string();
+            for( size_t cOffset=0; cOffset < 4; cOffset++)
+            {
+              cOutputWords.push_back(cString.substr(cOffset*8, 8) );
+            }
+          }
+
+          std::string cOutput_wSpace="";
+          std::string cOutput="";
+          for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+          {
+              cOutput_wSpace += *cIt + " ";
+              cOutput += *cIt;
+          }
+          LOG (INFO) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+          cLines.push_back(cOutput);
+          //cStrLength = cOutput.length();
+          cLine++;
+        }while( cLine < pNlines );
+
+
+        cReadLines.push_back(cLines);
+
+        // std::string cOutput="";
+        // for( int i=0; i < cStrLength/5; i++)
+        // {
+        //     for( int j=0; j < 5; j++ )
+        //     {
+        //         for(cLine=0; cLine < cLines.size(); cLine++)
+        //         {
+        //             cOutput += cLines[cLine][5*i + j]; 
+        //         }
+        //     }
+        // }
+        //LOG (INFO) << BOLDBLUE << "StubWord : " << cOutput_wSpace << RESET;
+        // do
+        // {
+        //   std::vector<std::string> cOutputWords(0);
+        //   for( size_t cIndex=0; cIndex < 5; cIndex++)
+        //   {
+        //     auto cWord = cWords[cLine*10+cIndex];
+        //     auto cString=std::bitset<32>(cWord).to_string();
+        //     for( size_t cOffset=0; cOffset < 4; cOffset++)
+        //     {
+        //       cOutputWords.push_back(cString.substr(cOffset*8, 8) );
+        //     }
+        //   }
+
+        //   std::string cOutput="";
+        //   for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
+        //   {
+        //       cOutput += *cIt + " ";
+        //   }
+        //   LOG (INFO) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput << RESET;
+
+        //   cLine++;
+        // }while( cLine < pNlines );
+        // disbale stub debug
+        this->WriteReg("fc7_daq_cnfg.stub_debug.enable",0x00);
+        this->ResetReadout();
+    }
     // tuning of L1A lines
     bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard , bool pScope)
     {
@@ -2573,7 +2653,6 @@ namespace Ph2_HwInterface
 
     bool D19cFWInterface::WriteI2C ( std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast )
     {
-
         bool cFailed ( false );
         if( fOptical )
         {
