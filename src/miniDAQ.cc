@@ -133,17 +133,16 @@ int main(int argc, char* argv[])
     cTool.ConfigureHw();
 
     cTool.addFileHandler(cOutputFile, 'w');
-
+   
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Initialise();
-    cBackEndAligner.Align();
+    cBackEndAligner.Start(0);
     // reset all chip and board registers
     // to what they were before this tool was called
-    cBackEndAligner.resetPointers();
+    cBackEndAligner.Reset();
 
-    // if CIC is enabled then align CIC first
+     // if CIC is enabled then align CIC first
     if(cWithCIC)
     {
         CicFEAlignment cCicAligner;
@@ -152,8 +151,10 @@ int main(int argc, char* argv[])
         // reset all chip and board registers
         // to what they were before this tool was called
         cCicAligner.Reset();
-        // cCicAligner.dumpConfigFiles();
+        cCicAligner.dumpConfigFiles();
     }
+    
+    
 
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 

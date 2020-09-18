@@ -155,21 +155,50 @@ void PSHybridTester::SelectCIC(bool pSelect)
         cTC_PSFE.mode_control(TC_PSFE::mode::SSA_OUT);
 #endif
 }
-void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
+void PSHybridTester::AlignCICout(uint8_t pPattern)
 {
-    // enable CIC mux - phy port 0
-    for(uint8_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
+    this->SelectCIC(true);
+    for (auto cBoard : *fDetectorContainer)
     {
-        for(auto cOpticalGroup: *pBoard)
+        for(auto cOpticalGroup : *cBoard)
         {
-            for(auto cHybrid: *cOpticalGroup)
+            for(auto cHybrid : *cOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                fCicInterface->SelectMux(cCic, cPhyPort);
-            } // hybrid
-        }     // module
-        // check output
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                fCicInterface->SelectMux(cCic, 6 );
+            }//hybrid 
+        }// module 
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 1 , pPattern , 8);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 2 , pPattern , 8);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 3 , pPattern , 8);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 4 , pPattern , 8);
+    }       
+}
+void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
+{
+    // enable CIC mux - phy port 0 -- 10 are stub lines 
+    for( uint8_t cPhyPort=0; cPhyPort < 10 ; cPhyPort++)
+    {
+        for(auto cOpticalGroup : *pBoard)
+        {
+            for(auto cHybrid : *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                fCicInterface->SelectMux(cCic, cPhyPort ); 
+            }//hybrid 
+        }// module 
+        
+        // align back-end
+        //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+        for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
+        {
+            uint8_t cHybridId=0;
+            uint8_t cChipId=0; 
+            uint8_t cPatternPeriod=8;
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , pPattern , cPatternPeriod);
+        }
+        // check output 
+        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
     }
 }

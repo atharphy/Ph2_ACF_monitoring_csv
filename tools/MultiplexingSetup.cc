@@ -16,12 +16,24 @@ MultiplexingSetup::~MultiplexingSetup() {}
 void MultiplexingSetup::Initialise()
 {
     // If I do this here.. DLL does not lock
-    LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         auto cBeBoard = static_cast<BeBoard*>(cBoard);
-        fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        fBeBoardInterface->setBoard(theBoardId);
+        bool cSetupScanned = (fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
+        // if its not been scanned.. then send a reset 
+        if( cSetupScanned )
+        {
+            LOG (INFO) << BOLDBLUE << "Set-up has already been scanned..." << RESET;
+        }
+        else
+        {
+            LOG (INFO) << BOLDBLUE << "Set-up has not been scanned..." << RESET;
+            LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
+            fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
     }
 }
 
@@ -59,7 +71,7 @@ void MultiplexingSetup::ConfigureSingleCard(uint8_t pBackPlaneId, uint8_t pCardI
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
         LOG(INFO) << BOLDBLUE << "Configuring backplane " << +pBackPlaneId << " card " << +pCardId << " on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
-        fAvailableCards = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureMultiplexingSetup(pBackPlaneId, pCardId);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureMultiplexingSetup(pBackPlaneId, pCardId);
         parseAvailable();
         printAvailableCards();
     }

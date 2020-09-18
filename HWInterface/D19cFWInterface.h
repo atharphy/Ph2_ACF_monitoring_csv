@@ -725,7 +725,7 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param BackplaneNum
      * \param CardNum
      */
-    uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
+    void ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
 
     // ############################
     // # Read/Write Optical Group #

@@ -812,7 +812,7 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
     LOG(INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pPhyPort : (cRegValue & 0x8) | pPhyPort;
+    uint16_t    cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pPhyPort : (cRegValue & 0x10 ) | pPhyPort ;
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
 bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
@@ -820,7 +820,7 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
     setBoard(pChip->getBeBoardId());
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "enableMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0x7) | (pEnable << 3);
+    uint16_t    cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0xF ) | (pEnable << 4 ) ;
     if(pEnable == 1)
         LOG(INFO) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " << RESET;
     else

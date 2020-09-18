@@ -137,44 +137,52 @@ int main(int argc, char* argv[])
     // need to do this if
     // reading out CIC
     // or testing MPA
-    if(cmd.foundOption("withCIC") || cmd.foundOption("mpaTest"))
+    if ( cmd.foundOption ( "withCIC" )  )
     {
         cHybridTester.SelectCIC(true);
-        // align back-end
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cHybridTester);
-        cBackEndAligner.Start(0);
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cBackEndAligner.Reset();
-
-        // Check if data player is running
-        if(cDPInterfacer.IsRunning(cInterface))
+        
+        //Check if data player is running
+        if (cDPInterfacer.IsRunning(cInterface))
         {
-            LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+            LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
             cDPInterfacer.Stop(cInterface);
         }
 
-        // Configure and Start DataPlayer
-        // to send phase alignment pattern
-        uint8_t cPhaseAlignmentPattern = 0x55;
+        //Configure and Start DataPlayer
+        // to send phase alignment pattern 
+        uint8_t cPhaseAlignmentPattern=0xAA;
         cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
         cDPInterfacer.Start(cInterface);
-        if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
+        if( cDPInterfacer.IsRunning(cInterface) )
+        {
+            LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+        }
         else
-            LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+            LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-        // align CIC inputs
+        // align CIC inputs 
         CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cHybridTester);
+        cCicAligner.Inherit (&cHybridTester);
         cCicAligner.PhaseAlignmentMPA(100);
+        
+        // and then re-align back-end just because 
+        cHybridTester.AlignCICout(cPhaseAlignmentPattern);
+
         cDPInterfacer.Stop(cInterface);
         cDPInterfacer.CheckNPatterns(cInterface);
 
+        // // align back-end 
+        // BackEndAlignment cBackEndAligner;
+        // cBackEndAligner.Inherit (&cHybridTester);
+        // cBackEndAligner.Start(0);
+        // //reset all chip and board registers 
+        // // to what they were before this tool was called 
+        // cBackEndAligner.Reset(); 
+   
         // // still needs to be de-bugged!!
         // // does not work yet
         // // Configure and Start DataPlayer
-        // // to send word alignment pattern
+        // // to send word alignment pattern 
         // uint8_t cWordAlignmentPattern = 0x75;
         // cDPInterfacer.ConfigureEmulator(cInterface, cWordAlignmentPattern);
         // cDPInterfacer.StartEmulator(cInterface);
@@ -186,10 +194,63 @@ int main(int argc, char* argv[])
         //     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
         // cCicAligner.WordAlignmentMPA(100);
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        // cCicAligner.dumpConfigFiles();
+        //reset all chip and board registers 
+        // to what they were before this tool was called 
+        //cCicAligner.dumpConfigFiles();
     }
+    // if(cmd.foundOption("withCIC") || cmd.foundOption("mpaTest"))
+    // {
+    //     cHybridTester.SelectCIC(true);
+    //     // align back-end
+    //     BackEndAlignment cBackEndAligner;
+    //     cBackEndAligner.Inherit(&cHybridTester);
+    //     cBackEndAligner.Start(0);
+    //     // reset all chip and board registers
+    //     // to what they were before this tool was called
+    //     cBackEndAligner.Reset();
+
+    //     // Check if data player is running
+    //     if(cDPInterfacer.IsRunning(cInterface))
+    //     {
+    //         LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+    //         cDPInterfacer.Stop(cInterface);
+    //     }
+
+    //     // Configure and Start DataPlayer
+    //     // to send phase alignment pattern
+    //     uint8_t cPhaseAlignmentPattern = 0x55;
+    //     cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+    //     cDPInterfacer.Start(cInterface);
+    //     if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
+    //     else
+    //         LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+    //     // align CIC inputs
+    //     CicFEAlignment cCicAligner;
+    //     cCicAligner.Inherit(&cHybridTester);
+    //     cCicAligner.PhaseAlignmentMPA(100);
+    //     cDPInterfacer.Stop(cInterface);
+    //     cDPInterfacer.CheckNPatterns(cInterface);
+
+    //     // // still needs to be de-bugged!!
+    //     // // does not work yet
+    //     // // Configure and Start DataPlayer
+    //     // // to send word alignment pattern
+    //     // uint8_t cWordAlignmentPattern = 0x75;
+    //     // cDPInterfacer.ConfigureEmulator(cInterface, cWordAlignmentPattern);
+    //     // cDPInterfacer.StartEmulator(cInterface);
+    //     // if( cDPInterfacer.EmulatorIsRunning(cInterface) )
+    //     // {
+    //     //     LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+    //     // }
+    //     // else
+    //     //     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+    //     // cCicAligner.WordAlignmentMPA(100);
+    //     // reset all chip and board registers
+    //     // to what they were before this tool was called
+    //     // cCicAligner.dumpConfigFiles();
+    // }
     if(cmd.foundOption("checkAsync"))
     {
         DataChecker cDataChecker;
@@ -245,36 +306,37 @@ int main(int argc, char* argv[])
         cShortFinder.FindShorts();
     }
     // test MPA outputs
-    if(cmd.foundOption("mpaTest"))
+    // test MPA outputs 
+    if( cmd.foundOption ( "mpaTest" ) )
     {
         cHybridTester.SelectCIC(true);
-        // Configure and Start DataPlayer
-        for(uint8_t cAttempt = 0; cAttempt < 1; cAttempt++)
+        //Configure and Start DataPlayer
+        for( uint8_t cAttempt=0; cAttempt < 1; cAttempt++)
         {
-            // Check if data player is running
-            if(cDPInterfacer.IsRunning(cInterface))
+            //Check if data player is running
+            if (cDPInterfacer.IsRunning(cInterface))
             {
-                LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
                 cDPInterfacer.Stop(cInterface);
             }
 
-            if(cAttempt == 0)
-                LOG(INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
-            else if(cAttempt == 1)
-                LOG(INFO) << BOLDGREEN << "Attempt " << +cAttempt << RESET;
-            else if(cAttempt == 2)
-                LOG(INFO) << BOLDMAGENTA << "Attempt " << +cAttempt << RESET;
-            else if(cAttempt == 3)
-                LOG(INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
+            if( cAttempt == 0 )
+                LOG (INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 1 )
+                LOG (INFO) << BOLDGREEN << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 2 )
+                LOG (INFO) << BOLDMAGENTA << "Attempt " << +cAttempt << RESET;
+            else if( cAttempt == 3 )
+                LOG (INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
 
             cDPInterfacer.Configure(cInterface, cPattern);
             cDPInterfacer.Start(cInterface);
             cHybridTester.MPATest(cPattern);
-            cDPInterfacer.Stop(cInterface);
-            cDPInterfacer.CheckNPatterns(cInterface);
+            //cDPInterfacer.Stop(cInterface);
+            //cDPInterfacer.CheckNPatterns(cInterface);
         }
-        cHybridTester.SelectCIC(false);
-    }
+        //cHybridTester.SelectCIC(false);    
+    }  
     // ssa pair tests
     if(!cSSAPair.empty())
     {

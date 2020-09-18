@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
-#ifdef __MULTIPLEXING__
+    #ifdef __MULTIPLEXING__
     bool cMuxDisconnect    = (cmd.foundOption("mux_disconnect")) ? true : false;
     bool cMuxScan          = (cmd.foundOption("mux_scan")) ? true : false;
     bool cMuxConfigure     = (cmd.foundOption("mux_configure")) ? true : false;
