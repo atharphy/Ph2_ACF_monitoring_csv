@@ -690,7 +690,7 @@ uint8_t CicInterface::GetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyP
     {
         cSuccess = cSuccess && cReadBack.first;
         cPhaseTap = (cReadBack.second & (0xF << (cBitOffset * 4))) >> (cBitOffset * 4);
-        LOG (INFO) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort 
+        LOG (DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort 
             << " PhyPortChannel " << +pPhyPortChannel
             << " Optimal tap " << +cPhaseTap 
             << RESET;
@@ -726,15 +726,24 @@ std::vector<uint8_t> CicInterface::GetOptimalTaps(Chip* pChip, uint8_t pFeId)
     if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
         
     // 6 outputs fer FE
-    std::vector<uint8_t> cPhaseTaps(6, 0);
+    uint32_t cPhaseTapsThisFe = (uint32_t)(std::bitset<24>(fPhaseValues[ cFeMapping[pFeId] ]).to_ulong());
+    LOG (DEBUG) << BOLDBLUE << "Optimal Taps for FE [ internal counter : " 
+            << +cFeMapping[pFeId] << " position on hybrid : " << +pFeId << " ] "
+            << " is "
+            << std::bitset<24>(cPhaseTapsThisFe)
+            << RESET;
+
+    std::vector<uint8_t> cPhaseTaps(6, 0); 
     for( size_t cIndx= 0 ; cIndx < cPhaseTaps.size(); cIndx++){
-        cPhaseTaps[cIndx] = (fPhaseValues[ cFeMapping[pFeId] ].to_ulong() & ( 0xF <<  cIndx*4)) >> ( 0xF <<  cIndx*4); 
-        LOG (INFO) << BOLDBLUE << "Optimal Tap for FE [ internal counter : " 
-            << +cFeMapping[pFeId] << " position on hybrid : " << +pFeId << " ] is "
+        cPhaseTaps[cIndx] = ( cPhaseTapsThisFe & ( 0xF <<  cIndx*4)) >> (cIndx*4); 
+        LOG (DEBUG) << BOLDBLUE << "Optimal Tap for FE [ internal counter : " 
+            << +cFeMapping[pFeId] << " position on hybrid : " << +pFeId << " ] , line# "
+            << +cIndx 
+            << " is "
             << +cPhaseTaps[cIndx] 
+            << " taps."
             << RESET;
     }
-    //for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1) { this->ReadOptimalTap(pChip, cPhyPortChannel, cPhaseTaps); }
     return cPhaseTaps;
 }
 bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
@@ -784,7 +793,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
             uint32_t cPhaseValue  = (cInputLineCounter==0) ? cPhaseTap : (fPhaseValues[cFeCounter].to_ulong() |  ( cPhaseTap << cInputLineCounter*4)) ; 
             fPhaseValues[cFeCounter] = std::bitset<24>(cPhaseValue);
             
-            LOG(INFO) << BOLDBLUE << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
+            LOG(DEBUG) << BOLDBLUE << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
                        << +cAligned 
                        << " phase tap value is "
                        << +cPhaseTap

@@ -149,9 +149,13 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         // reset all chip and board registers
         // to what they were before this tool was called
-        //cCicAligner.Reset();
+        cCicAligner.Reset();
         cCicAligner.dumpConfigFiles();
-    
+        
+        // check what the output looks like
+        //dynamic_cast<D19cFWInterface*>(cHybridTester.fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+
+        
         // // align back-end
         // BackEndAlignment cBackEndAligner;
         // cBackEndAligner.Inherit(&cHybridTester);

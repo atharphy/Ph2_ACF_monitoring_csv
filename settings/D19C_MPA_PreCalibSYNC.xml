@@ -1,35 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="MPA">
+  <BeBoard Id="0" boardType="D19C" eventType="VR">
 
 
-    <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+        <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
 
-     <CDCE configure="0" clockRate="320"/>
-    
-    <OpticalGroup Id="0" FMCId="0">
-        <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
-          <Settings
-          />
-        </lpGBT>
-        <Hybrid Id="0" Status="1" LinkId="0">
-            <Global>
-               <CIC2 enableBend="0" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
-            </Global>
-     
-            <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" partid="0" configfile="SSA_minConfig.txt" />
+         <CDCE configure="0" clockRate="320"/>
+        
+        <OpticalGroup Id="0" FMCId="0">
+            <lpGBT_Files path="./settings/lpGBTFiles/" />
+            <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
+              <Settings
+              />
+            </lpGBT>
+            <Hybrid Id="0" Status="1" LinkId="0">
+                <Global>
+                   <CIC2 enableBend="0" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+                </Global>
+         
+                <SSA_Files path="./settings/SSAFiles/" />
+                <SSA Id="0" partid="0" configfile="SSA_minConfig.txt" />
 
-            <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="0" partid="0" configfile="MPA.txt" />
+                <MPA_Files path="./settings/MPAFiles/" />
+                <MPA Id="0" partid="0" configfile="MPA.txt" />
 
-            <CIC_Files path="./settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
-    </OpticalGroup>
-
-
+                <CIC_Files path="./settings/CicFiles/" />
+                <CIC2 Id="8" configfile="CIC2_default.txt" />
+            </Hybrid>
+        </OpticalGroup>
 
 
         <!--CONFIG-->
@@ -47,7 +45,7 @@
             <Register name="fast_command_block">
                 <Register name="triggers_to_accept"> 0 </Register>
                 <Register name="trigger_source"> 3 </Register>
-                <Register name="user_trigger_frequency"> 10 </Register>
+                <Register name="user_trigger_frequency"> 500 </Register>
     		<Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 200 </Register>

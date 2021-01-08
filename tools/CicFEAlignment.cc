@@ -520,23 +520,24 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                     {
                         if (cChip->getFrontEndType() != FrontEndType::MPA) continue;
                         auto cTaps = fCicInterface->GetOptimalTaps(cCic, cChip->getId()); 
+                        for( size_t cIndx=0 ; cIndx <  cTaps.size(); cIndx++ )  cPhaseTapsFEs[ cChip->getId() ][cIndx] = cTaps[cIndx];
                     } // loop over MPAs
 
                     //cPhaseTaps    = fCicInterface->GetOptimalTaps(cCic);
                     // cPhaseTapsFEs = this->SortOptimalTaps(cPhaseTaps);
-                    // for(auto cChip: *cHybrid)
-                    // {
-                    //     if (cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    for(auto cChip: *cHybrid)
+                    {
+                        if (cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-                    //     std::string cOutput;
-                    //     for(uint8_t cInput = 0; cInput < 6; cInput += 1)
-                    //     {
-                    //         char cBuffer[80];
-                    //         sprintf(cBuffer, "%.2d ", cPhaseTapsFEs[cChip->getId()][cInput]);
-                    //         cOutput += cBuffer;
-                    //     }
-                    //     LOG(INFO) << BOLDBLUE << "Optimal tap found on FE[Hybrid Count]" << +cChip->getId() << " : " << cOutput << RESET;
-                    // }
+                        std::string cOutput;
+                        for(uint8_t cInput = 0; cInput < 6; cInput += 1)
+                        {
+                            char cBuffer[80];
+                            sprintf(cBuffer, "%.2d ", cPhaseTapsFEs[cChip->getId()][cInput]);
+                            cOutput += cBuffer;
+                        }
+                        LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC phy-port input connected to MPA#" << +cChip->getId() << " : " << cOutput << RESET;
+                    }
                     // put phase aligner in static mode
                     //fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
                 }
