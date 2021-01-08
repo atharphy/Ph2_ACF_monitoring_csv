@@ -514,7 +514,7 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vect
     if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     pNEvents = pNEvents * (cMultiplicity + 1);
 
-    this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
+    //this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
 }
 
 void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pulses, bool fast, bool fsm)

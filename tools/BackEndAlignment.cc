@@ -142,25 +142,17 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 {
     // make sure you're only sending one trigger at a time here
-    bool cSparsified          = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
     auto cTriggerMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
 
-    // force CIC to output repeating 101010 pattern [by disabling all FEs]
+    // force CIC to output repeating 101010 pattern on L1 line 
+    // needed for phase alignment in back-end 
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            // only produce L1A header .. so disable all FEs .. for CIC2 only
-            if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
-
-            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-            if(cCic->getFrontEndType() == FrontEndType::CIC)
-            {
-                // to get a 1010 pattern on the L1 line .. have to do something
-                fCicInterface->SelectOutput(cCic, true);
-            }
+            fCicInterface->SelectOutput(cCic, true);
         }
     }
     bool cAligned = true;
@@ -170,16 +162,21 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "L1A phase alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
         return false;
     }
+
     // force CIC to output empty L1A frames [by disabling all FEs]
+    // needed for word alingment in the back-end
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            // disable alignment output 
             fCicInterface->SelectOutput(cCic, false);
+            // 
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
     }
+    fL1Debug = true;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1WordAlignment(pBoard, fL1Debug);
     if(!cAligned)
     {
@@ -187,26 +184,34 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         return false;
     }
 
-    // enable CIC output of pattern .. and enable all FEs again
+    // enable CIC output of alignmnent pattern on stub lines 
+    // .. and enable all FEs again
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, true);
+            // figure out which FEs are active 
+            std::vector<uint8_t> cEnabledFEs(0);             
+            for(auto cReadoutChip: *cHybrid)
+            {
+                if( cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                cEnabledFEs.push_back( cReadoutChip->getId() );
+            }
+            fCicInterface->EnableFEs(cCic, cEnabledFEs, true);
+            // enable alignment output for stubs 
             fCicInterface->SelectOutput(cCic, true);
         }
     }
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, true);
 
-    // disable CIC output of pattern
+    // disable CIC output of pattern on stub + l1 lines
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SelectOutput(cCic, false);
-            if(!cSparsified && cCic->getFrontEndType() == FrontEndType::CIC2) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
         }
     }
 
@@ -323,7 +328,9 @@ bool BackEndAlignment::Align()
         OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->at(0)->at(0));
         bool                cWithCIC     = cFirstHybrid->fCic != NULL;
         if(cWithCIC)
+        {
             cAligned = this->CICAlignment(theBoard);
+        }
         else
         {
             ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));

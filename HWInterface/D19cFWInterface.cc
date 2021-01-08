@@ -1745,6 +1745,19 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
     do
     {
         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+        // for now .. print the data out here 
+        for( size_t cOffset=0; cOffset < cEventSize ; cOffset++)
+        {
+            if( cOffset < 4 )
+                LOG (INFO) << BOLDMAGENTA << "HEADER : "
+                    << std::bitset<32>(*(cEventIterator+cOffset)) 
+                    << RESET;
+            else
+
+                LOG (INFO) << BOLDBLUE << "\t...DATA\t.. : "
+                    << std::bitset<32>(*(cEventIterator+cOffset)) 
+                    << RESET;
+        }
         cEventIterator += cEventSize;
         cNEvents++;
     } while(cEventIterator < pData.end());
@@ -2186,6 +2199,7 @@ uint32_t D19cFWInterface::Why(lpGBT*  clpGBT, uint8_t cSlaveAddress,uint8_t cMas
 
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
+    LOG (INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
     EventType cEventType = pBoard->getEventType();
     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     bool      cWithMPA   = false;
@@ -2199,17 +2213,17 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
                 cWithMPA = cWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA);
                 cWithSSA = cWithSSA || (cChip->getFrontEndType() == FrontEndType::SSA);
             } // chips
-        }     // hybrids
-    }         // opticalGroup
+        } // hybrids
+    } // opticalGroup
     uint32_t cNEvents = 0;
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
     if(fIsDDR3Readout && !cAsync)
     {
-        LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
+        LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // figure out how many events I've got
         cNEvents = this->CountFwEvents(pBoard, pData);
-        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
+        LOG(INFO) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
         // in the handshake mode offset is cleared after each handshake
         fDDR3Offset = 0;
@@ -2429,6 +2443,8 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 }
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
+    LOG (INFO) << BOLDBLUE << "Waiting for data from the FC7.." << RESET;
+
     bool pFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
@@ -2500,17 +2516,20 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             uint32_t cTimeoutValue   = 2.0 * cNevents * (cMultiplicity + 1); // maximum number of times I allow the word counter not to increment ..
             uint32_t cFailures       = 0;
             uint32_t cPause          = 1 * static_cast<uint32_t>(cTimeSingleTrigger_us);
+            uint32_t cNWords_previous = cNWords;
             do
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(cPause));
                 cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                 cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
                 cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-                // cNWords_previous = cNWords;
-                cFailures += ((cNtriggers == 0)); // || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
-                cTimeoutCounter++;
-                // LOG (INFO) << MAGENTA << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
-            } while(cReadoutReq == 0 && (cTimeoutCounter < cTimeoutValue) && (cNtriggers < cNevents * (cMultiplicity + 1)) && (cFailures < 5));
+                cTimeoutCounter += ( (cNWords==0 || (cNWords-cNWords_previous) == 0 ) ) ? 1 : 0 ;
+                LOG (INFO) << MAGENTA << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
+                cFailures += ((cNtriggers == 0));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
+                cNWords_previous = cNWords;
+            } while(cReadoutReq == 0 && (cTimeoutCounter < cTimeoutValue) && (cFailures<5));
+            // (cNtriggers < cNevents * (cMultiplicity + 1)) && (cFailures < 5));
+            
             // fails if either one of these is true
             // but to me it looks like sometimes the readoutrequest is not '1' although
             // all triggers have been received
