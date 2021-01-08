@@ -114,7 +114,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             std::pair<uint16_t, uint16_t> cL1Information;
                             cL1Information.first  = (*(cIterator + 2) & 0x7FC000) >> 14;
                             cL1Information.second = (*(cIterator + 2) & 0xFF800000) >> 23;
-                            LOG(DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
+                            LOG(INFO) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
                                        << std::bitset<9>(cL1Information.second) << RESET;
                             int cL1Offset = cOffset + 2 + int(cWithCIC2);
                             if(fIsSparsified)
@@ -135,12 +135,10 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 }
                                 else
                                 {
-                                    LOG (INFO) << BOLDRED << "Decoding L1 data from PS CIC2" << RESET;
                                     //P + S clusters 
                                     uint8_t cNPClusters = (*(cIterator + 2) & 0x7F);
                                     uint8_t cNSClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
-                                    LOG (INFO) << BOLDRED << "Found " << +cNPClusters << " p clusters and "
-                                        << +cNSClusters << " in the CIC2 event.." << RESET;
+                                    LOG (INFO) << BOLDBLUE << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " in the CIC2 event.." << RESET;
                                     
                                 }
                             }
