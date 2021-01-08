@@ -257,6 +257,8 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint32_t> GetHitData(uint8_t pIndex) { return fD19cFWEvts.fBoardHitData[pIndex]; }
     // vector of 32 bit words for ROC#pIndex [stubs]
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
+    // check chips connected to board can be read from 
+    void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
 
   private:
     uint8_t  fFastCommandDuration = 0;

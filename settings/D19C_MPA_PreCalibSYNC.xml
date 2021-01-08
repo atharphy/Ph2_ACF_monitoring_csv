@@ -18,15 +18,12 @@
                <CIC2 enableBend="0" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
      
-
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" partid="0" configfile="SSAPreCalibSYNC.txt" />
+            <SSA Id="0" partid="0" configfile="SSA_minConfig.txt" />
 
-     
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="0" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="0" partid="0" configfile="MPA.txt" />
 
-       
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>

@@ -142,7 +142,7 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     {
         cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
     }
-    if(cSuccess)
+    if(cSuccess && flpGBTInterface == nullptr ) // check is done in lpGBTInterface for opto
     {
         pChip->setReg(pRegNode, pValue);
         if(pVerifLoop)
@@ -310,18 +310,16 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
     }
     else
     {
-        int cRegCount = 0;
+        int cCount=0;
         for(const auto& cReg: pRegs)
         {
-            if(cRegCount % 50 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address " << std::hex << +cReg.first << std::dec << RESET;
-	    //bool pVerifLoopcur=pVerifLoop;
-    	    //if((cRegInMap.first.find("_ALL") != std::string::npos) ) pVerifLoopcur=false;
+            if( cCount%100 == 0 ) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
             cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
             if(!cSuccess) continue;
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
-            cRegCount++;
+            #ifdef COUNT_FLAG
+                fRegisterCount++;
+            #endif
+            cCount++;
         }
     }
     return cSuccess;

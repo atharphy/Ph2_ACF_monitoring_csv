@@ -358,7 +358,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     if(cSuccess)
     {
         pChip->setReg(pRegNode, pValue);
-        if(pVerifLoop)
+        if(pVerifLoop&&flpGBTInterface == nullptr)
         {
             if(pRegNode != "ENFLAGS" && pRegNode != "DigCalibPattern_L" && pRegNode != "DigCalibPattern_H")
             {

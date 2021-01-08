@@ -15,7 +15,7 @@
 
 #include "Tool.h"
 #include <map>
-#ifdef __USE_ROOT__
+// #ifdef __USE_ROOT__
 
 // add break codes here
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
@@ -31,10 +31,8 @@ class CicFEAlignment : public Tool
     CicFEAlignment();
     ~CicFEAlignment();
 
-
-    bool 			      ismpa;
     void                              Initialise();
-    bool                              PhaseAlignment(uint16_t pWait_ms = 100);
+    bool                              PhaseAlignment(uint16_t pWait_ms = 100, uint32_t pNTriggers = 10);
     bool                              ManualPhaseAlignment(uint16_t pPhase = 10);
     bool                              WordAlignment(uint16_t pWait_ms = 100);
     bool                              Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
@@ -49,6 +47,7 @@ class CicFEAlignment : public Tool
     void                              Pause() override;
     void                              Resume() override;
     void                              Reset();
+    void                              InjectAlignmentPattern(uint8_t pChipId, uint8_t pPhyPort);
     void                              writeObjects();
 
     // injection
@@ -68,11 +67,13 @@ class CicFEAlignment : public Tool
     DetectorDataContainer fWordAlignmentValues;
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+    // with MPA
+    bool fWithMPA;
 
     // mapping of FEs for CIC
-    std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
+    std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC [2S]
     void                 SetStubWindowOffsets(uint8_t pBendCode, int pBend);
 };
 
 #endif
-#endif
+// #endif

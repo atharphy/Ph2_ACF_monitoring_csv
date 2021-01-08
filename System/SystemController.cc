@@ -135,7 +135,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
                 bool hasmpa = false;
                 bool hasssa = false;
-
+                bool cWithCBC = false; 
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
@@ -145,29 +145,25 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         auto cChipType = cROC->getFrontEndType();
                         if(cChipType == FrontEndType::SSA) hasssa=true;
                         if(cChipType == FrontEndType::MPA) hasmpa=true;
-
-
-                        if(cROC->getIndex() > 0) continue;
-
-                        LOG(INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() << " represents all ROCs on this hybrid" << RESET;
-                        if(cChipType == FrontEndType::CBC3)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
-                            fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-                        }
+                        if(cChipType == FrontEndType::CBC3) cWithCBC=true;
                     }
-                    if (hasssa and hasmpa)
+
+                    if (cWithCBC)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+                        fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+                    }
+                    else if( hasssa && hasmpa ) //PS module 
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS(s)" << RESET;
                         fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
-                        //fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
                         if(cFirstOpticalGroup->flpGBT != nullptr)
                             {
                                 auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                                 (static_cast<PSInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
                             }
                     }
-                    else if(hasmpa)
+                    else if(hasmpa) // MPA only 
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
                         fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
@@ -179,7 +175,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
               
                     }
-                    else if(hasssa)
+                    else if(hasssa) // SSA only 
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                         fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
@@ -189,7 +185,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                                 (static_cast<SSAInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
                             }
                     }
-
+                    else
+                    {
+                        LOG (ERROR) << BOLDRED << "No valid HWInterface found " << RESET;
+                        throw std::runtime_error(std::string("No valid HWInterface found ... stopping run."));
+                    }
 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);
@@ -293,6 +293,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                             exit(0);
                         }
                         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
+
+                        // select CIC FE enable register
+                        std::vector<uint8_t> cFeIds(0);
+                        for(auto cReadoutChip: *cHybrid) { if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue; cFeIds.push_back(cReadoutChip->getId()); } 
+                        fCicInterface->EnableFEs(cCic, cFeIds, true);
+                    
+
                         // CIC start-up sequence
                         uint8_t cDriveStrength = 5;
                         cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
@@ -300,6 +307,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
                                   << +theOuterTrackerHybrid->getLinkId() << RESET;
                         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
+                        
+
                     }
                     // Configure readout-chips [CBCs, MPAs, SSAs]
                     for(auto cReadoutChip: *cHybrid)

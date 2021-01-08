@@ -139,22 +139,34 @@ int main(int argc, char* argv[])
     // or testing MPA
     if(cmd.foundOption("withCIC") || cmd.foundOption("mpaTest"))
     {
+        // TO-DO 
+        // add condirion to check if USB is being used 
         cHybridTester.SelectCIC(true);
-        // align back-end
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cHybridTester);
-        cBackEndAligner.Align();
+        
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(&cHybridTester);
+        cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
+        // reset all chip and board registers
+        // to what they were before this tool was called
+        //cCicAligner.Reset();
+        cCicAligner.dumpConfigFiles();
+    
+        // // align back-end
+        // BackEndAlignment cBackEndAligner;
+        // cBackEndAligner.Inherit(&cHybridTester);
+        // cBackEndAligner.Align();
         // cBackEndAligner.Start(0);
         // reset all chip and board registers
         // to what they were before this tool was called
         // cBackEndAligner.Reset();
 
         // Check if data player is running
-        if(cDPInterfacer.IsRunning(cInterface))
-        {
-            LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-            cDPInterfacer.Stop(cInterface);
-        }
+        // if(cDPInterfacer.IsRunning(cInterface))
+        // {
+        //     LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+        //     cDPInterfacer.Stop(cInterface);
+        // }
 
         // Configure and Start DataPlayer
         // to send phase alignment pattern
