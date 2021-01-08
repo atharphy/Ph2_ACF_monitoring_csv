@@ -89,6 +89,15 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         if(cHeader == 0xFFFF)
         {
             auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
+            // quick look at data 
+            for( size_t cIndx=0 ; cIndx < cEventSize; cIndx++)
+            {
+                if( cIndx < (cEventSize-cDummyCount) ) 
+                    LOG (INFO) << BOLDBLUE << "\t VALID ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
+                else
+                    LOG (INFO) << BOLDMAGENTA << "\t DUMMY ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
+            }
+            
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
             for(auto cOpticalGroup: *pBoard)
@@ -139,7 +148,6 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     uint8_t cNPClusters = (*(cIterator + 2) & 0x7F);
                                     uint8_t cNSClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
                                     LOG (INFO) << BOLDBLUE << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " in the CIC2 event.." << RESET;
-                                    
                                 }
                             }
                             else

@@ -540,7 +540,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                         LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC phy-port input connected to MPA#" << +cChip->getId() << " : " << cOutput << RESET;
                     }
                     // put phase aligner in static mode
-                    //fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
+                    fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
                 }
                 else
                 {
