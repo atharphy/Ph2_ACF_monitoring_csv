@@ -475,6 +475,7 @@ bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
 }
 bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 {
+    // MPA phase alignment
     bool cAligned = true;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for MPAs .... " << RESET;
     for(auto cBoard: *fDetectorContainer)
