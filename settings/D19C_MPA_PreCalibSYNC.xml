@@ -26,9 +26,7 @@
             <MPA_Files path="./settings/MPAFiles/" />
             <MPA Id="0" partid="0" configfile="MPATSTSYNC.txt" />
 
-
-
-            
+       
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
