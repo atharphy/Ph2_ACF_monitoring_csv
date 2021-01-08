@@ -129,7 +129,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
     // some useful stuff
     int                 fResetAttempts;
-    void                Align_out();
+
     D19clpGBTInterface* fLocalLpGBTInterface;
 
   public:
@@ -139,7 +139,7 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param puHalConfigFileName : path of the uHal Config File
      * \param pBoardId
      */
-
+    void                Align_out();
     D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
     /*!
@@ -263,14 +263,13 @@ class D19cFWInterface : public BeBoardFWInterface
     uint16_t fWait_us             = 10000; // 10 ms
     uint8_t  fResetMinPeriod_ms   = 100;   // was 100
     // get data from FC7
-    uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+
     // wait for events from FC7
     bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
     // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
-    void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast);
+    void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast);
 
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
@@ -357,6 +356,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pCbcId : Id of the Chip to work with
      * \param pVecReq : Vector to stack the encoded words
      */
+    //for testing, move back
+    uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     void
          EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
     void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
@@ -734,6 +735,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // # Read/Write Optical Group #
     // ############################
     uint8_t  flpGBTAddress = 0x70;
+
+    uint32_t Why(Ph2_HwDescription::lpGBT* clpGBT,uint8_t cSlaveAddress,uint8_t cMaster,uint16_t fAddress);
     //Functions for standard uDTC
     void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
     void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;

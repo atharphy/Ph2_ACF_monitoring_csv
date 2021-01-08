@@ -71,95 +71,74 @@ void BackEndAlignment::Initialise()
     }
 }
 
-bool BackEndAlignment::MPAAlignment(BeBoard* pBoard)
+bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
     bool cTuned = true;
-    LOG(INFO) << GREEN << "Trying Phase Tuning for MPA Chip(s)" << RESET;
+    LOG(INFO) << GREEN << "Trying Phase Tuning for PS Chip(s)" << RESET;
 
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
-            for(auto cChip: *cHybrid) // for each chip (makes sense)
+            for(auto cChip: *cHybrid)
             {
                 ReadoutChip*             cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                std::vector<std::string> cRegNames{"ReadoutMode", "ECM", "LFSR_data"};
-                std::vector<uint8_t>     cOriginalValues;
-                uint8_t                  cAlignmentPattern = 0xa0;
-                std::vector<uint8_t>     cRegValues{0x0, 0x08, cAlignmentPattern};
-                for(size_t cIndex = 0; cIndex < 3; cIndex++)
-                {
-                    cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
-                }
 
-                for(uint8_t cLineId = 0; cLineId < 7; cLineId++)
-                { cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getId(), cChip->getId(), cLineId, cAlignmentPattern, 8); }
 
-                for(size_t cIndex = 0; cIndex < 3; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); };
+                if (cChip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                    LOG(INFO) << GREEN << "MPA Alignment" << RESET;
+                    std::vector<std::string> cRegNames{"ReadoutMode", "ECM", "LFSR_data"};
+                    std::vector<uint8_t>     cOriginalValues;
+                    uint8_t                  cAlignmentPattern = 0xa0;
+                    std::vector<uint8_t>     cRegValues{0x0, 0x08, cAlignmentPattern};
+
+                    for(size_t cIndex = 0; cIndex < 3; cIndex++)
+                    {
+                        cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
+                    }
+
+                    for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
+                    { cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getIndex(), cChip->getIndex(), cLineId, cAlignmentPattern, 8); }
+
+                    for(size_t cIndex = 0; cIndex < 3; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); };
+
+                    }
+                if (cChip->getFrontEndType() == FrontEndType::SSA)
+                    {
+                    LOG(INFO) << GREEN << "SSA Alignment" << RESET;
+                    ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
+                    std::vector<std::string> cRegNames{"SLVS_pad_current", "ReadoutMode"};
+                    std::vector<uint8_t>     cOriginalValues;
+                    std::vector<uint8_t>     cRegValues{0x7, 2};
+                    for(size_t cIndex = 0; cIndex < 2; cIndex++)
+                    {
+                        cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
+                    }
+
+                    uint8_t cAlignmentPattern = 0x80;
+
+                    for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
+                    {
+                        char cBuffer[11];
+                        sprintf(cBuffer, "OutPattern%d", cLineId );
+                        std::string cRegName = (cLineId == 7) ? "OutPattern7/FIFOconfig" : std::string(cBuffer, sizeof(cBuffer));
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cAlignmentPattern);
+                        cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getIndex(), cChip->getIndex(), cLineId, cAlignmentPattern, 8);
+                    }
+
+                    for(size_t cIndex = 0; cIndex < 2; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); }
+                    }
             }
         }
     }
 
-    LOG(INFO) << GREEN << "MPA Phase tuning finished succesfully" << RESET;
+    LOG(INFO) << GREEN << "PS Phase tuning finished succesfully" << RESET;
     return cTuned;
 }
 
-bool BackEndAlignment::SSAAlignment(BeBoard* pBoard)
-{
-    LOG(INFO) << GREEN << "Trying Phase Tuning for SSA Chip(s)" << RESET;
-    // configure patterns
-    bool                  cTuned = true;
-    std::vector<uint32_t> cVec(0);
-    std::vector<uint32_t> cReplies(0); // might be superceding cVecReq?
-    for(auto cOpticalReadout: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalReadout)
-        {
-            for(auto cChip: *cHybrid) // for each chip (makes sense)
-            {
-                ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                // configure SLVS drive strength and readout mode
-                std::vector<std::string> cRegNames{"SLVS_pad_current", "ReadoutMode"};
-                std::vector<uint8_t>     cOriginalValues;
-                std::vector<uint8_t>     cRegValues{0x7, 2};
-                for(size_t cIndex = 0; cIndex < 2; cIndex++)
-                {
-                    // auto cRegItem = static_cast<ChipRegItem>(cReadoutChip->getRegItem ( cRegNames[cIndex] ));
-                    cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
-                } // all that did was set our pad current to max and our readout mode to transmit known patterns
-
-                // configure output pattern on sutb lines
-                uint8_t cAlignmentPattern = 0x80;
-                for(uint8_t cLineId = 0; cLineId < 6; cLineId++)
-                {
-                    char cBuffer[11];
-                    sprintf(cBuffer, "OutPattern%d", cLineId - 1);
-                    std::string cRegName = (cLineId == 8) ? "OutPattern7/FIFOconfig" : std::string(cBuffer, sizeof(cBuffer));
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cAlignmentPattern);
-                    cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getId(), cChip->getId(), cLineId, cAlignmentPattern, 8);
-                }
-
-                // self.I2C.strip_write("ENFLAGS", 0, 0b01001)
-                // self.I2C.strip_write("DigCalibPattern_L", 0, 0)
-                // self.I2C.strip_write("DigCalibPattern_H", 0, 0)
-                // self.I2C.peri_write( "CalPulse_duration", 15)
-                // self.I2C.strip_write("ENFLAGS",   7, 0b01001)
-                // self.I2C.strip_write("ENFLAGS", 120, 0b01001)
-                // self.I2C.strip_write("DigCalibPattern_L",   7, 0xff)
-                // self.I2C.strip_write("DigCalibPattern_L", 120, 0xff)
-                // fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig",7)
-                // fc7.write("ctrl_phy_phase_tune_again", 1)
-
-                // back to original modes
-                for(size_t cIndex = 0; cIndex < 2; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); }
-            }
-        }
-    }
-    LOG(INFO) << GREEN << "SSA Phase tuning finished succesfully" << RESET;
-    return cTuned;
-}
 bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 {
     // make sure you're only sending one trigger at a time here
@@ -352,13 +331,9 @@ bool BackEndAlignment::Align()
             bool         cWithSSA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
             bool         cWithMPA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
             if(cWithCBC) { this->CBCAlignment(theBoard); }
-            else if(cWithSSA)
+            else if(cWithMPA or cWithSSA)
             {
-                this->SSAAlignment(theBoard);
-            }
-            else if(cWithMPA)
-            {
-                this->MPAAlignment(theBoard);
+                this->PSAlignment(theBoard);
             }
             else
             {

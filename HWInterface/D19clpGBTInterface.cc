@@ -922,7 +922,7 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
         if(cReadBack != pRegisterValue)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            throw std::runtime_error(std::string("I2C readback mismatch"));
+            //throw std::runtime_error(std::string("I2C readback mismatch"));
         }
     }
     return true;
@@ -941,21 +941,30 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 {
     LOG(DEBUG) << BOLDBLUE << "MPA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
+    //LOG(INFO) << BOLDBLUE << "SWR" << RESET;
+    /*for(int ii=0 ; ii<6; ii++)
+	{
+    LOG(INFO) << BOLDBLUE << "ii "<<ii << RESET;
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, (pRegisterValue << 16) | cInvertedRegister, ii);
+	}*/
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
+
+    //LOG(INFO) << BOLDBLUE << "EWR" << RESET;
     if(pRetry)
     {
         uint8_t cReadBack = mpaRead(pChip, pFeId, pChipId, pRegisterAddress);
         uint8_t cIter = 0, cMaxIter = 10;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
-            WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 | (1 + pChipId), (pRegisterValue << 16) | cInvertedRegister, 3);
+            WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 2);
+            //WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 | (1 + pChipId), (pRegisterValue << 16) | cInvertedRegister, 3);
             cReadBack = mpaRead(pChip, pFeId, pChipId, pRegisterAddress);
             cIter++;
         }
         if(cReadBack != pRegisterValue)
         {
             LOG(INFO) << BOLDRED << "MPA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            throw std::runtime_error(std::string("I2C readback mismatch"));
+            //throw std::runtime_error(std::string("I2C readback mismatch"));
         }
     }
     return true;
@@ -964,8 +973,8 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress)
 {
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, cInvertedRegister, 2);
-    uint32_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 + pChipId, 1);
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, cInvertedRegister, 2);
+    uint32_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, 1);
     LOG(DEBUG) << BOLDYELLOW << "MPA Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }

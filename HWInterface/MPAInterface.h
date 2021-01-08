@@ -14,7 +14,7 @@
 
 #include "BeBoardFWInterface.h"
 #include "ReadoutChipInterface.h"
-
+#include "D19clpGBTInterface.h"
 #include "pugixml.hpp"
 #include <vector>
 
@@ -61,10 +61,10 @@ class MPAInterface : public ReadoutChipInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
     void     ReadMPA(Ph2_HwDescription::ReadoutChip* pMPA);
 
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode) override;
+    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
 
     void                  Pix_write(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
     uint32_t              Pix_read(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
@@ -78,7 +78,7 @@ class MPAInterface : public ReadoutChipInterface
     void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_pp(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_ss(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_ps(Ph2_HwDescription::Chip* pMPA);
+    void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win=8);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
     void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
@@ -103,6 +103,7 @@ class MPAInterface : public ReadoutChipInterface
     void Set_calibration(Ph2_HwDescription::Chip* pMPA, uint32_t cal);
     void Set_threshold(Ph2_HwDescription::Chip* pMPA, uint32_t th);
 
+
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
@@ -118,6 +119,15 @@ class MPAInterface : public ReadoutChipInterface
     L1data Format_l1(std::vector<uint8_t> rawl1, bool verbose = false);
 
     void Cleardata();
+    void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
+  private:
+    D19clpGBTInterface*            flpGBTInterface = nullptr;
+    Ph2_HwDescription::lpGBT*      flpGBT          = nullptr;
+
+    bool                           WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
+    bool                           WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
+    bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
+    uint16_t                       ReadReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, bool pVerifLoop = true);
 };
 } // namespace Ph2_HwInterface
 

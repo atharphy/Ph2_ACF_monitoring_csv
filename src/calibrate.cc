@@ -134,7 +134,6 @@ int main(int argc, char* argv[])
     // second parameter disables stub logic on CBC3
     // cPedestalEqualization.Initialise ( false, true );
     cPedestalEqualization.Initialise(cAllChan, fDisableStubLogic);
-
     if(cVplus) cPedestalEqualization.FindVplus();
 
     cPedestalEqualization.FindOffsets();
@@ -158,7 +157,11 @@ int main(int argc, char* argv[])
         // cPedeNoise.sweepSCurves (225);
         // cPedeNoise.sweepSCurves (205);
 
-        cPedeNoise.Validate();
+        // Crashes with high event numbers, need to make as a setting
+        if(cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA)
+            cPedeNoise.Validate(1, 1);
+        else
+            cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.resetPointers();

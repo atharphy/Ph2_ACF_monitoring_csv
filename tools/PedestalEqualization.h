@@ -58,6 +58,7 @@ class PedestalEqualization : public Tool
     DetectorDataContainer fHIPCountCointainer;
     bool                  cWithCBC = true;
     bool                  cWithSSA = false;
+    bool                  cWithMPA = false;
 
 #ifdef __USE_ROOT__
     DQMHistogramPedestalEqualization fDQMHistogramPedestalEqualization;

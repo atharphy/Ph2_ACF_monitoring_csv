@@ -31,6 +31,8 @@ class CicFEAlignment : public Tool
     CicFEAlignment();
     ~CicFEAlignment();
 
+
+    bool 			      ismpa;
     void                              Initialise();
     bool                              PhaseAlignment(uint16_t pWait_ms = 100);
     bool                              ManualPhaseAlignment(uint16_t pPhase = 10);
@@ -38,8 +40,8 @@ class CicFEAlignment : public Tool
     bool                              Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
     bool                              SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
     bool                              BackEndAlignment();
-    bool                              PhaseAlignmentMPA(uint16_t pWait_ms);
-    bool                              WordAlignmentMPA(uint16_t pWait_ms);
+    bool                              PhaseAlignmentMPA(uint16_t pWait_ms = 100);
+    bool                              WordAlignmentMPA(uint16_t pWait_ms = 100);
     std::vector<std::vector<uint8_t>> SortOptimalTaps(std::vector<std::vector<uint8_t>> pOptimalTaps);
     std::vector<std::vector<uint8_t>> SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValue);
     void                              Running() override;

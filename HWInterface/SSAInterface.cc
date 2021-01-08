@@ -33,6 +33,7 @@ void SSAInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
 
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
+    LOG(INFO) << BOLDBLUE << "SSACONFIG" << RESET;
     setBoard(pSSA->getBeBoardId());
     std::vector<uint32_t> cVec;
     ChipRegMap            cSSARegMap = pSSA->getRegMap();
@@ -86,7 +87,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     if(pRegName == "CountingMode")
     {
         uint8_t cRegValue = (pValue << 2) | (1 << 0);
-        return WriteChipSingleReg(pSSA, "ENFLAGS", cRegValue, false);
+        return WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
     }
     else if(pRegName == "AmuxHigh")
     {
@@ -103,7 +104,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     else if(pRegName == "AnalogueAsync")
     {
         uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
-        bool    cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS", cRegValue, false);
+        bool    cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
         bool    cEnableFECal    = WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
         cRegValue               = ReadChipReg(pSSA, "ReadoutMode");
         cRegValue               = (cRegValue & 0x4) | (1);
@@ -120,7 +121,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
         cRegValue               = cRegValue | (pStripEnable << 0);
         LOG(INFO) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
-        bool cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS", cRegValue, false);
+        bool cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
         bool cEnableFECal    = WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
         cRegValue            = ReadChipReg(pSSA, "ReadoutMode");
         cRegValue            = (cRegValue & 0x4) | ((1 - pValue));
@@ -132,7 +133,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         // digital injection, async , enable all strips
         uint8_t cRegValue = (pValue << 3) | (1 << 2) | (1 << 0);
-        return WriteChipSingleReg(pSSA, "ENFLAGS", cRegValue, false);
+        return WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
     }
     else if(pRegName == "EnableSLVSTestOutput")
     {
@@ -150,7 +151,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         uint8_t pStripEnable    = 1;
         uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
         cRegValue               = cRegValue | (pStripEnable << 0);
-        bool cEnableAnalogue    = WriteChipSingleReg(pSSA, "ENFLAGS", cRegValue, false);
+        bool cEnableAnalogue    = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
         if(cEnableAnalogue)
             return WriteChipSingleReg(pSSA, "DigCalibPattern_L", pValue, pVerifLoop);
         else
@@ -170,7 +171,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         uint8_t pStripEnable    = 1;
         uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
         cRegValue               = cRegValue | (pStripEnable << 0);
-        bool cEnableAnalogue    = WriteChipSingleReg(pSSA, "ENFLAGS", cRegValue, false);
+        bool cEnableAnalogue    = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
         if(cEnableAnalogue)
             return this->WriteReg(pSSA, cAddress, pValue, pVerifLoop);
         else
@@ -271,6 +272,7 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
 
 bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
+LOG(INFO) << BOLDBLUE << "WRSSA"<< RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     if(flpGBTInterface == nullptr)
@@ -380,21 +382,37 @@ bool SSAInterface::WriteChipMultReg(Chip* pSSA, const std::vector<std::pair<std:
 {
     setBoard(pSSA->getBeBoardId());
     std::vector<uint32_t> cVec;
-    ChipRegItem           cRegItem;
+
+    // Deal with the ChipRegItems and encode them
+    ChipRegItem cRegItem;
     for(const auto& cReg: pVecReq)
     {
-        cRegItem        = pSSA->getRegItem(cReg.first);
-        cRegItem.fValue = cReg.second;
-        fBoardFW->EncodeReg(cRegItem, pSSA->getHybridId(), pSSA->getId(), cVec, pVerifLoop, true);
+        if(cReg.second > 0xFF)
+        {
+            LOG(ERROR) << "MPA register are 8 bits, impossible to write " << cReg.second << " on registed " << cReg.first;
+            continue;
+        }
+
+        // HACK! take out
+        this->WriteChipReg(pSSA, cReg.first, cReg.second, pVerifLoop);
+
 #ifdef COUNT_FLAG
         fRegisterCount++;
 #endif
     }
-    uint8_t cWriteAttempts = 0;
-    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+    // write the registers, the answer will be in the same cVec
+    // the number of times the write operation has been attempted is given by cWriteAttempts
+    // uint8_t cWriteAttempts = 0 ;
+
+    // HACK! put back in
+    // bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
+    bool cSuccess = true;
+
 #ifdef COUNT_FLAG
     fTransactionCount++;
 #endif
+
+    // if the transaction is successfull, update the HWDescription object
     if(cSuccess)
     {
         for(const auto& cReg: pVecReq)
@@ -403,8 +421,26 @@ bool SSAInterface::WriteChipMultReg(Chip* pSSA, const std::vector<std::pair<std:
             pSSA->setReg(cReg.first, cReg.second);
         }
     }
+
     return cSuccess;
+    
 }
+
+void SSAInterface::Set_calibration(Chip* pSSA, uint32_t cal)
+{
+  this->WriteChipReg(pSSA, "Bias_CALDAC", cal);
+}
+
+
+void SSAInterface::Set_threshold(Chip* pSSA, uint32_t th)
+{
+    setBoard(pSSA->getBeBoardId());
+
+    this->WriteChipReg(pSSA, "Bias_THDAC", th);
+
+}
+
+
 bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop)
 {
     assert(localRegValues.size() == pChip->getNumberOfChannels());

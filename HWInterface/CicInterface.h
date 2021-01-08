@@ -24,6 +24,7 @@ namespace Ph2_HwInterface
 class CicInterface : public ChipInterface
 {
   public:
+    std::vector<uint8_t>        fFeMapping{6, 7, 3, 1, 2, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
     /*!
      * \brief Constructor of the CICInterface Class
      * \param pBoardMap

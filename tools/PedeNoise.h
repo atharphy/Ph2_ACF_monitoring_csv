@@ -68,6 +68,7 @@ class PedeNoise : public Tool
     DetectorDataContainer* fHIPCountValue;
     bool                   cWithCBC = true;
     bool                   cWithSSA = false;
+    bool                   cWithMPA = false;
 
     // Settings
     bool fPlotSCurves{false};

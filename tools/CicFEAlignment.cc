@@ -99,11 +99,15 @@ void CicFEAlignment::Initialise()
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+                    if (cChip->getFrontEndType() == FrontEndType::MPA) ismpa=true;
                     // CbcInterface* theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                    cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg(theChip, "VCth");
-                    cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()      = fReadoutChipInterface->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth");
-                    cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()       = fReadoutChipInterface->ReadChipReg(theChip, "HIP&TestMode");
-                    cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()      = fReadoutChipInterface->ReadChipReg(theChip, "PtCut");
+                    if (cChip->getFrontEndType() == FrontEndType::CBC3) 
+			{
+		            cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg(theChip, "VCth");
+		            cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()      = fReadoutChipInterface->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth");
+		            cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()       = fReadoutChipInterface->ReadChipReg(theChip, "HIP&TestMode");
+		            cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()      = fReadoutChipInterface->ReadChipReg(theChip, "PtCut");
+			}
                     // prepare alignment value result
                     cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().clear();
                     cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().clear();
@@ -150,14 +154,18 @@ void CicFEAlignment::writeObjects()
 void CicFEAlignment::Running()
 {
     Initialise();
-    bool cPhaseAligned = this->PhaseAlignment();
+    bool cPhaseAligned;
+    if (ismpa) cPhaseAligned = this->PhaseAlignmentMPA();
+    else cPhaseAligned = this->PhaseAlignment();
     if(!cPhaseAligned)
     {
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET;
         exit(FAILED_PHASE_ALIGNMENT);
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET;
-    bool cWordAligned = this->WordAlignment();
+    bool cWordAligned;
+    if (ismpa) cWordAligned = this->WordAlignmentMPA();
+    else cWordAligned = this->WordAlignment();
     if(!cWordAligned)
     {
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET;
@@ -175,6 +183,20 @@ void CicFEAlignment::Running()
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
     fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
+    for(auto pBoard: *fDetectorContainer)
+    {
+      for(auto cOpticalReadout: *pBoard)
+      {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            fCicInterface->EnableFEs(cCic, {0,1,2,3,4,5,6,7}, false);
+            fCicInterface->EnableFEs(cCic, {0}, true);
+            fCicInterface->SelectOutput(cCic, false);
+            LOG(INFO) << BOLDGREEN << "FE_CONFIG " << fCicInterface->ReadChipReg(cCic,"FE_CONFIG");
+        }
+      }
+    }
 }
 
 std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValues)
@@ -461,6 +483,7 @@ bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
 }
 bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 {
+
     bool cAligned = true;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure .... " << RESET;
     for(auto cBoard: *fDetectorContainer)
@@ -469,6 +492,32 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
+               for(auto cChip: *cHybrid)
+                {
+                        if (cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                	ReadoutChip*             cReadoutChip = static_cast<ReadoutChip*>(cChip);
+
+
+                	LOG(INFO) << GREEN << "MPA Alignment" << RESET;
+                	std::vector<std::string> cRegNames{"ReadoutMode", "ECM"};
+                	std::vector<uint8_t>     cOriginalValues;
+                	std::vector<uint8_t>     cRegValues{0x0, 0x08};
+
+
+                        for(size_t cIndex = 0; cIndex < 2; cIndex++)
+                        {
+                          cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
+                          fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
+                        }
+ 			
+
+                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Align_out();
+                        for(size_t cIndex = 0; cIndex < 2; cIndex++) 
+			{ 
+			  fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); 
+			};
+
+		}
                 // enable automatic phase aligner
                 fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic, true);
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
@@ -507,6 +556,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 LOG(INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cHybrid->getId() << RESET;
                 // check if a resync is needed
                 fCicInterface->CheckReSync(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+
             }
         }
     }
@@ -560,6 +610,7 @@ bool CicFEAlignment::WordAlignmentMPA(uint16_t pWait_ms)
         // now send a fast reset
         fBeBoardInterface->ChipReSync(theBoard);
     }
+    return true;
     return cAligned;
 }
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)

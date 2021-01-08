@@ -691,50 +691,81 @@ std::vector<std::vector<uint8_t>> CicInterface::GetOptimalTaps(Chip* pChip)
     for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1) { this->ReadOptimalTap(pChip, cPhyPortChannel, cPhaseTaps); }
     return cPhaseTaps;
 }
+
+
+
 bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
 {
-    uint16_t cRegBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5C : 0xA0;
+    // first .. get enabled FEs
     setBoard(pChip->getBeBoardId());
+    std::string cRegName    = "FE_ENABLE";
+    uint8_t     cEnabledFEs = this->ReadChipReg(pChip, cRegName);
+    LOG(DEBUG) << BOLDMAGENTA << "FE_Enable Register set to " << +cEnabledFEs << RESET;
+
+    uint16_t cRegBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5C : 0xA0;
     LOG(DEBUG) << BOLDBLUE << "Checking Auto phase aligner lock in CIC." << RESET;
     ChipRegItem cRegItem;
     bool        cLocked = true;
 
-    // std::vector<std::bitset<4>> cPortStates(12);
-    size_t cPortCounter = 0;
+    size_t cPortCounter       = 0;
+    size_t cInputCounter      = 0;
+    size_t cFeCounter         = 0;
+    size_t cInputLineCounter  = 0;
+    size_t cCounter           = 0;
+    size_t cNStubLines        = 5;
+    size_t cL1Line            = 5;
+    bool   cLastStubLineFound = false;
+
     // read back phase alignment on stub lines
     for(int cIndex = 0; cIndex < 6; cIndex++)
     {
         cRegItem.fPage                      = 0x00;
         cRegItem.fAddress                   = cRegBaseAddress + cIndex;
         std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-        if(cReadBack.first) cLocked = cLocked & (cReadBack.second == pCheckValue);
         LOG(DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
+
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
-            fPortStates[cPortCounter][cBitIndex & 0x3] = std::bitset<8>(cReadBack.second)[cBitIndex];
-            cPortCounter += (cBitIndex == 3) || (cBitIndex == 7);
-        }
-    }
+            auto cAligned      = (cReadBack.second & (0x1 << cBitIndex)) >> cBitIndex;
+            cInputCounter      = (cBitIndex & 0x3);
+            cInputLineCounter  = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
+            cLastStubLineFound = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
+            cFeCounter         = (cLastStubLineFound) ? cBitIndex : cFeCounter;
 
-    size_t cInputLineCounter = 0;
-    // std::vector<std::bitset<6>> cFeStates(8,0);
-    cPortCounter = 0;
-    for(size_t cFeCounter = 0; cFeCounter < 8; cFeCounter++)
-    {
-        for(size_t cStubLineCounter = 0; cStubLineCounter < 5; cStubLineCounter++)
-        {
-            fFeStates[cFeCounter][cStubLineCounter] = fPortStates[cPortCounter][cInputLineCounter];
-            cInputLineCounter++;
-            if(cInputLineCounter > 3)
-            {
-                cPortCounter++;
-                cInputLineCounter = 0;
-            }
+            LOG(DEBUG) << BOLDBLUE << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
+                       << +cAligned << RESET;
+
+            fPortStates[cPortCounter][cInputCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
+            fFeStates[cFeCounter][cInputLineCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
+
+            cPortCounter += (cBitIndex == 3) || (cBitIndex == 7);
+            cFeCounter = (!cLastStubLineFound) ? (cFeCounter + (((1 + cCounter) % cNStubLines == 0) ? 1 : 0)) : cBitIndex;
+            cCounter++;
         }
-        // L1 line
-        fFeStates[cFeCounter][5] = fPortStates[(10 + (cFeCounter > 4))][(cFeCounter & 0x3)];
-        LOG(INFO) << BOLDBLUE << "PhyPort lock FE" << +cFeCounter << " : " << BOLDYELLOW << +fFeStates[cFeCounter][5] << " [L1 lines] " << BOLDMAGENTA
-                  << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
+    } // each register stores information from 4 phyport inputs
+    // 1 bit for each of the 4 channels of the 12 PHYPorts
+
+    cPortCounter = 0;
+    for(cFeCounter = 0; cFeCounter < 8; cFeCounter++)
+    {
+        auto cEnableBit = (cEnabledFEs & (0x1 << cFeCounter)) >> cFeCounter;
+        // only check enabled FEs
+        if(cEnableBit != 1) continue;
+
+        uint8_t cChipId_onyHybrid = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cFeCounter));
+        auto    cCheckValue       = (pCheckValue & (0x1 << cFeCounter)) >> cFeCounter;
+        for(cInputLineCounter = 0; cInputLineCounter < (1 + cNStubLines); cInputLineCounter++)
+        {
+            LOG(DEBUG) << BOLDYELLOW << "FE [CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << " Line#" << +cInputLineCounter << " alignment value "
+                       << +fFeStates[cFeCounter][cInputLineCounter] << RESET;
+            cLocked = cLocked & (fFeStates[cFeCounter][cInputLineCounter] == cCheckValue);
+        }
+        if(cLocked)
+            LOG(INFO) << BOLDGREEN << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
+                      << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDGREEN << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
+        else
+            LOG(INFO) << BOLDRED << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
+                      << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDRED << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
     }
     if(cLocked)
         LOG(INFO) << BOLDGREEN << "SUCCESSFULL " << BOLDBLUE << " lock on all phase aligner lines.." << RESET;
@@ -742,6 +773,8 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to lock on all phase aligner lines.." << RESET;
     return cLocked;
 }
+
+
 bool CicInterface::SoftReset(Chip* pChip, uint32_t cWait_ms)
 {
     setBoard(pChip->getBeBoardId());
@@ -786,15 +819,17 @@ bool CicInterface::SetSparsification(Chip* pChip, uint8_t pEnable)
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0x2F) | (pEnable << 4);
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
-bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFEs, bool pEnable)
+bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEnable)
 {
     setBoard(pChip->getBeBoardId());
     std::string cRegName = "FE_ENABLE";
     uint16_t    cValue   = this->ReadChipReg(pChip, cRegName);
-    for(auto pFe: pFEs)
+    for(auto pFeId: pFeIds)
     {
-        uint8_t cMask = ~(0x1 << pFe) & 0xFF;
-        cValue        = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << pFe);
+        uint8_t cChipId_forCic = fFeMapping[pFeId]; // std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pFeId));
+        uint8_t cMask          = ~(0x1 << cChipId_forCic) & 0xFF;
+        LOG(INFO) << BOLDMAGENTA << "For ROC [Hybrid Id " << +pFeId << "] CIC FE#" << +cChipId_forCic << " mask is " << std::bitset<8>(cMask) << RESET;
+        cValue = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << cChipId_forCic);
     }
     if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
@@ -949,7 +984,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     this->EnableFEs(pChip, {0, 1, 2, 3, 4, 5, 6, 7}, true);
 
     // select fast command edge
-    bool cNegEdge = true;
+    bool cNegEdge = false;
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else

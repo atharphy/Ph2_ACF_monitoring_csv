@@ -136,10 +136,25 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     else
     {
         cEventTypeString = cEventTypeAttribute.value();
+	    std::cout<<cEventTypeString<<std::endl;
+	    std::cout<<cEventTypeString<<std::endl;
+	    std::cout<<cEventTypeString<<std::endl;
+	    std::cout<<cEventTypeString<<std::endl;
+	    std::cout<<cEventTypeString<<std::endl;
+	    std::cout<<cEventTypeString<<std::endl;
+	    std::cout<<cEventTypeString<<std::endl;
+	    std::cout<<cEventTypeString<<std::endl;
         if(cEventTypeString == "ZS")
             cBeBoard->setEventType(EventType::ZS);
-        else if(cEventTypeString == "Async")
+        else if(cEventTypeString == "SSAAS")
             cBeBoard->setEventType(EventType::SSAAS);
+		
+        else if(cEventTypeString == "MPAAS")
+            cBeBoard->setEventType(EventType::MPAAS);
+        else if(cEventTypeString == "MPA")
+            cBeBoard->setEventType(EventType::MPA);
+        else if(cEventTypeString == "SSA")
+            cBeBoard->setEventType(EventType::SSA);
         else
             cBeBoard->setEventType(EventType::VR);
     }
@@ -461,6 +476,7 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
     pBoard->addConditionDataSet(cSet);
 }
 
+
 void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -473,6 +489,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
 
     // Get ID of SSA then add to the Hybrid!
     uint32_t    cChipId = pSSAnode.attribute("Id").as_int();
+    uint32_t    cPartnerId = pSSAnode.attribute("partid").as_int();
     std::string cFileName;
     if(!cFilePrefix.empty())
     {
@@ -482,7 +499,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     }
     else
         cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
-    ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, 0, cFileName));
+    ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA->setNumberOfChannels(120);
     this->parseSSASettings(pSSAnode, cSSA);
 }
@@ -495,6 +512,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
 void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::string cFilePrefix)
 { // Get ID of MPA then add to the Hybrid!
     uint32_t    cChipId = pHybridNode.attribute("Id").as_int();
+    uint32_t    cPartnerId = pHybridNode.attribute("partid").as_int();
     std::string cFileName;
     if(!cFilePrefix.empty())
     {
@@ -504,7 +522,7 @@ void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::stri
     }
     else
         cFileName = expandEnvironmentVariables(pHybridNode.attribute("configfile").value());
-    ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cFileName));
+    ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
     cMPA->setNumberOfChannels(1920);
     this->parseMPASettings(pHybridNode, cMPA);
 }

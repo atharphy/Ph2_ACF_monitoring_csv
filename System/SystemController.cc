@@ -132,6 +132,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap);
                 }
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
+
+                bool hasmpa = false;
+                bool hasssa = false;
+
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
@@ -139,6 +143,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     for(auto cROC: *cFirstHybrid)
                     {
                         auto cChipType = cROC->getFrontEndType();
+                        if(cChipType == FrontEndType::SSA) hasssa=true;
+                        if(cChipType == FrontEndType::MPA) hasmpa=true;
+
+
                         if(cROC->getIndex() > 0) continue;
 
                         LOG(INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() << " represents all ROCs on this hybrid" << RESET;
@@ -147,22 +155,42 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                             LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                             fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                         }
-                        else if(cChipType == FrontEndType::SSA)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
-                            fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-                            if(cFirstOpticalGroup->flpGBT != nullptr)
+                    }
+                    if (hasssa and hasmpa)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS(s)" << RESET;
+                        fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
+                        //fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                        if(cFirstOpticalGroup->flpGBT != nullptr)
+                            {
+                                auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                                (static_cast<PSInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
+                            }
+                    }
+                    else if(hasmpa)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                        fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+                        if(cFirstOpticalGroup->flpGBT != nullptr)
+                            {
+                                auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                                (static_cast<MPAInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
+                            }
+
+              
+                    }
+                    else if(hasssa)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+                        fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                        if(cFirstOpticalGroup->flpGBT != nullptr)
                             {
                                 auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                                 (static_cast<SSAInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
                             }
-                        }
-                        else if(cChipType == FrontEndType::MPA)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
-                            fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-                        }
                     }
+
+
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);
                     if(cFirstOpticalGroup->flpGBT != nullptr)
@@ -199,7 +227,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+        uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS or cBoard->getEventType() == EventType::MPAAS) ? 1 : 0;
 
         if(cBoard->getBoardType() != BoardType::RD53)
         {
@@ -531,8 +559,11 @@ void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32
 
 void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
+            	LOG(INFO) << BOLDBLUE << "DecodeData" << RESET;
+
     if(pType == BoardType::RD53)
     {
+            	LOG(INFO) << BOLDBLUE << "RD53" << RESET;
         fEventList.clear();
         if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
@@ -540,6 +571,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     }
     else if(pType == BoardType::D19C)
     {
+            	LOG(INFO) << BOLDBLUE << "D19C" << RESET;
+        //for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
         fCurrentEvent = 0;
@@ -547,39 +580,43 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
         else
         {
+            	LOG(INFO) << BOLDBLUE << "evn0" << RESET;
             EventType fEventType = pBoard->getEventType();
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize      = static_cast<uint32_t>((pData.size()) / pNevents);
+            //uint32_t nmpa = 0;
             uint32_t maxind = 0;
 
-            if(pBoard->getFrontEndType() == FrontEndType::SSA)
-            {
-                uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                if(fEventType == EventType::SSAAS) nSSA = pData.size() / 120;
 
-                for(auto opticalGroup: *pBoard)
-                {
+                //if(fEventType == EventType::SSAAS)
+                 //   {
+                 //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
+                 //   nSSA = pData.size() / 120;
+                 //   }
+
+
+            for(auto opticalGroup: *pBoard)
+            {
                     for(auto hybrid: *opticalGroup)
                     {
-                        for(auto chip: *hybrid)
-                        {
-                            // LOG (INFO) << BOLDBLUE <<chip->getId()+hybrid->getId()*nSSA <<RESET;
-                            maxind = std::max(maxind, uint32_t(chip->getId() + hybrid->getId() * nSSA));
-                        }
+
+                            maxind = std::max(maxind, uint32_t(hybrid->size()));
+
+
                     }
-                }
-                // LOG (INFO) << BOLDBLUE << "maxind " << maxind << RESET;
             }
 
-            if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
+            if(fEventType == EventType::SSAAS) { 
+fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
             else if(fEventType == EventType::MPAAS)
             {
                 fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
             }
             else if(fEventType != EventType::ZS)
             {
+
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
                 do
@@ -596,11 +633,12 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
                         else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
+                            LOG (INFO) << BOLDBLUE << "Decoding CIC data " << RESET;
                             fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                         {
-                            // LOG (INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
+                            LOG (INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
                             // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
                             // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
                             // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
@@ -611,6 +649,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                         {
+                            LOG (INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
+                            //fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
                             fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
                         }
                         cEventIndex++;

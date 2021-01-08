@@ -6,6 +6,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/EmptyContainer.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
@@ -42,13 +43,17 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
+    if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
 
     initializeRecycleBin();
 
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    // For async only -- to fix
+    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
     fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -131,8 +136,10 @@ void PedeNoise::reloadStubLogic()
 
 void PedeNoise::sweepSCurves()
 {
-    uint16_t cStartValue            = 0;
-    bool     originalAllChannelFlag = this->fAllChan;
+    uint16_t cStartValue = 0;
+    if(cWithSSA) cStartValue = 40;
+    if(cWithMPA) cStartValue = 50;
+    bool originalAllChannelFlag = this->fAllChan;
 
     if(fPulseAmplitude != 0 && originalAllChannelFlag && cWithCBC)
     {
@@ -143,7 +150,7 @@ void PedeNoise::sweepSCurves()
     // configure TP amplitude
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cWithSSA)
+        if(cWithSSA or cWithMPA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
@@ -172,8 +179,17 @@ void PedeNoise::sweepSCurves()
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(false);
-        if(cWithSSA)
-            setSameGlobalDac("InjectedCharge", 0);
+        if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
+        if(cWithMPA)
+        {
+            setSameGlobalDac("CalDAC0", 0);
+            setSameGlobalDac("CalDAC1", 0);
+            setSameGlobalDac("CalDAC2", 0);
+            setSameGlobalDac("CalDAC3", 0);
+            setSameGlobalDac("CalDAC4", 0);
+            setSameGlobalDac("CalDAC5", 0);
+            setSameGlobalDac("CalDAC6", 0);
+        }
         else
             setSameGlobalDac("TestPulsePotNodeSel", 0);
 
@@ -186,9 +202,13 @@ void PedeNoise::sweepSCurves()
 
 void PedeNoise::measureNoise()
 {
+    LOG(INFO) << BOLDBLUE << "sweepSCurves" << RESET;
     sweepSCurves();
+    LOG(INFO) << BOLDBLUE << "extractPedeNoise" << RESET;
     extractPedeNoise();
+    LOG(INFO) << BOLDBLUE << "producePedeNoisePlots" << RESET;
     producePedeNoisePlots();
+    LOG(INFO) << BOLDBLUE << "Done" << RESET;
 }
 
 void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
@@ -202,16 +222,12 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     }
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
-
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
     bool originalAllChannelFlag = this->fAllChan;
 
     this->SetTestAllChannels(true);
-
     this->measureData(fEventsPerPoint * pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
-
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
     // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
@@ -223,6 +239,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
+
     for(auto board: theOccupancyContainer)
     {
         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
@@ -242,8 +259,10 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                 for(auto cROC: *cFe)
                 {
                     RegisterVector cRegVec;
+
                     uint32_t       NCH = NCHANNELS;
-                    if(cWithSSA) NCH = NSSACHANNELS;
+                    if (cROC->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
+                    if (cROC->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;
@@ -257,10 +276,16 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                                 sprintf(cRegName, "Channel%03d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0xFF});
                             }
-                            if(cWithSSA)
+                            if(cROC->getFrontEndType() == FrontEndType::SSA)
                             {
                                 char cRegName[17];
                                 sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
+                                cRegVec.push_back({cRegName, 0x1F});
+                            }
+                            if((cROC->getFrontEndType() == FrontEndType::MPA))
+                            {
+                                char cRegName[12];
+                                sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
                             LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " Channel " << iChan << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF
@@ -272,7 +297,6 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                 }
             }
         }
-
         setThresholdtoNSigma(cBoard, 0);
     }
 }
@@ -285,9 +309,9 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
     if(cWithCBC) this->bitWiseScan("VCth", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(cWithSSA) this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56, fNEventsPerBurst);
+    if(cWithMPA) this->bitWiseScan("ThDAC_ALL", fEventsPerPoint, 0.56, fNEventsPerBurst);
 
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
@@ -305,6 +329,7 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                     uint16_t tmpVthr = 0;
                     if(cWithCBC) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
                     if(cWithSSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
+                    if(cWithMPA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("ThDAC0");
 
                     cMean += tmpVthr;
                     ++nCbc;
@@ -326,12 +351,12 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int      cMinBreakCount = 5;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
+    // uint16_t cMinValue      = 0;
     if(cWithSSA) cMaxValue = (1 << 8) - 1;
-
+    if(cWithMPA) cMaxValue = (1 << 8) - 1;
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int>   cSigns{-1, 1};
     std::vector<float> cLimits{cFirstLimit, 1 - cFirstLimit};
-
     //(fDetectorContainer[0]->getBoardType() == BoardType::D19C)
 
     int cCounter = 0;
@@ -344,9 +369,9 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
-
             if(cWithCBC) this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint, fNEventsPerBurst);
             if(cWithSSA) this->setDacAndMeasureData("Bias_THDAC", cValue, fEventsPerPoint, fNEventsPerBurst);
+            if(cWithMPA) this->setDacAndMeasureData("ThDAC_ALL", cValue, fEventsPerPoint, fNEventsPerBurst);
             // this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
@@ -410,7 +435,7 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(auto chip: *hybrid)
                     {
-                        for(uint8_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                        for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
                             if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                             float previousOccupancy = (previousIterator)
@@ -464,7 +489,7 @@ void PedeNoise::extractPedeNoise()
             {
                 for(auto chip: *hybrid)
                 {
-                    for(uint8_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                    for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
                         if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
@@ -523,7 +548,6 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
                     LOG(INFO) << "Changing Threshold on ROC " << +cROCId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!";
                 else
                     LOG(INFO) << "Changing Threshold on ROC " << +cROCId << " back to the pedestal at " << +cPedestal;
-
                 ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, cValue);
                 static_cast<ReadoutChip*>(chip)->accept(cThresholdVisitor);
             }
