@@ -83,7 +83,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
 
-        LOG(DEBUG) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
+        LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
                    << " dummy 32 bit words .. " << RESET;
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
@@ -119,14 +119,30 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             int cL1Offset = cOffset + 2 + int(cWithCIC2);
                             if(fIsSparsified)
                             {
-                                uint8_t cNClusters = (*(cIterator + 2) & 0x7F);
-                                // clusters/hit data first
-                                std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
-                                this->splitStream(pData, cL1Words, cOffset + 3,
-                                                  cNClusters); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
-                                fEventHitList[cFe->getIndex()].first = cL1Information;
-                                fEventHitList[cFe->getIndex()].second.clear();
-                                for(auto cL1Word: cL1Words) { fEventHitList[cFe->getIndex()].second.push_back(cL1Word.to_ulong()); }
+                                // check if we have a 2S or a PS CIC 
+                                bool cIs2S=true;
+                                for(auto cChip: *cFe) cIs2S = cIs2S && (cChip->getFrontEndType()==FrontEndType::CBC3);
+                                if( cIs2S )
+                                {
+                                    uint8_t cNClusters = (*(cIterator + 2) & 0x7F);
+                                    // clusters/hit data first
+                                    std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
+                                    this->splitStream(pData, cL1Words, cOffset + 3,
+                                                      cNClusters); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
+                                    fEventHitList[cFe->getIndex()].first = cL1Information;
+                                    fEventHitList[cFe->getIndex()].second.clear();
+                                    for(auto cL1Word: cL1Words) { fEventHitList[cFe->getIndex()].second.push_back(cL1Word.to_ulong()); }
+                                }
+                                else
+                                {
+                                    LOG (INFO) << BOLDRED << "Decoding L1 data from PS CIC2" << RESET;
+                                    //P + S clusters 
+                                    uint8_t cNPClusters = (*(cIterator + 2) & 0x7F);
+                                    uint8_t cNSClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
+                                    LOG (INFO) << BOLDRED << "Found " << +cNPClusters << " p clusters and "
+                                        << +cNSClusters << " in the CIC2 event.." << RESET;
+                                    
+                                }
                             }
                             else
                             {

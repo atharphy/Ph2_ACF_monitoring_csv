@@ -1202,6 +1202,10 @@ void D19cFWInterface::TriggerConfiguration()
 }
 void D19cFWInterface::Start()
 {
+    // send a resync 
+    this->ResetReadout();
+    this->ChipReSync();
+                
     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
     // clear the register manually)
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
@@ -1749,12 +1753,12 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
         for( size_t cOffset=0; cOffset < cEventSize ; cOffset++)
         {
             if( cOffset < 4 )
-                LOG (INFO) << BOLDMAGENTA << "HEADER : "
+                LOG (DEBUG) << BOLDMAGENTA << "HEADER : "
                     << std::bitset<32>(*(cEventIterator+cOffset)) 
                     << RESET;
             else
 
-                LOG (INFO) << BOLDBLUE << "\t...DATA\t.. : "
+                LOG (DEBUG) << BOLDBLUE << "\t...DATA\t.. : "
                     << std::bitset<32>(*(cEventIterator+cOffset)) 
                     << RESET;
         }
@@ -2225,8 +2229,13 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         cNEvents = this->CountFwEvents(pBoard, pData);
         LOG(INFO) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
-        // in the handshake mode offset is cleared after each handshake
-        fDDR3Offset = 0;
+        // how many events did you ask for 
+        auto cNeventsReq       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
+        if( cNeventsReq != cNEvents )
+        {
+            LOG (INFO) << BOLDRED << "Mismatch in number of events "
+                << " received from FC7!!" << RESET;        
+        }
     }
     else if(cAsync)
     {
@@ -2449,8 +2458,8 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
     // in kHz .. if external trigger assume 1 kHz or TP assume lowest possible rate
-    auto     cTriggerRate          = (cTriggerSource == 5 || cTriggerSource == 6) ? 0.01 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-    uint32_t cTimeSingleTrigger_us = std::ceil(1.5e3 / (cTriggerRate));
+    //auto     cTriggerRate          = (cTriggerSource == 5 || cTriggerSource == 6) ? 0.01 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+    uint32_t cTimeSingleTrigger_us = 1000;//std::ceil(10e3 / (cTriggerRate));
     auto     cMultiplicity         = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
 
     EventType                                     cEventType = pBoard->getEventType();
@@ -2513,10 +2522,11 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
 
             uint32_t cTimeoutCounter = 0;
-            uint32_t cTimeoutValue   = 2.0 * cNevents * (cMultiplicity + 1); // maximum number of times I allow the word counter not to increment ..
-            uint32_t cFailures       = 0;
+            //uint32_t cFailures       = 0;
             uint32_t cPause          = 1 * static_cast<uint32_t>(cTimeSingleTrigger_us);
+            uint32_t cTimeoutValue   = 1000;//2.0 * (float)(cNevents * (cMultiplicity + 1))/cPause; // maximum number of times I allow the word counter not to increment ..
             uint32_t cNWords_previous = cNWords;
+            uint32_t cAttempt=0;
             do
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(cPause));
@@ -2524,16 +2534,19 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
                 cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                 cTimeoutCounter += ( (cNWords==0 || (cNWords-cNWords_previous) == 0 ) ) ? 1 : 0 ;
-                LOG (INFO) << MAGENTA << cReadoutReq << " " << cNtriggers << " " << cNWords << RESET;
-                cFailures += ((cNtriggers == 0));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
+                if( (cNWords==0 || (cNWords-cNWords_previous) == 0 ) )
+                    LOG (INFO) << MAGENTA << "Waiting for data.. attempt#" << +cAttempt 
+                        << " ... ReadoutReq," << cReadoutReq << " Ntriggers," << cNtriggers << " NWords," << cNWords 
+                        << " [ timeout ==  " << +cTimeoutValue << " ]" 
+                        << RESET;
+                //cFailures += ((cNtriggers == 0));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
                 cNWords_previous = cNWords;
-            } while(cReadoutReq == 0 && (cTimeoutCounter < cTimeoutValue) && (cFailures<5));
-            // (cNtriggers < cNevents * (cMultiplicity + 1)) && (cFailures < 5));
-            
+                cAttempt++; 
+            } while(cReadoutReq == 0 && (cTimeoutCounter < cTimeoutValue));// && (cFailures<5));
             // fails if either one of these is true
-            // but to me it looks like sometimes the readoutrequest is not '1' although
-            // all triggers have been received
-            pFailed = ((cReadoutReq == 0 && cNtriggers < cNevents * (cMultiplicity + 1)) || (cNWords == 0));
+            pFailed = (cNWords == 0 || cTimeoutCounter >= cTimeoutValue);
+            //pFailed = (cReadoutReq == 0) || (cNWords == 0);
+            //pFailed = ((cReadoutReq == 0 && cNtriggers < cNevents * (cMultiplicity + 1)) || (cNWords == 0));
 
             if((cReadoutReq == 0 && cNtriggers < cNevents * (cMultiplicity + 1)) && cNWords != 0)
             {
@@ -2599,7 +2612,11 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // write number of triggers to accept
     this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
     bool pFailed = WaitForData(pBoard);
-    if(!pFailed) this->GetData(pBoard, pData);
+    if(!pFailed)
+    {
+        this->GetData(pBoard, pData);
+        fDDR3Offset = 0;
+    }
     // again check if failed to re-run in case
     else
     {
@@ -2612,6 +2629,8 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         pData.clear();
         this->Stop();
 
+        // in the handshake mode offset is cleared after each handshake
+        fDDR3Offset = 0;
         // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
         // reset trigger
         // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
