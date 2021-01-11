@@ -906,7 +906,7 @@ bool CicInterface::SelectOutput(Chip* pChip, bool pFixedPattern)
     if(pFixedPattern)
         LOG(INFO) << BOLDBLUE << "Want to configure CIC to output fixed pattern on all lines... " << RESET;
     else
-        LOG(INFO) << BOLDBLUE << "Want to configure CIC to output patterns from readout chips... " << RESET;
+        LOG(INFO) << BOLDBLUE << "Want to configure CIC to output data from readout chips... " << RESET;
 
     // enable output pattern from CIC
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "OUTPUT_PATTERN_ENABLE" : "MISC_CTRL";

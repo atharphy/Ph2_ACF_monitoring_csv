@@ -191,14 +191,6 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalReadout)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            // figure out which FEs are active 
-            std::vector<uint8_t> cEnabledFEs(0);             
-            for(auto cReadoutChip: *cHybrid)
-            {
-                if( cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
-                cEnabledFEs.push_back( cReadoutChip->getId() );
-            }
-            fCicInterface->EnableFEs(cCic, cEnabledFEs, true);
             // enable alignment output for stubs 
             fCicInterface->SelectOutput(cCic, true);
         }
@@ -212,8 +204,17 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SelectOutput(cCic, false);
-        }
-    }
+            
+            // figure out which FEs are active 
+            std::vector<uint8_t> cEnabledFEs(0);             
+            for(auto cReadoutChip: *cHybrid)
+            {
+                if( cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                cEnabledFEs.push_back( cReadoutChip->getId() );
+            }
+            fCicInterface->EnableFEs(cCic, cEnabledFEs, true);
+        }//hybrids [CICs]
+    }//optical groups [modules]
 
     // re-load configuration of fast command block from register map loaded from xml file
     LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;

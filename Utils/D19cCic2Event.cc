@@ -83,7 +83,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
 
-        LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
+        LOG(DEBUG) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
                    << " dummy 32 bit words .. " << RESET;
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
@@ -93,9 +93,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             for( size_t cIndx=0 ; cIndx < cEventSize; cIndx++)
             {
                 if( cIndx < (cEventSize-cDummyCount) ) 
-                    LOG (INFO) << BOLDBLUE << "\t VALID ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
+                    LOG (DEBUG) << BOLDBLUE << "\t VALID ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
                 else
-                    LOG (INFO) << BOLDMAGENTA << "\t DUMMY ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
+                    LOG (DEBUG) << BOLDMAGENTA << "\t DUMMY ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
             }
             
             uint32_t cStatus   = 0x00000000;
@@ -147,7 +147,10 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     //P + S clusters 
                                     uint8_t cNPClusters = (*(cIterator + 2) & 0x7F);
                                     uint8_t cNSClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
-                                    LOG (INFO) << BOLDBLUE << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " in the CIC2 event.." << RESET;
+                                    if( cNPClusters > 0 )
+                                        LOG (INFO) << BOLDMAGENTA << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " s clusters in the CIC2 event.." << RESET;
+                                    else
+                                        LOG (INFO) << BOLDRED << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << "  s clusters in the CIC2 event.." << RESET;
                                 }
                             }
                             else

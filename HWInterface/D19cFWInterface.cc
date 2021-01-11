@@ -1196,9 +1196,9 @@ void D19cFWInterface::TriggerConfiguration()
     auto cSource       = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
     auto cRate         = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    LOG(DEBUG) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
-    LOG(DEBUG) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
-    LOG(DEBUG) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
 }
 void D19cFWInterface::Start()
 {
@@ -1660,31 +1660,34 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 if(fOptical)
                 {
                     LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
-                    pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, 1, 0, 0);
-                    pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
-                    pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
-                    uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    LOG(DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
-                    uint8_t cAttempts = 0;
-                    if(pTuner.fBitslip == 0)
-                    {
-                        do
-                        {
-                            if(cAttempts > 10)
-                            {
-                                LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                                exit(0);
-                            }
-                            // try again
-                            LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
-                            GbtInterface cGBTx;
-                            cGBTx.gbtxSetPhase(this, fGBTphase);
-                            pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
-                            cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                            LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                            cAttempts++;
-                        } while(pTuner.fBitslip == 0);
-                    }
+                    pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                    cSuccess = cSuccess && pTuner.fDone;
+                    // why was I doing it like this?
+                    // pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, 1, 0, 0);
+                    // pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
+                    // pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
+                    // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    // LOG(DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
+                    // uint8_t cAttempts = 0;
+                    // if(pTuner.fBitslip == 0)
+                    // {
+                    //     do
+                    //     {
+                    //         if(cAttempts > 10)
+                    //         {
+                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                    //             exit(0);
+                    //         }
+                    //         // try again
+                    //         LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
+                    //         GbtInterface cGBTx;
+                    //         cGBTx.gbtxSetPhase(this, fGBTphase);
+                    //         pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
+                    //         cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    //         LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                    //         cAttempts++;
+                    //     } while(pTuner.fBitslip == 0);
+                    // }
                 }
                 else
                 {
@@ -2203,7 +2206,7 @@ uint32_t D19cFWInterface::Why(lpGBT*  clpGBT, uint8_t cSlaveAddress,uint8_t cMas
 
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
-    LOG (INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
+    LOG (DEBUG) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
     EventType cEventType = pBoard->getEventType();
     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     bool      cWithMPA   = false;
@@ -2223,11 +2226,11 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
     if(fIsDDR3Readout && !cAsync)
     {
-        LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
+        LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // figure out how many events I've got
         cNEvents = this->CountFwEvents(pBoard, pData);
-        LOG(INFO) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
+        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
         // how many events did you ask for 
         auto cNeventsReq       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
@@ -2454,7 +2457,7 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 }
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
-    LOG (INFO) << BOLDBLUE << "Waiting for data from the FC7.." << RESET;
+    LOG (DEBUG) << BOLDBLUE << "Waiting for data from the FC7.... Attempt#" << fReadoutAttempts << RESET;
 
     bool cFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
@@ -2517,7 +2520,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             this->PS_Open_shutter(fFastCommandDuration);
         }
         // start triggering machine which will collect N events
-        LOG (INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
         this->Start();
         if(!cAsync)
         {
@@ -2526,18 +2529,18 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-
+            uint32_t cTimeoutValue   = 1000;
             if( cWaitForFSM ) // send triggers unti FSM is idle 
             {
                 // FSM is finished sending triggers 
                 uint32_t cIterations = 0;
                 do
                 {
-                    LOG(INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+                    LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
                     std::this_thread::sleep_for(std::chrono::microseconds(cTimeSingleTrigger_us*cNevents));
                     cIterations++;
-                } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);
-                cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10);
+                } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < cTimeoutValue);
+                cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == cTimeoutValue);
                 
                 // readout request if fulfilled 
                 if( !cFailed )
@@ -2550,10 +2553,10 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 
                         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
                         cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-                        LOG(INFO) << "Readout request is " << +cReadoutReq << RESET;
+                        LOG(DEBUG) << "Readout request is " << +cReadoutReq << RESET;
                         cIterations++;
-                    } while(cReadoutReq == 0 && cIterations < 100 ); 
-                    cFailed = (cIterations >= 100 );
+                    } while(cReadoutReq == 0 && cIterations < cTimeoutValue ); 
+                    cFailed = (cIterations >= cTimeoutValue );
                 }
             }
             else// send triggers until the readout request flag is '1' 
@@ -2561,7 +2564,6 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 uint32_t cTimeoutCounter = 0;
                 //uint32_t cFailures       = 0;
                 uint32_t cPause          = cNevents * static_cast<uint32_t>(cTimeSingleTrigger_us);
-                uint32_t cTimeoutValue   = 1000;//2.0 * (float)(cNevents * (cMultiplicity + 1))/cPause; // maximum number of times I allow the word counter not to increment ..
                 uint32_t cNWords_previous = cNWords;
                 uint32_t cAttempt = 0 ;
                 do
@@ -2572,7 +2574,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                     cTimeoutCounter += ( (cNWords==0 || (cNWords-cNWords_previous) == 0 ) ) ? 1 : 0 ;
                     if( (cNWords==0 || (cNWords-cNWords_previous) == 0 ) )
-                        LOG (INFO) << MAGENTA << "Waiting for data.. attempt#" << +cAttempt 
+                        LOG (DEBUG) << MAGENTA << "Waiting for data.. attempt#" << +cAttempt 
                             << " ... ReadoutReq," << cReadoutReq << " Ntriggers," << cNtriggers << " NWords," << cNWords 
                             << " [ timeout ==  " << +cTimeoutValue << " ]" 
                             << RESET;
@@ -2600,7 +2602,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             }
             else
             {
-                LOG(INFO) << BOLDGREEN << "\t...Have data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << cNevents * (cMultiplicity + 1) << " events and have " << cNWords
+                LOG(DEBUG) << BOLDGREEN << "\t...Have data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << cNevents * (cMultiplicity + 1) << " events and have " << cNWords
                           << " words in the readout... reading out data." << RESET;
             }
         }
@@ -2631,11 +2633,11 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
         
         cReSync = 0 ; 
-        cBC0 = 0 ; 
+        cBC0 = 1 ; 
         cL1A = 1; 
         // funny trigger source 
         LOG (INFO) << BOLDBLUE << "Reading Nevent with single triggers sent from SW" << RESET;
-        for( uint32_t cIndx=0; cIndx < (2 + cNevents) ; cIndx++)
+        for( uint32_t cIndx=0; cIndx < (cNevents) ; cIndx++)
         {
             this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -2659,6 +2661,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         //     //LOG (DEBUG) << BOLDBLUE << "Iter#" << +cIteration << " ...antenna status " << +cDone << RESET;
         //     cDone = this->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
         // };
+
         uint32_t cIterations = 0;
         do
         {
@@ -2678,6 +2681,8 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     // write number of triggers to accept
+    // in the handshake mode offset is cleared after each handshake
+    fDDR3Offset = 0;
     this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
     bool cFailed = WaitForData(pBoard);
     if(!cFailed)
@@ -2686,7 +2691,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         fDDR3Offset = 0;
     }
     // again check if failed to re-run in case
-    else
+    else if( fReadoutAttempts < 10 )
     {
         LOG(INFO) << BOLDRED << "Failed to readout all events..... Retrying..." << RESET;
         uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
@@ -2696,21 +2701,15 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         LOG(INFO) << BOLDRED << "Number of triggers received " << +cNtriggers << RESET;
         pData.clear();
         this->Stop();
-
-        // in the handshake mode offset is cleared after each handshake
-        fDDR3Offset = 0;
         fReadoutAttempts++;
-        // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
-        // reset trigger
-        // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset",0x1);
-        // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
-        // reset the readout
-        // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
-        // this->ResetReadout();
-        // try again
+        //try again
         this->ReadNEvents(pBoard, pNEvents, pData);
     }
-
+    else
+    {
+        LOG (INFO) << BOLDRED << "After " << +fReadoutAttempts << " attempts at reading out data .. I'm giving up! " << RESET;
+        throw Exception("Too many failures when attempting to read data from the FC7..somethign is wrong!");
+    }
     if(fSaveToFile) fFileHandler->setData(pData);
 }
 

@@ -570,7 +570,7 @@ void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32
 
 void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
-            	LOG(INFO) << BOLDBLUE << "DecodeData" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "DecodeData" << RESET;
 
     if(pType == BoardType::RD53)
     {
@@ -582,7 +582,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     }
     else if(pType == BoardType::D19C)
     {
-            	LOG(INFO) << BOLDBLUE << "D19C" << RESET;
         //for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
@@ -591,7 +590,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
         else
         {
-            	LOG(INFO) << BOLDBLUE << "evn0" << RESET;
             EventType fEventType = pBoard->getEventType();
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
@@ -644,7 +642,7 @@ fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
                         if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
                         else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
-                            LOG (INFO) << BOLDBLUE << "Decoding CIC data " << RESET;
+                            LOG (DEBUG) << BOLDBLUE << "Decoding CIC data " << RESET;
                             fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::SSA)
