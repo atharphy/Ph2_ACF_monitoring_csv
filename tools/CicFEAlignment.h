@@ -32,6 +32,7 @@ class CicFEAlignment : public Tool
     ~CicFEAlignment();
 
     void                              Initialise();
+    void                              SetStaticPhaseAlignment();
     bool                              PhaseAlignment(uint16_t pWait_ms = 100, uint32_t pNTriggers = 10);
     bool                              ManualPhaseAlignment(uint16_t pPhase = 10);
     bool                              WordAlignment(uint16_t pWait_ms = 100);

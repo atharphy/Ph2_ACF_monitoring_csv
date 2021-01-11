@@ -262,6 +262,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
   private:
     uint8_t  fFastCommandDuration = 0;
+    uint32_t fReadoutAttempts     = 0; 
     uint16_t fWait_us             = 10000; // 10 ms
     uint8_t  fResetMinPeriod_ms   = 100;   // was 100
     // get data from FC7

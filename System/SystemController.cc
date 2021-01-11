@@ -227,10 +227,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS or cBoard->getEventType() == EventType::MPAAS) ? 1 : 0;
-
         if(cBoard->getBoardType() != BoardType::RD53)
         {
+            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS or cBoard->getEventType() == EventType::MPAAS) ? 1 : 0;
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
@@ -321,7 +320,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         }
                         // if SSA + ASYNC
                         // make sure ROCs are configured for that
-                        if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
+                        if( cReadoutChip->getFrontEndType() != FrontEndType::SSA)  continue;
+                        
+                        if( cAsync ) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", 1); }
+                        else { static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "Sync", 1); }
                     }
                 }
             }

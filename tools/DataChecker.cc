@@ -637,30 +637,42 @@ void DataChecker::ReadNeventsTest()
 {
     auto cSetting = fSettingsMap.find ( "Nevents" );
     uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+    LOG (INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
     std::stringstream outp;
     for(auto cBoard: *fDetectorContainer)
     {
-        // for(auto cOpticalGroup: *cBoard)
-        // {
-        //     for(auto cHybrid: *cOpticalGroup)
-        //     {
-        //         // matching
-        //         uint16_t cTh1 = (cHybrid->getId() % 2 == 0) ? 900 : 1;
-        //         uint16_t cTh2 = (cHybrid->getId() % 2 == 0) ? 1 : 900;
-        //         for(auto cChip: *cHybrid)
-        //         {
-        //             uint16_t cTh = (cChip->getId() % 2 == 0) ? cTh1 : cTh2;
-        //             LOG(INFO) << BOLDBLUE << "Threshold on RoC#" << +cChip->getId() << " set to " << +cTh << RESET;
-        //             fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", cTh);
-        //         }
-        //     }
-        // }
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // matching
+                uint16_t cTh1 = (cHybrid->getId() % 2 == 0) ? 900 : 1;
+                uint16_t cTh2 = (cHybrid->getId() % 2 == 0) ? 1 : 900;
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        uint16_t cTh = (cChip->getId() % 2 == 0) ? cTh1 : cTh2;
+                        LOG(INFO) << BOLDBLUE << "Threshold on RoC#" << +cChip->getId() << " set to " << +cTh << RESET;
+                        fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", cTh);
+                    }
+                    else if( cChip->getFrontEndType() == FrontEndType::MPA )
+                    {
+                        auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip,"ReadoutMode");
+                        LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
+                            << " : readout mode [" << +cReadoutMode << " ]" << RESET; 
+                    }
+                }
+            }
+        }
 
         LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
             << +cNevents
             << " from BeBoard#"
             << +cBoard->getIndex()
             << RESET;
+
+        
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
         this->ReadNEvents(cBeBoard, cNevents);
         // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);

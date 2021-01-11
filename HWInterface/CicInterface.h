@@ -72,6 +72,7 @@ class CicInterface : public ChipInterface
     std::vector<std::vector<uint8_t>> GetOptimalTaps(Ph2_HwDescription::Chip* pChip);
     bool                              SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
     bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
+    bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip); 
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pFeId = 0, uint8_t pLineId = 0, uint8_t pPhase = 0);
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, std::vector<std::vector<uint8_t>> pPhaseTaps);
     bool                              SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);

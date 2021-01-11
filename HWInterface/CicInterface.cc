@@ -536,6 +536,7 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
     }
     return cSuccess;
 }
+//FIX ME
 bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, uint8_t pReadoutChipId, uint8_t pLineId, uint8_t pPhase)
 {
     std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
@@ -580,6 +581,7 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, uint8_t pReadoutChipId, 
     }
     return cSuccess;
 }
+//FIX ME 
 bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, std::vector<std::vector<uint8_t>> pPhaseTaps)
 {
     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
@@ -610,6 +612,47 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, std::vector<std::vector<
     }
     return cSuccess;
 }
+//
+// bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
+// {
+//     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
+//     setBoard(pChip->getBeBoardId());
+//     if(cSuccess)
+//     {
+//         ChipRegItem cRegItem;
+//         bool        cSuccess     = true;
+//         uint16_t    cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x40 : 0x80;
+//         for( int cPhyPortChannel=0; cPhyPortChannel < 4 ; cPhyPortChannel++)
+//         {
+//             uint16_t    cBaseReg     = cBaseAddress + pPhyPortChannel * 6;
+//             cRegItem.fPage                      = 0x00;
+//             cRegItem.fAddress                   = cBaseReg + cRegOffset; 
+//             std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+//             if(cReadBack.first)
+//             {
+//                 cSuccess = cSuccess && cReadBack.first;
+//                 for( int cPhyPort=0; cPhyPort< 12 ; cPhyPort++)
+//                 {
+//                     // 4 bits per phyPorts --> 12 phy ports --> 48 bits --> 6 registers 
+//                     uint8_t     cRegOffset       = (cPhyPort*4/8);  
+//                     uint8_t     cBitOffset       = (cPhyPort%2); 
+//                     uint8_t cPhaseTap = (cReadBack.second & (0xF << (cBitOffset * 4))) >> (cBitOffset * 4);
+//                     LOG (DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +cPhyPort 
+//                         << " PhyPortChannel " << +cPhyPortChannel
+//                         << " Register 0x" << std::hex << +(cBaseReg + cRegOffset )  << std::dec 
+//                         << " BitOffset " << +cBitOffset 
+//                         << RESET;
+//                 }
+//             }
+//         }
+//     }
+//     else
+//     {
+//         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
+//         exit(0);
+//     }
+//     return cSuccess;
+// } 
 bool CicInterface::SetStaticWordAlignment(Chip* pChip, uint8_t pValue)
 {
     LOG(INFO) << BOLDBLUE << "Setting word alignment value of CIC on FE" << +pChip->getHybridId() << " to " << +pValue << RESET;
