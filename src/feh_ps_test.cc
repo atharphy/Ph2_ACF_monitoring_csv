@@ -165,6 +165,7 @@ int main(int argc, char* argv[])
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cHybridTester);
         cDataChecker.ReadNeventsTest();
+        
         // Check if data player is running
         // if(cDPInterfacer.IsRunning(cInterface))
         // {

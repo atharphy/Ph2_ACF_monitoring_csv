@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="SSAAS">
-    <!-- B598 skeleton, direct powering -->
+    <!-- PS half module -->
     <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+
+    <!-- B598 skeleton, direct powering -->
+    <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- B14 skeleton, POH -->
     <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
      <CDCE configure="0" clockRate="320"/>
@@ -15,14 +18,16 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-               <CIC2 enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+               <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" />
             <SSA Id="1" configfile="SSA.txt" />
-
             
+            <MPA_Files path="./settings/MPAFiles/" />
+            <MPA Id="1" partid="0" configfile="MPA.txt" />
+
+
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
