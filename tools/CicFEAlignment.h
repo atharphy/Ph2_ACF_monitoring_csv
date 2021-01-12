@@ -40,7 +40,6 @@ class CicFEAlignment : public Tool
     bool                              SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
     bool                              BackEndAlignment();
     bool                              PhaseAlignmentMPA(uint16_t pWait_ms = 100);
-    bool                              WordAlignmentMPA(uint16_t pWait_ms = 100);
     std::vector<std::vector<uint8_t>> SortOptimalTaps(std::vector<std::vector<uint8_t>> pOptimalTaps);
     std::vector<std::vector<uint8_t>> SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValue);
     void                              Running() override;
@@ -74,6 +73,12 @@ class CicFEAlignment : public Tool
     // mapping of FEs for CIC
     std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC [2S]
     void                 SetStubWindowOffsets(uint8_t pBendCode, int pBend);
+
+    // expected number of bx first stub 
+    // appears after resync 
+    // different for CBC and MPA 
+    uint8_t fStubBxDelay2S = 8 ; 
+    uint8_t fStubBxDelayPS = 22 ; 
 };
 
 #endif

@@ -169,9 +169,7 @@ void CicFEAlignment::Running()
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET;
     
-    bool cWordAligned = true;
-    if (fWithMPA) cWordAligned= true;//this->WordAlignmentMPA(); 
-    else cWordAligned = this->WordAlignment();
+    bool cWordAligned = this->WordAlignment();
     if(!cWordAligned)
     {
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET;
@@ -181,8 +179,7 @@ void CicFEAlignment::Running()
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
     // automatic alignment
     // TO-DO ADD alignment for PS 
-    bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(8) : true; 
-    // bool cBxAligned = this->Bx0Alignment(0,4,1,100);
+    bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelay2S) : this->SetBx0Delay(fStubBxDelayPS); 
     if(!cBxAligned)
     {
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
@@ -473,56 +470,6 @@ void CicFEAlignment::InjectAlignmentPattern(uint8_t pChipId, uint8_t pPhyPort)
         }
     }
 }
-bool CicFEAlignment::WordAlignmentMPA(uint16_t pWait_ms)
-{
-    LOG(INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
-
-    // phase alignment step - first 85 [] , 170 []
-    bool                 cAligned          = true;
-    uint8_t              cAlignmentPattern = 0x7A;
-    std::vector<uint8_t> cAlignmentPatterns{cAlignmentPattern, cAlignmentPattern, cAlignmentPattern, cAlignmentPattern, cAlignmentPattern};
-    for(auto cBoard: *fDetectorContainer)
-    {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                if(cCic == NULL) continue;
-
-                // now send a fast reset
-                fBeBoardInterface->ChipReSync(theBoard);
-
-                // run automated word alignment
-                cAligned                                               = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_ms);
-                std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->ReadWordAlignmentValues(cCic);
-                if(cAligned)
-                {
-                    LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
-                    std::vector<std::vector<uint8_t>> cValues = SortWordAlignmentValues(cWordAlignmentValues);
-                    for(auto cChip: *cHybrid)
-                    {
-                        std::string cOutput;
-                        for(uint8_t cLine = 0; cLine < 5; cLine += 1)
-                        {
-                            char cBuffer[80];
-                            sprintf(cBuffer, "%.2d ", cValues[cChip->getId()][cLine]);
-                            cOutput += cBuffer;
-                        }
-                        LOG(INFO) << BOLDBLUE << "Word alignment values for FE" << +cChip->getId() << " : " << cOutput << RESET;
-                    }
-                }
-                else
-                    LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
-            }
-        }
-        // now send a fast reset
-        fBeBoardInterface->ChipReSync(theBoard);
-    }
-    return cAligned;
-}
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
 {
     bool cAligned = true;
@@ -690,28 +637,47 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
 void CicFEAlignment::WordAlignmentPattern(ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns)
 {
     // enable stub logic
-    static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(pChip, "Sampled", true, true);
-    // switch on HitOr
-    fReadoutChipInterface->WriteChipReg(pChip, "HitOr", 0);
-    // set PtCut to maxmim
-    fReadoutChipInterface->WriteChipReg(pChip, "PtCut", 14);
-
-    std::vector<uint8_t> cStubs{pAlignmentPatterns[0], pAlignmentPatterns[1], pAlignmentPatterns[2]};
-    std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(pChip);
-    std::vector<uint8_t> cBendCodes{static_cast<uint8_t>(pAlignmentPatterns[3] & 0x0F), static_cast<uint8_t>((pAlignmentPatterns[3] & 0xF0) >> 4), static_cast<uint8_t>(pAlignmentPatterns[4] & 0x0F)};
-    std::vector<int>     cBends(3, 0);
-    for(size_t cIndex = 0; cIndex < cBendCodes.size(); cIndex += 1)
+    if( pChip->getFrontEndType() == FrontEndType::CBC3)
     {
-        auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex]);
-        if(cIterator != cBendLUT.end())
+        LOG(INFO) << GREEN << "Configuring CBC3 Alignment pattern" << RESET;
+        
+        static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(pChip, "Sampled", true, true);
+        // switch on HitOr
+        fReadoutChipInterface->WriteChipReg(pChip, "HitOr", 0);
+        // set PtCut to maxmim
+        fReadoutChipInterface->WriteChipReg(pChip, "PtCut", 14);
+
+        std::vector<uint8_t> cStubs{pAlignmentPatterns[0], pAlignmentPatterns[1], pAlignmentPatterns[2]};
+        std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(pChip);
+        std::vector<uint8_t> cBendCodes{static_cast<uint8_t>(pAlignmentPatterns[3] & 0x0F), static_cast<uint8_t>((pAlignmentPatterns[3] & 0xF0) >> 4), static_cast<uint8_t>(pAlignmentPatterns[4] & 0x0F)};
+        std::vector<int>     cBends(3, 0);
+        for(size_t cIndex = 0; cIndex < cBendCodes.size(); cIndex += 1)
         {
-            int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
-            double cBend_strips = -7. + 0.5 * cPosition;
-            cBends[cIndex]      = cBend_strips * 2;
-            LOG(DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCodes[cIndex]) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
+            auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex]);
+            if(cIterator != cBendLUT.end())
+            {
+                int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
+                double cBend_strips = -7. + 0.5 * cPosition;
+                cBends[cIndex]      = cBend_strips * 2;
+                LOG(DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCodes[cIndex]) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
+            }
+        }
+        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(pChip, cStubs, cBends);
+    }
+    else
+    {
+        // enable MPA alignment pattern
+        LOG(INFO) << GREEN << "Configuring MPA Alignment pattern :" 
+            << " MPA will output 0x" << std::hex << +pAlignmentPatterns[0] << std::dec 
+            << RESET;
+        std::vector<uint8_t>     cOriginalValues;
+        std::vector<uint8_t>     cRegValues{0x2, pAlignmentPatterns[0]};
+        std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
+        for( size_t cIndx=0; cIndx < cRegNames.size() ; cIndx++)
+        {
+            fReadoutChipInterface->WriteChipReg(pChip, cRegNames[cIndx], cRegValues[cIndx]);
         }
     }
-    static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(pChip, cStubs, cBends);
 }
 bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 {
@@ -719,37 +685,32 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 
     // phase alignment step - first 85 [] , 170 []
     bool                 cAligned = true;
-    std::vector<uint8_t> cAlignmentPatterns{0x7A, 0xBC, 0xD4, 0x31, 0x81};
+    std::vector<uint8_t> cAlignmentPatterns_CBC{0x7A, 0xBC, 0xD4, 0x31, 0x81};
+    std::vector<uint8_t> cAlignmentPatterns_MPA{0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
+
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        // original threshold + logic values
-        // auto& cThresholdsThisBoard    = fThresholds.at(cBoard->getIndex());
-        // auto& cLogicThisBoard         = fLogic.at(cBoard->getIndex());
-        // auto& cHIPsThisBoard          = fHIPs.at(cBoard->getIndex());
-        // auto& cPtCutThisBoard         = fPtCuts.at(cBoard->getIndex());
         auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
 
         for(auto cOpticalGroup: *cBoard)
         {
-            // auto& cThresholdsThisOpticalGroup    = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
-            // auto& cLogicThisOpticalGroup         = cLogicThisBoard->at(cOpticalGroup->getIndex());
-            // auto& cHIPsThisOpticalGroup          = cHIPsThisBoard->at(cOpticalGroup->getIndex());
-            // auto& cPtCutThisOpticalGroup         = cPtCutThisBoard->at(cOpticalGroup->getIndex());
             auto& cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(cOpticalGroup->getIndex());
 
             for(auto cHybrid: *cOpticalGroup)
             {
-                // auto& cThresholdsThisHybrid    = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
-                // auto& cLogicThisHybrid         = cLogicThisOpticalGroup->at(cHybrid->getIndex());
-                // auto& cHIPsThisHybrid          = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
-                // auto& cPtCutThisHybrid         = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
                 // now inject stubs that can generate word alignment pattern
-                for(auto cChip: *cHybrid) { this->WordAlignmentPattern(static_cast<ReadoutChip*>(cChip), cAlignmentPatterns); }
+                std::vector<uint8_t> cAlignmentPatterns;
+                for(auto cChip: *cHybrid) { 
+                    if(  cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                    cAlignmentPatterns = (  cChip->getFrontEndType() == FrontEndType::MPA ) ? cAlignmentPatterns_MPA : cAlignmentPatterns_CBC;
+    
+                    this->WordAlignmentPattern(static_cast<ReadoutChip*>(cChip), cAlignmentPatterns); 
+                }
                 // now send a fast reset
                 fBeBoardInterface->ChipReSync(theBoard);
 
@@ -762,6 +723,7 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                     std::vector<std::vector<uint8_t>> cValues = SortWordAlignmentValues(cWordAlignmentValues);
                     for(auto cChip: *cHybrid)
                     {
+                        if(  cChip->getFrontEndType() == FrontEndType::SSA ) continue;
                         std::string cOutput;
                         for(uint8_t cLine = 0; cLine < 5; cLine += 1)
                         {
@@ -775,17 +737,6 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 }
                 else
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
-                // re-configure thresholds + hit/stub detect logic to original values
-                // LOG(INFO) << BOLDBLUE << "Setting thresholds and logic detect modes back to their original values [Hybrid " << +cHybrid->getId() << " ]." << RESET;
-                // for(auto cChip: *cHybrid)
-                // {
-                //     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "Pipe&StubInpSel&Ptwidth", cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "HIP&TestMode", cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "PtCut", cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels(theReadoutChip, false);
-                // }
             }
         }
         // now send a fast reset

@@ -161,10 +161,10 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         cBackEndAligner.Reset();
 
-        // check data 
-        DataChecker cDataChecker;
-        cDataChecker.Inherit(&cHybridTester);
-        cDataChecker.ReadNeventsTest();
+        // // check data 
+        // DataChecker cDataChecker;
+        // cDataChecker.Inherit(&cHybridTester);
+        // cDataChecker.ReadNeventsTest();
         
         // Check if data player is running
         // if(cDPInterfacer.IsRunning(cInterface))

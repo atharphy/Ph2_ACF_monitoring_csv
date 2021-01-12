@@ -37,6 +37,7 @@ class BackEndAlignment : public Tool
     void SetL1Debug(bool pDebug) { fL1Debug = pDebug; };
     void SetStubDebug(bool pDebug) { fStubDebug = pDebug; };
 
+    bool Bx0Alignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool PSAlignment(Ph2_HwDescription::BeBoard* pBoard);

@@ -650,9 +650,13 @@ void DataChecker::DigitalInjectionTest()
                 {
                     if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
                 
+                    // activate pp mode
+                    fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);//on for 8 Bx after cal pulse 
+                    // readout mode is tracker 
+                    fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode",0x00);//readout mode 
                     // set digi pattern 
-                    fReadoutChipInterface->WriteChipReg(cChip,"DigPattern_ALL", 0xFF);//on for 8 Bx after cal pulse 
-                    uint8_t cPixelMask=0; 
+                    //fReadoutChipInterface->WriteChipReg(cChip,"DigPattern_ALL", 0xFF);//on for 8 Bx after cal pulse 
+                    uint8_t cPixelMask=1; 
                     uint8_t cPolarity=1;
                     uint8_t cEnEdgeBR=1;
                     uint8_t cEnLvlBr=0;
@@ -664,9 +668,9 @@ void DataChecker::DigitalInjectionTest()
                     cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
                     cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
                     fReadoutChipInterface->WriteChipReg(cChip,"ENFLAGS_ALL", cRegValue); // all pixels disabled
-                    cPixelMask=1;
-                    cRegValue = cRegValue | (cPixelMask);
-                    fReadoutChipInterface->WriteChipReg(cChip,"ENFLAGS_P1", cRegValue); // enable one pixel
+                    // cPixelMask=1;
+                    // cRegValue = cRegValue | (cPixelMask);
+                    // fReadoutChipInterface->WriteChipReg(cChip,"ENFLAGS_P1", cRegValue); // enable one pixel
 
                     // // enable MPA alignment pattern
                     // LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
@@ -698,12 +702,18 @@ void DataChecker::DigitalInjectionTest()
             << RESET;
 
         // check trigger source 
+        // and reload 
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
         LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+        cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
 
         // why -2?!
         uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        for(uint16_t cLatency = cDelay -10 ; cLatency < cDelay+10 ; cLatency++)
+        for(uint16_t cLatency = cDelay -cDelay ; cLatency < cDelay+20 ; cLatency++)
         {
             uint8_t cLatencyReg1 = (0x00FF & cLatency); 
             uint8_t cLatencyReg2 = (0x0100 & cLatency) >> 8; 
