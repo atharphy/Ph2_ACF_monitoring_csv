@@ -784,7 +784,8 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic)
                         cLine++;
                     } while(cLine < 4);
                     std::this_thread::sleep_for(std::chrono::microseconds(10));
-                }// 
+                }// attempt to readout stub debug lines  
+                fBeBoardInterface->Stop(cBeBoard); 
                 // //try and scope N times 
                 // {
                 //     uint8_t cDuration = 0;
@@ -855,7 +856,6 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic)
                 //         std::this_thread::sleep_for(std::chrono::microseconds(10));
                 //     }
                 // }
-                fBeBoardInterface->Stop(cBeBoard); 
             }
             else
                 this->ReadNEvents(cBeBoard, cNevents);
