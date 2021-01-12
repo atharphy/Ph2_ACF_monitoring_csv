@@ -657,7 +657,7 @@ void DataChecker::CollectEvents()
         }
     }
 }
-void DataChecker::DigitalInjectionTest()
+void DataChecker::DigitalInjectionTest(bool pBypassCic)
 {
     auto cSetting = fSettingsMap.find ( "Nevents" );
     uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
@@ -677,21 +677,8 @@ void DataChecker::DigitalInjectionTest()
                     // activate pp mode
                     fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);//on for 8 Bx after cal pulse 
                     // readout mode is tracker 
-                    fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode",0x00);//readout mode 
-                    // set digi pattern 
-                    //fReadoutChipInterface->WriteChipReg(cChip,"DigPattern_ALL", 0xFF);//on for 8 Bx after cal pulse 
-                    uint8_t cPixelMask=1; 
-                    uint8_t cPolarity=1;
-                    uint8_t cEnEdgeBR=1;
-                    uint8_t cEnLvlBr=0;
-                    uint8_t cEnCount=0;
-                    uint8_t cDigCal=1; 
-                    uint8_t cAnaCal=0; 
-                    uint8_t cBrClk=0;
-                    uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask; 
-                    cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
-                    cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
-                    fReadoutChipInterface->WriteChipReg(cChip,"ENFLAGS_ALL", cRegValue); // all pixels disabled
+                    fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode",0x00);//readout mode
+                    static_cast<MPAInterface*>(fReadoutChipInterface)->WriteChipReg(cChip,"DigitalSync",0x01);
                     // cPixelMask=1;
                     // cRegValue = cRegValue | (cPixelMask);
                     // fReadoutChipInterface->WriteChipReg(cChip,"ENFLAGS_P1", cRegValue); // enable one pixel
@@ -746,10 +733,12 @@ void DataChecker::DigitalInjectionTest()
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     // let's try and look at CIC mux 
-                    //auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    //fCicInterface->SelectMux(cCic,11); 
-                    //fCicInterface->SelectOutput(cCic, false);//force it to be off
-            
+                    if( pBypassCic )
+                    {
+                        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                        fCicInterface->SelectMux(cCic,11); 
+                        fCicInterface->SelectOutput(cCic, false);//force it to be off
+                    }
                     for(auto cChip: *cHybrid)
                     {
                         if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
@@ -763,79 +752,113 @@ void DataChecker::DigitalInjectionTest()
             LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency 
                 << RESET;
 
-            //fBeBoardInterface->Start(cBeBoard); 
-            // try and scope N times 
-            // {
-            //     uint8_t cDuration = 0;
-            //     uint8_t cReSync   = 0;
-            //     uint8_t cCalPulse = 1;
-            //     uint8_t cL1A      = 0;
-            //     uint8_t cBC0      = 0;
-            //     uint32_t cFastCommand;
+            if( pBypassCic )
+            {
+                fBeBoardInterface->Start(cBeBoard); 
+                for( size_t cAttempt=0; cAttempt < 1000; cAttempt++)
+                {
+                    auto cWords = fBeBoardInterface->ReadBlockBoardReg(cBeBoard,"fc7_daq_stat.physical_interface_block.stub_debug", 80);
+                    std::vector<std::string> cLines(0);
+                    size_t                   cLine = 0;
+                    do
+                    {
+                        std::vector<std::string> cOutputWords(0);
+                        for(size_t cIndex = 0; cIndex < 5; cIndex++)
+                        {
+                            auto cWord   = cWords[cLine * 10 + cIndex];
+                            auto cString = std::bitset<32>(cWord).to_string();
+                            for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+                        }
 
-            //     std::vector<std::pair<std::string, uint32_t>> cVecReg;
+                        std::string cOutput_wSpace = "";
+                        std::string cOutput        = "";
+                        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+                        {
+                            cOutput_wSpace += *cIt + " ";
+                            cOutput += *cIt;
+                        }
+                        if( cLine ==3 )
+                            LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+                        cLines.push_back(cOutput);
+                        // cStrLength = cOutput.length();
+                        cLine++;
+                    } while(cLine < 4);
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+                }// 
+                // //try and scope N times 
+                // {
+                //     uint8_t cDuration = 0;
+                //     uint8_t cReSync   = 0;
+                //     uint8_t cCalPulse = 1;
+                //     uint8_t cL1A      = 0;
+                //     uint8_t cBC0      = 0;
+                //     uint32_t cFastCommand;
 
-            //     uint32_t encode_resync    = cReSync << 16;
-            //     uint32_t encode_cal_pulse = cCalPulse << 17;
-            //     uint32_t encode_l1a       = cL1A << 18;
-            //     uint32_t encode_bc0       = cBC0 << 19;
-            //     uint32_t encode_duration  = cDuration << 28;
+                //     std::vector<std::pair<std::string, uint32_t>> cVecReg;
 
-            //     //calPulse
-            //     cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
-            //     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
-            //     //empty for N clock cycles 
-            //     for( int cIndx=0; cIndx<20; cIndx++)
-            //     {
-            //         cL1A = 0;
-            //         cCalPulse=0;
-            //         encode_cal_pulse = cCalPulse << 17;
-            //         encode_l1a       = cL1A << 18;
-            //         cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
-            //         cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
-            //     }
-            //     //trigger 
-            //     cL1A = 1;
-            //     cCalPulse=0;
-            //     encode_cal_pulse = cCalPulse << 17;
-            //     encode_l1a       = cL1A << 18;
-            //     cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
-            //     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
-            //     // write 
-            //     fBeBoardInterface->WriteBoardMultReg(cBeBoard, cVecReg); 
-            //     for( size_t cAttempt=0; cAttempt < 1000; cAttempt++)
-            //     {
-            //         auto cWords = fBeBoardInterface->ReadBlockBoardReg(cBeBoard,"fc7_daq_stat.physical_interface_block.stub_debug", 80);
-            //         std::vector<std::string> cLines(0);
-            //         size_t                   cLine = 0;
-            //         do
-            //         {
-            //             std::vector<std::string> cOutputWords(0);
-            //             for(size_t cIndex = 0; cIndex < 5; cIndex++)
-            //             {
-            //                 auto cWord   = cWords[cLine * 10 + cIndex];
-            //                 auto cString = std::bitset<32>(cWord).to_string();
-            //                 for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
-            //             }
+                //     uint32_t encode_resync    = cReSync << 16;
+                //     uint32_t encode_cal_pulse = cCalPulse << 17;
+                //     uint32_t encode_l1a       = cL1A << 18;
+                //     uint32_t encode_bc0       = cBC0 << 19;
+                //     uint32_t encode_duration  = cDuration << 28;
 
-            //             std::string cOutput_wSpace = "";
-            //             std::string cOutput        = "";
-            //             for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-            //             {
-            //                 cOutput_wSpace += *cIt + " ";
-            //                 cOutput += *cIt;
-            //             }
-            //             if( cLine ==3 )
-            //                 LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-            //             cLines.push_back(cOutput);
-            //             // cStrLength = cOutput.length();
-            //             cLine++;
-            //         } while(cLine < 4);
-            //         std::this_thread::sleep_for(std::chrono::microseconds(10));
-            //     }
-            // }
-            //fBeBoardInterface->Stop(cBeBoard); 
-            this->ReadNEvents(cBeBoard, cNevents);
+                //     //calPulse
+                //     cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
+                //     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
+                //     //empty for N clock cycles 
+                //     for( int cIndx=0; cIndx<20; cIndx++)
+                //     {
+                //         cL1A = 0;
+                //         cCalPulse=0;
+                //         encode_cal_pulse = cCalPulse << 17;
+                //         encode_l1a       = cL1A << 18;
+                //         cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
+                //         cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
+                //     }
+                //     //trigger 
+                //     cL1A = 1;
+                //     cCalPulse=0;
+                //     encode_cal_pulse = cCalPulse << 17;
+                //     encode_l1a       = cL1A << 18;
+                //     cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
+                //     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
+                //     // write 
+                //     fBeBoardInterface->WriteBoardMultReg(cBeBoard, cVecReg); 
+                //     for( size_t cAttempt=0; cAttempt < 1000; cAttempt++)
+                //     {
+                //         auto cWords = fBeBoardInterface->ReadBlockBoardReg(cBeBoard,"fc7_daq_stat.physical_interface_block.stub_debug", 80);
+                //         std::vector<std::string> cLines(0);
+                //         size_t                   cLine = 0;
+                //         do
+                //         {
+                //             std::vector<std::string> cOutputWords(0);
+                //             for(size_t cIndex = 0; cIndex < 5; cIndex++)
+                //             {
+                //                 auto cWord   = cWords[cLine * 10 + cIndex];
+                //                 auto cString = std::bitset<32>(cWord).to_string();
+                //                 for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+                //             }
+
+                //             std::string cOutput_wSpace = "";
+                //             std::string cOutput        = "";
+                //             for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+                //             {
+                //                 cOutput_wSpace += *cIt + " ";
+                //                 cOutput += *cIt;
+                //             }
+                //             if( cLine ==3 )
+                //                 LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+                //             cLines.push_back(cOutput);
+                //             // cStrLength = cOutput.length();
+                //             cLine++;
+                //         } while(cLine < 4);
+                //         std::this_thread::sleep_for(std::chrono::microseconds(10));
+                //     }
+                // }
+                fBeBoardInterface->Stop(cBeBoard); 
+            }
+            else
+                this->ReadNEvents(cBeBoard, cNevents);
         }//latency scan 
     }// board 
 }
