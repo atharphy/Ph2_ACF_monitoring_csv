@@ -457,15 +457,21 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 void DataChecker::AsyncTest()
 {
     uint8_t           cSweepThreshold = this->findValueInSettings("AsyncSweepTh");
-    uint8_t           cThreshold      = this->findValueInSettings("cThreshold");
+    uint8_t           cThreshold      = this->findValueInSettings("AsyncThreshold");
     uint8_t           cThresholdStart = (cSweepThreshold == 0) ? cThreshold : 0;
     uint8_t           cThresholdStop  = (cSweepThreshold == 0) ? cThreshold + 5 : 200;
     std::stringstream outp;
     for(auto cBoard: *fDetectorContainer)
     {
+        auto cEventType = cBoard->getEventType();
+        // event type to check 
+        // EventType::MPAAS --> MPAs ASYNC 
+        // will only decode those events 
+        cBoard->setEventType(EventType::MPAAS);
         for(uint8_t cThreshold = cThresholdStart; cThreshold < cThresholdStop; cThreshold += 5)
         {
             // set thresholds
+            // and configure injection 
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -500,6 +506,7 @@ void DataChecker::AsyncTest()
             }
             LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadNEvents" << RESET;
         }
+        cBoard->setEventType(cEventType);
         // const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
     }
     LOG(INFO) << BOLDBLUE << "Done!" << RESET;
@@ -824,6 +831,8 @@ void DataChecker::ReadNeventsTest()
     std::stringstream outp;
     for(auto cBoard: *fDetectorContainer)
     {
+        auto cEventType = cBoard->getEventType();
+        cBoard->setEventType(EventType::VR);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -874,6 +883,7 @@ void DataChecker::ReadNeventsTest()
         //     }
         //     cN++;
         // }
+        cBoard->setEventType(cEventType);
     }
     LOG(INFO) << BOLDBLUE << "Done!" << RESET;
 }

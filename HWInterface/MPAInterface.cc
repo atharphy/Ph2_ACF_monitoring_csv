@@ -88,15 +88,66 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     setBoard(pMPA->getBeBoardId());
     //need to or success
     if (pRegName=="ThDAC_ALL")
-        {
+    {
         this->Set_threshold(pMPA, pValue);
         return true;
-        }
-
+    }
+    else if(pRegName == "DigitalSync" ) 
+    {
+        uint8_t cPixelMask=1; 
+        uint8_t cPolarity=1;
+        uint8_t cEnEdgeBR=1;
+        uint8_t cEnLvlBr=0;
+        uint8_t cEnCount=0;
+        uint8_t cDigCal=pValue; 
+        uint8_t cAnaCal=0; 
+        uint8_t cBrClk=0;
+        uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask; 
+        cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
+        cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
+        if( pValue == 1 )
+            LOG (INFO) << BOLDBLUE << "Enabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
+                << std::hex << +cRegValue << std::dec << RESET;
+        else
+            LOG (INFO) << BOLDBLUE << "Disabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
+                << std::hex << +cRegValue << std::dec << RESET;
+            
+        bool    cEnableDigital = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
+        bool cReadoutMode       = WriteChipSingleReg(pMPA, "ReadoutMode", 0 , pVerifLoop);
+        LOG (INFO) << BOLDBLUE << "Enabling readout of L1 data on MPA by setting register ReadoutMode to 0x" 
+                << std::hex << +(0) << std::dec << RESET;
+        return cEnableDigital && cReadoutMode;
+    }
     else if(pRegName == "AnalogueAsync")
     {
-      //toimplement
-      return true;
+        uint8_t cPixelMask=1; 
+        uint8_t cPolarity=1;
+        uint8_t cEnEdgeBR=1;
+        uint8_t cEnLvlBr=0;
+        uint8_t cEnCount=1;
+        uint8_t cDigCal=0; 
+        uint8_t cAnaCal=pValue; 
+        uint8_t cBrClk=0;
+        uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask; 
+        cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
+        cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
+        if( pValue == 1 )
+            LOG (INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" 
+                << std::hex << +cRegValue << std::dec << RESET;
+        else
+            LOG (INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" 
+                << std::hex << +cRegValue << std::dec << RESET;
+            
+        bool    cEnableAnalogue = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
+        bool    cEnableFECal    = true;//WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
+        bool cReadoutMode       = WriteChipSingleReg(pMPA, "ReadoutMode", pValue , pVerifLoop);
+        if( pValue == 1 )
+            LOG (INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" 
+                << std::hex << +pValue << std::dec << RESET;
+        else
+            LOG (INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" 
+                << std::hex << +pValue << std::dec << RESET;
+        return cEnableAnalogue && cEnableFECal && cReadoutMode;
     }
 
     else if(pRegName == "Threshold" or pRegName == "Bias_THDAC" )

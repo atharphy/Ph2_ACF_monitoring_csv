@@ -122,6 +122,8 @@ class D19cFWInterface : public BeBoardFWInterface
     bool                       fConfigureCDCE = false;
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;
+    // 2S or PS readout 
+    bool fIs2S = true;
 
     uint32_t fGBTphase;
 

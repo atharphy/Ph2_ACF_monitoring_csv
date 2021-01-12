@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkAsync", "Check async readout", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkSync", "Check sync readout", ArgvParser::NoOptionAttribute);
 
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
@@ -161,10 +162,6 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         cBackEndAligner.Reset();
 
-        // check data 
-        DataChecker cDataChecker;
-        cDataChecker.Inherit(&cHybridTester);
-        cDataChecker.ReadNeventsTest();
         
         // Check if data player is running
         // if(cDPInterfacer.IsRunning(cInterface))
@@ -208,14 +205,15 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         // cCicAligner.dumpConfigFiles();
     }
-    if(cmd.foundOption("checkAsync"))
+    if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync") )
     {
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cHybridTester);
-        cDataChecker.AsyncTest();
+        if( cmd.foundOption("checkAsync") ) cDataChecker.AsyncTest();
+        else cDataChecker.ReadNeventsTest();
         // cDataChecker.resetPointers();
     }
-
+    
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))
     {

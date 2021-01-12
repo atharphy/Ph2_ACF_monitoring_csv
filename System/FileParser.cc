@@ -148,13 +148,14 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setEventType(EventType::ZS);
         else if(cEventTypeString == "SSAAS")
             cBeBoard->setEventType(EventType::SSAAS);
-		
-        else if(cEventTypeString == "MPAAS")
+		else if(cEventTypeString == "MPAAS")
             cBeBoard->setEventType(EventType::MPAAS);
         else if(cEventTypeString == "MPA")
             cBeBoard->setEventType(EventType::MPA);
         else if(cEventTypeString == "SSA")
             cBeBoard->setEventType(EventType::SSA);
+        else if(cEventTypeString == "PSAS")
+            cBeBoard->setEventType(EventType::PSAS);
         else
             cBeBoard->setEventType(EventType::VR);
     }

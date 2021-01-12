@@ -757,7 +757,17 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(fIsDDR3Readout == 1) LOG(INFO) << BOLDBLUE << "DD3 Readout .... " << RESET;
     fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
     fOptical    = pBoard->ifOptical();
-
+    fIs2S = false;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                fIs2S = fIs2S || (cChip->getFrontEndType()==FrontEndType::CBC3) ;
+            }
+        }
+    }
     if(fI2CVersion >= 1)
     {
         fI2CSlaveMap.clear();
@@ -1774,7 +1784,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
 {
     // get event type
     EventType cEventType = pBoard->getEventType();
-    if(cEventType == EventType::MPAAS or cEventType == EventType::SSAAS)
+    if(cEventType == EventType::MPAAS or cEventType == EventType::SSAAS or cEventType == EventType :: PSAS)
     {
         pData.clear();
 
@@ -1865,235 +1875,281 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                     else if(clpGBT == nullptr)
                     {
                         if (cChip->getFrontEndType() == FrontEndType::MPA)
-                            {
+                        {
 
-		                LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from MPA" << +cChip->getId() << RESET;
-		                bool                  cWrite = false;
-		                std::vector<uint32_t> cVec;
-		                cVec.clear();
-		                std::vector<uint32_t> cReplies;
-		                cReplies.clear();
-		                // I think it would also work to loop over rows
-		                // then columns
-		                // 16 columns , 120 rows?
-		                for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
-		                {
-		                    // address
-		                    uint32_t cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
-		                    uint32_t cBaseRegisterMSB = cBaseRegisterLSB + 128;
-		                    // MSB
-		                    ChipRegItem cReg_Counters_MSB;
-		                    cReg_Counters_MSB.fPage    = 0x00;
-		                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl%120;
-		                    cReg_Counters_MSB.fValue   = 0x00;
-		                    this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
-		                    // LSB
-		                    ChipRegItem cReg_Counters_LSB;
-		                    cReg_Counters_LSB.fPage    = 0x00;
-		                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl%120;
-		                    cReg_Counters_LSB.fValue   = 0x00;
-		                    this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
-		                }
-		                // read back
-		                this->ReadChipBlockReg(cVec);
-		                // set in data vector
-		                uint32_t cDataWord    = 0x0000;
-		                uint32_t cWordCounter = 0;
-		                uint16_t cIndx        = 0;
-		                for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
-		                {
-		                    uint8_t cMPAId;
-		                    bool    cFailed = false;
-		                    bool    cRead;
-		                    // address
-		                    uint32_t    cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
-		                    uint32_t    cBaseRegisterMSB = cBaseRegisterLSB + 128;
-		                    ChipRegItem cReg_Counters_MSB;
-		                    cReg_Counters_MSB.fPage    = 0x00;
-		                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl%120;
-		                    cReg_Counters_MSB.fValue   = 0x00;
-		                    ChipRegItem cReg_Counters_LSB;
-		                    cReg_Counters_LSB.fPage    = 0x00;
-		                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl%120;
-		                    cReg_Counters_LSB.fValue   = 0x00;
-		                    this->DecodeReg(cReg_Counters_MSB, cMPAId, cVec[cIndx], cRead, cFailed);
-		                    this->DecodeReg(cReg_Counters_LSB, cMPAId, cVec[cIndx + 1], cRead, cFailed);
-		                    cIndx += 2;
-		                    uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
-		                    if(cChnl < 10)
-		                    {
-		                        LOG(INFO) << BOLDMAGENTA << "Pix#" << +cChnl << " : " << +cCounterValue << " hits."
-		                                   << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
-		                    }
-		                    cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
-		                    if((cWordCounter & 0x1) == 1)
-		                    {
-		                        pData.push_back(cDataWord);
-		                        cDataWord = 0x0000;
-		                    }
-		                    cWordCounter++;
-		                }
-			    }
+                            LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from MPA" << +cChip->getId() << RESET;
+                            bool                  cWrite = false;
+                            std::vector<uint32_t> cVec;
+                            cVec.clear();
+                            std::vector<uint32_t> cReplies;
+                            cReplies.clear();
+                            // I think it would also work to loop over rows
+                            // then columns
+                            // 16 columns , 120 rows?
+                            for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                            {
+                            // address
+                            uint32_t cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
+                            uint32_t cBaseRegisterMSB = cBaseRegisterLSB + 128;
+                            // MSB
+                            ChipRegItem cReg_Counters_MSB;
+                            cReg_Counters_MSB.fPage    = 0x00;
+                            cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl%120;
+                            cReg_Counters_MSB.fValue   = 0x00;
+                            this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                            // LSB
+                            ChipRegItem cReg_Counters_LSB;
+                            cReg_Counters_LSB.fPage    = 0x00;
+                            cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl%120;
+                            cReg_Counters_LSB.fValue   = 0x00;
+                            this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                            }
+                            // read back
+                            this->ReadChipBlockReg(cVec);
+                            // set in data vector
+                            uint32_t cDataWord    = 0x0000;
+                            uint32_t cWordCounter = 0;
+                            uint16_t cIndx        = 0;
+                            for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                            {
+                                uint8_t cMPAId;
+                                bool    cFailed = false;
+                                bool    cRead;
+                                // address
+                                uint32_t    cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
+                                uint32_t    cBaseRegisterMSB = cBaseRegisterLSB + 128;
+                                ChipRegItem cReg_Counters_MSB;
+                                cReg_Counters_MSB.fPage    = 0x00;
+                                cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl%120;
+                                cReg_Counters_MSB.fValue   = 0x00;
+                                ChipRegItem cReg_Counters_LSB;
+                                cReg_Counters_LSB.fPage    = 0x00;
+                                cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl%120;
+                                cReg_Counters_LSB.fValue   = 0x00;
+                                this->DecodeReg(cReg_Counters_MSB, cMPAId, cVec[cIndx], cRead, cFailed);
+                                this->DecodeReg(cReg_Counters_LSB, cMPAId, cVec[cIndx + 1], cRead, cFailed);
+                                cIndx += 2;
+                                uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
+                                if(cChnl < 10)
+                                {
+                                    LOG(INFO) << BOLDMAGENTA << "Pix#" << +cChnl << " : " << +cCounterValue << " hits."
+                                               << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
+                                }
+                                cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                                if((cWordCounter & 0x1) == 1)
+                                {
+                                    pData.push_back(cDataWord);
+                                    cDataWord = 0x0000;
+                                }
+                                cWordCounter++;
+                            }
+                        }
                         else if (cChip->getFrontEndType() == FrontEndType::SSA)
+                        {
+                            bool                  cWrite = false;
+                            std::vector<uint32_t> cVec;
+                            cVec.clear();
+                            std::vector<uint32_t> cReplies;
+                            cReplies.clear();
+                            for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                             {
-
-		                bool                  cWrite = false;
-		                std::vector<uint32_t> cVec;
-		                cVec.clear();
-		                std::vector<uint32_t> cReplies;
-		                cReplies.clear();
-		                for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
-		                {
-		                    // MSB
-		                    ChipRegItem cReg_Counters_MSB;
-		                    cReg_Counters_MSB.fPage    = 0x00;
-		                    cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-		                    cReg_Counters_MSB.fValue   = 0x00;
-		                    this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
-		                    // this->ReadChipBlockReg( cVec );
-		                    // cReplies.push_back(cVec[0]);
-		                    // cVec.clear();
-		                    // LSB
-		                    ChipRegItem cReg_Counters_LSB;
-		                    cReg_Counters_LSB.fPage    = 0x00;
-		                    cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-		                    cReg_Counters_LSB.fValue   = 0x00;
-		                    this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
-		                    // this->ReadChipBlockReg( cVec );
-		                    // cReplies.push_back(cVec[0]);
-		                    // cVec.clear();
-		                }
-		                // read back
-		                this->ReadChipBlockReg(cVec);
-		                // set in data vector
-		                uint32_t cDataWord    = 0x0000;
-		                uint32_t cWordCounter = 0;
-		                uint16_t cIndx        = 0;
-		                for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
-		                {
-		                    uint8_t     cSSAId;
-		                    bool        cFailed = false;
-		                    bool        cRead;
-		                    ChipRegItem cReg_Counters_MSB;
-		                    cReg_Counters_MSB.fPage    = 0x00;
-		                    cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-		                    cReg_Counters_MSB.fValue   = 0x00;
-		                    ChipRegItem cReg_Counters_LSB;
-		                    cReg_Counters_LSB.fPage    = 0x00;
-		                    cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-		                    cReg_Counters_LSB.fValue   = 0x00;
-		                    this->DecodeReg(cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed);
-		                    this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
-		                    cIndx += 2;
-		                    uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
-		                    if(cChnl < 10)
-		                    {
-		                        LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
-		                                   << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
-		                    }
-		                    cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
-		                    if((cWordCounter & 0x1) == 1)
-		                    {
-		                        pData.push_back(cDataWord);
-		                        cDataWord = 0x0000;
-		                    }
-		                    cWordCounter++;
-		                }
-			    }
-		    }
+                                // MSB
+                                ChipRegItem cReg_Counters_MSB;
+                                cReg_Counters_MSB.fPage    = 0x00;
+                                cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                                cReg_Counters_MSB.fValue   = 0x00;
+                                this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                                // this->ReadChipBlockReg( cVec );
+                                // cReplies.push_back(cVec[0]);
+                                // cVec.clear();
+                                // LSB
+                                ChipRegItem cReg_Counters_LSB;
+                                cReg_Counters_LSB.fPage    = 0x00;
+                                cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                                cReg_Counters_LSB.fValue   = 0x00;
+                                this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                                // this->ReadChipBlockReg( cVec );
+                                // cReplies.push_back(cVec[0]);
+                                // cVec.clear();
+                            }
+                            // read back
+                            this->ReadChipBlockReg(cVec);
+                            // set in data vector
+                            uint32_t cDataWord    = 0x0000;
+                            uint32_t cWordCounter = 0;
+                            uint16_t cIndx        = 0;
+                            for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                            {
+                                uint8_t     cSSAId;
+                                bool        cFailed = false;
+                                bool        cRead;
+                                ChipRegItem cReg_Counters_MSB;
+                                cReg_Counters_MSB.fPage    = 0x00;
+                                cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                                cReg_Counters_MSB.fValue   = 0x00;
+                                ChipRegItem cReg_Counters_LSB;
+                                cReg_Counters_LSB.fPage    = 0x00;
+                                cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                                cReg_Counters_LSB.fValue   = 0x00;
+                                this->DecodeReg(cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed);
+                                this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
+                                cIndx += 2;
+                                uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
+                                if(cChnl < 10)
+                                {
+                                    LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                                               << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
+                                }
+                                cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                                if((cWordCounter & 0x1) == 1)
+                                {
+                                    pData.push_back(cDataWord);
+                                    cDataWord = 0x0000;
+                                }
+                                cWordCounter++;
+                            }
+                        }
+                    }
                     else
                     {
-                        if (cChip->getFrontEndType() == FrontEndType::MPA)
+                        uint32_t cDataWord     = 0x0000;
+                        uint32_t cWordCounter  = 0;
+                        bool     cWithMPA      = cChip->getFrontEndType() == FrontEndType::MPA;
+                        uint8_t cBaseSlaveAddrs = cWithMPA ? 0x40  : 0x20 ; 
+                        uint8_t  cSlaveAddress = cBaseSlaveAddrs + cChip->getId();
+                        int cPrintDebug = cWithMPA ? 250 : 25; 
+                        for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        {
+                            int cRowNumber       = cWithMPA ? 1 + cChnl/120 : 1 ; 
+                            int cPixelNumber     = cWithMPA ? 1 + cChnl%120 : 0 ; 
+                            int cBaseRegisterLSB = cWithMPA ? ((cRowNumber << 11) | ( 9 << 7 ) | cPixelNumber) : 0x0901 + cChnl;
+                            int cBaseRegisterMSB = cWithMPA ? ((cRowNumber << 11) | ( 10 << 7 ) | cPixelNumber) : 0x0801 + cChnl;
+                            //int cBaseRegisterLSB = cWithMPA ? ((12 + 8 * (cChnl / 120)) << 8) + 0x81 : 0x0901 + cChnl;
+                            //int cBaseRegisterMSB = cWithMPA ? cBaseRegisterLSB + 128 : 0x0801 + cChnl;
+                            std::vector<int> cRegs{cBaseRegisterMSB, cBaseRegisterLSB};
+                            std::vector<int> cValues(0);
+                            for(auto cReg: cRegs)
                             {
 
-		                // set in data vector
-		                //uint32_t cDataWord     = 0x0000;
-		                uint32_t cWordCounter  = 0;
-
-		                uint8_t  cSlaveAddress = 0x40 + cChip->getId();
-
-		                for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
-		                {
-                                    uint32_t cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
-                                    uint32_t cBaseRegisterMSB = cBaseRegisterLSB + 128;
-                                    // MSB
-                                    ChipRegItem cReg_Counters_MSB;
-                                    cReg_Counters_MSB.fPage    = 0x00;
-                                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl%120;
-                                    cReg_Counters_MSB.fValue   = 0x00;
-                                    // LSB
-                                    ChipRegItem cReg_Counters_LSB;
-                                    cReg_Counters_LSB.fPage    = 0x00;
-                                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl%120;
-		                    cReg_Counters_LSB.fValue   = 0x00;
-
-		                    //LOG(INFO) << BOLDMAGENTA << "0x802 " << +cChnl << " : " <<std::hex<< Why(clpGBT,cSlaveAddress,cMaster,0x802)  << std::dec << RESET;
-		                    //LOG(INFO) << BOLDMAGENTA << "0x882 " << +cChnl << " : " <<std::hex<< Why(clpGBT,cSlaveAddress,cMaster,0x882)  << std::dec << RESET;
-		                    //LOG(INFO) << BOLDMAGENTA << "0x902 " << +cChnl << " : " <<std::hex<< Why(clpGBT,cSlaveAddress,cMaster,0x902)  << std::dec << RESET;
-				    uint16_t cCounterValueL = Why(clpGBT,cSlaveAddress,cMaster,cReg_Counters_LSB.fAddress) ;
-				    uint16_t cCounterValueM = Why(clpGBT,cSlaveAddress,cMaster,cReg_Counters_MSB.fAddress) ;
-				    uint16_t cCounterValue = ((cCounterValueM & 0xFF) << 8) | (cCounterValueL & 0xFF);
-		                    if(cChnl % 10 == 0)
-		                    {
-		                        LOG(INFO) << BOLDMAGENTA << "PIX#" << +cChnl << " : " << +cCounterValue << " hits." << RESET;
-		                    }
-		                    pData.push_back(cCounterValue);
-		                    //cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
-		                    //if((cWordCounter & 0x1) == 1)
-		                    //{
-		                     //   pData.push_back(cDataWord);
-		                     //   cDataWord = 0x0000;
-		                    //}
-		                    cWordCounter++;	
-				}	
-			     }
-
-                        if (cChip->getFrontEndType() == FrontEndType::SSA)
+                                ChipRegItem cReg_Counters;
+                                cReg_Counters.fPage    = 0x00;
+                                cReg_Counters.fAddress = cReg;
+                                cValues.push_back(Why(clpGBT,cSlaveAddress,cMaster,cReg_Counters.fAddress));
+                            }
+                            uint16_t cCounterValue = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF);
+                            if(cChnl % cPrintDebug == 0)
                             {
-		                // set in data vector
-		                uint32_t cDataWord     = 0x0000;
-		                uint32_t cWordCounter  = 0;
+                                if( cWithMPA)
+                                    LOG(INFO) << BOLDMAGENTA << "Pix#" << +cChnl << " : " << +cCounterValue << " hits."
+                                          << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0]) 
+                                          << " MSB address 0x" << std::hex << +cRegs[0] << std::dec 
+                                          << " LSB address 0x" << std::hex << +cRegs[1] << std::dec 
+                                          << " channel number " << +cChnl
+                                          << " row number " << +cRowNumber
+                                          << " pixel number " << +cPixelNumber 
+                                          << RESET;
+                                else
+                                    LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                                          << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0])
+                                          << " MSB address 0x" << std::hex << +cRegs[0] << std::dec 
+                                          << " LSB address 0x" << std::hex << +cRegs[1] << std::dec 
+                                          << RESET;
+                                
+                            }
+                            cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                            if((cWordCounter & 0x1) == 1)
+                            {
+                                pData.push_back(cDataWord);
+                                cDataWord = 0x0000;
+                            }
+                            cWordCounter++;
+                        }
+                        // if (cChip->getFrontEndType() == FrontEndType::MPA)
+                        // {
 
-		                uint8_t  cSlaveAddress = 0x20 + cChip->getId();
-		                for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
-		                {
-		                    // MSB
-		                    std::vector<int> cRegs{0x0801 + cChnl, 0x0901 + cChnl};
-		                    std::vector<int> cValues(0);
-		                    for(auto cReg: cRegs)
-		                    {
+                        //     // set in data vector
+                        //     uint32_t cDataWord     = 0x0000;
+                        //     uint32_t cWordCounter  = 0;
+                        //     uint8_t  cSlaveAddress = 0x40 + cChip->getId();
+                        //     for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        //     {
 
-		                        ChipRegItem cReg_Counters_MSB;
-		                        cReg_Counters_MSB.fPage    = 0x00;
-		                        cReg_Counters_MSB.fAddress = cReg;
-		                        
-		                        // cReg_Counters_MSB.fValue = cValue;
-		                        cValues.push_back(Why(clpGBT,cSlaveAddress,cMaster,cReg_Counters_MSB.fAddress));
-		                    }
-		                    uint16_t cCounterValue = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF);
-		                    if(cChnl % 10 == 0)
-		                    {
-		                        LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
-		                                  << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0]) << RESET;
-		                    }
-		                    cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
-		                    if((cWordCounter & 0x1) == 1)
-		                    {
-		                        pData.push_back(cDataWord);
-		                        cDataWord = 0x0000;
-		                    }
-		                    cWordCounter++;
-		                } // chnl loop
-			    }
-			
-                        
-		    }
-                    
+                        //         // MSB, then LSB 
+                        //         int cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
+                        //         int cBaseRegisterMSB = cBaseRegisterLSB + 128;
+                        //         std::vector<int> cRegs{cBaseRegisterMSB, cBaseRegisterLSB};
+                        //         std::vector<int> cValues(0);
+                        //         for(auto cReg: cRegs)
+                        //         {
+
+                        //             ChipRegItem cReg_Counters_MSB;
+                        //             cReg_Counters_MSB.fPage    = 0x00;
+                        //             cReg_Counters_MSB.fAddress = cReg;
+                        //             cValues.push_back(Why(clpGBT,cSlaveAddress,cMaster,cReg_Counters_MSB.fAddress));
+                        //         }
+                        //         uint16_t cCounterValue = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF);
+                        //         if(cChnl % 100 == 0)
+                        //         {
+                        //              LOG(INFO) << BOLDMAGENTA << "Pix#" << +cChnl << " : " << +cCounterValue << " hits."
+                        //                       << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0]) << RESET;
+                        //         }
+                        //         cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                        //         if((cWordCounter & 0x1) == 1)
+                        //         {
+                        //             pData.push_back(cDataWord);
+                        //             cDataWord = 0x0000;
+                        //         }
+                        //          cWordCounter++;
+                        //         //cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                        //         //if((cWordCounter & 0x1) == 1)
+                        //         //{
+                        //         //   pData.push_back(cDataWord);
+                        //         //   cDataWord = 0x0000;
+                        //         //}
+                        //     }	
+                        // }
+                        // if (cChip->getFrontEndType() == FrontEndType::SSA)
+                        // {
+                        //     // set in data vector
+                        //     uint32_t cDataWord     = 0x0000;
+                        //     uint32_t cWordCounter  = 0;
+
+                        //     uint8_t  cSlaveAddress = 0x20 + cChip->getId();
+                        //     for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        //     {
+                        //         // MSB, then LSB 
+                        //         std::vector<int> cRegs{0x0801 + cChnl, 0x0901 + cChnl};
+                        //         std::vector<int> cValues(0);
+                        //         for(auto cReg: cRegs)
+                        //         {
+
+                        //             ChipRegItem cReg_Counters_MSB;
+                        //             cReg_Counters_MSB.fPage    = 0x00;
+                        //             cReg_Counters_MSB.fAddress = cReg;
+                                    
+                        //             // cReg_Counters_MSB.fValue = cValue;
+                        //             cValues.push_back(Why(clpGBT,cSlaveAddress,cMaster,cReg_Counters_MSB.fAddress));
+                        //         }
+                        //         uint16_t cCounterValue = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF);
+                        //         if(cChnl % 100 == 0)
+                        //         {
+                        //             LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                        //                       << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0]) << RESET;
+                        //         }
+                        //         cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
+                        //         if((cWordCounter & 0x1) == 1)
+                        //         {
+                        //             pData.push_back(cDataWord);
+                        //             cDataWord = 0x0000;
+                        //         }
+                        //         cWordCounter++;
+                        //     } // chnl loop
+                        // }
+                    }
                 } // chip loop
-            }     // hybrid loop
-        }         // hybrid loop
+            }// hybrid loop
+        }// hybrid loop
         // clear counters after they have been read
-
     }
     else
     {
@@ -2207,8 +2263,14 @@ uint32_t D19cFWInterface::Why(lpGBT*  clpGBT, uint8_t cSlaveAddress,uint8_t cMas
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     LOG (DEBUG) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
+    if( pData.size() ) 
+    {
+        LOG (INFO) << BOLDRED << "No data to retrieve .. fail!" << RESET;
+        throw Exception("No data to retrieve..stopping here");
+    }
+
     EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
     bool      cWithMPA   = false;
     bool      cWithSSA   = false;
     for(auto cOpticalGroup: *pBoard)
@@ -2242,20 +2304,28 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         if( cNeventsReq != cNEvents )
         {
             LOG (INFO) << BOLDRED << "Mismatch in number of events "
-                << " received from FC7!!" << RESET;        
+                << " received from FC7!!" 
+                << " User has asked for " << +cNeventsReq 
+                << " and we have only read-back " << +cNEvents 
+                << " from the FC7..."
+                << RESET;        
         }
     }
     else if(cAsync)
     {
-        uint32_t its = 0;
-        while(pData.size() == 0 and its < 5)
+        if(cWithMPA or cWithSSA) this->ReadPSCounters(pBoard, pData, false);
+        else 
         {
-            if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
-            if(cWithMPA or cWithSSA)
-                this->ReadPSCounters(pBoard, pData, false);
-                
-            its += 1;
+            LOG (INFO) << BOLDRED << "Trying to read AsyncCounter wihtout an MPA/SSA.." << RESET;
+            throw Exception("Trying to read AsyncCounter wihtout an MPA/SSA..stopping herer");
         }
+        //uint32_t its = 0;
+        // while(pData.size() == 0 and its < 5)
+        // {
+        //     if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
+        //     if(cWithMPA or cWithSSA) this->ReadPSCounters(pBoard, pData, false);
+        //     its += 1;
+        // }
         cNEvents = 1;
     }
     else
@@ -2274,7 +2344,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     bool      pFailed    = false;
     int       cCounter   = 0;
     EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
 
     while(cNWords == 0 && cCounter < 1000 && !cAsync)
     {
@@ -2474,7 +2544,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     auto     cMultiplicity         = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
 
     EventType                                     cEventType = pBoard->getEventType();
-    bool                                          cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool                                          cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents * (cMultiplicity + 1)});
     if(cAsync && cTriggerSource == 3)
@@ -3185,10 +3255,8 @@ void D19cFWInterface::ChipReSync()
     uint8_t cL1A      = 0;
     // in CIC case always send fast reset with an orbit reset
     bool    cWithCIC = (fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2);
-    //uint8_t cBC0     = cWithCIC ? 0 : 0;
-    uint8_t cBC0     = cWithCIC ? 0 : 0;
+    uint8_t cBC0     = ( cWithCIC && fIs2S) ? 1 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
-    // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
 }
 void D19cFWInterface::ChipTestPulse()
 {

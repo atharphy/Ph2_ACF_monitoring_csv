@@ -229,7 +229,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
-            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS or cBoard->getEventType() == EventType::MPAAS) ? 1 : 0;
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
@@ -321,9 +320,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // if SSA + ASYNC
                         // make sure ROCs are configured for that
                         if( cReadoutChip->getFrontEndType() != FrontEndType::SSA)  continue;
-                        
-                        if( cAsync ) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", 1); }
-                        else { static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "Sync", 1); }
+                        //if( cAsync ) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", 1); }
+                        //else { static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "Sync", 1); }
                     }
                 }
             }
@@ -574,7 +572,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
     if(pType == BoardType::RD53)
     {
-            	LOG(INFO) << BOLDBLUE << "RD53" << RESET;
+        LOG(INFO) << BOLDBLUE << "RD53" << RESET;
         fEventList.clear();
         if(RD53FWInterface::decodedEvents.size() == 0) RD53FWInterface::DecodeEventsMultiThreads(pData, RD53FWInterface::decodedEvents);
         RD53FWInterface::Event::addBoardInfo2Events(pBoard, RD53FWInterface::decodedEvents);
@@ -599,30 +597,17 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t maxind = 0;
 
 
-                //if(fEventType == EventType::SSAAS)
-                 //   {
-                 //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-                 //   nSSA = pData.size() / 120;
-                 //   }
-
-
             for(auto opticalGroup: *pBoard)
             {
                     for(auto hybrid: *opticalGroup)
                     {
 
                             maxind = std::max(maxind, uint32_t(hybrid->size()));
-
-
                     }
             }
 
-            if(fEventType == EventType::SSAAS) { 
-fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
-            else if(fEventType == EventType::MPAAS)
-            {
-                fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
-            }
+            if(fEventType == EventType::SSAAS) {  fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
+            else if(fEventType == EventType::MPAAS){ fEventList.push_back(new D19cMPAEventAS(pBoard, pData)); }
             else if(fEventType != EventType::ZS)
             {
 
