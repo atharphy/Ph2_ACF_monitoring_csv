@@ -2537,7 +2537,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     bool cFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    cTriggerSource = 42; 
+    //cTriggerSource = 42; 
     // in kHz .. if external trigger assume 1 kHz or TP assume lowest possible rate
     auto     cTriggerRate          = (cTriggerSource == 5 || cTriggerSource == 6) ? 0.01 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     uint32_t cTimeSingleTrigger_us = std::ceil(1.5 / (cTriggerRate));

@@ -464,10 +464,22 @@ void DataChecker::AsyncTest()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cEventType = cBoard->getEventType();
-        // event type to check 
-        // EventType::MPAAS --> MPAs ASYNC 
         // will only decode those events 
-        cBoard->setEventType(EventType::MPAAS);
+        // check what kind of FEs I have and based on that .. set the event type 
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::MPA )
+                        cBoard->setEventType(EventType::MPAAS);
+                    else
+                        cBoard->setEventType(EventType::SSAAS);
+                }
+            }
+        }
+
         for(uint8_t cThreshold = cThresholdStart; cThreshold < cThresholdStop; cThreshold += 5)
         {
             // set thresholds
@@ -499,7 +511,12 @@ void DataChecker::AsyncTest()
                         for(auto cEvent: cEvents)
                         {
                             auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                            for(uint8_t cChnl = 0; cChnl < 5; cChnl++) { LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET; }
+                            for(uint8_t cChnl = 0; cChnl < 5; cChnl++) { 
+                                if( cChip->getFrontEndType() == FrontEndType::SSA) 
+                                    LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET; 
+                                else
+                                    LOG(INFO) << BOLDBLUE << "Counter value Pix#" << +cChnl << " is " << cHits[cChnl] << RESET; 
+                            }
                         }
                     }
                 }

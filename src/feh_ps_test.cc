@@ -70,8 +70,8 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("pattern", "p");
 
     cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("checkAsync", "Check async readout", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("checkSync", "Check sync readout", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
 
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
@@ -92,6 +92,9 @@ int main(int argc, char* argv[])
     bool              batchMode  = (cmd.foundOption("batch")) ? true : false;
     std::string       cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     std::string       cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
+    std::string       cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
+    if( !(cmd.foundOption("checkAsync")) ) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA"; 
+
     uint8_t           cPattern   = (cmd.foundOption("mpaTest")) ? convertAnyInt(cmd.optionValue("mpaTest").c_str()) : 0;
     const std::string cSSAPair   = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
     cDirectory += Form("FEH_PS_%s", cHybridId.c_str());
@@ -208,9 +211,30 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync") )
     {
         DataChecker cDataChecker;
+        // front end type to tool  
+        FrontEndType cFrontEndType; 
+        if (cChipType == "MPA")  
+        {
+            LOG (INFO) << "Checking data for MPAs only.." << RESET;
+            cFrontEndType = FrontEndType::MPA;
+        }
+        else if( cChipType == "SSA" ) 
+        {
+            LOG (INFO) << "Checking data for SSAs only.." << RESET;
+            cFrontEndType = FrontEndType::SSA;
+        }
+        else
+        { 
+            LOG (INFO) << "Checking data for SSAs only.." << RESET;
+            cFrontEndType = FrontEndType::SSA;
+        }
+        auto cSelectFunction = [cFrontEndType](const ChipContainer *theChip){return ( static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType);};
+        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cDataChecker.Inherit(&cHybridTester);
         if( cmd.foundOption("checkAsync") ) cDataChecker.AsyncTest();
         else cDataChecker.ReadNeventsTest();
+        // reset 
+        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
         // cDataChecker.resetPointers();
     }
     

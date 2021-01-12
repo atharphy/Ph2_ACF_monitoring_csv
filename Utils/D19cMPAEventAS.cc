@@ -89,7 +89,7 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
                 auto& cChipCounterData = cHybridCounterData[cRocIndex];
                 for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                 {
-                    if(cChnl % 2 == 0 && cDataIterator != pData.end() )
+                    if(cChnl % 2 == 0 )
                     {
                         auto cWord = *(cDataIterator);
                         int cFrstPxl = cChnl; 
@@ -102,8 +102,6 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
                                     << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                         cDataIterator++;
                     } //every 2 channels are packed into one 32 bit word 
-                    if( cDataIterator == pData.end() ) 
-                        LOG (INFO) << BOLDRED << "End of data list [MPA AS event]" << RESET;
                 } // chnl loop
                 cRocIndex++;
             } // chips
