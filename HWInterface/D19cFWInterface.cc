@@ -2226,6 +2226,11 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
     if(fIsDDR3Readout && !cAsync)
     {
+        if( cNWords == 0 )
+        {
+            LOG (INFO) << BOLDRED << "No words in the readout.. " << RESET;
+            throw Exception("No words in the readout when reading data...stopping."); 
+        }
         LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // figure out how many events I've got
@@ -2462,7 +2467,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     bool cFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    //cTriggerSource = 42; 
+    cTriggerSource = 42; 
     // in kHz .. if external trigger assume 1 kHz or TP assume lowest possible rate
     auto     cTriggerRate          = (cTriggerSource == 5 || cTriggerSource == 6) ? 0.01 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     uint32_t cTimeSingleTrigger_us = std::ceil(1.5 / (cTriggerRate));
@@ -2633,7 +2638,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
         
         cReSync = 0 ; 
-        cBC0 = 1 ; 
+        cBC0 = 0 ; 
         cL1A = 1; 
         // funny trigger source 
         LOG (INFO) << BOLDBLUE << "Reading Nevent with single triggers sent from SW" << RESET;
@@ -3181,7 +3186,7 @@ void D19cFWInterface::ChipReSync()
     // in CIC case always send fast reset with an orbit reset
     bool    cWithCIC = (fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2);
     //uint8_t cBC0     = cWithCIC ? 0 : 0;
-    uint8_t cBC0     = cWithCIC ? 1 : 0;
+    uint8_t cBC0     = cWithCIC ? 0 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
     // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
 }

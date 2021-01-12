@@ -262,103 +262,103 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
         }     // hybrid
     }         // module
 
-    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
-    LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
-    bool    cCorrectDelay = false;
-    uint8_t cPackageDelay = 0;
-    uint8_t cFinalDelay   = cPackageDelay;
-    for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
-    {
-        if(cCorrectDelay) continue;
+    // auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    // LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
+    // bool    cCorrectDelay = false;
+    // uint8_t cPackageDelay = 0;
+    // uint8_t cFinalDelay   = cPackageDelay;
+    // for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+    // {
+    //     if(cCorrectDelay) continue;
 
-        LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
-        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
+    //     LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
+    //     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+    //     (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
 
-        // check stubs
-        // 2 events should be enough
-        LOG(INFO) << BOLDMAGENTA << "Reading ten events from the board " << RESET;
-        ReadNEvents(pBoard, 10);
-        const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
-        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+    //     // check stubs
+    //     // 2 events should be enough
+    //     LOG(INFO) << BOLDMAGENTA << "Reading ten events from the board " << RESET;
+    //     ReadNEvents(pBoard, 10);
+    //     const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
+    //     LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
 
-        // // I need to think about this some more ...
-        // // so for now just check the number of stubs
-        // // first I want to check that the BxIds from one CIC is incrementing correctly
-        // // assuming that this is the same for all CICs
-        std::vector<uint16_t> cBxIds(0);
-        bool                  cIncrementing  = true;
-        bool                  cCorrectNStubs = true;
-        for(auto& cEvent: cEventsWithStubs)
-        {
-            for(auto cOpticalGroup: *pBoard)
-            {
-                if(cOpticalGroup->getIndex() > 0) continue;
+    //     // // I need to think about this some more ...
+    //     // // so for now just check the number of stubs
+    //     // // first I want to check that the BxIds from one CIC is incrementing correctly
+    //     // // assuming that this is the same for all CICs
+    //     std::vector<uint16_t> cBxIds(0);
+    //     bool                  cIncrementing  = true;
+    //     bool                  cCorrectNStubs = true;
+    //     for(auto& cEvent: cEventsWithStubs)
+    //     {
+    //         for(auto cOpticalGroup: *pBoard)
+    //         {
+    //             if(cOpticalGroup->getIndex() > 0) continue;
 
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    if(cHybrid->getIndex() > 0) continue;
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 if(cHybrid->getIndex() > 0) continue;
 
-                    auto cBx = cEvent->BxId(cHybrid->getId());
-                    // cBxIds.push_back( cBx );
-                    // if( ( cBxIds.size() == 1   )
-                    //     cIncrementing =  true;
-                    // else if ( cBxIds.size() > 1 )
-                    //     if ( )
-                    // else
-                    //     cIncrementing = (cIncrementing) && ( cBx > cBxIds[cBxIds.size()-1]);
+    //                 auto cBx = cEvent->BxId(cHybrid->getId());
+    //                 // cBxIds.push_back( cBx );
+    //                 // if( ( cBxIds.size() == 1   )
+    //                 //     cIncrementing =  true;
+    //                 // else if ( cBxIds.size() > 1 )
+    //                 //     if ( )
+    //                 // else
+    //                 //     cIncrementing = (cIncrementing) && ( cBx > cBxIds[cBxIds.size()-1]);
 
-                    LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID "
-                               << +cBx
-                               // << " roll-over indicator set to " << ((cRollOver) ? "True" : "False")
-                               << " and incrementing flag is " << ((cIncrementing) ? "True" : "False") << RESET;
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(std::find(cChipIds.begin(), cChipIds.end(), cChip->getId()) == cChipIds.end()) continue;
+    //                 LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID "
+    //                            << +cBx
+    //                            // << " roll-over indicator set to " << ((cRollOver) ? "True" : "False")
+    //                            << " and incrementing flag is " << ((cIncrementing) ? "True" : "False") << RESET;
+    //                 for(auto cChip: *cHybrid)
+    //                 {
+    //                     if(std::find(cChipIds.begin(), cChipIds.end(), cChip->getId()) == cChipIds.end()) continue;
 
-                        auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                        cCorrectNStubs = cCorrectNStubs && (cStubs.size() == cSeeds.size());
-                        auto cHits     = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+    //                     auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+    //                     cCorrectNStubs = cCorrectNStubs && (cStubs.size() == cSeeds.size());
+    //                     auto cHits     = cEvent->GetHits(cHybrid->getId(), cChip->getId());
 
-                        LOG(DEBUG) << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cStubs.size() << " stubs in the event and " << +cHits.size() << " hits." << RESET;
-                    }
-                } // hybrids or CICs
-            }     // modules or optical links
-        }
-        cCorrectDelay = cCorrectNStubs && cIncrementing;
-        if(cCorrectDelay)
-        {
-            cFinalDelay = cCorrectDelay;
-            LOG(INFO) << BOLDBLUE << "Stub package delay will be set to " << +cPackageDelay << RESET;
+    //                     LOG(DEBUG) << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cStubs.size() << " stubs in the event and " << +cHits.size() << " hits." << RESET;
+    //                 }
+    //             } // hybrids or CICs
+    //         }     // modules or optical links
+    //     }
+    //     cCorrectDelay = cCorrectNStubs && cIncrementing;
+    //     if(cCorrectDelay)
+    //     {
+    //         cFinalDelay = cCorrectDelay;
+    //         LOG(INFO) << BOLDBLUE << "Stub package delay will be set to " << +cPackageDelay << RESET;
 
-            // check again
-            this->ReadNEvents(pBoard, 10);
-            const std::vector<Event*>& cEvents = this->GetEvents();
-            LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 ..." << RESET;
-            for(auto& cEvent: cEvents)
-            {
-                auto cEventCount = cEvent->GetEventCount();
-                LOG(INFO) << BOLDBLUE << "Event " << +cEventCount << RESET;
-                for(auto cOpticalGroup: *pBoard)
-                {
-                    // check number of stubs
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        auto cStatus = static_cast<D19cCic2Event*>(cEvent)->Status(cHybrid->getId());
-                        auto cBx     = cEvent->BxId(cHybrid->getId());
+    //         // check again
+    //         this->ReadNEvents(pBoard, 10);
+    //         const std::vector<Event*>& cEvents = this->GetEvents();
+    //         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 ..." << RESET;
+    //         for(auto& cEvent: cEvents)
+    //         {
+    //             auto cEventCount = cEvent->GetEventCount();
+    //             LOG(INFO) << BOLDBLUE << "Event " << +cEventCount << RESET;
+    //             for(auto cOpticalGroup: *pBoard)
+    //             {
+    //                 // check number of stubs
+    //                 for(auto cHybrid: *cOpticalGroup)
+    //                 {
+    //                     auto cStatus = static_cast<D19cCic2Event*>(cEvent)->Status(cHybrid->getId());
+    //                     auto cBx     = cEvent->BxId(cHybrid->getId());
 
-                        LOG(INFO) << BOLDBLUE << "FE" << +cHybrid->getId() << " Status : " << std::bitset<9>(cStatus) << " BxId : " << +cBx << RESET;
-                    } // hybrids or CICs
-                }     // modules
-            }         // event
-        }
-        else
-            LOG(INFO) << BOLDRED << "Stubs from CIC for a package delay of " << +cPackageDelay << " do not make sense...  continuing the scan ..." << RESET;
+    //                     LOG(INFO) << BOLDBLUE << "FE" << +cHybrid->getId() << " Status : " << std::bitset<9>(cStatus) << " BxId : " << +cBx << RESET;
+    //                 } // hybrids or CICs
+    //             }     // modules
+    //         }         // event
+    //     }
+    //     else
+    //         LOG(INFO) << BOLDRED << "Stubs from CIC for a package delay of " << +cPackageDelay << " do not make sense...  continuing the scan ..." << RESET;
 
-    } // pkg delay
+    // } // pkg delay
 
-    LOG(INFO) << BOLDMAGENTA << "End of Bx0Alignment loop " << RESET;
-    cAligned = cCorrectDelay && (cFinalDelay < 8);
+    // LOG(INFO) << BOLDMAGENTA << "End of Bx0Alignment loop " << RESET;
+    // cAligned = cCorrectDelay && (cFinalDelay < 8);
     return cAligned;
 }
 bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
