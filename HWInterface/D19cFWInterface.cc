@@ -2020,6 +2020,8 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                         int cPrintDebug = cWithMPA ? 250 : 25; 
                         for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
+                            // uint32_t cRow = (pPixelNum == 0 ) ? 0 : 1 + cPixNum/120 ;
+                            // uint32_t cColumn = (pPixelNum == 0 ) ? 0 : 1 + cPixNum%120 ;
                             int cRowNumber       = cWithMPA ? 1 + cChnl/120 : 1 ; 
                             int cPixelNumber     = cWithMPA ? 1 + cChnl%120 : 0 ; 
                             int cBaseRegisterLSB = cWithMPA ? ((cRowNumber << 11) | ( 9 << 7 ) | cPixelNumber) : 0x0901 + cChnl;

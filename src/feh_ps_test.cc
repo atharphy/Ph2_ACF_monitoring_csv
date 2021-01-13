@@ -73,6 +73,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
     cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
 
+    cmd.defineOption("perType", "perform pedeNoise per chip flavour [MPA/SSA]");
+    cmd.defineOptionAlternative("perType", "a");
+
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -253,6 +256,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
         t.show("Time to tune the front-ends on the system: ");
+
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise"))
@@ -261,6 +265,10 @@ int main(int argc, char* argv[])
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
+        // hard coded for now 
+        FrontEndType cFrontEndType = FrontEndType::MPA; 
+        auto cSelectFunction = [cFrontEndType](const ChipContainer *theChip){return ( static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType);};
+        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cPedeNoise.Inherit(&cHybridTester);
         // second parameter disables stub logic on CBC3
         cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
@@ -269,6 +277,9 @@ int main(int argc, char* argv[])
         cPedeNoise.dumpConfigFiles();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
+
+        // reset 
+        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
     if(cmd.foundOption("findOpens"))

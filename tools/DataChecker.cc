@@ -474,7 +474,8 @@ void DataChecker::AsyncTest()
                 {
                     if( cChip->getFrontEndType() == FrontEndType::MPA )
                     {
-                        cBoard->setEventType(EventType::MPAAS);
+                        cBoard->setEventType(EventType::PSAS);
+                        //cBoard->setEventType(EventType::MPAAS);
                     }
                     else
                         cBoard->setEventType(EventType::SSAAS);
@@ -769,6 +770,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
             << " from BeBoard#"
             << +cBoard->getIndex()
             << RESET;
+        this->ReadNEvents(cBeBoard, cNevents);
 
         // check trigger source 
         // and reload 
@@ -949,7 +951,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
 }
 void DataChecker::ReadNeventsTest()
 {
-    this->DigitalInjectionTest(true,false);
+    this->DigitalInjectionTest(false,false);
     // auto cSetting = fSettingsMap.find ( "Nevents" );
     // uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     // LOG (INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;

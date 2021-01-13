@@ -70,6 +70,27 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
 
+    // for now.. force to use async mode here
+    for(auto cBoard: *fDetectorContainer)
+    {
+        bool cAsyncEvent = cBoard->getEventType() == EventType::PSAS;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cROC: *cHybrid)
+                {
+                    if(!cAsyncEvent) continue;
+
+                    if( cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA ) // force this to work in async mode for now 
+                        fReadoutChipInterface->WriteChipReg(cROC,"AnalogueAsync",1);
+                }
+            }
+        }
+    }
+
+                    
+
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

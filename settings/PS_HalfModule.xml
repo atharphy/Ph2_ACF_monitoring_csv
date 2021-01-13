@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR">
+  <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
+  <BeBoard Id="0" boardType="D19C" eventType="PSAS">
     <!-- PS half module FNAL-->
     <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- B598 skeleton, direct powering -->
@@ -45,8 +46,8 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 3 </Register>
-            <Register name="user_trigger_frequency"> 100 </Register>
+            <Register name="trigger_source"> 10 </Register>
+            <Register name="user_trigger_frequency"> 1000 </Register>
             <Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -157,7 +158,7 @@
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">120</Setting>
-    <Setting name="PedeNoisePulseAmplitude">8</Setting>
+    <Setting name="PedeNoisePulseAmplitude">30</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 

@@ -606,7 +606,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                     }
             }
 
-            if(fEventType == EventType::SSAAS) {  fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
+            if(fEventType == EventType::PSAS) { fEventList.push_back(new D19cPSEventAS(pBoard,pData)); }
+            else if(fEventType == EventType::SSAAS) {  fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
             else if(fEventType == EventType::MPAAS){ fEventList.push_back(new D19cMPAEventAS(pBoard, pData)); }
             else if(fEventType != EventType::ZS)
             {

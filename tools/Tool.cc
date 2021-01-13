@@ -704,7 +704,7 @@ void Tool::setFWTestPulse()
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS  || cEventType == EventType::PSAS);
 
             if(!cAsync)
             {

@@ -243,9 +243,9 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
                 << std::hex << +cRegValue << std::dec << RESET;
         bool    cEnableAnalogue = this->configPixel(pMPA, "PixelEnable" , 0 , cRegValue, pVerifLoop);
         // mask pixel 1 
-        // {
-        //     this->maskPixel(pMPA,1,1, pVerifLoop); 
-        // }
+        {
+            this->maskPixel(pMPA,1,1, pVerifLoop); 
+        }
         if( pValue == 1 )
             LOG (INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" 
                 << std::hex << +pValue << std::dec << RESET;
