@@ -168,25 +168,26 @@ void CicFEAlignment::Running()
         exit(FAILED_PHASE_ALIGNMENT);
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET;
+    fSuccess = cPhaseAligned;
     
-    bool cWordAligned = this->WordAlignment();
-    if(!cWordAligned)
-    {
-        LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET;
-        exit(FAILED_WORD_ALIGNMENT);
-    }
+    // bool cWordAligned = this->WordAlignment();
+    // if(!cWordAligned)
+    // {
+    //     LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET;
+    //     exit(FAILED_WORD_ALIGNMENT);
+    // }
 
-    LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
-    // automatic alignment
-    // TO-DO ADD alignment for PS 
-    bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelay2S) : this->SetBx0Delay(fStubBxDelayPS); 
-    if(!cBxAligned)
-    {
-        LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
-        exit(FAILED_BX_ALIGNMENT);
-    }
-    LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
-    fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
+    // LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
+    // // automatic alignment
+    // // TO-DO ADD alignment for PS 
+    // bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelay2S) : this->SetBx0Delay(fStubBxDelayPS); 
+    // if(!cBxAligned)
+    // {
+    //     LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
+    //     exit(FAILED_BX_ALIGNMENT);
+    // }
+    // LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
+    // fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
 }
 
 std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValues)
@@ -372,7 +373,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 // enable MPA alignment pattern
                 LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
                 std::vector<uint8_t>     cOriginalValues;
-                uint8_t                  cAlignmentPattern = 0xaa;
+                uint8_t                  cAlignmentPattern = 0xAA;
                 std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
                 std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
                 for(size_t cIndex = 0; cIndex < cRegValues.size() ; cIndex++)
@@ -396,9 +397,9 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
             }//hybrid
         }//optical group
     }// board 
-
+    //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
     // check alignment and use static phase from now on
-    //if( cAligned ) this->SetStaticPhaseAlignment();
+    if( cAligned ) this->SetStaticPhaseAlignment();
     return cAligned;
 }
 void CicFEAlignment::InjectAlignmentPattern(uint8_t pChipId, uint8_t pPhyPort)

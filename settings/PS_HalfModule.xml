@@ -21,10 +21,10 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="1" configfile="SSA.txt" />
+            <SSA Id="2" configfile="SSA.txt" />
             
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="1" partid="0" configfile="MPA.txt" />
+            <MPA Id="2" partid="0" configfile="MPA.txt" />
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -46,7 +46,7 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register>
-            <Register name="user_trigger_frequency"> 1 </Register>
+            <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>

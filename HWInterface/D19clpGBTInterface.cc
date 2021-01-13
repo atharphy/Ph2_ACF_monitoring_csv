@@ -843,7 +843,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 7;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -863,7 +863,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
             ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // for now .. don't do this 
+    //PhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels Uncomment this for Skeleton test

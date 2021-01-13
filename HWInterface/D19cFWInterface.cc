@@ -1367,8 +1367,8 @@ void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
 }
 void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 {
-    // enable stub debug - allows you to 'scope' the stub output
-    this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
+     // enable stub debug - allows you to 'scope' the stub output
+    //this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
 
     if(pWithTestPulse)
         this->ChipTestPulse();
@@ -1437,7 +1437,7 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
     //   cLine++;
     // }while( cLine < pNlines );
     // disbale stub debug
-    this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
+    //this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
     this->ResetReadout();
 }
 

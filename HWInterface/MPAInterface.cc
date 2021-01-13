@@ -16,7 +16,8 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-MPAInterface::MPAInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
+MPAInterface::MPAInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {
+}
 MPAInterface::~MPAInterface() {}
 void MPAInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
 {
@@ -82,6 +83,64 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     return cRegItem.fValue & 0xFF;
 }
 
+bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum , uint8_t pMask, bool pVerifLoop) 
+{
+    auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
+    uint32_t cRow = (pPixelNum == 0 ) ? 0 : cRowCol.first;
+    uint32_t cColumn = (pPixelNum == 0 ) ? 0 : cRowCol.second;
+    return this->maskPixel( pChip, cRow, cColumn , pMask, pVerifLoop);
+}
+bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum , uint8_t pValue, bool pVerifLoop)
+{
+    auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
+    uint32_t cRow = (pPixelNum == 0 ) ? 0 : cRowCol.first;
+    uint32_t cColumn = (pPixelNum == 0 ) ? 0 : cRowCol.second;
+    uint8_t cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
+    return this->regPixel( pChip , cRegAddress , cRow, cColumn, pValue , pVerifLoop); 
+}
+bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow , uint8_t pValue, bool pVerifLoop)
+{
+    uint8_t cRegAddress = ROW_CONFIG_TABLE.find(cReg)->second;  
+    return this->regRow( pChip , cRegAddress , pRow, pValue , pVerifLoop);
+} 
+bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
+{
+    LOG (INFO) << BOLDRED << PERI_CONFIG_TABLE.size() << " items in peri map." << RESET;
+    for( auto cMapItem : PERI_CONFIG_TABLE )
+        LOG (INFO) << cMapItem.first << " " << +cMapItem.second << RESET;
+    uint8_t cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second;  
+    return this->regPeri(pChip, cRegAddress, pValue, pVerifLoop); 
+}
+
+
+bool MPAInterface::maskPixel(Chip* pChip, int pRow , int pColumn, uint8_t pMask, bool pVerifLoop) 
+{
+    // uint8_t cRegAddress = MPA::fPixelConfigTable["PixelEnable"];
+    // return this->regPixel( pChip , cRegAddress , pRow, pColumn, (1-pMask) , pVerifLoop); 
+    return true;
+}
+
+bool MPAInterface::regPixel(Chip* pChip, int pBaseRegister, int pRow , int pColumn, uint8_t pValue, bool pVerifLoop) 
+{
+    uint16_t cRegValue =  ((pRow << 11) | ( pBaseRegister << 7 ) | pColumn);
+    // if global register don't readback 
+    pVerifLoop = (pRow == 0 || pColumn == 0 ) ? false : pVerifLoop; 
+    return MPAInterface::WriteReg(pChip, cRegValue, pValue, pVerifLoop);
+}
+bool MPAInterface::regPeri(Chip* pChip, int pBaseRegister, uint8_t pValue, bool pVerifLoop) 
+{
+    uint16_t cRegAddress =  ((0x11 << 11) | ( 0x0 << 8 ) | pBaseRegister);
+    LOG (INFO) << BOLDBLUE << "Writing Peri register 0x" << std::hex << +cRegAddress << std::dec << RESET;
+    return MPAInterface::WriteReg(pChip, cRegAddress, pValue, pVerifLoop);
+}
+bool MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow , uint8_t pValue, bool pVerifLoop) 
+{
+    uint16_t cRegValue =  ((pRow << 11) | ( pBaseRegister << 7 ) | 0x79);
+    // if global register don't readback 
+    pVerifLoop = (pRow == 0) ? false : pVerifLoop; 
+    return MPAInterface::WriteReg(pChip, cRegValue, pValue, pVerifLoop);
+}
+
 
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
@@ -92,30 +151,38 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
+    else if(pRegName == "DigitalPattern" )
+    {
+        bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x03);
+        bool cConfigPattern = WriteChipSingleReg(pMPA, "LFSR_data", pValue);
+        return cReadoutMode && cConfigPattern;
+    }
     else if(pRegName == "DigitalSync" ) 
     {
-        uint8_t cPixelMask=1; 
-        uint8_t cPolarity=1;
-        uint8_t cEnEdgeBR=1;
-        uint8_t cEnLvlBr=0;
-        uint8_t cEnCount=0;
-        uint8_t cDigCal=pValue; 
-        uint8_t cAnaCal=0; 
-        uint8_t cBrClk=0;
-        uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask; 
-        cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
-        cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
-        if( pValue == 1 )
-            LOG (INFO) << BOLDBLUE << "Enabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
-                << std::hex << +cRegValue << std::dec << RESET;
-        else
-            LOG (INFO) << BOLDBLUE << "Disabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
-                << std::hex << +cRegValue << std::dec << RESET;
+        bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
+        bool cEnableDigital = true;
+        // //bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
+        // uint8_t cPixelMask=1; 
+        // uint8_t cPolarity=1;
+        // uint8_t cEnEdgeBR=1;
+        // uint8_t cEnLvlBr=0;
+        // uint8_t cEnCount=0;
+        // uint8_t cDigCal=pValue; 
+        // uint8_t cAnaCal=0; 
+        // uint8_t cBrClk=0;
+        // uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask; 
+        // cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
+        // cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
+        // if( pValue == 1 )
+        //     LOG (INFO) << BOLDBLUE << "Enabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
+        //         << std::hex << +cRegValue << std::dec << RESET;
+        // else
+        //     LOG (INFO) << BOLDBLUE << "Disabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
+        //         << std::hex << +cRegValue << std::dec << RESET;
             
-        bool    cEnableDigital = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
-        bool cReadoutMode       = WriteChipSingleReg(pMPA, "ReadoutMode", 0 , pVerifLoop);
-        LOG (INFO) << BOLDBLUE << "Enabling readout of L1 data on MPA by setting register ReadoutMode to 0x" 
-                << std::hex << +(0) << std::dec << RESET;
+        // bool    cEnableDigital = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
+        // LOG (INFO) << BOLDBLUE << "Enabling readout of L1 data on MPA by setting register ReadoutMode to 0x" 
+        //         << std::hex << +(0) << std::dec << RESET;
         return cEnableDigital && cReadoutMode;
     }
     else if(pRegName == "AnalogueAsync")
@@ -140,7 +207,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             
         bool    cEnableAnalogue = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
         bool    cEnableFECal    = true;//WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
-        bool cReadoutMode       = WriteChipSingleReg(pMPA, "ReadoutMode", pValue , pVerifLoop);
+        bool cReadoutMode       = WriteChipSingleReg(pMPA, "ReadoutMode", 0x00 , pVerifLoop);
         if( pValue == 1 )
             LOG (INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" 
                 << std::hex << +pValue << std::dec << RESET;
@@ -191,6 +258,7 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     }
     else
     {
+        flpGBT->setBeBoardId(pChip->getBeBoardId());
         cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
     }
     if(cSuccess && flpGBTInterface == nullptr ) // check is done in lpGBTInterface for opto
@@ -336,6 +404,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 
 bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
+    LOG (INFO) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     if(flpGBTInterface == nullptr)
@@ -362,6 +431,7 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
     else
     {
         int cCount=0;
+        flpGBT->setBeBoardId(pChip->getBeBoardId());
         for(const auto& cReg: pRegs)
         {
             if( cCount%100 == 0 ) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
@@ -394,10 +464,15 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     else
     {
-	//bool pVerifLoopcur=pVerifLoop;
-    	//if((cRegInMap.first.find("_ALL") != std::string::npos) ) pVerifLoopcur=false;
-        //LOG(DEBUG) << BOLDBLUE << "Writing address 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-        cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, pRegisterValue, pVerifLoop);
+       flpGBT->setBeBoardId(pChip->getBeBoardId());
+       LOG (INFO) << BOLDBLUE << "Writing MPA register 0x" 
+        << std::hex << +pRegisterAddress << std::dec 
+        << " on back-end board " << +flpGBT->getBeBoardId() 
+        << " MPA#" << +pChip->getId() 
+        << " on FE#" << +pChip->getHybridId() 
+        << " register value is " << +pRegisterValue 
+        << RESET;
+       cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, pRegisterValue, pVerifLoop);
     }
     return cSuccess;
 }

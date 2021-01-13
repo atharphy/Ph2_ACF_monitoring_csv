@@ -25,6 +25,13 @@
 #include <string>
 #include <utility>
 
+
+// #############
+// # CONSTANTS #
+// #############
+#define NROWSMPA 16 // Total number of rows
+#define NCOLSMPA 120 // Total number of columns
+
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
@@ -33,9 +40,13 @@ namespace Ph2_HwDescription
 {
 using MPARegPair = std::pair<std::string, ChipRegItem>;
 using CommentMap = std::map<int, std::string>;
+
 class MPA : public ReadoutChip
 {
   public:
+    static constexpr size_t nRows = NROWSMPA;
+    static constexpr size_t nCols = NCOLSMPA;
+    
     MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename);
     // C'tors with object FE Description
     MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename);
@@ -69,6 +80,7 @@ class MPA : public ReadoutChip
 
     uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first) * 120 + (PC.second) +1; }
 };
+
 
 struct MPARegItemComparer
 {

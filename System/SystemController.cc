@@ -299,7 +299,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     
 
                         // CIC start-up sequence
-                        uint8_t cDriveStrength = 5;
+                        uint8_t cDriveStrength = 1;
                         cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
                         fBeBoardInterface->ChipReSync(cBoard);
                         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
