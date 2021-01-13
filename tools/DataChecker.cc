@@ -473,7 +473,9 @@ void DataChecker::AsyncTest()
                 for(auto cChip: *cHybrid)
                 {
                     if( cChip->getFrontEndType() == FrontEndType::MPA )
+                    {
                         cBoard->setEventType(EventType::MPAAS);
+                    }
                     else
                         cBoard->setEventType(EventType::SSAAS);
                 }
@@ -739,18 +741,23 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                             fBeBoardInterface->Start(cBeBoard); 
                             fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBeBoard));
                         }
-                        do
-                        //for( int cAttempt=0; cAttempt < 10; cAttempt++)
+                        for( int cAttempt=0; cAttempt < 10; cAttempt++)
                         {
                             (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
                             std::this_thread::sleep_for(std::chrono::microseconds(10));
-                        }while(true);
+                        }
 
                         if( !pShiftRegMode )
                         {
                             fBeBoardInterface->Stop(cBeBoard); 
+                            for(auto cChip: *cHybrid)
+                            {
+                                if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
+                                auto cRegValue = fReadoutChipInterface->ReadChipReg(cChip,"ErrorL1");
+                                LOG (INFO) << BOLDBLUE << "ErrorL1 register is 0x" 
+                                    << std::hex << +cRegValue <<  std::dec << RESET;
+                            }
                         }
-                        
                     }
                 }
             }//hybrid 
@@ -976,32 +983,32 @@ void DataChecker::ReadNeventsTest()
     //         }
     //     }
 
-    //     LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
-    //         << +cNevents
-    //         << " from BeBoard#"
-    //         << +cBoard->getIndex()
-    //         << RESET;
+    // //     LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
+    // //         << +cNevents
+    // //         << " from BeBoard#"
+    // //         << +cBoard->getIndex()
+    // //         << RESET;
 
         
-    //     BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-    //     this->ReadNEvents(cBeBoard, cNevents);
-    //     // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
-    //     // LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+    // //     BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+    // //     this->ReadNEvents(cBeBoard, cNevents);
+    // //     // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+    // //     // LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
 
-    //     // uint32_t cN = 0;
-    //     // for(auto& cEvent: cEvents)
-    //     // {
-    //     //     if(cN % 5 == 0)
-    //     //     {
-    //     //         LOG(INFO) << ">>> Event #" << cN << RESET;
-    //     //         ;
-    //     //         outp.str("");
-    //     //         outp << *cEvent;
-    //     //         LOG(INFO) << outp.str();
-    //     //     }
-    //     //     cN++;
-    //     // }
-    //     cBoard->setEventType(cEventType);
+    // //     // uint32_t cN = 0;
+    // //     // for(auto& cEvent: cEvents)
+    // //     // {
+    // //     //     if(cN % 5 == 0)
+    // //     //     {
+    // //     //         LOG(INFO) << ">>> Event #" << cN << RESET;
+    // //     //         ;
+    // //     //         outp.str("");
+    // //     //         outp << *cEvent;
+    // //     //         LOG(INFO) << outp.str();
+    // //     //     }
+    // //     //     cN++;
+    // //     // }
+    // //     cBoard->setEventType(cEventType);
     // }
     // LOG(INFO) << BOLDBLUE << "Done!" << RESET;
 }

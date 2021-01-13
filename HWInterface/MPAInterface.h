@@ -19,7 +19,7 @@
 #include <vector>
 
 // periphery config register map 
-const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0}, {"ECM", 1}, {"ReTime", 2}};
+const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0}, {"ECM", 1}, {"ReTime", 2}, {"ErrorL1",40}};
 // row config register map
 const std::map<std::string, uint8_t> ROW_CONFIG_TABLE = {{"L1Offset_1", 1}, {"L1Offset_2", 2}, {"ClrRst", 3}};
 // pixel config register map 
@@ -138,8 +138,10 @@ class MPAInterface : public ReadoutChipInterface
 
     // 
     bool configPixel(Ph2_HwDescription::Chip* pChip, std::string cReg , int pPixelNum , uint8_t pValue, bool pVerifLoop=true);
+    uint16_t readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum);
     bool configRow(Ph2_HwDescription::Chip* pChip, std::string cReg , int pRowNum , uint8_t pValue, bool pVerifLoop=true);
     bool configPeri(Ph2_HwDescription::Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop=true);
+    uint16_t readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
 
   private:
     D19clpGBTInterface*            flpGBTInterface = nullptr;
@@ -149,11 +151,11 @@ class MPAInterface : public ReadoutChipInterface
     bool                           WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
     bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
     uint16_t                       ReadReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, bool pVerifLoop = true);
-    bool                           maskPixel(Ph2_HwDescription::Chip* pChip, int pPixelNum=1 , uint8_t pMask=1, bool pVerifLoop=true);
-    bool                           maskPixel(Ph2_HwDescription::Chip* pChip, int pRow=1 , int pColumn = 1, uint8_t pMask=1, bool pVerifLoop=true);
-    bool                           regPixel(Ph2_HwDescription::Chip* pChip, int pBaseRegister=0, int pRow=1 , int pColumn=1, uint8_t pValue=0x00, bool pVerifLoop=true) ; 
-    bool                           regPeri(Ph2_HwDescription::Chip* pChip, int pBaseRegister, uint8_t pValue, bool pVerifLoop) ;
-    bool                           regRow(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow , uint8_t pValue, bool pVerifLoop) ; 
+    bool                           maskPixel(Ph2_HwDescription::Chip* pChip, int pPixelNum , uint8_t pMask, bool pVerifLoop);
+    bool                           maskRowCol(Ph2_HwDescription::Chip* pChip, int pRow , int pColumn , uint8_t pMask, bool pVerifLoop);
+    uint16_t                       regPixel(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow , int pColumn) ; 
+    uint16_t                       regPeri(Ph2_HwDescription::Chip* pChip, int pBaseRegister) ;
+    uint16_t                       regRow(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow) ; 
     
 
 

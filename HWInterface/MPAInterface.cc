@@ -47,7 +47,10 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
                    << RESET;
         return cCounterValue;
     }
-
+    else if(pRegNode == "ErrorL1") 
+    {
+        return this->readPeri(pMPA, pRegNode);
+    }
     else if(pRegNode == "Threshold")
     {
         return this->ReadChipReg(pMPA, "ThDAC0");
@@ -83,25 +86,58 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     return cRegItem.fValue & 0xFF;
 }
 
-bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum , uint8_t pMask, bool pVerifLoop) 
-{
-    auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
-    uint32_t cRow = (pPixelNum == 0 ) ? 0 : cRowCol.first;
-    uint32_t cColumn = (pPixelNum == 0 ) ? 0 : cRowCol.second;
-    return this->maskPixel( pChip, cRow, cColumn , pMask, pVerifLoop);
-}
+
 bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum , uint8_t pValue, bool pVerifLoop)
 {
     auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
-    uint32_t cRow = (pPixelNum == 0 ) ? 0 : cRowCol.first;
-    uint32_t cColumn = (pPixelNum == 0 ) ? 0 : cRowCol.second;
+    int cPixNum = pPixelNum - 1; 
+    uint32_t cRow = (pPixelNum == 0 ) ? 0 : 1 + cPixNum/120 ;
+    uint32_t cColumn = (pPixelNum == 0 ) ? 0 : 1 + cPixNum%120 ;
     uint8_t cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
-    return this->regPixel( pChip , cRegAddress , cRow, cColumn, pValue , pVerifLoop); 
+    uint16_t cAddress = this->regPixel( pChip , cRegAddress , cRow, cColumn ); 
+    LOG (INFO) << BOLDBLUE << "PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
+            << " [built-in MPA row " << +cRowCol.first << " col " << +cRowCol.second 
+            << " ] register 0x" << std::hex << cAddress << std::dec 
+            << " value to write is 0x" << std::hex << +pValue << std::dec
+            << RESET;
+
+    // if global register don't readback 
+    if (cRow == 0 || cColumn == 0 ) LOG (DEBUG) << BOLDMAGENTA << "GLOBAL PXL REG" << RESET;
+    pVerifLoop = (cRow == 0 || cColumn == 0 ) ? false : pVerifLoop; 
+    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
+}
+uint16_t MPAInterface::readPixel(Chip* pChip, std::string cReg, int pPixelNum)
+{
+    int cPixNum = pPixelNum - 1; 
+    uint32_t cRow = (pPixelNum == 0 ) ? 0 : 1 + cPixNum/120 ;
+    uint32_t cColumn = (pPixelNum == 0 ) ? 0 : 1 + cPixNum%120 ;
+    uint8_t cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
+    uint16_t cAddress = this->regPixel( pChip , cRegAddress , cRow, cColumn ); 
+    LOG (DEBUG) << BOLDBLUE << "PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
+            << " register 0x" << std::hex << cAddress << std::dec 
+            << RESET;
+    return MPAInterface::ReadReg(pChip, cAddress);
+}
+bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum , uint8_t pMask, bool pVerifLoop) 
+{
+    // pixel num starts from 1 [0 == global]
+    auto cRegValue = this->readPixel(pChip,"PixelEnable", pPixelNum);
+    uint8_t cNewValue = (cRegValue&0xFE) | (1-pMask);
+    return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop );
+}
+bool MPAInterface::maskRowCol(Chip* pChip, int pRow , int pColumn, uint8_t pMask, bool pVerifLoop) 
+{
+    // row and col num starts from 1 [0 == global]
+    int cPixNum = 1 + (pColumn-1)*120 + (pRow-1);//starting from 1 
+    return this->maskPixel(pChip, cPixNum, pMask, pVerifLoop);
 }
 bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow , uint8_t pValue, bool pVerifLoop)
 {
     uint8_t cRegAddress = ROW_CONFIG_TABLE.find(cReg)->second;  
-    return this->regRow( pChip , cRegAddress , pRow, pValue , pVerifLoop);
+    // if global register don't readback 
+    pVerifLoop = (pRow == 0 ) ? false : pVerifLoop; 
+    uint16_t cAddress =  this->regRow( pChip , cRegAddress , pRow);
+    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
 } 
 bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
 {
@@ -109,36 +145,34 @@ bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, boo
     for( auto cMapItem : PERI_CONFIG_TABLE )
         LOG (INFO) << cMapItem.first << " " << +cMapItem.second << RESET;
     uint8_t cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second;  
-    return this->regPeri(pChip, cRegAddress, pValue, pVerifLoop); 
+    uint16_t cAddress =  this->regPeri(pChip, cRegAddress ); 
+    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
 }
-
-
-bool MPAInterface::maskPixel(Chip* pChip, int pRow , int pColumn, uint8_t pMask, bool pVerifLoop) 
+uint16_t MPAInterface::readPeri(Chip* pChip, std::string cReg)
 {
-    // uint8_t cRegAddress = MPA::fPixelConfigTable["PixelEnable"];
-    // return this->regPixel( pChip , cRegAddress , pRow, pColumn, (1-pMask) , pVerifLoop); 
-    return true;
+    uint8_t cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second;  
+    uint16_t cAddress =  this->regPeri(pChip, cRegAddress ); 
+    LOG (INFO) << BOLDBLUE << "Reading peri register 0x" << std::hex << cAddress << std::dec 
+            << RESET;
+    return MPAInterface::ReadReg(pChip, cAddress);
 }
 
-bool MPAInterface::regPixel(Chip* pChip, int pBaseRegister, int pRow , int pColumn, uint8_t pValue, bool pVerifLoop) 
+
+
+uint16_t MPAInterface::regPixel(Chip* pChip, int pBaseRegister, int pRow , int pColumn) 
 {
-    uint16_t cRegValue =  ((pRow << 11) | ( pBaseRegister << 7 ) | pColumn);
-    // if global register don't readback 
-    pVerifLoop = (pRow == 0 || pColumn == 0 ) ? false : pVerifLoop; 
-    return MPAInterface::WriteReg(pChip, cRegValue, pValue, pVerifLoop);
+    uint16_t cRegAddress =  ((pRow << 11) | ( pBaseRegister << 7 ) | pColumn);
+    return cRegAddress;
 }
-bool MPAInterface::regPeri(Chip* pChip, int pBaseRegister, uint8_t pValue, bool pVerifLoop) 
+uint16_t MPAInterface::regPeri(Chip* pChip, int pBaseRegister ) 
 {
     uint16_t cRegAddress =  ((0x11 << 11) | ( 0x0 << 8 ) | pBaseRegister);
-    LOG (INFO) << BOLDBLUE << "Writing Peri register 0x" << std::hex << +cRegAddress << std::dec << RESET;
-    return MPAInterface::WriteReg(pChip, cRegAddress, pValue, pVerifLoop);
+    return cRegAddress;
 }
-bool MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow , uint8_t pValue, bool pVerifLoop) 
+uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow ) 
 {
-    uint16_t cRegValue =  ((pRow << 11) | ( pBaseRegister << 7 ) | 0x79);
-    // if global register don't readback 
-    pVerifLoop = (pRow == 0) ? false : pVerifLoop; 
-    return MPAInterface::WriteReg(pChip, cRegValue, pValue, pVerifLoop);
+    uint16_t cRegAddress =  ((pRow << 11) | ( pBaseRegister << 7 ) | 0x79);
+    return cRegAddress;
 }
 
 
@@ -187,11 +221,14 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "AnalogueAsync")
     {
+        //readout mode 1 -- ASYNC counter
+        bool cReadoutMode       = configPeri(pMPA, "ReadoutMode", 0x01);
+
         uint8_t cPixelMask=1; 
         uint8_t cPolarity=1;
         uint8_t cEnEdgeBR=1;
         uint8_t cEnLvlBr=0;
-        uint8_t cEnCount=1;
+        uint8_t cEnCount=pValue;
         uint8_t cDigCal=0; 
         uint8_t cAnaCal=pValue; 
         uint8_t cBrClk=0;
@@ -204,17 +241,18 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         else
             LOG (INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" 
                 << std::hex << +cRegValue << std::dec << RESET;
-            
-        bool    cEnableAnalogue = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
-        bool    cEnableFECal    = true;//WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
-        bool cReadoutMode       = WriteChipSingleReg(pMPA, "ReadoutMode", 0x00 , pVerifLoop);
+        bool    cEnableAnalogue = this->configPixel(pMPA, "PixelEnable" , 0 , cRegValue, pVerifLoop);
+        // mask pixel 1 
+        // {
+        //     this->maskPixel(pMPA,1,1, pVerifLoop); 
+        // }
         if( pValue == 1 )
             LOG (INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" 
                 << std::hex << +pValue << std::dec << RESET;
         else
             LOG (INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" 
                 << std::hex << +pValue << std::dec << RESET;
-        return cEnableAnalogue && cEnableFECal && cReadoutMode;
+        return cEnableAnalogue && cReadoutMode;
     }
 
     else if(pRegName == "Threshold" or pRegName == "Bias_THDAC" )
@@ -434,7 +472,7 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         flpGBT->setBeBoardId(pChip->getBeBoardId());
         for(const auto& cReg: pRegs)
         {
-            if( cCount%100 == 0 ) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
+            if( cCount%100 == 0 ) LOG(DEBUG) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
             cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
             if(!cSuccess) continue;
             #ifdef COUNT_FLAG
