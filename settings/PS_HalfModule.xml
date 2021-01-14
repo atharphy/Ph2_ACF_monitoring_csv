@@ -22,10 +22,10 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="7" configfile="SSA.txt" />
+            <SSA Id="2" configfile="SSA.txt" />
             
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="7" partid="0" configfile="MPA_Kevin.txt" />
+            <MPA Id="2" partid="0" configfile="MPA_Kevin.txt" />
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -46,7 +46,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 3 </Register>
+            <Register name="trigger_source"> 6 </Register>
             <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
@@ -151,7 +151,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">50</Setting>
+    <Setting name="Nevents">2</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>

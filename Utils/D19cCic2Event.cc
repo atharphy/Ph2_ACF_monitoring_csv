@@ -148,9 +148,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     uint8_t cNPClusters = (*(cIterator + 2) & 0x7F);
                                     uint8_t cNSClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
                                     if( cNPClusters > 0 )
-                                        LOG (INFO) << BOLDMAGENTA << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " s clusters in the CIC2 event.." << RESET;
+                                        LOG (INFO) << BOLDGREEN << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " s clusters in the CIC2 event.." << RESET;
                                     else
-                                        LOG (INFO) << BOLDRED << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << "  s clusters in the CIC2 event.." << RESET;
+                                        LOG (DEBUG) << BOLDRED << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << "  s clusters in the CIC2 event.." << RESET;
                                 }
                             }
                             else

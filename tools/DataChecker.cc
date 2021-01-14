@@ -684,18 +684,29 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                 {
                     if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
                     
+                    // mapping for PS module 
+                    // mapping for probe station/etc. can be different
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",5);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",2);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
+
+
                     // I want to test my row configuration stuff 
                     if( pShiftRegMode )
                     {
                         fReadoutChipInterface->WriteChipReg(cChip,"DigitalPattern", cPattern);
-                    }
-                    else// 
+                    }// shit register mode 
+                    else
                     {
                         // activate pp mode
                         //fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);//on for 8 Bx after cal pulse 
-                        fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode", 0x00);
-                        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ConfigureTriggerFSM( 0, 100, 3);
-                        //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x1);
+                        // digital sync this pattern on pixel 1 
+                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0xFF);
+                        // LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
+                        //     << " Out5 is connected to data_bit#" << +fReadoutChipInterface->ReadChipReg(cChip,"Out5") << RESET;
                     }
                     // // readout mode is tracker 
                     // fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode",0x00);//readout mode
@@ -783,11 +794,11 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         }//optical group
 
         
-        // LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
-        //     << +cNevents
-        //     << " from BeBoard#"
-        //     << +cBoard->getIndex()
-        //     << RESET;
+        LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
+            << +cNevents
+            << " from BeBoard#"
+            << +cBoard->getIndex()
+            << RESET;
         // this->ReadNEvents(cBeBoard, cNevents);
 
         // check trigger source 
@@ -800,176 +811,37 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         // fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
 
-        // // why -2?!
-        // uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        // for(uint16_t cLatency = cDelay -1 ; cLatency < cDelay ; cLatency++)
-        // {
-        //     // uint8_t cLatencyReg1 = (0x00FF & cLatency); 
-        //     // uint8_t cLatencyReg2 = (0x0100 & cLatency) >> 8; 
-        //     // for(auto cOpticalGroup: *cBoard)
-        //     // {
-        //     //     for(auto cHybrid: *cOpticalGroup)
-        //     //     {
-        //     //         // for(auto cChip: *cHybrid)
-        //     //         // {
-        //     //         //     if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
+        // why -2?!
+        uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+        for(uint16_t cLatency = cDelay - 10 ; cLatency < cDelay+10 ; cLatency++)
+        {
+            uint8_t cLatencyReg1 = (0x00FF & cLatency); 
+            uint8_t cLatencyReg2 = (0x0100 & cLatency) >> 8; 
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
                 
-        //     //         //     fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_1_ALL", cLatencyReg1);
-        //     //         //     fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_2_ALL", cLatencyReg2);
-        //     //         // }// chip 
-        //     //     }// hybrid 
-        //     // }//module 
-        //     // // read events 
-        //     // LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency 
-        //     //     << RESET;
+                        fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_1_ALL", cLatencyReg1);
+                        fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_2_ALL", cLatencyReg2);
+                    }// chip 
+                }// hybrid 
+            }//module 
+            // read events 
+            LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency 
+                << RESET;
 
-        //     if( pBypassCic )
-        //     {
-        //         // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        //         // (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
-
-        //         // //trying with stub debug 
-        //         // //enable stub debug 
-        //         // fBeBoardInterface->WriteBoardReg(cBeBoard,"fc7_daq_cnfg.stub_debug.enable", 0x01);
-        //         // // start stub debug 
-        //         // fBeBoardInterface->WriteBoardReg(cBeBoard,"fc7_daq_ctrl.physical_interface_block.control.stub_debug", 0x01);
-                
-        //         // // fBeBoardInterface->Start(cBeBoard); 
-        //         // // std::this_thread::sleep_for(std::chrono::microseconds(1000));
-        //         // // fBeBoardInterface->Stop(cBeBoard); 
-        //         // auto cWords = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadBlockRegOffsetValue("fc7_daq_ddr3", 100, 0);
-        //         // for( auto cWord : cWords)
-        //         //     LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
-
-        //         fBeBoardInterface->Start(cBeBoard); 
-        //         for( size_t cAttempt=0; cAttempt < 10; cAttempt++)
-        //         {
-        //             // uint8_t cDuration = 0;
-        //             // uint8_t cReSync   = 0;
-        //             // uint8_t cCalPulse = 0;
-        //             // uint8_t cL1A      = 1;
-        //             // uint8_t cBC0      = 0;
-        //             // uint32_t cFastCommand=0;
-
-        //             // uint32_t encode_resync    = cReSync << 16;
-        //             // uint32_t encode_cal_pulse = cCalPulse << 17;
-        //             // uint32_t encode_l1a       = cL1A << 18;
-        //             // uint32_t encode_bc0       = cBC0 << 19;
-        //             // uint32_t encode_duration  = cDuration << 28;
-
-        //             // //calPulse
-        //             // cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
-        //             // fBeBoardInterface->WriteBoardReg(cBeBoard,"fc7_daq_ctrl.fast_command_block.control", cFastCommand);
-
-
-        //             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        //             auto cWords = fBeBoardInterface->ReadBlockBoardReg(cBeBoard,"fc7_daq_stat.physical_interface_block.stub_debug", 80);
-        //             std::vector<std::string> cLines(0);
-        //             size_t                   cLine = 0;
-        //             do
-        //             {
-        //                 std::vector<std::string> cOutputWords(0);
-        //                 for(size_t cIndex = 0; cIndex < 5; cIndex++)
-        //                 {
-        //                     auto cWord   = cWords[cLine * 10 + cIndex];
-        //                     auto cString = std::bitset<32>(cWord).to_string();
-        //                     for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
-        //                 }
-
-        //                 std::string cOutput_wSpace = "";
-        //                 std::string cOutput        = "";
-        //                 for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-        //                 {
-        //                     cOutput_wSpace += *cIt + " ";
-        //                     cOutput += *cIt;
-        //                 }
-        //                 if( cLine ==0 )
-        //                     LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-        //                 cLines.push_back(cOutput);
-        //                 cLine++;
-        //             } while(cLine < 4);
-        //             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        //         }// attempt to readout stub debug lines  
-        //         fBeBoardInterface->Stop(cBeBoard); 
-        //         // //try and scope N times 
-        //         // {
-        //         //     uint8_t cDuration = 0;
-        //         //     uint8_t cReSync   = 0;
-        //         //     uint8_t cCalPulse = 1;
-        //         //     uint8_t cL1A      = 0;
-        //         //     uint8_t cBC0      = 0;
-        //         //     uint32_t cFastCommand;
-
-        //         //     std::vector<std::pair<std::string, uint32_t>> cVecReg;
-
-        //         //     uint32_t encode_resync    = cReSync << 16;
-        //         //     uint32_t encode_cal_pulse = cCalPulse << 17;
-        //         //     uint32_t encode_l1a       = cL1A << 18;
-        //         //     uint32_t encode_bc0       = cBC0 << 19;
-        //         //     uint32_t encode_duration  = cDuration << 28;
-
-        //         //     //calPulse
-        //         //     cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
-        //         //     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
-        //         //     //empty for N clock cycles 
-        //         //     for( int cIndx=0; cIndx<20; cIndx++)
-        //         //     {
-        //         //         cL1A = 0;
-        //         //         cCalPulse=0;
-        //         //         encode_cal_pulse = cCalPulse << 17;
-        //         //         encode_l1a       = cL1A << 18;
-        //         //         cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
-        //         //         cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
-        //         //     }
-        //         //     //trigger 
-        //         //     cL1A = 1;
-        //         //     cCalPulse=0;
-        //         //     encode_cal_pulse = cCalPulse << 17;
-        //         //     encode_l1a       = cL1A << 18;
-        //         //     cFastCommand = encode_resync + encode_l1a + encode_cal_pulse + encode_bc0 + encode_duration;
-        //         //     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control", cFastCommand});
-        //         //     // write 
-        //         //     fBeBoardInterface->WriteBoardMultReg(cBeBoard, cVecReg); 
-        //         //     for( size_t cAttempt=0; cAttempt < 1000; cAttempt++)
-        //         //     {
-        //         //         auto cWords = fBeBoardInterface->ReadBlockBoardReg(cBeBoard,"fc7_daq_stat.physical_interface_block.stub_debug", 80);
-        //         //         std::vector<std::string> cLines(0);
-        //         //         size_t                   cLine = 0;
-        //         //         do
-        //         //         {
-        //         //             std::vector<std::string> cOutputWords(0);
-        //         //             for(size_t cIndex = 0; cIndex < 5; cIndex++)
-        //         //             {
-        //         //                 auto cWord   = cWords[cLine * 10 + cIndex];
-        //         //                 auto cString = std::bitset<32>(cWord).to_string();
-        //         //                 for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
-        //         //             }
-
-        //         //             std::string cOutput_wSpace = "";
-        //         //             std::string cOutput        = "";
-        //         //             for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-        //         //             {
-        //         //                 cOutput_wSpace += *cIt + " ";
-        //         //                 cOutput += *cIt;
-        //         //             }
-        //         //             if( cLine ==3 )
-        //         //                 LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-        //         //             cLines.push_back(cOutput);
-        //         //             // cStrLength = cOutput.length();
-        //         //             cLine++;
-        //         //         } while(cLine < 4);
-        //         //         std::this_thread::sleep_for(std::chrono::microseconds(10));
-        //         //     }
-        //         // }
-        //     }
-        //     else
-        //         this->ReadNEvents(cBeBoard, cNevents);
-        // }//latency scan 
+            
+            this->ReadNEvents(cBeBoard, cNevents);
+        }//latency scan 
     }// board 
 }
 void DataChecker::ReadNeventsTest()
 {
-    this->DigitalInjectionTest(true,false);
+    this->DigitalInjectionTest(false,false);
     // auto cSetting = fSettingsMap.find ( "Nevents" );
     // uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     // LOG (INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;

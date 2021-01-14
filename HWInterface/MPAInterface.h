@@ -19,7 +19,9 @@
 #include <vector>
 
 // periphery config register map 
-const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0}, {"ECM", 1}, {"ReTime", 2}, {"ErrorL1",40}};
+const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0}, {"ECM", 1}, {"ReTime", 2}, {"ErrorL1",40}
+, {"Out0",14},{"Out1",15},{"Out2",16},{"Out3",17},{"Out4",18},{"Out5",19}};
+
 // row config register map
 const std::map<std::string, uint8_t> ROW_CONFIG_TABLE = {{"L1Offset_1", 1}, {"L1Offset_2", 2}, {"ClrRst", 3}};
 // pixel config register map 
@@ -28,7 +30,7 @@ const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE = {{"PixelEnable", 0},
                                                {"TrimDAC", 2},
                                                {"ClusterCut", 3},
                                                {"HipCut", 4},
-                                               {"DigPattern", 5},
+                                               {"DigiPattern", 5},
                                                {"ACCounter_LSB", 9},
                                                {"ACCounter_MSB", 10},
                                                {"SEUCounter", 11}};
