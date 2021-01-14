@@ -409,6 +409,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
     void L1ADebug(uint8_t pWait_ms = 1);
     void StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
+    std::vector<std::string> ScopeStubLines(bool pWithTestPulse=true);
     bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);

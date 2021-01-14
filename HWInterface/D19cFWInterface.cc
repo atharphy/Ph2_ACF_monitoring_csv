@@ -1367,9 +1367,6 @@ void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
 }
 void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 {
-     // enable stub debug - allows you to 'scope' the stub output
-    //this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
-
     if(pWithTestPulse)
         this->ChipTestPulse();
     else
@@ -1401,44 +1398,44 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
         // cStrLength = cOutput.length();
         cLine++;
     } while(cLine < pNlines);
-
-    // std::string cOutput="";
-    // for( int i=0; i < cStrLength/5; i++)
-    // {
-    //     for( int j=0; j < 5; j++ )
-    //     {
-    //         for(cLine=0; cLine < cLines.size(); cLine++)
-    //         {
-    //             cOutput += cLines[cLine][5*i + j];
-    //         }
-    //     }
-    // }
-    // LOG (INFO) << BOLDBLUE << "StubWord : " << cOutput_wSpace << RESET;
-    // do
-    // {
-    //   std::vector<std::string> cOutputWords(0);
-    //   for( size_t cIndex=0; cIndex < 5; cIndex++)
-    //   {
-    //     auto cWord = cWords[cLine*10+cIndex];
-    //     auto cString=std::bitset<32>(cWord).to_string();
-    //     for( size_t cOffset=0; cOffset < 4; cOffset++)
-    //     {
-    //       cOutputWords.push_back(cString.substr(cOffset*8, 8) );
-    //     }
-    //   }
-
-    //   std::string cOutput="";
-    //   for( auto cIt = cOutputWords.end()-1 ; cIt >= cOutputWords.begin() ; cIt--)
-    //   {
-    //       cOutput += *cIt + " ";
-    //   }
-    //   LOG (INFO) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput << RESET;
-
-    //   cLine++;
-    // }while( cLine < pNlines );
-    // disbale stub debug
-    //this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
     this->ResetReadout();
+}
+std::vector<std::string> D19cFWInterface::ScopeStubLines(bool pWithTestPulse)
+{
+    uint8_t cNlines=5; 
+    if(pWithTestPulse)
+        this->ChipTestPulse();
+    else
+        this->Trigger(0);
+
+    auto                     cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+    std::vector<std::string> cLines(0);
+    size_t                   cLine = 0;
+    // int cStrLength=0;
+    do
+    {
+        std::vector<std::string> cOutputWords(0);
+        for(size_t cIndex = 0; cIndex < cNlines; cIndex++)
+        {
+            auto cWord   = cWords[cLine * 10 + cIndex];
+            auto cString = std::bitset<32>(cWord).to_string();
+            for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+        }
+
+        std::string cOutput_wSpace = "";
+        std::string cOutput        = "";
+        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+        {
+            cOutput_wSpace += *cIt + " ";
+            cOutput += *cIt;
+        }
+        LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+        cLines.push_back(cOutput);
+        // cStrLength = cOutput.length();
+        cLine++;
+    } while(cLine < cNlines);
+    this->ResetReadout();
+    return cLines;
 }
 
 // tuning of L1A lines

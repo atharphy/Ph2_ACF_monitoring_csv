@@ -694,6 +694,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                         // activate pp mode
                         //fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);//on for 8 Bx after cal pulse 
                         fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode", 0x00);
+                        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ConfigureTriggerFSM( 0, 100, 3);
                         //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x1);
                     }
                     // // readout mode is tracker 
@@ -726,10 +727,16 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    
+                    std::vector<uint8_t> cPhyPorts(12,0);
+                    std::iota(cPhyPorts.begin(), cPhyPorts.end(), 0);
+                    //std::generate(cPhyPorts.begin(), cPhyPorts.end(), [n = 0] () mutable { return n++; });
+                    //std::vector<uint8_t> cPhyPorts{10,11}; // stub + L1 lines 
                     //std::vector<uint8_t> cPhyPorts{0,1,10}; // stub + L1 lines 
-                    std::vector<uint8_t> cPhyPorts{10}; // stub + L1 lines 
                     for( auto cPhyPort : cPhyPorts ) 
                     {
+                        std::string cMPAHeader = "111111110";
+                        LOG (INFO) << BOLDBLUE << "PhyPort" << +cPhyPort << RESET;
                         fCicInterface->SelectMux(cCic,cPhyPort);//0 , stubs MPA5(FE0) 
                         // D19cFWInterface::PhaseTuner cD19cTuner;
                         // LOG(INFO) << BOLDBLUE << "Running work alignment on stub lines.." << RESET;
@@ -742,10 +749,21 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                             fBeBoardInterface->Start(cBeBoard); 
                             fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBeBoard));
                         }
-                        for( int cAttempt=0; cAttempt < 10; cAttempt++)
+                        for( int cAttempt=0; cAttempt < 100; cAttempt++)
                         {
-                            (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
-                            std::this_thread::sleep_for(std::chrono::microseconds(10));
+                            auto cLines = (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                            int cLineIndx=0;
+                            for( auto cLine : cLines )
+                            {
+                                if (cLine.find(cMPAHeader) != std::string::npos) 
+                                    LOG (INFO) << BOLDBLUE << "Attempt# " << +cAttempt << " PhyPort#" << +cPhyPort
+                                        << ",Line#" << +cLineIndx << " : " << BOLDGREEN << cLine << RESET;
+                                else
+                                    LOG (DEBUG) << BOLDBLUE << "Line#" << +cLineIndx << BOLDRED << cLine << RESET;
+                                cLineIndx++;
+                            }
+                            //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
+                            //std::this_thread::sleep_for(std::chrono::microseconds(10));
                         }
 
                         if( !pShiftRegMode )
@@ -765,12 +783,12 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         }//optical group
 
         
-        LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
-            << +cNevents
-            << " from BeBoard#"
-            << +cBoard->getIndex()
-            << RESET;
-        this->ReadNEvents(cBeBoard, cNevents);
+        // LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
+        //     << +cNevents
+        //     << " from BeBoard#"
+        //     << +cBoard->getIndex()
+        //     << RESET;
+        // this->ReadNEvents(cBeBoard, cNevents);
 
         // check trigger source 
         // and reload 
@@ -951,7 +969,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
 }
 void DataChecker::ReadNeventsTest()
 {
-    this->DigitalInjectionTest(false,false);
+    this->DigitalInjectionTest(true,false);
     // auto cSetting = fSettingsMap.find ( "Nevents" );
     // uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     // LOG (INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;

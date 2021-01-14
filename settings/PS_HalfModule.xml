@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="PSAS">
+  <BeBoard Id="0" boardType="D19C" eventType="VR">
     <!-- PS half module FNAL-->
     <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- B598 skeleton, direct powering -->
@@ -22,10 +22,10 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="2" configfile="SSA.txt" />
+            <SSA Id="7" configfile="SSA.txt" />
             
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="2" partid="0" configfile="MPA.txt" />
+            <MPA Id="7" partid="0" configfile="MPA_Kevin.txt" />
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -46,8 +46,8 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 10 </Register>
-            <Register name="user_trigger_frequency"> 1000 </Register>
+            <Register name="trigger_source"> 3 </Register>
+            <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
