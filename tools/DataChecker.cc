@@ -815,10 +815,10 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBoard));
         
         uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        for(uint16_t cLatency = cDelay - 1 ; cLatency < cDelay+10 ; cLatency++)
+        for(uint16_t cLatency = cDelay - 1 ; cLatency < cDelay ; cLatency++)
         {
-            uint8_t cLatencyReg1 = (0x00FF & cLatency); 
-            uint8_t cLatencyReg2 = (0x0100 & cLatency) >> 8; 
+            //uint8_t cLatencyReg1 = (0x00FF & cLatency); 
+            //uint8_t cLatencyReg2 = (0x0100 & cLatency) >> 8; 
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -826,17 +826,16 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                     for(auto cChip: *cHybrid)
                     {
                         if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                
-                        fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_1_ALL", cLatencyReg1);
-                        fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_2_ALL", cLatencyReg2);
+                    
+                        fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cLatency);
+                        //fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_1_ALL", cLatencyReg1);
+                        //fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_2_ALL", cLatencyReg2);
                     }// chip 
                 }// hybrid 
             }//module 
             // read events 
-            LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency 
-                << RESET;
+            LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency  << RESET;
 
-            
             this->ReadNEvents(cBeBoard, cNevents);
         }//latency scan 
     }// board 

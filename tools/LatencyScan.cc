@@ -144,10 +144,13 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
         BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
         for(uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
         {
+            this->setSameDacBeBoard(theBoard, "TriggerLatency", cLat);
+            fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
             //  Set a Latency Value on all FEs
-            cVisitor.setLatency(cLat);
-            this->accept(cVisitor);
+            // cVisitor.setLatency(cLat);
+            // this->accept(cVisitor);
             ReadNEvents(theBoard, fNevents);
+           
             const std::vector<Event*>& events = GetEvents(theBoard);
             countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
             // done counting hits for all FE's, now update the Histograms

@@ -134,10 +134,12 @@ bool MPAInterface::maskRowCol(Chip* pChip, int pRow , int pColumn, uint8_t pMask
 }
 bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow , uint8_t pValue, bool pVerifLoop)
 {
+    LOG (INFO) << BOLDBLUE << "Configuring row register " << cReg << " writing " << +pValue << RESET;
     uint8_t cRegAddress = ROW_CONFIG_TABLE.find(cReg)->second;  
     // if global register don't readback 
     pVerifLoop = (pRow == 0 ) ? false : pVerifLoop; 
     uint16_t cAddress =  this->regRow( pChip , cRegAddress , pRow);
+    LOG (INFO) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
     return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
 } 
 bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
@@ -159,8 +161,6 @@ uint16_t MPAInterface::readPeri(Chip* pChip, std::string cReg)
             << RESET;
     return MPAInterface::ReadReg(pChip, cAddress);
 }
-
-
 
 uint16_t MPAInterface::regPixel(Chip* pChip, int pBaseRegister, int pRow , int pColumn) 
 {
@@ -191,6 +191,15 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     else if( PERI_CONFIG_TABLE.find(pRegName) != PERI_CONFIG_TABLE.end() )
     {
         return this->configPeri(pMPA, pRegName, pValue);
+    }
+    else if(pRegName == "TriggerLatency" ) 
+    {
+        uint8_t cLatencyReg1 = (0x00FF & pValue); 
+        uint8_t cLatencyReg2 = (0x0100 & pValue) >> 8; 
+        bool cConfigReg1 = this->configRow(pMPA,"L1Offset_1",0, cLatencyReg1);
+        bool cConfigReg2 = this->configRow(pMPA,"L1Offset_2",0, cLatencyReg2);
+        return cConfigReg1&& cConfigReg2;
+            
     }
     else if(pRegName == "DigitalPattern" )
     {

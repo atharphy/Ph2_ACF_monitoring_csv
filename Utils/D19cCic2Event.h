@@ -17,10 +17,14 @@
 #include <numeric>
 
 const size_t CLUSTER_WORD_SIZE = 3 + 8 + 3;
+const size_t P_CLUSTER_WORD_SIZE = 3 + 7 + 3 + 4;
+const size_t S_CLUSTER_WORD_SIZE = 3 + 7 + 3 + 1;
+
 const size_t L1_BLOCK_SIZE     = 11;
 const size_t RAW_L1_CBC        = 275;
 const size_t HIT_WORD_SIZE     = 2 + 9 + 9 + 254;
-const size_t STUB_WORD_SIZE    = 3 + 8 + 4;
+const size_t STUB_WORD_SIZE_2S    = 3 + 8 + 4;
+const size_t STUB_WORD_SIZE_PS    = 3 + 8 + 4 + 3;
 const size_t EVENT_HEADER_SIZE = 4; // in 32 bit words
 
 const uint8_t INVALID_L1HEADER   = 1;
