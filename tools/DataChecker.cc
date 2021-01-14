@@ -801,19 +801,21 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
             << RESET;
         // this->ReadNEvents(cBeBoard, cNevents);
 
+
         // check trigger source 
         // and reload 
-        // uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        // LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
-        // cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
-        // std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
-        // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-        // fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
-
-        // why -2?!
+        uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+        cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
+        // resync
+        fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBoard));
+        
         uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        for(uint16_t cLatency = cDelay - 10 ; cLatency < cDelay+10 ; cLatency++)
+        for(uint16_t cLatency = cDelay - 1 ; cLatency < cDelay+10 ; cLatency++)
         {
             uint8_t cLatencyReg1 = (0x00FF & cLatency); 
             uint8_t cLatencyReg2 = (0x0100 & cLatency) >> 8; 
