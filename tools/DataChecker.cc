@@ -812,7 +812,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
         // resync
-        fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBoard));
+        //fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBoard));
         
         uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
         for(uint16_t cLatency = cDelay - 1 ; cLatency < cDelay ; cLatency++)

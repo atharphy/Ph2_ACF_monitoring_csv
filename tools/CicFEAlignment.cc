@@ -170,24 +170,24 @@ void CicFEAlignment::Running()
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET;
     fSuccess = cPhaseAligned;
     
-    // bool cWordAligned = this->WordAlignment();
-    // if(!cWordAligned)
-    // {
-    //     LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET;
-    //     exit(FAILED_WORD_ALIGNMENT);
-    // }
+    bool cWordAligned = this->WordAlignment();
+    if(!cWordAligned)
+    {
+        LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << "word alignment step on CIC input .. " << RESET;
+        exit(FAILED_WORD_ALIGNMENT);
+    }
 
-    // LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
-    // // automatic alignment
-    // // TO-DO ADD alignment for PS 
-    // bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelay2S) : this->SetBx0Delay(fStubBxDelayPS); 
-    // if(!cBxAligned)
-    // {
-    //     LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
-    //     exit(FAILED_BX_ALIGNMENT);
-    // }
-    // LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
-    // fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
+    LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
+    // automatic alignment
+    // TO-DO ADD alignment for PS 
+    bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelayPS) : this->SetBx0Delay(fStubBxDelay2S); 
+    if(!cBxAligned)
+    {
+        LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
+        exit(FAILED_BX_ALIGNMENT);
+    }
+    LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
+    fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
 }
 
 std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValues)

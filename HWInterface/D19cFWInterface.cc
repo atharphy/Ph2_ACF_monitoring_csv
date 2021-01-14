@@ -3297,10 +3297,10 @@ bool D19cFWInterface::Bx0Alignment()
     do
     {
         // pause after reset
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*100));
         // send a resync then wait
         this->ChipReSync();
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*100));
         // check state of bx0 alignment block
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
@@ -3311,10 +3311,10 @@ bool D19cFWInterface::Bx0Alignment()
             // figure out which one of these is needed
             // resync after bx0 alignment worked
             this->ChipReSync();
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*100));
             // reset the readout as well
             this->ResetReadout();
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*100));
         }
         else
         {

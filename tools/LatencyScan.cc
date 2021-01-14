@@ -145,7 +145,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
         for(uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
         {
             this->setSameDacBeBoard(theBoard, "TriggerLatency", cLat);
-            fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
+            //fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
             //  Set a Latency Value on all FEs
             // cVisitor.setLatency(cLat);
             // this->accept(cVisitor);

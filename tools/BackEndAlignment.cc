@@ -70,7 +70,197 @@ void BackEndAlignment::Initialise()
         }
     }
 }
+bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
+{
+    bool cAligned = true;
+    LOG(INFO) << GREEN << "Trying CIC un-packer alignment in the back-end" << RESET;
 
+    uint32_t cNevents = 10; 
+    // make sure I'm using the regular triger source
+    uint16_t cNtriggers   = 0;
+    uint16_t cTriggerRate = 1;
+    uint8_t  cSource      = 3;
+    uint8_t  cStubsMask   = 0;
+    uint8_t  cStubLatency = 100;
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(cNtriggers, cTriggerRate, cSource, cStubsMask, cStubLatency);
+
+    // only inject stub in the first ROC
+    std::vector<uint8_t> cChipIds{0};
+    std::vector<uint8_t> cSeeds{10};
+    std::vector<int>     cBends{0};
+    // for CBC 
+    // for now comment out
+    // uint16_t cMaxBxCounter = 3563;
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid) // for each chip (makes sense)
+            {
+                auto cReadoutChip          = static_cast<ReadoutChip*>(cChip);
+                auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                // for the moment - only written for CBC3
+                if(cChip->getFrontEndType() == FrontEndType::CBC3) 
+                {
+                    //only inject stubs in the first ROC
+                    if(std::find(cChipIds.begin(), cChipIds.end(), cChip->getId()) != cChipIds.end()) { cReadoutChipInterface->injectStubs(cReadoutChip, cSeeds, cBends, true); }
+                    else
+                    {
+                        // make sure all other chips are quiet
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", 100);
+                    }
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::MPA) 
+                {
+                    // activate pp mode
+                    fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);
+                    // digital sync this pattern on pixel 1 
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x00);
+                        
+                    // mapping for PS module 
+                    // mapping for probe station/etc. can be different
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",5);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",2);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
+                }
+            } // chip
+        }     // hybrid
+    }         // module
+
+    // check trigger source 
+    // and reload 
+    uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+    cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    // resync
+    fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
+   
+
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
+    bool    cCorrectDelay = false;
+    uint8_t cPackageDelay = 0;
+    uint8_t cFinalDelay   = cPackageDelay;
+    for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+    {
+        if(cCorrectDelay) continue;
+
+        LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
+
+        // check stubs
+        // 2 events should be enough
+        LOG(INFO) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+        ReadNEvents(pBoard, cNevents);
+        const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
+        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+
+        for(auto& cEvent: cEventsWithStubs)
+        {
+            for(auto cOpticalGroup: *pBoard)
+            {
+                if(cOpticalGroup->getIndex() > 0) continue;
+
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    if(cHybrid->getIndex() > 0) continue;
+
+                    auto cBx = cEvent->BxId(cHybrid->getId());
+                    LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() 
+                        << " BxID " << +cBx << RESET;
+                    
+                } // hybrids or CICs
+            }// modules or optical links
+        }// events 
+
+        // // // I need to think about this some more ...
+        // // // so for now just check the number of stubs
+        // // // first I want to check that the BxIds from one CIC is incrementing correctly
+        // // // assuming that this is the same for all CICs
+        // std::vector<uint16_t> cBxIds(0);
+        // bool                  cIncrementing  = true;
+        // bool                  cCorrectNStubs = true;
+        // for(auto& cEvent: cEventsWithStubs)
+        // {
+        //     for(auto cOpticalGroup: *pBoard)
+        //     {
+        //         if(cOpticalGroup->getIndex() > 0) continue;
+
+        //         for(auto cHybrid: *cOpticalGroup)
+        //         {
+        //             if(cHybrid->getIndex() > 0) continue;
+
+        //             auto cBx = cEvent->BxId(cHybrid->getId());
+        //             // cBxIds.push_back( cBx );
+        //             // if( ( cBxIds.size() == 1   )
+        //             //     cIncrementing =  true;
+        //             // else if ( cBxIds.size() > 1 )
+        //             //     if ( )
+        //             // else
+        //             //     cIncrementing = (cIncrementing) && ( cBx > cBxIds[cBxIds.size()-1]);
+
+        //             LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID "
+        //                        << +cBx
+        //                        // << " roll-over indicator set to " << ((cRollOver) ? "True" : "False")
+        //                        << " and incrementing flag is " << ((cIncrementing) ? "True" : "False") << RESET;
+        //             for(auto cChip: *cHybrid)
+        //             {
+        //                 if(std::find(cChipIds.begin(), cChipIds.end(), cChip->getId()) == cChipIds.end()) continue;
+
+        //                 auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+        //                 cCorrectNStubs = cCorrectNStubs && (cStubs.size() == cSeeds.size());
+        //                 auto cHits     = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+
+        //                 LOG(DEBUG) << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cStubs.size() << " stubs in the event and " << +cHits.size() << " hits." << RESET;
+        //             }
+        //         } // hybrids or CICs
+        //     }     // modules or optical links
+        // }
+        // cCorrectDelay = cCorrectNStubs && cIncrementing;
+        // if(cCorrectDelay)
+        // {
+        //     cFinalDelay = cCorrectDelay;
+        //     LOG(INFO) << BOLDBLUE << "Stub package delay will be set to " << +cPackageDelay << RESET;
+
+        //     // check again
+        //     this->ReadNEvents(pBoard, 10);
+        //     const std::vector<Event*>& cEvents = this->GetEvents();
+        //     LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 ..." << RESET;
+        //     for(auto& cEvent: cEvents)
+        //     {
+        //         auto cEventCount = cEvent->GetEventCount();
+        //         LOG(INFO) << BOLDBLUE << "Event " << +cEventCount << RESET;
+        //         for(auto cOpticalGroup: *pBoard)
+        //         {
+        //             // check number of stubs
+        //             for(auto cHybrid: *cOpticalGroup)
+        //             {
+        //                 auto cStatus = static_cast<D19cCic2Event*>(cEvent)->Status(cHybrid->getId());
+        //                 auto cBx     = cEvent->BxId(cHybrid->getId());
+
+        //                 LOG(INFO) << BOLDBLUE << "FE" << +cHybrid->getId() << " Status : " << std::bitset<9>(cStatus) << " BxId : " << +cBx << RESET;
+        //             } // hybrids or CICs
+        //         }     // modules
+        //     }         // event
+        // }
+        // else
+        //     LOG(INFO) << BOLDRED << "Stubs from CIC for a package delay of " << +cPackageDelay << " do not make sense...  continuing the scan ..." << RESET;
+
+    } // pkg delay
+
+    LOG(INFO) << BOLDMAGENTA << "End of Bx0Alignment loop " << RESET;
+    cAligned = cCorrectDelay && (cFinalDelay < 8);
+    cAligned = true; // for now 
+    return cAligned;
+}
 bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
     bool cTuned = true;
@@ -222,145 +412,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
     return cAligned;
 }
-bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
-{
-    bool cAligned = true;
-    LOG(INFO) << GREEN << "Trying CIC un-packer alignment in the back-end" << RESET;
 
-    // make sure I'm using the regular triger source
-    uint16_t cNtriggers   = 0;
-    uint16_t cTriggerRate = 1;
-    uint8_t  cSource      = 3;
-    uint8_t  cStubsMask   = 0;
-    uint8_t  cStubLatency = 100;
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(cNtriggers, cTriggerRate, cSource, cStubsMask, cStubLatency);
-
-    // only inject stub in the first ROC
-    std::vector<uint8_t> cChipIds{0};
-    std::vector<uint8_t> cSeeds{10};
-    std::vector<int>     cBends{0};
-    // uint16_t cMaxBxCounter = 3563;
-    for(auto cOpticalReadout: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalReadout)
-        {
-            for(auto cChip: *cHybrid) // for each chip (makes sense)
-            {
-                auto cReadoutChip          = static_cast<ReadoutChip*>(cChip);
-                auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                // for the moment - only written for CBC3
-                if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-
-                // only inject stubs in the first ROC
-                if(std::find(cChipIds.begin(), cChipIds.end(), cChip->getId()) != cChipIds.end()) { cReadoutChipInterface->injectStubs(cReadoutChip, cSeeds, cBends, true); }
-                else
-                {
-                    // make sure all other chips are quiet
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", 100);
-                }
-            } // chip
-        }     // hybrid
-    }         // module
-
-    // auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
-    // LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
-    // bool    cCorrectDelay = false;
-    // uint8_t cPackageDelay = 0;
-    // uint8_t cFinalDelay   = cPackageDelay;
-    // for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
-    // {
-    //     if(cCorrectDelay) continue;
-
-    //     LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
-    //     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
-    //     (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
-
-    //     // check stubs
-    //     // 2 events should be enough
-    //     LOG(INFO) << BOLDMAGENTA << "Reading ten events from the board " << RESET;
-    //     ReadNEvents(pBoard, 10);
-    //     const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
-    //     LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
-
-    //     // // I need to think about this some more ...
-    //     // // so for now just check the number of stubs
-    //     // // first I want to check that the BxIds from one CIC is incrementing correctly
-    //     // // assuming that this is the same for all CICs
-    //     std::vector<uint16_t> cBxIds(0);
-    //     bool                  cIncrementing  = true;
-    //     bool                  cCorrectNStubs = true;
-    //     for(auto& cEvent: cEventsWithStubs)
-    //     {
-    //         for(auto cOpticalGroup: *pBoard)
-    //         {
-    //             if(cOpticalGroup->getIndex() > 0) continue;
-
-    //             for(auto cHybrid: *cOpticalGroup)
-    //             {
-    //                 if(cHybrid->getIndex() > 0) continue;
-
-    //                 auto cBx = cEvent->BxId(cHybrid->getId());
-    //                 // cBxIds.push_back( cBx );
-    //                 // if( ( cBxIds.size() == 1   )
-    //                 //     cIncrementing =  true;
-    //                 // else if ( cBxIds.size() > 1 )
-    //                 //     if ( )
-    //                 // else
-    //                 //     cIncrementing = (cIncrementing) && ( cBx > cBxIds[cBxIds.size()-1]);
-
-    //                 LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID "
-    //                            << +cBx
-    //                            // << " roll-over indicator set to " << ((cRollOver) ? "True" : "False")
-    //                            << " and incrementing flag is " << ((cIncrementing) ? "True" : "False") << RESET;
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     if(std::find(cChipIds.begin(), cChipIds.end(), cChip->getId()) == cChipIds.end()) continue;
-
-    //                     auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-    //                     cCorrectNStubs = cCorrectNStubs && (cStubs.size() == cSeeds.size());
-    //                     auto cHits     = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-
-    //                     LOG(DEBUG) << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cStubs.size() << " stubs in the event and " << +cHits.size() << " hits." << RESET;
-    //                 }
-    //             } // hybrids or CICs
-    //         }     // modules or optical links
-    //     }
-    //     cCorrectDelay = cCorrectNStubs && cIncrementing;
-    //     if(cCorrectDelay)
-    //     {
-    //         cFinalDelay = cCorrectDelay;
-    //         LOG(INFO) << BOLDBLUE << "Stub package delay will be set to " << +cPackageDelay << RESET;
-
-    //         // check again
-    //         this->ReadNEvents(pBoard, 10);
-    //         const std::vector<Event*>& cEvents = this->GetEvents();
-    //         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 ..." << RESET;
-    //         for(auto& cEvent: cEvents)
-    //         {
-    //             auto cEventCount = cEvent->GetEventCount();
-    //             LOG(INFO) << BOLDBLUE << "Event " << +cEventCount << RESET;
-    //             for(auto cOpticalGroup: *pBoard)
-    //             {
-    //                 // check number of stubs
-    //                 for(auto cHybrid: *cOpticalGroup)
-    //                 {
-    //                     auto cStatus = static_cast<D19cCic2Event*>(cEvent)->Status(cHybrid->getId());
-    //                     auto cBx     = cEvent->BxId(cHybrid->getId());
-
-    //                     LOG(INFO) << BOLDBLUE << "FE" << +cHybrid->getId() << " Status : " << std::bitset<9>(cStatus) << " BxId : " << +cBx << RESET;
-    //                 } // hybrids or CICs
-    //             }     // modules
-    //         }         // event
-    //     }
-    //     else
-    //         LOG(INFO) << BOLDRED << "Stubs from CIC for a package delay of " << +cPackageDelay << " do not make sense...  continuing the scan ..." << RESET;
-
-    // } // pkg delay
-
-    // LOG(INFO) << BOLDMAGENTA << "End of Bx0Alignment loop " << RESET;
-    // cAligned = cCorrectDelay && (cFinalDelay < 8);
-    return cAligned;
-}
 bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
 {
     bool cAligned = false;
