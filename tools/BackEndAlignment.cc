@@ -113,9 +113,11 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                 else if( cChip->getFrontEndType() == FrontEndType::MPA) 
                 {
                     // activate pp mode
+                    LOG (INFO) << BOLDBLUE << "Setting up pixel mode.." << RESET;
                     fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);
                     // digital sync this pattern on pixel 1 
-                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x00);
+                    LOG (INFO) << BOLDBLUE << "Controlling injection .." << RESET;
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0xFF);
                         
                     // mapping for PS module 
                     // mapping for probe station/etc. can be different

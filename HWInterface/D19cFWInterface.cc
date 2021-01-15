@@ -1658,12 +1658,12 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
 
-            // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+            //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
             if(pScope) this->StubDebug();
 
             LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
             uint8_t cNlines = 6;
-            for(uint8_t cLineId = 1; cLineId < cNlines; cLineId += 1)
+            for(uint8_t cLineId = 1; cLineId < 1+cNlines; cLineId += 1)
             {
                 if(fOptical)
                 {
@@ -1700,13 +1700,32 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 else
                 {
                     pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                    uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    if(pTuner.fBitslip == 0)
+                    {
+                        uint32_t cAttempts=0;
+                        do
+                        {
+                            if(cAttempts > 10)
+                            {
+                                LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                                exit(0);
+                            }
+                            // try again
+                            LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                            pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                            cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                            LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                            cAttempts++;
+                        } while(pTuner.fBitslip == 0);
+                    }
                     cSuccess = cSuccess && pTuner.fDone;
                 }
-                if(pTuner.fDone != 1)
-                {
-                    LOG(ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId - 1) << " in the back-end." << RESET;
-                    exit(0);
-                }
+                // if(pTuner.fDone != 1)
+                // {
+                //     LOG(ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId - 1) << " in the back-end." << RESET;
+                //     exit(0);
+                // }
             }
         }
     }

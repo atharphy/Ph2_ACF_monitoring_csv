@@ -96,7 +96,7 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum , ui
     uint32_t cColumn = (pPixelNum == 0 ) ? 0 : 1 + cPixNum%120 ;
     uint8_t cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress = this->regPixel( pChip , cRegAddress , cRow, cColumn ); 
-    LOG (DEBUG) << BOLDBLUE << "PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
+    LOG (INFO) << BOLDBLUE << "Configuring " "" << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
             << " [built-in MPA row " << +cRowCol.first << " col " << +cRowCol.second 
             << " ] register 0x" << std::hex << cAddress << std::dec 
             << " value to write is 0x" << std::hex << +pValue << std::dec
@@ -124,6 +124,8 @@ bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum , uint8_t pMask, bool pV
     // pixel num starts from 1 [0 == global]
     auto cRegValue = this->readPixel(pChip,"PixelEnable", pPixelNum);
     uint8_t cNewValue = (cRegValue&0xFE) | (1-pMask);
+    LOG (INFO) << BOLDBLUE << "Setting pixel mask to 0x" 
+        << std::hex << +cNewValue << std::dec << RESET;
     return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop );
 }
 bool MPAInterface::maskRowCol(Chip* pChip, int pRow , int pColumn, uint8_t pMask, bool pVerifLoop) 
@@ -209,6 +211,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "DigitalSync" ) 
     {
+        // tracker mode 
         bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
         //bool cEnableDigital = true;
         uint8_t cPixelMask=0; 
@@ -228,7 +231,8 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t cPixel=1; 
         this->maskPixel(pMPA, cPixel,0, pVerifLoop); 
         // configure pattern 
-        bool    cConfigPattern = this->configPixel(pMPA, "DigiPattern" , 0 , pValue, pVerifLoop);
+        bool    cConfigPattern = this->configPixel(pMPA, "DigiPattern" , pValue , pValue, pVerifLoop);
+
         //if( pValue == 1 )
         //     LOG (INFO) << BOLDBLUE << "Enabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
         //         << std::hex << +cRegValue << std::dec << RESET;
