@@ -33,7 +33,7 @@ const uint8_t INVALID            = 3;
 
 namespace Ph2_HwInterface
 {
-using FeData    = std::pair<std::pair<uint16_t, uint16_t>, std::vector<uint16_t>>;
+using FeData    = std::pair<std::pair<uint16_t, uint16_t>, std::vector<uint32_t>>;
 using RawFeData = std::pair<std::pair<uint16_t, uint16_t>, std::vector<std::bitset<RAW_L1_CBC>>>;
 
 using EventList    = std::vector<FeData>;
@@ -242,7 +242,10 @@ class D19cCic2Event : public Event
         // assign front-end mapping 
         std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR; 
         if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-        return  (7 - std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId)));
+        if( fIs2S )
+            return (7 - std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId)));
+        else
+            return cFeMapping[pReadoutChipId];//std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
     }
 
     std::vector<Cluster> formClusters(std::vector<uint32_t> pHits, int pSensorId) const

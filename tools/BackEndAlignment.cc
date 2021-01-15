@@ -178,7 +178,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     LOG (INFO) <<  BOLDBLUE << "Bx0Alignment for : " << ((cIsPS) ? "PS" : "2S") << RESET;
     // resync .. checking what this does to the alignment 
     // seems ok .. I will keep it then 
-    fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
+    // fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
     
     
     // now try and find correct package delay 
@@ -329,11 +329,16 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     cAligned = cCorrectDelay && (cFinalDelay < 8);
     
     // quick and dirty stub latency scan 
+    // if I do 
     if( cAligned )
     {
-        for( int cOffset=0; cOffset < 100; cOffset++)
+        // I expect the offset to be in this range [at least for this case]
+        int cCorrectLatency = 0; 
+        for( int cOffset=70; cOffset < 90; cOffset++)
         {
             int cStubLatency = cLatency - cOffset; 
+            if( cCorrectLatency != 0 ) continue; 
+
             if( cStubLatency < 0 ) continue;
 
             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
@@ -341,9 +346,43 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 
             LOG(INFO) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
             ReadNEvents(pBoard, cNevents);
-            // adding this here in preparation for stub decoding 
-            //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()).SetStubOffset( cStubLatency );
+            const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
+            LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+            for( auto cEvent : cEventsWithStubs ) 
+            {
+                for(auto cOpticalGroup: *pBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        // only for the first hybrid 
+                        if(cHybrid->getIndex() > 0) continue;
 
+                        for(auto cChip: *cHybrid)
+                        {
+                            if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
+                            auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event." << RESET;
+                            if( cStubs.size() == 2 ) 
+                            {
+                                cCorrectLatency = cOffset;
+                            }
+                        }// ROCs 
+                    } // hybrids or CICs
+                }// optical group loop 
+            }//event loop 
+        }
+        cAligned = ( cCorrectLatency != 0 );
+        if( cAligned )
+        {
+            LOG (INFO) << BOLDGREEN << "Setting correct stub offset for this back-end board to " << +cCorrectLatency << RESET;
+            // adding this here in preparation for stub decoding 
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset( cCorrectLatency );
+        }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Could not find correct stub offset in back-end.. stop and check!" << RESET;
+            throw std::runtime_error(std::string("Could not find correct stub offset in back-end.. stop and check!"));
         }
     }
     //cAligned = true; // for now 

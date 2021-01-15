@@ -50,6 +50,8 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             std::vector<uint8_t> cROCIds(0);
             cROCIds.clear();
             for(auto cChip: *cFe) {
+                if( cChip->getFrontEndType() == FrontEndType::SSA) continue; 
+
                 cROCIds.push_back(cChip->getId());
                 fIs2S = fIs2S || cChip->getFrontEndType() == FrontEndType::CBC3; 
             }
@@ -240,7 +242,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             cStubInformation.first  = (cStubInfo & 0xFFF);
                             cStubInformation.second = (cStubInfo & (0x1FF << 22)) >> 22;
                             if( cNStubs > 0 ) 
-                                LOG (INFO) << BOLDGREEN << "BxId for this event : " << +cStubInformation.first 
+                                LOG (DEBUG) << BOLDGREEN << "BxId for this event : " << +cStubInformation.first 
                                     << " . Stub data size is " << +cStubInfoSize << " status " 
                                     << std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs
                                     << RESET;
@@ -255,9 +257,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             }
                             else
                             {
+                                //LOG (INFO) << BOLDGREEN << "splitting stream of stubs for PS case " << RESET;
                                 std::vector<std::bitset<STUB_WORD_SIZE_PS>> cStubWords(cNStubs, 0);
                                 this->splitStream(pData, cStubWords, cOffset + cHitInfoSize + 2, cNStubs); // split 32 bit words in std::vector of STUB_WORD_SIZE_2S bits
-                                for(auto cStubWord: cStubWords) { fEventStubList[cFe->getIndex()].second.push_back(cStubWord.to_ulong()); }
+                                for(auto cStubWord: cStubWords) { 
+                                    //LOG (INFO) << BOLDBLUE << "Stub word " << std::bitset<STUB_WORD_SIZE_PS>(cStubWord) << RESET;
+                                    fEventStubList[cFe->getIndex()].second.push_back(cStubWord.to_ulong()); 
+                                }
                             }
                         }
                         else
@@ -700,27 +706,42 @@ std::string D19cCic2Event::GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const {
 std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
     auto&             cStubWords    = fEventStubList[getFeIndex(pFeId)].second;
-    auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
-    //auto              cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
     std::vector<Stub> cStubVec;
     for(auto cStubWord: cStubWords)
     {
-        if( fIs2S )
+        uint8_t cIdOffset    = ( fIs2S ) ? (8 + 4) : (8 + 4 + 3 );
+        uint8_t cAddressOffset = (fIs2S) ? (4) : (4+3);
+        uint8_t cBendOffset = (fIs2S) ? 0 : 3;
+        uint8_t cBendMask = (fIs2S) ? 0xF : 0x7 ;
+        
+        // 3 bit chip id 
+        uint8_t cChipId      = static_cast<uint8_t>( ( cStubWord & (0x7 << (cIdOffset)) ) >> cIdOffset);
+        auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        LOG (DEBUG) << BOLDBLUE << "Retreiving stub information for FE#" << +pFeId 
+            << " ROC#" << +cChipId 
+            << " this is chip Id #" << +cChipIdMapped << " in CIC land" << RESET;
+    
+        uint8_t cStubAddress = static_cast<uint8_t>( (cStubWord & (0xFF << (cAddressOffset)) ) >> cAddressOffset);
+        uint8_t cStubBend  =  static_cast<uint8_t>( (cStubWord & (cBendMask << (cBendOffset)) ) >> cBendOffset);
+        uint8_t cRow = fIs2S ? 0x00 : static_cast<uint8_t>( (cStubWord & 0xF) );
+        
+        if(cChipId == cChipIdMapped)
         {
-            uint8_t cChipId      = static_cast<uint8_t>((cStubWord & (0x7 << 12)) >> 12);
-            uint8_t cStubAddress = static_cast<uint8_t>((cStubWord & (0xFF << 4)) >> 4);
-            uint8_t cStubBend    = static_cast<uint8_t>((cStubWord & (0xF << 0)) >> 0);
-            if(cChipId == cChipIdMapped)
-            {
-                // LOG (DEBUG) << BOLDBLUE << "Stub package ..... " << std::bitset<15>(cStubWord) << " --  chip id from
-                // package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]" << RESET;
-                cStubVec.emplace_back(cStubAddress, cStubBend);
-            }
+            LOG (DEBUG) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) 
+                << " --  chip id from package " << +cChipIdMapped 
+                << " [ chip id on hybrid " << +pReadoutChipId << "]"
+                << " stub address is " << +cStubAddress
+                << " stub bend is " << +cStubBend
+                << " stub row is " << +cRow 
+                << RESET;
+            cStubVec.emplace_back(cStubAddress, cStubBend,cRow);
         }
         else
-        {
+            LOG (DEBUG) << BOLDRED << "Stub package ..... " << std::bitset<18>(cStubWord) 
+                << " --  chip id from package " << +cChipIdMapped 
+                << " [ chip id on hybrid " << +pReadoutChipId << "]" << RESET;
             
-        }
+
     }
     return cStubVec;
 }
