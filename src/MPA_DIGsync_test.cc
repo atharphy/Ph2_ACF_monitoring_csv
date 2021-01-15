@@ -206,8 +206,8 @@ int main(int argc, char* argv[])
 					if (cMPA->getFrontEndType() != FrontEndType::MPA) continue;
 
 
-				        NPclustot += static_cast<D19cCic2Event*>(ev)->GetNPixelClusters(0,cMPA->getId());
-				        NSclustot += static_cast<D19cCic2Event*>(ev)->GetNStripClusters(0,cMPA->getId());
+				        NPclustot += static_cast<D19cCic2Event*>(ev)->GetNPixelClusters(0);
+				        NSclustot += static_cast<D19cCic2Event*>(ev)->GetNStripClusters(0);
 				       
 
 				        std::vector<PCluster> Pclus = static_cast<D19cCic2Event*>(ev)->GetPixelClusters(0,cMPA->getId());
