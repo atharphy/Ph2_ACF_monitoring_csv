@@ -365,13 +365,19 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                             LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event."  << RESET;
                             if( cStubs.size() == 2 ) 
                             {
-                                auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                                
-                                LOG (INFO) << BOLDMAGENTA << "\t\t... found " << +cPClusters.size() << " p clusters "
-                                    << " and "<< +cSClusters.size() << " s clusters in Bx0Alignment"
+                                // auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                // auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                LOG (INFO) << BOLDMAGENTA << "\t\t... number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
+                                    << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
                                     << RESET;
                                     cCorrectLatency = cOffset;
+                            
+                                // LOG (INFO) << BOLDMAGENTA << "\t\t... found " << +cPClusters.size() << " p clusters "
+                                //     << " and "<< +cSClusters.size() << " s clusters in Bx0Alignment"
+                                //     << " number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
+                                //     << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
+                                //     << RESET;
+                                //     cCorrectLatency = cOffset;
                             }
                         }// ROCs 
                     } // hybrids or CICs

@@ -195,8 +195,8 @@ class D19cCic2Event : public Event
     std::vector<Cluster>  clusterize(uint8_t pFeId) const;
 
     std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const override;
-    uint8_t GetNStripClusters(uint8_t pFeId, uint8_t pMPAId) const;
-    uint8_t GetNPixelClusters(uint8_t pFeId, uint8_t pMPAId) const;
+    uint8_t GetNStripClusters(uint8_t pFeId) const;
+    uint8_t GetNPixelClusters(uint8_t pFeId) const;
     std::vector<SCluster> GetStripClusters(uint8_t pFeId, uint8_t pMPAId) const;
     std::vector<PCluster> GetPixelClusters(uint8_t pFeId, uint8_t pMPAId) const;
 
@@ -237,8 +237,8 @@ class D19cCic2Event : public Event
     std::vector<uint8_t>              fFeMapping;//{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
     std::vector<uint8_t>              fFeIds;
     std::vector<std::vector<uint8_t>> fROCIds;
-    std::vector<std::vector<uint8_t>> fNStripClusters;
-    std::vector<std::vector<uint8_t>> fNPxlClusters;
+    std::vector<uint8_t> fNStripClusters;
+    std::vector<uint8_t> fNPxlClusters;
     
     bool         fIs2S=true;
     bool         fIsSparsified = true;
