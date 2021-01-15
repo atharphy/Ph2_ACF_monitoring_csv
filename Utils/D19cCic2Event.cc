@@ -528,11 +528,8 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
     auto cIterator =  cClusterWords.begin() + GetNStripClusters( pFeId  );
     auto cEnd      = cClusterWords.end();
 
-    while( cIterator != cEnd )
+    while( cIterator < cEnd )
     {
-    LOG(INFO) << BOLDBLUE << "P" << RESET;
-        if( cIterator == cEnd ) continue; 
-
         uint8_t cChipId = ((*cIterator) & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
         auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
         LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
@@ -584,10 +581,9 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
     auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     auto cIterator =  cClusterWords.begin() ;
 
-    auto cEnd      = cClusterWords.begin() + GetNStripClusters( pFeId ) ;
-    while( cIterator != cEnd ) 
+    auto cEnd      = cClusterWords.begin() + GetNStripClusters( pFeId  ) ;
+    while( cIterator < cEnd )
     {
-    LOG(INFO) << BOLDBLUE << "S" << RESET;
         uint8_t cChipId = ((*cIterator) & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
         auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
         LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
