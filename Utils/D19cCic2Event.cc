@@ -591,6 +591,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
             cSClusters.push_back(cSCluster);
             LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
         }
+        cIterator++;
     };
     return cSClusters;
     // std::vector<SCluster> result;
