@@ -191,65 +191,64 @@ int main(int argc, char* argv[])
 
 		        std::this_thread::sleep_for(ShortWait);
 			
-		 //        const std::vector<Event*>& events = cTool.GetEvents(pBoard);
-		 //        int nev=0;
-		 //        //int nevtot=0;
-			// // std::cout <<"TSST " <<row << "," << col << "," << gpix << std::endl;
+		        const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+		        int nev=0;
+				//int nevtot=0;
+				std::cout <<"TSST " <<row << "," << col << "," << gpix << std::endl;
 
-			// // uint32_t NPclustot=0;
-			// // uint32_t NSclustot=0;
+				uint32_t NPclustot=0;
+				uint32_t NSclustot=0;
 				       
-		 // //        for(__attribute__((unused)) auto& ev: events) 
-		 // //            { 
-			// // 	for(auto cMPA: *ChipVec)
-			// // 	{
-			// // 		if (cMPA->getFrontEndType() != FrontEndType::MPA) continue;
+				for(__attribute__((unused)) auto& ev: events) 
+				    { 
+				for(auto cMPA: *ChipVec)
+				{
+					if (cMPA->getFrontEndType() != FrontEndType::MPA) continue;
 
 
-			// // 	        NPclustot += static_cast<D19cCic2Event*>(ev)->GetNPixelClusters(0,cMPA->getId());
-			// // 	        NSclustot += static_cast<D19cCic2Event*>(ev)->GetNStripClusters(0,cMPA->getId());
+				        NPclustot += static_cast<D19cCic2Event*>(ev)->GetNPixelClusters(0,cMPA->getId());
+				        NSclustot += static_cast<D19cCic2Event*>(ev)->GetNStripClusters(0,cMPA->getId());
 				       
 
-
-			// // 	        std::vector<PCluster> Pclus = static_cast<D19cCic2Event*>(ev)->GetPixelClusters(0,cMPA->getId());
-			// // 	        std::vector<SCluster> Sclus = static_cast<D19cCic2Event*>(ev)->GetStripClusters(0,cMPA->getId());
+				        std::vector<PCluster> Pclus = static_cast<D19cCic2Event*>(ev)->GetPixelClusters(0,cMPA->getId());
+				        std::vector<SCluster> Sclus = static_cast<D19cCic2Event*>(ev)->GetStripClusters(0,cMPA->getId());
 				       
-			// // 	        //std::cout << "NPclus "<<+NPclus<<" NSclus "<<+NSclus <<std::endl;
+				        //std::cout << "NPclus "<<+NPclus<<" NSclus "<<+NSclus <<std::endl;
 
 
-			// // 	        for( auto& pc: Pclus)  
-			// // 	            {
-			// // 	             std::cout << "-------------------------------PIXELS-------------------------------"<< std::endl;
-			// // 	             std::cout << "fAddress "<<+pc.fAddress<< std::endl;
-			// // 	             std::cout << "fWidth "<<+pc.fWidth<< std::endl;
-			// // 	             std::cout << "fZpos "<<+pc.fZpos << std::endl<< std::endl;
-			// // 	            }
-			// // 	        for( auto& sc: Sclus)  
-			// // 	            {
-			// // 	             std::cout << "-------------------------------STRIPS-------------------------------"<< std::endl;
-			// // 	             std::cout << "fAddress? "<<+sc.fAddress<< std::endl;
-			// // 	             std::cout << "fWidth "<<+sc.fWidth<< std::endl;
-			// // 	             std::cout << "fMip "<<+sc.fMip << std::endl<< std::endl;
-			// // 	            }
+				        for( auto& pc: Pclus)  
+				            {
+				             std::cout << "-------------------------------PIXELS-------------------------------"<< std::endl;
+				             std::cout << "fAddress "<<+pc.fAddress<< std::endl;
+				             std::cout << "fWidth "<<+pc.fWidth<< std::endl;
+				             std::cout << "fZpos "<<+pc.fZpos << std::endl<< std::endl;
+				            }
+				        for( auto& sc: Sclus)  
+				            {
+				             std::cout << "-------------------------------STRIPS-------------------------------"<< std::endl;
+				             std::cout << "fAddress? "<<+sc.fAddress<< std::endl;
+				             std::cout << "fWidth "<<+sc.fWidth<< std::endl;
+				             std::cout << "fMip "<<+sc.fMip << std::endl<< std::endl;
+				            }
 					
-			// // 	        //std::cout << "stubs "<< std::endl;
-			// // 	        //for( auto& st: stubs)  
-			// // 	          //  {
-			// // 	             //std::cout << "-------------------------------STUBS-------------------------------"<< std::endl;
-			// // 	            //   std::cout << "getPosition "<<+st.getPosition()<< std::endl;
-			// // 	              // std::cout << "getBend "<<+st.getBend()<< std::endl;
-			// // 	            //   std::cout << "getRow "<<+st.getRow()<< std::endl;
-			// // 	            //   std::cout << "getCenter "<<+st.getCenter()<< std::endl<< std::endl;
-			// // 	            //}
+				        //std::cout << "stubs "<< std::endl;
+				        //for( auto& st: stubs)  
+				          //  {
+				             //std::cout << "-------------------------------STUBS-------------------------------"<< std::endl;
+				            //   std::cout << "getPosition "<<+st.getPosition()<< std::endl;
+				              // std::cout << "getBend "<<+st.getBend()<< std::endl;
+				            //   std::cout << "getRow "<<+st.getRow()<< std::endl;
+				            //   std::cout << "getCenter "<<+st.getCenter()<< std::endl<< std::endl;
+				            //}
 
-				
-	 
-			// // 	}
-		 // //            nev+=1;
-		          
-		 // //            }
-   // //              std::cout << "NPclustot "<<NPclustot<< std::endl;
-   // //              std::cout << "NSclustot "<<NSclustot<< std::endl;
+
+
+				}
+				    nev+=1;
+				  
+				    }
+				std::cout << "NPclustot "<<NPclustot<< std::endl;
+				std::cout << "NSclustot "<<NSclustot<< std::endl;
 
 		
                 npixtot += 1;
