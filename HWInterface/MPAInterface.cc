@@ -96,7 +96,7 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum , ui
     uint32_t cColumn = (pPixelNum == 0 ) ? 0 : 1 + cPixNum%120 ;
     uint8_t cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress = this->regPixel( pChip , cRegAddress , cRow, cColumn ); 
-    LOG (INFO) << BOLDBLUE << "Configuring " "" << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
+    LOG (DEBUG) << BOLDBLUE << "Configuring " "" << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
             //<< " [built-in MPA row " << +cRowCol.first << " col " << +cRowCol.second << " ]"
             << " register 0x" << std::hex << cAddress << std::dec 
             << " value to write is 0x" << std::hex << +pValue << std::dec

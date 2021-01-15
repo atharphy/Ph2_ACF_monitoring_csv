@@ -92,6 +92,8 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     std::vector<uint8_t> cChipIds{0};
     std::vector<uint8_t> cSeeds{10};
     std::vector<int>     cBends{0};
+    // for PS 
+    //std::vector<uint32_t> cPixelIds{1, 200};
     // for now comment out
     uint16_t cMaxBxCounter = 3564;
 
@@ -108,9 +110,10 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     
     // latency to set on all FEs
     uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    uint16_t cLatency = cDelay -1;
     // PS specific configuration .. 
     // TO-DO : ADD TO GLOBAL tag in XML for MPAs TO BE ABLE TO CONFIGURE FROM THERE 
-    uint8_t  cStubWindow = 10; // stub window 
+    uint8_t  cStubWindow = 1; // stub window in half pixels (1)
     uint8_t  cMode = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel 
     //uint8_t  cModeReg = (cMode<<6)|cStubWindow; 
     for(auto cOpticalReadout: *pBoard)
@@ -146,12 +149,17 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                     LOG (INFO) << BOLDBLUE << "Controlling injection .." << RESET;
                     // first make sure all pixels output 0x00 
                     fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x00);
+                    // for( auto cPixelId : cPixelIds )
+                    // {
+                    //     // then .. for pixels I want enable pattern on Pixel1
+                    //     fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP1", 0xFF);
+                    // }
                     // then .. for pixels I want enable pattern on Pixel1
                     fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP1", 0xFF);
                     // then .. for pixels I want enable pattern on Pixel20 as well 
-                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP20", 0xFF);
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP200", 0xFF);
 
-                    fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cDelay-1);
+                    fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cLatency);
 
                     //
                      // mapping for PS module 
@@ -323,7 +331,17 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     // quick and dirty stub latency scan 
     if( cAligned )
     {
+        for( int cOffset=0; cOffset < 100; cOffset++)
+        {
+            int cStubLatency = cLatency - cOffset; 
+            if( cStubLatency < 0 ) continue;
 
+            fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+            LOG (INFO) << BOLDBLUE << "Stub latency set to " << +cStubLatency << RESET;
+
+            LOG(INFO) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+            ReadNEvents(pBoard, cNevents);
+        }
     }
     //cAligned = true; // for now 
     return cAligned;

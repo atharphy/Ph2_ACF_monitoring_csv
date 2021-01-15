@@ -155,10 +155,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                         LOG (INFO) << BOLDGREEN << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " s clusters in the CIC2 event.." << RESET;
                                         for( size_t cWrdOffst=0; cWrdOffst < (cHitInfoSize) ; cWrdOffst++)
                                         {
-                                            LOG (INFO) << BOLDGREEN << "L1 word#" << cWrdOffst  << " : " << std::bitset<32>(*(cIterator+cWrdOffst)) << RESET;
+                                            LOG (DEBUG) << BOLDGREEN << "L1 word#" << cWrdOffst  << " : " << std::bitset<32>(*(cIterator+cWrdOffst)) << RESET;
                                         }
-                                        // for(auto cPCluster : cPClusters )
-                                        //     LOG (INFO) << BOLDGREEN << "\t.." << std::bitset<P_CLUSTER_WORD_SIZE>(cPCluster) << RESET;
                                     }
                                     else
                                         LOG (DEBUG) << BOLDRED << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << "  s clusters in the CIC2 event.." << RESET;
@@ -218,7 +216,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
+                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
                                    << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         // for( uint32_t cIndx=0; cIndx < cStubInfoSize ; cIndx++)
                         // {
@@ -234,10 +232,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             uint8_t  cNStubs        = (cStubInfo & (0x3F << 16)) >> 16;
                             cStubInformation.first  = (cStubInfo & 0xFFF);
                             cStubInformation.second = (cStubInfo & (0x1FF << 22)) >> 22;
-                            // LOG (DEBUG) << BOLDBLUE << "BxId for this event : " << +cStubInformation.first << " .
-                            // Stub data size is " << +cStubInfoSize << " status " <<
-                            // std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs
-                            // << RESET;
+                            if( cNStubs > 0 ) 
+                                LOG (INFO) << BOLDGREEN << "BxId for this event : " << +cStubInformation.first 
+                                    << " . Stub data size is " << +cStubInfoSize << " status " 
+                                    << std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs
+                                    << RESET;
                             fEventStubList[cFe->getIndex()].first = cStubInformation;
                             fEventStubList[cFe->getIndex()].second.clear();
                             if( cIs2S ) 
