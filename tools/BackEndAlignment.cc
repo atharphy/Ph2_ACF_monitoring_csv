@@ -152,13 +152,25 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP20", 0xFF);
 
                     fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cDelay-1);
+
+                    //
+                     // mapping for PS module 
+                    // mapping for probe station/etc. can be different
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",5);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",2);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
+
                 }
             } // chip
         }     // hybrid
     }         // module
     LOG (INFO) <<  BOLDBLUE << "Bx0Alignment for : " << ((cIsPS) ? "PS" : "2S") << RESET;
-    // resync
-    //fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
+    // resync .. checking what this does to the alignment 
+    // seems ok .. I will keep it then 
+    fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
     
     
     // now try and find correct package delay 
@@ -304,8 +316,15 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 
     } // pkg delay
 
+
     LOG(INFO) << BOLDMAGENTA << "End of Bx0Alignment loop " << RESET;
     cAligned = cCorrectDelay && (cFinalDelay < 8);
+    
+    // quick and dirty stub latency scan 
+    if( cAligned )
+    {
+
+    }
     //cAligned = true; // for now 
     return cAligned;
 }
