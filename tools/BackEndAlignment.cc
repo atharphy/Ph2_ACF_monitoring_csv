@@ -341,6 +341,9 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 
             LOG(INFO) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
             ReadNEvents(pBoard, cNevents);
+            // adding this here in preparation for stub decoding 
+            //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()).SetStubOffset( cStubLatency );
+
         }
     }
     //cAligned = true; // for now 

@@ -34,7 +34,9 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     fFeIds.clear();
     fROCIds.clear();
     fNCbc = 0;
+
     // assuming that FEIds aren't shared between links
+    fIs2S=false;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cFe: *cOpticalGroup)
@@ -47,7 +49,10 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             fFeIds.push_back(cFe->getId());
             std::vector<uint8_t> cROCIds(0);
             cROCIds.clear();
-            for(auto cChip: *cFe) cROCIds.push_back(cChip->getId());
+            for(auto cChip: *cFe) {
+                cROCIds.push_back(cChip->getId());
+                fIs2S = fIs2S || cChip->getFrontEndType() == FrontEndType::CBC3; 
+            }
             fROCIds.push_back(cROCIds);
             if(fIsSparsified) { fEventHitList.push_back(cFeData); }
             else
@@ -61,6 +66,9 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     fBeFWType    = 0;
     fCBCDataType = 0;
     fBeStatus    = 0;
+    
+    fFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
+
     this->Set(pBoard, list);
     // this->SetEvent ( pBoard, fNCbc, list );
 }
@@ -110,9 +118,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                     for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
                     {
                         // check if we have a 2S or a PS CIC 
-                        bool cIs2S=true;
-                        for(auto cChip: *cFe) cIs2S = cIs2S && (cChip->getFrontEndType()==FrontEndType::CBC3);
-                        
+                        bool cIs2S=fIs2S;
+
                         uint8_t  cStatusWord    = 0x00;
                         uint32_t cHitInfoHeader = *(cIterator);
                         uint32_t cGoodHitInfo   = (cHitInfoHeader & (0xF << 28)) >> 28;
@@ -470,9 +477,11 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
     } while(cIterator < list.end() - fDummySize);
 }
 
+
 std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
-    auto  cChipIdMapped = 7 - std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
+    auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+    //auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
     auto& cDataBitset   = fEventRawList[getFeIndex(pFeId)].second[cChipIdMapped];
     return cDataBitset;
 }
@@ -535,11 +544,13 @@ bool D19cCic2Event::Error(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const { ret
 
 uint32_t D19cCic2Event::Error(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
+    
     // now only 1 bit per chip - OR of a few error flags
     if(fIsSparsified)
     {
         auto&    cHitInformation = fEventHitList[getFeIndex(pFeId)].first;
-        auto     cChipIdMapped   = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
+        auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        //auto     cChipIdMapped   = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
         uint32_t cError          = (cHitInformation.second & (0x1 << (1 + cChipIdMapped))) >> (1 + cChipIdMapped);
         return cError;
     }
@@ -594,6 +605,7 @@ uint32_t D19cCic2Event::PipelineAddress(uint8_t pFeId, uint8_t pReadoutChipId) c
 }
 std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
+    
     auto&                  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     std::bitset<NCHANNELS> cBitSet(0);
     size_t                 cClusterId = 0;
@@ -601,7 +613,8 @@ std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId, uint8_t pRea
     for(auto cClusterWord: cClusterWords)
     {
         uint8_t cChipId       = ((cClusterWord & (0x7 << 11)) >> 11);
-        auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
+        auto  cChipIdMapped = this->getChipIdMapped(pFeId, cChipId);
+        //auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
         if(cChipIdMapped != pReadoutChipId) continue;
 
         uint8_t cLayerId      = ((cClusterWord & (0xFF << 3)) >> 3) & 0x01;        // LSB is the layer
@@ -687,18 +700,26 @@ std::string D19cCic2Event::GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const {
 std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
     auto&             cStubWords    = fEventStubList[getFeIndex(pFeId)].second;
-    auto              cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
+    auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+    //auto              cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
     std::vector<Stub> cStubVec;
     for(auto cStubWord: cStubWords)
     {
-        uint8_t cChipId      = static_cast<uint8_t>((cStubWord & (0x7 << 12)) >> 12);
-        uint8_t cStubAddress = static_cast<uint8_t>((cStubWord & (0xFF << 4)) >> 4);
-        uint8_t cStubBend    = static_cast<uint8_t>((cStubWord & (0xF << 0)) >> 0);
-        if(cChipId == cChipIdMapped)
+        if( fIs2S )
         {
-            // LOG (DEBUG) << BOLDBLUE << "Stub package ..... " << std::bitset<15>(cStubWord) << " --  chip id from
-            // package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]" << RESET;
-            cStubVec.emplace_back(cStubAddress, cStubBend);
+            uint8_t cChipId      = static_cast<uint8_t>((cStubWord & (0x7 << 12)) >> 12);
+            uint8_t cStubAddress = static_cast<uint8_t>((cStubWord & (0xFF << 4)) >> 4);
+            uint8_t cStubBend    = static_cast<uint8_t>((cStubWord & (0xF << 0)) >> 0);
+            if(cChipId == cChipIdMapped)
+            {
+                // LOG (DEBUG) << BOLDBLUE << "Stub package ..... " << std::bitset<15>(cStubWord) << " --  chip id from
+                // package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]" << RESET;
+                cStubVec.emplace_back(cStubAddress, cStubBend);
+            }
+        }
+        else
+        {
+            
         }
     }
     return cStubVec;
@@ -843,6 +864,7 @@ void D19cCic2Event::print(std::ostream& os) const
 }
 std::vector<Cluster> D19cCic2Event::clusterize(uint8_t pFeId) const
 {
+    
     // even hits ---> bottom sensor : cSensorId ==0 [bottom], cSensorId == 1 [top]
     std::vector<Cluster>   cClusters(0);
     auto&                  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
@@ -850,7 +872,8 @@ std::vector<Cluster> D19cCic2Event::clusterize(uint8_t pFeId) const
     for(auto cClusterWord: cClusterWords)
     {
         uint8_t cChipId       = (cClusterWord & (0x3 << 11)) >> 11;
-        auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
+        auto  cChipIdMapped = this->getChipIdMapped(pFeId, cChipId);
+        //auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
 
         Cluster cCluster;
         uint8_t cFirst         = ((cClusterWord & (0xFF << 3)) >> 3) & 0x7F;
@@ -865,13 +888,15 @@ std::vector<Cluster> D19cCic2Event::clusterize(uint8_t pFeId) const
 // TO-DO : replace all get clusters with clusterize
 std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
+    
     std::vector<Cluster>   cClusters(0);
     auto&                  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     std::bitset<NCHANNELS> cBitSet(0);
     for(auto cClusterWord: cClusterWords)
     {
         uint8_t cChipId       = (cClusterWord & (0x3 << 11)) >> 11;
-        auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
+        auto  cChipIdMapped = this->getChipIdMapped(pFeId, cChipId);
+        //auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
         if(cChipIdMapped != pReadoutChipId) continue;
 
         Cluster cCluster;

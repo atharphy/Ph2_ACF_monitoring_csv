@@ -124,10 +124,10 @@ class D19cFWInterface : public BeBoardFWInterface
     std::map<uint8_t, uint8_t> fTxPolarity;
     // 2S or PS readout 
     bool fIs2S = true;
-
     uint32_t fGBTphase;
-
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
+    // I'm going to add a variable to hold the stub offset 
+    uint32_t fStubOffset=0;
 
     // some useful stuff
     int                 fResetAttempts;
@@ -261,6 +261,8 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
     // check chips connected to board can be read from 
     void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
+    // set stub offset 
+    void SetStubOffset(uint32_t pOffset){ fStubOffset=pOffset;};
 
   private:
     uint8_t  fFastCommandDuration = 0;

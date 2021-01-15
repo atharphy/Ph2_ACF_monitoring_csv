@@ -223,14 +223,27 @@ class D19cCic2Event : public Event
     }
 
   private:
-    std::vector<uint8_t>              fFeMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
+    std::vector<uint8_t>        fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t>        fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t>        fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
+    
+    std::vector<uint8_t>              fFeMapping;//{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
     std::vector<uint8_t>              fFeIds;
     std::vector<std::vector<uint8_t>> fROCIds;
 
+    bool         fIs2S=true;
     bool         fIsSparsified = true;
     EventList    fEventHitList;
     RawEventList fEventRawList;
     EventList    fEventStubList;
+    // mapped id 
+    uint8_t getChipIdMapped(uint8_t pFeId, uint8_t pReadoutChipId) const
+    {
+        // assign front-end mapping 
+        std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR; 
+        if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+        return  (7 - std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId)));
+    }
 
     std::vector<Cluster> formClusters(std::vector<uint32_t> pHits, int pSensorId) const
     {
