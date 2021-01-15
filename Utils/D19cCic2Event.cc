@@ -53,6 +53,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             std::vector<uint8_t> cNPClstrs(0);
             cROCIds.clear();
             for(auto cChip: *cFe) {
+                // only count MPAs
                 if( cChip->getFrontEndType() == FrontEndType::SSA) continue; 
 
                 cROCIds.push_back(cChip->getId());
@@ -524,9 +525,11 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
 {
     std::vector<PCluster> cPClusters;
     auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
-    for( auto cCluster : cClusterWords ) 
+    auto cIterator =  cClusterWords.begin() + GetNStripClusters( pFeId , pReadoutChipId );
+    auto cEnd      = cClusterWords.end();
+    do
     {
-        uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
+        uint8_t cChipId = ((*cIterator) & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
         auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
         LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
             << " ROC#" << +cChipId 
@@ -536,13 +539,15 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
         if(cChipId == cChipIdMapped)
         {
             PCluster aPCluster;
-            aPCluster.fAddress = (cCluster & ((0x7F) << (0+4+3))) >> (0+4+3); 
-            aPCluster.fWidth = (cCluster & ((0x7) << (0+4))) >> (0+4);
-            aPCluster.fZpos = (cCluster & ((0xF) << 0)) >> 0;
+            aPCluster.fAddress = ((*cIterator)  & ((0x7F) << (0+4+3))) >> (0+4+3); 
+            aPCluster.fWidth = ((*cIterator)  & ((0x7) << (0+4))) >> (0+4);
+            aPCluster.fZpos = ((*cIterator)  & ((0xF) << 0)) >> 0;
             cPClusters.push_back(aPCluster);
             LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
         }
-    }
+        cIterator++;
+
+    }while( cIterator != cEnd ) ;
     return cPClusters;
 
     // uint8_t NSclus = GetNStripClusters(pFeId, pReadoutChipId);
@@ -571,9 +576,11 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
 {
     std::vector<SCluster> cSClusters;
     auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
-    for( auto cCluster : cClusterWords ) 
+    auto cIterator =  cClusterWords.begin() ;
+    auto cEnd      = cClusterWords.begin() + GetNStripClusters( pFeId , pReadoutChipId ) ;
+    do
     {
-        uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
+        uint8_t cChipId = ((*cIterator) & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
         auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
         LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
             << " ROC#" << +cChipId 
@@ -582,13 +589,13 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
         if(cChipId == cChipIdMapped)
         {
             SCluster cSCluster;
-            cSCluster.fAddress = (cCluster & ((0x7F) << (0+1+3))) >> (0+1+3); 
-            cSCluster.fWidth = (cCluster & ((0x7) << (0+1))) >> (0+1);
-            cSCluster.fMip = (cCluster & ((0x1) << 0)) >> 0;
+            cSCluster.fAddress = ((*cIterator) & ((0x7F) << (0+1+3))) >> (0+1+3); 
+            cSCluster.fWidth = ((*cIterator) & ((0x7) << (0+1))) >> (0+1);
+            cSCluster.fMip = ((*cIterator) & ((0x1) << 0)) >> 0;
             cSClusters.push_back(cSCluster);
             LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
         }
-    }
+    }while( cIterator != cEnd ) ;
     return cSClusters;
     // std::vector<SCluster> result;
     // uint8_t NSclus = GetNStripClusters(pFeId, pReadoutChipId);
