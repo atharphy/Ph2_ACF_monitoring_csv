@@ -830,7 +830,13 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                             if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
                             auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event." << RESET;
+                            // check S and P clusters 
+                            auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                            auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                            LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event." 
+                                << " also found " << +cPClusters.size() << " p clusters "
+                                << " and "<< +cSClusters.size() << " s clusters "
+                                << RESET;
                         }// ROCs 
                     } // hybrids or CICs
                 }// optical group loop 

@@ -362,10 +362,16 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                             if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
                             auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event." << RESET;
+                            LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event."  << RESET;
                             if( cStubs.size() == 2 ) 
                             {
-                                cCorrectLatency = cOffset;
+                                auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                
+                                LOG (INFO) << BOLDMAGENTA << "\t\t... found " << +cPClusters.size() << " p clusters "
+                                    << " and "<< +cSClusters.size() << " s clusters in Bx0Alignment"
+                                    << RESET;
+                                    cCorrectLatency = cOffset;
                             }
                         }// ROCs 
                     } // hybrids or CICs

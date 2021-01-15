@@ -47,15 +47,22 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             FeData cFeData;
             fEventStubList.push_back(cFeData);
             fFeIds.push_back(cFe->getId());
+
             std::vector<uint8_t> cROCIds(0);
+            std::vector<uint8_t> cNSClstrs(0);
+            std::vector<uint8_t> cNPClstrs(0);
             cROCIds.clear();
             for(auto cChip: *cFe) {
                 if( cChip->getFrontEndType() == FrontEndType::SSA) continue; 
 
                 cROCIds.push_back(cChip->getId());
+                cNSClstrs.push_back(0);
+                cNPClstrs.push_back(0);
                 fIs2S = fIs2S || cChip->getFrontEndType() == FrontEndType::CBC3; 
             }
             fROCIds.push_back(cROCIds);
+            fNStripClusters.push_back(cNSClstrs);
+            fNPxlClusters.push_back(cNPClstrs);
             if(fIsSparsified) { fEventHitList.push_back(cFeData); }
             else
             {
@@ -141,34 +148,47 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             int cL1Offset = cOffset + 2 + int(cWithCIC2);
                             if(fIsSparsified)
                             {
+                                size_t cEOffset=3;
+                                fEventHitList[cFe->getIndex()].first = cL1Information;
+                                fEventHitList[cFe->getIndex()].second.clear();
+                                uint8_t cNStripClusters = (*(cIterator + 2) & 0x7F);
+                                    
                                 if( cIs2S )
                                 {
-                                    uint8_t cNClusters = (*(cIterator + 2) & 0x7F);
+                                    fNStripClusters[cFe->getIndex()][cIndex] = cNStripClusters;
                                     // clusters/hit data first
-                                    std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNClusters, 0);
-                                    this->splitStream(pData, cL1Words, cOffset + 3,
-                                                      cNClusters); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
-                                    fEventHitList[cFe->getIndex()].first = cL1Information;
-                                    fEventHitList[cFe->getIndex()].second.clear();
+                                    std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);
+                                    this->splitStream(pData, cL1Words, cOffset + cEOffset,
+                                                      cNStripClusters); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
                                     for(auto cL1Word: cL1Words) { fEventHitList[cFe->getIndex()].second.push_back(cL1Word.to_ulong()); }
                                 }
                                 else
                                 {
                                     //P + S clusters 
-                                    uint8_t cNPClusters = (*(cIterator + 2) & 0x7F);
-                                    uint8_t cNSClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
-                                    // std::vector<std::bitset<P_CLUSTER_WORD_SIZE>> cPClusters(cNPClusters, 0);
-                                    // this->splitStream(pData, cPClusters, cOffset + 3, cNPClusters); // split 32 bit words in std::vector of CLUSTER_WORD_SIZE bits
-                                    if( cNPClusters > 0 )
+                                    uint8_t cNPxlClusters= (*(cIterator + 2) & 0x7F);
+                                    fNPxlClusters[cFe->getIndex()][cIndex] = cNPxlClusters; 
+                                    fNStripClusters[cFe->getIndex()][cIndex] = cNStripClusters;
+
+                                    // split stream into s and p clusters 
+                                    std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
+                                    this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
+                                    if( cNStripClusters > 0 ) LOG (DEBUG) << BOLDGREEN << "Found " << +cNStripClusters << " s clusters in this event " << RESET;
+                                    
+                                    for(auto cL1Word : cL1SWords ) 
                                     {
-                                        LOG (INFO) << BOLDGREEN << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << " s clusters in the CIC2 event.." << RESET;
-                                        for( size_t cWrdOffst=0; cWrdOffst < (cHitInfoSize) ; cWrdOffst++)
-                                        {
-                                            LOG (DEBUG) << BOLDGREEN << "L1 word#" << cWrdOffst  << " : " << std::bitset<32>(*(cIterator+cWrdOffst)) << RESET;
-                                        }
-                                    }
-                                    else
-                                        LOG (DEBUG) << BOLDRED << "Found " << +cNPClusters << " p clusters and " << +cNSClusters << "  s clusters in the CIC2 event.." << RESET;
+                                        fEventHitList[cFe->getIndex()].second.push_back(cL1Word.to_ulong());
+                                        LOG (DEBUG) << BOLDCYAN << "\t..SCluster:" << std::bitset<S_CLUSTER_WORD_SIZE>(cL1Word) << RESET;
+                                    }// push back s clusters 
+
+                                    cEOffset += (cNStripClusters*S_CLUSTER_WORD_SIZE)/32; 
+                                    std::vector<std::bitset<P_CLUSTER_WORD_SIZE>> cL1PWords(cNPxlClusters, 0); 
+                                    this->splitStream(pData, cL1PWords, cOffset + cEOffset, cNPxlClusters); 
+                                    if( cNPxlClusters > 0 ) LOG (DEBUG) << BOLDGREEN << "Found " << +cNPxlClusters << " p clusters in this event " << RESET;
+                                    for(auto cL1Word : cL1PWords ) 
+                                    {
+                                        fEventHitList[cFe->getIndex()].second.push_back(cL1Word.to_ulong());
+                                        LOG (DEBUG) << BOLDCYAN << "\t...PCluster:" << std::bitset<P_CLUSTER_WORD_SIZE>(cL1Word) << RESET;
+                                    }// push back p clusters 
                                 }
                             }
                             else
@@ -483,6 +503,110 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
     } while(cIterator < list.end() - fDummySize);
 }
 
+uint8_t D19cCic2Event::GetNStripClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
+{
+   //auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+   return fNStripClusters[pFeId][pReadoutChipId];
+}
+uint8_t D19cCic2Event::GetNPixelClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
+{
+   //auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+   return fNPxlClusters[pFeId][pReadoutChipId];
+}
+std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
+{
+    std::vector<PCluster> cPClusters;
+    auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    for( auto cCluster : cClusterWords ) 
+    {
+        uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
+        auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
+            << " ROC#" << +cChipId 
+            << " this is chip Id #" << +cChipIdMapped << " in CIC land" << RESET;
+    
+
+        if(cChipId == cChipIdMapped)
+        {
+            PCluster aPCluster;
+            aPCluster.fAddress = (cCluster & ((0x7F) << (0+4+3))) >> (0+4+3); 
+            aPCluster.fWidth = (cCluster & ((0x7) << (0+4))) >> (0+4);
+            aPCluster.fZpos = (cCluster & ((0xF) << 0)) >> 0;
+            cPClusters.push_back(aPCluster);
+            LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
+        }
+    }
+    return cPClusters;
+
+    // uint8_t NSclus = GetNStripClusters(pFeId, pReadoutChipId);
+    // uint8_t NPclus = GetNPixelClusters(pFeId, pReadoutChipId);
+    // auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+
+    // for(int ic=NSclus; ic <(NSclus+NPclus) ; ic++) 
+    // {
+    // //LOG(INFO) << BOLDRED << "firstword " <<firstword<<" nword "<<nword<< RESET;
+
+    // aPCluster.fAddress = (0x00003f80 & cClusterWords[ic]) >> 7;
+    // aPCluster.fWidth   = (0x00000070 & cClusterWords[ic]) >> 4;
+    // aPCluster.fZpos    =  0x0000000F & cClusterWords[ic];
+    // //LOG(INFO) << BOLDRED << "PIX" << RESET;
+    // //LOG(INFO) << BOLDRED << std::bitset<17>(cClusterWord) << RESET;
+
+
+    // //LOG(INFO) << BOLDRED << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
+    // result.push_back(aPCluster);
+
+    // }
+
+    // return result;
+}
+std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
+{
+    std::vector<SCluster> cSClusters;
+    auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    for( auto cCluster : cClusterWords ) 
+    {
+        uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
+        auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
+            << " ROC#" << +cChipId 
+            << " this is chip Id #" << +cChipIdMapped << " in CIC land" << RESET;
+    
+        if(cChipId == cChipIdMapped)
+        {
+            SCluster cSCluster;
+            cSCluster.fAddress = (cCluster & ((0x7F) << (0+1+3))) >> (0+1+3); 
+            cSCluster.fWidth = (cCluster & ((0x7) << (0+1))) >> (0+1);
+            cSCluster.fMip = (cCluster & ((0x1) << 0)) >> 0;
+            cSClusters.push_back(cSCluster);
+            LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
+        }
+    }
+    return cSClusters;
+    // std::vector<SCluster> result;
+    // uint8_t NSclus = GetNStripClusters(pFeId, pReadoutChipId);
+    // SCluster aSCluster;
+    // auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    // //uint8_t cSClusterSize = D19C_SCluster_SIZE_32_MPA;
+    // //uint8_t deltaword     = 3*32;
+
+    // for(int ic=0; ic <NSclus ; ic++) 
+    // {
+    // //decoding might now be right here...
+
+    //     aSCluster.fAddress = ((0x000007f0 & cClusterWords[ic]) >> 4);
+    //     aSCluster.fMip     = (0x0000000e & cClusterWords[ic]) >> 1;
+    //     aSCluster.fWidth   = 0x00000001 & cClusterWords[ic];
+
+    //     //LOG(INFO) << BOLDRED << "STRIPS" << RESET;
+    //     //LOG (INFO) << BOLDRED << std::bitset<14>(cClusterWords[ic]) << RESET;
+    //     //LOG(INFO) << BOLDRED << unsigned(aSCluster.fAddress)<<","<<unsigned(aSCluster.fWidth)<<","<< unsigned(aSCluster.fMip)<< RESET;
+
+    //     result.push_back(aSCluster);
+
+    // }
+    // return result;
+}
 
 std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
