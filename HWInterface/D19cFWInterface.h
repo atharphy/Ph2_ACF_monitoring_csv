@@ -263,6 +263,8 @@ class D19cFWInterface : public BeBoardFWInterface
     void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
     // set stub offset 
     void SetStubOffset(uint32_t pOffset){ fStubOffset=pOffset;};
+    uint32_t getStubOffset(){ return fStubOffset;};
+    
 
   private:
     uint8_t  fFastCommandDuration = 0;

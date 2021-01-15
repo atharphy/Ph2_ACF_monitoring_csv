@@ -666,7 +666,9 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
     uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     LOG (INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
     uint8_t cPattern = 0x00;
-
+    
+    uint8_t  cStubWindow = 1; // stub window in half pixels (1)
+    uint8_t  cMode = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel 
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
@@ -701,49 +703,18 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                     }// shit register mode 
                     else
                     {
-                        // activate pixel-pixel mode (for now)
-                        fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0xC1);//on for 8 Bx after cal pulse 
+                        // digital sync this pattern on pixel 1 
+                        LOG (INFO) << BOLDBLUE << "Controlling injection .." << RESET;
                         // first make sure all pixels output 0x00 
                         fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x00);
                         // then .. for pixels I want enable pattern on Pixel1
                         fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP1", 0xFF);
                         // then .. for pixels I want enable pattern on Pixel20 as well 
-                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP20", 0xFF);
-                        // then .. for pixels I want enable pattern on Pixel400 as well 
-                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP400", 0xFF);
-
-                        // activate pp mode
-                        //fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);//on for 8 Bx after cal pulse 
-                        // digital sync this pattern on pixel 1 
-                        //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0xFF);
-                        // LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
-                        //     << " Out5 is connected to data_bit#" << +fReadoutChipInterface->ReadChipReg(cChip,"Out5") << RESET;
+                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP200", 0xFF);
+                        // activate stub mode
+                        fReadoutChipInterface->WriteChipReg(cChip,"StubMode", cMode);
+                        fReadoutChipInterface->WriteChipReg(cChip,"StubWindow", cStubWindow);
                     }
-                    // // readout mode is tracker 
-                    // fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode",0x00);//readout mode
-
-                    //static_cast<MPAInterface*>(fReadoutChipInterface)->WriteChipReg(cChip,"DigitalSync",0x01);
-                    // cPixelMask=1;
-                    // cRegValue = cRegValue | (cPixelMask);
-                    // fReadoutChipInterface->WriteChipReg(cChip,"ENFLAGS_P1", cRegValue); // enable one pixel
-
-                    // // enable MPA alignment pattern
-                    // LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
-                    // std::vector<uint8_t>     cOriginalValues;
-                    // uint8_t                  cAlignmentPattern = 0xAA;
-                    // std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
-                    // std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-                    // for(size_t cIndex = 0; cIndex < cRegValues.size() ; cIndex++)
-                    // {
-                    //     for(auto cChip: *cHybrid)
-                    //     {
-                    //         if (cChip->getFrontEndType() != FrontEndType::MPA) continue;
-
-                    //         cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
-                    //         fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
-                    //     } // loop over MPAs
-                    // }// loop over registers
-
                 }//chip
                 if( pBypassCic)
                 {
@@ -822,32 +793,48 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
         cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
+        // figure out what stub offset was set to 
+        auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
         // resync
         //fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBoard));
-        
         uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
         for(uint16_t cLatency = cDelay - 1 ; cLatency < cDelay ; cLatency++)
         {
-            //uint8_t cLatencyReg1 = (0x00FF & cLatency); 
-            //uint8_t cLatencyReg2 = (0x0100 & cLatency) >> 8; 
-            for(auto cOpticalGroup: *cBoard)
+            int cStubLatency = cLatency - cStubOffset; 
+            LOG (INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
+            for(auto cOpticalGroup: *cBeBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                    
+                        //if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
                         fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cLatency);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_1_ALL", cLatencyReg1);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "L1Offset_2_ALL", cLatencyReg2);
                     }// chip 
                 }// hybrid 
             }//module 
             // read events 
-            LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency  << RESET;
+            fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
 
             this->ReadNEvents(cBeBoard, cNevents);
+            const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+            LOG(INFO) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the FC7 ..." << RESET;
+            for( auto cEvent : cEvents ) 
+            {
+                for(auto cOpticalGroup: *cBeBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        for(auto cChip: *cHybrid)
+                        {
+                            if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
+                            auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event." << RESET;
+                        }// ROCs 
+                    } // hybrids or CICs
+                }// optical group loop 
+            }//event loop 
         }//latency scan 
     }// board 
 }
