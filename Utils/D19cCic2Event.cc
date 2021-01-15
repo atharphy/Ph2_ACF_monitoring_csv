@@ -580,10 +580,12 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
     std::vector<SCluster> cSClusters;
     auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     auto cIterator =  cClusterWords.begin() ;
-
+        //LOG (INFO) << BOLDBLUE << "NS " << +GetNStripClusters( pFeId  )<< RESET;
+    
     auto cEnd      = cClusterWords.begin() + GetNStripClusters( pFeId  ) ;
     while( cIterator < cEnd )
     {
+        //LOG (INFO) << BOLDBLUE << "INLOOP"<< RESET;
         uint8_t cChipId = ((*cIterator) & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
         auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
         LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
@@ -592,6 +594,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
     
         if(cChipId == cChipIdMapped)
         {
+        LOG (INFO) << BOLDBLUE << "cChipIdMapped "<<+cChipId<<","<<+cChipIdMapped<< RESET;
             SCluster cSCluster;
             cSCluster.fAddress = ((*cIterator) & ((0x7F) << (0+1+3))) >> (0+1+3); 
             cSCluster.fWidth = ((*cIterator) & ((0x7) << (0+1))) >> (0+1);
