@@ -207,6 +207,8 @@ class D19cCic2Event : public Event
     uint32_t BxId(uint8_t pFeId) const override;
     uint16_t Status(uint8_t pFeId) const;
 
+    std::bitset<NMPACHANNELS>  decodePClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
+    std::bitset<NSSACHANNELS>  decodeSClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
     std::bitset<NCHANNELS>  decodeClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
     std::bitset<RAW_L1_CBC> getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const;
     size_t                  getFeIndex(const uint8_t pFeId) const
@@ -282,6 +284,46 @@ class D19cCic2Event : public Event
         return cClusters;
     }
     std::bitset<NCHANNELS> hitsFromClusters(uint8_t pFeId, uint8_t pReadoutChipId);
+
+    // templated decoding function 
+    // split stream of data
+    template <std::size_t N>
+    void decodeCicClusters(uint8_t pFeId, uint8_t pReadoutChipId)
+    {
+        auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+        std::bitset<N> cBitSet(0);
+        // size_t                 cClusterId = 0;
+        // for( auto cCluster : cClusterWords ) 
+        // {
+        // uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
+        // auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        // if(cChipId == cChipIdMapped)
+        // {
+        //     //figure out if it is an S or a P cluster 
+        //     uint8_t cFlag = ( cCluster & (0x1 << 31) ) >> 31 ;
+        //     if( cFlag == 0 ) // s cluster 
+        //     {
+        //         SCluster cSCluster;
+        //         cSCluster.fAddress = (cCluster & ((0x7F) << (0+1+3))) >> (0+1+3); 
+        //         cSCluster.fWidth = (cCluster & ((0x7) << (0+1))) >> (0+1);
+        //         cSCluster.fMip = (cCluster & ((0x1) << 0)) >> 0;
+        //         //cSClusters.push_back(cSCluster);
+        //         LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
+        //     }
+        //     else
+        //     {
+        //         PCluster aPCluster;
+        //         aPCluster.fAddress = (cCluster & ((0x7F) << (0+4+3))) >> (0+4+3); 
+        //         aPCluster.fWidth = (cCluster & ((0x7) << (0+4))) >> (0+4);
+        //         aPCluster.fZpos = (cCluster & ((0xF) << 0)) >> 0;
+        //         //cPClusters.push_back(aPCluster);
+        //         LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
+        //     }
+        //     cClusterId++;
+        // }
+        // }
+        return cBitSet;
+    }
 
     // L1 Id from chip
     void       printL1Header(std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;
