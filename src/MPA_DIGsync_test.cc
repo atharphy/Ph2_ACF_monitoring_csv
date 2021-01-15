@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 				gpix = theMPA->PNglobal(std::pair<uint32_t, uint32_t>(row, col));
 				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
 				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix-1), 0x37);
-				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix), 0x37);
+				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix), 0x37);
 				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+1), 0x37);
 
 				thePSInterface->WriteChipReg(cMPA, "DigPattern_ALL",0xFF);
@@ -137,9 +137,9 @@ int main(int argc, char* argv[])
 			if (cMPA->getFrontEndType() == FrontEndType::SSA)
 			{
 				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
-				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col-1), 0x9);
+				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col-1), 0x9);
 				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col), 0x9);
-				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col+1), 0x9);
+				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col+1), 0x9);
 	
 				//thePSInterface->WriteChipReg(cMPA, "SAMPLINGMODE_ALL",0x1);
 				thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_L_ALL", 0x0F);

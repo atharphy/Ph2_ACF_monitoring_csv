@@ -111,6 +111,16 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool cReadoutMode       = WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
         return cEnableAnalogue && cEnableFECal && cReadoutMode;
     }
+    else if(pRegName == "TriggerLatency" ) 
+    {
+         //   LOG(INFO) << " pValue " << +pValue;
+        uint8_t cLatencyReg1 = (0x00FF & pValue); 
+        uint8_t cLatencyReg2 = (0x0100 & pValue) >> 8; 
+        bool cConfigReg1 = this->WriteChipSingleReg(pSSA,"L1-Latency_LSB", cLatencyReg1);
+        bool cConfigReg2 = this->WriteChipSingleReg(pSSA,"L1-Latency_MSB", cLatencyReg2);
+        return cConfigReg1&& cConfigReg2;
+            
+    }
     else if(pRegName == "Sync")
     {
         uint8_t pAnalogueCalib  = 1;

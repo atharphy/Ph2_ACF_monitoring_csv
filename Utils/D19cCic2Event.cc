@@ -151,10 +151,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 size_t cEOffset=3;
                                 fEventHitList[cFe->getIndex()].first = cL1Information;
                                 fEventHitList[cFe->getIndex()].second.clear();
-                                uint8_t cNStripClusters = (*(cIterator + 2) & 0x7F);
+                                uint8_t cNStripClusters = 0;
                                     
                                 if( cIs2S )
                                 {
+                                    cNStripClusters = (*(cIterator + 2) & 0x7F);
                                     fNStripClusters[cFe->getIndex()][cIndex] = cNStripClusters;
                                     // clusters/hit data first
                                     std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);
@@ -166,6 +167,10 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 {
                                     //P + S clusters 
                                     uint8_t cNPxlClusters= (*(cIterator + 2) & 0x7F);
+				    cNStripClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
+
+                                    LOG (INFO) << BOLDCYAN << "DECODED " << +cNStripClusters<<","<<+cNPxlClusters << RESET;
+
                                     fNPxlClusters[cFe->getIndex()][cIndex] = cNPxlClusters; 
                                     fNStripClusters[cFe->getIndex()][cIndex] = cNStripClusters;
 
@@ -506,11 +511,13 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
 uint8_t D19cCic2Event::GetNStripClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
    //auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+   LOG (INFO) << BOLDBLUE << "NSC "<<+fNStripClusters[pFeId][pReadoutChipId] << RESET;
    return fNStripClusters[pFeId][pReadoutChipId];
 }
 uint8_t D19cCic2Event::GetNPixelClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
    //auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+   LOG (INFO) << BOLDBLUE << "PSC "<<+fNPxlClusters[pFeId][pReadoutChipId] << RESET;
    return fNPxlClusters[pFeId][pReadoutChipId];
 }
 std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pReadoutChipId) const

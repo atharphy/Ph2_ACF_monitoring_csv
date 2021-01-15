@@ -22,10 +22,10 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="7" configfile="SSA.txt" />
+            <SSA Id="1" configfile="SSAPreCalibSYNC.txt" />
             
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="7" partid="0" configfile="MPA_Kevin.txt" />
+            <MPA Id="1" partid="0" configfile="MPATSTSYNC.txt" />
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
