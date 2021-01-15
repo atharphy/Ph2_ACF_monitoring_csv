@@ -90,15 +90,15 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
 
 bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum , uint8_t pValue, bool pVerifLoop)
 {
-    auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
+    //auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
     int cPixNum = pPixelNum - 1; 
     uint32_t cRow = (pPixelNum == 0 ) ? 0 : 1 + cPixNum/120 ;
     uint32_t cColumn = (pPixelNum == 0 ) ? 0 : 1 + cPixNum%120 ;
     uint8_t cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress = this->regPixel( pChip , cRegAddress , cRow, cColumn ); 
     LOG (INFO) << BOLDBLUE << "Configuring " "" << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
-            << " [built-in MPA row " << +cRowCol.first << " col " << +cRowCol.second 
-            << " ] register 0x" << std::hex << cAddress << std::dec 
+            //<< " [built-in MPA row " << +cRowCol.first << " col " << +cRowCol.second << " ]"
+            << " register 0x" << std::hex << cAddress << std::dec 
             << " value to write is 0x" << std::hex << +pValue << std::dec
             << RESET;
 
@@ -124,8 +124,7 @@ bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum , uint8_t pMask, bool pV
     // pixel num starts from 1 [0 == global]
     auto cRegValue = this->readPixel(pChip,"PixelEnable", pPixelNum);
     uint8_t cNewValue = (cRegValue&0xFE) | (1-pMask);
-    LOG (INFO) << BOLDBLUE << "Setting pixel mask to 0x" 
-        << std::hex << +cNewValue << std::dec << RESET;
+    LOG (DEBUG) << BOLDBLUE << "Setting pixel mask to 0x" << std::hex << +cNewValue << std::dec << RESET;
     return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop );
 }
 bool MPAInterface::maskRowCol(Chip* pChip, int pRow , int pColumn, uint8_t pMask, bool pVerifLoop) 
@@ -203,48 +202,102 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         return cConfigReg1&& cConfigReg2;
             
     }
+    else if(pRegName == "StubMode" ) 
+    {
+        uint8_t cBitShift= ECM_TABLE.find("StubMode")->second;
+        auto cReg = this->readPeri(pMPA,"ECM"); 
+        uint8_t cRegMask = (0x3 << cBitShift) ; // 
+        cRegMask = ~(cRegMask); 
+        uint8_t cValue = ( cReg  & cRegMask ) | (pValue <<  cBitShift ) ;
+        return this->configPeri(pMPA, "ECM", cValue ) ;
+    }
+    else if(pRegName == "StubWindow" ) 
+    {
+        uint8_t cBitShift= ECM_TABLE.find("StubWindow")->second;
+        auto cReg = this->readPeri(pMPA,"ECM"); 
+        uint8_t cRegMask = (0x3F << cBitShift); // FIX ME _ AUTOMATE THIS  
+        cRegMask = ~(cRegMask); 
+        uint8_t cValue = ( cReg  & cRegMask ) | (pValue <<  cBitShift ) ;
+        return this->configPeri(pMPA, "ECM", cValue ) ;
+        
+    }
     else if(pRegName == "DigitalPattern" )
     {
         bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x03);
         bool cConfigPattern = WriteChipSingleReg(pMPA, "LFSR_data", pValue);
         return cReadoutMode && cConfigPattern;
     }
-    else if(pRegName == "DigitalSync" ) 
+    else if(pRegName.find("DigitalSync") != std::string::npos)
     {
         // tracker mode 
-        bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
-        //bool cEnableDigital = true;
-        uint8_t cPixelMask=0; 
-        uint8_t cPolarity=1;
-        uint8_t cEnEdgeBR=1;
-        uint8_t cEnLvlBr=0;
-        uint8_t cEnCount=0;
-        uint8_t cDigCal=pValue; 
-        uint8_t cAnaCal=0; 
-        uint8_t cBrClk=0;
-        uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask; 
-        cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
-        cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
-        // enable digital injection on all pixels 
-        bool    cEnableDigital = this->configPixel(pMPA, "PixelEnable" , 0 , cRegValue, pVerifLoop);
-        // for now .. only one on pixel 
-        uint8_t cPixel=1; 
-        this->maskPixel(pMPA, cPixel,0, pVerifLoop); 
+        bool cReadoutMode = this->configPeri(pMPA, "ReadoutMode", 0x00);
+        // value to change
+        // enable digital injection, disable analogue calibration and analogue count 
+        uint8_t cEnable = 1 ; 
+        uint8_t cValue = (1 << PIXEL_ENABLE_TABLE.find("PixelMask")->second );//enable pixel; 
+        cValue= (0 << PIXEL_ENABLE_TABLE.find("CounterEnable")->second ) ;//disable counter
+        cValue= cValue | (cEnable << PIXEL_ENABLE_TABLE.find("DigitalInjection")->second ) ;//enable digital injection
+        cValue= cValue | (0 << PIXEL_ENABLE_TABLE.find("AnalogueInjection")->second ) ;//disable analogue injection
+        // register mask 
+        std::vector<std::string> cPixelRegs{"CounterEnable", "DigitalInjection", "AnalogueInjection"};
+        uint8_t cRegMask = 0x00; 
+        for( auto cPixelReg : cPixelRegs ) 
+            cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second ) ;
+        cRegMask = ~(cRegMask); 
+        LOG (INFO) << BOLDBLUE << "Register mask is 0x" << std::hex <<  +cRegMask << std::dec << RESET;
+        uint8_t cRegValue=0x00;
+        int cPixelNumber=0;
+        if(pRegName.find("P")!= std::string::npos) // single pixel
+        {
+            cPixelNumber = std::stoi(pRegName.substr( pRegName.find("P")+1, pRegName.length()));
+            cRegValue = this->readPixel(pMPA, "PixelEnable", cPixelNumber);
+            cRegValue = (cRegValue & cRegMask) | cValue; 
+        }
+        else 
+        {
+            std::vector<uint8_t> cBits={1,1,1,0,0,cEnable,0,0};
+            for( auto cBit : cBits ) 
+                cRegValue = cRegValue | (1 << cBit ) ;
+        }
+        bool    cEnableDigital = this->configPixel(pMPA, "PixelEnable" , cPixelNumber , cRegValue, pVerifLoop);
         // configure pattern 
-        bool    cConfigPattern = this->configPixel(pMPA, "DigiPattern" , pValue , pValue, pVerifLoop);
+        bool    cConfigPattern = this->configPixel(pMPA, "DigiPattern" , cPixelNumber , pValue, pVerifLoop);
+        return cReadoutMode && cEnableDigital && cConfigPattern;
+    }   
+    // else if(pRegName == "DigitalSync" ) 
+    // {
+        
+    //     uint8_t cPixelMask=0; 
+    //     uint8_t cPolarity=1;
+    //     uint8_t cEnEdgeBR=1;
+    //     uint8_t cEnLvlBr=0;
+    //     uint8_t cEnCount=0;
+    //     uint8_t cDigCal=1; 
+    //     uint8_t cAnaCal=0; 
+    //     uint8_t cBrClk=0;
+    //     uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask; 
+    //     cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ; 
+    //     cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ; 
+    //     // enable digital injection on all pixels 
+    //     bool    cEnableDigital = this->configPixel(pMPA, "PixelEnable" , 0 , cRegValue, pVerifLoop);
+    //     // for now .. only one on pixel 
+    //     uint8_t cPixel=1; 
+    //     this->maskPixel(pMPA, cPixel,0, pVerifLoop); 
+    //     // configure pattern 
+    //     bool    cConfigPattern = this->configPixel(pMPA, "DigiPattern" , pValue , pValue, pVerifLoop);
 
-        //if( pValue == 1 )
-        //     LOG (INFO) << BOLDBLUE << "Enabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
-        //         << std::hex << +cRegValue << std::dec << RESET;
-        // else
-        //     LOG (INFO) << BOLDBLUE << "Disabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
-        //         << std::hex << +cRegValue << std::dec << RESET;
+    //     //if( pValue == 1 )
+    //     //     LOG (INFO) << BOLDBLUE << "Enabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
+    //     //         << std::hex << +cRegValue << std::dec << RESET;
+    //     // else
+    //     //     LOG (INFO) << BOLDBLUE << "Disabling digital injection on MPA by setting register ENFLAGS_ALL to 0x" 
+    //     //         << std::hex << +cRegValue << std::dec << RESET;
             
-        // bool    cEnableDigital = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
-        // LOG (INFO) << BOLDBLUE << "Enabling readout of L1 data on MPA by setting register ReadoutMode to 0x" 
-        //         << std::hex << +(0) << std::dec << RESET;
-        return cEnableDigital && cReadoutMode && cConfigPattern;
-    }
+    //     // bool    cEnableDigital = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
+    //     // LOG (INFO) << BOLDBLUE << "Enabling readout of L1 data on MPA by setting register ReadoutMode to 0x" 
+    //     //         << std::hex << +(0) << std::dec << RESET;
+    //     return cEnableDigital && cReadoutMode && cConfigPattern;
+    // }
     else if(pRegName == "AnalogueAsync")
     {
         //readout mode 1 -- ASYNC counter

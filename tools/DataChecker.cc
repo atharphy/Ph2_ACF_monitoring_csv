@@ -701,10 +701,21 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                     }// shit register mode 
                     else
                     {
+                        // activate pixel-pixel mode (for now)
+                        fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0xC1);//on for 8 Bx after cal pulse 
+                        // first make sure all pixels output 0x00 
+                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x00);
+                        // then .. for pixels I want enable pattern on Pixel1
+                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP1", 0xFF);
+                        // then .. for pixels I want enable pattern on Pixel20 as well 
+                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP20", 0xFF);
+                        // then .. for pixels I want enable pattern on Pixel400 as well 
+                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP400", 0xFF);
+
                         // activate pp mode
                         //fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);//on for 8 Bx after cal pulse 
                         // digital sync this pattern on pixel 1 
-                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0xFF);
+                        //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0xFF);
                         // LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
                         //     << " Out5 is connected to data_bit#" << +fReadoutChipInterface->ReadChipReg(cChip,"Out5") << RESET;
                     }

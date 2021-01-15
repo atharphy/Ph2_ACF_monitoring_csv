@@ -21,7 +21,10 @@ void BackEndAlignment::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        for(auto cReg: cBeRegMap){ 
+            if(cReg.first.find("stub_package_delay") != std::string::npos) continue;
+            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
@@ -85,12 +88,31 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(cNtriggers, cTriggerRate, cSource, cStubsMask, cStubLatency);
 
     // only inject stub in the first ROC
+    // for CBC 
     std::vector<uint8_t> cChipIds{0};
     std::vector<uint8_t> cSeeds{10};
     std::vector<int>     cBends{0};
-    // for CBC 
     // for now comment out
-    // uint16_t cMaxBxCounter = 3563;
+    uint16_t cMaxBxCounter = 3564;
+
+    bool cIsPS=false;
+    // check trigger source 
+    // and reload 
+    uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+    cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    
+    // latency to set on all FEs
+    uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    // PS specific configuration .. 
+    // TO-DO : ADD TO GLOBAL tag in XML for MPAs TO BE ABLE TO CONFIGURE FROM THERE 
+    uint8_t  cStubWindow = 10; // stub window 
+    uint8_t  cMode = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel 
+    //uint8_t  cModeReg = (cMode<<6)|cStubWindow; 
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -112,39 +134,34 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                 }
                 else if( cChip->getFrontEndType() == FrontEndType::MPA) 
                 {
-                    // activate pp mode
-                    LOG (INFO) << BOLDBLUE << "Setting up pixel mode.." << RESET;
-                    fReadoutChipInterface->WriteChipReg(cChip,"ECM", 0x81);
+                    cIsPS=true;
+                    // activate stub mode
+                    fReadoutChipInterface->WriteChipReg(cChip,"StubMode", cMode);
+                    fReadoutChipInterface->WriteChipReg(cChip,"StubWindow", cStubWindow);
+                    auto cRegValue = fReadoutChipInterface->ReadChipReg(cChip,"ECM");
+                    LOG (INFO) << BOLDBLUE << "Read-back of pixel mode.. ECM register set to 0x" 
+                        << std::hex << +cRegValue << std::dec << RESET;
+
                     // digital sync this pattern on pixel 1 
                     LOG (INFO) << BOLDBLUE << "Controlling injection .." << RESET;
-                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0xFF);
-                        
-                    // mapping for PS module 
-                    // mapping for probe station/etc. can be different
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",5);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",4);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",2);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",4);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
+                    // first make sure all pixels output 0x00 
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x00);
+                    // then .. for pixels I want enable pattern on Pixel1
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP1", 0xFF);
+                    // then .. for pixels I want enable pattern on Pixel20 as well 
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP20", 0xFF);
+
+                    fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cDelay-1);
                 }
             } // chip
         }     // hybrid
     }         // module
-
-    // check trigger source 
-    // and reload 
-    uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
-    cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
-    std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
-    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    LOG (INFO) <<  BOLDBLUE << "Bx0Alignment for : " << ((cIsPS) ? "PS" : "2S") << RESET;
     // resync
-    fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
-   
-
+    //fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
+    
+    
+    // now try and find correct package delay 
     auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
     LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
     bool    cCorrectDelay = false;
@@ -165,23 +182,52 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
         const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
         LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
 
+        // now ... check for incrementing BxIds 
+        int     cNRollOvers = 0 ;
+        std::vector<int> cBxIds(0);
+        std::vector<int> cBxDifferences(0);//I think by injecting this way this number should always be the same ..
         for(auto& cEvent: cEventsWithStubs)
         {
             for(auto cOpticalGroup: *pBoard)
             {
+                // only checked for first link 
                 if(cOpticalGroup->getIndex() > 0) continue;
 
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     if(cHybrid->getIndex() > 0) continue;
 
-                    auto cBx = cEvent->BxId(cHybrid->getId());
-                    LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() 
-                        << " BxID " << +cBx << RESET;
+                    auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                    if( cBxIds.size() > 0 ) 
+                    {
+                        int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size()-1]%cMaxBxCounter); 
+                        cNRollOvers += ((cBxIds[cBxIds.size()-1] >= 2500 ) && (cBxIds[cBxIds.size()-1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size()-1]) ? 1 : 0 ;
+                        cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx%cMaxBxCounter) - cBxDifference;
+                        cBxDifferences.push_back(cBxDifference);
+                        LOG (DEBUG) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
+                    }
+                    cBxIds.push_back(cBx);
+                    LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
                     
                 } // hybrids or CICs
             }// modules or optical links
         }// events 
+        // figure out the differences between the bxIds 
+        auto cFirstDifference=cBxDifferences[0];
+        std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin()); 
+        cBxDifferences.erase (cBxDifferences.begin()); // erase the first element 
+        for(auto cDifference : cBxDifferences )
+            LOG (DEBUG) << BOLDBLUE << "\t..." << +cDifference << RESET;
+        // all elements are equal 
+        if( cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()) )
+        {
+            LOG (INFO) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
+            LOG (INFO) << BOLDGREEN << "Going to fix the manual package delay to " << +cPackageDelay << RESET;
+            cCorrectDelay=true;
+        }
+        else
+            LOG (INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
+
 
         // // // I need to think about this some more ...
         // // // so for now just check the number of stubs
@@ -260,7 +306,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 
     LOG(INFO) << BOLDMAGENTA << "End of Bx0Alignment loop " << RESET;
     cAligned = cCorrectDelay && (cFinalDelay < 8);
-    cAligned = true; // for now 
+    //cAligned = true; // for now 
     return cAligned;
 }
 bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
