@@ -93,7 +93,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     std::vector<uint8_t> cSeeds{10};
     std::vector<int>     cBends{0};
     // for PS 
-    //std::vector<uint32_t> cPixelIds{1, 200};
+    std::vector<uint32_t> cPixelIds{0*120+10  , 10*120 + 60}; // these will be used to generate stubs 
     // for now comment out
     uint16_t cMaxBxCounter = 3564;
 
@@ -149,26 +149,25 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                     LOG (INFO) << BOLDBLUE << "Controlling injection .." << RESET;
                     // first make sure all pixels output 0x00 
                     fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x00);
-                    // for( auto cPixelId : cPixelIds )
-                    // {
-                    //     // then .. for pixels I want enable pattern on Pixel1
-                    //     fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP1", 0xFF);
-                    // }
-                    // then .. for pixels I want enable pattern on Pixel1
-                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP1", 0xFF);
-                    // then .. for pixels I want enable pattern on Pixel20 as well 
-                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP200", 0xFF);
+                    // then .. for pixels I want enable pattern on PixelN
+                    for( auto cPixelId : cPixelIds)
+                    {
+                        std::ostringstream cRegName;
+                        cRegName << "DigitalSyncP" << std::to_string(cPixelId);
+                        LOG (INFO) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET; 
+                        fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), 0xFF);
+                    }
+                    //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP200", 0xFF);
 
                     fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cLatency);
 
-                    //
-                     // mapping for PS module 
+                    // mapping for PS module 
                     // mapping for probe station/etc. can be different
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",5);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",4);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",2);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",1);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",1);//1  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",2);//2  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);//3  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",4);//4  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",5);//5  
                     fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
 
                 }
@@ -176,9 +175,6 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
         }     // hybrid
     }         // module
     LOG (INFO) <<  BOLDBLUE << "Bx0Alignment for : " << ((cIsPS) ? "PS" : "2S") << RESET;
-    // resync .. checking what this does to the alignment 
-    // seems ok .. I will keep it then 
-    // fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
     
     
     // now try and find correct package delay 
@@ -197,10 +193,10 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 
         // check stubs
         // 2 events should be enough
-        LOG(INFO) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
         ReadNEvents(pBoard, cNevents);
         const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
-        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
 
         // now ... check for incrementing BxIds 
         int     cNRollOvers = 0 ;
@@ -248,80 +244,6 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
         else
             LOG (INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
 
-
-        // // // I need to think about this some more ...
-        // // // so for now just check the number of stubs
-        // // // first I want to check that the BxIds from one CIC is incrementing correctly
-        // // // assuming that this is the same for all CICs
-        // std::vector<uint16_t> cBxIds(0);
-        // bool                  cIncrementing  = true;
-        // bool                  cCorrectNStubs = true;
-        // for(auto& cEvent: cEventsWithStubs)
-        // {
-        //     for(auto cOpticalGroup: *pBoard)
-        //     {
-        //         if(cOpticalGroup->getIndex() > 0) continue;
-
-        //         for(auto cHybrid: *cOpticalGroup)
-        //         {
-        //             if(cHybrid->getIndex() > 0) continue;
-
-        //             auto cBx = cEvent->BxId(cHybrid->getId());
-        //             // cBxIds.push_back( cBx );
-        //             // if( ( cBxIds.size() == 1   )
-        //             //     cIncrementing =  true;
-        //             // else if ( cBxIds.size() > 1 )
-        //             //     if ( )
-        //             // else
-        //             //     cIncrementing = (cIncrementing) && ( cBx > cBxIds[cBxIds.size()-1]);
-
-        //             LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID "
-        //                        << +cBx
-        //                        // << " roll-over indicator set to " << ((cRollOver) ? "True" : "False")
-        //                        << " and incrementing flag is " << ((cIncrementing) ? "True" : "False") << RESET;
-        //             for(auto cChip: *cHybrid)
-        //             {
-        //                 if(std::find(cChipIds.begin(), cChipIds.end(), cChip->getId()) == cChipIds.end()) continue;
-
-        //                 auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-        //                 cCorrectNStubs = cCorrectNStubs && (cStubs.size() == cSeeds.size());
-        //                 auto cHits     = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-
-        //                 LOG(DEBUG) << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cStubs.size() << " stubs in the event and " << +cHits.size() << " hits." << RESET;
-        //             }
-        //         } // hybrids or CICs
-        //     }     // modules or optical links
-        // }
-        // cCorrectDelay = cCorrectNStubs && cIncrementing;
-        // if(cCorrectDelay)
-        // {
-        //     cFinalDelay = cCorrectDelay;
-        //     LOG(INFO) << BOLDBLUE << "Stub package delay will be set to " << +cPackageDelay << RESET;
-
-        //     // check again
-        //     this->ReadNEvents(pBoard, 10);
-        //     const std::vector<Event*>& cEvents = this->GetEvents();
-        //     LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 ..." << RESET;
-        //     for(auto& cEvent: cEvents)
-        //     {
-        //         auto cEventCount = cEvent->GetEventCount();
-        //         LOG(INFO) << BOLDBLUE << "Event " << +cEventCount << RESET;
-        //         for(auto cOpticalGroup: *pBoard)
-        //         {
-        //             // check number of stubs
-        //             for(auto cHybrid: *cOpticalGroup)
-        //             {
-        //                 auto cStatus = static_cast<D19cCic2Event*>(cEvent)->Status(cHybrid->getId());
-        //                 auto cBx     = cEvent->BxId(cHybrid->getId());
-
-        //                 LOG(INFO) << BOLDBLUE << "FE" << +cHybrid->getId() << " Status : " << std::bitset<9>(cStatus) << " BxId : " << +cBx << RESET;
-        //             } // hybrids or CICs
-        //         }     // modules
-        //     }         // event
-        // }
-        // else
-        //     LOG(INFO) << BOLDRED << "Stubs from CIC for a package delay of " << +cPackageDelay << " do not make sense...  continuing the scan ..." << RESET;
-
     } // pkg delay
 
 
@@ -334,7 +256,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     {
         // I expect the offset to be in this range [at least for this case]
         int cCorrectLatency = 0; 
-        for( int cOffset=70; cOffset < 90; cOffset++)
+        for( int cOffset=70; cOffset <= 90; cOffset++)
         {
             int cStubLatency = cLatency - cOffset; 
             if( cCorrectLatency != 0 ) continue; 
@@ -344,10 +266,10 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             LOG (INFO) << BOLDBLUE << "Stub latency set to " << +cStubLatency << RESET;
 
-            LOG(INFO) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+            LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
             ReadNEvents(pBoard, cNevents);
             const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
-            LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
             for( auto cEvent : cEventsWithStubs ) 
             {
                 for(auto cOpticalGroup: *pBoard)
@@ -362,22 +284,28 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                             if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
                             auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            LOG (INFO) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event."  << RESET;
-                            if( cStubs.size() == 2 ) 
+                            LOG (DEBUG) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event."  << RESET;
+                            if( cStubs.size() == cPixelIds.size() ) 
                             {
-                                // auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                // auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                                LOG (INFO) << BOLDMAGENTA << "\t\t... number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
-                                    << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
-                                    << RESET;
-                                    cCorrectLatency = cOffset;
-                            
-                                // LOG (INFO) << BOLDMAGENTA << "\t\t... found " << +cPClusters.size() << " p clusters "
-                                //     << " and "<< +cSClusters.size() << " s clusters in Bx0Alignment"
-                                //     << " number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
+                                auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                // LOG (INFO) << BOLDMAGENTA << "\t\t... number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
                                 //     << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
                                 //     << RESET;
                                 //     cCorrectLatency = cOffset;
+                            
+                                LOG (INFO) << BOLDMAGENTA << "\t\t... found " << +cPClusters.size() << " p clusters "
+                                    << " and "<< +cSClusters.size() << " s clusters in Bx0Alignment"
+                                    << " number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
+                                    << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
+                                    << RESET;
+                                    cCorrectLatency = cOffset;
+                                for( auto cPCluster : cPClusters )
+                                    LOG (INFO) << "\t... PCluster : address : " << unsigned(cPCluster.fAddress) 
+                                    << ", width "<<unsigned(cPCluster.fWidth)
+                                    << ", row "<< unsigned(cPCluster.fZpos)
+                                    << RESET;
+        
                             }
                         }// ROCs 
                     } // hybrids or CICs

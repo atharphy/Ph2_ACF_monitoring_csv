@@ -96,7 +96,7 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum , ui
     uint32_t cColumn = (pPixelNum == 0 ) ? 0 : 1 + cPixNum%120 ;
     uint8_t cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress = this->regPixel( pChip , cRegAddress , cRow, cColumn ); 
-    LOG (DEBUG) << BOLDBLUE << "Configuring " "" << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
+    LOG (INFO) << BOLDBLUE << "Configuring " "" << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn 
             //<< " [built-in MPA row " << +cRowCol.first << " col " << +cRowCol.second << " ]"
             << " register 0x" << std::hex << cAddress << std::dec 
             << " value to write is 0x" << std::hex << +pValue << std::dec
@@ -145,13 +145,13 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow , uint8_t p
 } 
 bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
 {
-    LOG (DEBUG) << BOLDBLUE << "Configuring peri register " << cReg << " writing " << +pValue << RESET;
+    LOG (INFO) << BOLDBLUE << "Configuring peri register " << cReg << " writing " << +pValue << RESET;
     // LOG (INFO) << BOLDRED << PERI_CONFIG_TABLE.size() << " items in peri map." << RESET;
     // for( auto cMapItem : PERI_CONFIG_TABLE )
     //     LOG (INFO) << cMapItem.first << " " << +cMapItem.second << RESET;
     uint8_t cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second;  
     uint16_t cAddress =  this->regPeri(pChip, cRegAddress ); 
-    LOG (DEBUG) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
+    LOG (INFO) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
     return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
 }
 uint16_t MPAInterface::readPeri(Chip* pChip, std::string cReg)

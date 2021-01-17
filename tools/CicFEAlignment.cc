@@ -687,7 +687,7 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
     // phase alignment step - first 85 [] , 170 []
     bool                 cAligned = true;
     std::vector<uint8_t> cAlignmentPatterns_CBC{0x7A, 0xBC, 0xD4, 0x31, 0x81};
-    std::vector<uint8_t> cAlignmentPatterns_MPA{0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
+    std::vector<uint8_t> cAlignmentPatterns_MPA{0x81, 0x81, 0x81, 0x81, 0x81};
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -713,7 +713,7 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                     this->WordAlignmentPattern(static_cast<ReadoutChip*>(cChip), cAlignmentPatterns); 
                 }
                 // now send a fast reset
-                fBeBoardInterface->ChipReSync(theBoard);
+                //fBeBoardInterface->ChipReSync(theBoard);
 
                 // run automated word alignment
                 cAligned                                               = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_ms);
