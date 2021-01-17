@@ -692,7 +692,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                     fReadoutChipInterface->WriteChipReg(cChip,"Out1",4);  
                     fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);  
                     fReadoutChipInterface->WriteChipReg(cChip,"Out3",2);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",1);  
                     fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
 
 
