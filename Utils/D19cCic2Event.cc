@@ -885,7 +885,7 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
     {
         uint8_t cIdOffset    = ( fIs2S ) ? (8 + 4) : (8 + 4 + 3 );
         uint8_t cAddressOffset = (fIs2S) ? (4) : (4+3);
-        uint8_t cBendOffset = (fIs2S) ? 0 : 3;
+        uint8_t cBendOffset = (fIs2S) ? 0 : 4;
         uint8_t cBendMask = (fIs2S) ? 0xF : 0x7 ;
         
         // 3 bit chip id 
