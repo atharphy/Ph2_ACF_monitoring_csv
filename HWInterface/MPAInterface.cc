@@ -47,6 +47,23 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
                    << RESET;
         return cCounterValue;
     }
+    else if( pRegNode.find("BendCode") != std::string::npos ) // configure bend LUT 
+    {
+        std::string cSubStr = pRegNode.substr( pRegNode.find("BendCode")+std::string("BendCode").length(), pRegNode.length()) ; 
+        std::string cPattern = "P" ; 
+        if ( pRegNode.find("P") == std::string::npos ){
+            cPattern = "M";
+        }
+        int cBendHalfStrips = std::stoi(cSubStr.substr( cSubStr.find(cPattern)+1, cSubStr.length())); 
+        int cIndex = (cBendHalfStrips + 9 )/2; 
+        int cNibble = (cBendHalfStrips + 9 )%2;
+        uint8_t cBitShift= 3*cNibble;
+        uint8_t cRegMask = (0x7 << cBitShift) ; //
+        uint16_t cRegAddress = this->regPeri(pMPA, 5 + cIndex ); 
+        uint16_t cRegValue =   MPAInterface::ReadReg(pMPA, cRegAddress);
+        uint8_t cValue = ( cRegValue  & cRegMask ) >> cBitShift ;
+        return cValue;
+    }
     else if( PERI_CONFIG_TABLE.find(pRegNode) != PERI_CONFIG_TABLE.end() )
     //else if(pRegNode == "ErrorL1") 
     {
@@ -86,8 +103,25 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     }
     return cRegItem.fValue & 0xFF;
 }
-
-
+std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip)
+{
+    std::vector<uint8_t> cBendCodes(0); // bend registers are 0 -- 14. Each register encodes 2 codes
+    for(size_t cIndex = 0; cIndex < 9; cIndex ++) // 9 registers 
+    {
+        uint16_t cRegAddress = 5 + cIndex; // each register controls two codes 
+        // code starts from dummy 
+        uint16_t cCode =  this->regPeri(pChip, cRegAddress ); 
+        for( int cNibble=0; cNibble<2 ; cNibble++)
+        {
+            uint8_t cBendHalfStrips = -9 + cIndex*2 + cNibble; 
+            uint8_t cBendCode = (cCode& (0x7 << cNibble*3)) >> (cNibble*3);
+            LOG (INFO) << BOLDMAGENTA << "BendCode for a bend of " << +cBendHalfStrips 
+                << " is " << std::bitset<3>(cBendCode) << RESET;
+            cBendCodes.push_back( cBendCode ); 
+        }
+    }
+    return cBendCodes;
+}
 bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum , uint8_t pValue, bool pVerifLoop)
 {
     //auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
@@ -191,6 +225,27 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }   
+    else if( pRegName.find("BendCode") != std::string::npos ) // configure bend LUT 
+    {
+        std::string cSubStr = pRegName.substr( pRegName.find("BendCode")+std::string("BendCode").length(), pRegName.length()) ; 
+        //int cSign  =  1; 
+        std::string cPattern = "P" ; 
+        if ( pRegName.find("P") == std::string::npos ){
+            //cSign = -1;
+            cPattern = "M";
+        }
+        int cBendHalfStrips = std::stoi(cSubStr.substr( cSubStr.find(cPattern)+1, cSubStr.length())); 
+        //    uint8_t cBendHalfStrips = -9 + cIndex*2 + cNibble; 
+        int cIndex = (cBendHalfStrips + 9 )/2; 
+        int cNibble = (cBendHalfStrips + 9 )%2;
+        uint8_t cBitShift= 3*cNibble;
+        uint8_t cRegMask = (0x7 << cBitShift) ; // 
+        cRegMask = ~(cRegMask); 
+        uint16_t cRegAddress = this->regPeri(pMPA, 5 + cIndex ); 
+        uint16_t cRegValue =   MPAInterface::ReadReg(pMPA, cRegAddress);
+        uint8_t cValue = ( cRegValue  & cRegMask ) | (pValue <<  cBitShift ) ;
+        return MPAInterface::WriteReg(pMPA, cRegAddress, cValue, pVerifLoop); 
+    }
     else if( PERI_CONFIG_TABLE.find(pRegName) != PERI_CONFIG_TABLE.end() )
     {
         return this->configPeri(pMPA, pRegName, pValue);

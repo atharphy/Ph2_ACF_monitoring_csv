@@ -160,6 +160,10 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                     }
                     //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP200", 0xFF);
                     fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cLatency);
+
+                    // just to check 
+                    auto cBendCode = fReadoutChipInterface->ReadChipReg( cChip, "BendCodeP5" ) ;
+                    LOG (INFO) << BOLDMAGENTA << "Bend code for P5 is " << std::bitset<3>(cBendCode) << RESET;
                 }
             } // chip
         }     // hybrid
@@ -322,9 +326,30 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
         cAligned = ( cCorrectLatency != 0 );
         if( cAligned )
         {
-            LOG (INFO) << BOLDGREEN << "Setting correct stub offset for this back-end board to " << +cCorrectLatency << RESET;
+            // first retrieve value of retime pix 
+            int cReTimePix = -1 ;
+            for(auto cOpticalGroup: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    // only for the first hybrid 
+                    if(cHybrid->getIndex() > 0) continue;
+
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
+                        if( cReTimePix >= 0 ) break;
+
+                        cReTimePix = fReadoutChipInterface->ReadChipReg(cChip,"RetimePix"); 
+                    }//chip
+                }//hybrid
+            }//group 
+
+            // correct stub latency : l1Latency - ( Offset + cReTimePix ) ;  so Offset assuming no re-time is ( Offset + cReTimePix ) - cReTimePix ;
+            LOG (INFO) << BOLDGREEN << "Found correct stub offset for this back-end board to be " << +cCorrectLatency 
+                << " correcting for re-time pix value during scan [" << +cReTimePix << "]" << RESET;
             // adding this here in preparation for stub decoding 
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset( cCorrectLatency );
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset( cCorrectLatency - cReTimePix );
         }
         else
         {
