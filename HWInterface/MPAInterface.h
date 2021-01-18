@@ -146,6 +146,7 @@ class MPAInterface : public ReadoutChipInterface
     void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
 
     // 
+    std::vector<int> decodeBendCode( Ph2_HwDescription::ReadoutChip* pChip , uint8_t pBendCode );
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pChip); 
     bool configPixel(Ph2_HwDescription::Chip* pChip, std::string cReg , int pPixelNum , uint8_t pValue, bool pVerifLoop=true);
     uint16_t readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum);

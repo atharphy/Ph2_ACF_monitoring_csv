@@ -158,12 +158,16 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                         LOG (INFO) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET; 
                         fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), 0xFF);
                     }
-                    //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP200", 0xFF);
                     fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cLatency);
 
                     // just to check 
                     auto cBendCode = fReadoutChipInterface->ReadChipReg( cChip, "BendCodeP5" ) ;
                     LOG (INFO) << BOLDMAGENTA << "Bend code for P5 is " << std::bitset<3>(cBendCode) << RESET;
+                    auto cBendsHalfStrips = (static_cast<PSInterface*>(fReadoutChipInterface))->decodeBendCode( cChip, cBendCode ); 
+                    for (auto cBend : cBendsHalfStrips )
+                    {
+                        LOG (INFO) << BOLDMAGENTA << "\t.. matched to a bend of " << cBend << " half strips. " << RESET;
+                    }
                 }
             } // chip
         }     // hybrid

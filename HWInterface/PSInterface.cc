@@ -227,6 +227,11 @@ bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop
   return false;
 
 }
+// 
+std::vector<int> PSInterface::decodeBendCode( ReadoutChip* pChip , uint8_t pBendCode )
+{
+  return theMPAInterface->decodeBendCode( pChip, pBendCode);
+}
 
 uint32_t PSInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {

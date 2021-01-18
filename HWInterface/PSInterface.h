@@ -72,6 +72,7 @@ class PSInterface : public ReadoutChipInterface
     void Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
 
+    std::vector<int> decodeBendCode( Ph2_HwDescription::ReadoutChip* pChip , uint8_t pBendCode );
     void ReadASEvent(Ph2_HwDescription::ReadoutChip* pPS, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void Pix_Smode(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string smode);
     void Enable_pix_BRcal(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string polarity = "rise", std::string smode = "edge");
