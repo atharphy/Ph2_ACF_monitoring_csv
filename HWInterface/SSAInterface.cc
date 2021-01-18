@@ -111,6 +111,14 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool cReadoutMode       = WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
         return cEnableAnalogue && cEnableFECal && cReadoutMode;
     }
+    else if(pRegName == "TriggerLatency" )
+    {
+        uint8_t cLatencyReg1 = (0x00FF & pValue); 
+        uint8_t cLatencyReg2 = (0x0300 & pValue) >> 8; 
+        bool cConfigReg1 = this->WriteChipSingleReg(pSSA,"L1-Latency_LSB", cLatencyReg1,pVerifLoop);
+        bool cConfigReg2 = this->WriteChipSingleReg(pSSA,"L1-Latency_MSB", cLatencyReg2,pVerifLoop);
+        return cConfigReg1&& cConfigReg2;
+    }
     else if(pRegName == "Sync")
     {
         uint8_t pAnalogueCalib  = 1;
@@ -128,6 +136,31 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool cReadoutMode    = WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
         LOG(INFO) << BOLDRED << "Readout mode is 0x" << std::hex << +cRegValue << std::dec << RESET;
         return cEnableAnalogue && cEnableFECal && cReadoutMode;
+    }
+    else if(pRegName.find("DigitalSync") != std::string::npos)
+    {
+        bool cReadoutMode       = WriteChipSingleReg(pSSA, "ReadoutMode", 0x00, pVerifLoop);
+        std::string cRegName; 
+        if( pRegName.find("R") != std::string::npos ) // global 
+        { 
+            cRegName = "ENFLAGS_ALL";
+        }
+        else // single row 
+        {
+            std::ostringstream cRegName;
+            int cStripNumber = std::stoi(pRegName.substr( pRegName.find("R")+1, pRegName.length()));
+            cRegName << "ENFLAGS_S" << std::to_string(cStripNumber);
+        }
+        uint8_t pAnalogueCalib  = 0;
+        uint8_t pDigitalCalib   = 1;
+        uint8_t pHitCounter     = 0;
+        uint8_t pSignalPolarity = 0;
+        uint8_t pStripEnable    = ( pValue != 0x00) ; // 1 == enable , 0 == disable 
+        uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
+        cRegValue               = cRegValue | (pStripEnable << 0);
+        LOG(INFO) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
+        bool cEnableReg = WriteChipSingleReg(pSSA, cRegName , 1, pVerifLoop);
+        return cEnableReg && cReadoutMode;
     }
     else if(pRegName == "DigitalAsync")
     {

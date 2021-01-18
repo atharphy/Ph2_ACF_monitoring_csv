@@ -10,6 +10,7 @@
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
+#include "tools/PSAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 
@@ -138,9 +139,23 @@ int main(int argc, char* argv[])
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
 
+
+    // align ASICs on PS module 
+    PSAlignment cPSAlignment; 
+    cPSAlignment.Inherit(&cHybridTester);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
+    // reset all chip and board registers
+    // not configured by the tool 
+    // back to their original values
+    cPSAlignment.Reset();
+    
+
     // interface to data player
     DPInterface         cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(cHybridTester.fBeBoardFWMap.find(0)->second);
+    
     // need to do this if
     // reading out CIC
     // or testing MPA
@@ -159,6 +174,7 @@ int main(int argc, char* argv[])
         cCicAligner.Reset();
         cCicAligner.dumpConfigFiles();
         
+
         // align back-end
         BackEndAlignment cBackEndAligner;
         cBackEndAligner.Inherit(&cHybridTester);
@@ -211,6 +227,13 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         // cCicAligner.dumpConfigFiles();
     }
+
+    // // now go back to PS alignment and align inputs 
+    // // need to do this if you're going to do any kind 
+    // // of data tests 
+    // cPSAlignment.Align();
+    // cPSAlignment.Reset();
+    
     if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync") )
     {
         DataChecker cDataChecker;

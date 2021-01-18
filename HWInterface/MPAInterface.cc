@@ -145,13 +145,15 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow , uint8_t p
 } 
 bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
 {
-    LOG (INFO) << BOLDBLUE << "Configuring peri register " << cReg << " writing " << +pValue << RESET;
+    LOG (DEBUG) << BOLDBLUE << "Configuring peri register " << cReg << " writing " << +pValue << RESET;
     // LOG (INFO) << BOLDRED << PERI_CONFIG_TABLE.size() << " items in peri map." << RESET;
     // for( auto cMapItem : PERI_CONFIG_TABLE )
     //     LOG (INFO) << cMapItem.first << " " << +cMapItem.second << RESET;
     uint8_t cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second;  
     uint16_t cAddress =  this->regPeri(pChip, cRegAddress ); 
-    LOG (INFO) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
+    LOG (DEBUG) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
+    // update register map 
+    pChip->setReg(cReg, pValue); 
     return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
 }
 uint16_t MPAInterface::readPeri(Chip* pChip, std::string cReg)
@@ -188,7 +190,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     {
         this->Set_threshold(pMPA, pValue);
         return true;
-    }
+    }   
     else if( PERI_CONFIG_TABLE.find(pRegName) != PERI_CONFIG_TABLE.end() )
     {
         return this->configPeri(pMPA, pRegName, pValue);
@@ -200,7 +202,24 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         bool cConfigReg1 = this->configRow(pMPA,"L1Offset_1",0, cLatencyReg1);
         bool cConfigReg2 = this->configRow(pMPA,"L1Offset_2",0, cLatencyReg2);
         return cConfigReg1&& cConfigReg2;
-            
+    }
+    else if( pRegName == "StubInputPhase" )
+    {
+        uint8_t cBitShift= 1;
+        uint8_t cRegMask = (0x7 << cBitShift) ; // 
+        cRegMask = ~(cRegMask); 
+        auto cReg = this->readPeri(pMPA,"LatencyRx320"); 
+        uint8_t cValue = ( cReg  & cRegMask ) | (pValue <<  cBitShift ) ;
+        return this->configPeri(pMPA, "LatencyRx320", cValue ) ;
+    }
+    else if( pRegName == "L1InputPhase" )
+    {
+        uint8_t cBitShift= 0;
+        uint8_t cRegMask = (0x1 << cBitShift) ; // 
+        cRegMask = ~(cRegMask); 
+        auto cReg = this->readPeri(pMPA,"LatencyRx320"); 
+        uint8_t cValue = ( cReg  & cRegMask ) | (pValue <<  cBitShift ) ;
+        return this->configPeri(pMPA, "LatencyRx320", cValue ) ;
     }
     else if(pRegName == "StubMode" ) 
     {
@@ -499,16 +518,19 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     // takes forever
     std::map<uint16_t, ChipRegItem> cMap;
     cMap.clear();
-    for(auto& cRegInMap: cMPARegMap) { 
-//SPEEDUP, TEMPORARY
-    if((cRegInMap.first.find("_P") != std::string::npos)  and (cRegInMap.first.find("TrimDAC") == std::string::npos) ) continue;
-
-    //LOG(INFO) << BOLDBLUE << cRegInMap.first<< RESET; 
-    cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
+    for(auto& cRegInMap: cMPARegMap) 
+    { 
+        // //SPEEDUP, TEMPORARY
+        // if((cRegInMap.first.find("_P") != std::string::npos)  and (cRegInMap.first.find("TrimDAC") == std::string::npos) ) continue;
+        LOG(DEBUG) << BOLDBLUE << cRegInMap.first<< RESET; 
+        cMap[cRegInMap.second.fAddress] = cRegInMap.second; 
+    }
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
     for(auto& cRegItem: cMap)
     {
-        LOG(DEBUG) << BOLDBLUE << "Register map for MPA contains a register with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
+        // LOG(INFO) << BOLDBLUE << "Register map for MPA contains a register "
+        //  << 
+        //  << " with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
         std::pair<uint16_t, uint16_t> cReg;
         cReg.first  = cRegItem.second.fAddress;
         cReg.second = cRegItem.second.fValue;

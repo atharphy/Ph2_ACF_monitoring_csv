@@ -266,7 +266,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             cStubInformation.first  = (cStubInfo & 0xFFF);
                             cStubInformation.second = (cStubInfo & (0x1FF << 22)) >> 22;
                             if( cNStubs > 0 ) 
-                                LOG (INFO) << BOLDGREEN << "BxId for this event : " << +cStubInformation.first 
+                                LOG (DEBUG) << BOLDGREEN << "BxId for this event : " << +cStubInformation.first 
                                     << " . Stub data size is " << +cStubInfoSize << " status " 
                                     << std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs
                                     << RESET;
@@ -901,7 +901,7 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
         
         if(cChipId == cChipIdMapped)
         {
-            LOG (INFO) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) 
+            LOG (DEBUG) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) 
                 << " --  chip id from package " << +cChipIdMapped 
                 << " [ chip id on hybrid " << +pReadoutChipId << "]"
                 << " stub address is " << +cStubAddress

@@ -21,11 +21,13 @@
 // pixelEnable bits 
 const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE = {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR",3}
 , {"CounterEnable",4},{"DigitalInjection",5},{"AnalogueInjection",6},{"BrClk",7}};
+
 const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
 // periphery config register map 
 const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0}, {"ECM", 1}, {"ReTime", 2}, {"ErrorL1",40}
-, {"Out0",14},{"Out1",15},{"Out2",16},{"Out3",17},{"Out4",18},{"Out5",19}};
+, {"LatencyRx320",34},{"PhaseShift",32}
+, {"OutSetting_0",14},{"OutSetting_1",15},{"OutSetting_2",16},{"OutSetting_3",17},{"OutSetting_4",18},{"OutSetting_5",19}};
 
 // row config register map
 const std::map<std::string, uint8_t> ROW_CONFIG_TABLE = {{"L1Offset_1", 1}, {"L1Offset_2", 2}, {"ClrRst", 3}};

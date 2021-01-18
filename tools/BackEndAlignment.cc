@@ -13,6 +13,7 @@ BackEndAlignment::BackEndAlignment() : Tool() { fRegMapContainer.reset(); }
 BackEndAlignment::~BackEndAlignment() {}
 void BackEndAlignment::Reset()
 {
+    LOG (INFO) << BOLDGREEN << "Resetting registers touched  by BackEndAlignment" << RESET;
     // set everything back to original values .. like I wasn't here
     for(auto cBoard: *fDetectorContainer)
     {
@@ -158,18 +159,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                         fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), 0xFF);
                     }
                     //fReadoutChipInterface->WriteChipReg(cChip,"DigitalSyncP200", 0xFF);
-
                     fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cLatency);
-
-                    // mapping for PS module 
-                    // mapping for probe station/etc. can be different
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",1);//1  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",2);//2  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);//3  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",4);//4  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",5);//5  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
-
                 }
             } // chip
         }     // hybrid
@@ -270,6 +260,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
             ReadNEvents(pBoard, cNevents);
             const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
             LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+            bool cEventsMatch=true;
             for( auto cEvent : cEventsWithStubs ) 
             {
                 for(auto cOpticalGroup: *pBoard)
@@ -284,7 +275,6 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                             if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
                             auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            LOG (DEBUG) << BOLDBLUE << "\t... found " << +cStubs.size() << " stubs in this event."  << RESET;
                             if( cStubs.size() == cPixelIds.size() ) 
                             {
                                 auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -292,16 +282,33 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                                 // LOG (INFO) << BOLDMAGENTA << "\t\t... number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
                                 //     << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
                                 //     << RESET;
+                                
+                                // LOG (INFO) << BOLDMAGENTA << "\t\t... found " << +cPClusters.size() << " p clusters "
+                                //     << " and "<< +cSClusters.size() << " s clusters in Bx0Alignment"
+                                //     << " number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
+                                //     << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
+                                //     << RESET;
                                 //     cCorrectLatency = cOffset;
-                            
-                                LOG (INFO) << BOLDMAGENTA << "\t\t... found " << +cPClusters.size() << " p clusters "
-                                    << " and "<< +cSClusters.size() << " s clusters in Bx0Alignment"
-                                    << " number of S-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNStripClusters(cHybrid->getId() )
-                                    << " number of P-clusters from EventClass is " << +(static_cast<D19cCic2Event*>(cEvent))->GetNPixelClusters(cHybrid->getId() )
-                                    << RESET;
-                                    cCorrectLatency = cOffset;
+
+                                // check stubs are where you put them 
+                                // not checking bend for now
+                                for( auto cStub : cStubs ) 
+                                {
+                                    auto cStubAddress = cStub.getPosition(); 
+                                    auto cRow = cStub.getRow();
+                                    uint32_t cPixelId = (cStubAddress/2) + cRow*120; 
+                                    cEventsMatch = cEventsMatch && (std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) != cPixelIds.end() );
+                                }
+                                if( cEventsMatch )
+                                {
+                                    cCorrectLatency = cOffset; 
+                                    LOG (INFO) << BOLDGREEN << "\t... found the " << +cStubs.size() << " EXPECTED stubs in this event."  << RESET;
+                                }
+                                else
+                                    LOG (INFO) << BOLDRED << "\t... found " << +cStubs.size() << " UN-EXPECTED stubs in this event."  << RESET;
+                                    
                                 for( auto cPCluster : cPClusters )
-                                    LOG (INFO) << "\t... PCluster : address : " << unsigned(cPCluster.fAddress) 
+                                    LOG (INFO) << BOLDBLUE << "\t\t... PCluster : address : " << unsigned(cPCluster.fAddress) 
                                     << ", width "<<unsigned(cPCluster.fWidth)
                                     << ", row "<< unsigned(cPCluster.fZpos)
                                     << RESET;
