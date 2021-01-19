@@ -261,6 +261,7 @@ int main(int argc, char* argv[])
         else cDataChecker.ReadNeventsTest();
         // reset 
         cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
+        cDataChecker.writeObjects();
         // cDataChecker.resetPointers();
     }
     

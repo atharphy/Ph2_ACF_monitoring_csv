@@ -88,6 +88,7 @@ class DataChecker : public Tool
     DetectorDataContainer fThresholds, fLogic, fHIPs;
     DetectorDataContainer fInjections;
     DetectorDataContainer fDataMismatches;
+    DetectorDataContainer fBxIdsMatches, fBxIdsMismatches;
 
     int fPhaseTap     = 8;
     int fAttempt      = 0;

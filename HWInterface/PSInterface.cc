@@ -232,6 +232,14 @@ std::vector<int> PSInterface::decodeBendCode( ReadoutChip* pChip , uint8_t pBend
 {
   return theMPAInterface->decodeBendCode( pChip, pBendCode);
 }
+// 
+void PSInterface::digiInjection(  ReadoutChip* pChip , std::vector<Injection> pInjections ) 
+{
+  if( pChip->getFrontEndType()== FrontEndType::MPA) 
+  {
+    theMPAInterface->digiInjection( pChip,  pInjections ) ; 
+  }
+}
 
 uint32_t PSInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {

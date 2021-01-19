@@ -103,6 +103,24 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     }
     return cRegItem.fValue & 0xFF;
 }
+void MPAInterface::digiInjection( ReadoutChip* pChip, std::vector<Injection> pInjections )
+{
+    std::vector<uint32_t> cPixelIds(0); 
+    for( auto pInjection : pInjections )
+    {
+        cPixelIds.push_back( (uint32_t)(pInjection.fColumn)*120+(uint32_t)pInjection.fRow );
+    }
+    // first make sure all pixels output 0x00 
+    this->WriteChipReg(pChip,"DigitalSync", 0x00);
+    // then .. for pixels I want enable pattern on PixelN
+    for( auto cPixelId : cPixelIds)
+    {
+        std::ostringstream cRegName;
+        cRegName << "DigitalSyncP" << std::to_string(cPixelId);
+        LOG (INFO) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET; 
+        this->WriteChipReg(pChip,cRegName.str(), 0xFF);
+    }
+}
 std::vector<int> MPAInterface::decodeBendCode( ReadoutChip* pChip , uint8_t pBendCode )
 {
     std::vector<int> cBends(0);
