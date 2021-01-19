@@ -104,13 +104,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         {
             auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             // quick look at data 
-            // for( size_t cIndx=0 ; cIndx < cEventSize; cIndx++)
-            // {
-            //     if( cIndx < (cEventSize-cDummyCount) ) 
-            //         LOG (INFO) << BOLDBLUE << "\t VALID ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
+             for( size_t cIndx=0 ; cIndx < cEventSize; cIndx++)
+             {
+                 if( cIndx < (cEventSize-cDummyCount) ) 
+                     LOG (DEBUG) << BOLDBLUE << "\t VALID ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
             //     else
             //         LOG (INFO) << BOLDMAGENTA << "\t DUMMY ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
-            // }
+             }
             
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
@@ -175,8 +175,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 
                                     // split stream into s and p clusters 
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
+                                    //LOG (INFO) << BOLDCYAN << "\t..SCluster:" <<+cNStripClusters<< RESET;
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
-                                    //if( cNStripClusters > 0 ) LOG (INFO) << BOLDGREEN << "Found " << +cNStripClusters << " s clusters in this event " << RESET;
+                                    if( cNStripClusters > 0 ) LOG (DEBUG) << BOLDGREEN << "Found " << +cNStripClusters << " s clusters in this event " << RESET;
                                     
                                     for(auto cL1Word : cL1SWords ) 
                                     {
@@ -184,10 +185,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                         fEventHitList[cFe->getIndex()].second.push_back(cWord);
                                         //LOG (INFO) << BOLDCYAN << "\t..SCluster:" << std::bitset<S_CLUSTER_WORD_SIZE>(cL1Word) << RESET;
                                     }// push back s clusters 
-
+		   		    
                                     cEOffset += (cNStripClusters*S_CLUSTER_WORD_SIZE)/32; 
                                     std::vector<std::bitset<P_CLUSTER_WORD_SIZE>> cL1PWords(cNPxlClusters, 0); 
-                                    this->splitStream(pData, cL1PWords, cOffset + cEOffset, cNPxlClusters); 
+                                    //LOG (INFO) << BOLDCYAN << "\t..PCluster " <<+cNPxlClusters<<","<<S_CLUSTER_WORD_SIZE<< RESET;
+                                    this->splitStream(pData, cL1PWords, cOffset + cEOffset, cNPxlClusters,(cNStripClusters*S_CLUSTER_WORD_SIZE)%32); 
                                     //if( cNPxlClusters > 0 ) LOG (INFO) << BOLDGREEN << "Found " << +cNPxlClusters << " p clusters in this event " << RESET;
                                     for(auto cL1Word : cL1PWords ) 
                                     {
@@ -527,8 +529,7 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
     auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     auto cIterator =  cClusterWords.begin() + GetNStripClusters( pFeId  );
     auto cEnd      = cClusterWords.end();
-
-    while( cIterator < cEnd )
+    while( cIterator != cEnd )
     {
         uint8_t cChipId = ((*cIterator) & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
         auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
@@ -540,6 +541,7 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
         if(cChipId == cChipIdMapped)
         {
             PCluster aPCluster;
+            //LOG (INFO) << BOLDGREEN << "PCLUS ..... " << std::bitset<16>(*cIterator)  << RESET;
             aPCluster.fAddress = ((*cIterator)  & ((0x7F) << (0+4+3))) >> (0+4+3); 
             aPCluster.fWidth = ((*cIterator)  & ((0x7) << (0+4))) >> (0+4);
             aPCluster.fZpos = ((*cIterator)  & ((0xF) << 0)) >> 0;
@@ -583,18 +585,19 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
         //LOG (INFO) << BOLDBLUE << "NS " << +GetNStripClusters( pFeId  )<< RESET;
     
     auto cEnd      = cClusterWords.begin() + GetNStripClusters( pFeId  ) ;
-    while( cIterator < cEnd )
+    while( cIterator != cEnd )
     {
-        //LOG (INFO) << BOLDBLUE << "INLOOP"<< RESET;
-        uint8_t cChipId = ((*cIterator) & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
+        uint8_t cChipId = ((*cIterator) & ((0x7) << (0+1+3+7))) >> (0+1+3+7);
+
         auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+
         LOG (DEBUG) << BOLDBLUE << "Retreiving pixel information for FE#" << +pFeId 
             << " ROC#" << +cChipId 
             << " this is chip Id #" << +cChipIdMapped << " in CIC land" << RESET;
     
         if(cChipId == cChipIdMapped)
         {
-        LOG (INFO) << BOLDBLUE << "cChipIdMapped "<<+cChipId<<","<<+cChipIdMapped<< RESET;
+            //LOG (INFO) << BOLDGREEN << "SCLUS ..... " << std::bitset<14>(*cIterator)  << RESET;
             SCluster cSCluster;
             cSCluster.fAddress = ((*cIterator) & ((0x7F) << (0+1+3))) >> (0+1+3); 
             cSCluster.fWidth = ((*cIterator) & ((0x7) << (0+1))) >> (0+1);
@@ -896,7 +899,7 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
     {
         uint8_t cIdOffset    = ( fIs2S ) ? (8 + 4) : (8 + 4 + 3 );
         uint8_t cAddressOffset = (fIs2S) ? (4) : (4+3);
-        uint8_t cBendOffset = (fIs2S) ? 0 : 3;
+        uint8_t cBendOffset = (fIs2S) ? 0 : 4;
         uint8_t cBendMask = (fIs2S) ? 0xF : 0x7 ;
         
         // 3 bit chip id 
@@ -912,6 +915,8 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
         
         if(cChipId == cChipIdMapped)
         {
+            LOG (DEBUG) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord)  << RESET;
+            LOG (DEBUG) << BOLDGREEN << "address " << +cStubAddress  << RESET;
             LOG (DEBUG) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) 
                 << " --  chip id from package " << +cChipIdMapped 
                 << " [ chip id on hybrid " << +pReadoutChipId << "]"

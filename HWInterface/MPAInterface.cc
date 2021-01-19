@@ -253,6 +253,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             cRegValue = this->readPixel(pMPA, "PixelEnable", cPixelNumber);
             cRegValue = (cRegValue & cRegMask) | cValue; 
         }
+
         else 
         {
             std::vector<uint8_t> cBits={1,1,1,0,0,cEnable,0,0};
@@ -502,6 +503,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     for(auto& cRegInMap: cMPARegMap) { 
 //SPEEDUP, TEMPORARY
     if((cRegInMap.first.find("_P") != std::string::npos)  and (cRegInMap.first.find("TrimDAC") == std::string::npos) ) continue;
+    //if(cRegInMap.first.find("InSetting")!= std::string::npos) continue;
 
     //LOG(INFO) << BOLDBLUE << cRegInMap.first<< RESET; 
     cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
@@ -765,9 +767,9 @@ void MPAInterface::Activate_async(Chip* pMPA) { this->WriteChipReg(pMPA, "Readou
 
 void MPAInterface::Activate_sync(Chip* pMPA) { this->WriteChipReg(pMPA, "ReadoutMode", 0x0); }
 
-void MPAInterface::Activate_pp(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x81); }
+void MPAInterface::Activate_pp(Chip* pMPA, uint8_t win) { this->WriteChipReg(pMPA, "ECM", (0x2<<6)|win); }
 
-void MPAInterface::Activate_ss(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x41); }
+void MPAInterface::Activate_ss(Chip* pMPA, uint8_t win) { this->WriteChipReg(pMPA, "ECM", (0x1<<6)|win); }
 
 void MPAInterface::Activate_ps(Chip* pMPA, uint8_t win) { this->WriteChipReg(pMPA, "ECM", win); }
 

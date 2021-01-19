@@ -164,11 +164,11 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                     //
                      // mapping for PS module 
                     // mapping for probe station/etc. can be different
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",5);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out0",1);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out1",2);  
                     fReadoutChipInterface->WriteChipReg(cChip,"Out2",3);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",2);  
-                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out3",4);  
+                    fReadoutChipInterface->WriteChipReg(cChip,"Out4",5);  
                     fReadoutChipInterface->WriteChipReg(cChip,"Out5",0);//L1 line 
 
                 }

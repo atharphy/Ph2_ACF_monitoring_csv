@@ -62,8 +62,8 @@ class PSInterface : public ReadoutChipInterface
     void                  PS_Start_counters_read(uint32_t duration = 0);
     void                  Activate_async(Ph2_HwDescription::Chip* pPS);
     void                  Activate_sync(Ph2_HwDescription::Chip* pPS);
-    void                  Activate_pp(Ph2_HwDescription::Chip* pPS);
-    void                  Activate_ss(Ph2_HwDescription::Chip* pPS);
+    void                  Activate_pp(Ph2_HwDescription::Chip* pPS, uint8_t win=0);
+    void                  Activate_ss(Ph2_HwDescription::Chip* pPS, uint8_t win=0);
     void                  Activate_ps(Ph2_HwDescription::Chip* pPS, uint8_t win=8);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);

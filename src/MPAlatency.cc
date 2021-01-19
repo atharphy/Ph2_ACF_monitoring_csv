@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19C_MPA_PreCalibSYNC.xml";
+    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/PS_HalfModule.xml";
 
     TApplication cApp("Root Application", &argc, argv);
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     if(batchMode)
         gROOT->SetBatch(true);
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    pBoard->setFrontEndType(FrontEndType::MPA);
+    //pBoard->setFrontEndType(FrontEndType::MPA);
 
 
 
@@ -111,8 +111,8 @@ int main(int argc, char* argv[])
         LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
     }
-    dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( 0, 100, 3, 0, 0);
-    dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+    //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( 0, 100, 3, 0, 0);
+    //dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug();
     
     LOG(INFO) << BOLDRED << "LatencyScan" << RESET;
     LatencyScan cLatencyScan;
@@ -163,9 +163,8 @@ int main(int argc, char* argv[])
 
     LOG(INFO) << BOLDRED << "MPA" << RESET;
 
-    auto hitlatmpa=cLatencyScan.ScanLatency(0, 250);
-    cTool.Destroy();
-    return 0;
+    auto hitlatmpa=cLatencyScan.ScanLatency(0, 13);
+
 
     for(auto cOpticalGroup: *pBoard)
             {
@@ -261,7 +260,7 @@ int main(int argc, char* argv[])
                     }
                 }
 
-        auto stublat=cLatencyScan.ScanStubLatency(0, 50);
+        auto stublat=cLatencyScan.ScanStubLatency(0, 100);
 
         for(auto cOpticalGroup: *pBoard)
             {

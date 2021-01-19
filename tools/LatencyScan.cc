@@ -363,16 +363,19 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
                     bool  cMaskOthers = (cCic != NULL) ? true : false;
                     for(auto cChip: *cHybrid)
                     {
-                        auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        if(cMaskOthers && cChip->getId() == 0)
-                        {
-                            uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
-                            cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
-                        }
-                        else if(cMaskOthers)
-                        {
-                            fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
-                        }
+                        if ((cChip->getFrontEndType() == FrontEndType::CBC3))  
+			{
+		                auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+		                if(cMaskOthers && cChip->getId() == 0)
+		                {
+		                    uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
+		                    cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
+		                }
+		                else if(cMaskOthers)
+		                {
+		                    fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
+		                }
+			}
                     } // roc
                 }     // hybrid
             }         // hybrid
@@ -573,11 +576,11 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
                     // now loop the channels for this particular event and increment a counter
                     if (cCbc->getFrontEndType() == FrontEndType::MPA) 
 			{
-			cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cFe->getId(), cCbc->getId());
+			cHitCounter += static_cast<D19cCic2Event*>(cEvent)->GetNPixelClusters(cFe->getId());
 			}
                     else if (cCbc->getFrontEndType() == FrontEndType::SSA) 
 			{
-			cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cFe->getId(), static_cast<SSA*> (cCbc)->getPartid());
+			cHitCounter += static_cast<D19cCic2Event*>(cEvent)->GetNStripClusters(cFe->getId());
 			}
                     else 
 			{

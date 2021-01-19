@@ -25,7 +25,7 @@
             <SSA Id="1" configfile="SSAPreCalibSYNC.txt" />
             
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="1" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="1" partid="1" configfile="MPATSTSYNC.txt" />
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -80,7 +80,7 @@
             <Register name="misc">
                     <Register name="backpressure_enable"> 0 </Register>
                     <Register name="stubOR"> 1 </Register>
-                    <Register name="initial_fast_reset_enable"> 0 </Register>
+                    <Register name="initial_fast_reset_enable"> 1 </Register>
                     <Register name="trigger_timeout_enable"> 0 </Register>
                    <Register name="trigger_multiplicity"> 0 </Register>
             </Register>
