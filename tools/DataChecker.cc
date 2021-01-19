@@ -667,10 +667,174 @@ void DataChecker::CollectEvents()
         }
     }
 }
-// bool DataChecker::CheckPClusters( std::vector<Injection> pInjections )
-// {
+void DataChecker::CheckPSData( BeBoard* pBoard, std::vector<Injection> pInjections )
+{
+    auto cSetting = fSettingsMap.find ( "Nevents" );
+    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+    std::vector<uint32_t> cPixelIds(0);
+    std::vector<uint8_t> cRows(0);
+    std::vector<uint8_t> cColumns(0);
+    for( auto cInjection : pInjections )
+    {
+        cRows.push_back ( cInjection.fRow );
+        cColumns.push_back ( cInjection.fColumn );
+        cPixelIds.push_back( (uint32_t)(cInjection.fColumn)*120+(uint32_t)cInjection.fRow );
+    }// injections 
 
-// }
+    uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    uint16_t cCalPulseDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
+    uint16_t cTimeBetweenCalPulses =  cCalPulseDelay + cDelay;
+
+    int cNeventsToRecord = cNevents*100; 
+    this->ReadNEvents(pBoard, cNeventsToRecord );
+    const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+    LOG(INFO) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the FC7 ..." << RESET;
+    uint32_t cNMatchedEvents=0; 
+    std::vector<int> cMatchedBxIds(0);
+    std::vector<int> cMismatchedBxIds(0);
+    int cEventIndx=0; 
+    std::vector<int> cBxIdsGbl(0);
+    for( auto cEvent : cEvents ) 
+    {   
+        bool cEventMatchesL1=true ;
+        bool cEventMatchesStubs=true ;
+
+        for(auto cOpticalGroup: *pBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // for now I'm only checking one CIC 
+                if( cHybrid->getIndex() > 0 ) continue;
+
+                auto cBxId = (int)cEvent->BxId(cHybrid->getId());
+                cBxIdsGbl.push_back( cBxId );
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                    // check if it is in p-p or s-p mode 
+                    
+                    auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cHybrid->getId(), cChip->getId());
+                    auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
+                    auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                    // check S and P clusters 
+                    auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                    //auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                    
+                    // in pixel-pixel mode . only get P clusters 
+                    bool cMatchedPCluster= (cPClusters.size() > 0 );
+                    #ifdef __USE_ROOT__
+                        TH2D* cNPclusters = static_cast<TH2D*>(getHist(cHybrid, "NPClusters"));
+                        cNPclusters->Fill( cTimeBetweenCalPulses, cPClusters.size() );
+                        TH2D* cNStubs = static_cast<TH2D*>(getHist(cHybrid, "NStubs"));
+                        cNStubs->Fill( cTimeBetweenCalPulses, cStubs.size() );
+                        TH2D* cBxIdsPClusters = static_cast<TH2D*>(getHist(cHybrid, "BxId_Pclusters"));
+                        cBxIdsPClusters->Fill( cBxId, cPClusters.size() );
+                        TH2D* cBxIdsStubs = static_cast<TH2D*>(getHist(cHybrid, "BxId_Stubs"));
+                        cBxIdsStubs->Fill( cBxId, cStubs.size() );
+                    #endif
+
+                    for( auto cPCluster : cPClusters )
+                    {
+                        uint8_t cRow = cPCluster.fAddress; 
+                        uint8_t cColumn = cPCluster.fZpos; 
+                        // check column  
+                        bool cFound=false;
+                        for(  auto cInjectedCluster : pInjections )
+                        {
+                            if( cInjectedCluster.fRow == cRow && cInjectedCluster.fColumn == cColumn  )
+                            {
+                                cFound=true;
+                            }
+                        }
+                        cMatchedPCluster = cMatchedPCluster && cFound;
+                        bool cRowNotFound = std::find(cRows.begin(), cRows.end() , cRow ) == cRows.end() ; 
+                        bool cColNotFound = std::find(cColumns.begin(), cColumns.end() , cColumn ) == cColumns.end() ; 
+                        if( cRowNotFound || cColNotFound )
+                        {
+                            if( cRowNotFound )
+                                LOG (INFO) << BOLDRED  << "\t Event#" << +cEventIndx 
+                                    << " BxId#" << +cBxId  
+                                    << " un-expected P-cluster.... Row " << +cRow << " does not match expected." RESET;
+                            else
+                                LOG (INFO) << BOLDRED  << "\t Event#" << +cEventIndx 
+                                    << " BxId#" << +cBxId  
+                                    << " un-expected P-cluster.... Column " << +cColumn << " does not match expected." RESET;
+                            
+                        }
+                    }
+                    if(  (cPClusters.size()) == 0 ) 
+                        LOG (DEBUG) << BOLDRED << "Event#" << +cEventIndx 
+                            << " BxId#" << +cBxId  
+                            << " has no n P clusters!" << RESET;
+
+                    // also check stubs 
+                    bool cMatchedStubs=(cStubs.size() > 0 );
+                    for( auto cStub : cStubs ) 
+                    {
+                        auto cStubAddress = cStub.getPosition(); 
+                        auto cRow = cStub.getRow();
+                        uint32_t cPixelId = (cStubAddress/2) + cRow*120; 
+                        bool cFound = (std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) != cPixelIds.end() ); 
+                        cMatchedStubs = cMatchedStubs && cFound ;
+                        if( std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) == cPixelIds.end()  )
+                        {
+                            LOG (DEBUG) << BOLDRED  << "\t Event# " << +cEventIndx 
+                                << " BxId#" << +cBxId  
+                                << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET;
+                        }
+                    }
+                    if(  (cStubs.size()) == 0 ) 
+                        LOG (DEBUG) << BOLDRED << "Event#" << +cEventIndx 
+                            << " BxId#" << +cBxId  
+                            << " has no stubs!" << RESET;
+                    
+                    int cClass = 0 ;
+                    if( cPClusters.size() == 0 ) 
+                        cClass = 0 ;
+                    else if( cStubs.size() == 0 )
+                        cClass = 1; 
+                    else if(  !cMatchedPCluster && cMatchedStubs ) 
+                        cClass = 2 ;
+                    else if( cMatchedPCluster && !cMatchedStubs ) 
+                        cClass = 3; 
+                    else if( cMatchedPCluster && cMatchedStubs ) 
+                        cClass = 4; 
+
+                    // only check for differences when 
+                    // there is more than one bx here 
+                    if( cBxIdsGbl.size() > 1 ) 
+                    {
+                        int cBxDifference=0; 
+                        cBxDifference = cBxId - cBxIdsGbl[ cBxIdsGbl.size() -2] ; 
+                        if( cBxDifference < 0 )
+                            cBxDifference = cBxId + (3564 - cBxIdsGbl[ cBxIdsGbl.size() -2]);
+                        
+                        bool cPrint = (cBxDifference != (cTimeBetweenCalPulses + 3 ) );
+                        cPrint = cPrint || (cClass!=4); 
+                        if( cPrint )
+                            LOG (INFO) << BOLDRED << "Event# " << +cEventIndx 
+                                << " L1 Id is " << +cL1Id 
+                                << " error bit for this FE is " << +cErrorBit
+                                << " Bx difference is " << +cBxDifference 
+                                << " fill histogram at " << (cBxDifference - cTimeBetweenCalPulses)
+                                << " event classification is " << +cClass << RESET; 
+                        #ifdef __USE_ROOT__
+                            TH2D* cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClass"));
+                            cEventClass->Fill( cBxDifference - cTimeBetweenCalPulses , cClass );
+                            cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClassL1Id"));
+                            cEventClass->Fill( cL1Id , cClass );
+                        #endif
+                    }// check bx loop
+                    cEventMatchesL1 = cEventMatchesL1 && cMatchedPCluster ;
+                    cEventMatchesStubs  = cEventMatchesStubs && cMatchedStubs ; 
+                }// ROCs 
+            } // hybrids or CICs
+        }// optical group loop 
+        cNMatchedEvents += (cEventMatchesL1 && cEventMatchesStubs) ? 1 : 0 ;
+        cEventIndx++; 
+    }//event loop 
+                    
+}
 void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
 {
     auto cSetting = fSettingsMap.find ( "Nevents" );
@@ -695,7 +859,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
     }
     // std::vector<uint32_t> cPixelIds{0*120+10  , 10*120 + 60}; // these will be used to generate stubs 
     
-    std::vector<uint16_t> cDelaysBetwn{100,125,150,175,200};
+    std::vector<uint16_t> cDelaysBetwn{100};//,125,150,175,200};
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
@@ -840,11 +1004,20 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                     bookHistogram(cHybrid, "BxId_Stubs", cHist);
 
                     // event classification
+                    // first per bx Id 
                     cName = Form("h_EventClass_Cic%d", cHybrid->getId());
                     cObj  = gROOT->FindObject(cName);
                     if(cObj) delete cObj;
-                    cHist = new TH2D(cName, Form("Event classification, digi-inject test CIC%d; BxId_{N} - BxId_{N-1}; Classification", (int)cHybrid->getId()), 500 , 0 - 0.5 , 500 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
+                    cHist = new TH2D(cName, Form("Event classification, digi-inject test CIC%d; BxId_{N} - BxId_{N-1} - FSM_{Delay}; Classification", (int)cHybrid->getId()), 10 , 0 - 0.5 , 10 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
                     bookHistogram(cHybrid, "EventClass", cHist);
+
+
+                    // first per L1 Id 
+                    cName = Form("h_EventClass_L1Id_Cic%d", cHybrid->getId());
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist = new TH2D(cName, Form("Event classification, digi-inject test CIC%d; L1Id; Classification", (int)cHybrid->getId()), 512 , 0 - 0.5 , 512 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
+                    bookHistogram(cHybrid, "EventClassL1Id", cHist);
 
                 }
             }
@@ -923,6 +1096,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                     if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
                                     auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cHybrid->getId(), cChip->getId());
+                                    auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
                                     auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                                     // check S and P clusters 
                                     auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -1024,12 +1198,15 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                         if( cPrint )
                                             LOG (INFO) << BOLDRED << "Event# " << +cEventIndx 
                                                 << " L1 Id is " << +cL1Id 
+                                                << " error bit for this FE is " << +cErrorBit
                                                 << " Bx difference is " << +cBxDifference 
                                                 << " fill histogram at " << (cBxDifference - cTimeBetweenCalPulses)
                                                 << " event classification is " << +cClass << RESET; 
                                         #ifdef __USE_ROOT__
                                             TH2D* cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClass"));
                                             cEventClass->Fill( cBxDifference - cTimeBetweenCalPulses , cClass );
+                                            cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClassL1Id"));
+                                            cEventClass->Fill( cL1Id , cClass );
                                         #endif
                                     }
                                     cEventMatchesL1 = cEventMatchesL1 && cMatchedPCluster ;
