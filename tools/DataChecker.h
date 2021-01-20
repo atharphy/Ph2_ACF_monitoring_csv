@@ -17,8 +17,16 @@
 
 #ifndef ChannelList
 typedef std::vector<uint8_t> ChannelList;
-typedef std::vector<uint16_t> BadEventsList;
 #endif
+#ifndef EventTag
+#ifndef EventId 
+typedef std::pair<uint16_t, uint16_t> EventId;
+#endif 
+typedef std::pair<EventId,uint8_t> EventTag; // [L1Id, BxId],Tag
+#endif 
+#ifndef EventsList
+typedef std::vector<EventTag> EventsList;
+#endif 
 
 #include <map>
 #ifdef __USE_ROOT__
@@ -89,7 +97,7 @@ class DataChecker : public Tool
     DetectorDataContainer fHitCheckContainer, fStubCheckContainer;
     DetectorDataContainer fThresholds, fLogic, fHIPs;
     DetectorDataContainer fInjections;
-    DetectorDataContainer fDataMismatches, fBadEvents;
+    DetectorDataContainer fDataMismatches, fGoodEvents , fBadEvents;
     DetectorDataContainer fBxIdsMatches, fBxIdsMismatches;
 
     int fPhaseTap     = 8;

@@ -2623,14 +2623,17 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-            uint32_t cTimeoutValue   = 1000;
+            uint32_t cTimeoutValue   = 10;
             if( cWaitForFSM ) // send triggers unti FSM is idle 
             {
                 // FSM is finished sending triggers 
                 uint32_t cIterations = 0;
                 do
                 {
-                    LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+                    if( (1+cIterations)%10  == 0 )
+                        LOG(INFO) << "\t..Trigger State: " << BOLDGREEN << "Running" 
+                            << " iteration# " << +cIterations
+                            << RESET;
                     std::this_thread::sleep_for(std::chrono::microseconds(cTimeSingleTrigger_us*cNevents));
                     cIterations++;
                 } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < cTimeoutValue);
@@ -2644,10 +2647,12 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
                     do
                     {
-
+                        if( (1+cIterations)%25  == 0 ) 
+                            LOG(INFO) << "\t..Readout request is " << +cReadoutReq 
+                                << " iteration# " << +cIterations
+                                << RESET;
                         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
                         cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-                        LOG(DEBUG) << "Readout request is " << +cReadoutReq << RESET;
                         cIterations++;
                     } while(cReadoutReq == 0 && cIterations < cTimeoutValue ); 
                     cFailed = (cIterations >= cTimeoutValue );
