@@ -257,6 +257,7 @@ int main(int argc, char* argv[])
         auto cSelectFunction = [cFrontEndType](const ChipContainer *theChip){return ( static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType);};
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cDataChecker.Inherit(&cHybridTester);
+        cDataChecker.Initialise();
         if( cmd.foundOption("checkAsync") ) cDataChecker.AsyncTest();
         else cDataChecker.ReadNeventsTest();
         // reset 

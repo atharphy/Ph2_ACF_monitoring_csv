@@ -17,6 +17,7 @@
 
 #ifndef ChannelList
 typedef std::vector<uint8_t> ChannelList;
+typedef std::vector<uint16_t> BadEventsList;
 #endif
 
 #include <map>
@@ -88,7 +89,7 @@ class DataChecker : public Tool
     DetectorDataContainer fHitCheckContainer, fStubCheckContainer;
     DetectorDataContainer fThresholds, fLogic, fHIPs;
     DetectorDataContainer fInjections;
-    DetectorDataContainer fDataMismatches;
+    DetectorDataContainer fDataMismatches, fBadEvents;
     DetectorDataContainer fBxIdsMatches, fBxIdsMismatches;
 
     int fPhaseTap     = 8;

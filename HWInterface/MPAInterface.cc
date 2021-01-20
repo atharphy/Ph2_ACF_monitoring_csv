@@ -105,21 +105,22 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
 }
 void MPAInterface::digiInjection( ReadoutChip* pChip, std::vector<Injection> pInjections )
 {
-    std::vector<uint32_t> cPixelIds(0); 
-    for( auto pInjection : pInjections )
-    {
-        cPixelIds.push_back( (uint32_t)(pInjection.fColumn)*120+(uint32_t)pInjection.fRow );
-    }
+    // std::vector<uint32_t> cPixelIds(0); 
+    // for( auto pInjection : pInjections )
+    // {
+    //     cPixelIds.push_back( (uint32_t)(pInjection.fColumn)*120+(uint32_t)pInjection.fRow );
+    // }
     // first make sure all pixels output 0x00 
     this->WriteChipReg(pChip,"DigitalSync", 0x00);
     // then .. for pixels I want enable pattern on PixelN
-    for( auto cPixelId : cPixelIds)
+    for( auto pInjection : pInjections )
     {
+        uint32_t  cPixelIds = (uint32_t)(pInjection.fColumn)*120+(uint32_t)pInjection.fRow;
         std::ostringstream cRegName;
-        cRegName << "DigitalSyncP" << std::to_string(cPixelId);
-        LOG (INFO) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET; 
+        cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
+        LOG (DEBUG) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET; 
         this->WriteChipReg(pChip,cRegName.str(), 0xFF);
-    }
+    }//injections
 }
 std::vector<int> MPAInterface::decodeBendCode( ReadoutChip* pChip , uint8_t pBendCode )
 {
@@ -371,7 +372,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         for( auto cPixelReg : cPixelRegs ) 
             cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second ) ;
         cRegMask = ~(cRegMask); 
-        LOG (INFO) << BOLDBLUE << "Register mask is 0x" << std::hex <<  +cRegMask << std::dec << RESET;
+        LOG (DEBUG) << BOLDBLUE << "Register mask is 0x" << std::hex <<  +cRegMask << std::dec << RESET;
         uint8_t cRegValue=0x00;
         int cPixelNumber=0;
         if(pRegName.find("P")!= std::string::npos) // single pixel
