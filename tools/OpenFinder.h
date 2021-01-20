@@ -15,6 +15,7 @@
 #include "PSHybridTester.h"
 #ifdef __USE_ROOT__
   #include "TTree.h"
+  #include "TH2F.h"
 #endif
 
 #ifdef __ANTENNA__
@@ -102,8 +103,8 @@ class OpenFinder : public PSHybridTester
     #ifdef __TCUSB__
         std::map<std::string, TC_PSFE::ant_channel> fAntennaControl =
         {
-            { "EvenChannels", TC_PSFE::ant_channel::_1 },
-            { "OddChannels", TC_PSFE::ant_channel::_2 },
+            { "EvenChannels", TC_PSFE::ant_channel::_2 },
+            { "OddChannels", TC_PSFE::ant_channel::_1 },
             { "Enable", TC_PSFE::ant_channel::ALL },
             { "Disable" , TC_PSFE::ant_channel::NONE}
         };
