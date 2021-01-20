@@ -78,6 +78,54 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
     }
 }
 
+void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> &cReadLines, BeBoard* pBoard, bool pTrigger)
+{
+    uint32_t cNtriggers= this->findValueInSettings("PSHybridDebugDuration");
+    if( pTrigger )
+        LOG (INFO) << BOLDBLUE << "Going to send "
+            << +cNtriggers << " triggers to debug L1 SSA output " 
+            << RESET;
+    else
+        LOG (INFO) << BOLDBLUE << "Going to capture for "
+            << +cNtriggers*10 << " ms to debug stub SSA output " 
+            << RESET;
+
+    // pair id 
+    for( uint8_t cPairId=0; cPairId < 2; cPairId++)
+    {
+        uint8_t cAlignmentPattern = (cPairId == 0 ) ? 0x05 : 0x01; 
+        // first I would like to align the lines in the back-end 
+        if( !pTrigger )
+        {
+            bool cAligned=true;
+            for( uint8_t cLineId=1; cLineId < 8; cLineId++)
+            { 
+                cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, 0 , cPairId , cLineId , cAlignmentPattern , 8);
+                if( !cAligned )
+                    LOG (INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
+            }
+            //if aligned then try and scope 
+            LOG (INFO) << "SLVS debug [stub lines] : Chip "
+                << +cPairId 
+                << RESET;
+        }
+        else
+        {
+            LOG (INFO) << BOLDBLUE << "SLVS debug [L1 line] : Chip "
+                << +cPairId 
+                << RESET;
+        }
+        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
+        if( pTrigger )
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug(false);
+        else
+        {
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7, cReadLines);
+        }
+        
+    }
+}
+
 void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
 {
     uint32_t cNtriggers= this->findValueInSettings("PSHybridDebugDuration");
@@ -228,7 +276,8 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard,  const std::string& cSSA
                 if( cReadoutChip->getFrontEndType() != FrontEndType::SSA )
                     continue;
 
-        		uint8_t cPattern= (cReadoutChip->getId()%2 == 0 ) ? 0x01 : 0x05; 
+        		// uint8_t cPattern= (cReadoutChip->getId()%2 == 0 ) ? 0xAA : 0xCC; 
+        		uint8_t cPattern= (uint8_t)cReadoutChip->getId()+1;
                         
         		LOG (INFO) << BOLDBLUE << "Chip " 
         			<< +cReadoutChip->getId() 
@@ -252,7 +301,55 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard,  const std::string& cSSA
     }//module 
     // now capture output on pogo sockets 
     //this->SSAOutputsPogoDebug(pBoard, false);
-    this->SSAOutputsPogoScope(pBoard, false);
+    std::vector<std::vector<std::string>> cReadLines; // Container for the scoped lines
+    this->SSAOutputsPogoScope( cReadLines, pBoard, false); //Recover Scoped lines
+    std::string pPattern_str;
+    // Needs SSAPairSelect
+    for(int a = 0; a < (int)cReadLines.size(); a++)
+        {
+            pPattern_str = ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) ? std::bitset<8>(  (int)cSSAPairSel.at(a) - '0' + 1  ).to_string() : std::bitset<8>(  (int)cSSAPairSel.at(1-a) - '0' + 1  ).to_string() ;
+            if ( ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) && ( (int)cSSAPairSel.at(a) - '0' == 3) ) 
+                pPattern_str = std::bitset<8>( 5 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
+            else if ( ( ((int)cSSAPairSel.at(0)-'0')%2==0 ) && ( (int)cSSAPairSel.at(1-a) - '0' == 3 ) ) 
+                pPattern_str = std::bitset<8>( 5 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
+            LOG(INFO) << "Checking for " << pPattern_str << RESET;
+            std::string cLine    = "";
+            float       distance = 0.0;
+            int         badLines;
+            std::string cSubLine;
+            for(int b = 0; b < (int)cReadLines[a].size(); b++)
+            {
+                badLines = 0;
+                cLine = cReadLines[a][b];
+                LOG(DEBUG) << cLine << RESET;
+                bool ok = false;
+                // Go throught the read line and compare with pattern
+                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length())
+                {
+                    cSubLine = cLine.substr(k, pPattern_str.length());
+                    LOG(DEBUG) << BOLDBLUE << cSubLine << RESET;
+                    // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
+                    // aux = k + 1;
+                    for ( int i = 0; i < (int)cSubLine.length()-1 ; i++) {
+                        if ( cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) == pPattern_str ) {
+                            ok = true;
+                            LOG (INFO) << BOLDMAGENTA << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << " equals " << pPattern_str << RESET;
+                            break;
+                        }
+                        else{
+                            LOG (DEBUG) << BOLDRED << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << RESET;
+                        }
+                    }
+                    if( ok == true )
+                        break;
+                    else
+                        badLines++;
+                }
+                LOG (DEBUG) << badLines << RESET;
+                if( ok == true )
+                    break;
+            }
+        }
 }
 void PSHybridTester::SSATestL1Output(BeBoard* pBoard,  const std::string& cSSAPairSel)
 {

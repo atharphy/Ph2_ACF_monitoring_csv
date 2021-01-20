@@ -384,8 +384,16 @@ int main ( int argc, char* argv[] )
     {
        LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
         // configure SSA to output something on stub lines 
-        cHybridTester.SSATestStubOutput(cSSAPair);
-        // still needs to be debugged 
+        if(cSSAPair != "ALL") { cHybridTester.SSATestStubOutput(cSSAPair); }
+        else
+        {
+            std::string current_pair;
+            for(int i = 0; i < 7; i++)
+            {
+                current_pair = std::to_string(i) + std::to_string(i + 1);
+                cHybridTester.SSATestStubOutput(current_pair);
+            }
+        }        // still needs to be debugged 
         // configure SSA to output something on L1 lines
         //cHybridTester.SSATestL1Output(cSSAPair);
         // put it back in normal readout mode 
