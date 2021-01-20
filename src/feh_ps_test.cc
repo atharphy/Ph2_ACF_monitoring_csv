@@ -60,7 +60,7 @@ int main ( int argc, char* argv[] )
    
     cmd.defineOption ( "findShorts", "look for shorts", ArgvParser::NoOptionAttribute );
     cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
-    cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
     cmd.defineOption ( "ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
 
     cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
@@ -80,6 +80,7 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "USB", "USB iProduct string to identify the test card when using the USB functionalities.", ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "useGui", "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false", ArgvParser::NoOptionAttribute );
 
+    cmd.defineOption ( "output", "Output directory. Default: Results/" );
 
     int result = cmd.parse ( argc, argv );
 
