@@ -595,10 +595,11 @@ void PedeNoise::producePedeNoisePlots()
                             chipPedestalHistogram->Fill(channelData.fThreshold);
                             chipNoiseHistogram->Fill(channelData.fNoise);
                         }
-                        fillSummaryTree("AvgNoiseSSA" + fSummaryTreeParameter.Itoa(chip->getIndex(), 10) , Double_t(chipNoiseHistogram->GetMean() ) ); //For GUI summaryTree
-                        fillSummaryTree("RMSNoiseSSA" + fSummaryTreeParameter.Itoa(chip->getIndex(), 10) , Double_t(chipNoiseHistogram->GetRMS() ) ); //For GUI summaryTree
-                        fillSummaryTree("AvgPedeSSA" + fSummaryTreeParameter.Itoa(chip->getIndex(), 10) , Double_t(chipPedestalHistogram->GetMean() ) ); //For GUI summaryTree
-                        fillSummaryTree("RMSPedeSSA" + fSummaryTreeParameter.Itoa(chip->getIndex(), 10) , Double_t(chipPedestalHistogram->GetRMS() ) ); //For GUI summaryTree
+                        fillSummaryTree("AvgNoiseSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipNoiseHistogram->GetMean() ) ); //For GUI summaryTree
+                        fillSummaryTree("RMSNoiseSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipNoiseHistogram->GetRMS() ) ); //For GUI summaryTree
+                        fillSummaryTree("AvgPedeSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipPedestalHistogram->GetMean() ) ); //For GUI summaryTree
+                        fillSummaryTree("RMSPedeSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipPedestalHistogram->GetRMS() ) ); //For GUI summaryTree
+                        fillSummaryTree("StDvPedeSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipPedestalHistogram->GetStdDev() ) ); //For GUI summaryTree
                     }
                 }
             }
