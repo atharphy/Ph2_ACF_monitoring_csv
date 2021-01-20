@@ -686,7 +686,7 @@ void DataChecker::CheckPSData( BeBoard* pBoard, std::vector<Injection> pInjectio
     auto& cGoodEvents = fGoodEvents.at(pBoard->getIndex());
         
     auto cSetting = fSettingsMap.find ( "Nevents" );
-    int cScale=1;
+    int cScale=1000;
     uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second)*cScale : 100;
     LOG (INFO) << BOLDBLUE << "Checking PSdata by reading "
             << +cNevents
@@ -1193,60 +1193,66 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                 << +cGdEventsList.size() << " good events." << RESET;
                             
                             // look at events in class 0 
-                            uint8_t cSelection=0;
-                            std::vector<int> cL1Ids_BdEvnts(0);
-                            for( auto cBadEventTag : cBadEventsList ) 
+                            for( uint8_t cSelection=0; cSelection<7; cSelection++)
                             {
-                                EventId cId=cBadEventTag.first;
-                                uint8_t cTg=cBadEventTag.second;
-                                //no p clusters 
-                                if(cTg==cSelection) cL1Ids_BdEvnts.push_back(cId.first);
-                            }
-                            auto cIterator = std::find( cL1Ids_BdEvnts.begin(), cL1Ids_BdEvnts.end(), 511 );
-                            std::vector<int> cNBadEvents_511(0);
-                            std::vector<int> cNBadEvents_Rndm(0);
-                            while( cIterator!= cL1Ids_BdEvnts.end() )
-                            {
-                                auto cNextPosition = std::find( cIterator+1, cL1Ids_BdEvnts.end(), 511 );
-                                if( cNextPosition != cL1Ids_BdEvnts.end() )
+                                std::vector<int> cL1Ids_BdEvnts(0);
+                                for( auto cBadEventTag : cBadEventsList ) 
                                 {
-                                    int cNBad_511=0;
-                                    auto cIter = cIterator;
-                                    do
+                                    EventId cId=cBadEventTag.first;
+                                    uint8_t cTg=cBadEventTag.second;
+                                    //no p clusters 
+                                    if(cTg==cSelection) cL1Ids_BdEvnts.push_back(cId.first);
+                                }
+                                LOG (INFO) << BOLDBLUE << "\t.. " << +cL1Ids_BdEvnts.size() << " events with classification " << +cSelection << RESET;
+                                if( cSelection == 0 )
+                                {
+                                    auto cIterator = std::find( cL1Ids_BdEvnts.begin(), cL1Ids_BdEvnts.end(), 511 );
+                                    std::vector<int> cNBadEvents_511(0);
+                                    std::vector<int> cNBadEvents_Rndm(0);
+                                    while( cIterator!= cL1Ids_BdEvnts.end() )
                                     {
-                                        if( cIter!= cIterator)
+                                        auto cNextPosition = std::find( cIterator+1, cL1Ids_BdEvnts.end(), 511 );
+                                        if( cNextPosition != cL1Ids_BdEvnts.end() )
                                         {
-                                            int cDiff = (int)(*cIter) - (int)(*(cIter-1));
-                                            if( cDiff != 1  && cDiff != -511 ){
-                                                LOG (DEBUG) << BOLDRED << "\t.. L1 difference of " << +cDiff << " between bad events." 
-                                                    << " L1Id is " << *cIter 
-                                                    << " [L1Id mod 16 = " << +((int)(*cIter)%16)
-                                                    << " ] previous event had an L1Id of " << *(cIter-1)
-                                                    << RESET;
-                                                cNBadEvents_Rndm.push_back(*cIter);
-                                            }
-                                            else cNBad_511++;
-                                        } 
-                                        cIter++;
-                                    }while( cIter != cNextPosition );
-                                    cNBadEvents_511.push_back(cNBad_511);
-                                }//look for next bad event in the list 
-                                cIterator = cNextPosition;
-                            }// list of bad events 
-                            auto cSum = std::accumulate(cNBadEvents_511.begin(), cNBadEvents_511.end(), 0.0);
-                            auto cMean = cSum/cNBadEvents_511.size();
-                            auto cMax = std::max_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
-                            auto cMin = std::min_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
-                            double cSqSum = std::inner_product(cNBadEvents_511.begin(), cNBadEvents_511.end(), cNBadEvents_511.begin(), 0.0);
-                            double cStdDev = std::sqrt(cSqSum / cNBadEvents_511.size() - cMean * cMean);
-                            LOG (INFO) << BOLDBLUE << "Found " << +cSum << " missing after an L1Id of 511." 
-                                << " and " << +cNBadEvents_Rndm.size() << " with other L1Ids "
-                                << " On average, the following " << +cMean << " events are bad..."
-                                << " StdDev of number of bad events is " << cStdDev 
-                                << " Maxium number of consecutive events following a 511 is " << (*cMax)
-                                << " Minimum number of consecutive events following a 511 is " << (*cMin)
-                                << " Also.. have found " << +cNBadEvents_Rndm.size() << " events with random L1Ids and no P-clusters."
-                                << RESET;
+                                            int cNBad_511=0;
+                                            auto cIter = cIterator;
+                                            do
+                                            {
+                                                if( cIter!= cIterator)
+                                                {
+                                                    int cDiff = (int)(*cIter) - (int)(*(cIter-1));
+                                                    if( cDiff != 1  && cDiff != -511 ){
+                                                        LOG (DEBUG) << BOLDRED << "\t.. L1 difference of " << +cDiff << " between bad events." 
+                                                            << " L1Id is " << *cIter 
+                                                            << " [L1Id mod 16 = " << +((int)(*cIter)%16)
+                                                            << " ] previous event had an L1Id of " << *(cIter-1)
+                                                            << RESET;
+                                                        cNBadEvents_Rndm.push_back(*cIter);
+                                                    }
+                                                    else cNBad_511++;
+                                                } 
+                                                cIter++;
+                                            }while( cIter != cNextPosition );
+                                            cNBadEvents_511.push_back(cNBad_511);
+                                        }//look for next bad event in the list 
+                                        cIterator = cNextPosition;
+                                    }// list of bad events 
+                                    auto cSum = std::accumulate(cNBadEvents_511.begin(), cNBadEvents_511.end(), 0.0);
+                                    auto cMean = cSum/cNBadEvents_511.size();
+                                    auto cMax = std::max_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
+                                    auto cMin = std::min_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
+                                    double cSqSum = std::inner_product(cNBadEvents_511.begin(), cNBadEvents_511.end(), cNBadEvents_511.begin(), 0.0);
+                                    double cStdDev = std::sqrt(cSqSum / cNBadEvents_511.size() - cMean * cMean);
+                                    LOG (INFO) << BOLDBLUE << "Found " << +cSum << " missing after an L1Id of 511." 
+                                        << " and " << +cNBadEvents_Rndm.size() << " with other L1Ids "
+                                        << " On average, the following " << +cMean << " events are bad..."
+                                        << " StdDev of number of bad events is " << cStdDev 
+                                        << " Maxium number of consecutive events following a 511 is " << (*cMax)
+                                        << " Minimum number of consecutive events following a 511 is " << (*cMin)
+                                        << " Also.. have found " << +cNBadEvents_Rndm.size() << " events with random L1Ids and no P-clusters."
+                                        << RESET;
+                                }
+                            }
                             //remember to clear
                             cBadEventsList.clear();
                             cGdEventsList.clear();
