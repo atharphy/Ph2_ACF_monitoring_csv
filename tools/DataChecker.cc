@@ -1160,7 +1160,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                 fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
 
                 // do this 10 times 
-                for( int cAttempt= 0 ; cAttempt < 1 ; cAttempt++ )
+                for( int cAttempt= 0 ; cAttempt < 25 ; cAttempt++ )
                 {
                     if( cAttempt%10 == 0 ) LOG (INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
                     this->CheckPSData( cBoard , cInjections );         
@@ -1195,6 +1195,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                             // look at events in class 0 
                             for( int cSelection=6; cSelection>=0; cSelection--)
                             {
+                                if( cSelection == 5 ) continue; // this is a good event
                                 std::vector<int> cL1Ids_BdEvnts(0);
                                 for( auto cBadEventTag : cBadEventsList ) 
                                 {
@@ -1246,13 +1247,18 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                     auto cMin = std::min_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
                                     double cSqSum = std::inner_product(cNBadEvents_511.begin(), cNBadEvents_511.end(), cNBadEvents_511.begin(), 0.0);
                                     double cStdDev = std::sqrt(cSqSum / cNBadEvents_511.size() - cMean * cMean);
-                                    LOG (INFO) << BOLDBLUE << "\t\t..Found " << +cN511sfound << " times where an L1Id of 511 was found in a readout event.." 
-                                        << +cSum << " of those L1Ids are consecutive ones missing immediately after an L1Id of 511." 
-                                        << " and " << +cNBadEvents_Rndm.size() << " are some others population. "
-                                        << " On average, the " << +cMean << " events following an L1Id of 511 are bad..."
+                                    LOG (INFO) << BOLDBLUE << "\t\t..Found " << +cN511sfound 
+                                        << " times where an L1Id of 511 was found in a readout event.." 
+                                        << +cSum 
+                                        << " of those L1Ids are consecutive ones missing immediately after an L1Id of 511." 
+                                        << RESET;
+                                    LOG (INFO) << BOLDBLUE << "\t\t .. On average, the " << +cMean 
+                                        << " events following an L1Id of 511 are bad..."
                                         << " StdDev : " << cStdDev 
                                         << " Maxium :  " << (*cMax)
                                         << " Minimum : " << (*cMin)
+                                        << RESET;
+                                    LOG (INFO) << BOLDBLUE << "\t\t .. " << +cNBadEvents_Rndm.size() << " are some others population. "
                                         << RESET;
                                 }
                             }
