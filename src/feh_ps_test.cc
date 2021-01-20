@@ -97,7 +97,7 @@ int main ( int argc, char* argv[] )
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
     std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
     std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
-    uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0; 
+    // uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0; 
     const std::string cSSAPair = ( cmd.foundOption ( "ssapair" ) )   ?   cmd.optionValue ( "ssapair" ) : "";
     cDirectory += Form("FEH_PS_%s",cHybridId.c_str());
 
