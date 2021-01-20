@@ -61,6 +61,8 @@ private:
     void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
     void MPATest(Ph2_HwDescription::BeBoard* pBoard, uint32_t pPattern);
 
+    int FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str);
+
     std::map<std::string, uint8_t> fInputDebugMap =
     {
         { "sda_out", 0 },

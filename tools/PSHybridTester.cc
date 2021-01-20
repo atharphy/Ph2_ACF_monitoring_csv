@@ -2,6 +2,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
+#define MIN(x, y) ((x) < (y) ? (x) : (y)) // calculate minimum between two values
 
 //initialize the static member
 
@@ -29,6 +30,35 @@ void PSHybridTester::MPATest(uint32_t pPattern)
     {
        this->MPATest(cBoard, pPattern );
     }
+}
+int PSHybridTester::FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str)
+{
+    // Levenshtein Distance Computing Algorithm copied from https://www.tutorialspoint.com/cplusplus-program-to-implement-levenshtein-distance-computing-algorithm
+    int t, track = 0;
+    int dist[50][50];
+
+    LOG(DEBUG) << cSubLine << RESET;
+    LOG(DEBUG) << pPattern_str << RESET;
+
+    int lSubLine = cSubLine.length();
+    int lPattern = pPattern_str.length();
+    for(int i = 0; i <= lSubLine; i++) { dist[0][i] = i; }
+    for(int j = 0; j <= lPattern; j++) { dist[j][0] = j; }
+    for(int j = 1; j <= lSubLine; j++)
+    {
+        for(int i = 1; i <= lPattern; i++)
+        {
+            if(cSubLine[i - 1] == pPattern_str[j - 1]) { track = 0; }
+            else
+            {
+                track = 1;
+            }
+            t          = MIN((dist[i - 1][j] + 1), (dist[i][j - 1] + 1));
+            dist[i][j] = MIN(t, (dist[i - 1][j - 1] + track));
+        }
+    }
+    LOG(DEBUG) << "The Levinstein distance is: " << dist[lPattern][lSubLine] << RESET;
+    return dist[lPattern][lSubLine];
 }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
