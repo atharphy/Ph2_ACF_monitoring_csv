@@ -941,7 +941,7 @@ namespace Ph2_HwInterface {
         if( !cSuccess ) 
         {
             LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " select FC edge in CIC  " << RESET;
-            exit(0);
+            exit(5);
         }
 
         // check fast command lock 
@@ -949,7 +949,7 @@ namespace Ph2_HwInterface {
         if( !cSuccess ) 
         {
             LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " lock FC decoder in CIC  " << RESET;
-            exit(0);
+            exit(4);
         }
         LOG (INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured fast command block in CIC." << RESET;
         
