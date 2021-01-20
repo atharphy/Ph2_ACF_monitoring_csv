@@ -71,23 +71,33 @@ void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
 
         cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.Configure(cInterface, 0xEA);
+        cDPInterfacer.Configure(cInterface, 0xAA);
         cDPInterfacer.Start(cInterface);
         //Running phase alignment on the stub lines before running the CIC in lines.
-        if(cPhyPort < 10) 
+        // if(cPhyPort < 10) 
+        // {
+        //     bool cAligned=true;
+        //     for( int i= 0 ; i < 3 ; i ++ ) {  //Run Phase and Word alignment on the stub lines. Try up to three times if it fails 
+        //         cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning_noExit( pBoard, false );
+        //         if( !cAligned )
+        //             LOG (INFO) << BOLDRED << "Alignment attempt failed" << RESET;
+        //         else
+        //             break;
+        //     }
+        //     if (cAligned) 
+        //         LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << +cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDGREEN << "SUCCESSFUL" << RESET;
+        //     else
+        //         LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << +cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDRED << "UNSUCCESSFUL" << RESET;            
+        // }
+
+        // align back-end
+        //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+        for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
         {
-            bool cAligned=true;
-            for( int i= 0 ; i < 3 ; i ++ ) {  //Run Phase and Word alignment on the stub lines. Try up to three times if it fails 
-                cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning_noExit( pBoard, false );
-                if( !cAligned )
-                    LOG (INFO) << BOLDRED << "Alignment attempt failed" << RESET;
-                else
-                    break;
-            }
-            if (cAligned) 
-                LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDGREEN << "SUCCESSFUL" << RESET;
-            else
-                LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDRED << "UNSUCCESSFUL" << RESET;            
+            uint8_t cHybridId=0;
+            uint8_t cChipId=0; 
+            uint8_t cPatternPeriod=8;
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , pPattern , cPatternPeriod);
         }
 
         cDPInterfacer.Stop(cInterface);
@@ -95,7 +105,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
         cDPInterfacer.Start(cInterface);
         
         // cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning (pBoard,fL1Debug);
-
+        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
 
         for(int a = 0; a < (int)cReadLines.size(); a++)
