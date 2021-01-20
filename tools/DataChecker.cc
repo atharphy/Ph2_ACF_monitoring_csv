@@ -1193,7 +1193,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                 << +cGdEventsList.size() << " good events." << RESET;
                             
                             // look at events in class 0 
-                            for( uint8_t cSelection=0; cSelection<7; cSelection++)
+                            for( int cSelection=6; cSelection>=0; cSelection--)
                             {
                                 std::vector<int> cL1Ids_BdEvnts(0);
                                 for( auto cBadEventTag : cBadEventsList ) 
@@ -1209,6 +1209,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                     auto cIterator = std::find( cL1Ids_BdEvnts.begin(), cL1Ids_BdEvnts.end(), 511 );
                                     std::vector<int> cNBadEvents_511(0);
                                     std::vector<int> cNBadEvents_Rndm(0);
+                                    int cN511sfound=0;
                                     while( cIterator!= cL1Ids_BdEvnts.end() )
                                     {
                                         auto cNextPosition = std::find( cIterator+1, cL1Ids_BdEvnts.end(), 511 );
@@ -1230,12 +1231,14 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                                         cNBadEvents_Rndm.push_back(*cIter);
                                                     }
                                                     else cNBad_511++;
-                                                } 
+                                                }
+                                                else cNBad_511++;
                                                 cIter++;
                                             }while( cIter != cNextPosition );
                                             cNBadEvents_511.push_back(cNBad_511);
                                         }//look for next bad event in the list 
                                         cIterator = cNextPosition;
+                                        cN511sfound++;
                                     }// list of bad events 
                                     auto cSum = std::accumulate(cNBadEvents_511.begin(), cNBadEvents_511.end(), 0.0);
                                     auto cMean = cSum/cNBadEvents_511.size();
@@ -1243,13 +1246,13 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                                     auto cMin = std::min_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
                                     double cSqSum = std::inner_product(cNBadEvents_511.begin(), cNBadEvents_511.end(), cNBadEvents_511.begin(), 0.0);
                                     double cStdDev = std::sqrt(cSqSum / cNBadEvents_511.size() - cMean * cMean);
-                                    LOG (INFO) << BOLDBLUE << "Found " << +cSum << " missing after an L1Id of 511." 
-                                        << " and " << +cNBadEvents_Rndm.size() << " with other L1Ids "
-                                        << " On average, the following " << +cMean << " events are bad..."
-                                        << " StdDev of number of bad events is " << cStdDev 
-                                        << " Maxium number of consecutive events following a 511 is " << (*cMax)
-                                        << " Minimum number of consecutive events following a 511 is " << (*cMin)
-                                        << " Also.. have found " << +cNBadEvents_Rndm.size() << " events with random L1Ids and no P-clusters."
+                                    LOG (INFO) << BOLDBLUE << "\t\t..Found " << +cN511sfound << " times where an L1Id of 511 was found in a readout event.." 
+                                        << +cSum << " of those L1Ids are consecutive ones missing immediately after an L1Id of 511." 
+                                        << " and " << +cNBadEvents_Rndm.size() << " are some others population. "
+                                        << " On average, the " << +cMean << " events following an L1Id of 511 are bad..."
+                                        << " StdDev : " << cStdDev 
+                                        << " Maxium :  " << (*cMax)
+                                        << " Minimum : " << (*cMin)
                                         << RESET;
                                 }
                             }
