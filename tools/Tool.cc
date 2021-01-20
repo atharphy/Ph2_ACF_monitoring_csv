@@ -224,6 +224,17 @@ void Tool::SoftDestroy()
 			fSummaryTree->Fill();
 	}
 
+	Double_t Tool::getSummaryParameter( TString cParameter )
+	{
+		for(int i=0; i<fSummaryTree->GetEntries(); i++)
+		{
+			fSummaryTree->GetEntry(i);
+			if ( fSummaryTreeParameter == cParameter )
+				return fSummaryTreeValue;
+		}
+		return -1.;
+	}
+
 	TString Tool::getDirectoryName() 
 	{
 		return fDirectoryName.c_str();
@@ -319,6 +330,18 @@ void Tool::SoftDestroy()
 	{
 		auto cChipHistMap = fChipHistMap.find ( pChip );
 
+		// auto  it = cChipHistMap.begin();
+
+		// for(int i = 0; i < 8 ; ++i)
+		// {
+		// 	std::cout << it->first << " " << it->second.first << " " << it->second.second << "\n";
+		// }
+
+		// for(auto it = cChipHistMap.cbegin(); it != cChipHistMap.cend(); ++it)
+		// {
+		// 	LOG(INFO) << it->first << it->second.first << it->second.second << RESET;
+		// }
+
 		if ( cChipHistMap == std::end ( fChipHistMap ) )
 		{
 			//Fabio: CBC specific -> to be moved out from Tool
@@ -391,13 +414,20 @@ void Tool::WriteRootFile()
 
 void Tool::SaveResults()
 {
+
+	LOG(INFO) << "Saving results" << RESET;
+
 	#ifdef __USE_ROOT__
+
+		LOG(INFO) << "Saving 2" << RESET; 
 		for ( const auto& cBeBoard : fBeBoardHistMap )
 		{
 			fResultFile->cd();
 
 			for ( const auto& cHist : cBeBoard.second )
+			{	
 				cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+			}
 
 			fResultFile->cd();
 		}
@@ -415,7 +445,9 @@ void Tool::SaveResults()
 			fResultFile->cd ( cDirName );
 
 			for ( const auto& cHist : cHybrid.second )
+			{
 				cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
+			}
 
 			fResultFile->cd();
 		}
@@ -433,8 +465,9 @@ void Tool::SaveResults()
 			fResultFile->cd ( cDirName );
 
 			for ( const auto& cHist : cChip.second )
+			{
 				cHist.second->Write ( cHist.second->GetName(), TObject::kOverwrite );
-
+			}
 			fResultFile->cd();
 		}
 

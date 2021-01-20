@@ -95,6 +95,8 @@ class Tool : public Ph2_System::SystemController
         */
         void fillSummaryTree( TString cParameter, Double_t cValue);
 
+        Double_t getSummaryParameter( TString cParameter );
+
         TString getDirectoryName();
 
         void bookHistogram ( ChipContainer* pChip, std::string pName, TObject* pObject );
