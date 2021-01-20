@@ -1445,7 +1445,7 @@ namespace Ph2_HwInterface
               cOutput_wSpace += *cIt + " ";
               cOutput += *cIt;
           }
-          LOG (INFO) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+          LOG (DEBUG) << BOLDBLUE <<  "Line " << +cLine << " : " << cOutput_wSpace << RESET;
           cLines.push_back(cOutput);
           //cStrLength = cOutput.length();
           cLine++;
@@ -1749,7 +1749,7 @@ namespace Ph2_HwInterface
                                 if( cAttempts > 10 )
                                 {
                                     LOG (INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                                    exit(0);
+                                    exit(2);
                                 }
                                 // try again
                                 LOG (INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
@@ -1770,7 +1770,76 @@ namespace Ph2_HwInterface
                     if( pTuner.fDone != 1  )
                     {
                         LOG (ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId-1) << " in the back-end." << RESET;
-                        exit(0);
+                        exit(3);
+                    }
+                }
+            }
+        }
+        if( pScope)
+            this->StubDebug ();
+        return cSuccess;
+    }
+
+        // tuning of stub lines
+    bool D19cFWInterface::StubTuning_noExit(const BeBoard* pBoard, bool pScope)
+    {
+        PhaseTuner pTuner;
+        bool cSuccess=true;
+
+        // back-end tuning on stub lines
+        for(auto cModule : *pBoard)
+        {
+            selectLink (cModule->getId());
+            for (auto cHybrid : *cModule)
+            {
+                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                if( cCic == NULL )
+                    continue;
+
+                //this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid) ;
+                if( pScope)
+                  this->StubDebug ();
+
+                LOG (INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getChipId() << RESET;
+                uint8_t cNlines=5; // Changed for MPATest!! Only 4 stub lines are used (PhyPort outputs)
+                for( uint8_t cLineId=1; cLineId < cNlines; cLineId+=1)
+                {
+                    if( fOptical )
+                    {
+                        LOG (INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
+                        pTuner.SetLineMode( this, cHybrid->getId() , 0 , cLineId , 2 , 0, 1, 0, 0 );
+                        pTuner.SetLineMode(this, cHybrid->getId(), 0  , cLineId, 0 );
+                        pTuner.SendControl(this, cHybrid->getId(), 0 , cLineId , "WordAlignment");
+                        uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                        LOG (DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
+                        uint8_t cAttempts=0;
+                        if( pTuner.fBitslip == 0 )
+                        {
+                            do
+                            {
+                                if( cAttempts > 10 )
+                                {
+                                    LOG (INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                                }
+                                // try again
+                                LOG (INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
+                                GbtInterface cGBTx;
+                                cGBTx.gbtxSetPhase(this, fGBTphase) ;
+                                pTuner.SendControl(this, cHybrid->getId(), 0 , cLineId , "WordAlignment");
+                                cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                                LOG (DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                                cAttempts++;
+                            }while( pTuner.fBitslip == 0) ;
+                        }
+                    }
+                    else
+                    {
+                        pTuner.TuneLine(this,  cHybrid->getId() , 0 , cLineId , 0xEA , 8 , true);
+                        cSuccess = cSuccess && pTuner.fDone;
+                    }
+                    if( pTuner.fDone != 1  )
+                    {
+                        LOG (ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId-1) << " in the back-end." << RESET;
                     }
                 }
             }
@@ -1834,7 +1903,7 @@ namespace Ph2_HwInterface
           {
             for(auto cChip: *cFe )
             {
-                LOG (DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
+                LOG (DEBUG) << BOLDBLUE << "Directly reading back counters from MPA" << +cChip->getId() << RESET;
                 bool cWrite=false;
                 std::vector<uint32_t> cVec; cVec.clear();
                 std::vector<uint32_t> cReplies; cReplies.clear();
@@ -1909,8 +1978,8 @@ namespace Ph2_HwInterface
       }
       else
       {
-        LOG (ERROR) << BOLDRED << "Trying to read SSA counters when EventType does not match..." << RESET;
-        throw std::runtime_error(std::string("Trying to read SSA counters when EventType does not match..."));
+        LOG (ERROR) << BOLDRED << "Trying to read MPA counters when EventType does not match..." << RESET;
+        throw std::runtime_error(std::string("Trying to read MPA counters when EventType does not match..."));
       }
     }
     void D19cFWInterface::ReadSSACounters( BeBoard* pBoard, std::vector<uint32_t>& pData) 

@@ -431,6 +431,7 @@ namespace Ph2_HwInterface {
         bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         bool StubTuning(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
+        bool StubTuning_noExit(const Ph2_HwDescription::BeBoard* pBoard , bool pScope=false);
         //bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
 
         // Optical readout specific functions - d19c [temporary]
