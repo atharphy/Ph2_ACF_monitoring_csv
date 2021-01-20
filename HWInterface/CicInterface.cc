@@ -843,7 +843,7 @@ namespace Ph2_HwInterface {
 
         // then select phy port 
         setBoard ( pChip->getBeBoardId() ); 
-        LOG (INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
+        LOG (INFO) << BOLDMAGENTA << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
         std::string cRegName = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? "ctrlTestMux" : "MUX_CTRL";
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pPhyPort : (cRegValue & 0x8 ) | pPhyPort ;
@@ -857,9 +857,9 @@ namespace Ph2_HwInterface {
         uint16_t cRegValue = this->ReadChipReg( pChip , cRegName ); 
         uint16_t cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0x7 ) | (pEnable << 3 ) ;
         if( pEnable == 1 )
-            LOG (INFO) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " <<  RESET ;
+            LOG (DEBUG) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " <<  RESET ;
         else
-            LOG (INFO) << BOLDBLUE << " Disabling CIC MUX .. so activating CIC logic  " <<  RESET ;
+            LOG (DEBUG) << BOLDBLUE << " Disabling CIC MUX .. so activating CIC logic  " <<  RESET ;
             
         return this->WriteChipReg( pChip, cRegName, cValue);
     }
