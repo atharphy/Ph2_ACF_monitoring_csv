@@ -504,6 +504,8 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                         << +cInjectionPeriod
                         << "th channel " 
                         << RESET;
+                std::string param = Form("Shorts_%d", cReadoutChip->getId());
+                fillSummaryTree(param, (double_t)cShortsData->getSummary<uint16_t>());
             }//chip
         }//hybrid
     }//module
