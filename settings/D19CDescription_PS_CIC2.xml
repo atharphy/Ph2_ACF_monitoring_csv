@@ -7,7 +7,7 @@
     <OpticalGroup Id="0" FMCId="0" >
         <Module FeId="0" ModuleId="0" Status="1">
             <Global>
-                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
@@ -20,7 +20,7 @@
             <SSA Id="7" configfile="SSA.txt" /> 
             
             <CIC_Files path="./settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Module>
     </OpticalGroup>
 
@@ -143,7 +143,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">1000</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -163,9 +163,8 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometerLowEnd">540</Setting>
-    <Setting name="AntennaPotentiometerHighEnd">840</Setting>
-    <Setting name="ThresholdForOpens">15</Setting>
+    <Setting name="AntennaPotentiometer">647</Setting>
+    <Setting name="ThresholdForOpens">10</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 
     <!-- Shorts -->
