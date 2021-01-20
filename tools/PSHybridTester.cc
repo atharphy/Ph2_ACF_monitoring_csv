@@ -405,6 +405,145 @@ void PSHybridTester::SetHybridVoltage()
 	    cTC_PSFE.set_voltage(cTC_PSFE._1050mV,cTC_PSFE._1250mV);
     #endif
 }
+void PSHybridTester::RunHybridETest()
+{
+#ifdef __TCUSB__
+    TC_PSFE cTC_PSFE;
+
+    float result;
+
+    // auto cMapIterator = fHybridVoltageMap.find(pVoltageName);
+    // if( cMapIterator != fHybridVoltageMap.end() )
+    for (auto cMapIterator : fHybridVoltageMap)
+    {
+        auto& cMeasurement = cMapIterator.second;
+        cTC_PSFE.adc_get(cMeasurement, result);
+        LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+        fillSummaryTree(cMapIterator.first, result);
+    }
+
+    // cMapIterator = fHybridCurrentMap.find(pVoltageName);
+    // if( cMapIterator != fHybridCurrentMap.end() )
+    for (auto cMapIterator : fHybridCurrentMap)
+    {
+        auto& cMeasurement = cMapIterator.second;
+        cTC_PSFE.adc_get(cMeasurement, result);
+        LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+        fillSummaryTree(cMapIterator.first, result);
+    }
+
+    // cMapIterator = fHybridOtherMap.find(pVoltageName);
+    // if( cMapIterator != fHybridOtherMap.end() )
+    for (auto cMapIterator : fHybridOtherMap)
+    {
+        auto& cMeasurement = cMapIterator.second;
+        cTC_PSFE.adc_get(cMeasurement, result);
+        LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+        fillSummaryTree(cMapIterator.first, result);
+    }
+
+    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V_3, result );
+    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V_4, result );
+    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V25A_4, result );
+    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V25A_3, result );
+
+    // LOG(INFO) << "MPA1V_3" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA1V_3")->second, result);
+    // // fillSummaryTree("MPA1V_3", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V_3, result);
+    // fillSummaryTree("MPA1V_3", result);
+
+    // LOG(INFO) << "MPA_1V_4" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA_1V_4")->second, result);
+    // // fillSummaryTree("MPA_1V_4", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V_4, result);
+    // fillSummaryTree("MPA_1V_4", result);
+
+    // LOG(INFO) << "MPA_1V25A_3" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA_1V25A_3")->second, result);
+    // // fillSummaryTree("MPA_1V25A_3", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V25A_3, result);
+    // fillSummaryTree("MPA_1V25A_3", result);
+
+    // LOG(INFO) << "MPA_1V25A_4" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA_1V25A_3")->second, result);
+    // // fillSummaryTree("MPA_1V25A_3", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V25A_4, result);
+    // fillSummaryTree("MPA_1V25A_4", result);
+
+    // LOG(INFO) << "ROH_GND_AMP" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("ROH_GND_AMP")->second, result);
+    // // fillSummaryTree("ROH_GND_AMP", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::ROH_GND_AMP, result);
+    // fillSummaryTree("ROH_GND_AMP", result);
+
+    // LOG(INFO) << "Hybrid1V00" << RESET;
+    // // cTC_PSFE.adc_get(fHybridCurrentMap.find("Hybrid1V00")->second, result);
+    // // fillSummaryTree("Hybrid1V00", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V, result);
+    // fillSummaryTree("Hybrid1V00", result);
+
+    // LOG(INFO) << "Hybrid1V25" << RESET;
+    // // cTC_PSFE.adc_get(fHybridCurrentMap.find("Hybrid1V25")->second, result);
+    // // fillSummaryTree("Hybrid1V25", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V25_OUT, result);
+    // fillSummaryTree("Hybrid1V25", result);
+
+    // LOG(INFO) << "MPAContinuity" << RESET;
+    // // cTC_PSFE.adc_get(fHybridOtherMap.find("MPAContinuity")->second, result);
+    // // fillSummaryTree("MPAContinuity", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_RST_TEST, result);
+    // fillSummaryTree("MPAContinuity", result);
+
+    // LOG(INFO) << "VDrop1V25" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop1V25")->second, result);
+    // // fillSummaryTree("VDrop1V25", result);
+    // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop1V25")->second, result);
+    // fillSummaryTree("VDrop1V25", result);
+
+    // LOG(INFO) << "VDrop2V55" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop2V55")->second, result);
+    // // fillSummaryTree("VDrop2V55", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3_AMP, result);
+    // fillSummaryTree("VDrop2V55", result);
+
+    // LOG(INFO) << "HybridLoadV" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("HybridLoadV")->second, result);
+    // // fillSummaryTree("HybridLoadV", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3_OUT, result);
+    // fillSummaryTree("HybridLoadV", result);
+
+    // LOG(INFO) << "VDrop1V00" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop1V00")->second, result);
+    // // fillSummaryTree("VDrop1V00", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V_AMP, result);
+    // fillSummaryTree("VDrop1V00", result);
+
+    // LOG(INFO) << "Panasonic1V00" << RESET;
+    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("Panasonic1V00")->second, result);
+    // // fillSummaryTree("Panasonic1V00", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V_OUT, result);
+    // fillSummaryTree("Panasonic1V00", result);
+
+    // LOG(INFO) << "Temperature" << RESET;
+    // // cTC_PSFE.adc_get(fHybridOtherMap.find("Temperature")->second, result);
+    // // fillSummaryTree("Temperature", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::THERM_SENSE, result);
+    // fillSummaryTree("Temperature", result);
+
+    // LOG(INFO) << "PGLineContinuity" << RESET;
+    // // cTC_PSFE.adc_get(fHybridOtherMap.find("PGLineContinuity")->second, result);
+    // // fillSummaryTree("PGLineContinuity", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::C_TEST_PG, result);
+    // fillSummaryTree("PGLineContinuity", result);
+
+    // LOG(INFO) << "12VLineContinuity" << RESET;
+    // // cTC_PSFE.adc_get(fHybridOtherMap.find("12VLineContinuity")->second, result);
+    // // fillSummaryTree("12VLineContinuity", result);
+    // cTC_PSFE.adc_get(TC_PSFE::measurement::C_TEST_P12, result);
+    // fillSummaryTree("12VLineContinuity", result);
+#endif
+}
 void PSHybridTester::ReadHybridVoltage(const std::string & pVoltageName )
 {
     #ifdef __TCUSB__

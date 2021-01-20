@@ -147,10 +147,11 @@ int main ( int argc, char* argv[] )
 
     cHybridTester.SetHybridVoltage();
     //LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
-    //cHybridTester.CheckHybridCurrents();
+    // cHybridTester.CheckHybridCurrents();
     //check voltage on PS FEH 
-    cHybridTester.CheckHybridVoltages();
-    LOG (INFO) << outp.str();
+    // cHybridTester.CheckHybridVoltages();
+    cHybridTester.RunHybridETest();
+    LOG (INFO) << outp.str() << RESET;
     //select CIC readout 
     //cHybridTester.SelectCIC(true);
 
