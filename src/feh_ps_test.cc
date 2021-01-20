@@ -366,11 +366,49 @@ int main ( int argc, char* argv[] )
             else if( cAttempt == 3 )
                 LOG (INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
 
-            cDPInterfacer.Configure(cInterface, cPattern);
-            cDPInterfacer.Start(cInterface);
-            cHybridTester.MPATest(cPattern);
+            // cDPInterfacer.Configure(cInterface, 0xEA);
+            // cDPInterfacer.Start(cInterface);
+            // BackEndAlignment cBackEndAligner;
+            // cBackEndAligner.Inherit (&cHybridTester);
+            // cBackEndAligner.Start(0);
+            // //reset all chip and board registers 
+            // // to what they were before this tool was called 
+            // cBackEndAligner.Reset();
+            cHybridTester.MPATest(0xAA);
+            // cDPInterfacer.Stop(cInterface);
+            // cDPInterfacer.CheckNPatterns(cInterface);
+            
+            // cDPInterfacer.Configure(cInterface, 0xCC);
+            // cDPInterfacer.Start(cInterface);
+            // // cBackEndAligner.Start(0);
+            // // //reset all chip and board registers 
+            // // // to what they were before this tool was called 
+            // // cBackEndAligner.Reset();
+            cHybridTester.MPATest(0xCC);
+            // cDPInterfacer.Stop(cInterface);
+            // cDPInterfacer.CheckNPatterns(cInterface);
+
+                        
+            // cDPInterfacer.Configure(cInterface, 0xFF);
+            // cDPInterfacer.Start(cInterface);
+            // // cBackEndAligner.Start(0);
+            // // //reset all chip and board registers 
+            // // // to what they were before this tool was called 
+            // // cBackEndAligner.Reset();
+            cHybridTester.MPATest(0xFF);
+            // cDPInterfacer.Stop(cInterface);
+            // cDPInterfacer.CheckNPatterns(cInterface);
+
+                        
+            // cDPInterfacer.Configure(cInterface, 0x00);
+            // cDPInterfacer.Start(cInterface);
+            // // cBackEndAligner.Start(0);
+            // // //reset all chip and board registers 
+            // // // to what they were before this tool was called 
+            // // cBackEndAligner.Reset();
+            cHybridTester.MPATest(0x00);
             cDPInterfacer.Stop(cInterface);
-            cDPInterfacer.CheckNPatterns(cInterface);
+            // cDPInterfacer.CheckNPatterns(cInterface);
         }
         cHybridTester.SelectCIC(false);    
 

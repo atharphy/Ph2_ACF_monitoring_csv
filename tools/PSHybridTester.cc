@@ -31,6 +31,137 @@ void PSHybridTester::MPATest(uint32_t pPattern)
        this->MPATest(cBoard, pPattern );
     }
 }
+void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
+{
+    std::string pPattern_str = std::bitset<8>(pPattern).to_string(); // String with the binary representation of the pattern
+    std::stringstream sstream;
+    sstream << std::hex << pPattern;
+    std::string pPattern_str_hex = sstream.str();
+    int         cBadLines    = 0;                                    // Number of bad CIC in lines
+    TString     cParameter   = "";                                   // Placeholder for the name of the summaryTree parameter name
+    TString     cValue       = "";
+    fResultFile->cd();
+    std::string cTitle = Form("CICinTree0x%s",pPattern_str_hex.c_str());
+    std::string cDesc = Form("Bad Lines in the CIC IN test for pattern %s", pPattern_str_hex.c_str());
+    TTree* CICinTree = new TTree( cTitle.c_str() , cDesc.c_str() );
+    CICinTree->Branch("Parameter", &cParameter);
+    CICinTree->Branch("Value", &cValue);
+    cParameter = "Pattern";
+    cValue     = pPattern_str;
+    CICinTree->Fill();
+        
+    DPInterface cDPInterfacer;
+    BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( this->fBeBoardFWMap.find(0)->second );
+
+    // enable CIC mux - phy port 0
+    for(uint8_t cPhyPort = 0; cPhyPort < 10; cPhyPort++)
+    {
+
+
+        for(auto cOpticalGroup : *pBoard)
+        {
+            for(auto cHybrid : *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                fCicInterface->SelectMux(cCic, cPhyPort);
+            } // hybrid
+        }     // module
+        // check output
+        std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.Configure(cInterface, 0xEA);
+        cDPInterfacer.Start(cInterface);
+        //Running phase alignment on the stub lines before running the CIC in lines.
+        if(cPhyPort < 10) 
+        {
+            bool cAligned=true;
+            for( int i= 0 ; i < 3 ; i ++ ) {  //Run Phase and Word alignment on the stub lines. Try up to three times if it fails 
+                cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning_noExit( pBoard, false );
+                if( !cAligned )
+                    LOG (INFO) << BOLDRED << "Alignment attempt failed" << RESET;
+                else
+                    break;
+            }
+            if (cAligned) 
+                LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDGREEN << "SUCCESSFUL" << RESET;
+            else
+                LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDRED << "UNSUCCESSFUL" << RESET;            
+        }
+
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.Configure(cInterface, pPattern);
+        cDPInterfacer.Start(cInterface);
+        
+        // cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning (pBoard,fL1Debug);
+
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
+
+        for(int a = 0; a < (int)cReadLines.size(); a++)
+        {
+            // if( cReadLines[i] != pPattern ) {
+            //     cBadLines++;
+            // }
+
+            std::string cLine;
+            float       distance;
+            // int         aux      = 0;
+            int         badLines;
+            std::string cSubLine;
+            // bool bad = false;
+            for(int b = 0; b < (int)cReadLines[a].size(); b++)
+            {
+                badLines = 0;
+                cLine = cReadLines[a][b];
+                // Go throught the read line and compare with pattern
+                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length())
+                {
+                    cSubLine = cLine.substr(k, pPattern_str.length());
+                    // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
+                    // aux = k + 1;
+                    if (cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) {
+                        distance = FuzzyCompareStrings(cSubLine, pPattern_str);
+                        // LOG(INFO) << "Pattern: " << pPattern_str << " . Line: " << cSubLine << ". Distance: " << distance << RESET;
+                        if (distance>1)
+                            badLines++;
+                    }
+                }
+
+                // distance = distance / aux;
+
+                // LOG(INFO) << "The overall distance in line " << b << " is: " << distance << "." << RESET;
+
+                std::string recovered = "";
+                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
+                    recovered += cLine.substr(k, pPattern_str.length()) + "  ";
+                }
+                if(badLines > 2 ) //35
+                {
+                    cBadLines++;
+                    LOG(INFO) << "The pattern " << pPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                    std::string recovered = "";
+                    for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
+                        recovered += cLine.substr(k, pPattern_str.length()) + "  ";
+                    }
+                    LOG (INFO) << "Recovered:  " << recovered << RESET;
+                    cParameter.Clear();
+                    cParameter = std::to_string(cPhyPort) + "_" + std::to_string(b);
+                    cValue     = cLine;
+                    CICinTree->Fill();
+                } 
+                else {
+                    LOG(DEBUG) << "The pattern 0x" << pPattern_str_hex << " was" << BOLDGREEN <<" recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                    LOG (DEBUG) << "Recovered:  " << recovered << RESET;
+                }
+            }
+        }
+        // CICinTree->Write();
+    }
+
+    LOG(INFO) << BOLDYELLOW << "***************************************Bad lines for pattern 0x" << pPattern_str_hex << ": " << cBadLines << RESET;
+    fillSummaryTree("CIC IN bad lines_0x" + pPattern_str_hex, cBadLines);
+}
 int PSHybridTester::FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str)
 {
     // Levenshtein Distance Computing Algorithm copied from https://www.tutorialspoint.com/cplusplus-program-to-implement-levenshtein-distance-computing-algorithm
@@ -268,26 +399,6 @@ void PSHybridTester::SelectCIC(bool pSelect)
         else
             cTC_PSFE.mode_control(TC_PSFE::mode::SSA_OUT);
     #endif    
-}   
-void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
-{
-
-    // enable CIC mux - phy port 0 
-    for( uint8_t cPhyPort=0; cPhyPort < 12 ; cPhyPort++)
-    {
-        for(auto cOpticalGroup : *pBoard)
-        {
-            for(auto cHybrid : *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                fCicInterface->SelectMux(cCic, cPhyPort ); 
-            }//hybrid 
-        }// module 
-        // check output 
-        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
-    }
-    
 }
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard,  const std::string& cSSAPairSel)
 {

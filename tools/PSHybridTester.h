@@ -15,6 +15,7 @@
   #include "USB_a.h"
 #endif
 
+#include "DPInterface.h"
 #define PSHYBRIDMAXV 1.32 
 
 #include <map>
