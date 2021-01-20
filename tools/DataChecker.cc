@@ -688,7 +688,7 @@ void DataChecker::CheckPSData( BeBoard* pBoard, std::vector<Injection> pInjectio
     auto cSetting = fSettingsMap.find ( "Nevents" );
     int cScale=1000;
     uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second)*cScale : 100;
-    LOG (INFO) << BOLDBLUE << "Checking PSdata by reading "
+    LOG (DEBUG) << BOLDBLUE << "Checking PSdata by reading "
             << +cNevents
             << " from BeBoard#"
             << +pBoard->getIndex()
@@ -967,7 +967,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         cInjections.push_back( cInjection );
     }//create injection patterns
     
-    std::vector<uint16_t> cDelaysBetwn{90};// 100, 150, 200};
+    std::vector<uint16_t> cDelaysBetwn{90, 180, 360};
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
@@ -1160,7 +1160,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                 fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
 
                 // do this 10 times 
-                for( int cAttempt= 0 ; cAttempt < 25 ; cAttempt++ )
+                for( int cAttempt= 0 ; cAttempt < 50 ; cAttempt++ )
                 {
                     if( cAttempt%10 == 0 ) LOG (INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
                     this->CheckPSData( cBoard , cInjections );         
