@@ -57,6 +57,7 @@ private:
     void SSATestStubOutput(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
+    void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
     void MPATest(Ph2_HwDescription::BeBoard* pBoard, uint32_t pPattern);
 
     std::map<std::string, uint8_t> fInputDebugMap =
