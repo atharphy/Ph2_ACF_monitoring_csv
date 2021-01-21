@@ -16,22 +16,22 @@
 
 class PlotContainer //: public streammable
 {
-public:
-    PlotContainer() {;}
+  public:
+    PlotContainer() { ; }
     PlotContainer(const PlotContainer& container) = delete;
-    PlotContainer& operator= (const PlotContainer& container) = delete;
-    PlotContainer(PlotContainer&& container) = default;
-    PlotContainer& operator= (PlotContainer&& container) = default;
-    
-    virtual ~PlotContainer() {;}
+    PlotContainer& operator=(const PlotContainer& container) = delete;
+    PlotContainer(PlotContainer&& container)                 = default;
+    PlotContainer& operator=(PlotContainer&& container) = default;
 
-    virtual void setNameTitle(std::string histogramName, std::string histogramTitle) = 0;
-    virtual std::string getName() const = 0;
-    virtual std::string getTitle() const = 0;
-    virtual void initialize(std::string name, std::string title, const PlotContainer *reference) = 0;
+    virtual ~PlotContainer() { ; }
 
-protected:
-    bool fHasToBeDeletedManually{true}; //if associated to a File, ROOT takes the pointer and destroys it :-(
+    virtual void        setNameTitle(std::string histogramName, std::string histogramTitle)             = 0;
+    virtual std::string getName() const                                                                 = 0;
+    virtual std::string getTitle() const                                                                = 0;
+    virtual void        initialize(std::string name, std::string title, const PlotContainer* reference) = 0;
+
+  protected:
+    bool fHasToBeDeletedManually{true}; // if associated to a File, ROOT takes the pointer and destroys it :-(
 };
 
 #endif

@@ -13,29 +13,29 @@
    FileName : 		FpgaConfig.cc
    Content : 		FPGA configuration
    Programmer : 	Christian Bonnin
-   Version : 		
+   Version :
    Date of creation : 2014-07-10
    Support : 		mail to : christian.bonnin@iphc.cnrs.fr
 */
 
-#include <sys/stat.h>
-#include <time.h>
-#include <fstream>
+#include "FpgaConfig.h"
+#include "BeBoardFWInterface.h"
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
-#include "BeBoardFWInterface.h"
-#include "FpgaConfig.h"
+#include <fstream>
+#include <sys/stat.h>
+#include <time.h>
 
 using namespace std;
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-  FpgaConfig::FpgaConfig(BeBoardFWInterface* pbbfi)
-  {
+FpgaConfig::FpgaConfig(BeBoardFWInterface* pbbfi)
+{
     fwManager        = pbbfi;
     numUploadingFpga = 0;
     progressValue    = 0;
     progressString   = "";
-  }
 }
+} // namespace Ph2_HwInterface

@@ -49,8 +49,11 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}") 
     MESSAGE(STATUS " ") 
  
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
- 
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
+    
+     
     #library dirs
     #link_directories(${UHAL_UHAL_LIB_PREFIX})
 

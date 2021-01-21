@@ -116,7 +116,7 @@
       <!-- <node id="Chips_en"             mask="0x000001FE"       permission="rw"      description="" /> -->
     </node>
 
-    <node id="Slow_cmd_fifo_din"     address="0x0000000D"     permission="rw"      description=""> </node>
+    <node id="Slow_cmd_fifo_din"     address="0x0000000D"     permission="rw"      mode="non-incremental"       description=""> </node>
 
     <node id="Slow_cmd"              address="0x0000000E"     permission="rw"      description="">
       <node id="fifo_prog_empty_thr"       mask="0x00000FFF"  permission="rw"      description="" />
@@ -244,7 +244,7 @@
     </node>
 
     <!-- Register Readout -->
-    <node id="Register_Rdback_fifo" address="0x00000011"    permission="r"      description="Fifo with Register Read-back data from all chips."> </node>
+    <node id="Register_Rdback_fifo" address="0x00000011"    permission="r"      mode="non-incremental"       description="Fifo with Register Read-back data from all chips."> </node>
 
     <node id="AutoRead_Reg_A"       address="0x00000012"    permission="r"      description="Auto-Read Register-A Data of the selected chip"> </node>
     <node id="AutoRead_Reg_B"       address="0x00000013"    permission="r"      description="Auto-Read Register-B Data of the selected chip"> </node>
@@ -282,18 +282,6 @@
     <node id="prbs_frame_cntr_low" address="0x00000019"        permission="r"> </node>
     <node id="prbs_frame_cntr_high" address="0x0000001A"       permission="r"> </node>
 
-  </node>
-
-  <!-- ================================================ -->
-  <!-- ============== READOUT REGISTERS =============== -->
-  <!-- ================================================ -->
-  <node id="fc7_daq_ddr3"     address="0x00000600" size="134217728" mode="incremental" permission="r"/>
-
-  <node id="readout0"         address="0x00000100"    permission="rw"     description="Register Readout." >
-    <node id="sel"            address="0x00000000"    permission="rw"     description="Select weather register or data frames are read out. 0x2: Register readout 0x1: Data readout - else: 0xffffffff"> </node>
-    <node id="reg_mask"       address="0x00000001"    permission="rw"     description="Set filter for register readback. 0: cmd only 1: auto 2nd only 2: auto 1st only 3: auto 1st and 2nd"> </node>
-    <node id="dat_read"       address="0x00000004"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
-    <node id="reg_read"       address="0x00000008"    permission="r"      description="Enable read fifo."     mode="non-incremental" size="512"> </node>
   </node>
 
 </node>

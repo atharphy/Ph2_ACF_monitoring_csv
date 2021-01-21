@@ -10,75 +10,61 @@
 #ifndef OpticalGroup_H
 #define OpticalGroup_H
 
-#include "FrontEndDescription.h"
-#include "lpGBT.h"
-#include "Module.h"
-#include "../Utils/Visitor.h"
 #include "../Utils/Container.h"
+#include "../Utils/Visitor.h"
+#include "FrontEndDescription.h"
+#include "Module.h"
+#include "lpGBT.h"
 
 #include <vector>
-
 
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
  */
-namespace Ph2_HwDescription {
+namespace Ph2_HwDescription
+{
+/*!
+ * \class OpticalGroup
+ * \brief handles a vector of Chip which are connected to the OpticalGroup
+ */
+class OpticalGroup
+    : public FrontEndDescription
+    , public OpticalGroupContainer
+{
+  public:
+    // C'tors take FrontEndDescription or hierachy of connection
+    OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalGroupId);
+    OpticalGroup(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId);
+
+    // Default C'tor
+    OpticalGroup();
+
+    // D'tor
+    ~OpticalGroup() { delete flpGBT; };
 
     /*!
-     * \class OpticalGroup
-     * \brief handles a vector of Chip which are connected to the OpticalGroup
+     * \brief acceptor method for HwDescriptionVisitor
+     * \param pVisitor
      */
-    class OpticalGroup : public FrontEndDescription, public OpticalGroupContainer
+    void accept(HwDescriptionVisitor& pVisitor)
     {
+        pVisitor.visitOpticalGroup(*this);
 
-      public:
+        for(auto* cHybrid: *this) static_cast<Module*>(cHybrid)->accept(pVisitor);
+    }
 
-        // C'tors take FrontEndDescription or hierachy of connection
-        OpticalGroup (const FrontEndDescription& pFeDesc, uint8_t pOpticalGroupId );
-        OpticalGroup (uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId );
+    uint8_t getOpticalGroupId() const { return fOpticalGroupId; };
 
-        // Default C'tor
-        OpticalGroup();
+    void setOpticalGroupId(uint8_t pOpticalGroupId) { fOpticalGroupId = pOpticalGroupId; };
 
-        // D'tor
-        ~OpticalGroup()
-        {
-          delete flpGBT;
-        };
+    void addlpGBT(lpGBT* plpGBT) { flpGBT = plpGBT; }
 
-        /*!
-         * \brief acceptor method for HwDescriptionVisitor
-         * \param pVisitor
-         */
-        void accept ( HwDescriptionVisitor& pVisitor )
-        {
-            pVisitor.visitOpticalGroup ( *this );
+    lpGBT* flpGBT = nullptr;
 
-            for ( auto* cHybrid : *this )
-                static_cast<Module*>(cHybrid)->accept ( pVisitor );
-        }
-
-        uint8_t getOpticalGroupId() const
-        {
-            return fOpticalGroupId;
-        };
-
-        void setOpticalGroupId ( uint8_t pOpticalGroupId )
-        {
-            fOpticalGroupId = pOpticalGroupId;
-        };
-
-        void addlpGBT(lpGBT* plpGBT)
-        {
-          flpGBT = plpGBT;
-        }
-
-        lpGBT* flpGBT = nullptr;
-
-      protected:
-        uint8_t fOpticalGroupId;
-    };
-}
+  protected:
+    uint8_t fOpticalGroupId;
+};
+} // namespace Ph2_HwDescription
 
 #endif

@@ -15,7 +15,7 @@
         <!-- LHS --> 
         <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="550" latency="74"/>
+                <Settings threshold="550" latency="104"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x3F" channelgroup="0" delay="0" groundothers="1"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
@@ -63,23 +63,23 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
         <Register name="triggers_to_accept"> 0 </Register>
-        <Register name="trigger_source"> 3 </Register>
+        <Register name="trigger_source"> 6 </Register>
         <Register name="user_trigger_frequency"> 10 </Register>
         <Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
         <Register name="stub_trigger_delay_value"> 10 </Register>
                 <Register name="stub_trigger_veto_length"> 0 </Register>
         <Register name="test_pulse">
-            <Register name="delay_after_fast_reset"> 80 </Register>
-            <Register name="delay_after_test_pulse"> 75 </Register>
+            <Register name="delay_after_fast_reset"> 200 </Register>
+            <Register name="delay_after_test_pulse"> 105 </Register>
             <Register name="delay_before_next_pulse"> 400 </Register>
             <Register name="en_fast_reset"> 0 </Register>
             <Register name="en_test_pulse"> 1 </Register>
             <Register name="en_l1a"> 1 </Register>
         </Register>
-                <Register name="ext_trigger_delay_value"> 500 </Register>
-                <Register name="antenna_trigger_delay_value"> 50 </Register>
-                <Register name="delay_between_two_consecutive"> 100 </Register>
+                <Register name="ext_trigger_delay_value"> 1 </Register>
+                <Register name="antenna_trigger_delay_value"> 1 </Register>
+                <Register name="delay_between_two_consecutive"> 1 </Register>
                 <Register name="misc">
                         <Register name="backpressure_enable"> 1 </Register>
                         <Register name="stubOR"> 1 </Register>
@@ -115,7 +115,7 @@
         </Register>
     <!-- DIO5 Block -->
     <Register name="dio5_block">
-        <Register name="dio5_en"> 0 </Register>
+        <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 0 </Register>
                 <Register name="term_enable"> 1 </Register>
@@ -153,7 +153,7 @@
 
 <Settings>
      <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">3</Setting>
     <Setting name="TestPulsePotentiometer">0x00</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
@@ -217,9 +217,11 @@
 
     <!--[>Stubs Test<] -->
     <Setting name="SweepPackageDelay">0</Setting>
-    <Setting name="SweepStubDelay">0</Setting>
+    <Setting name="SweepStubDelay">1</Setting>
     <Setting name="StubThreshold">500</Setting>
-    <Setting name="StubAttempts">10</Setting>
+    <Setting name="StubAttempts">1</Setting>
+    <Setting name="StubFWTestPulseDelay">200</Setting>
+    <Setting name="StubFWTriggerDelay">85</Setting>
     
 </Settings>
 </HwDescription>

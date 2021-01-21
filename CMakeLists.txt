@@ -272,7 +272,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWDescription)
     add_subdirectory(HWInterface)
     add_subdirectory(System)
-#    add_subdirectory(miniDAQ)
+    add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")

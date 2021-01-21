@@ -6,22 +6,20 @@
 
 class TCPClientBase : public virtual TCPSocket
 {
-public:
+  public:
+    // TCPClientBase();
+    TCPClientBase(const std::string& serverIP, int serverPort);
+    virtual ~TCPClientBase(void);
 
-	//TCPClientBase();
-	TCPClientBase(const std::string& serverIP, int serverPort);
-	virtual ~TCPClientBase(void);
+    bool connect(int retry = -1, unsigned int sleepMilliSeconds = 1000);
+    bool disconnect(void);
 
-	bool connect   (int retry = -1, unsigned int sleepMilliSeconds = 1000);
-	bool disconnect(void);
+  private:
+    std::string fServerIP;
+    int         fServerPort;
+    bool        fConnected;
 
-private:
-	std::string           fServerIP;
-	int	                  fServerPort;
-	bool                  fConnected;
-
-	void resolveServer   (std::string& serverIP);
-
+    void resolveServer(std::string& serverIP);
 };
 
 #endif

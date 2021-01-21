@@ -8,61 +8,60 @@ using namespace Ph2_System;
 using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
-int main ( int argc, char** argv )
+int main(int argc, char** argv)
 {
-    //configure the logger
-    el::Configurations conf ("settings/logger.conf");
-    el::Loggers::reconfigureAllLoggers (conf);
+    // configure the logger
+    el::Configurations conf("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers(conf);
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription ( "CMS Ph2_ACF EUDAQ Producer for Test Beam Operations" );
+    cmd.setIntroductoryDescription("CMS Ph2_ACF EUDAQ Producer for Test Beam Operations");
     // error codes
-    cmd.addErrorCode ( 0, "Success" );
-    cmd.addErrorCode ( 1, "Error" );
+    cmd.addErrorCode(0, "Success");
+    cmd.addErrorCode(1, "Error");
 
     // options
-    cmd.setHelpOption ( "h", "help", "Print this help page" );
-    cmd.defineOption ( "runcontrol", "The RunControl address. Default value: tcp://localhost:44000", ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative ( "runcontrol", "r" );
-    cmd.defineOption ( "name", "Producer code name. Default value: ph2producer", ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative ( "name", "n" );
-    cmd.defineOption ( "save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue );
-    cmd.defineOptionAlternative ( "save", "s" );
+    cmd.setHelpOption("h", "help", "Print this help page");
+    cmd.defineOption("runcontrol", "The RunControl address. Default value: tcp://localhost:44000", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("runcontrol", "r");
+    cmd.defineOption("name", "Producer code name. Default value: ph2producer", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("name", "n");
+    cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("save", "s");
 
     // parse
-    int result = cmd.parse ( argc, argv );
-    if ( result != ArgvParser::NoParserError )
+    int result = cmd.parse(argc, argv);
+    if(result != ArgvParser::NoParserError)
     {
-        LOG (INFO) << cmd.parseErrorDescription ( result );
-        exit ( 1 );
+        LOG(INFO) << cmd.parseErrorDescription(result);
+        exit(1);
     }
 
     // get values
-    std::string cRunControlAddress = ( cmd.foundOption ( "runcontrol" ) ) ? cmd.optionValue ( "runcontrol" ) : "tcp://localhost:44000";
-    std::string cName = ( cmd.foundOption ( "name" ) ) ? cmd.optionValue ( "name" ) : "ph2producer";
-    std::string cOutputFile;     
-    
-    // create eudaq2 producer (if need can also create eudaq1 here)
-    #ifdef __EUDAQ__
-        Eudaq2Producer cProducer(cName, cRunControlAddress);
-        try{
-            LOG(INFO) << "Trying to connect to RunControl";
-            cProducer.Connect();
-        }
-        catch (...){
-            LOG(ERROR) << "Can not connect to RunControl at "<< cRunControlAddress.c_str();
-            return -1;
-        }
-        LOG(INFO) << "Connected";
-        
-        while(cProducer.IsConnected()) 
-        {        
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-    #endif
+    std::string cRunControlAddress = (cmd.foundOption("runcontrol")) ? cmd.optionValue("runcontrol") : "tcp://localhost:44000";
+    std::string cName              = (cmd.foundOption("name")) ? cmd.optionValue("name") : "ph2producer";
+    std::string cOutputFile;
+
+// create eudaq2 producer (if need can also create eudaq1 here)
+#ifdef __EUDAQ__
+    Eudaq2Producer cProducer(cName, cRunControlAddress);
+    try
+    {
+        LOG(INFO) << "Trying to connect to RunControl";
+        cProducer.Connect();
+    }
+    catch(...)
+    {
+        LOG(ERROR) << "Can not connect to RunControl at " << cRunControlAddress.c_str();
+        return -1;
+    }
+    LOG(INFO) << "Connected";
+
+    while(cProducer.IsConnected()) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
+#endif
 
     // as well damn if u want, cdz
-    //cProducer.Destroy();
+    // cProducer.Destroy();
     return 0;
 }

@@ -9,27 +9,27 @@
 
 #include "RD53Shared.h"
 
-std::string RD53Shared::fromInt2Str (int val)
+std::string RD53Shared::fromInt2Str(int val)
 {
-  std::stringstream myString;
-  myString << std::setfill('0') << std::setw(6) << val;
-  return myString.str();
+    std::stringstream myString;
+    myString << std::setfill('0') << std::setw(6) << val;
+    return myString.str();
 }
 
-std::string RD53Shared::composeFileName (const std::string& configFileName, const std::string& fName2Add)
+std::string RD53Shared::composeFileName(const std::string& configFileName, const std::string& fName2Add)
 {
-  std::string output = configFileName;
-  output.insert(output.find(RD53Shared::NAMESEARCHinPATH),fName2Add);
-  return output;
+    std::string output = configFileName;
+    output.insert(output.find(RD53Shared::NAMESEARCHinPATH), fName2Add);
+    return output;
 }
 
-size_t RD53Shared::countBitsOne (size_t num)
+size_t RD53Shared::countBitsOne(size_t num)
 {
-  auto count = 0u;
-  while (num != 0)
+    auto count = 0u;
+    while(num != 0)
     {
-      count += (num & 1);
-      num >>= 1;
+        count += (num & 1);
+        num >>= 1;
     }
-  return count;
+    return count;
 }

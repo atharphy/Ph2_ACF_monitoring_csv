@@ -2,8 +2,7 @@
 
 class SSAChannelGroupHandler : public ChannelGroupHandler
 {
-public:
+  public:
     SSAChannelGroupHandler();
     ~SSAChannelGroupHandler();
 };
-

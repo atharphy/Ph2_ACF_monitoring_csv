@@ -107,10 +107,12 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS " ") 
    
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
   
     #library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
+    #link_directories(${UHAL_UHAL_LIB_PREFIX})
 
     cet_make_exec(RunController
         SOURCE

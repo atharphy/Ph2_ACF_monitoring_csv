@@ -1,9 +1,7 @@
 /*!
         \file            ChipRegItem.h
-        \brief                   ChipRegItem description, contents of the structure ChipRegItem with is the value of the ChipRegMap
-        \author                  Lorenzo BIDEGAIN
-        \version                 1.0
-        \date                    25/06/14
+        \brief                   ChipRegItem description, contents of the structure ChipRegItem with is the value of the
+   ChipRegMap \author                  Lorenzo BIDEGAIN \version                 1.0 \date                    25/06/14
         Support :                mail to : lorenzo.bidegain@cern.ch
  */
 
@@ -14,15 +12,10 @@
 
 namespace Ph2_HwDescription
 {
-  struct ChipRegItem
-  {
-    ChipRegItem() {};
-    ChipRegItem (uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue)
-    : fPage     (pPage)
-    , fAddress  (pAddress)
-    , fDefValue (pDefValue)
-    , fValue    (pValue)
-    {}
+struct ChipRegItem
+{
+    ChipRegItem(){};
+    ChipRegItem(uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue) : fPage(pPage), fAddress(pAddress), fDefValue(pDefValue), fValue(pValue) {}
 
     uint8_t  fPage;
     uint16_t fAddress;
@@ -30,7 +23,7 @@ namespace Ph2_HwDescription
     uint16_t fValue;
     bool     fPrmptCfg = false;
     uint8_t  fBitSize  = 0;
-  };
-}
+};
+} // namespace Ph2_HwDescription
 
 #endif

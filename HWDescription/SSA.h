@@ -9,57 +9,62 @@
 
  */
 
-
 #ifndef SSA_h__
 #define SSA_h__
 
+#include "../Utils/Exception.h"
+#include "../Utils/Visitor.h"
+#include "../Utils/easylogging++.h"
+#include "ChipRegItem.h"
 #include "FrontEndDescription.h"
 #include "ReadoutChip.h"
-#include "ChipRegItem.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/Exception.h"
 #include <iostream>
 #include <map>
-#include <string>
-#include <stdint.h>
-#include <utility>
 #include <set>
-#include "../Utils/easylogging++.h"
+#include <stdint.h>
+#include <string>
+#include <utility>
 
-namespace Ph2_HwDescription { //open namespace
+namespace Ph2_HwDescription
+{ // open namespace
 
-    using SSARegPair = std::pair <std::string, ChipRegItem>;
-    using CommentMap = std::map <int, std::string>;
+using SSARegPair = std::pair<std::string, ChipRegItem>;
+using CommentMap = std::map<int, std::string>;
 
-    class SSA : public ReadoutChip { // open class def
-	public:
-		// C'tors which take BeId, FMCId, FeID, SSAId
-		SSA ( uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename);
-		// C'tors with object FE Description
-		SSA ( const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename);
+class SSA : public ReadoutChip
+{ // open class def
+  public:
+    // C'tors which take BeId, FMCId, FeID, SSAId
+    SSA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename);
+    // C'tors with object FE Description
+    SSA(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pSSASide, const std::string& filename);
 
+    virtual void accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }
+    void         loadfRegMap(const std::string& filename) override;
+    void         saveRegMap(const std::string& filename) override;
+    uint32_t     getNumberOfChannels() const override { return NSSACHANNELS; }
+    bool         isDACLocal(const std::string& dacName) override
+    {
+        if(dacName.find("THTRIMMING_S", 0, 12) != std::string::npos)
+            return true;
+        else if(dacName.find("ThresholdTrim") != std::string::npos)
+            return true;
+        else
+            return false;
+    }
+    uint8_t getNumberOfBits(const std::string& dacName) override
+    {
+        if(dacName.find("THTRIMMING_S", 0, 12) != std::string::npos)
+            return 5;
+        else if(dacName.find("ThresholdTrim") != std::string::npos)
+            return 5;
+        else
+            return 8;
+    }
 
-		virtual void accept ( HwDescriptionVisitor& pVisitor )
-		{
-		    pVisitor.visitChip ( *this );
-		}
-		void loadfRegMap ( const std::string& filename ) override;
-		void saveRegMap ( const std::string& filename ) override;
-		uint32_t getNumberOfChannels() const override { return NSSACHANNELS; }
-		bool isDACLocal(const std::string &dacName) override {
-		    if(dacName.find("THTRIMMING_S",0,12)!=std::string::npos ) return true;
-		    else if(dacName.find("ThresholdTrim")!=std::string::npos ) return true;
-		    else return false;
-		}
-		uint8_t getNumberOfBits(const std::string &dacName) override {
-		    if(dacName.find("THTRIMMING_S",0,12)!=std::string::npos) return 5;
-		    else if(dacName.find("ThresholdTrim")!=std::string::npos ) return 5;
-		    else return 8;
-		}
-	protected:
-	}; // close class def
+  protected:
+}; // close class def
 
-} // close namespace
-
+} // namespace Ph2_HwDescription
 
 #endif

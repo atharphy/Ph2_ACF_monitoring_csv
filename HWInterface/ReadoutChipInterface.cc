@@ -16,12 +16,12 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-  ReadoutChipInterface::ReadoutChipInterface (const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap)
-  {
+ReadoutChipInterface::ReadoutChipInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap)
+{
 #ifdef COUNT_FLAG
-    LOG (DEBUG) << "Counting number of Transactions!";
+    LOG(DEBUG) << "Counting number of Transactions!";
 #endif
-  }
-
-  ReadoutChipInterface::~ReadoutChipInterface() {}
 }
+
+ReadoutChipInterface::~ReadoutChipInterface() {}
+} // namespace Ph2_HwInterface

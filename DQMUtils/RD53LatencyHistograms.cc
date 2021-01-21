@@ -12,86 +12,86 @@
 
 using namespace Ph2_HwDescription;
 
-void LatencyHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void LatencyHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
-  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
+    // #######################
+    // # Retrieve parameters #
+    // #######################
+    nTRIGxEvent = this->findValueInSettings(settingsMap, "nTRIGxEvent");
+    startValue  = this->findValueInSettings(settingsMap, "LatencyStart");
+    stopValue   = this->findValueInSettings(settingsMap, "LatencyStop");
 
-  // #######################
-  // # Retrieve parameters #
-  // #######################
-  nTRIGxEvent = this->findValueInSettings(settingsMap,"nTRIGxEvent");
-  startValue  = this->findValueInSettings(settingsMap,"LatencyStart");
-  stopValue   = this->findValueInSettings(settingsMap,"LatencyStop");
+    auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
+    bookImplementer(theOutputFile, theDetectorStructure, Latency, hLatency, "Latency (n.bx)", "Entries");
 
-
-  auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
-  bookImplementer(theOutputFile, theDetectorStructure, Latency, hLatency, "Latency (n.bx)", "Entries");
-
-  auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
-  bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Latency (n.bx)", "Efficiency");
+    auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
+    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Latency (n.bx)", "Efficiency");
 }
 
-bool LatencyHistograms::fill (std::vector<char>& dataBuffer)
+bool LatencyHistograms::fill(std::vector<char>& dataBuffer)
 {
-  const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-  ChipContainerStream<EmptyContainer,GenericDataArray<LatencySize>> theOccStreamer    ("LatencyOcc");
-  ChipContainerStream<EmptyContainer,uint16_t>                      theLatencyStreamer("LatencyLatency");
+    ChipContainerStream<EmptyContainer, GenericDataArray<LatencySize>> theOccStreamer("LatencyOcc");
+    ChipContainerStream<EmptyContainer, uint16_t>                      theLatencyStreamer("LatencyLatency");
 
-  if (theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccStreamer.attachBuffer(&dataBuffer))
     {
-      theOccStreamer.decodeChipData(DetectorData);
-      LatencyHistograms::fillOccupancy(DetectorData);
-      DetectorData.cleanDataStored();
-      return true;
+        theOccStreamer.decodeChipData(DetectorData);
+        LatencyHistograms::fillOccupancy(DetectorData);
+        DetectorData.cleanDataStored();
+        return true;
     }
-  else if (theLatencyStreamer.attachBuffer(&dataBuffer))
+    else if(theLatencyStreamer.attachBuffer(&dataBuffer))
     {
-      theLatencyStreamer.decodeChipData(DetectorData);
-      LatencyHistograms::fillLatency(DetectorData);
-      DetectorData.cleanDataStored();
-      return true;
+        theLatencyStreamer.decodeChipData(DetectorData);
+        LatencyHistograms::fillLatency(DetectorData);
+        DetectorData.cleanDataStored();
+        return true;
     }
 
-  return false;
+    return false;
 }
 
-void LatencyHistograms::fillOccupancy (const DetectorDataContainer& OccupancyContainer)
+void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-  const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-  for (const auto cBoard : OccupancyContainer)
-    for (const auto cOpticalGroup : *cBoard)
-      for (const auto cHybrid : *cOpticalGroup)
-        for (const auto cChip : *cHybrid)
-          {
-            if (cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
+    for(const auto cBoard: OccupancyContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
 
-            auto* Occupancy1DHist = Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* Occupancy1DHist =
+                        Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-            for (size_t i = startValue; i <= stopValue; i+=nTRIGxEvent)
-              Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i-startValue)/nTRIGxEvent]);
-          }
+                    for(size_t i = startValue; i <= stopValue; i += nTRIGxEvent)
+                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i - startValue) / nTRIGxEvent]);
+                }
 }
 
-void LatencyHistograms::fillLatency (const DetectorDataContainer& LatencyContainer)
+void LatencyHistograms::fillLatency(const DetectorDataContainer& LatencyContainer)
 {
-  for (const auto cBoard : LatencyContainer)
-    for (const auto cOpticalGroup : *cBoard)
-      for (const auto cHybrid : *cOpticalGroup)
-        for (const auto cChip : *cHybrid)
-          {
-            if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+    for(const auto cBoard: LatencyContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-            auto* LatencyHist = Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* LatencyHist =
+                        Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-            for (auto i = 0u; i < nTRIGxEvent; i++) LatencyHist->Fill(cChip->getSummary<uint16_t>() - i);
-          }
+                    for(auto i = 0u; i < nTRIGxEvent; i++) LatencyHist->Fill(cChip->getSummary<uint16_t>() - i);
+                }
 }
 
-void LatencyHistograms::process ()
+void LatencyHistograms::process()
 {
-  draw<TH1F>(Occupancy1D);
-  draw<TH1F>(Latency);
+    draw<TH1F>(Occupancy1D);
+    draw<TH1F>(Latency);
 }

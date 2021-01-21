@@ -14,19 +14,19 @@
 
 #include "Tool.h"
 
-#include "../Utils/Visitor.h"
-#include "../Utils/Utilities.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
+#include "../Utils/Utilities.h"
+#include "../Utils/Visitor.h"
 
 #ifdef __USE_ROOT__
-#include "TString.h"
 #include "TCanvas.h"
-#include "TH1F.h"
 #include "TF1.h"
-#include "TH2F.h"
 #include "TGaxis.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TString.h"
 #endif
 
 using namespace Ph2_System;
@@ -38,12 +38,14 @@ using namespace Ph2_System;
 
 class SSALatencyScan : public Tool
 {
-
   public:
     SSALatencyScan();
     ~SSALatencyScan();
     void Initialise(void);
     void run(void);
+
+    bool cWithSSA;
+    bool cWithMPA;
 };
 
 #endif

@@ -12,48 +12,45 @@
 
 using namespace Ph2_HwDescription;
 
-void ThresholdHistograms::book (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void ThresholdHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
-  ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
+    uint16_t rangeThreshold = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
 
-  uint16_t rangeThreshold = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
-
-  auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
-  bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
+    auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
+    bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
 }
 
-bool ThresholdHistograms::fill (std::vector<char>& dataBuffer)
+bool ThresholdHistograms::fill(std::vector<char>& dataBuffer)
 {
-  ChipContainerStream<EmptyContainer,uint16_t> theThrStreamer("Threshold");
+    ChipContainerStream<EmptyContainer, uint16_t> theThrStreamer("Threshold");
 
-  if(theThrStreamer.attachBuffer(&dataBuffer))
+    if(theThrStreamer.attachBuffer(&dataBuffer))
     {
-      theThrStreamer.decodeChipData(DetectorData);
-      ThresholdHistograms::fill(DetectorData);
-      DetectorData.cleanDataStored();
-      return true;
+        theThrStreamer.decodeChipData(DetectorData);
+        ThresholdHistograms::fill(DetectorData);
+        DetectorData.cleanDataStored();
+        return true;
     }
 
-  return false;
+    return false;
 }
 
-void ThresholdHistograms::fill (const DetectorDataContainer& DataContainer)
+void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
 {
-  for (const auto cBoard : DataContainer)
-    for (const auto cOpticalGroup : *cBoard)
-      for (const auto cHybrid : *cOpticalGroup)
-        for (const auto cChip : *cHybrid)
-          {
-            if (cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+    for(const auto cBoard: DataContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-            auto* hThrehsold = Threhsold.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hThrehsold =
+                        Threhsold.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-            hThrehsold->Fill(cChip->getSummary<uint16_t>());
-          }
+                    hThrehsold->Fill(cChip->getSummary<uint16_t>());
+                }
 }
 
-void ThresholdHistograms::process ()
-{
-  draw<TH1F>(Threhsold);
-}
+void ThresholdHistograms::process() { draw<TH1F>(Threhsold); }

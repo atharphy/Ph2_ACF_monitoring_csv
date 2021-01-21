@@ -1,29 +1,28 @@
 #include <cstring>
 
-#include "Utils/Utilities.h"
-#include "Utils/Timer.h"
-#include "PSHybridTester.h"
-#include "PedestalEqualization.h"
-#include "PedeNoise.h"
-#include "OpenFinder.h"
-#include "ShortFinder.h"
 #include "DPInterface.h"
-#include "tools/CicFEAlignment.h"
-#include "tools/BackEndAlignment.h"
-#include "tools/DataChecker.h"
+#include "OpenFinder.h"
+#include "PSHybridTester.h"
+#include "PedeNoise.h"
+#include "PedestalEqualization.h"
+#include "ShortFinder.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/DataChecker.h"
 
 #ifdef __USE_ROOT__
-    #include "TROOT.h"
-    #include "TApplication.h"
+#include "TApplication.h"
+#include "TROOT.h"
 #endif
 
-#define __NAMEDPIPE__ 
+#define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
-    #include "gui_logger.h"
+#include "gui_logger.h"
 #endif
-
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -33,24 +32,25 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
-int main ( int argc, char* argv[] )
+int main(int argc, char* argv[])
 {
-    //configure the logger
-    el::Configurations conf ("settings/logger.conf");
-    el::Loggers::reconfigureAllLoggers (conf);
+    // configure the logger
+    el::Configurations conf("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription ( "CMS Ph2_ACF  Commissioning tool to perform the following procedures:\n-Timing / Latency scan\n-Threshold Scan\n-Stub Latency Scan" );
+    cmd.setIntroductoryDescription("CMS Ph2_ACF  Commissioning tool to perform the following procedures:\n-Timing / "
+                                   "Latency scan\n-Threshold Scan\n-Stub Latency Scan");
     // error codes
-    cmd.addErrorCode ( 0, "Success" );
-    cmd.addErrorCode ( 1, "Error" );
+    cmd.addErrorCode(0, "Success");
+    cmd.addErrorCode(1, "Error");
     // options
-    cmd.setHelpOption ( "h", "help", "Print this help page" );
+    cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption ( "file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
-    cmd.defineOptionAlternative ( "file", "f" );
+    cmd.defineOption("file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption ( "tuneOffsets", "tune offsets on readout chips connected to CIC.");
     cmd.defineOptionAlternative ( "tuneOffsets", "t" );
@@ -62,19 +62,17 @@ int main ( int argc, char* argv[] )
     cmd.defineOption ( "findOpens", "perform latency scan with antenna on UIB",  ArgvParser::NoOptionAttribute );
     cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
     cmd.defineOption ( "ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
 
-    cmd.defineOption ( "threshold", "Threshold value to set on chips for open and short finding",  ArgvParser::OptionRequiresValue );
-    cmd.defineOption ( "hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/ );
-    
     cmd.defineOption("pattern", "Data Player Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("pattern", "p");
 
-    cmd.defineOption ( "withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute );
-    cmd.defineOption ( "checkAsync", "Check async readout", ArgvParser::NoOptionAttribute );
-    
-    // general 
-    cmd.defineOption ( "batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute );
-    cmd.defineOptionAlternative ( "batch", "b" );
+    cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkAsync", "Check async readout", ArgvParser::NoOptionAttribute);
+
+    // general
+    cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("batch", "b");
 
     // GUI support    
     cmd.defineOption ( "USB", "USB iProduct string to identify the test card when using the USB functionalities.", ArgvParser::OptionRequiresValue );
@@ -84,14 +82,14 @@ int main ( int argc, char* argv[] )
 
     int result = cmd.parse ( argc, argv );
 
-    if ( result != ArgvParser::NoParserError )
+    if(result != ArgvParser::NoParserError)
     {
-        LOG (INFO) << cmd.parseErrorDescription ( result );
-        exit ( 1 );
+        LOG(INFO) << cmd.parseErrorDescription(result);
+        exit(1);
     }
 
     // now query the parsing results
-    std::string cHWFile = ( cmd.foundOption ( "file" ) ) ? cmd.optionValue ( "file" ) : "settings/Commissioning.xml";
+    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
     // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
     // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
     bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
@@ -112,7 +110,10 @@ int main ( int argc, char* argv[] )
         TQObject::Connect ( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
 
     std::string cResultfile = "Hybrid";
-    Timer t;
+    Timer       t;
+
+#ifdef __TCUSB__
+#endif
 
     if ( cGui ){
         //Initialize gui communication with named pipe
@@ -126,10 +127,10 @@ int main ( int argc, char* argv[] )
     #endif
     
     std::stringstream outp;
-    // hybrid testing tool 
-    // going to use this because it also 
+    // hybrid testing tool
+    // going to use this because it also
     // allows me to initialize voltages
-    // and check voltages 
+    // and check voltages
     PSHybridTester cHybridTester;
     cHybridTester.InitializeHw ( cHWFile, outp);
     cHybridTester.InitializeSettings ( cHWFile, outp );
@@ -181,14 +182,7 @@ int main ( int argc, char* argv[] )
     if ( cmd.foundOption ( "withCIC" ) || cmd.foundOption ( "mpaTest" ) )
     {
         cHybridTester.SelectCIC(true);
-        // align back-end 
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit (&cHybridTester);
-        cBackEndAligner.Start(0);
-        //reset all chip and board registers 
-        // to what they were before this tool was called 
-        cBackEndAligner.Reset(); 
-   
+        
         //Check if data player is running
         if (cDPInterfacer.IsRunning(cInterface))
         {
@@ -198,7 +192,7 @@ int main ( int argc, char* argv[] )
 
         //Configure and Start DataPlayer
         // to send phase alignment pattern 
-        uint8_t cPhaseAlignmentPattern=0x55;
+        uint8_t cPhaseAlignmentPattern=0xAA;
         cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
         cDPInterfacer.Start(cInterface);
         if( cDPInterfacer.IsRunning(cInterface) )
@@ -212,9 +206,21 @@ int main ( int argc, char* argv[] )
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit (&cHybridTester);
         cCicAligner.PhaseAlignmentMPA(100);
+        
+        // and then re-align back-end just because 
+        cHybridTester.AlignCICout(cPhaseAlignmentPattern);
+
         cDPInterfacer.Stop(cInterface);
         cDPInterfacer.CheckNPatterns(cInterface);
 
+        // // align back-end 
+        // BackEndAlignment cBackEndAligner;
+        // cBackEndAligner.Inherit (&cHybridTester);
+        // cBackEndAligner.Start(0);
+        // //reset all chip and board registers 
+        // // to what they were before this tool was called 
+        // cBackEndAligner.Reset(); 
+   
         // // still needs to be de-bugged!!
         // // does not work yet
         // // Configure and Start DataPlayer
@@ -234,14 +240,67 @@ int main ( int argc, char* argv[] )
         // to what they were before this tool was called 
         //cCicAligner.dumpConfigFiles();
     }
-    if( cmd.foundOption ( "checkAsync" ) )
+    // if(cmd.foundOption("withCIC") || cmd.foundOption("mpaTest"))
+    // {
+    //     cHybridTester.SelectCIC(true);
+    //     // align back-end
+    //     BackEndAlignment cBackEndAligner;
+    //     cBackEndAligner.Inherit(&cHybridTester);
+    //     cBackEndAligner.Start(0);
+    //     // reset all chip and board registers
+    //     // to what they were before this tool was called
+    //     cBackEndAligner.Reset();
+
+    //     // Check if data player is running
+    //     if(cDPInterfacer.IsRunning(cInterface))
+    //     {
+    //         LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+    //         cDPInterfacer.Stop(cInterface);
+    //     }
+
+    //     // Configure and Start DataPlayer
+    //     // to send phase alignment pattern
+    //     uint8_t cPhaseAlignmentPattern = 0x55;
+    //     cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+    //     cDPInterfacer.Start(cInterface);
+    //     if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
+    //     else
+    //         LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+    //     // align CIC inputs
+    //     CicFEAlignment cCicAligner;
+    //     cCicAligner.Inherit(&cHybridTester);
+    //     cCicAligner.PhaseAlignmentMPA(100);
+    //     cDPInterfacer.Stop(cInterface);
+    //     cDPInterfacer.CheckNPatterns(cInterface);
+
+    //     // // still needs to be de-bugged!!
+    //     // // does not work yet
+    //     // // Configure and Start DataPlayer
+    //     // // to send word alignment pattern
+    //     // uint8_t cWordAlignmentPattern = 0x75;
+    //     // cDPInterfacer.ConfigureEmulator(cInterface, cWordAlignmentPattern);
+    //     // cDPInterfacer.StartEmulator(cInterface);
+    //     // if( cDPInterfacer.EmulatorIsRunning(cInterface) )
+    //     // {
+    //     //     LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+    //     // }
+    //     // else
+    //     //     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+    //     // cCicAligner.WordAlignmentMPA(100);
+    //     // reset all chip and board registers
+    //     // to what they were before this tool was called
+    //     // cCicAligner.dumpConfigFiles();
+    // }
+    if(cmd.foundOption("checkAsync"))
     {
         DataChecker cDataChecker;
-        cDataChecker.Inherit (&cHybridTester);
+        cDataChecker.Inherit(&cHybridTester);
         cDataChecker.AsyncTest();
-        //cDataChecker.resetPointers();
+        // cDataChecker.resetPointers();
     }
-    
+
     // // equalize thresholds on readout chips
     if( cmd.foundOption ( "tuneOffsets" ) ) 
     { 
@@ -254,9 +313,9 @@ int main ( int argc, char* argv[] )
         t.start();
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
-        cPedestalEqualization.Inherit (&cHybridTester);
+        cPedestalEqualization.Inherit(&cHybridTester);
         // second parameter disables stub logic on CBC3
-        cPedestalEqualization.Initialise ( true, true );
+        cPedestalEqualization.Initialise(true, true);
         cPedestalEqualization.FindVplus();
         cPedestalEqualization.FindOffsets();
         cPedestalEqualization.writeObjects();
@@ -269,8 +328,8 @@ int main ( int argc, char* argv[] )
         }
 
     }
-    // measure noise on FE chips 
-    if (cmd.foundOption( "measurePedeNoise"))
+    // measure noise on FE chips
+    if(cmd.foundOption("measurePedeNoise"))
     {
         if ( cGui ){
             gui::status("Measuring noise on front-end chips"); 
@@ -280,12 +339,12 @@ int main ( int argc, char* argv[] )
 
 
         t.start();
-        //if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        //tool provides an Inherit(Tool* pTool) for this purpose
+        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
-        cPedeNoise.Inherit (&cHybridTester);
-        //second parameter disables stub logic on CBC3
-        cPedeNoise.Initialise (true, true); // canvases etc. for fast calibration
+        cPedeNoise.Inherit(&cHybridTester);
+        // second parameter disables stub logic on CBC3
+        cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
@@ -293,13 +352,9 @@ int main ( int argc, char* argv[] )
         t.show ( "Time to Scan Pedestals and Noise" );
         if ( cGui ){
             gui::message("Noise measured");
-            gui::progress(4.5 / 10.0);        
         }
 
     }
-    
-    if( cmd.foundOption("findOpens"))
-    {
         if ( cGui ){
             gui::status("Running open finding procedure...");  
             gui::message(""); 
@@ -307,7 +362,7 @@ int main ( int argc, char* argv[] )
         }
 
         OpenFinder cOpenFinder;
-        cOpenFinder.Inherit (&cHybridTester);
+        cOpenFinder.Inherit(&cHybridTester);
         cOpenFinder.FindOpensPS();
 
         if ( cGui ){
@@ -316,7 +371,7 @@ int main ( int argc, char* argv[] )
         }    
 
     }
-    if( cmd.foundOption("findShorts"))
+    if(cmd.foundOption("findShorts"))
     {
         if ( cGui ){
             gui::status("Running short finding procedure..."); 
@@ -325,7 +380,7 @@ int main ( int argc, char* argv[] )
         }  
 
         ShortFinder cShortFinder;
-        cShortFinder.Inherit (&cHybridTester);
+        cShortFinder.Inherit(&cHybridTester);
         cShortFinder.Initialise();
         cShortFinder.FindShorts();
 
@@ -335,6 +390,7 @@ int main ( int argc, char* argv[] )
         }    
 
     }
+    // test MPA outputs
     // test MPA outputs 
     if( cmd.foundOption ( "mpaTest" ) )
     {
@@ -410,7 +466,7 @@ int main ( int argc, char* argv[] )
             cDPInterfacer.Stop(cInterface);
             // cDPInterfacer.CheckNPatterns(cInterface);
         }
-        cHybridTester.SelectCIC(false);    
+        // cHybridTester.SelectCIC(false);    
 
         if ( cGui ){
             gui::message("MPA input test done."); 
@@ -418,8 +474,8 @@ int main ( int argc, char* argv[] )
         }  
 
     }  
-    // ssa pair tests 
-    if ( !cSSAPair.empty() )
+    // ssa pair tests
+    if(!cSSAPair.empty())
     {
        LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
         // configure SSA to output something on stub lines 
@@ -434,9 +490,9 @@ int main ( int argc, char* argv[] )
             }
         }        // still needs to be debugged 
         // configure SSA to output something on L1 lines
-        //cHybridTester.SSATestL1Output(cSSAPair);
-        // put it back in normal readout mode 
-        // and make sure we're in normal readout mode 
+        // cHybridTester.SSATestL1Output(cSSAPair);
+        // put it back in normal readout mode
+        // and make sure we're in normal readout mode
         // i.e. synchronous
         // auto cNevents  = 9;//cTool.findValueInSettings("Nevents" ,10);
         // for(auto cBoard : *cHybridTester.fDetectorContainer)
@@ -451,11 +507,12 @@ int main ( int argc, char* argv[] )
         //                 if( cReadoutChip->getFrontEndType() != FrontEndType::SSA )
         //                     continue;
         //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Sync",1);
-        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", 0x3);
+        //                 cHybridTester.fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig",
+        //                 0x3);
         //             }//chip
-        //         }//hybrid 
-        //     }// module 
-        //     // check if i can read anything     
+        //         }//hybrid
+        //     }// module
+        //     // check if i can read anything
         //     for( uint32_t cThreshold=0; cThreshold < 20; cThreshold++)
         //     {
         //         cHybridTester.setSameDac("Threshold", cThreshold);
@@ -485,5 +542,4 @@ int main ( int argc, char* argv[] )
 
     if ( !batchMode ) cApp.Run();
     return 0;
-
 }

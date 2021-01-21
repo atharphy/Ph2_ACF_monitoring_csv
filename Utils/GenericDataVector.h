@@ -14,23 +14,20 @@
 
 class GenericDataVector : public OccupancyAndPh
 {
- public:
-  GenericDataVector()  {}
-  ~GenericDataVector() {}
+  public:
+    GenericDataVector() {}
+    ~GenericDataVector() {}
 
-  void print(void)
-  {
-    std::cout << data1.size() << "\t" << data2.size() << std::endl;
-  }
+    void print(void) { std::cout << data1.size() << "\t" << data2.size() << std::endl; }
 
-  void makeSummaryAverage (const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-  void makeSummaryAverage (const std::vector<EmptyContainer>*    theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
-  {
-    OccupancyAndPh::makeSummaryAverage (theOccupancyVector, theNumberOfEnabledChannelsList, numberOfEvents);
-  }
+    void makeSummaryAverage(const std::vector<GenericDataVector>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
+    void makeSummaryAverage(const std::vector<EmptyContainer>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
+    {
+        OccupancyAndPh::makeSummaryAverage(theOccupancyVector, theNumberOfEnabledChannelsList, numberOfEvents);
+    }
 
-  std::vector<float> data1;
-  std::vector<float> data2;
+    std::vector<float> data1;
+    std::vector<float> data2;
 };
 
 #endif

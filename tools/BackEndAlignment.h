@@ -1,18 +1,17 @@
 /*!
-*
-* \file BackEndAlignment.h
-* \brief CIC FE alignment class, automated alignment procedure for CICs
-* connected to FEs
-* \author Sarah SEIF EL NASR-STOREY
-* \date 28 / 06 / 19
-*
-* \Support : sarah.storey@cern.ch
-*
-*/
+ *
+ * \file BackEndAlignment.h
+ * \brief CIC FE alignment class, automated alignment procedure for CICs
+ * connected to FEs
+ * \author Sarah SEIF EL NASR-STOREY
+ * \date 28 / 06 / 19
+ *
+ * \Support : sarah.storey@cern.ch
+ *
+ */
 
 #ifndef BackEndAlignment_h__
 #define BackEndAlignment_h__
-
 
 #include "Tool.h"
 
@@ -20,7 +19,7 @@
 
 namespace Ph2_HwInterface
 {
-   class BackendAlignmentInterface;
+class BackendAlignmentInterface;
 }
 
 // add breakcodes here
@@ -32,16 +31,16 @@ class BackEndAlignment : public Tool
     BackEndAlignment();
     ~BackEndAlignment();
 
-    void Initialise ( );
+    void Initialise();
     bool Align();
 
-    void SetL1Debug(bool pDebug){ fL1Debug=pDebug;};
-    void SetStubDebug(bool pDebug){ fStubDebug=pDebug;};
-
+    void SetL1Debug(bool pDebug) { fL1Debug = pDebug; };
+    void SetStubDebug(bool pDebug) { fStubDebug = pDebug; };
 
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool SSAAlignment(Ph2_HwDescription::BeBoard* pBoard);
+    bool MPAAlignment(Ph2_HwDescription::BeBoard* pBoard);
     void Start(int currentRun) override;
     void Stop() override;
     void Pause() override;
@@ -50,11 +49,11 @@ class BackEndAlignment : public Tool
     void Reset();
 
     // get alignment results
-    bool    getStatus() const { return fSuccess;}
+    bool getStatus() const { return fSuccess; }
 
   protected:
-    bool fL1Debug=false;
-    bool fStubDebug=false;
+    bool fL1Debug   = false;
+    bool fStubDebug = false;
 
   private:
     // status
@@ -63,10 +62,9 @@ class BackEndAlignment : public Tool
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
 
-    // booking histograms
-    #ifdef __USE_ROOT__
-    //  DQMHistogramCic fDQMHistogram;
-    #endif
-
+// booking histograms
+#ifdef __USE_ROOT__
+//  DQMHistogramCic fDQMHistogram;
+#endif
 };
 #endif

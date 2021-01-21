@@ -175,12 +175,12 @@ For more information on the firmware, please check the doc directory of https://
 
     iii. click the `Add variable` button
 
-        - add key: $USER_NAME and value: <your CERN user name>
+        - add key: USER_NAME and value: <your CERN user name>
 
     iv. click the `Add variable` button
 
         - select the flag `Mask variable`
-        - add key: $USER_PASS and value: <your CERN password encoded to base64>
+        - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
 2. Enable shared Runners (if not enabled)
@@ -188,6 +188,15 @@ For more information on the firmware, please check the doc directory of https://
     i. from `settings > CI/CD` expand the `Runners` section
 
     ii. click the `Allow shared Runners` button
+
+### clang-format (required to submit merge requests!!!)
+1. install 7.0 llvm toolset:
+
+        $> yum install llvm-toolset-7.0
+
+2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
+
+        $> formatAll
 
 
 ### Setup on CC7 (Scroll down for instructions on setting up on SLC6)

@@ -21,12 +21,11 @@ class TFile;
  */
 class DQMHistogramPedestalEqualization : public DQMHistogramBase
 {
-
   public:
     /*!
      * constructor
      */
-    DQMHistogramPedestalEqualization ();
+    DQMHistogramPedestalEqualization();
 
     /*!
      * destructor
@@ -36,41 +35,36 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
      */
-    bool fill (std::vector<char>& dataBuffer) override;
+    bool fill(std::vector<char>& dataBuffer) override;
 
     /*!
      * Save histogram
      */
-    void process () override;
+    void process() override;
 
     /*!
      * Reset histogram
      */
     void reset(void) override;
-    //virtual void summarizeHistos();
+    // virtual void summarizeHistos();
 
-    void fillVplusPlots(DetectorDataContainer &theVthr);
+    void fillVplusPlots(DetectorDataContainer& theVthr);
 
+    void fillOffsetPlots(DetectorDataContainer& theOffsets);
 
-    void fillOffsetPlots(DetectorDataContainer &theOffsets);
-
-    void fillOccupancyPlots(DetectorDataContainer &theOccupancy);
-
-
+    void fillOccupancyPlots(DetectorDataContainer& theOccupancy);
 
   private:
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fDetectorVplusHistograms;
     DetectorDataContainer fDetectorOffsetHistograms;
     DetectorDataContainer fDetectorOccupancyHistograms;
-    
+
     DetectorDataContainer fDetectorPedestalHistograms;
-
-
 };
 #endif

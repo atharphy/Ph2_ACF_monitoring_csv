@@ -3,204 +3,200 @@
 #ifdef __USE_ROOT__
 #include "../HWInterface/CbcInterface.h"
 
-PulseShape::PulseShape() : Tool()
-{}
+PulseShape::PulseShape() : Tool() {}
 
-PulseShape::~PulseShape()
-{}
+PulseShape::~PulseShape() {}
 
 void PulseShape::Initialize()
 {
     LOG(INFO) << "starting the Initialize()";
     fNCbc = 0;
 
-    std::cerr << "void PulseShape::Initialize()"  ;
+    std::cerr << "void PulseShape::Initialize()";
 
-    for ( auto cBoard : *fDetectorContainer )
+    for(auto cBoard: *fDetectorContainer)
     {
-    	LOG(INFO) << "Loop for board()";
+        LOG(INFO) << "Loop for board()";
         uint32_t cBoardId = cBoard->getId();
-        std::cerr << "cBoardId = " << cBoardId ;
+        std::cerr << "cBoardId = " << cBoardId;
         LOG(INFO) << "Before reading board parameter()";
-        //fDelayAfterPulse = fBeBoardInterface->ReadBoardReg (cBoard, getDelAfterTPString ( cBoard->getBoardType() ) );
+        // fDelayAfterPulse = fBeBoardInterface->ReadBoardReg (cBoard, getDelAfterTPString ( cBoard->getBoardType() ) );
         fDelayAfterPulse = 196;
         LOG(INFO) << "After reading board parameter()";
 
-        for(auto cOpticalGroup : *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for ( auto cFe : *cOpticalGroup)
+            for(auto cFe: *cOpticalGroup)
             {
-            
                 LOG(INFO) << "Certain board()";
                 uint32_t cFeId = cFe->getId();
-                std::cerr << "cFeId = " << cFeId ;
+                std::cerr << "cFeId = " << cFeId;
                 fType = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
 
-                for ( auto cCbc : *cFe)
+                for(auto cCbc: *cFe)
                 {
                     uint16_t cMaxValue = 1023;
-                    uint32_t cCbcId = cCbc->getId();
-                    std::cerr << "cCbcId = " << cCbcId ;
+                    uint32_t cCbcId    = cCbc->getId();
+                    std::cerr << "cCbcId = " << cCbcId;
                     fNCbc++;
                     // Create the Canvas to draw
-                    TCanvas* ctmpCanvas = new TCanvas ( Form ( "c_online_canvas_fe%dcbc%d", cFeId, cCbcId ), Form ( "FE%dCBC%d  Online Canvas", cFeId, cCbcId ) );
-                    ctmpCanvas->Divide ( 2, 1 );
+                    TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%dcbc%d", cFeId, cCbcId), Form("FE%dCBC%d  Online Canvas", cFeId, cCbcId));
+                    ctmpCanvas->Divide(2, 1);
                     fCanvasMap[cCbc] = ctmpCanvas;
 
-                    //should set the canvas frames sane!
-            int cLow = ( fDelayAfterPulse + 3 ) * 25;
-                    int cHigh = ( fDelayAfterPulse + 8 ) * 25;
-                    //TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, cLow, cHigh, cMaxValue, 0, cMaxValue );
-            TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, 0, cHigh-cLow, cMaxValue, 0, cMaxValue ); //Jarne
-                    cFrame->SetStats ( false );
-                    ctmpCanvas->cd ( 2 );
-                    cFrame->Draw( );
-                    bookHistogram ( cCbc, "frame", cFrame );
+                    // should set the canvas frames sane!
+                    int cLow  = (fDelayAfterPulse + 3) * 25;
+                    int cHigh = (fDelayAfterPulse + 8) * 25;
+                    // TH2I* cFrame = new TH2I ( "cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, cLow, cHigh,
+                    // cMaxValue, 0, cMaxValue );
+                    TH2I* cFrame = new TH2I("cFrame", "PulseShape; Delay [ns]; Amplitude [VCth]", 350, 0, cHigh - cLow, cMaxValue, 0,
+                                            cMaxValue); // Jarne
+                    cFrame->SetStats(false);
+                    ctmpCanvas->cd(2);
+                    cFrame->Draw();
+                    bookHistogram(cCbc, "frame", cFrame);
                     // Create Multigraph Object for each CBC
-                    TString cName =  Form ( "g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId );
-                    TObject* cObj = gROOT->FindObject ( cName );
+                    TString  cName = Form("g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId);
+                    TObject* cObj  = gROOT->FindObject(cName);
 
-                    if ( cObj ) delete cObj;
+                    if(cObj) delete cObj;
 
                     TMultiGraph* cMultiGraph = new TMultiGraph();
-                    cMultiGraph->SetName ( cName );
-                    bookHistogram ( cCbc, "cbc_pulseshape", cMultiGraph );
-                    cName = Form ( "f_cbc_pulse_Fe%dCbc%d", cFeId, cCbcId );
-                    cObj = gROOT->FindObject ( cName );
+                    cMultiGraph->SetName(cName);
+                    bookHistogram(cCbc, "cbc_pulseshape", cMultiGraph);
+                    cName = Form("f_cbc_pulse_Fe%dCbc%d", cFeId, cCbcId);
+                    cObj  = gROOT->FindObject(cName);
 
-                    if ( cObj ) delete cObj;
+                    if(cObj) delete cObj;
                 }
-
             }
         }
     }
 
     parseSettings();
-    LOG (INFO) << "Histograms and Settings initialised." ;
+    LOG(INFO) << "Histograms and Settings initialised.";
 }
 
-void PulseShape::ScanTestPulseDelay ( uint8_t fStepSize )
+void PulseShape::ScanTestPulseDelay(uint8_t fStepSize)
 {
-
-
     // setSystemTestPulse(fTPAmplitude, fChannelId);
     // enableChannel(fChannelId);
     LOG(INFO) << "setSystemTestPulse";
-    setSystemTestPulse ( fTPAmplitude/*, 0 */ );
+    setSystemTestPulse(fTPAmplitude /*, 0 */);
     LOG(INFO) << "toggleTestGroup (true)";
-    toggleTestGroup (true);
+    toggleTestGroup(true);
     LOG(INFO) << " end of toggleTestGroup (true)";
     // initialize the historgram for the channel map
-    //should set the histogram boardes frames sane (from config file)!
+    // should set the histogram boardes frames sane (from config file)!
     uint32_t cCoarseDefault = fDelayAfterPulse;
-    uint32_t cLow = ( cCoarseDefault + 3 ) * 25;
-    uint32_t cHigh = ( cCoarseDefault + 8 ) * 25;
+    uint32_t cLow           = (cCoarseDefault + 3) * 25;
+    uint32_t cHigh          = (cCoarseDefault + 8) * 25;
 
-    
     LOG(INFO) << "Starting loop over delays";
-    for ( uint32_t cTestPulseDelay = cLow ; cTestPulseDelay < cHigh; cTestPulseDelay += fStepSize )
+    for(uint32_t cTestPulseDelay = cLow; cTestPulseDelay < cHigh; cTestPulseDelay += fStepSize)
     {
-        setDelayAndTesGroup ( cTestPulseDelay );
-        ScanVcth ( cTestPulseDelay , cLow);
+        setDelayAndTesGroup(cTestPulseDelay);
+        ScanVcth(cTestPulseDelay, cLow);
     }
 
-    this->fitGraph ( cLow );
-    updateHists ( "cbc_pulseshape", true );
-    toggleTestGroup (false);
-
+    this->fitGraph(cLow);
+    updateHists("cbc_pulseshape", true);
+    toggleTestGroup(false);
 }
 
-void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
+void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
 {
-    for ( auto& cChannelVector : fChannelMap )
-        for ( auto& cChannel : cChannelVector.second )
-            cChannel->initializeHist ( pDelay, "Delay" );
+    for(auto& cChannelVector: fChannelMap)
+        for(auto& cChannel: cChannelVector.second) cChannel->initializeHist(pDelay, "Delay");
 
-    uint16_t cMaxValue = 0x003FF;
-    uint16_t cVcth = ( fHoleMode ) ?  cMaxValue :  0x00;
-    int cStep = ( fHoleMode ) ? -10 : +10;
+    uint16_t cMaxValue      = 0x003FF;
+    uint16_t cVcth          = (fHoleMode) ? cMaxValue : 0x00;
+    int      cStep          = (fHoleMode) ? -10 : +10;
     uint32_t cAllOneCounter = 0;
-    bool cAllOne = false;
-    bool cNonZero = false;
-    bool cSaturate = false;
-    uint16_t cDoubleVcth = 0;
+    bool     cAllOne        = false;
+    bool     cNonZero       = false;
+    bool     cSaturate      = false;
+    uint16_t cDoubleVcth    = 0;
 
-    ThresholdVisitor cVisitor (fReadoutChipInterface, 0);
+    ThresholdVisitor cVisitor(fReadoutChipInterface, 0);
 
     // Adaptive VCth loop
-    while ( 0x00 == cVcth && cVcth <= cMaxValue )
+    while(0x00 == cVcth && cVcth <= cMaxValue)
     {
-        //LOG (INFO) << "   "<< cVcth ;
-        if ( cAllOne ) break;
+        // LOG (INFO) << "   "<< cVcth ;
+        if(cAllOne) break;
 
-        if ( cVcth == cDoubleVcth )
+        if(cVcth == cDoubleVcth)
         {
-            cVcth +=  cStep;
+            cVcth += cStep;
             continue;
         }
 
         // then we take fNEvents
         uint32_t cNthAcq = 0;
-        int cNHits = 0;
+        int      cNHits  = 0;
 
         // Take Data for all Modules
-        for ( auto pBoard : *fDetectorContainer )
+        for(auto pBoard: *fDetectorContainer)
         {
             BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
-            for(auto cOpticalGroup : *pBoard)
+            for(auto cOpticalGroup: *pBoard)
             {
-                for (auto cFe : *cOpticalGroup)
+                for(auto cFe: *cOpticalGroup)
                 {
-                    cVisitor.setThreshold (cVcth);
-                    static_cast<OuterTrackerModule*>(cFe)->accept (cVisitor);
+                    cVisitor.setThreshold(cVcth);
+                    static_cast<OuterTrackerModule*>(cFe)->accept(cVisitor);
                 }
             }
 
-	    //LOG(INFO) << "Reading N Events";
-            ReadNEvents ( theBoard, fNevents );
-	    //LOG(INFO) << "End Reading N Events";
-            const std::vector<Event*>& events = GetEvents ( theBoard );
-            if (events.empty())LOG (INFO) << " EMPTY EVENT VECTOR !!!" ;
-           // LOG (INFO) <<"events size, VCTH value " << events.size()<< "  "<< (uint16_t) cVcth;
-           // int iii=0;
-            for ( auto& cEvent : events ){
-                //LOG (INFO) <<"EVENT ID "<< iii;
-                //iii++;
-                cNHits += fillVcthHist ( theBoard, cEvent, cVcth );
+            // LOG(INFO) << "Reading N Events";
+            ReadNEvents(theBoard, fNevents);
+            // LOG(INFO) << "End Reading N Events";
+            const std::vector<Event*>& events = GetEvents(theBoard);
+            if(events.empty()) LOG(INFO) << " EMPTY EVENT VECTOR !!!";
+            // LOG (INFO) <<"events size, VCTH value " << events.size()<< "  "<< (uint16_t) cVcth;
+            // int iii=0;
+            for(auto& cEvent: events)
+            {
+                // LOG (INFO) <<"EVENT ID "<< iii;
+                // iii++;
+                cNHits += fillVcthHist(theBoard, cEvent, cVcth);
             }
             cNthAcq++;
 
-            if ( !cNonZero && cNHits != 0 )
+            if(!cNonZero && cNHits != 0)
             {
-                cNonZero = true;
-                cDoubleVcth = cVcth;
+                cNonZero      = true;
+                cDoubleVcth   = cVcth;
                 int cBackStep = 2 * cStep;
 
-                if ( int ( cVcth ) - cBackStep > cMaxValue ) cVcth = cMaxValue;
-                else if ( int ( cVcth ) - cBackStep < 0 ) cVcth = 0;
-                else cVcth -= cBackStep;
+                if(int(cVcth) - cBackStep > cMaxValue)
+                    cVcth = cMaxValue;
+                else if(int(cVcth) - cBackStep < 0)
+                    cVcth = 0;
+                else
+                    cVcth -= cBackStep;
 
                 cStep /= 10;
                 continue;
             }
 
-            if ( cNHits > 0.95 * fNCbc * fNevents * findChannelsInTestGroup ( fTestGroup ).size() )
-                cAllOneCounter++;
-            //if ( cAllOneCounter > 6 ) cAllOne = true;
-            if ( cAllOneCounter > 30 ) cAllOne = true;//increase fine scan steps
+            if(cNHits > 0.95 * fNCbc * fNevents * findChannelsInTestGroup(fTestGroup).size()) cAllOneCounter++;
+            // if ( cAllOneCounter > 6 ) cAllOne = true;
+            if(cAllOneCounter > 30) cAllOne = true; // increase fine scan steps
 
-            if ( cAllOne )  break; //by BB, suspect this is the bug for zero entries
+            if(cAllOne) break; // by BB, suspect this is the bug for zero entries
 
             cVcth += cStep;
-            updateHists ( "", false );
+            updateHists("", false);
 
-            if ( fHoleMode && cVcth >= cMaxValue - 1 && cNHits != 0 )
+            if(fHoleMode && cVcth >= cMaxValue - 1 && cNHits != 0)
             {
                 cSaturate = true;
                 break;
             }
 
-            if ( !fHoleMode && cVcth <= 0x01 && cNHits != 0 )
+            if(!fHoleMode && cVcth <= 0x01 && cNHits != 0)
             {
                 cSaturate = true;
                 break;
@@ -208,151 +204,151 @@ void PulseShape::ScanVcth ( uint32_t pDelay , int cLow)
         }
     }
 
-    for ( auto& cChannelVector : fChannelMap )
+    for(auto& cChannelVector: fChannelMap)
     {
-        for ( auto& cChannel : cChannelVector.second )
+        for(auto& cChannel: cChannelVector.second)
         {
-            if ( fFitHist ) cChannel->fitHist ( fNevents, fHoleMode, pDelay, "Delay", fResultFile );
-            else cChannel->differentiateHist ( fNevents, fHoleMode, pDelay, "Delay", fResultFile );
+            if(fFitHist)
+                cChannel->fitHist(fNevents, fHoleMode, pDelay, "Delay", fResultFile);
+            else
+                cChannel->differentiateHist(fNevents, fHoleMode, pDelay, "Delay", fResultFile);
 
-            //if ( !cSaturate ) cChannel->setPulsePoint ( pDelay, cChannel->getPedestal() );
-            //else cChannel->setPulsePoint ( pDelay, 255 );
+            // if ( !cSaturate ) cChannel->setPulsePoint ( pDelay, cChannel->getPedestal() );
+            // else cChannel->setPulsePoint ( pDelay, 255 );
 
-            if ( !cSaturate ){ cChannel->setPulsePoint ( pDelay-cLow, cChannel->getPedestal() );//Jarne
-            if(cChannel->getPedestal()==0)LOG (INFO) << " I AM HERE WITH ZERO!!  "<<"  "<<(double) cChannel->fCbcId<<"  "<< (double) cChannel->fChannelId<<"  "<< cChannel->getPedestal() ;}
-            else cChannel->setPulsePoint ( pDelay-cLow, 255 );//Jarne
-            //CbcRegReader cReader( fCbcInterface, "SelTestPulseDel&ChanGroup" );
-            //LOG (INFO) <<std::hex << +cReader.visit(cCbc).fRegValue; 
-       }
-
+            if(!cSaturate)
+            {
+                cChannel->setPulsePoint(pDelay - cLow, cChannel->getPedestal()); // Jarne
+                if(cChannel->getPedestal() == 0)
+                    LOG(INFO) << " I AM HERE WITH ZERO!!  "
+                              << "  " << (double)cChannel->fCbcId << "  " << (double)cChannel->fChannelId << "  " << cChannel->getPedestal();
+            }
+            else
+                cChannel->setPulsePoint(pDelay - cLow, 255); // Jarne
+            // CbcRegReader cReader( fCbcInterface, "SelTestPulseDel&ChanGroup" );
+            // LOG (INFO) <<std::hex << +cReader.visit(cCbc).fRegValue;
+        }
     }
-    LOG (INFO) << "   "<< cVcth ;
+    LOG(INFO) << "   " << cVcth;
 
-    updateHists ( "", true );
-    updateHists ( "cbc_pulseshape", false );
+    updateHists("", true);
+    updateHists("cbc_pulseshape", false);
 }
-
-
-
 
 //////////////////////////////////////      PRIVATE METHODS     /////////////////////////////////////////////
 
-
-void PulseShape::fitGraph ( int pLow )
+void PulseShape::fitGraph(int pLow)
 {
-    for ( auto& cCbc : fChannelMap )
+    for(auto& cCbc: fChannelMap)
     {
-        for ( auto& cChannel : cCbc.second )
+        for(auto& cChannel: cCbc.second)
         {
-            TString cName = Form ( "f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId );
-            TObject* cObj = gROOT->FindObject ( cName );
+            TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId);
+            TObject* cObj  = gROOT->FindObject(cName);
 
-            if ( cObj ) delete cObj;
+            if(cObj) delete cObj;
 
-	    bool UsePulseShape2 = true;
-            //TF1* cPulseFit = new TF1( cName, pulseshape, ( fDelayAfterPulse - 1 ) * 25, ( fDelayAfterPulse + 6 ) * 25, 6 );
-            TF1* cPulseFit = new TF1 ( cName, pulseshape, 5000, 5300, 6 );
+            bool UsePulseShape2 = true;
+            // TF1* cPulseFit = new TF1( cName, pulseshape, ( fDelayAfterPulse - 1 ) * 25, ( fDelayAfterPulse + 6 ) *
+            // 25, 6 );
+            TF1* cPulseFit = new TF1(cName, pulseshape, 5000, 5300, 6);
 
-            cPulseFit->SetParNames ( "Amplitude", "t_0", "tau", "Amplitude offset", "Rel. negative pulse amplitude", "Delta t" );
+            cPulseFit->SetParNames("Amplitude", "t_0", "tau", "Amplitude offset", "Rel. negative pulse amplitude", "Delta t");
             //"scale_par"
-            cPulseFit->SetParLimits ( 0, 160, 2000 );
-            cPulseFit->SetParameter ( 0, 250 );
+            cPulseFit->SetParLimits(0, 160, 2000);
+            cPulseFit->SetParameter(0, 250);
             //"offset"
-            cPulseFit->SetParLimits ( 1, 5000, 5300 );
-            cPulseFit->SetParameter ( 1, 5025 );
+            cPulseFit->SetParLimits(1, 5000, 5300);
+            cPulseFit->SetParameter(1, 5025);
             //"time_constant"
-            cPulseFit->SetParLimits ( 2, 25, 75 );
-            cPulseFit->SetParameter ( 2, 50 );
+            cPulseFit->SetParLimits(2, 25, 75);
+            cPulseFit->SetParameter(2, 50);
             //"y_offset"
-            cPulseFit->SetParLimits ( 3, 0, 200 );
-            cPulseFit->SetParameter ( 3, 50 );
+            cPulseFit->SetParLimits(3, 0, 200);
+            cPulseFit->SetParameter(3, 50);
             //"Relative amplitude of negative pulse"
-            cPulseFit->SetParameter ( 4, 0.5 );
-            cPulseFit->SetParLimits ( 4, 0, 1 );
-            //delta t
-            cPulseFit->FixParameter ( 5, 50 );
+            cPulseFit->SetParameter(4, 0.5);
+            cPulseFit->SetParLimits(4, 0, 1);
+            // delta t
+            cPulseFit->FixParameter(5, 50);
 
-	    if(UsePulseShape2 == true){
-		    cPulseFit = new TF1 ( cName, pulseshape2, 0, 140, 5 );
-		    cPulseFit->SetParNames ( "theta", "r", "tau", "amplitude_offset", "amplitude_stretch" );
-		    //"theta"
-		    cPulseFit->SetParLimits ( 0, -1, 1 );
-		    cPulseFit->SetParameter ( 0, 0.5 );
-		    //"r"
-		    cPulseFit->SetParLimits ( 1, -5, -30 );
-		    cPulseFit->SetParameter ( 1, -12 );
-		    //"tau"
-		    cPulseFit->SetParLimits ( 2, 5, 30 );
-		    cPulseFit->SetParameter ( 2, 12 );
-		    //"amplitude offset"
-		    cPulseFit->SetParLimits ( 3, 0, 255 );
-                    cPulseFit->SetParameter ( 3, 135 );
-		    //"amplitude stretch"
-		    cPulseFit->SetParLimits ( 4, 0, 255 );
-                    cPulseFit->SetParameter ( 4, 35 );
-	    }
+            if(UsePulseShape2 == true)
+            {
+                cPulseFit = new TF1(cName, pulseshape2, 0, 140, 5);
+                cPulseFit->SetParNames("theta", "r", "tau", "amplitude_offset", "amplitude_stretch");
+                //"theta"
+                cPulseFit->SetParLimits(0, -1, 1);
+                cPulseFit->SetParameter(0, 0.5);
+                //"r"
+                cPulseFit->SetParLimits(1, -5, -30);
+                cPulseFit->SetParameter(1, -12);
+                //"tau"
+                cPulseFit->SetParLimits(2, 5, 30);
+                cPulseFit->SetParameter(2, 12);
+                //"amplitude offset"
+                cPulseFit->SetParLimits(3, 0, 255);
+                cPulseFit->SetParameter(3, 135);
+                //"amplitude stretch"
+                cPulseFit->SetParLimits(4, 0, 255);
+                cPulseFit->SetParameter(4, 35);
+            }
 
+            cChannel->fPulse->Fit(cPulseFit, "R+S");
+            TString     cDirName = "PulseshapeFits";
+            TDirectory* cDir     = dynamic_cast<TDirectory*>(gROOT->FindObject(cDirName));
 
-            cChannel->fPulse->Fit ( cPulseFit, "R+S" );
-            TString cDirName = "PulseshapeFits";
-            TDirectory* cDir = dynamic_cast< TDirectory* > ( gROOT->FindObject ( cDirName ) );
+            if(!cDir) cDir = fResultFile->mkdir(cDirName);
 
-            if ( !cDir ) cDir = fResultFile->mkdir ( cDirName );
-
-            fResultFile->cd ( cDirName );
-            cChannel->fPulse->Write ( cChannel->fPulse->GetName(), TObject::kOverwrite );
-            cPulseFit->Write ( cPulseFit->GetName(), TObject::kOverwrite );
+            fResultFile->cd(cDirName);
+            cChannel->fPulse->Write(cChannel->fPulse->GetName(), TObject::kOverwrite);
+            cPulseFit->Write(cPulseFit->GetName(), TObject::kOverwrite);
             fResultFile->cd();
             fResultFile->Flush();
         }
-
     }
 }
 
-
-
-
-std::vector<uint32_t> PulseShape::findChannelsInTestGroup ( uint32_t pTestGroup )
+std::vector<uint32_t> PulseShape::findChannelsInTestGroup(uint32_t pTestGroup)
 {
     std::vector<uint32_t> cChannelVector;
-    //Jarne: changing this to all channels, so the script thinks it has to make a pulse shape for everything
-    for ( int idx = 0; idx < 254; idx++ )
+    // Jarne: changing this to all channels, so the script thinks it has to make a pulse shape for everything
+    for(int idx = 0; idx < 254; idx++)
     {
-        int ctemp1 = idx + 1 ;
+        int ctemp1 = idx + 1;
         int ctemp2 = ctemp1 + 1;
 
-        if ( ctemp1 < 254 ) cChannelVector.push_back ( ctemp1 );
+        if(ctemp1 < 254) cChannelVector.push_back(ctemp1);
 
-        if ( ctemp2 < 254 )  cChannelVector.push_back ( ctemp2 );
-	idx++;
+        if(ctemp2 < 254) cChannelVector.push_back(ctemp2);
+        idx++;
     }
 
-   /* for ( int idx = 0; idx < 16; idx++ )
-    {
-        int ctemp1 = idx * 16  + pTestGroup * 2 + 1 ;
-        int ctemp2 = ctemp1 + 1;
+    /* for ( int idx = 0; idx < 16; idx++ )
+     {
+         int ctemp1 = idx * 16  + pTestGroup * 2 + 1 ;
+         int ctemp2 = ctemp1 + 1;
 
-        if ( ctemp1 < 254 ) cChannelVector.push_back ( ctemp1 );
+         if ( ctemp1 < 254 ) cChannelVector.push_back ( ctemp1 );
 
-        if ( ctemp2 < 254 )  cChannelVector.push_back ( ctemp2 );
-    }*/
+         if ( ctemp2 < 254 )  cChannelVector.push_back ( ctemp2 );
+     }*/
     return cChannelVector;
 }
 
-void PulseShape::toggleTestGroup (bool pEnable )
+void PulseShape::toggleTestGroup(bool pEnable)
 {
-    std::vector<std::pair<std::string, uint8_t> > cRegVec;
-    uint8_t cDisableValue = fHoleMode ? 0x00 : 0xFF;
-    uint8_t cValue = pEnable ? fOffset : cDisableValue;
+    std::vector<std::pair<std::string, uint8_t>> cRegVec;
+    uint8_t                                      cDisableValue = fHoleMode ? 0x00 : 0xFF;
+    uint8_t                                      cValue        = pEnable ? fOffset : cDisableValue;
 
-    for ( auto& cChannel : fChannelVector )
+    for(auto& cChannel: fChannelVector)
     {
-        TString cRegName = Form ( "Channel%03d", cChannel );
-        cRegVec.push_back ( std::make_pair ( cRegName.Data(), cValue ) );
+        TString cRegName = Form("Channel%03d", cChannel);
+        cRegVec.push_back(std::make_pair(cRegName.Data(), cValue));
     }
 
-    //CbcMultiRegWriter cWriter ( fReadoutChipInterface, cRegVec );
-    //this->accept ( cWriter );
+    // CbcMultiRegWriter cWriter ( fReadoutChipInterface, cRegVec );
+    // this->accept ( cWriter );
 
     /*LOG(INFO) << "Going to do a broadcast()";
     for (BeBoard* cBoard : fBoardVector)
@@ -363,54 +359,54 @@ void PulseShape::toggleTestGroup (bool pEnable )
     */
 }
 
-void PulseShape::setDelayAndTesGroup ( uint32_t pDelay )
+void PulseShape::setDelayAndTesGroup(uint32_t pDelay)
 {
-    uint8_t cCoarseDelay = floor ( pDelay  / 25 );
-    uint8_t cFineDelay = ( cCoarseDelay * 25 ) + 24 - pDelay;
+    uint8_t cCoarseDelay = floor(pDelay / 25);
+    uint8_t cFineDelay   = (cCoarseDelay * 25) + 24 - pDelay;
 
-    LOG (INFO) << "cFineDelay: " << +cFineDelay ;
-    LOG (INFO) << "cCoarseDelay: " << +cCoarseDelay ;
-    LOG (INFO) << "Current Time: " << +pDelay ;
+    LOG(INFO) << "cFineDelay: " << +cFineDelay;
+    LOG(INFO) << "cCoarseDelay: " << +cCoarseDelay;
+    LOG(INFO) << "Current Time: " << +pDelay;
 
-    for (auto pBoard : *fDetectorContainer)
+    for(auto pBoard: *fDetectorContainer)
     {
-        //potentially have to reset the IC FW commissioning cycle state machine?
+        // potentially have to reset the IC FW commissioning cycle state machine?
 
         LOG(INFO) << "Writing the delay values to the board";
-	//for (auto cReg : getDelAfterTPString (pBoard->getBoardType() ) )
+        // for (auto cReg : getDelAfterTPString (pBoard->getBoardType() ) )
         //        fBeBoardInterface->WriteBoardReg (pBoard, cReg, cCoarseDelay);
-	fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(pBoard), "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cCoarseDelay);
+        fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(pBoard), "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cCoarseDelay);
     }
 
     LOG(INFO) << "Writing fine delay and test group, i2c...";
-    CbcRegWriter cWriter ( fReadoutChipInterface, "TestPulseDel&ChanGroup", to_reg ( cFineDelay, fTestGroup ) );
-    this->accept ( cWriter );
+    CbcRegWriter cWriter(fReadoutChipInterface, "TestPulseDel&ChanGroup", to_reg(cFineDelay, fTestGroup));
+    this->accept(cWriter);
     LOG(INFO) << "End of Writing fine delay and test group, i2c...";
-
 }
 
-uint32_t PulseShape::fillVcthHist ( BeBoard* pBoard, Event* pEvent, uint32_t pVcth )
+uint32_t PulseShape::fillVcthHist(BeBoard* pBoard, Event* pEvent, uint32_t pVcth)
 {
     uint32_t cHits = 0;
 
     // Loop over Events from this Acquisition
-    for(auto cOpticalGroup : *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for ( auto cFe : *cOpticalGroup )
+        for(auto cFe: *cOpticalGroup)
         {
-            for ( auto cCbc : *cFe )
+            for(auto cCbc: *cFe)
             {
                 //  get histogram to fill
-                auto cChannelVector = fChannelMap.find ( cCbc );
+                auto cChannelVector = fChannelMap.find(cCbc);
 
-                if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel vector mapped to this CBC ( " << +cCbc->getId() << " )" ;
+                if(cChannelVector == std::end(fChannelMap))
+                    LOG(INFO) << "Error, no channel vector mapped to this CBC ( " << +cCbc->getId() << " )";
                 else
                 {
-                    for ( auto& cChannel : cChannelVector->second )
+                    for(auto& cChannel: cChannelVector->second)
                     {
-                        if ( pEvent->DataBit ( cFe->getId(), cCbc->getId(), cChannel->fChannelId - 1 ) )
+                        if(pEvent->DataBit(cFe->getId(), cCbc->getId(), cChannel->fChannelId - 1))
                         {
-                            cChannel->fillHist ( pVcth );
+                            cChannel->fillHist(pVcth);
                             cHits++;
                         }
                     }
@@ -424,81 +420,92 @@ uint32_t PulseShape::fillVcthHist ( BeBoard* pBoard, Event* pEvent, uint32_t pVc
 void PulseShape::parseSettings()
 {
     // now read the settings from the map
-    auto cSetting = fSettingsMap.find ( "Nevents" );
+    auto cSetting = fSettingsMap.find("Nevents");
 
-    if ( cSetting != std::end ( fSettingsMap ) ) fNevents = cSetting->second;
-    else fNevents = 2000;
+    if(cSetting != std::end(fSettingsMap))
+        fNevents = cSetting->second;
+    else
+        fNevents = 2000;
 
-    cSetting = fSettingsMap.find ( "HoleMode" );
+    cSetting = fSettingsMap.find("HoleMode");
 
-    if ( cSetting != std::end ( fSettingsMap ) )  fHoleMode = cSetting->second;
-    else fHoleMode = 1;
+    if(cSetting != std::end(fSettingsMap))
+        fHoleMode = cSetting->second;
+    else
+        fHoleMode = 1;
 
-    cSetting = fSettingsMap.find ( "Vplus" );
+    cSetting = fSettingsMap.find("Vplus");
 
-    if ( cSetting != std::end ( fSettingsMap ) )  fVplus = cSetting->second;
-    else fVplus = 0x6F;
+    if(cSetting != std::end(fSettingsMap))
+        fVplus = cSetting->second;
+    else
+        fVplus = 0x6F;
 
-    cSetting = fSettingsMap.find ( "TestPulsePotentiometer" );
+    cSetting = fSettingsMap.find("TestPulsePotentiometer");
 
-    if ( cSetting != std::end ( fSettingsMap ) ) fTPAmplitude = cSetting->second;
-    else fTPAmplitude = 0x20;
+    if(cSetting != std::end(fSettingsMap))
+        fTPAmplitude = cSetting->second;
+    else
+        fTPAmplitude = 0x20;
 
-    cSetting = fSettingsMap.find ( "ChannelOffset" );
+    cSetting = fSettingsMap.find("ChannelOffset");
 
-  //  if ( cSetting != std::end ( fSettingsMap ) ) fOffset = cSetting->second;
-  //  else fOffset = 0x5;
+    //  if ( cSetting != std::end ( fSettingsMap ) ) fOffset = cSetting->second;
+    //  else fOffset = 0x5;
 
-    cSetting = fSettingsMap.find ( "TestGroup" );
+    cSetting = fSettingsMap.find("TestGroup");
 
-    if ( cSetting != std::end ( fSettingsMap ) ) fTestGroup = cSetting->second;
-    else fTestGroup = 0;
+    if(cSetting != std::end(fSettingsMap))
+        fTestGroup = cSetting->second;
+    else
+        fTestGroup = 0;
 
-    cSetting = fSettingsMap.find ( "StepSize" );
+    cSetting = fSettingsMap.find("StepSize");
 
-    if ( cSetting != std::end ( fSettingsMap ) ) fStepSize = cSetting->second;
-    else fStepSize = 5;
+    if(cSetting != std::end(fSettingsMap))
+        fStepSize = cSetting->second;
+    else
+        fStepSize = 5;
 
-    cSetting = fSettingsMap.find ( "FitSCurves" );
-    fFitHist = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0;
+    cSetting = fSettingsMap.find("FitSCurves");
+    fFitHist = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
 
-    LOG (INFO) << "Parsed the following settings:" ;
-    LOG (INFO) << "	Nevents = " << fNevents ;
-    LOG (INFO) << "	HoleMode = " << int ( fHoleMode ) ;
-    LOG (INFO) << "	Vplus = " << int ( fVplus ) ;
-    LOG (INFO) << "	TPAmplitude = " << int ( fTPAmplitude ) ;
-    LOG (INFO) << "	ChOffset = " << int ( fOffset ) ;
-    LOG (INFO) << "	StepSize = " << int ( fStepSize ) ;
-    LOG (INFO) << "	FitSCurves = " << int ( fFitHist ) ;
-    LOG (INFO) << "	TestGroup = " << int ( fTestGroup ) ;
+    LOG(INFO) << "Parsed the following settings:";
+    LOG(INFO) << "	Nevents = " << fNevents;
+    LOG(INFO) << "	HoleMode = " << int(fHoleMode);
+    LOG(INFO) << "	Vplus = " << int(fVplus);
+    LOG(INFO) << "	TPAmplitude = " << int(fTPAmplitude);
+    LOG(INFO) << "	ChOffset = " << int(fOffset);
+    LOG(INFO) << "	StepSize = " << int(fStepSize);
+    LOG(INFO) << "	FitSCurves = " << int(fFitHist);
+    LOG(INFO) << "	TestGroup = " << int(fTestGroup);
 }
 
-void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
+void PulseShape::setSystemTestPulse(uint8_t pTPAmplitude)
 {
-
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    fChannelVector = findChannelsInTestGroup ( fTestGroup );
-    //set the value of test pulsepot registrer and MiscTestPulseCtrl&AnalogMux register
-    if ( fHoleMode )
-        cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0xC1 ) );
+    fChannelVector = findChannelsInTestGroup(fTestGroup);
+    // set the value of test pulsepot registrer and MiscTestPulseCtrl&AnalogMux register
+    if(fHoleMode)
+        cRegVec.push_back(std::make_pair("MiscTestPulseCtrl&AnalogMux", 0xC1));
     else
-        cRegVec.push_back ( std::make_pair ( "MiscTestPulseCtrl&AnalogMux", 0x61 ) );
+        cRegVec.push_back(std::make_pair("MiscTestPulseCtrl&AnalogMux", 0x61));
 
-    //cRegVec.push_back ( std::make_pair ( "TestPulsePot", pTPAmplitude ) );
-    cRegVec.push_back ( std::make_pair ( "TestPulsePot", 0x40 ) );
-    cRegVec.push_back ( std::make_pair ( "Vplus",  fVplus ) );
-    cRegVec.push_back ( std::make_pair ( "HitDetectSLVS",  0xE7 ) );
+    // cRegVec.push_back ( std::make_pair ( "TestPulsePot", pTPAmplitude ) );
+    cRegVec.push_back(std::make_pair("TestPulsePot", 0x40));
+    cRegVec.push_back(std::make_pair("Vplus", fVplus));
+    cRegVec.push_back(std::make_pair("HitDetectSLVS", 0xE7));
 
-    cRegVec.push_back ( std::make_pair ( "FrontEndControl",  0x3C ) );
-    cRegVec.push_back ( std::make_pair ( "Ipre1",  0xF0 ) );
-    cRegVec.push_back ( std::make_pair ( "Ipre2",  0x14 ) );
-    cRegVec.push_back ( std::make_pair ( "Ipsf",  0x2D ) );
-    cRegVec.push_back ( std::make_pair ( "Ipa",  0x1E ) );
-    cRegVec.push_back ( std::make_pair ( "Ipaos",  0x2d ) );
-    cRegVec.push_back ( std::make_pair ( "Vpafb",  0x00 ) );
-    cRegVec.push_back ( std::make_pair ( "Icomp",  0x1E ) );
-    cRegVec.push_back ( std::make_pair ( "Vpc",  0x4B ) );
-    cRegVec.push_back ( std::make_pair ( "TestPulseChargeMirrCascodeVolt",  0x41 ) );
+    cRegVec.push_back(std::make_pair("FrontEndControl", 0x3C));
+    cRegVec.push_back(std::make_pair("Ipre1", 0xF0));
+    cRegVec.push_back(std::make_pair("Ipre2", 0x14));
+    cRegVec.push_back(std::make_pair("Ipsf", 0x2D));
+    cRegVec.push_back(std::make_pair("Ipa", 0x1E));
+    cRegVec.push_back(std::make_pair("Ipaos", 0x2d));
+    cRegVec.push_back(std::make_pair("Vpafb", 0x00));
+    cRegVec.push_back(std::make_pair("Icomp", 0x1E));
+    cRegVec.push_back(std::make_pair("Vpc", 0x4B));
+    cRegVec.push_back(std::make_pair("TestPulseChargeMirrCascodeVolt", 0x41));
 
     /*cRegVec.push_back ( std::make_pair ( "MaskChannelFrom008downto001",  0xff ) );
     cRegVec.push_back ( std::make_pair ( "MaskChannelFrom016downto009",  0xff ) );
@@ -534,40 +541,42 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
     cRegVec.push_back ( std::make_pair ( "MaskChannelFrom254downto249",  0xff ) );
 */
 
-    cRegVec.push_back ( std::make_pair ( "TestPulsePotNodeSel", pTPAmplitude ) );
-    cRegVec.push_back ( std::make_pair ( "Vplus1&2",  fVplus ) );
-    cRegVec.push_back ( std::make_pair ( "Pipe&StubInpSel&Ptwidth",0x03)); //select the hit detect pipeline logic, def is sampled (variable) mode (0x03), 0xc3 for fixed with mode, 0x43 for OR mode, 0x83 for HIP supp
+    cRegVec.push_back(std::make_pair("TestPulsePotNodeSel", pTPAmplitude));
+    cRegVec.push_back(std::make_pair("Vplus1&2", fVplus));
+    cRegVec.push_back(std::make_pair("Pipe&StubInpSel&Ptwidth",
+                                     0x03)); // select the hit detect pipeline logic, def is sampled (variable) mode
+                                             // (0x03), 0xc3 for fixed with mode, 0x43 for OR mode, 0x83 for HIP supp
 
-    CbcMultiRegWriter cWriter ( fReadoutChipInterface, cRegVec );
+    CbcMultiRegWriter cWriter(fReadoutChipInterface, cRegVec);
 
-    this->accept ( cWriter );
+    this->accept(cWriter);
 
-    for ( auto cBoard : *fDetectorContainer )
+    for(auto cBoard: *fDetectorContainer)
     {
         uint32_t cBoardId = cBoard->getId();
-        for(auto cOpticalGroup : *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
             uint32_t cOpticalGroupId = cOpticalGroup->getId();
-            for ( auto cFe : *cOpticalGroup)
+            for(auto cFe: *cOpticalGroup)
             {
                 uint32_t cFeId = cFe->getId();
 
-                for ( auto cCbc : *cFe )
+                for(auto cCbc: *cFe)
                 {
                     std::vector<Channel*> cChannelVector;
-                    uint32_t cCbcId = cCbc->getId();
-                    int cMakerColor = 1;
+                    uint32_t              cCbcId      = cCbc->getId();
+                    int                   cMakerColor = 1;
 
-                    for ( auto& cChannelId : fChannelVector )
+                    for(auto& cChannelId: fChannelVector)
                     {
-                        Channel* cChannel = new Channel ( cBoardId, cOpticalGroupId, cFeId, cCbcId, cChannelId );
-                        TString cName =  Form ( "g_cbc_pulseshape_Fe%dCbc%d_Channel%d", cFeId, cCbcId, cChannelId );
-                        cChannel->initializePulse ( cName );
-                        cChannelVector.push_back ( cChannel );
-                        cChannel->fPulse->SetMarkerColor ( cMakerColor );
+                        Channel* cChannel = new Channel(cBoardId, cOpticalGroupId, cFeId, cCbcId, cChannelId);
+                        TString  cName    = Form("g_cbc_pulseshape_Fe%dCbc%d_Channel%d", cFeId, cCbcId, cChannelId);
+                        cChannel->initializePulse(cName);
+                        cChannelVector.push_back(cChannel);
+                        cChannel->fPulse->SetMarkerColor(cMakerColor);
                         cMakerColor++;
-                        TMultiGraph* cTmpGraph = static_cast<TMultiGraph*> ( getHist ( cCbc, "cbc_pulseshape" ) );
-                        cTmpGraph->Add ( cChannel->fPulse, "lp" );
+                        TMultiGraph* cTmpGraph = static_cast<TMultiGraph*>(getHist(cCbc, "cbc_pulseshape"));
+                        cTmpGraph->Add(cChannel->fPulse, "lp");
                     }
 
                     fChannelMap[cCbc] = cChannelVector;
@@ -575,126 +584,125 @@ void PulseShape::setSystemTestPulse ( uint8_t pTPAmplitude )
             }
         }
     }
-
 }
 
-void PulseShape::updateHists ( std::string pHistName, bool pFinal )
+void PulseShape::updateHists(std::string pHistName, bool pFinal)
 {
-    for ( auto& cCanvas : fCanvasMap )
+    for(auto& cCanvas: fCanvasMap)
     {
         cCanvas.second->cd();
 
-        if ( pHistName == "" )
+        if(pHistName == "")
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
+            auto cChannelVector = fChannelMap.find(static_cast<ChipContainer*>(cCanvas.first));
 
-            if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
+            if(cChannelVector == std::end(fChannelMap))
+                LOG(INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )";
             else
             {
                 TString cOption = "P";
 
-                for ( auto& cChannel : cChannelVector->second )
+                for(auto& cChannel: cChannelVector->second)
                 {
-                    cCanvas.second->cd ( 1 );
-                    cChannel->fScurve->Draw ( cOption );
+                    cCanvas.second->cd(1);
+                    cChannel->fScurve->Draw(cOption);
                     cOption = "p same";
                 }
             }
         }
 
-        if ( pHistName == "" && pFinal )
+        if(pHistName == "" && pFinal)
         {
             // now iterate over the channels in the channel map and draw
-            auto cChannelVector = fChannelMap.find (static_cast<ChipContainer*>(cCanvas.first) );
+            auto cChannelVector = fChannelMap.find(static_cast<ChipContainer*>(cCanvas.first));
 
-            if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
+            if(cChannelVector == std::end(fChannelMap))
+                LOG(INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )";
             else
             {
                 TString cOption = "P";
 
-                for ( auto& cChannel : cChannelVector->second )
+                for(auto& cChannel: cChannelVector->second)
                 {
-                    cCanvas.second->cd ( 1 );
-                    cChannel->fScurve->Draw ( cOption );
+                    cCanvas.second->cd(1);
+                    cChannel->fScurve->Draw(cOption);
                     cOption = "p same";
 
-                    if ( fFitHist ) cChannel->fFit->Draw ( "same" );
-                    else cChannel->fDerivative->Draw ( "same" );
+                    if(fFitHist)
+                        cChannel->fFit->Draw("same");
+                    else
+                        cChannel->fDerivative->Draw("same");
                 }
             }
         }
-        else if ( pHistName == "cbc_pulseshape" )
+        else if(pHistName == "cbc_pulseshape")
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
+            auto cChannelVector = fChannelMap.find(static_cast<ChipContainer*>(cCanvas.first));
 
-            if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
+            if(cChannelVector == std::end(fChannelMap))
+                LOG(INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )";
             else
             {
-                TH2I* cTmpFrame = static_cast<TH2I*> ( getHist ( static_cast<ChipContainer*>(cCanvas.first), "frame" ) );
-                cCanvas.second->cd ( 2 );
-                cTmpFrame->Draw( );
+                TH2I* cTmpFrame = static_cast<TH2I*>(getHist(static_cast<ChipContainer*>(cCanvas.first), "frame"));
+                cCanvas.second->cd(2);
+                cTmpFrame->Draw();
                 TString cOption = "P same";
 
-                for ( auto& cChannel : cChannelVector->second )
+                for(auto& cChannel: cChannelVector->second)
                 {
-                    cCanvas.second->cd ( 2 );
-                    cChannel->fPulse->Draw ( cOption );
+                    cCanvas.second->cd(2);
+                    cChannel->fPulse->Draw(cOption);
                     cOption = "P same";
                 }
-
             }
         }
-        else if ( pHistName == "cbc_pulseshape" && pFinal )
+        else if(pHistName == "cbc_pulseshape" && pFinal)
         {
-            auto cChannelVector = fChannelMap.find ( static_cast<ChipContainer*>(cCanvas.first) );
+            auto cChannelVector = fChannelMap.find(static_cast<ChipContainer*>(cCanvas.first));
 
-            if ( cChannelVector == std::end ( fChannelMap ) ) LOG (INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )" ;
+            if(cChannelVector == std::end(fChannelMap))
+                LOG(INFO) << "Error, no channel mapped to this CBC ( " << +cCanvas.first << " )";
             else
             {
-                cCanvas.second->cd ( 2 );
-                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*> ( getHist ( static_cast<ChipContainer*>(cCanvas.first), "cbc_pulseshape" ) );
-                cMultiGraph->Draw ( "A" );
+                cCanvas.second->cd(2);
+                TMultiGraph* cMultiGraph = static_cast<TMultiGraph*>(getHist(static_cast<ChipContainer*>(cCanvas.first), "cbc_pulseshape"));
+                cMultiGraph->Draw("A");
                 cCanvas.second->Modified();
             }
         }
 
         cCanvas.second->Update();
     }
-
 }
 
-double pulseshape ( double* x, double* par )
+double pulseshape(double* x, double* par)
 {
-    double xx = x[0];
+    double xx  = x[0];
     double val = par[3];
 
-    if ( xx > par[1] )
-        val += par[0] * ( xx - par[1] ) / par[2] * exp ( - ( ( xx - par[1] ) / par[2] ) );
+    if(xx > par[1]) val += par[0] * (xx - par[1]) / par[2] * exp(-((xx - par[1]) / par[2]));
 
-    if ( xx > par[1] + par[5] )
-        val -= par[0] * par[4] * ( xx - par[1] - par[5] ) / par[2]  * exp ( - ( ( xx - par[1] - par[5] ) / par[2] ) );
+    if(xx > par[1] + par[5]) val -= par[0] * par[4] * (xx - par[1] - par[5]) / par[2] * exp(-((xx - par[1] - par[5]) / par[2]));
 
     return val;
 }
 
 double pulseshape2(double* x, double* par)
 {
-   double xx = x[0];//time
-   
-   double theta = par[0];
-   double r = par[1];
-   double tau = par[2];
-   double Amplitude_offset = par[3];
-   double Amplitude_stretch = par[4];
+    double xx = x[0]; // time
 
-   
-   double f_0 = 0.5;
-   double f_1 = r/(6*tau*tau)*(TMath::Cos(theta)+TMath::Sin(theta))*(xx-3*tau);
-   double f_2 = r*r/(24*pow(tau,4))*(1+TMath::Cos(theta)*TMath::Sin(theta))*(xx*xx-8*tau*xx+12*tau*tau);
-   
-   return Amplitude_offset + Amplitude_stretch* TMath::Exp(-xx/tau)*pow(xx/tau,2)*(f_0+f_1+f_2);
+    double theta             = par[0];
+    double r                 = par[1];
+    double tau               = par[2];
+    double Amplitude_offset  = par[3];
+    double Amplitude_stretch = par[4];
 
+    double f_0 = 0.5;
+    double f_1 = r / (6 * tau * tau) * (TMath::Cos(theta) + TMath::Sin(theta)) * (xx - 3 * tau);
+    double f_2 = r * r / (24 * pow(tau, 4)) * (1 + TMath::Cos(theta) * TMath::Sin(theta)) * (xx * xx - 8 * tau * xx + 12 * tau * tau);
+
+    return Amplitude_offset + Amplitude_stretch * TMath::Exp(-xx / tau) * pow(xx / tau, 2) * (f_0 + f_1 + f_2);
 }
 
 #endif

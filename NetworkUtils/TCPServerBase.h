@@ -2,52 +2,50 @@
 #define _ots_TCPServerBase_h_
 
 #include "../NetworkUtils/TCPSocket.h"
-#include <string>
-#include <vector>
 #include <future>
 #include <map>
+#include <string>
+#include <vector>
 
-
-
-//namespace ots
+// namespace ots
 //{
 
 class TCPServerBase : public TCPSocket
 {
-public:
-	TCPServerBase(int serverPort, unsigned int maxNumberOfClients);
-	virtual ~TCPServerBase(void);
-	
-	void startAccept(void);
-	void broadcastPacket (const std::string &message);
-	void broadcast       (const std::string &message);
-	void broadcast       (const std::vector<char> &message);
+  public:
+    TCPServerBase(int serverPort, unsigned int maxNumberOfClients);
+    virtual ~TCPServerBase(void);
 
-protected:
-	virtual void acceptConnections() = 0;
+    void startAccept(void);
+    void broadcastPacket(const std::string& message);
+    void broadcast(const std::string& message);
+    void broadcast(const std::vector<char>& message);
 
-	void closeClientSocket (int socket);
-	template <class T>
-	T*  acceptClient()
-	{
-		int socketId = accept();
-		fConnectedClients.emplace(socketId, new T(socketId));
-		return dynamic_cast<T*>(fConnectedClients[socketId]);
-	}
-	
-	std::promise<bool>        fAcceptPromise;
-	std::map<int, TCPSocket*> fConnectedClients;
-	const int E_SHUTDOWN = 0;
+  protected:
+    virtual void acceptConnections() = 0;
 
-private:
-	void closeClientSockets(void);
-	int  accept            (void);
-	void shutdownAccept    (void);
+    void closeClientSocket(int socket);
+    template <class T>
+    T* acceptClient()
+    {
+        int socketId = accept();
+        fConnectedClients.emplace(socketId, new T(socketId));
+        return dynamic_cast<T*>(fConnectedClients[socketId]);
+    }
 
-	const int         fMaxConnectionBacklog = 5;
-	unsigned int      fMaxNumberOfClients;
-	std::atomic_bool  fAccept;
-	std::future<bool> fAcceptFuture;
+    std::promise<bool>        fAcceptPromise;
+    std::map<int, TCPSocket*> fConnectedClients;
+    const int                 E_SHUTDOWN = 0;
+
+  private:
+    void closeClientSockets(void);
+    int  accept(void);
+    void shutdownAccept(void);
+
+    const int         fMaxConnectionBacklog = 5;
+    unsigned int      fMaxNumberOfClients;
+    std::atomic_bool  fAccept;
+    std::future<bool> fAcceptFuture;
 };
 
 //}

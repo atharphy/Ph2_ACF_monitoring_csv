@@ -12,7 +12,4 @@
 #include "../Utils/Exception.h"
 // #include "TROOT.h"
 
-const char* Exception::what() const throw()
-{
-    return  fStrError.data();
-}
+const char* Exception::what() const throw() { return fStrError.data(); }

@@ -5,13 +5,12 @@
 
 class TCPPublishServer : public TCPServerBase
 {
-public:
-	TCPPublishServer(int serverPort, unsigned int maxNumberOfClients=-1);
-	virtual ~TCPPublishServer(void);
+  public:
+    TCPPublishServer(int serverPort, unsigned int maxNumberOfClients = -1);
+    virtual ~TCPPublishServer(void);
 
-protected:
-	void acceptConnections() override;
-
+  protected:
+    void acceptConnections() override;
 };
 
 #endif

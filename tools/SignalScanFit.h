@@ -15,29 +15,28 @@
 #include "Tool.h"
 #ifdef __USE_ROOT__
 
-#include "../Utils/Visitor.h"
-#include "../Utils/Utilities.h"
 #include "../Utils/CommonVisitors.h"
+#include "../Utils/Utilities.h"
+#include "../Utils/Visitor.h"
 
 #ifdef __USE_ROOT__
-  #include "../DQMUtils/DQMHistogramSignalScanFit.h"
+#include "../DQMUtils/DQMHistogramSignalScanFit.h"
 #endif
 
-
-#include "TString.h"
 #include "TCanvas.h"
-#include "TH1D.h"
-#include "TProfile.h"
 #include "TF1.h"
-#include "TH2F.h"
-#include "TH2D.h"
 #include "TGaxis.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TH2F.h"
+#include "TProfile.h"
+#include "TString.h"
 #include "TStyle.h"
 
 using namespace Ph2_System;
 
-typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*> >  CbcHistogramMap;
-typedef std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*> > ModuleHistogramMap;
+typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>>   CbcHistogramMap;
+typedef std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*>> ModuleHistogramMap;
 
 /*!
  * \class SignalScanFit
@@ -46,10 +45,9 @@ typedef std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*> > M
 
 class SignalScanFit : public Tool
 {
-
   public:
-    void Initialize ( );
-    void ScanSignal ( int pSignalScanLength );
+    void   Initialize();
+    void   ScanSignal(int pSignalScanLength);
     double fVCthMin;
     double fVCthMax;
     double fVCthNbins;
@@ -61,17 +59,17 @@ class SignalScanFit : public Tool
     void Resume() override;
 
   private:
-    void updateHists ( std::string pHistName, bool pFinal );
+    void updateHists(std::string pHistName, bool pFinal);
     void parseSettings();
-    void processCurves ( Ph2_HwDescription::BeBoard *pBoard, std::string pHistName );
-    void differentiateHist ( Ph2_HwDescription::Chip* pCbc, std::string pHistName );
-    void fitHist ( Ph2_HwDescription::Chip* pCbc, std::string pHistName );
+    void processCurves(Ph2_HwDescription::BeBoard* pBoard, std::string pHistName);
+    void differentiateHist(Ph2_HwDescription::Chip* pCbc, std::string pHistName);
+    void fitHist(Ph2_HwDescription::Chip* pCbc, std::string pHistName);
 
     //  Members
     uint32_t fNevents;
     uint32_t fInitialThreshold;
     uint32_t fHoleMode;
-    //uint32_t fStepback;
+    // uint32_t fStepback;
     uint32_t fNCbc;
     uint32_t fSignalScanStep;
     bool     fFit;
@@ -90,14 +88,13 @@ class SignalScanFit : public Tool
     {
         if (pBoardIdentifier == "GLIB" ) return "cbc_stubdata_latency_adjust_fe1";
         else if ( pBoardIdentifier == "CTA") return "cbc.STUBDATA_LATENCY_MODE";
-        else if (pBoardIdentifier == "ICGLIB" || pBoardIdentifier == "ICFC7") return "cbc_daq_ctrl.latencies.stub_latency";
-        else return "not recognized";
+        else if (pBoardIdentifier == "ICGLIB" || pBoardIdentifier == "ICFC7") return
+    "cbc_daq_ctrl.latencies.stub_latency"; else return "not recognized";
     }*/
 
-
-    #ifdef __USE_ROOT__
-     DQMHistogramSignalScanFit fDQMHistogramSignalScanFit;
-   #endif
+#ifdef __USE_ROOT__
+    DQMHistogramSignalScanFit fDQMHistogramSignalScanFit;
+#endif
 };
 
 #endif

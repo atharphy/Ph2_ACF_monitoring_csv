@@ -10,234 +10,184 @@
 #ifndef _BeBoard_h__
 #define _BeBoard_h__
 
+#include "../Utils/ConditionDataSet.h"
+#include "../Utils/Container.h"
+#include "../Utils/Visitor.h"
+#include "../Utils/easylogging++.h"
 #include "Definition.h"
 #include "Module.h"
 #include "OpticalGroup.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
-#include "../Utils/ConditionDataSet.h"
-#include <vector>
 #include <map>
 #include <stdint.h>
-#include "../Utils/Container.h"
+#include <vector>
 
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
  */
-namespace Ph2_HwDescription {
+namespace Ph2_HwDescription
+{
+using BeBoardRegMap = std::map<std::string, uint32_t>; /*!< Map containing the registers of a board */
 
-    using BeBoardRegMap = std::map< std::string, uint32_t >;     /*!< Map containing the registers of a board */
+/*!
+ * \class BeBoard
+ * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Module which are
+ * connected to the BeBoard
+ */
+class BeBoard : public BoardContainer
+{
+  public:
+    // C'tors: the BeBoard only needs to know about which BE it is
+    /*!
+     * \brief Default C'tor
+     */
+    BeBoard();
 
     /*!
-     * \class BeBoard
-     * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Module which are connected to the BeBoard
+     * \brief Standard C'tor
+     * \param pBeId
      */
-    class BeBoard: public BoardContainer
+    BeBoard(uint8_t pBeId);
+
+    /*!
+     * \brief C'tor for a standard BeBoard reading a config file
+     * \param pBeId
+     * \param filename of the configuration file
+     */
+    BeBoard(uint8_t pBeId, const std::string& filename);
+
+    /*!
+     * \brief Destructor
+     */
+    ~BeBoard()
     {
+        // for ( auto& pModule : fModuleVector )
+        //     if (pModule) delete pModule;
 
-      public:
-        // C'tors: the BeBoard only needs to know about which BE it is
-        /*!
-         * \brief Default C'tor
-         */
-        BeBoard();
+        // fModuleVector.clear();
+    }
 
-        /*!
-         * \brief Standard C'tor
-         * \param pBeId
-         */
-        BeBoard ( uint8_t pBeId );
+    // Public Methods
 
-        /*!
-        * \brief C'tor for a standard BeBoard reading a config file
-        * \param pBeId
-        * \param filename of the configuration file
-        */
-        BeBoard ( uint8_t pBeId, const std::string& filename );
+    /*!
+     * \brief acceptor method for HwDescriptionVisitor
+     * \param pVisitor
+     */
+    void accept(HwDescriptionVisitor& pVisitor)
+    {
+        pVisitor.visitBeBoard(*this);
 
-        /*!
-        * \brief Destructor
-        */
-        ~BeBoard()
-        {
-            // for ( auto& pModule : fModuleVector )
-            //     if (pModule) delete pModule;
+        for(auto cOpticalGroup: *this) static_cast<OpticalGroup*>(cOpticalGroup)->accept(pVisitor);
+    }
 
-            // fModuleVector.clear();
-        }
+    /*!
+     * \brief Get the number of modules connected to the BeBoard
+     * \return The size of the vector
+     */
+    uint8_t getNFe() const
+    {
+        uint16_t nFe = 0;
+        for(auto opticalGroup: *this) nFe += opticalGroup->size();
+        return nFe;
+    }
 
-        // Public Methods
+    /*!
+     * \brief Get any register from the Map
+     * \param pReg
+     * \return The value of the register
+     */
+    uint32_t getReg(const std::string& pReg) const;
 
-        /*!
-         * \brief acceptor method for HwDescriptionVisitor
-         * \param pVisitor
-         */
-        void accept ( HwDescriptionVisitor& pVisitor )
-        {
-            pVisitor.visitBeBoard ( *this );
+    /*!
+     * \brief Set any register of the Map, if the register is not on the map, it adds it.
+     * \param pReg
+     * \param psetValue
+     */
+    void setReg(const std::string& pReg, uint32_t psetValue);
 
-            for ( auto cOpticalGroup : *this )
-                static_cast<OpticalGroup*>(cOpticalGroup)->accept ( pVisitor );
-        }
+    // /*!
+    // * \brief Get the Map of the registers
+    // * \return The map of register
+    // */
+    BeBoardRegMap getBeBoardRegMap() const { return fRegMap; }
 
-        /*!
-        * \brief Get the number of modules connected to the BeBoard
-        * \return The size of the vector
-        */
-        uint8_t getNFe() const
-        {
-            uint16_t nFe = 0;
-            for(auto opticalGroup : *this) nFe += opticalGroup->size();
-            return nFe;
-        }
+    /*!
+     * \brief Get the BeBoardId of the BeBoard
+     * \return the BeBoard Id
+     */
+    uint8_t getBeId() const { return fBeId; }
 
-        /*!
-        * \brief Get any register from the Map
-        * \param pReg
-        * \return The value of the register
-        */
-        uint32_t getReg ( const std::string& pReg ) const;
+    /*!
+     * \brief Get the BeBoardIdentifier
+     * \return The BeBoardIdentifier
+     */
+    uint32_t getBeBoardId() const { return fBeId << 8; }
 
-        /*!
-        * \brief Set any register of the Map, if the register is not on the map, it adds it.
-        * \param pReg
-        * \param psetValue
-        */
-        void setReg ( const std::string& pReg, uint32_t psetValue );
+    /*!
+     * \brief Set the Be Id of the BeBoard
+     * \param pBeId
+     */
+    void setBeId(uint8_t pBeId) { fBeId = pBeId; }
 
-        // /*!
-        // * \brief Get the Map of the registers
-        // * \return The map of register
-        // */
-        BeBoardRegMap getBeBoardRegMap() const
-        {
-            return fRegMap;
-        }
+    void setOptical(bool pOptical) { fOptical = pOptical; }
 
-        /*!
-        * \brief Get the BeBoardId of the BeBoard
-        * \return the BeBoard Id
-        */
-        uint8_t getBeId() const
-        {
-            return fBeId;
-        }
+    void setCDCEconfiguration(bool pConfigure, uint32_t pClockRate = 120)
+    {
+        fConfigureCDCE = pConfigure;
+        fClockRateCDCE = pClockRate;
+    }
 
-        /*!
-        * \brief Get the BeBoardIdentifier
-        * \return The BeBoardIdentifier
-        */
-        uint32_t getBeBoardId() const
-        {
-            return fBeId << 8;
-        }
+    bool ifOptical() const { return fOptical; }
 
-        /*!
-        * \brief Set the Be Id of the BeBoard
-        * \param pBeId
-        */
-        void setBeId ( uint8_t pBeId )
-        {
-            fBeId = pBeId;
-        }
+    std::pair<bool, uint32_t> configCDCE() const { return std::make_pair(fConfigureCDCE, fClockRateCDCE); }
 
-        void setOptical ( bool pOptical )
-        {
-            fOptical = pOptical;
-        }
+    void setBoardType(const BoardType pBoardType) { fBoardType = pBoardType; }
 
-        void setCDCEconfiguration ( bool pConfigure, uint32_t pClockRate=120 )
-        {
-            fConfigureCDCE = pConfigure;
-            fClockRateCDCE = pClockRate;
-        }
+    BoardType getBoardType() const { return fBoardType; }
 
-        bool ifOptical () const
-        {
-            return fOptical;
-        }
+    void setEventType(const EventType pEventType) { fEventType = pEventType; }
 
-        std::pair<bool,uint32_t> configCDCE () const
-        {
-            return std::make_pair(fConfigureCDCE,fClockRateCDCE);
-        }
+    EventType getEventType() const { return fEventType; }
 
-        void setBoardType (const BoardType pBoardType)
-        {
-            fBoardType = pBoardType;
-        }
+    void setFrontEndType(const FrontEndType pFrontEndType) { fFrontEndType = pFrontEndType; }
 
-        BoardType getBoardType() const
-        {
-            return fBoardType;
-        }
+    FrontEndType getFrontEndType() const { return fFrontEndType; }
 
-        void setEventType (const EventType pEventType)
-        {
-            fEventType = pEventType;
-        }
+    void addConditionDataSet(ConditionDataSet* pSet)
+    {
+        if(pSet != nullptr) fCondDataSet = pSet;
+    }
 
-        EventType getEventType() const
-        {
-            return fEventType;
-        }
+    ConditionDataSet* getConditionDataSet() const { return fCondDataSet; }
 
-        void setFrontEndType (const FrontEndType pFrontEndType)
-        {
-            fFrontEndType = pFrontEndType;
-        }
+    void updateCondData(uint32_t& pTDCVal);
 
-        FrontEndType getFrontEndType() const
-        {
-            return fFrontEndType;
-        }
+    void setSparsification(bool cSparsified) { fSparsifed = cSparsified; }
 
-        void addConditionDataSet (ConditionDataSet* pSet)
-        {
-            if (pSet != nullptr)
-                fCondDataSet = pSet;
-        }
+    bool getSparsification() const { return fSparsifed; }
 
-        ConditionDataSet* getConditionDataSet() const
-        {
-            return fCondDataSet;
-        }
+    int dummyValue_ = 1989;
 
-        void updateCondData (uint32_t& pTDCVal);
+  protected:
+    uint8_t      fBeId;
+    BoardType    fBoardType;
+    EventType    fEventType;
+    FrontEndType fFrontEndType;
 
-        void setSparsification(bool cSparsified)
-        {
-            fSparsifed=cSparsified;
-        }
+    BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
+    ConditionDataSet* fCondDataSet;
+    bool              fOptical;
+    bool              fConfigureCDCE;
+    bool              fSparsifed;
+    uint32_t          fClockRateCDCE;
 
-        bool getSparsification() const
-        {
-            return fSparsifed;
-        }
-
-        int dummyValue_ = 1989;
-
-      protected:
-        uint8_t fBeId;
-        BoardType fBoardType;
-        EventType fEventType;
-        FrontEndType fFrontEndType;
-
-        BeBoardRegMap fRegMap;  /*!< Map of BeBoard Register Names vs. Register Values */
-        ConditionDataSet* fCondDataSet;
-        bool fOptical;
-        bool fConfigureCDCE;
-        bool fSparsifed;
-        uint32_t fClockRateCDCE;
-
-      private:
-        /*!
-        * \brief Load RegMap from a file
-        * \param filename
-        */
-        void loadConfigFile ( const std::string& filename );
-    };
-}
+  private:
+    /*!
+     * \brief Load RegMap from a file
+     * \param filename
+     */
+    void loadConfigFile(const std::string& filename);
+};
+} // namespace Ph2_HwDescription
 
 #endif

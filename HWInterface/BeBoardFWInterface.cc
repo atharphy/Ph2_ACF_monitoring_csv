@@ -12,22 +12,17 @@
 
 namespace Ph2_HwInterface
 {
-  BeBoardFWInterface::BeBoardFWInterface (const char* puHalConfigFileName, uint32_t pBoardId)
-    : RegManager   (puHalConfigFileName, pBoardId)
-    , fSaveToFile  (false)
-    , fFileHandler (nullptr)
-    , fFpgaConfig  (nullptr)
-  {}
+BeBoardFWInterface::BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId), fSaveToFile(false), fFileHandler(nullptr), fFpgaConfig(nullptr)
+{
+}
 
-  BeBoardFWInterface::BeBoardFWInterface (const char* pId, const char* pUri, const char* pAddressTable)
-    : RegManager   (pId, pUri, pAddressTable)
-    , fSaveToFile  (false)
-    , fFileHandler (nullptr)
-    , fFpgaConfig  (nullptr)
-  {}
+BeBoardFWInterface::BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable)
+    : RegManager(pId, pUri, pAddressTable), fSaveToFile(false), fFileHandler(nullptr), fFpgaConfig(nullptr)
+{
+}
 
-  std::string BeBoardFWInterface::readBoardType ()
-  {
+std::string BeBoardFWInterface::readBoardType()
+{
     std::string cBoardTypeString;
 
     uint32_t cBoardType = ReadReg("board_id");
@@ -45,9 +40,9 @@ namespace Ph2_HwInterface
     cBoardTypeString.push_back(cChar);
 
     return cBoardTypeString;
-  }
-
-  void BeBoardFWInterface::PowerOn()  {}
-  void BeBoardFWInterface::PowerOff() {}
-  void BeBoardFWInterface::ReadVer()  {}
 }
+
+void BeBoardFWInterface::PowerOn() {}
+void BeBoardFWInterface::PowerOff() {}
+void BeBoardFWInterface::ReadVer() {}
+} // namespace Ph2_HwInterface

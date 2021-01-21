@@ -20,12 +20,11 @@ class TFile;
  */
 class CBCHistogramPulseShape : public DQMHistogramBase
 {
-
   public:
     /*!
      * constructor
      */
-    CBCHistogramPulseShape ();
+    CBCHistogramPulseShape();
 
     /*!
      * destructor
@@ -35,47 +34,46 @@ class CBCHistogramPulseShape : public DQMHistogramBase
     /*!
      * \brief Book histograms
      * \param theOutputFile : where histograms will be saved
-     * \param theDetectorStructure : Detector container as obtained after file parsing, used to create histograms for all board/chip/module/channel
-     * \param pSettingsMap : setting as for Tool setting map in case coe informations are needed (i.e. FitSCurve)
+     * \param theDetectorStructure : Detector container as obtained after file parsing, used to create histograms for
+     * all board/chip/module/channel \param pSettingsMap : setting as for Tool setting map in case coe informations are
+     * needed (i.e. FitSCurve)
      */
-    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
-     * \brief fill : fill histograms from TCP stream, need to be overwritten to avoid compilation errors, but it is not needed if you do not fo into the SoC
-     * \param dataBuffer : vector of char with the TCP datastream
+     * \brief fill : fill histograms from TCP stream, need to be overwritten to avoid compilation errors, but it is not
+     * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
-    bool fill (std::vector<char>& dataBuffer) override;
+    bool fill(std::vector<char>& dataBuffer) override;
 
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
      */
-    void process () override;
+    void process() override;
 
     /*!
      * \brief Reset histogram
      */
     void reset(void) override;
-   
+
     /*!
      * \brief fillCBCPulseShapePlots
      * \brief threshold
      * \brief delay
-     * \param theHitContainer : Container with the hits you want to plot 
+     * \param theHitContainer : Container with the hits you want to plot
      */
     void fillCBCPulseShapePlots(uint16_t delay, DetectorDataContainer& theOccupancyContainer);
 
   private:
-
     DetectorDataContainer fDetectorChannelPulseShapeHistograms;
     DetectorDataContainer fDetectorChipPulseShapeHistograms;
     DetectorDataContainer fDetectorData;
-    float fInitialVcth         {0};
-    float fFinalVcth           {0};
-    float fVcthStep            {0};
-    float fInitialDelay        {0};
-    float fFinalDelay          {0};
-    float fDelayStep           {0};
-    float fEffectiveFinalDelay {0};
-
+    float                 fInitialVcth{0};
+    float                 fFinalVcth{0};
+    float                 fVcthStep{0};
+    float                 fInitialDelay{0};
+    float                 fFinalDelay{0};
+    float                 fDelayStep{0};
+    float                 fEffectiveFinalDelay{0};
 };
 #endif

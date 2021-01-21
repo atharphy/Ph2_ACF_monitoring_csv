@@ -1,9 +1,9 @@
-#include "../Utils/ChannelGroupHandler.h"
 #include "../HWDescription/Definition.h"
+#include "../Utils/ChannelGroupHandler.h"
 
 class CBCChannelGroupHandler : public ChannelGroupHandler
 {
-public:
+  public:
     CBCChannelGroupHandler();
     CBCChannelGroupHandler(std::bitset<NCHANNELS>&& inputChannelsBitset);
     ~CBCChannelGroupHandler();

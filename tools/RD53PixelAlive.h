@@ -18,66 +18,68 @@
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
-#include "TApplication.h"
 #include "../DQMUtils/RD53PixelAliveHistograms.h"
+#include "TApplication.h"
 #endif
-
 
 // #########################
 // # PixelAlive test suite #
 // #########################
 class PixelAlive : public Tool
 {
- public:
-  void Start (int currentRun)  override;
-  void Stop  ()                override;
-  void ConfigureCalibration () override;
+  public:
+    void Start(int currentRun) override;
+    void Stop() override;
+    void ConfigureCalibration() override;
 
-  void sendData                                  ();
-  void localConfigure                            (const std::string fileRes_, int currentRun);
-  void initializeFiles                           (const std::string fileRes_, int currentRun);
-  void run                                       ();
-  void draw                                      (int currentRun);
-  std::shared_ptr<DetectorDataContainer> analyze ();
-  size_t getNumberIterations                     ()
-  {
-    return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) * nEvents/nEvtsBurst;
-  }
-
+    void                                   sendData();
+    void                                   localConfigure(const std::string fileRes_, int currentRun);
+    void                                   initializeFiles(const std::string fileRes_, int currentRun);
+    void                                   run();
+    void                                   draw(int currentRun);
+    std::shared_ptr<DetectorDataContainer> analyze();
+    size_t                                 getNumberIterations()
+    {
+        return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) *
+               nEvents / nEvtsBurst;
+    }
 
 #ifdef __USE_ROOT__
-  PixelAliveHistograms* histos;
+    PixelAliveHistograms* histos;
 #endif
 
+  private:
+    size_t rowStart;
+    size_t rowStop;
+    size_t colStart;
+    size_t colStop;
+    size_t nEvents;
+    size_t nEvtsBurst;
+    size_t injType;
+    size_t nHITxCol;
+    float  thrOccupancy;
+    enum INJtype
+    {
+        None,
+        Analog,
+        Digital
+    };
 
- private:
-  size_t rowStart;
-  size_t rowStop;
-  size_t colStart;
-  size_t colStop;
-  size_t nEvents;
-  size_t nEvtsBurst;
-  size_t injType;
-  size_t nHITxCol;
-  float  thrOccupancy;
-  enum INJtype { None, Analog , Digital };
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
+    std::shared_ptr<DetectorDataContainer>   theOccContainer;
+    DetectorDataContainer                    theBCIDContainer;
+    DetectorDataContainer                    theTrgIDContainer;
 
-  std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-  std::shared_ptr<DetectorDataContainer>   theOccContainer;
-  DetectorDataContainer theBCIDContainer;
-  DetectorDataContainer theTrgIDContainer;
+    void fillHisto();
+    void chipErrorReport();
+    void saveChipRegisters(int currentRun);
 
-  void fillHisto         ();
-  void chipErrorReport   ();
-  void saveChipRegisters (int currentRun);
-
-
- protected:
-  std::string fileRes;
-  bool doUpdateChip;
-  bool doDisplay;
-  bool doFast;
-  bool saveBinaryData;
+  protected:
+    std::string fileRes;
+    bool        doUpdateChip;
+    bool        doDisplay;
+    bool        doFast;
+    bool        saveBinaryData;
 };
 
 #endif

@@ -15,32 +15,27 @@
 #include <string>
 
 /*!
-  * \class Exception
-  * \brief Exception handling class, inheriting from std::exception
-  */
+ * \class Exception
+ * \brief Exception handling class, inheriting from std::exception
+ */
 class Exception : public std::exception
 {
   private:
-    std::string fStrError;         /*!< Error String */
+    std::string fStrError; /*!< Error String */
 
   public:
     /*!
-      * \brief Constructor of Exception class
-      * \param pStrError : Error message
-      */
-    Exception ( std::string&& pStrError )
-    {
-        fStrError = pStrError;
-    }
+     * \brief Constructor of Exception class
+     * \param pStrError : Error message
+     */
+    Exception(std::string&& pStrError) { fStrError = pStrError; }
     /*!
-      * \brief Destructor of Exception class
-      */
-    ~Exception() throw()
-    {
-    }
+     * \brief Destructor of Exception class
+     */
+    ~Exception() throw() {}
     /*!
-      * \brief What to throw
-      */
+     * \brief What to throw
+     */
     const char* what() const throw();
 };
 

@@ -5,29 +5,29 @@
 
 class TCPPacket
 {
-public:
-	TCPPacket();
-	virtual ~TCPPacket(void);
+  public:
+    TCPPacket();
+    virtual ~TCPPacket(void);
 
-	static std::string encode(const std::string &message);
+    static std::string encode(const std::string& message);
 
-	bool        decode    (std::string& message);
-	//Resets the storage buffer
-	void        reset     (void);
+    bool decode(std::string& message);
+    // Resets the storage buffer
+    void reset(void);
 
-	//Operator overload
-	TCPPacket &operator+=(const std::string &buffer)
-	{
-		this->fBuffer += buffer;
-		return *this;
-	}
+    // Operator overload
+    TCPPacket& operator+=(const std::string& buffer)
+    {
+        this->fBuffer += buffer;
+        return *this;
+    }
 
-	friend std::ostream &operator<<(std::ostream &out, const TCPPacket &packet);
+    friend std::ostream& operator<<(std::ostream& out, const TCPPacket& packet);
 
-private:
-	static constexpr uint32_t headerLength = 4;//sizeof(uint32_t); //THIS MUST BE 4
+  private:
+    static constexpr uint32_t headerLength = 4; // sizeof(uint32_t); //THIS MUST BE 4
 
-	std::string fBuffer; //This is Header + Message
+    std::string fBuffer; // This is Header + Message
 };
 
 #endif

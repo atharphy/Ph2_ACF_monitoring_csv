@@ -64,7 +64,7 @@ export EUDAQLIB=$EUDAQDIR/lib
 # System #
 ##########
 export PATH=$BASE_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQLIB:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$BASE_DIR/RootWeb/lib:$CACTUSLIB:$BASE_DIR/lib:$EUDAQLIB:/opt/rh/llvm-toolset-7.0/root/usr/lib64:$LD_LIBRARY_PATH
 
 #########
 # Flags #
@@ -102,5 +102,8 @@ export CompileForShep=false
 
 # Compile with EUDAQ libraries
 export CompileWithEUDAQ=false
+
+# clang-format command
+alias formatAll="find ${BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
 
 echo "=== DONE ==="

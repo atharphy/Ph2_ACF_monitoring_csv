@@ -22,48 +22,48 @@ namespace Ph2_HwInterface
  */
 class D19cFpgaConfig : public FpgaConfig
 {
-private:
-    fc7::MmcPipeInterface *lNode;
+  private:
+    fc7::MmcPipeInterface* lNode;
 
-public:
+  public:
     D19cFpgaConfig(BeBoardFWInterface* pbbi);
     ~D19cFpgaConfig();
     /*! \brief Launch the firmware upload in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bit or .bin file
      */
-    void runUpload(const std::string& strConfig, const char* pstrFile) ;
+    void runUpload(const std::string& strConfig, const char* pstrFile);
     /*! \brief Launch the firmware download in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bin file
      */
-    void runDownload(const std::string& strConfig, const char* pstrFile) ;
+    void runDownload(const std::string& strConfig, const char* pstrFile);
     /*! \brief Jump to an FPGA configuration
      * \param strConfig FPGA configuration name
      */
-    void jumpToImage( const std::string& strImage);
+    void jumpToImage(const std::string& strImage);
 
-    void downloadImage( const std::string& strImage, const std::string& strDestFile);
+    void downloadImage(const std::string& strImage, const std::string& strDestFile);
     /*! \brief Get the list of available FPGA configuration (or firmware images)*/
     std::vector<std::string> getFirmwareImageNames();
     /*! \brief Delete one Fpga configuration (or firmware image)*/
     void deleteFirmwareImage(const std::string& strId);
     /*! \brief Board hard reset */
     void resetBoard();
-private:
-    ///Sets the read mode as asynchronous.
-    void confAsyncRead() ;
-    ///Locks or unlocks a block of the flash (Xilinx DS617(v3.0.1) page 75, figure 43).
-    void blockLockOrUnlock(uint32_t block_number, char operation) ;
-    ///Erases a block of the flash (Xilinx DS617(v3.0.1) page 73, figure 41).
-    void blockErase(uint32_t block_number) ;
-    ///Writes up to 32 words to the flash (Xilinx DS617(v3.0.1) page 71, figure 39).
-    void bufferProgram(uint32_t block_number, uint32_t data_address, std::vector<uint32_t>& write_buffer, uint32_t words) ;
+
+  private:
+    /// Sets the read mode as asynchronous.
+    void confAsyncRead();
+    /// Locks or unlocks a block of the flash (Xilinx DS617(v3.0.1) page 75, figure 43).
+    void blockLockOrUnlock(uint32_t block_number, char operation);
+    /// Erases a block of the flash (Xilinx DS617(v3.0.1) page 73, figure 41).
+    void blockErase(uint32_t block_number);
+    /// Writes up to 32 words to the flash (Xilinx DS617(v3.0.1) page 71, figure 39).
+    void bufferProgram(uint32_t block_number, uint32_t data_address, std::vector<uint32_t>& write_buffer, uint32_t words);
     /*! \brief Main uploading loop
      * \param pstrFile Absolute path the .bit configuration file
      */
     void dumpFromFileIntoSD(const std::string& strImage, const char* pstrFile);
-
 };
-}
+} // namespace Ph2_HwInterface
 #endif

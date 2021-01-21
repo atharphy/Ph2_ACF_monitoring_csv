@@ -9,84 +9,78 @@
 
 #include <string>
 
-
 namespace uhal
 {
-  namespace exception
-  {
-    UHAL_DEFINE_EXCEPTION_CLASS ( TextExceedsSpaceAvailable , "Text exceeds space available for it in the MMC" )
-    UHAL_DEFINE_EXCEPTION_CLASS ( ReplyIndicatesError , "Reply value from MMC indicates an error" )
-    UHAL_DEFINE_EXCEPTION_CLASS ( GoldenImageIsInvolateError , "An attempt was made to modify the inviolate boot image" )
-  }
-}
+namespace exception
+{
+UHAL_DEFINE_EXCEPTION_CLASS(TextExceedsSpaceAvailable, "Text exceeds space available for it in the MMC")
+UHAL_DEFINE_EXCEPTION_CLASS(ReplyIndicatesError, "Reply value from MMC indicates an error")
+UHAL_DEFINE_EXCEPTION_CLASS(GoldenImageIsInvolateError, "An attempt was made to modify the inviolate boot image")
+} // namespace exception
+} // namespace uhal
 
 namespace fc7
 {
+/*!
+ * @class MmcPipeInterfaceNode
+ * @brief
+ *
+ * To fill
+ *
+ * @author Andrew Rose
+ * @date February 2014
+ */
 
+class MmcPipeInterface : public uhal::Node
+{
+    UHAL_DERIVEDNODE(MmcPipeInterface)
+  public:
+    // PUBLIC METHODS
+    MmcPipeInterface(const uhal::Node&);
+    virtual ~MmcPipeInterface();
+    using uhal::Node::operator=; // avoid overloading od Node assign operator
 
-  /*!
-   * @class MmcPipeInterfaceNode
-   * @brief
-   *
-   * To fill
-   *
-   * @author Andrew Rose
-   * @date February 2014
-   */
+  public:
+    void SetDummySensor(const uint8_t& aValue);
 
-  class MmcPipeInterface : public uhal::Node
-  {
-      UHAL_DERIVEDNODE ( MmcPipeInterface )
-    public:
+    void            FileToSD(const std::string& aFilename, Firmware& aFirmware, uint32_t* pProgress = NULL, std::string* pProgressStr = NULL);
+    XilinxBitStream FileFromSD(const std::string& aFilename, uint32_t* pProgress, uint32_t uOffset);
 
-      // PUBLIC METHODS
-      MmcPipeInterface ( const uhal::Node& );
-      virtual ~MmcPipeInterface();
-      using uhal::Node::operator =; // avoid overloading od Node assign operator
+    void RebootFPGA(const std::string& aFilename, const std::string& aPassword);
+    void BoardHardReset(const std::string& aPassword);
+    void DeleteFromSD(const std::string& aFilename, const std::string& aPassword);
 
-    public:
-      void SetDummySensor ( const uint8_t& aValue );
+    std::vector<std::string> ListFilesOnSD();
 
-      void FileToSD ( const std::string& aFilename, Firmware& aFirmware , uint32_t *pProgress=NULL, std::string *pProgressStr=NULL);
-      XilinxBitStream FileFromSD ( const std::string& aFilename , uint32_t *pProgress, uint32_t uOffset );
+  public:
+    void UpdateCounters();
 
-      void RebootFPGA ( const std::string& aFilename , const std::string& aPassword );
-      void BoardHardReset ( const std::string& aPassword );
-      void DeleteFromSD ( const std::string& aFilename , const std::string& aPassword );
+    const uint16_t& FPGAtoMMCDataAvailable();
+    const uint16_t& FPGAtoMMCSpaceAvailable();
+    const uint16_t& MMCtoFPGADataAvailable();
+    const uint16_t& MMCtoFPGASpaceAvailable();
 
-      std::vector< std::string > ListFilesOnSD ( );
+  private:
+    void Send(const uint32_t& aHeader);
+    void Send(const uint32_t& aHeader, const uint32_t& aSizeInWords, const uint32_t* aPayload);
+    void Send(const uint32_t& aHeader, const uint32_t& aSizeInBytes, const char* aPayload);
 
-    public:
-      void UpdateCounters();
+    std::vector<uint32_t> Receive();
 
-      const uint16_t& FPGAtoMMCDataAvailable();
-      const uint16_t& FPGAtoMMCSpaceAvailable();
-      const uint16_t& MMCtoFPGADataAvailable();
-      const uint16_t& MMCtoFPGASpaceAvailable();
+    std::string ConvertString(std::vector<uint32_t>::const_iterator aStart, const std::vector<uint32_t>::const_iterator& aEnd);
 
-    private:
-      void Send ( const uint32_t& aHeader );
-      void Send ( const uint32_t& aHeader , const uint32_t& aSizeInWords , const uint32_t* aPayload );
-      void Send ( const uint32_t& aHeader , const uint32_t& aSizeInBytes , const char* aPayload );
+  private:
+    void        SetTextSpace(const std::string& aStr);
+    void        EnterSecureMode(const std::string& aPassword);
+    std::string GetTextSpace();
 
-      std::vector< uint32_t > Receive ( );
+  private:
+    uint16_t mFPGAtoMMCDataAvailable;
+    uint16_t mFPGAtoMMCSpaceAvailable;
+    uint16_t mMMCtoFPGADataAvailable;
+    uint16_t mMMCtoFPGASpaceAvailable;
+};
 
-      std::string ConvertString ( std::vector< uint32_t >::const_iterator aStart , const std::vector< uint32_t >::const_iterator& aEnd );
+} // namespace fc7
 
-    private:
-      void SetTextSpace ( const std::string& aStr );
-      void EnterSecureMode ( const std::string& aPassword );
-      std::string GetTextSpace ( );
-
-    private:
-      uint16_t mFPGAtoMMCDataAvailable;
-      uint16_t mFPGAtoMMCSpaceAvailable;
-      uint16_t mMMCtoFPGADataAvailable;
-      uint16_t mMMCtoFPGASpaceAvailable;
-  };
-
-}
-
-#endif  /* _fc7_MmcPipeInterface_hpp_ */
-
-
+#endif /* _fc7_MmcPipeInterface_hpp_ */

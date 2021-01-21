@@ -1,55 +1,51 @@
 #include "OpenFinder.h"
-#include "ContainerFactory.h"
-#include "Occupancy.h"
 #include "CBCChannelGroupHandler.h"
+#include "ContainerFactory.h"
 #include "DataContainer.h"
+#include "Occupancy.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-
-
 OpenFinder::OpenFinder() : PSHybridTester()
 {
-  fParameters.fAntennaTriggerSource=7;
-  fParameters.antennaDelay=50;
-  fParameters.potentiometer = this->findValueInSettings("AntennaPotentiometer"); 
-  fParameters.nTriggers = this->findValueInSettings("Nevents"); 
+    fParameters.fAntennaTriggerSource = 7;
+    fParameters.antennaDelay          = 50;
+    fParameters.potentiometer         = this->findValueInSettings("AntennaPotentiometer");
+    fParameters.nTriggers             = this->findValueInSettings("Nevents");
 }
 
-OpenFinder::~OpenFinder()
-{
-}
+OpenFinder::~OpenFinder() {}
 void OpenFinder::Reset()
 {
-    // set everything back to original values .. like I wasn't here 
-    for (auto cBoard : *fDetectorContainer)
+    // set everything back to original values .. like I wasn't here
+    for(auto cBoard: *fDetectorContainer)
     {
-        BeBoard *theBoard = static_cast<BeBoard*>(cBoard);
-        LOG (INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto& cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
-        std::vector< std::pair<std::string, uint32_t> > cVecBeBoardRegs; cVecBeBoardRegs.clear();
-        for(auto cReg : cBeRegMap )
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
-        fBeBoardInterface->WriteBoardMultReg ( theBoard, cVecBeBoardRegs);
+        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
+        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
+        cVecBeBoardRegs.clear();
+        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
 
-        for(auto cOpticalGroup : *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
             auto& cRegMapThisModule = cRegMapThisBoard->at(cOpticalGroup->getIndex());
-            for (auto cHybrid : *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
-                LOG (INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId() ) << " back to their original values..." << RESET;
-                for (auto cChip : *cHybrid)
+                LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
+                for(auto cChip: *cHybrid)
                 {
-                    auto& cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>(); 
-                    std::vector< std::pair<std::string, uint16_t> > cVecRegisters; cVecRegisters.clear();
-                    for(auto cReg : cRegMapThisChip )
-                        cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-                    fReadoutChipInterface->WriteChipMultReg ( static_cast<ReadoutChip*>(cChip) , cVecRegisters );
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+                    cVecRegisters.clear();
+                    for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }
         }
@@ -58,406 +54,357 @@ void OpenFinder::Reset()
 }
 void OpenFinder::Initialise(Parameters pParameters)
 {
-  fChannelGroupHandler = new CBCChannelGroupHandler();
-  fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    fChannelGroupHandler = new CBCChannelGroupHandler();
+    fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
-  // Read some settings from the map
-  auto cSetting = fSettingsMap.find("Nevents");
-  fEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
-  cSetting = fSettingsMap.find("TestPulseAmplitude");
-  fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
-  // Set fTestPulse based on the test pulse amplitude
-  fTestPulse = (fTestPulseAmplitude & 0x1);
-  // Import the rest of parameters from the user settings
-  fParameters = pParameters;
+    // Read some settings from the map
+    auto cSetting       = fSettingsMap.find("Nevents");
+    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    cSetting            = fSettingsMap.find("TestPulseAmplitude");
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    // Set fTestPulse based on the test pulse amplitude
+    fTestPulse = (fTestPulseAmplitude & 0x1);
+    // Import the rest of parameters from the user settings
+    fParameters = pParameters;
 
-  // set the antenna switch min and max values
-  int cAntennaSwitchMinValue = (fParameters.antennaGroup > 0) ? fParameters.antennaGroup : 1;
-  int cAntennaSwitchMaxValue = (fParameters.antennaGroup > 0) ? (fParameters.antennaGroup + 1) : 5;
-  
+    // set the antenna switch min and max values
+    int cAntennaSwitchMinValue = (fParameters.antennaGroup > 0) ? fParameters.antennaGroup : 1;
+    int cAntennaSwitchMaxValue = (fParameters.antennaGroup > 0) ? (fParameters.antennaGroup + 1) : 5;
 
-  // prepare container 
-  ContainerFactory::copyAndInitStructure<ChannelList>(*fDetectorContainer, fOpens);
-  
-  // retreive original settings for all chips and all back-end boards 
-  ContainerFactory::copyAndInitStructure<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
-  ContainerFactory::copyAndInitStructure<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
-  ContainerFactory::copyAndInitStructure<ScanSummaries>(*fDetectorContainer, fInTimeOccupancy);
-  for (auto cBoard : *fDetectorContainer)
-  {
-      fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-      auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
-      auto& cOpens = fOpens.at(cBoard->getIndex());
-      auto& cOccupancy = fInTimeOccupancy.at( cBoard->getIndex() );
-      for(auto cModule : *cBoard)
-      {
-          auto& cOpensModule = cOpens->at(cModule->getIndex());
-          auto& cOccupancyModule = cOccupancy->at(cModule->getIndex());
-          auto& cRegMapThisModule = cRegMapThisBoard->at(cModule->getIndex());
-              
-          for (auto cHybrid : *cModule)
-          {
-              auto& cOpensHybrid = cOpensModule->at(cHybrid->getIndex());
-              auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
-              auto& cOccupancyHybrid = cOccupancyModule->at(cModule->getIndex());
-              for (auto cChip : *cHybrid)
-              {
-                  cOpensHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
-                  cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                  auto& cThisOcc = cOccupancyHybrid->at( cChip->getIndex() )->getSummary<ScanSummaries>();
-                  for (int cAntennaPosition = cAntennaSwitchMinValue; cAntennaPosition < cAntennaSwitchMaxValue; cAntennaPosition++)
-                  {
-                    ScanSummary cSummary; 
-                    cSummary.first=0;
-                    cSummary.second=0; 
-                    cThisOcc.push_back(cSummary);
-                  }
-              }
-          }
-      }
-  }
+    // prepare container
+    ContainerFactory::copyAndInitStructure<ChannelList>(*fDetectorContainer, fOpens);
+
+    // retreive original settings for all chips and all back-end boards
+    ContainerFactory::copyAndInitStructure<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
+    ContainerFactory::copyAndInitStructure<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
+    ContainerFactory::copyAndInitStructure<ScanSummaries>(*fDetectorContainer, fInTimeOccupancy);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
+        auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
+        auto& cOpens                                                           = fOpens.at(cBoard->getIndex());
+        auto& cOccupancy                                                       = fInTimeOccupancy.at(cBoard->getIndex());
+        for(auto cModule: *cBoard)
+        {
+            auto& cOpensModule      = cOpens->at(cModule->getIndex());
+            auto& cOccupancyModule  = cOccupancy->at(cModule->getIndex());
+            auto& cRegMapThisModule = cRegMapThisBoard->at(cModule->getIndex());
+
+            for(auto cHybrid: *cModule)
+            {
+                auto& cOpensHybrid      = cOpensModule->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisModule->at(cHybrid->getIndex());
+                auto& cOccupancyHybrid  = cOccupancyModule->at(cModule->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    cOpensHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
+                    cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
+                    auto& cThisOcc                                                     = cOccupancyHybrid->at(cChip->getIndex())->getSummary<ScanSummaries>();
+                    for(int cAntennaPosition = cAntennaSwitchMinValue; cAntennaPosition < cAntennaSwitchMaxValue; cAntennaPosition++)
+                    {
+                        ScanSummary cSummary;
+                        cSummary.first  = 0;
+                        cSummary.second = 0;
+                        cThisOcc.push_back(cSummary);
+                    }
+                }
+            }
+        }
+    }
 }
 // Antenna map generator by Sarah (used to be in Tools.cc)
-// TO-DO - generalize for other hybrids 
+// TO-DO - generalize for other hybrids
 // I think this is really the only thing that needs to change between
-// 2S and PS 
+// 2S and PS
 OpenFinder::antennaChannelsMap OpenFinder::returnAntennaMap()
 {
-  antennaChannelsMap cAntennaMap;
-  for (int cAntennaSwitch = 1; cAntennaSwitch < 5; cAntennaSwitch++)
-  {
-    std::vector<int> cOffsets(2);
-    if ((cAntennaSwitch - 1) % 2 == 0)
+    antennaChannelsMap cAntennaMap;
+    for(int cAntennaSwitch = 1; cAntennaSwitch < 5; cAntennaSwitch++)
     {
-      cOffsets[0] = 0 + (cAntennaSwitch > 2);
-      cOffsets[1] = 2 + (cAntennaSwitch > 2);
+        std::vector<int> cOffsets(2);
+        if((cAntennaSwitch - 1) % 2 == 0)
+        {
+            cOffsets[0] = 0 + (cAntennaSwitch > 2);
+            cOffsets[1] = 2 + (cAntennaSwitch > 2);
+        }
+        else
+        {
+            cOffsets[0] = 2 + (cAntennaSwitch > 2);
+            cOffsets[1] = 0 + (cAntennaSwitch > 2);
+        }
+        cbcChannelsMap cTmpMap;
+        for(int cCbc = 0; cCbc < 8; cCbc++)
+        {
+            int           cOffset = cOffsets[(cCbc % 2)];
+            channelVector cTmpList;
+            cTmpList.clear();
+            for(int cChannel = cOffset; cChannel < 254; cChannel += 4) { cTmpList.push_back(cChannel); }
+            cTmpMap.emplace(cCbc, cTmpList);
+        }
+        cAntennaMap.emplace(cAntennaSwitch, cTmpMap);
     }
-    else
-    {
-      cOffsets[0] = 2 + (cAntennaSwitch > 2);
-      cOffsets[1] = 0 + (cAntennaSwitch > 2);
-    }
-    cbcChannelsMap cTmpMap;
-    for (int cCbc = 0; cCbc < 8; cCbc++)
-    {
-      int cOffset = cOffsets[(cCbc % 2)];
-      channelVector cTmpList;
-      cTmpList.clear();
-      for (int cChannel = cOffset; cChannel < 254; cChannel += 4)
-      {
-        cTmpList.push_back(cChannel);
-      }
-      cTmpMap.emplace(cCbc, cTmpList);
-    }
-    cAntennaMap.emplace(cAntennaSwitch, cTmpMap);
-  }
-  return cAntennaMap;
+    return cAntennaMap;
 }
 
 bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
 {
-  LOG (INFO) << BOLDBLUE << "Scanning latency to find charge injected by antenna in time ..." << RESET;
-  // Preparing the antenna map, the list of opens and the hit counter
-  auto cAntennaMap = returnAntennaMap();
-  int cAntennaSwitchMinValue = (fParameters.antennaGroup > 0) ? fParameters.antennaGroup : 1;
-  auto cBeBoard = static_cast<BeBoard*>(pBoard);
-  auto& cSummaryThisBoard = fInTimeOccupancy.at( pBoard->getIndex() );
-  auto cSearchAntennaMap = cAntennaMap.find( fAntennaPosition ) ;
-  // scan latency and record optimal latency 
-  for( auto cLatency : pLatencies )
-  {
-    setSameDacBeBoard(cBeBoard, "TriggerLatency", cLatency);
-    fBeBoardInterface->ChipReSync ( cBeBoard ); // NEED THIS! ?? 
-    LOG (DEBUG) << BOLDBLUE << "L1A latency set to " << +cLatency << RESET; 
-    this->ReadNEvents ( cBeBoard , fEventsPerPoint );
-    const std::vector<Event*>& cEvents = this->GetEvents ( cBeBoard );
-    for(auto cModule : *pBoard)
+    LOG(INFO) << BOLDBLUE << "Scanning latency to find charge injected by antenna in time ..." << RESET;
+    // Preparing the antenna map, the list of opens and the hit counter
+    auto  cAntennaMap            = returnAntennaMap();
+    int   cAntennaSwitchMinValue = (fParameters.antennaGroup > 0) ? fParameters.antennaGroup : 1;
+    auto  cBeBoard               = static_cast<BeBoard*>(pBoard);
+    auto& cSummaryThisBoard      = fInTimeOccupancy.at(pBoard->getIndex());
+    auto  cSearchAntennaMap      = cAntennaMap.find(fAntennaPosition);
+    // scan latency and record optimal latency
+    for(auto cLatency: pLatencies)
     {
-      auto& cSummaryThisModule = cSummaryThisBoard->at( cModule->getIndex() );
-      for (auto cHybrid : *cModule)
-      {
-        auto& cSummaryThisHybrid = cSummaryThisModule->at( cModule->getIndex() );
-        for (auto cChip : *cHybrid)
+        setSameDacBeBoard(cBeBoard, "TriggerLatency", cLatency);
+        fBeBoardInterface->ChipReSync(cBeBoard); // NEED THIS! ??
+        LOG(DEBUG) << BOLDBLUE << "L1A latency set to " << +cLatency << RESET;
+        this->ReadNEvents(cBeBoard, fEventsPerPoint);
+        const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+        for(auto cModule: *pBoard)
         {
-          auto& cSummaryThisChip = cSummaryThisHybrid->at( cChip->getIndex() );
-          auto& cSummary = cSummaryThisChip->getSummary<ScanSummaries>()[fAntennaPosition-cAntennaSwitchMinValue];
-
-          auto cConnectedChannels = cSearchAntennaMap->second.find( (int)cChip->getId() )->second;
-          uint32_t cOccupancy=0;
-          for( auto cEvent : cEvents )
-          {
-            auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId() ) ;
-            for(auto cHit : cHits)
+            auto& cSummaryThisModule = cSummaryThisBoard->at(cModule->getIndex());
+            for(auto cHybrid: *cModule)
             {
-              if( std::find(cConnectedChannels.begin(), cConnectedChannels.end(), cHit) != cConnectedChannels.end() )
-              {  
-                cOccupancy++;
-              }
+                auto& cSummaryThisHybrid = cSummaryThisModule->at(cModule->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getIndex());
+                    auto& cSummary         = cSummaryThisChip->getSummary<ScanSummaries>()[fAntennaPosition - cAntennaSwitchMinValue];
+
+                    auto     cConnectedChannels = cSearchAntennaMap->second.find((int)cChip->getId())->second;
+                    uint32_t cOccupancy         = 0;
+                    for(auto cEvent: cEvents)
+                    {
+                        auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                        for(auto cHit: cHits)
+                        {
+                            if(std::find(cConnectedChannels.begin(), cConnectedChannels.end(), cHit) != cConnectedChannels.end()) { cOccupancy++; }
+                        }
+                    }
+                    float cEventOccupancy = cOccupancy / static_cast<float>(fEventsPerPoint * cConnectedChannels.size());
+                    if(cEventOccupancy >= cSummary.second)
+                    {
+                        cSummary.first  = cLatency;
+                        cSummary.second = cEventOccupancy;
+                    }
+                    LOG(DEBUG) << BOLDBLUE << "On average " << cEventOccupancy * 100 << " of events readout from chip " << +cChip->getId() << " contain a hit." << RESET;
+                }
             }
-          }
-          float cEventOccupancy = cOccupancy/static_cast<float>(fEventsPerPoint*cConnectedChannels.size());
-          if( cEventOccupancy >= cSummary.second )
-          { 
-            cSummary.first = cLatency;
-            cSummary.second = cEventOccupancy;
-          }
-          LOG (DEBUG) << BOLDBLUE << "On average "
-            << cEventOccupancy*100 
-            << " of events readout from chip "
-            << +cChip->getId() 
-            << " contain a hit."
-            << RESET;
         }
-      }
     }
-  }
 
-  // set optimal latency for each chip 
-  bool cFailed=false;
-  for(auto cModule : *pBoard)
-  {
-    auto& cSummaryThisModule = cSummaryThisBoard->at( cModule->getIndex() );
-    for (auto cHybrid : *cModule)
+    // set optimal latency for each chip
+    bool cFailed = false;
+    for(auto cModule: *pBoard)
     {
-        auto& cSummaryThisHybrid = cSummaryThisModule->at( cHybrid->getIndex() );
-        for (auto cChip : *cHybrid)
+        auto& cSummaryThisModule = cSummaryThisBoard->at(cModule->getIndex());
+        for(auto cHybrid: *cModule)
         {
-          auto& cSummaryThisChip = cSummaryThisHybrid->at( cChip->getIndex() )->getSummary<ScanSummaries>()[fAntennaPosition-cAntennaSwitchMinValue];
-          auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
-          fReadoutChipInterface->WriteChipReg(cReadoutChip,"TriggerLatency", cSummaryThisChip.first);
-          LOG (INFO) << BOLDBLUE << "Optimal latency "
-            << " for chip "
-            << +cChip->getId() 
-            << " was " << cSummaryThisChip.first 
-            << " hit occupancy " << cSummaryThisChip.second 
-            << RESET;  
+            auto& cSummaryThisHybrid = cSummaryThisModule->at(cHybrid->getIndex());
+            for(auto cChip: *cHybrid)
+            {
+                auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getIndex())->getSummary<ScanSummaries>()[fAntennaPosition - cAntennaSwitchMinValue];
+                auto  cReadoutChip     = static_cast<ReadoutChip*>(cChip);
+                fReadoutChipInterface->WriteChipReg(cReadoutChip, "TriggerLatency", cSummaryThisChip.first);
+                LOG(INFO) << BOLDBLUE << "Optimal latency "
+                          << " for chip " << +cChip->getId() << " was " << cSummaryThisChip.first << " hit occupancy " << cSummaryThisChip.second << RESET;
 
-          if( cSummaryThisChip.second == 0 )
-          {
-            LOG (INFO) << BOLDRED << "FAILED to find optimal latency "
-              << " for chip "
-              << +cChip->getId() 
-              << " hit occupancy " << cSummaryThisChip.second 
-              << RESET;  
-            cFailed = (cFailed || true );
-          }
+                if(cSummaryThisChip.second == 0)
+                {
+                    LOG(INFO) << BOLDRED << "FAILED to find optimal latency "
+                              << " for chip " << +cChip->getId() << " hit occupancy " << cSummaryThisChip.second << RESET;
+                    cFailed = (cFailed || true);
+                }
+            }
         }
     }
-  }
-  return !cFailed;
+    return !cFailed;
 }
-
 
 void OpenFinder::CountOpens(BeBoard* pBoard)
 {
+    DetectorDataContainer cMeasurement;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, cMeasurement);
 
-  DetectorDataContainer     cMeasurement ;
-  ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, cMeasurement);
-  
-  // Preparing the antenna map, the list of opens and the hit counter
-  auto cAntennaMap = returnAntennaMap();
-  auto cBeBoard = static_cast<BeBoard*>(pBoard);
-  auto cSearchAntennaMap = cAntennaMap.find( fAntennaPosition ) ;
-  // scan latency and record optimal latency 
-  this->ReadNEvents ( cBeBoard , fEventsPerPoint );
-  const std::vector<Event*>& cEvents = this->GetEvents ( cBeBoard );
+    // Preparing the antenna map, the list of opens and the hit counter
+    auto cAntennaMap       = returnAntennaMap();
+    auto cBeBoard          = static_cast<BeBoard*>(pBoard);
+    auto cSearchAntennaMap = cAntennaMap.find(fAntennaPosition);
+    // scan latency and record optimal latency
+    this->ReadNEvents(cBeBoard, fEventsPerPoint);
+    const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
 
-
-  auto& cOpens = fOpens.at(pBoard->getIndex());
-  auto& cSummaryThisBoard = cMeasurement.at(pBoard->getIndex());
-  for(auto cModule : *pBoard)
-  {
-    auto& cOpensThisModule = cOpens->at( cModule->getIndex() );
-    auto& cSummaryThisModule = cSummaryThisBoard->at( cModule->getIndex() );
-    for (auto cHybrid : *cModule)
+    auto& cOpens            = fOpens.at(pBoard->getIndex());
+    auto& cSummaryThisBoard = cMeasurement.at(pBoard->getIndex());
+    for(auto cModule: *pBoard)
     {
-
-      auto& cOpensThisHybrid = cOpensThisModule->at( cModule->getIndex() );
-      auto& cSummaryThisHybrid = cSummaryThisModule->at( cModule->getIndex() );
-      for (auto cChip : *cHybrid)
-      {
-        auto cConnectedChannels = cSearchAntennaMap->second.find( (int)cChip->getId() )->second;
-        auto& cSummaryThisChip = cSummaryThisHybrid->at( cChip->getIndex() );
-        for( auto cEvent : cEvents )
+        auto& cOpensThisModule   = cOpens->at(cModule->getIndex());
+        auto& cSummaryThisModule = cSummaryThisBoard->at(cModule->getIndex());
+        for(auto cHybrid: *cModule)
         {
-          auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId() ) ;
-          for(auto cConnectedChannel : cConnectedChannels )
-          {
-            if( std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end() )
-            {  
-              cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy += 1;
+            auto& cOpensThisHybrid   = cOpensThisModule->at(cModule->getIndex());
+            auto& cSummaryThisHybrid = cSummaryThisModule->at(cModule->getIndex());
+            for(auto cChip: *cHybrid)
+            {
+                auto  cConnectedChannels = cSearchAntennaMap->second.find((int)cChip->getId())->second;
+                auto& cSummaryThisChip   = cSummaryThisHybrid->at(cChip->getIndex());
+                for(auto cEvent: cEvents)
+                {
+                    auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                    for(auto cConnectedChannel: cConnectedChannels)
+                    {
+                        if(std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end()) { cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy += 1; }
+                    }
+                }
+
+                auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+                for(auto cConnectedChannel: cConnectedChannels)
+                {
+                    if(cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy > THRESHOLD_OPEN * fEventsPerPoint)
+                    {
+                        cOpensThisChip.push_back(cConnectedChannel);
+                        LOG(DEBUG) << BOLDRED << "Possible open found.."
+                                   << " readout chip " << +cChip->getId() << " channel " << +cConnectedChannel << RESET;
+                    }
+                }
             }
-          }
         }
-
-        
-        auto& cOpensThisChip = cOpensThisHybrid->at( cChip->getIndex() )->getSummary<ChannelList>();
-        for( auto cConnectedChannel : cConnectedChannels )
-        {
-          if( cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy > THRESHOLD_OPEN*fEventsPerPoint ) 
-          {
-            cOpensThisChip.push_back(cConnectedChannel);
-            LOG (DEBUG) << BOLDRED 
-              << "Possible open found.." 
-              << " readout chip " 
-              << +cChip->getId() 
-              << " channel " << +cConnectedChannel 
-              << RESET;
-          }
-        }
-      }
     }
-  }
 }
 
+#ifdef __USE_ROOT__
 void OpenFinder::Print()
 {
-
-  for( auto cBoard :*fDetectorContainer )
-  {
-    auto& cOpens = fOpens.at(cBoard->getIndex());
-    for(auto cModule : *cBoard)
+    for(auto cBoard: *fDetectorContainer)
     {
-      // create TTree for opens: opensTree
-  		auto OpensTree = new TTree("Opens", "Open channels in the hybrid");
-      // create int for all opens count
-      int32_t totalOpens = 0;
-      // create variables for TTree branches
-      int nCBC = -1;
-      std::vector<int> openChannels;
-      // create branches
-      OpensTree->Branch("CBC", &nCBC);
-	    OpensTree->Branch("Channels", &openChannels);
-
-      auto& cOpensThisModule = cOpens->at( cModule->getIndex() );
-      for (auto cHybrid : *cModule)
-      {
-
-        auto& cOpensThisHybrid = cOpensThisModule->at( cModule->getIndex() );
-        for (auto cChip : *cHybrid)
+        auto& cOpens = fOpens.at(cBoard->getIndex());
+        for(auto cModule: *cBoard)
         {
-          auto& cOpensThisChip = cOpensThisHybrid->at( cChip->getIndex() )->getSummary<ChannelList>();
+            // create TTree for opens: opensTree
+            auto OpensTree = new TTree("Opens", "Open channels in the hybrid");
+            // create int for all opens count
+            int32_t totalOpens = 0;
+            // create variables for TTree branches
+            int              nCBC = -1;
+            std::vector<int> openChannels;
+            // create branches
+            OpensTree->Branch("CBC", &nCBC);
+            OpensTree->Branch("Channels", &openChannels);
 
-          // empty openChannels vector
-          openChannels.clear();
+            auto& cOpensThisModule = cOpens->at(cModule->getIndex());
+            for(auto cHybrid: *cModule)
+            {
+                auto& cOpensThisHybrid = cOpensThisModule->at(cModule->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
 
-          if( cOpensThisChip.size() == 0 )
-          {
-            LOG (INFO) << BOLDGREEN 
-              << "No opens found "
-              << "on readout chip " 
-              << +cChip->getId() 
-              << " hybrid " 
-              << +cHybrid->getId() 
-              << RESET;
-          }
-          else 
-          {
-              LOG (INFO) << BOLDRED << "Found " << +cOpensThisChip.size() 
-                << " opens in readout chip"  
-                << +cChip->getId() 
-                << " on FE hybrid " 
-                << +cHybrid->getId() << RESET;
-            // add number of opens to total opens counts
-            totalOpens += cOpensThisChip.size();
-          }
-          for( auto cOpenChannel : cOpensThisChip )
-          {
-            LOG (DEBUG) << BOLDRED 
-              << "Possible open found.." 
-              << " readout chip " 
-              << +cChip->getId() 
-              << " channel " << +cOpenChannel 
-              << RESET;
-            // store opens on opensChannels vector
-            openChannels.push_back(cOpenChannel);
-          }
-          // store chip opens on OpensTree
-          nCBC = cChip->getId() + 1;
-          OpensTree->Fill();
+                    // empty openChannels vector
+                    openChannels.clear();
+
+                    if(cOpensThisChip.size() == 0)
+                    {
+                        LOG(INFO) << BOLDGREEN << "No opens found "
+                                  << "on readout chip " << +cChip->getId() << " hybrid " << +cHybrid->getId() << RESET;
+                    }
+                    else
+                    {
+                        LOG(INFO) << BOLDRED << "Found " << +cOpensThisChip.size() << " opens in readout chip" << +cChip->getId() << " on FE hybrid " << +cHybrid->getId() << RESET;
+                        // add number of opens to total opens counts
+                        totalOpens += cOpensThisChip.size();
+                    }
+                    for(auto cOpenChannel: cOpensThisChip)
+                    {
+                        LOG(DEBUG) << BOLDRED << "Possible open found.."
+                                   << " readout chip " << +cChip->getId() << " channel " << +cOpenChannel << RESET;
+                        // store opens on opensChannels vector
+                        openChannels.push_back(cOpenChannel);
+                    }
+                    // store chip opens on OpensTree
+                    nCBC = cChip->getId() + 1;
+                    OpensTree->Fill();
+                }
+            }
+            // fillSummaryTree( "nOpens", totalOpens );
+            fResultFile->cd();
+            OpensTree->Write();
+            if(totalOpens == 0) { gDirectory->Delete("Opens;*"); }
         }
-      }
-      //fillSummaryTree( "nOpens", totalOpens );
-      fResultFile->cd();
-      OpensTree->Write();
-      if ( totalOpens == 0 ) {
-        gDirectory->Delete("Opens;*");
-      }
     }
-  }
 }
+#endif
+
 void OpenFinder::FindOpens2S()
 {
-  #ifdef __ANTENNA__
-  // The main antenna object is needed here
-  // Antenna cAntenna;
-  Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
-  // Trigger source for the antenna
-  cAntenna.SelectTriggerSource( fParameters.fAntennaTriggerSource ); 
-  // Configure SPI (again?) and the clock
-  cAntenna.ConfigureClockGenerator(CLOCK_SLAVE, 8, 0);
-  // Configure bias for antenna pull-up
-  cAntenna.ConfigureDigitalPotentiometer(POTENTIOMETER_SLAVE, fParameters.potentiometer);
-  // Configure communication with analogue switch
-  cAntenna.ConfigureAnalogueSwitch(SWITCH_SLAVE);
-  // set the antenna switch min and max values
-  int cAntennaSwitchMinValue = (fParameters.antennaGroup > 0) ? fParameters.antennaGroup : 1;
-  int cAntennaSwitchMaxValue = (fParameters.antennaGroup > 0) ? (fParameters.antennaGroup + 1) : 5;
-  LOG (INFO) << BOLDBLUE << "Will switch antenna between chanels " << +cAntennaSwitchMinValue << " and  " << cAntennaSwitchMaxValue << RESET;
-  // Set the antenna delay and compute the corresponding latency start and stop
-  uint16_t cTriggerRate = 10; 
-  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureAntennaFSM(fEventsPerPoint, cTriggerRate, fParameters.antennaDelay); 
-  
-  uint16_t cStart = fParameters.antennaDelay - 1;
-  uint16_t cStop = fParameters.antennaDelay + (fParameters.latencyRange) + 1;
-  LOG (INFO) << BOLDBLUE << "Antenna delay set to " << +fParameters.antennaDelay << " .. will scan L1 latency between " << +cStart << " and " << +cStop << RESET;
-  // Loop over the antenna groups
-  cAntenna.TurnOnAnalogSwitchChannel (9);
+#ifdef __ANTENNA__
+    // The main antenna object is needed here
+    // Antenna cAntenna;
+    Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
+    // Trigger source for the antenna
+    cAntenna.SelectTriggerSource(fParameters.fAntennaTriggerSource);
+    // Configure SPI (again?) and the clock
+    cAntenna.ConfigureClockGenerator(CLOCK_SLAVE, 8, 0);
+    // Configure bias for antenna pull-up
+    cAntenna.ConfigureDigitalPotentiometer(POTENTIOMETER_SLAVE, fParameters.potentiometer);
+    // Configure communication with analogue switch
+    cAntenna.ConfigureAnalogueSwitch(SWITCH_SLAVE);
+    // set the antenna switch min and max values
+    int cAntennaSwitchMinValue = (fParameters.antennaGroup > 0) ? fParameters.antennaGroup : 1;
+    int cAntennaSwitchMaxValue = (fParameters.antennaGroup > 0) ? (fParameters.antennaGroup + 1) : 5;
+    LOG(INFO) << BOLDBLUE << "Will switch antenna between chanels " << +cAntennaSwitchMinValue << " and  " << cAntennaSwitchMaxValue << RESET;
+    // Set the antenna delay and compute the corresponding latency start and stop
+    uint16_t cTriggerRate = 10;
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureAntennaFSM(fEventsPerPoint, cTriggerRate, fParameters.antennaDelay);
 
-  // Latency range based on step 1
-  std::vector<DetectorDataContainer *> cContainerVector;
-  std::vector<uint16_t> cListOfLatencies;
-  for (int cLatency = cStart; cLatency < cStop; ++cLatency)
-  {
-    cListOfLatencies.push_back(cLatency);
-    cContainerVector.emplace_back(new DetectorDataContainer());
-    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cContainerVector.back());
-  }
+    uint16_t cStart = fParameters.antennaDelay - 1;
+    uint16_t cStop  = fParameters.antennaDelay + (fParameters.latencyRange) + 1;
+    LOG(INFO) << BOLDBLUE << "Antenna delay set to " << +fParameters.antennaDelay << " .. will scan L1 latency between " << +cStart << " and " << +cStop << RESET;
+    // Loop over the antenna groups
+    cAntenna.TurnOnAnalogSwitchChannel(9);
 
-  for (fAntennaPosition = cAntennaSwitchMinValue; fAntennaPosition < cAntennaSwitchMaxValue; fAntennaPosition++)
-  {
-    LOG (INFO) << BOLDBLUE << "Looking for opens using antenna channel " << +fAntennaPosition << RESET;
-    // Switching the antenna to the correct group
-    cAntenna.TurnOnAnalogSwitchChannel(fAntennaPosition);
-    
-    for( auto cBoard :*fDetectorContainer )
+    // Latency range based on step 1
+    std::vector<DetectorDataContainer*> cContainerVector;
+    std::vector<uint16_t>               cListOfLatencies;
+    for(int cLatency = cStart; cLatency < cStop; ++cLatency)
     {
-      auto cBeBoard = static_cast<BeBoard*>(cBoard);
-      bool cSuccess = this->FindLatency(cBeBoard, cListOfLatencies);
-      if( cSuccess )
-        this->CountOpens(cBeBoard); 
-      else 
-        exit(FAILED_LATENCY);
+        cListOfLatencies.push_back(cLatency);
+        cContainerVector.emplace_back(new DetectorDataContainer());
+        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cContainerVector.back());
     }
 
-    // de-select all channels 
-    cAntenna.TurnOnAnalogSwitchChannel (9);
-  }
-  #endif
+    for(fAntennaPosition = cAntennaSwitchMinValue; fAntennaPosition < cAntennaSwitchMaxValue; fAntennaPosition++)
+    {
+        LOG(INFO) << BOLDBLUE << "Looking for opens using antenna channel " << +fAntennaPosition << RESET;
+        // Switching the antenna to the correct group
+        cAntenna.TurnOnAnalogSwitchChannel(fAntennaPosition);
+
+        for(auto cBoard: *fDetectorContainer)
+        {
+            auto cBeBoard = static_cast<BeBoard*>(cBoard);
+            bool cSuccess = this->FindLatency(cBeBoard, cListOfLatencies);
+            if(cSuccess)
+                this->CountOpens(cBeBoard);
+            else
+                exit(FAILED_LATENCY);
+        }
+
+        // de-select all channels
+        cAntenna.TurnOnAnalogSwitchChannel(9);
+    }
+#endif
 }
-void OpenFinder::SelectAntennaPosition(const std::string &cPosition)
+void OpenFinder::SelectAntennaPosition(const std::string& cPosition)
 {
-  #ifdef __TCUSB__
+#ifdef __TCUSB__
     auto cMapIterator = fAntennaControl.find(cPosition);
-    if( cMapIterator != fAntennaControl.end() )
+    if(cMapIterator != fAntennaControl.end())
     {
         auto& cChannel = cMapIterator->second;
-        LOG (INFO) << BOLDBLUE << "Selecting antenna channel to "
-          << " inject charge in [ "
-          << cPosition 
-          << " ] position. This is switch position " 
-          << +cChannel
-          << RESET;
+        LOG(INFO) << BOLDBLUE << "Selecting antenna channel to "
+                  << " inject charge in [ " << cPosition << " ] position. This is switch position " << +cChannel << RESET;
         TC_PSFE cTC_PSFE;
         cTC_PSFE.antenna_fc7(fParameters.potentiometer, cChannel);
 
@@ -478,7 +425,7 @@ void OpenFinder::SelectAntennaPosition(const std::string &cPosition)
         LOG (INFO) << BOLDBLUE << "Antenna Pull-up Measurement : "
             << measurement << " mV." << RESET;
     }
-  #endif
+#endif
 }
 
 
@@ -530,9 +477,13 @@ void OpenFinder::FindOpensPS()
     cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
     for(auto cOpticalGroup : *cBoard)
     {
-        for (auto cHybrid : *cOpticalGroup)
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
+        for(auto cOpticalGroup: *cBoard)
         {
-            for (auto cChip : *cHybrid) 
+            for(auto cHybrid: *cOpticalGroup)
             {
               if( cChip->getFrontEndType() == FrontEndType::SSA)
               {
@@ -567,6 +518,7 @@ void OpenFinder::FindOpensPS()
               }
             }
         }
+        fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
     }
     fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
   }
@@ -850,4 +802,9 @@ void OpenFinder::FindOpensPS()
 void OpenFinder::FindOpens()
 {
 
+    // std::this_thread::sleep_for (std::chrono::milliseconds (10000) );
+    fParameters.potentiometer = 512;
+    SelectAntennaPosition("Disable");
+    // check counters
 }
+void OpenFinder::FindOpens() {}

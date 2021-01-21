@@ -21,12 +21,11 @@ class TFile;
  */
 class DQMHistogramSignalScanFit : public DQMHistogramBase
 {
-
   public:
     /*!
      * constructor
      */
-    DQMHistogramSignalScanFit ();
+    DQMHistogramSignalScanFit();
 
     /*!
      * destructor
@@ -36,28 +35,25 @@ class DQMHistogramSignalScanFit : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
      */
-    bool fill (std::vector<char>& dataBuffer) override;
+    bool fill(std::vector<char>& dataBuffer) override;
 
     /*!
      * Save histogram
      */
-    void process () override;
+    void process() override;
 
     /*!
      * Reset histogram
      */
     void reset(void) override;
-    //virtual void summarizeHistos();
-
+    // virtual void summarizeHistos();
 
   private:
     DetectorDataContainer fDetectorData;
-
-
 };
 #endif

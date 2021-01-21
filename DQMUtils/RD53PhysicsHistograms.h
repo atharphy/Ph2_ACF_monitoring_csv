@@ -18,28 +18,27 @@
 #include <TH1F.h>
 #include <TH2F.h>
 
-
 class PhysicsHistograms : public DQMHistogramBase
 {
- public:
-  void book    (TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
-  void process ()                                                                                                                override;
-  bool fill    (std::vector<char>& dataBuffer)                                                                                   override;
-  void reset   ()                                                                                                                override {};
+  public:
+    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void process() override;
+    bool fill(std::vector<char>& dataBuffer) override;
+    void reset() override{};
 
-  void fill      (const DetectorDataContainer& DataContainer);
-  void fillBCID  (const DetectorDataContainer& DataContainer);
-  void fillTrgID (const DetectorDataContainer& DataContainer);
+    void fill(const DetectorDataContainer& DataContainer);
+    void fillBCID(const DetectorDataContainer& DataContainer);
+    void fillTrgID(const DetectorDataContainer& DataContainer);
 
- private:
-  DetectorDataContainer DetectorData;
+  private:
+    DetectorDataContainer DetectorData;
 
-  DetectorDataContainer ToT1D;
-  DetectorDataContainer ToT2D;
-  DetectorDataContainer Occupancy2D;
-  DetectorDataContainer ErrorReadOut2D;
-  DetectorDataContainer BCID;
-  DetectorDataContainer TriggerID;
+    DetectorDataContainer ToT1D;
+    DetectorDataContainer ToT2D;
+    DetectorDataContainer Occupancy2D;
+    DetectorDataContainer ErrorReadOut2D;
+    DetectorDataContainer BCID;
+    DetectorDataContainer TriggerID;
 };
 
 #endif

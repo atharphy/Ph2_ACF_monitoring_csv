@@ -21,12 +21,11 @@ class TFile;
  */
 class DQMHistogramPedeNoise : public DQMHistogramBase
 {
-
   public:
     /*!
      * constructor
      */
-    DQMHistogramPedeNoise ();
+    DQMHistogramPedeNoise();
 
     /*!
      * destructor
@@ -36,45 +35,44 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile *theOutputFile, const DetectorContainer &theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
      */
-    bool fill (std::vector<char>& dataBuffer) override;
+    bool fill(std::vector<char>& dataBuffer) override;
 
     /*!
      * Save histogram
      */
-    void process () override;
+    void process() override;
 
     /*!
      * Reset histogram
      */
     void reset(void) override;
-    //virtual void summarizeHistos();
+    // virtual void summarizeHistos();
 
     /*!
      * \brief Fill validation histograms
      * \param theOccupancy : DataContainer for the occupancy
      */
-    void fillValidationPlots(DetectorDataContainer &theOccupancy);
+    void fillValidationPlots(DetectorDataContainer& theOccupancy);
 
     /*!
      * \brief Fill validation histograms
      * \param theOccupancy : DataContainer for pedestal and occupancy
      */
-    void fillPedestalAndNoisePlots(DetectorDataContainer &thePedestalAndNoise);
+    void fillPedestalAndNoisePlots(DetectorDataContainer& thePedestalAndNoise);
 
     /*!
      * \brief Fill SCurve histograms
      * \param fSCurveOccupancyMap : maps of Vthr and DataContainer
      */
-    void fillSCurvePlots(uint16_t vcthr, DetectorDataContainer &fSCurveOccupancy);
+    void fillSCurvePlots(uint16_t vcthr, DetectorDataContainer& fSCurveOccupancy);
 
   private:
-
-    void fitSCurves ();
+    void fitSCurves();
 
     DetectorDataContainer fThresholdAndNoiseContainer;
 
@@ -96,8 +94,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     bool cWithCBC = true;
     bool cWithSSA = false;
 
-
-    bool fPlotSCurves {false};
-    bool fFitSCurves  {false};
+    bool fPlotSCurves{false};
+    bool fFitSCurves{false};
 };
 #endif
