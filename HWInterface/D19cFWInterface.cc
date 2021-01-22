@@ -1989,6 +1989,9 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                                 cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
                                 if((cWordCounter & 0x1) == 1)
                                 {
+                                    LOG (INFO) << BOLDBLUE << "Word#" << +cWordCounter 
+                                        << std::bitset<32>(cDataWord) 
+                                        << RESET;
                                     pData.push_back(cDataWord);
                                     cDataWord = 0x0000;
                                 }
