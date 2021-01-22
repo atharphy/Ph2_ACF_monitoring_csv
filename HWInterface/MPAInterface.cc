@@ -202,6 +202,26 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         return cConfigReg1&& cConfigReg2;
             
     }
+    else if( pRegName == "StubInputPhase" )
+    {
+        uint8_t cBitShift= 3;
+        uint8_t cRegMask = (0x7 << cBitShift) ; // 
+        cRegMask = ~(cRegMask); 
+        auto cReg = this->ReadChipReg(pMPA,"LatencyRx320"); 
+        uint8_t cValue = ( cReg  & cRegMask ) | (pValue <<  cBitShift ) ;
+        LOG (INFO) << BOLDBLUE << "Writing " << std::hex <<  +cValue <<" "<<+( cReg  & cRegMask )<<" "<<(pValue <<  cBitShift )<< std::dec << RESET;
+        return this->WriteChipReg(pMPA, "LatencyRx320", cValue ) ;
+    }
+    else if( pRegName == "L1InputPhase" )
+    {
+        uint8_t cBitShift= 0;
+        uint8_t cRegMask = (0x7 << cBitShift) ; // 
+        cRegMask = ~(cRegMask); 
+        auto cReg = this->ReadChipReg(pMPA, "LatencyRx320");
+        uint8_t cValue = ( cReg  & cRegMask ) | (pValue <<  cBitShift ) ;
+        //LOG (INFO) << BOLDBLUE << "Writing " << std::hex <<  +cValue <<" "<<+( cReg  & cRegMask )<<" "<<(pValue <<  cBitShift )<< std::dec << RESET;
+        return this->WriteChipReg(pMPA, "LatencyRx320", cValue ) ;
+    }
     else if(pRegName == "StubMode" ) 
     {
         uint8_t cBitShift= ECM_TABLE.find("StubMode")->second;
@@ -501,7 +521,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     std::map<uint16_t, ChipRegItem> cMap;
     cMap.clear();
     for(auto& cRegInMap: cMPARegMap) { 
-//SPEEDUP, TEMPORARY
+	//SPEEDUP, TEMPORARY
     if((cRegInMap.first.find("_P") != std::string::npos)  and (cRegInMap.first.find("TrimDAC") == std::string::npos) ) continue;
     //if(cRegInMap.first.find("InSetting")!= std::string::npos) continue;
 

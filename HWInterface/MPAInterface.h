@@ -23,7 +23,7 @@ const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE = {{"PixelMask", 0}, {"P
 , {"CounterEnable",4},{"DigitalInjection",5},{"AnalogueInjection",6},{"BrClk",7}};
 const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
-// periphery config register map 
+// periphery config register map, why?
 const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0}, {"ECM", 1}, {"ReTime", 2}, {"ErrorL1",40}
 , {"Out0",14},{"Out1",15},{"Out2",16},{"Out3",17},{"Out4",18},{"Out5",19}};
 
