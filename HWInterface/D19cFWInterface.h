@@ -729,18 +729,21 @@ class D19cFWInterface : public BeBoardFWInterface
      * \breif Disconnect Setup with Multiplexing Backplane
      */
     void DisconnectMultiplexingSetup(uint8_t pWait_ms = 100);
+    void DisconnectMultiplexingSetup_old(uint8_t pWait_ms = 100);
 
     /*!
      * \breif Scan Setup with Multiplexing Backplane
      */
     uint32_t ScanMultiplexingSetup(uint8_t pWait_ms = 100);
+    uint32_t ScanMultiplexingSetup_old(uint8_t pWait_ms = 100);
 
     /*!
      * \breif Configure Setup with Multiplexing Backplane
      * \param BackplaneNum
      * \param CardNum
      */
-    uint32_t ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
+    void ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
+    uint32_t ConfigureMultiplexingSetup_old(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
 
     // ############################
     // # Read/Write Optical Group #
