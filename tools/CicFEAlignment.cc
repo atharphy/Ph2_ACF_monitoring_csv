@@ -295,25 +295,25 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
 bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
 {
     bool cConfigured = true;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                if(cCic != NULL)
-                {
-                    fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
-                    for(auto cChip: *cHybrid)
-                    {
-                        for(int cLineId = 0; cLineId < 6; cLineId++) { cConfigured = cConfigured && fCicInterface->SetStaticPhaseAlignment(cCic, cChip->getId(), cLineId, pPhase); }
-                    }
-                }
-            }
-        }
-        fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBoard));
-    }
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     for(auto cOpticalGroup: *cBoard)
+    //     {
+    //         for(auto cHybrid: *cOpticalGroup)
+    //         {
+    //             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //             if(cCic != NULL)
+    //             {
+    //                 fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
+    //                 for(auto cChip: *cHybrid)
+    //                 {
+    //                     for(int cLineId = 0; cLineId < 6; cLineId++) { cConfigured = cConfigured && fCicInterface->SetStaticPhaseAlignment(cCic, cChip->getId(), cLineId, pPhase); }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBoard));
+    // }
     return cConfigured;
 }
 void CicFEAlignment::SetStaticPhaseAlignment()
@@ -327,7 +327,7 @@ void CicFEAlignment::SetStaticPhaseAlignment()
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 // 4 channels per phyPort ... 12 phyPorts per CIC
-                std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
+                //std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
                 // 8 FEs per CIC .... 6 SLVS lines per FE
                 std::vector<std::vector<uint8_t>> cPhaseTapsFEs(8, std::vector<uint8_t>(6, 0));
                 // read back phase aligner values
@@ -353,7 +353,8 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                     LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC phy-port input connected to FE#" << +cChip->getId() << " : " << cOutput << RESET;
                 }
                 // put phase aligner in static mode
-                //fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
+
+                fCicInterface->SetStaticPhaseAlignment(cCic);
             }//hybrid 
         }//
     }
@@ -393,13 +394,14 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 // enable automatic phase aligner
                 fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic, true);
                 bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
+                // if locked .. switch to automatic phase aligner mode with best values
+                if( cLocked ) fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
                 cAligned = cAligned && cLocked;
             }//hybrid
         }//optical group
     }// board 
     //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
     // check alignment and use static phase from now on
-    if( cAligned ) this->SetStaticPhaseAlignment();
     return cAligned;
 }
 void CicFEAlignment::InjectAlignmentPattern(uint8_t pChipId, uint8_t pPhyPort)

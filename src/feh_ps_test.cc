@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("pattern", "p");
 
     cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("eyeScanCic", "Perform CIC eye scan", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
     cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
 
@@ -112,10 +113,6 @@ int main(int argc, char* argv[])
 
     std::string cResultfile = "Hybrid";
     Timer       t;
-
-#ifdef __TCUSB__
-#endif
-
     std::stringstream outp;
     // hybrid testing tool
     // going to use this because it also
@@ -266,6 +263,20 @@ int main(int argc, char* argv[])
         // cDataChecker.resetPointers();
     }
     
+    // eye scan for CIC inputs 
+    if(cmd.foundOption("eyeScanCic"))
+    {
+        DataChecker cDataChecker;
+        auto cSelectFunction = [](const ChipContainer *theChip){return ( static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
+        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+        cDataChecker.Inherit(&cHybridTester);
+        cDataChecker.Initialise();
+        cDataChecker.Eye_CIC();
+        // reset 
+        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
+        cDataChecker.writeObjects();
+    }
+
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))
     {

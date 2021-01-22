@@ -67,13 +67,15 @@ class CicInterface : public ChipInterface
 
     // CIC specific functions
     std::pair<bool, uint16_t>         ReadChipReg(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
+    bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel , int pOffset=0);
+    bool                              SetOptimalTaps(Ph2_HwDescription::Chip* pChip, int pOffset=0);
     uint8_t                           GetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, uint8_t pInput ); 
     std::vector<uint8_t>              GetOptimalTaps(Ph2_HwDescription::Chip* pChip, uint8_t pFEId);  
     std::vector<std::vector<uint8_t>> GetOptimalTaps(Ph2_HwDescription::Chip* pChip);
     bool                              SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
     bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip); 
-    bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pFeId = 0, uint8_t pLineId = 0, uint8_t pPhase = 0);
+    //bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pFeId , uint8_t pLineId , uint8_t pPhase );
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, std::vector<std::vector<uint8_t>> pPhaseTaps);
     bool                              SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
     bool                              SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pValue = 5);
@@ -120,6 +122,8 @@ class CicInterface : public ChipInterface
     std::map<uint8_t, uint8_t>  fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                     fMaxDriveStrength = 5;
     std::vector<std::bitset<24>>  fPhaseValues;
+    // 4 channels per phyPort ... 12 phyPorts per CIC
+    std::vector<std::vector<uint8_t>> fPhaseTaps;
     std::vector<std::bitset<6>> fFeStates;
     std::vector<std::bitset<4>> fPortStates;
 };
