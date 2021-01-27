@@ -431,7 +431,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
             {
                 // fBeBoardInterface->ChipReSync ( cBoard );
                 this->ReadNEvents(theBoard, cNevents);
-                const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
                 if(cIteration == 0 && cStepCount % 10 == 0)
                 { LOG(INFO) << BOLDBLUE << "Threshold set to " << cVcth << "...\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET; }
 
@@ -618,7 +618,7 @@ void ExtraChecks::OccupancyCheck(uint16_t pTriggerRate, bool pDisableStubs)
         {
             LOG(INFO) << BOLDBLUE << "Iteration : " << +cIteration << RESET;
             this->ReadNEvents(theBoard, cNevents);
-            const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cFe: *cOpticalGroup)
@@ -684,7 +684,7 @@ void ExtraChecks::ExternalTriggers(uint16_t pNconsecutive, const std::string& pS
 
         LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
         this->ReadData(theBoard, true);
-        const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
@@ -749,7 +749,7 @@ void ExtraChecks::ConsecutiveTriggers(uint8_t pNconsecutive)
         // fBeBoardInterface->Stop(theBoard);
         // this->ReadData( theBoard , true);
         // this->ReadNEvents ( theBoard , cNevents );
-        const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
@@ -1059,7 +1059,7 @@ void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitud
                 // fBeBoardInterface->ChipReSync ( theBoard );
 
                 this->ReadNEvents(theBoard, cEventsPerAttempt);
-                const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
                 for(auto cOpticalGroup: *cBoard)
                 {
                     for(auto cFe: *cOpticalGroup)
@@ -1363,7 +1363,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
         // why do I need this?
         // this->setSameDacBeBoard(theBoard, "TriggerLatency", cDelay);
         this->ReadNEvents(theBoard, cEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cFe: *cOpticalGroup)
@@ -1533,7 +1533,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
             }
             // read N events
             this->ReadNEvents(theBoard, cEventsPerPoint); //*(1+cTriggerMultiplicity) );
-            const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             LOG(INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from board." << RESET;
             for(auto cEvent: cEvents)
             {
@@ -1783,7 +1783,7 @@ void ExtraChecks::StubCheck(uint8_t pChipId, bool pUseNoise, uint8_t pTestPulseA
                         // set DAC .. read events
                         this->setSameDacBeBoard(theBoard, "VCth", cVcth);
                         this->ReadNEvents(theBoard, cEventsPerAttempt);
-                        // const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
+                        // const std::vector<Event*>& cEvents = this->GetEvents();
                         /*for (auto& cFe : cBoard->fModuleVector)
                         {
                             for (auto& cChip : cFe->fReadoutChipVector)
@@ -1965,7 +1965,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
             std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(cGroup)->getBitset());
             LOG(INFO) << "Injecting charge into front-end object using test capacitor " << +cTestGroup << " : L1A latency set to " << +cDelay << RESET;
             this->ReadNEvents(theBoard, cEventsPerAttempt);
-            const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             for(auto cOpticalGroup: *cBoard)
             {
                 auto cOpticalGroupShorts = cThisShortsContainer->at(cOpticalGroup->getIndex());

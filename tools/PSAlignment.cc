@@ -216,7 +216,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                 // now read data
                 LOG(INFO) << BOLDBLUE << "Setting stub input sampling phase, and pixel retime for MPA#" << +cChipId << " on hybrid to " << +cPhase << " and " << +cRetime << RESET;
                 ReadNEvents(pBoard, cNevents);
-                const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
                 LOG(INFO) << BOLDBLUE << "Checking phase by reading back " << +cEvents.size() << " events from the FC7 ..." << RESET;
                 uint32_t MatchNStubtot = 0;
                 for(auto& ev: cEvents)
@@ -342,7 +342,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                     // now read data
                     LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase and word for MPA#" << +cChipId << " on hybrid to " << +cPhase << " and " << +cWord << RESET;
                     ReadNEvents(pBoard, cNevents);
-                    const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+                    const std::vector<Event*>& cEvents = this->GetEvents();
                     LOG(INFO) << BOLDBLUE << "Checking phase by reading back " << +cEvents.size() << " events from the FC7 ..." << RESET;
                     uint32_t MatchNPclustot = 0;
                     uint32_t MatchNSclustot = 0;

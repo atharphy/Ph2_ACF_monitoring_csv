@@ -36,7 +36,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -111,8 +111,13 @@ int main(int argc, char* argv[])
     else
         TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
-    std::string       cResultfile = "Hybrid";
-    Timer             t;
+    std::string cResultfile = "Hybrid";
+    Timer       t, T;
+
+#ifdef __TCUSB__
+#endif
+
+    T.start();
     std::stringstream outp;
     // hybrid testing tool
     // going to use this because it also
@@ -405,5 +410,7 @@ int main(int argc, char* argv[])
     cHybridTester.Destroy();
 
     if(!batchMode) cApp.Run();
+    T.stop();
+    T.show("Total time = ");
     return 0;
 }

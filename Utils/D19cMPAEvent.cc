@@ -52,15 +52,7 @@ void D19cMPAEvent::fillDataContainer(BoardDataContainer* boardContainer, const C
 
 void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list)
 {
-    // LOG(INFO) << BOLDBLUE << "NEWEV" << RESET;
-    for(auto L: list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
-    if((list.at(4) | list.at(5) | list.at(6) | list.at(7)) != 0)
-    {
-        LOG(INFO) << "GOT IT1";
-        LOG(INFO) << "GOT IT1";
-        LOG(INFO) << "GOT IT1";
-        LOG(INFO) << "GOT IT1";
-    }
+    // for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
     // Not sure about dsize...
     // fEventSize = 4*((0x0000FFFF & list.at (0)) - (0x000000FF & list.at (1)));
     fEventSize = 4 * (0x0000FFFF & list.at(0));
@@ -98,21 +90,11 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
 
                 uint8_t cSyncBit1 = ((0x00008000 & list.at(data_offset + cL1size_32_MPA + 1)) >> 15);
                 uint8_t cSyncBit2 = ((0x00004000 & list.at(data_offset + cL1size_32_MPA + 1)) >> 14);
-                if(cPLeadingMPA != 0xA && cPLeadingMPA != 0x0)
-                    LOG(ERROR) << "Incorrect L1A header for MPA " << unsigned(pMPAId) << "," << unsigned(cHybrid->getId()) << "," << unsigned(cOpticalGroup->getId());
-                if(cSLeadingMPA != 0x5 && cSLeadingMPA != 0x0)
-                    LOG(ERROR) << "Incorrect stub header for MPA " << unsigned(pMPAId) << "," << unsigned(cHybrid->getId()) << "," << unsigned(cOpticalGroup->getId());
+                if(cPLeadingMPA != 0xA) LOG(ERROR) << "Incorrect L1A header for MPA " << unsigned(pMPAId) << "," << unsigned(cHybrid->getId()) << "," << unsigned(cOpticalGroup->getId());
+                if(cSLeadingMPA != 0x5) LOG(ERROR) << "Incorrect stub header for MPA " << unsigned(pMPAId) << "," << unsigned(cHybrid->getId()) << "," << unsigned(cOpticalGroup->getId());
                 if(cErrorMPA != 0) LOG(INFO) << BOLDRED << "Error code " << unsigned(cErrorMPA) << " for MPA " << unsigned(pMPAId);
-                if(cSyncBit1 != 1 && cSLeadingMPA == 0x5) LOG(INFO) << BOLDRED << "Warning, sync bit 1 not 1, data frame probably misaligned!" << RESET;
-                if(cSyncBit2 != 0 && cSLeadingMPA == 0x5) LOG(INFO) << BOLDRED << "Warning, sync bit 2 not 0, data frame probably misaligned!" << RESET;
-
-                if(cPLeadingMPA == 0xA || cSLeadingMPA == 0x5)
-                {
-                    LOG(INFO) << "GOT IT";
-                    LOG(INFO) << "GOT IT";
-                    LOG(INFO) << "GOT IT";
-                    LOG(INFO) << "GOT IT";
-                }
+                if(cSyncBit1 != 1) LOG(INFO) << BOLDRED << "Warning, sync bit 1 not 1, data frame probably misaligned!" << RESET;
+                if(cSyncBit2 != 0) LOG(INFO) << BOLDRED << "Warning, sync bit 2 not 0, data frame probably misaligned!" << RESET;
 
                 uint16_t cKey     = encodeVectorIndex(cFeId, pMPAId, fNMPA);
                 uint32_t begin    = data_offset;
@@ -158,22 +140,6 @@ uint32_t D19cMPAEvent::Error(uint8_t pFeId, uint8_t pMPAId) const
     {
         LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
         return 0;
-    }
-}
-
-bool D19cMPAEvent::MPAHitHeader(uint8_t pFeId, uint8_t pMPAId) const
-{
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
-
-    if(lvec.size() > 1)
-    {
-        uint8_t cPLeadingMPA = ((0xF0000000 & lvec.at(0)) >> 28);
-        if(cPLeadingMPA == 0xA) return true;
-        return false;
-    }
-    else
-    {
-        return false;
     }
 }
 
@@ -264,8 +230,7 @@ uint8_t D19cMPAEvent::GetMPAError(uint8_t pFeId, uint8_t pMPAId) const
 
 uint8_t D19cMPAEvent::GetNStripClusters(uint8_t pFeId, uint8_t pMPAId) const
 {
-    if(not MPAHitHeader(pFeId, pMPAId)) return 0;
-
+    // LOG (INFO) << fEventDataVector.size()<<" "<<encodeVectorIndex(pFeId, pMPAId, fNMPA) << RESET;
     std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
@@ -276,7 +241,6 @@ uint8_t D19cMPAEvent::GetNStripClusters(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "GetNStripClusters" << RESET;
         LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
@@ -284,7 +248,6 @@ uint8_t D19cMPAEvent::GetNStripClusters(uint8_t pFeId, uint8_t pMPAId) const
 
 uint8_t D19cMPAEvent::GetNPixelClusters(uint8_t pFeId, uint8_t pMPAId) const
 {
-    if(not MPAHitHeader(pFeId, pMPAId)) return 0;
     std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
     if(lvec.size() > 1)
     {
@@ -294,9 +257,6 @@ uint8_t D19cMPAEvent::GetNPixelClusters(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "GetNPixClusters" << RESET;
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
@@ -476,32 +436,20 @@ uint8_t D19cMPAEvent::GetNStubs(uint8_t pFeId, uint8_t pMPAId) const
 {
     std::vector<Stub> cStubVec;
     // here create stubs and return the vector
+    // std::cout<<"GetNStubs"<<std::endl;
     std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
     if(lvec.size() > 1)
     {
+        // std::cout<<"GETEM"<<std::endl;
+        // for (auto L : lvec) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         uint16_t cL1size_32_MPA = (0x00000FFF & lvec.at(0)) * 4;
+        // std::cout<<"GETEM"<<std::endl;
+        // std::cout<<std::bitset<32> (lvec.at(cL1size_32_MPA + 1))<<std::endl;
         return (lvec.at(cL1size_32_MPA + 1) & 0x7);
     }
     else
     {
-        return 0;
-    }
-}
-
-bool D19cMPAEvent::MPAStubHeader(uint8_t pFeId, uint8_t pMPAId) const
-{
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
-
-    if(lvec.size() > 1)
-    {
-        uint16_t cL1size_32_MPA = (0x00000FFF & lvec.at(0)) * 4;
-        uint8_t  cSLeadingMPA   = ((0xF0000000 & lvec.at(cL1size_32_MPA)) >> 28);
-        if(cSLeadingMPA == 0x5) return true;
-        return false;
-    }
-    else
-    {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        // LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }

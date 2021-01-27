@@ -18,7 +18,7 @@ void DPInterface::Configure(BeBoardFWInterface* pInterface, uint32_t pPattern)
 {
     LOG(INFO) << BOLDBLUE << std::bitset<8>(pPattern) << " pattern to use in PS ROH data player." << RESET;
 
-    pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.fe_data_player.pattern_640MHz", pPattern);
+    pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.fe_data_player.pattern_320MHz", pPattern);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 }
 void DPInterface::CheckNPatterns(BeBoardFWInterface* pInterface)

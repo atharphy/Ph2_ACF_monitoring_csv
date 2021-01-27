@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
                 std::this_thread::sleep_for(ShortWait);
 
-                const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+                const std::vector<Event*>& events = cTool.GetEvents();
                 int                        nev    = 0;
                 // int nevtot=0;
                 std::cout << "TSST " << row << "," << col << "," << gpix << std::endl;

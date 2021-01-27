@@ -8,11 +8,9 @@
 #include "../Utils/Timer.h"
 #include "../Utils/argvparser.h"
 #include "../tools/LatencyScan.h"
-#include "DPInterface.h"
 #include "TApplication.h"
 #include "TROOT.h"
 #include "tools/BackEndAlignment.h"
-#include "tools/CicFEAlignment.h"
 #include <cstring>
 
 using namespace Ph2_HwDescription;
@@ -25,7 +23,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -54,7 +52,7 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/PS_HalfModule.xml";
+    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19C_MPA_PreCalibSYNC.xml";
 
     TApplication cApp("Root Application", &argc, argv);
 
@@ -75,16 +73,10 @@ int main(int argc, char* argv[])
 
     if(batchMode) gROOT->SetBatch(true);
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    // pBoard->setFrontEndType(FrontEndType::MPA);
+    pBoard->setFrontEndType(FrontEndType::MPA);
 
     // cTool.StartHttpServer();
 
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit(&cTool);
-    cCicAligner.Start(0);
-    cCicAligner.waitForRunToBeCompleted();
-    //
-    // cCicAligner.Reset();
     // align back-end .. if this moves to firmware then we can get rid of this step
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
@@ -96,8 +88,6 @@ int main(int argc, char* argv[])
         LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
     }
-    // dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( 0, 100, 3, 0, 0);
-    // dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug();
 
     LOG(INFO) << BOLDRED << "LatencyScan" << RESET;
     LatencyScan cLatencyScan;
@@ -106,10 +96,10 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDRED << "INIT" << RESET;
     cLatencyScan.Initialize(0, 100);
     LOG(INFO) << BOLDRED << "Scan" << RESET;
-    // pBoard->setFrontEndType(FrontEndType::MPA);
+    pBoard->setFrontEndType(FrontEndType::MPA);
 
-    std::vector<int> rows{5, 7, 15, 30, 40, 51, 70, 80, 98, 20};
-    std::vector<int> cols{1, 2, 3, 4, 5, 9, 10};
+    std::vector<int> rows{5, 74, 51, 98, 20};
+    std::vector<int> cols{1};
 
     for(auto cOpticalGroup: *pBoard)
     {
@@ -119,12 +109,12 @@ int main(int argc, char* argv[])
             {
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_calibration(cChip, 200);
+                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_calibration(cChip, 50);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_threshold(cChip, 100);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_sync(cChip);
                     // static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x57);
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0, false);
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL", 4, false);
+                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL", 2);
                     for(auto rr: rows)
                     {
                         for(auto cc: cols)
@@ -134,14 +124,12 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
-                if(cChip->getFrontEndType() == FrontEndType::SSA) { static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 1, false); }
+                if(cChip->getFrontEndType() == FrontEndType::SSA) { static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS", 0); }
             }
         }
     }
 
-    LOG(INFO) << BOLDRED << "MPA" << RESET;
-
-    auto hitlatmpa = cLatencyScan.ScanLatency(0, 13);
+    auto hitlatmpa = cLatencyScan.ScanLatency(30, 50);
 
     for(auto cOpticalGroup: *pBoard)
     {
@@ -149,11 +137,11 @@ int main(int argc, char* argv[])
         {
             for(auto cChip: *cFe)
             {
-                if(cChip->getFrontEndType() == FrontEndType::MPA) { static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0, false); }
+                if(cChip->getFrontEndType() == FrontEndType::MPA) { static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0); }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "FE_Calibration", 1);
-                    static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0, false);
+                    static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS", 0);
                     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "Bias_CALDAC", 120);
                     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "Bias_THDAC", 60);
 
@@ -164,8 +152,6 @@ int main(int argc, char* argv[])
     }
 
     cLatencyScan.Initialize(0, 100);
-
-    LOG(INFO) << BOLDRED << "SSA" << RESET;
     auto hitlatssa = cLatencyScan.ScanLatency(30, 50);
 
     for(auto cOpticalGroup: *pBoard)
@@ -178,8 +164,8 @@ int main(int argc, char* argv[])
                 {
                     uint8_t hitlmpa = hitlatmpa[cFe];
                     LOG(INFO) << BOLDRED << "Hit max " << +hitlmpa << RESET;
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_1_ALL", (0x00FF & hitlmpa) >> 0, false);
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_2_ALL", (0x0100 & hitlmpa) >> 8, false);
+                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_1_ALL", (0x00FF & hitlmpa) >> 0);
+                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_2_ALL", (0x0100 & hitlmpa) >> 8);
                 }
 
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
@@ -206,8 +192,8 @@ int main(int argc, char* argv[])
                     if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
                         static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_ps(cChip);
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0, false);
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL", 4, false);
+                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL", 4);
                         static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "RetimePix", irt);
                         for(auto rr: rows)
                         {
@@ -222,7 +208,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        auto stublat = cLatencyScan.ScanStubLatency(0, 100);
+        auto stublat = cLatencyScan.ScanStubLatency(0, 50);
 
         for(auto cOpticalGroup: *pBoard)
         {

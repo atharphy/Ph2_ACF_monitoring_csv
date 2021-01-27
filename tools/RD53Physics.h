@@ -47,7 +47,11 @@ class Physics : public Tool
     void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
     void monitor();
 
-    void setGenericEvtConverter(evtConvType arg) { genericEvtConverter = std::move(arg); }
+    void setGenericEvtConverter(evtConvType arg)
+    {
+        std::lock_guard<std::mutex> theGuard(theMtx);
+        genericEvtConverter = std::move(arg);
+    }
 
 #ifdef __USE_ROOT__
     PhysicsHistograms* histos;
@@ -68,7 +72,7 @@ class Physics : public Tool
 
     void fillHisto();
     void chipErrorReport();
-    void clearContainers();
+    void clearContainers(Ph2_HwDescription::BeBoard* cBoard);
 
   protected:
     struct RD53dummyEvtConverter
@@ -83,6 +87,7 @@ class Physics : public Tool
     bool        doDisplay;
     bool        saveBinaryData;
     std::thread thrMonitor;
+    std::mutex  theMtx;
     evtConvType genericEvtConverter;
 };
 

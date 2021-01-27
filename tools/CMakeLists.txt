@@ -131,7 +131,7 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
 #    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories($ENV{PH2ACF_ROOT}/Utils)
+    include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
  
 
     cet_set_compiler_flags(

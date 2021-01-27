@@ -171,6 +171,16 @@ void PedeNoise::sweepSCurves()
     {
         if(cWithSSA or cWithMPA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
+        else if(cWithMPA)
+        {
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC3", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fPulseAmplitude);
+        }
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
@@ -259,12 +269,13 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
+    LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
 #endif
-
+    LOG(INFO) << "7 ";
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -278,10 +289,9 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                 for(auto cROC: *cFe)
                 {
                     RegisterVector cRegVec;
-
-                    uint32_t NCH = NCHANNELS;
-                    if(cROC->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
-                    if(cROC->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
+                    uint32_t       NCH = NCHANNELS;
+                    if(cWithSSA) NCH = NSSACHANNELS;
+                    if(cWithMPA) NCH = NMPACHANNELS;
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;

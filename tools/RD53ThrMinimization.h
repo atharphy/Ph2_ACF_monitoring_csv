@@ -34,9 +34,9 @@ class ThrMinimization : public PixelAlive
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nBitThr        = floor(log2(ThrStop - ThrStart + 1) + 1);
-        uint16_t moreIterations = 1;
-        return PixelAlive::getNumberIterations() * (nBitThr + moreIterations);
+        uint16_t nIterationsThr = floor(log2(ThrStop - ThrStart + 1) + 1);
+        uint16_t moreIterations = 2;
+        return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
     void saveChipRegisters(int currentRun);
 

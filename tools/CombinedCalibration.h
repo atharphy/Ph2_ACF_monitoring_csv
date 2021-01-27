@@ -1,4 +1,5 @@
 #include "../tools/Tool.h"
+#include <iostream>
 
 #if __cplusplus < 201402
 namespace std
@@ -33,10 +34,10 @@ struct CombinedCalibration : public Tool
 
     CombinedCalibration() : current_tool(this) {}
 
-    void Start(int run)
+    void Running()
     {
         runningCompleted = false;
-        start_impl(run, std::make_index_sequence<size>());
+        start_impl(std::make_index_sequence<size>());
         runningCompleted = true;
     }
 
@@ -58,27 +59,18 @@ struct CombinedCalibration : public Tool
   private:
     bool runningCompleted;
     template <size_t... Is>
-    void start_impl(int run, std::index_sequence<Is...>)
+    void start_impl(std::index_sequence<Is...>)
     {
-        __attribute__((unused)) auto _ = {(start_single(run, std::get<Is>(tools)), 0)...};
+        __attribute__((unused)) auto _ = {(start_single(std::get<Is>(tools)), 0)...};
     }
 
     template <class T>
-    void start_single(int run, T& tool)
+    void start_single(T& tool)
     {
         std::cout << __PRETTY_FUNCTION__ << " Starting calibration" << std::endl;
         tool.Inherit(current_tool);
-        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
         tool.ConfigureCalibration();
-        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
-        tool.Start(run);
-        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
-        while(!tool.GetRunningStatus())
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            std::cout << __PRETTY_FUNCTION__ << " waiting..." << std::endl;
-        }
-        std::cout << __PRETTY_FUNCTION__ << fRunningFuture.valid() << std::endl;
+        tool.Running();
         tool.Stop();
         tool.resetPointers();
         current_tool = &tool;

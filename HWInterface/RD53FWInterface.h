@@ -36,26 +36,21 @@
 #define NBIT_FWVER 16        // Number of bits for the firmware version
 #define IPBUS_FASTDURATION 1 // Duration of a fast command in terms of 40 MHz clk cycles
 
-// #################
-// # READOUT BLOCK #
-// #################
-#define HANDSHAKE_EN false
-#define L1A_TIMEOUT 4000
-
 namespace RD53FWEvtEncoder
 {
 // ################
 // # Event header #
 // ################
-const uint16_t EVT_HEADER     = 0xFFFF;
-const uint8_t  NBIT_EVTHEAD   = 16; // Number of bits for the Error Code
-const uint8_t  NBIT_BLOCKSIZE = 16; // Number of bits for the Block Size
-const uint8_t  NBIT_TRIGID    = 16; // Number of bits for the TLU Trigger ID
-const uint8_t  NBIT_FMTVER    = 8;  // Number of bits for the Format Version
-const uint8_t  NBIT_DUMMY     = 8;  // Number of bits for the Dummy Size
-const uint8_t  NBIT_TDC       = 8;  // Number of bits for the TDC
-const uint8_t  NBIT_L1ACNT    = 24; // Number of bits for the L1A Counter (Event number)
-const uint8_t  NBIT_BXCNT     = 32; // Number of bits for the BX Counter
+const uint16_t EVT_HEADER      = 0xFFFF;
+const uint16_t EVT_HEADER_SIZE = 4;  // Number of words in event header
+const uint8_t  NBIT_EVTHEAD    = 16; // Number of bits for the Error Code
+const uint8_t  NBIT_BLOCKSIZE  = 16; // Number of bits for the Block Size
+const uint8_t  NBIT_TRIGID     = 16; // Number of bits for the TLU Trigger ID
+const uint8_t  NBIT_FMTVER     = 8;  // Number of bits for the Format Version
+const uint8_t  NBIT_DUMMY      = 8;  // Number of bits for the Dummy Size
+const uint8_t  NBIT_TDC        = 8;  // Number of bits for the TDC
+const uint8_t  NBIT_L1ACNT     = 24; // Number of bits for the L1A Counter (Event number)
+const uint8_t  NBIT_BXCNT      = 32; // Number of bits for the BX Counter
 
 // ###############
 // # Chip header #
@@ -108,7 +103,12 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ChipReset() override;
     void     ChipReSync() override;
 
+    // #############################################
+    // # hybridId < 0 --> broadcast to all hybrids #
+    // #############################################
     void                                       WriteChipCommand(const std::vector<uint16_t>& data, int hybridId);
+    void                                       ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList);
+    void                                       SendChipCommandsPack(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
 
     struct ChipFrame
@@ -189,7 +189,7 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t delay_after_ecr         = 0;
         uint32_t delay_after_autozero    = 0; // @TMP@
         uint32_t delay_after_inject      = 0;
-        uint16_t delay_after_trigger     = 0;
+        uint32_t delay_after_trigger     = 0;
         uint32_t delay_after_prime       = 0;
     };
 
@@ -211,7 +211,12 @@ class RD53FWInterface : public BeBoardFWInterface
     };
 
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
-    void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays = 0, bool enableAutozero = false);
+    void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard,
+                                     const uint32_t                    nTRIGxEvent,
+                                     const size_t                      injType,
+                                     const uint32_t                    injLatency     = 0,
+                                     const uint32_t                    nClkDelays     = 0,
+                                     const bool                        enableAutozero = false);
 
     struct DIO5Config
     {
@@ -311,6 +316,7 @@ class RD53FWInterface : public BeBoardFWInterface
     D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
+    unsigned int       auroraSpeed;
     uint16_t           enabledHybrids;
 };
 

@@ -1,34 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR">
-
-
-        <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
-
-         <CDCE configure="0" clockRate="320"/>
-        
-        <OpticalGroup Id="0" FMCId="0">
-            <lpGBT_Files path="./settings/lpGBTFiles/" />
-            <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
-              <Settings
-              />
-            </lpGBT>
-            <Hybrid Id="0" Status="1" LinkId="0">
-                <Global>
-                   <CIC2 enableBend="0" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
-                </Global>
-         
-                <SSA_Files path="./settings/SSAFiles/" />
-                <SSA Id="0" partid="0" configfile="SSA_minConfig.txt" />
-
-                <MPA_Files path="./settings/MPAFiles/" />
-                <MPA Id="0" partid="0" configfile="MPA.txt" />
-
-                <CIC_Files path="./settings/CicFiles/" />
-                <CIC2 Id="8" configfile="CIC2_default.txt" />
-            </Hybrid>
-        </OpticalGroup>
-
+  <BeBoard Id="0" boardType="D19C" eventType="MPA">
+      <connection id="board" uri="chtcp-2.0://localhost:10203?target=198.162.4.11:50001" address_table="file://settings/address_tables/d19c_MT_address_table.xml" />
+    <OpticalGroup Id="0" FMCId="0" >
+        <Hybrid Id="0" Status="1">
+            <MPA_Files path="./settings/MPAFiles/" />
+            <MPA Id="1" partid="0" configfile="MPATSTSYNC.txt" />
+            <SSA_Files path="./settings/SSAFiles/" />
+            <SSA Id="0" partid="1" side="0" configfile="SSAPreCalibSYNC.txt" />
+        </Hybrid>
+    </OpticalGroup>
 
         <!--CONFIG-->
         <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
@@ -43,8 +24,8 @@
             </Register>
             <!-- Fast Command Block -->
             <Register name="fast_command_block">
-                <Register name="triggers_to_accept"> 0 </Register>
-                <Register name="trigger_source"> 3 </Register>
+                <Register name="triggers_to_accept"> 100 </Register>
+                <Register name="trigger_source"> 6 </Register>
                 <Register name="user_trigger_frequency"> 10 </Register>
     		<Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
@@ -81,7 +62,7 @@
     	</Register>
     	<!-- Readout Block -->
         	<Register name="readout_block">
-                <Register name="packet_nbr"> 999 </Register>
+                <Register name="packet_nbr"> 499 </Register>
                 <Register name="global">
                         <Register name="data_handshake_enable"> 1 </Register>
                         <Register name="int_trig_enable"> 0 </Register>
@@ -90,7 +71,7 @@
                         <Register name="data_type"> 0 </Register>
                         <!--this is what is commonly known as stub latency-->
                         <Register name="common_stubdata_delay"> 194 </Register>
-                    <Register name="zero_suppression_enable"> 1 </Register>
+                    <Register name="zero_suppression_enable"> 0 </Register>
                 </Register>
         	</Register>
     	<!-- DIO5 Block -->
@@ -136,12 +117,12 @@
 
     <!--[>Calibration<]-->
 
-    <Setting name="StartTHDAC">0x90</Setting>
-    <Setting name="StopTHDAC">0x250</Setting>
-    <Setting name="NMsec">0</Setting>
-    <Setting name="NMpulse">3000</Setting>
-    <Setting name="Nlvl">50</Setting>
-    <Setting name="Vfac">0.9</Setting>
+        <Setting name="StartTHDAC">0x90</Setting>
+        <Setting name="StopTHDAC">0x250</Setting>
+        <Setting name="NMsec">0</Setting>
+        <Setting name="NMpulse">3000</Setting>
+        <Setting name="Nlvl">50</Setting>
+        <Setting name="Vfac">0.9</Setting>
     <Setting name="Mrms">90.</Setting>
     <Setting name="TestPulsePotentiometer">0x50</Setting>
     <Setting name="SyncDebug">0</Setting>
@@ -163,4 +144,3 @@
 
 </Settings>
 </HwDescription>
-

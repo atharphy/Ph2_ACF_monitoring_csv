@@ -165,7 +165,7 @@ void StubTool::scanStubs()
 
                                 // now read Events
                                 ReadNEvents(theBoard, fNevents);
-                                const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                const std::vector<Event*> cEvents    = GetEvents();
                                 int                       countEvent = 0;
                                 for(auto cEvent: cEvents)
                                 {
@@ -407,7 +407,7 @@ void StubTool::scanStubs_wNoise()
 
                                     // now read Events
                                     ReadNEvents(theBoard, fNevents);
-                                    const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                    const std::vector<Event*> cEvents    = GetEvents();
                                     int                       countEvent = 0;
                                     for(auto cEvent: cEvents)
                                     {
@@ -684,7 +684,7 @@ void StubTool::scanStubs_swap()
 
                                     // now read Events
                                     ReadNEvents(theBoard, fNevents);
-                                    const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                    const std::vector<Event*> cEvents    = GetEvents();
                                     int                       countEvent = 0;
                                     for(auto cEvent: cEvents)
                                     {
@@ -885,7 +885,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
 
                         // now read Events
                         ReadNEvents(theBoard, fNevents);
-                        const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                        const std::vector<Event*> cEvents    = GetEvents();
                         int                       countEvent = 0;
                         for(auto cEvent: cEvents)
                         {
@@ -1122,7 +1122,7 @@ void StubTool::scanStubs_ptWidth()
 
                                         // now read Events
                                         ReadNEvents(theBoard, fNevents);
-                                        const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                        const std::vector<Event*> cEvents    = GetEvents();
                                         int                       countEvent = 0;
                                         for(auto cEvent: cEvents)
                                         {
@@ -1325,7 +1325,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
 
                     // now read Events
                     ReadNEvents(theBoard, fNevents);
-                    const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                    const std::vector<Event*> cEvents    = GetEvents();
                     int                       countEvent = 0;
                     for(auto cEvent: cEvents)
                     {

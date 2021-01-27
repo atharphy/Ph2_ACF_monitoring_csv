@@ -118,8 +118,10 @@ class D19cFWInterface : public BeBoardFWInterface
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
-    bool                       fOptical       = false;
-    bool                       fConfigureCDCE = false;
+    bool                       fOptical        = false;
+    bool                       fUseOpticalLink = false;
+    bool                       fUseCPB         = false;
+    bool                       fConfigureCDCE  = false;
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;
     // 2S or PS readout
@@ -670,6 +672,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void PSInterfaceBoard_PowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
     void PSInterfaceBoard_PowerOff();
 
+    void PSInterfaceBoard_PowerOn_MPASSA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, float VBF = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
     // MPA power on
     void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
     void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0, uint8_t ssaid = 0);
@@ -741,15 +744,12 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param BackplaneNum
      * \param CardNum
      */
-    void     ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
-    uint32_t ConfigureMultiplexingSetup_old(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
+    void ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
 
     // ############################
     // # Read/Write Optical Group #
     // ############################
     uint8_t flpGBTAddress = 0x70;
-
-    uint32_t Why(Ph2_HwDescription::lpGBT* clpGBT, uint8_t cSlaveAddress, uint8_t cMaster, uint16_t fAddress);
     // Functions for standard uDTC
     void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
     void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;

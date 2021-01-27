@@ -242,7 +242,7 @@ void RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26;
 
-    std::string   output = RD53Shared::composeFileName(configFileName, fName2Add);
+    std::string   output = RD53::getFileName(fName2Add);
     std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
 
     if(file)
@@ -379,6 +379,11 @@ void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 void RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask[col].InjEn[row] = inject; }
 
 void RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask[col].TDAC[row] = TDAC; }
+
+void RD53::resetTDAC()
+{
+    for(auto col = 0u; col < fPixelsMask.size(); col++) fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+}
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 

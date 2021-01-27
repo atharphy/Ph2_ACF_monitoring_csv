@@ -130,7 +130,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                             continue;
                         }
 
-                        const std::vector<Event*>& events = GetEvents(theBoard);
+                        const std::vector<Event*>& events = GetEvents();
                         cTotalEventCounter += events.size();
                         for(auto& cEvent: events)
                         {
@@ -263,7 +263,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //             {
 //                 ReadData ( pBoard );
 
-//                 const std::vector<Event*>& events = GetEvents ( pBoard );
+//                 const std::vector<Event*>& events = GetEvents();
 //                 cTotalEvents += events.size();
 
 //                 // Loop over Events from this Acquisition

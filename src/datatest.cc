@@ -27,7 +27,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     uint32_t pEventsperVcth;
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
             cSystemController.readFile(cReadVec, 10 * fPlaybackEventSize32);
             size_t cCalcEvents = cReadVec.size() / fPlaybackEventSize32;
             cSystemController.DecodeData(pBoard, cReadVec, cCalcEvents, pBoard->getBoardType());
-            pEvents = &cSystemController.GetEvents(pBoard);
+            pEvents = &cSystemController.GetEvents();
         }
         else
         {
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 
             if(cN + cPacketSize > pEventsperVcth) cSystemController.fBeBoardInterface->Stop(pBoard);
 
-            pEvents = &cSystemController.GetEvents(pBoard);
+            pEvents = &cSystemController.GetEvents();
         }
 
         for(auto& ev: *pEvents)

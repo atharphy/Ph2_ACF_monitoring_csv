@@ -39,10 +39,12 @@ class ThrAdjustment : public PixelAlive
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nBitThr        = floor(log2(ThrStop - ThrStart + 1) + 1);
-        uint16_t nBitVCal       = floor(log2(VCalStop - VCalStart + 1) + 1);
-        uint16_t moreIterations = 1;
-        return PixelAlive::getNumberIterations() * (nBitThr + moreIterations) * (nBitVCal + moreIterations);
+        uint16_t nIterationsThr     = floor(log2(ThrStop - ThrStart + 1) + 1);
+        uint16_t moreIterationsThr  = 1;
+        uint16_t nIterationsVCal    = floor(log2(VCalStop - VCalStart + 1) + 1);
+        uint16_t moreIterationsVCal = 1;
+        uint16_t moreIterations     = 1;
+        return PixelAlive::getNumberIterations() * ((nIterationsThr + moreIterationsThr) * (nIterationsVCal + moreIterationsVCal) + moreIterations);
     }
     void saveChipRegisters(int currentRun);
 

@@ -104,7 +104,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ") 
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS " ") 
    
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
@@ -215,7 +215,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     )
     
     MESSAGE(STATUS " ") 
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]") 
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]") 
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.") 
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}") 
     MESSAGE(STATUS " ") 

@@ -51,15 +51,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const char* registerBlackList[] = {"HighGain_LIN",
-                                              "INJECTION_SELECT_DELAY",
-                                              "CLK_DATA_DELAY_CLK_DELAY",
-                                              "CLK_DATA_DELAY_DATA_DELAY",
-                                              "I_MONITOR_SELECT",
-                                              "V_MONITOR_SELECT",
-                                              "ADC_OFFSET_VOLT",
-                                              "ADC_MAXIMUM_VOLT",
-                                              "TEMPSENS_IDEAL_FACTOR"};
+    static const char* registerBlackList[] = {"HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR"};
 
     for(const auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
@@ -75,18 +67,57 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
                 // #################
                 // # Special cases #
                 // #################
-                if(cRegItem.first == "ADC_MONITOR_CONFIG")
+                if(cRegItem.first == "MONITOR_CONFIG_ADC")
                 {
                     value =
-                        cRegItem.second.fValue | (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ RD53Shared::setBits(cRegItem.second.fBitSize)));
+                        cRegItem.second.fValue | (pRD53RegMap["MONITOR_CONFIG"].fValue & (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
                     regName = "MONITOR_CONFIG";
                 }
-                else if(cRegItem.first == "BG_MONITOR_CONFIG")
+                else if(cRegItem.first == "MONITOR_CONFIG_BG")
                 {
-                    value = (cRegItem.second.fValue << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize) |
+                    value = (cRegItem.second.fValue << pRD53RegMap["MONITOR_CONFIG_ADC"].fBitSize) |
                             (pRD53RegMap["MONITOR_CONFIG"].fValue &
-                             (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) ^ (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["ADC_MONITOR_CONFIG"].fBitSize)));
+                             (RD53Shared::setBits(pRD53RegMap["MONITOR_CONFIG"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["MONITOR_CONFIG_ADC"].fBitSize)));
                     regName = "MONITOR_CONFIG";
+                }
+                if(cRegItem.first == "VOLTAGE_TRIM_DIG")
+                {
+                    value = cRegItem.second.fValue | (pRD53RegMap["VOLTAGE_TRIM"].fValue & (RD53Shared::setBits(pRD53RegMap["VOLTAGE_TRIM"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    regName = "VOLTAGE_TRIM";
+                }
+                else if(cRegItem.first == "VOLTAGE_TRIM_ANA")
+                {
+                    value = (cRegItem.second.fValue << pRD53RegMap["VOLTAGE_TRIM_DIG"].fBitSize) |
+                            (pRD53RegMap["VOLTAGE_TRIM"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["VOLTAGE_TRIM"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["VOLTAGE_TRIM_DIG"].fBitSize)));
+                    regName = "VOLTAGE_TRIM";
+                }
+                else if(cRegItem.first == "INJECTION_SELECT_DELAY")
+                {
+                    value = cRegItem.second.fValue |
+                            (pRD53RegMap["INJECTION_SELECT"].fValue & (RD53Shared::setBits(pRD53RegMap["INJECTION_SELECT"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    regName = "INJECTION_SELECT";
+                }
+                else if(cRegItem.first == "CLK_DATA_DELAY_DATA_DELAY")
+                {
+                    value =
+                        cRegItem.second.fValue | (pRD53RegMap["CLK_DATA_DELAY"].fValue & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(cRegItem.second.fBitSize)));
+                    regName = "CLK_DATA_DELAY";
+                }
+                else if(cRegItem.first == "CLK_DATA_DELAY_CLK_DELAY")
+                {
+                    value = (cRegItem.second.fValue << pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize) |
+                            (pRD53RegMap["CLK_DATA_DELAY"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - (RD53Shared::setBits(cRegItem.second.fBitSize) << pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize)));
+                    regName = "CLK_DATA_DELAY";
+                }
+                else if(cRegItem.first == "CLK_DATA_DELAY_CLK_PHASE")
+                {
+                    value = (cRegItem.second.fValue << (pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize)) |
+                            (pRD53RegMap["CLK_DATA_DELAY"].fValue &
+                             (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) -
+                              (RD53Shared::setBits(cRegItem.second.fBitSize) << (pRD53RegMap["CLK_DATA_DELAY_DATA_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize))));
+                    regName = "CLK_DATA_DELAY";
                 }
 
                 RD53Interface::WriteChipReg(pChip, regName, value, true);
@@ -150,53 +181,53 @@ void RD53Interface::InitRD53Aurora(ReadoutChip* pChip, int nActiveLanes)
     usleep(DEEPSLEEP);
 }
 
-bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& pRegNode, const uint16_t data, bool pVerifLoop)
+bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(pRegNode).fAddress, data));
-    if((pRegNode == "VCAL_HIGH") || (pRegNode == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
+    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(regName).fAddress, data));
+    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) usleep(VCALSLEEP); // @TMP@
 
     if(pVerifLoop == true)
     {
-        if(pRegNode == "PIX_PORTAL")
+        if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
             if(pixMode == 0)
             {
-                auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
+                auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
                 if(regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data)
                 {
-                    LOG(ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << pRegNode << RESET;
+                    LOG(ERROR) << BOLDRED << "Error while writing into RD53 reg. " << BOLDYELLOW << regName << RESET;
                     return false;
                 }
             }
         }
-        else if(data != RD53Interface::ReadChipReg(pChip, pRegNode))
+        else if(data != RD53Interface::ReadChipReg(pChip, regName))
             return false;
     }
 
-    pChip->setReg(pRegNode, data);
+    pChip->setReg(regName, data);
     return true;
 }
 
-void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& pRegNode, const uint16_t data)
+void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, const uint16_t data)
 {
     this->setBoard(pBoard->getId());
 
-    const uint16_t address = static_cast<RD53*>(pBoard->at(0)->at(0)->at(0))->getRegItem(pRegNode).fAddress;
+    const uint16_t address = static_cast<RD53*>(pBoard->at(0)->at(0)->at(0))->getRegItem(regName).fAddress;
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, address, data).getFrames(), -1);
 }
 
-uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
+uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
 
     const int nAttempts = 2;
     for(auto attempt = 0; attempt < nAttempts; attempt++)
     {
-        auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), pRegNode);
+        auto regReadback = RD53Interface::ReadRD53Reg(static_cast<RD53*>(pChip), regName);
         if(regReadback.size() == 0)
         {
             LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt << RESET;
@@ -211,11 +242,11 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
     return 0;
 }
 
-std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(ReadoutChip* pChip, const std::string& pRegNode)
+std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    RD53Interface::sendCommand(pChip, RD53Cmd::RdReg(pChip->getId(), pChip->getRegItem(pRegNode).fAddress));
+    RD53Interface::sendCommand(pChip, RD53Cmd::RdReg(pChip->getId(), pChip->getRegItem(regName).fAddress));
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)
@@ -260,7 +291,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault, bo
     const uint16_t                   PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
     const uint8_t                    highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
     const uint8_t                    chipID          = pRD53->getId();
-    std::vector<perColumnPixelData>& mask            = doDefault ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
+    std::vector<perColumnPixelData>& mask            = doDefault == true ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #
@@ -406,6 +437,21 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
         for(auto col = 0u; col < RD53::nCols; col++) pValue.getChannel<uint16_t>(row, col) = pRD53->getTDAC(row, col);
 }
 
+void RD53Interface::PackChipCommands(ReadoutChip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
+{
+    RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(regName).fAddress, data).appendTo(chipCommandList);
+    if(updateReg == true) pChip->setReg(regName, data);
+}
+
+void RD53Interface::SendChipCommandsPack(const std::vector<uint16_t>& chipCommandList, int hybridId) { static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(chipCommandList, hybridId); }
+
+void RD53Interface::PackHybridCommands(const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList)
+{
+    static_cast<RD53FWInterface*>(fBoardFW)->ComposeAndPackChipCommands(chipCommandList, hybridId, hybridCommandList);
+}
+
+void RD53Interface::SendHybridCommandsPack(const std::vector<uint32_t>& hybridCommandList) { static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommandsPack(hybridCommandList); }
+
 // ###########################
 // # Dedicated to minitoring #
 // ###########################
@@ -472,7 +518,7 @@ uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
 {
     const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
     const uint8_t  chipID             = pChip->getId();
-    const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("BG_MONITOR_CONFIG").fValue, pChip->getRegItem("ADC_MONITOR_CONFIG").fValue);
+    const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("MONITOR_CONFIG_BG").fValue, pChip->getRegItem("MONITOR_CONFIG_ADC").fValue);
     // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
     const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GLOBAL_PULSE_ROUTE");
 

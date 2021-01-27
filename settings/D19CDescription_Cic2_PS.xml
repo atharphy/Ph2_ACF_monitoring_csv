@@ -2,7 +2,7 @@
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
       <!-- <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
-      <connection id="board" uri="ipbusudp-2.0://192.168.13.207:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+      <connection id="board" uri="ipbusudp-2.0://192.168.13.207:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />      <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
 
     <CDCE configure="0" clockRate="120"/>
 
@@ -19,7 +19,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-            <CBC_Files path="./settings/CbcFiles/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
@@ -29,7 +29,7 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="./settings/CicFiles/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
 
@@ -44,7 +44,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-            <CBC_Files path="./settings/CbcFiles/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
@@ -54,7 +54,7 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="./settings/CicFiles/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
     -->

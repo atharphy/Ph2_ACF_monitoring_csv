@@ -39,7 +39,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
         cOpenFinder.Inherit(&cTool);
         cOpenFinder.Initialise(cOfp);
         LOG(INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" << RESET;
-        cOpenFinder.FindOpens();
+        cOpenFinder.FindOpens2S();
         // TODO: write this one from cLatencyScan.writeObjects();
         // cOpenFinder.writeObjects();
 #endif
@@ -357,6 +357,8 @@ int main(int argc, char* argv[])
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+
+    // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
 
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();

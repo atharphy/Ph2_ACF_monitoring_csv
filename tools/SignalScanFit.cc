@@ -193,7 +193,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                 cTimeout = 10e-3;
                 cTime    = fNevents * 1e-3;
             }
-            const std::vector<Event*>& cEvents      = GetEvents(theBoard); // Get the events and play with them
+            const std::vector<Event*>& cEvents      = GetEvents(); // Get the events and play with them
             double                     cTriggerRate = (cEvents.size()) / cTime;
             cTotalEvents                            = cEvents.size();
             LOG(INFO) << BOLDBLUE << "Vcth: " << +cVCth << ". Recorded " << cTotalEvents << " Events [ average trigger rate " << cTriggerRate << " ]" << RESET;

@@ -257,13 +257,13 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
             uint32_t cN      = 1;
             uint32_t cNthAcq = 0;
 
-            this->Start(pBoard);
+            this->StartBoard(pBoard);
 
             while(cN <= fTotalEvents)
             {
                 // Run( pBoard, cNthAcq );
                 ReadData(pBoard);
-                const std::vector<Event*>& events = GetEvents(pBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -279,7 +279,7 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
                 cNthAcq++;
             }
 
-            this->Stop(pBoard);
+            this->StopBoard(pBoard);
 
             /*Here the reconstruction of histograms happens*/
             for(uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++)

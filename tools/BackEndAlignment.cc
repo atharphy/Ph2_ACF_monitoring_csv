@@ -189,7 +189,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
         // 2 events should be enough
         LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
         ReadNEvents(pBoard, cNevents);
-        const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
+        const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
         LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
 
         // now ... check for incrementing BxIds
@@ -260,7 +260,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 
             LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
             ReadNEvents(pBoard, cNevents);
-            const std::vector<Event*>& cEventsWithStubs = this->GetEvents(pBoard);
+            const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
             LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
             bool cEventsMatch = true;
             for(auto cEvent: cEventsWithStubs)

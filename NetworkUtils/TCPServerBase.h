@@ -13,7 +13,7 @@
 class TCPServerBase : public TCPSocket
 {
   public:
-    TCPServerBase(int serverPort, unsigned int maxNumberOfClients);
+    TCPServerBase(unsigned int serverPort, unsigned int maxNumberOfClients);
     virtual ~TCPServerBase(void);
 
     void startAccept(void);
@@ -36,6 +36,7 @@ class TCPServerBase : public TCPSocket
         return dynamic_cast<T*>(fConnectedClients[socketId]);
     }
 
+    void pingActiveClients(void);
     // std::promise<bool>        fAcceptPromise;
     std::map<int, TCPSocket*>        fConnectedClients;
     std::map<int, std::future<void>> fConnectedClientsFuture;
@@ -48,6 +49,7 @@ class TCPServerBase : public TCPSocket
 
     const int         fMaxConnectionBacklog = 5;
     unsigned int      fMaxNumberOfClients;
+    unsigned int      fServerPort;
     std::atomic_bool  fAccept;
     std::future<void> fAcceptFuture;
 };

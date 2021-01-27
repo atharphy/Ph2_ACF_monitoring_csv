@@ -44,6 +44,7 @@ class RD53RunProgress
             LOG(INFO) << GREEN << "n. 32 bit words : " << std::setw(9) << std::fixed << dataSize << RESET;
             LOG(INFO) << BOLDMAGENTA << ">>>> Progress : " << std::setw(5) << std::setprecision(1) << std::fixed << fraction * 100 << "% <<<<" << std::setprecision(-1) << RESET;
             LOG(INFO) << CYAN << "---------------------------" << RESET;
+            RD53Shared::resetDefaultFloat();
             if(fraction != 1)
                 for(int i = 0; i < 5; i++) std::cout << "\x1b[A";
         }

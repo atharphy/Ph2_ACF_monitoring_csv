@@ -128,7 +128,7 @@
 
 
     <!--[>Calibration<]-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">10</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>

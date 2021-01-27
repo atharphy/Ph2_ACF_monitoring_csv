@@ -4,7 +4,7 @@
 #include "../tools/Tool.h"
 #include "tools/BackEndAlignment.h"
 
-#include "../tools/PSROHHybridTester.h"
+#include "../tools/PSROHTester.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -34,7 +34,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -46,12 +46,8 @@ int main(int argc, char* argv[])
     cmd.addErrorCode(1, "Error");
     // options
     cmd.setHelpOption("h", "help", "Print this help page");
-    cmd.defineOption(
-        "control-file", "Hw Description file for Control (electrical) FC7. Default value: settings/D19CDescription_ROH_EFC7.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
-    cmd.defineOptionAlternative("control-file", "cf");
-    cmd.defineOption(
-        "backend-file", "Hw Description file for Back-End (optical) FC7. Default value: settings/D19CDescription_ROH_OFC7.xml", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
-    cmd.defineOptionAlternative("backend-file", "bf");
+    cmd.defineOption("file", "Hw Description file. Default value: settings/D19CDescription_ROH_EFC7.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("file", "f");
     // Load pattern
     cmd.defineOption("internal-pattern", "Internally Generated LpGBT Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("internal-pattern", "ip");
@@ -100,7 +96,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("debug", "Run debug", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("debug", "d");
     // scope
-    cmd.defineOption("scopeFastCommand", "Scope fast commands [de-serialized]");
+    cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -112,8 +108,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    std::string       cBackEndHWFile        = (cmd.foundOption("backend-file")) ? cmd.optionValue("backend-file") : "settings/D19CDescription_ROH_OFC7.xml";
-    std::string       cControlHWFile        = (cmd.foundOption("control-file")) ? cmd.optionValue("control-file") : "settings/D19CDescription_ROH_EFC7.xml";
+    std::string       cHWFile               = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
     bool              batchMode             = (cmd.foundOption("batch")) ? true : false;
     const std::string cSSAPair              = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
     std::string       cDirectory            = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
@@ -132,7 +127,6 @@ int main(int argc, char* argv[])
     uint8_t           cInternalPattern8     = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
     uint32_t          cInternalPattern32    = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
     uint8_t           cFCMDPattern          = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
-    // std::string cADCList = ( cmd.foundOption( "testADC" ) ) ? ( cmd.optionValue( "testADC" ) ) : "0,1,2,3,4,5,6,7";
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -146,46 +140,35 @@ int main(int argc, char* argv[])
     // Timer t;
 
     // Initialize and Configure Back-End (Optical) FC7
-    Tool              cBackEndTool;
+    Tool cTool;
+
     std::stringstream outp;
-    LOG(INFO) << BOLDYELLOW << "Initializing Back-End (Optical) FC7" << RESET;
-    cBackEndTool.InitializeHw(cBackEndHWFile, outp);
-    cBackEndTool.InitializeSettings(cBackEndHWFile, outp);
+    LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
+    cTool.InitializeHw(cHWFile, outp);
+    cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
     outp.str("");
-    cBackEndTool.CreateResultDirectory(cDirectory);
-    cBackEndTool.InitResultFile(cResultfile);
-    LOG(INFO) << BOLDYELLOW << "Configuring Back-End (Optical) FC7" << RESET;
-    cBackEndTool.ConfigureHw();
-    // Initialize BackEnd Hybrid Tester
-    PSROHHybridTester cBackEndROHHybridTester;
-    cBackEndROHHybridTester.Inherit(&cBackEndTool);
+    cTool.CreateResultDirectory(cDirectory);
+    cTool.InitResultFile(cResultfile);
+    LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
+    cTool.ConfigureHw();
 
-    // Initialize and Configure Control (Electrical) FC7
-    Tool              cControlTool;
-    PSROHHybridTester cControlROHHybridTester;
-    if(cmd.foundOption("control-file"))
-    {
-        LOG(INFO) << BOLDYELLOW << "Initializing Control (Electrical) FC7" << RESET;
-        cControlTool.InitializeHw(cControlHWFile, outp);
-        cControlTool.InitializeSettings(cControlHWFile, outp);
-        LOG(INFO) << outp.str();
-        outp.str("");
-
-        LOG(INFO) << BOLDYELLOW << "Configuring Control (Electrical) FC7" << RESET;
-        cControlTool.ConfigureHw();
-        // Initialize Control Hybrid Tester
-        cControlROHHybridTester.Inherit(&cControlTool);
-    }
+    // Initialize BackEnd & Control LpGBT Tester
+    PSROHTester cPSROHTester;
+    cPSROHTester.Inherit(&cTool);
+    cPSROHTester.FindUSBHandler();
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
-        if(cmd.foundOption("internal-pattern") && cmd.foundOption("backend-file")) { cBackEndROHHybridTester.TestULInternalPattern(cInternalPattern32); }
-
-        if(cmd.foundOption("external-pattern") && cmd.foundOption("control-file"))
+        if(cmd.foundOption("internal-pattern"))
         {
-            cControlROHHybridTester.InjectExternalPattern(cExternalPattern);
-            cBackEndROHHybridTester.TestULExternalPattern();
+            cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
+            cPSROHTester.LpGBTCheckULPattern(false);
+        }
+        else if(cmd.foundOption("external-pattern"))
+        {
+            cPSROHTester.LpGBTInjectULExternalPattern(cExternalPattern);
+            cPSROHTester.LpGBTCheckULPattern(true);
         }
     }
 
@@ -194,7 +177,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
         // align back-end
         BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cBackEndTool);
+        cBackEndAligner.Inherit(&cTool);
         cBackEndAligner.Align();
         // cBackEndAligner.Start(0);
         // reset all chip and board registers
@@ -204,14 +187,16 @@ int main(int argc, char* argv[])
     // Test PS ROH Reset Lines
     if(cmd.foundOption("testReset"))
     {
-        std::vector<uint8_t> cLevels{0x00, 0xFF};
+        std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
+        std::vector<uint8_t>                    cGPIOs  = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         for(auto cLevel: cLevels)
         {
-            bool cStatus = cBackEndROHHybridTester.TestResetLines(cLevel);
+            cPSROHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
+            bool cStatus = cPSROHTester.TestResetLines(cLevel.second);
             if(cStatus)
-                LOG(INFO) << BOLDBLUE << "Set levels to " << +cLevel << " : test " << BOLDGREEN << " passed." << RESET;
+                LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
             else
-                LOG(INFO) << BOLDBLUE << "Set levels to " << +cLevel << " : test " << BOLDRED << " failed." << RESET;
+                LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
         }
     }
 
@@ -219,7 +204,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testI2C"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
-        bool                 cStatus  = cBackEndROHHybridTester.TestI2CMaster(cMasters);
+        bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters);
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
         else
@@ -229,96 +214,91 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testADC"))
     {
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
-        cBackEndROHHybridTester.TestADC(cADCs, 0, 1000, 20);
+        cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
     }
-
-    if(cmd.foundOption("optical")) cBackEndROHHybridTester.TestOpticalRW();
 
     // Test Fast Commands
     if(cDebug)
     {
         LOG(INFO) << "Start debugging" << RESET;
-        cControlROHHybridTester.PSROHInputsDebug();
+        cPSROHTester.PSROHInputsDebug();
     }
 
     if(cClockTest)
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cControlROHHybridTester.CheckClocks();
+        cPSROHTester.CheckClocks();
     }
 
-    if(cmd.foundOption("scopeFastCommand"))
+    if(cmd.foundOption("scope-fcmd"))
     {
-        if(cmd.foundOption("fcmd-pattern"))
-            cBackEndROHHybridTester.PrepareFCMDTest(3, cFCMDPattern);
-        else
-            cBackEndROHHybridTester.PrepareFCMDTest(0);
-        cControlROHHybridTester.FastCommandScope();
+        if(cmd.foundOption("fcmd-pattern")) cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+        cPSROHTester.FastCommandScope();
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Fast command test" << RESET;
-        cControlROHHybridTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
+        cPSROHTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
     }
 
     if(cmd.foundOption("bramfcmd-check") && !cBRAMFCMDLine.empty())
     {
         LOG(INFO) << BOLDBLUE << "Access to written data in BRAM" << RESET;
-        cControlROHHybridTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
+        cPSROHTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
     }
 
     if(cmd.foundOption("bramreffcmd-write") && !cBRAMFCMDFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Write reference patterns to BRAM" << RESET;
-        cControlROHHybridTester.WritePatternToBRAM(cBRAMFCMDFileName);
+        cPSROHTester.WritePatternToBRAM(cBRAMFCMDFileName);
     }
 
     if(cmd.foundOption("convert-userfile") && !cConvertUserFileName.empty())
     {
         LOG(INFO) << BOLDBLUE << "Convert user file to fw compliant format" << RESET;
-        cControlROHHybridTester.UserFCMDTranslate(cConvertUserFileName);
+        cPSROHTester.UserFCMDTranslate(cConvertUserFileName);
     }
 
     if(cmd.foundOption("read-ref-bram"))
     {
         int cAddr = std::atoi(cRefBRAMAddr.c_str());
         LOG(INFO) << BOLDBLUE << "Read single ref FCMD BRAM address: " << cmd.optionValue("read-ref-bram") << RESET;
-        cControlROHHybridTester.ReadRefAddrBRAM(cAddr);
+        cPSROHTester.ReadRefAddrBRAM(cAddr);
     }
 
     if(cmd.foundOption("read-check-bram"))
     {
         int cAddr = std::atoi(cCheckBRAMAddr.c_str());
         LOG(INFO) << BOLDBLUE << "Read single check FCMD BRAM address: " << cmd.optionValue("read-check-bram") << RESET;
-        cControlROHHybridTester.ReadCheckAddrBRAM(cAddr);
+        cPSROHTester.ReadCheckAddrBRAM(cAddr);
     }
 
     if(cmd.foundOption("clear-ref-bram"))
     {
         LOG(INFO) << BOLDBLUE << "Flushing ref BRAM!" << RESET;
-        cControlROHHybridTester.ClearBRAM(std::string("ref"));
+        cPSROHTester.ClearBRAM(std::string("ref"));
     }
 
     if(cmd.foundOption("clear-check-bram"))
     {
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
-        cControlROHHybridTester.ClearBRAM(std::string("test"));
+        cPSROHTester.ClearBRAM(std::string("test"));
     }
     /*
-        D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cBackEndTool.fBeBoardInterface->getFirmwareInterface());
+        D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
         cFWInterface->StubDebug(true, 6);
         LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
         cFWInterface->L1ADebug();
     */
     // Save Result File
-    cBackEndTool.SaveResults();
-    cBackEndTool.WriteRootFile();
-    cBackEndTool.CloseResultFile();
+    cTool.SaveResults();
+    cTool.WriteRootFile();
+    cTool.CloseResultFile();
     // Destroy Tools
-    cControlTool.Destroy();
-    cBackEndTool.Destroy();
+    cTool.Destroy();
+    cTool.Destroy();
 
     if(!batchMode) cApp.Run();
     return 0;

@@ -15,7 +15,7 @@ class TCPTransmitterSocket : public virtual TCPSocket
     // TCPTransmitterSocket(TCPTransmitterSocket const&)  = delete ;
     TCPTransmitterSocket(TCPTransmitterSocket&& theTCPTransmitterSocket) = default;
 
-    void send(char const* buffer, std::size_t size);
+    void send(char const* buffer, std::size_t size, bool forceEmptyPacket = false);
     void send(const std::string& buffer);
     void send(const std::vector<char>& buffer);
     void send(const std::vector<uint16_t>& buffer);
@@ -23,11 +23,6 @@ class TCPTransmitterSocket : public virtual TCPSocket
     template <typename T>
     void send(const std::vector<T>& buffer)
     {
-        if(buffer.size() == 0)
-        {
-            std::cout << __PRETTY_FUNCTION__ << "I am sorry but I won't send an empty packet!" << std::endl;
-            return;
-        }
         send(reinterpret_cast<const char*>(&buffer.at(0)), buffer.size() * sizeof(T));
     }
 
