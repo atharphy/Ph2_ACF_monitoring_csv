@@ -130,14 +130,14 @@ void PSInterface::Activate_sync(Chip* pPS)
 {return theMPAInterface->Activate_sync( pPS);}
 
 
-void PSInterface::Activate_pp(Chip* pPS)
-{return theMPAInterface->Activate_pp( pPS);}
+void PSInterface::Activate_pp(Chip* pPS, uint8_t win)
+{return theMPAInterface->Activate_pp( pPS,  win);}
 
-void PSInterface::Activate_ss(Chip* pPS)
-{return theMPAInterface->Activate_ss( pPS);}
+void PSInterface::Activate_ss(Chip* pPS, uint8_t win)
+{return theMPAInterface->Activate_ss( pPS, win);}
 
 void PSInterface::Activate_ps(Chip* pPS, uint8_t win)
-{return theMPAInterface->Activate_ps( pPS);}
+{return theMPAInterface->Activate_ps( pPS, win);}
 
 
 void PSInterface::Pix_Smode(ReadoutChip* pPS, uint32_t p, std::string smode = "edge")

@@ -21,7 +21,6 @@
 // pixelEnable bits 
 const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE = {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR",3}
 , {"CounterEnable",4},{"DigitalInjection",5},{"AnalogueInjection",6},{"BrClk",7}};
-
 const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
 // periphery config register map 
@@ -107,8 +106,8 @@ class MPAInterface : public ReadoutChipInterface
     void                  PS_Start_counters_read(uint32_t duration = 0);
     void                  Activate_async(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_pp(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_ss(Ph2_HwDescription::Chip* pMPA);
+    void                  Activate_pp(Ph2_HwDescription::Chip* pMPA, uint8_t win=0);
+    void                  Activate_ss(Ph2_HwDescription::Chip* pMPA, uint8_t win=0);
     void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win=8);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);

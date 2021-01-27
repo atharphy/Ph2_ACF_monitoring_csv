@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     // thePSInterface->activate_I2C_chip();
 
     std::pair<uint32_t, uint32_t> rows = {5, 6};
-    std::pair<uint32_t, uint32_t> cols = {10, 70};
+    std::pair<uint32_t, uint32_t> cols = {68, 69};
     // std::pair<uint32_t, uint32_t> rows = {5,7};
     // std::pair<uint32_t, uint32_t> cols = {1,5};
 
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 				gpix = theMPA->PNglobal(std::pair<uint32_t, uint32_t>(row, col));
 				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
 				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix-1), 0x37);
-				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix), 0x37);
+				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix), 0x37);
 				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+1), 0x37);
 
 				thePSInterface->WriteChipReg(cMPA, "DigPattern_ALL",0xFF);
@@ -137,12 +137,12 @@ int main(int argc, char* argv[])
 			if (cMPA->getFrontEndType() == FrontEndType::SSA)
 			{
 				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
-				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col-1), 0x9);
+				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col-1), 0x9);
 				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col), 0x9);
-				thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col+1), 0x9);
+				//thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col+1), 0x9);
 	
 				//thePSInterface->WriteChipReg(cMPA, "SAMPLINGMODE_ALL",0x1);
-				thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_L_ALL", 0x0F);
+				thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_L_ALL", 0x01);
 				thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_H_ALL", 0x00);
 			}
 
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 
 		
         
-                for(size_t ilat = 59; ilat <60; ilat++)
+                for(size_t ilat = 0; ilat <30; ilat++)
                 {
 																		
 		        std::cout <<"ilat "<< ilat << std::endl;
@@ -162,22 +162,24 @@ int main(int argc, char* argv[])
 				//L1OffsetPeri_2  	0x0 	 0x882B 0x5 	0x5
 				//SSAOffset_1  	0x0 	 0x882C 0x5 	0x5
 				//SSAOffset_2  	0x0 	 0x882D 0x5 	0x5
-				size_t  writelat=ilat;
-				if (cMPA->getFrontEndType() == FrontEndType::SSA)writelat-=2;
-				thePSInterface->WriteChipReg(cMPA, "TriggerLatency", writelat >> 0,false);
+				size_t  writelat=58;
+
+				//size_t  writelat=60;
+				//if (cMPA->getFrontEndType() == FrontEndType::SSA)writelat-=2;
+				thePSInterface->WriteChipReg(cMPA, "TriggerLatency", writelat ,false);
 				//thePSInterface->WriteChipReg(cMPA, "L1Offset_2_ALL", (0x0100 & ilat) >> 8,false);
 
 				if (cMPA->getFrontEndType() == FrontEndType::MPA)
 					{
-					thePSInterface->WriteChipReg(cMPA, "LatencyRx320",  6);
-					//thePSInterface->WriteChipReg(cMPA, "SSAOffset_1",  ilat);
-					//thePSInterface->WriteChipReg(cMPA, "LatencyRx40",  ilat);
+					thePSInterface->WriteChipReg(cMPA, "LatencyRx320",  1);//3
+					thePSInterface->WriteChipReg(cMPA, "EdgeSelT1Raw",  2);
+					thePSInterface->WriteChipReg(cMPA, "LatencyRx40",  ilat);
 					}
 				
 
 
 			}
-		        cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", ilat);
+		        //cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", ilat);
 	 		//for(size_t ion = 0; ion <1; ion++)
 			//{
 
@@ -186,7 +188,7 @@ int main(int argc, char* argv[])
 		        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ResetReadout();
 
 		   
-		        cTool.ReadNEvents(pBoard, 20);
+		        cTool.ReadNEvents(pBoard, 50);
 
 
 		        std::this_thread::sleep_for(ShortWait);
