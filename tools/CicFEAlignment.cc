@@ -102,7 +102,7 @@ void CicFEAlignment::Initialise()
                     // check chip type
                     fWithMPA = fWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA);
 
-                    //ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+                    // ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
                     // CbcInterface* theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                     // if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     // {
@@ -158,10 +158,12 @@ void CicFEAlignment::writeObjects()
 void CicFEAlignment::Running()
 {
     Initialise();
-    
+
     bool cPhaseAligned = true;
-    if (fWithMPA)  cPhaseAligned= this->PhaseAlignmentMPA();
-    else  cPhaseAligned = this->PhaseAlignment();
+    if(fWithMPA)
+        cPhaseAligned = this->PhaseAlignmentMPA();
+    else
+        cPhaseAligned = this->PhaseAlignment();
     if(!cPhaseAligned)
     {
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " phase alignment step on CIC input .. " << RESET;
@@ -169,7 +171,7 @@ void CicFEAlignment::Running()
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " phase alignment on CIC inputs... " << RESET;
     fSuccess = cPhaseAligned;
-    
+
     bool cWordAligned = this->WordAlignment();
     if(!cWordAligned)
     {
@@ -179,8 +181,8 @@ void CicFEAlignment::Running()
 
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
     // automatic alignment
-    // TO-DO ADD alignment for PS 
-    bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelayPS) : this->SetBx0Delay(fStubBxDelay2S); 
+    // TO-DO ADD alignment for PS
+    bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelayPS) : this->SetBx0Delay(fStubBxDelay2S);
     if(!cBxAligned)
     {
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
@@ -327,21 +329,21 @@ void CicFEAlignment::SetStaticPhaseAlignment()
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 // 4 channels per phyPort ... 12 phyPorts per CIC
-                //std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
+                // std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
                 // 8 FEs per CIC .... 6 SLVS lines per FE
                 std::vector<std::vector<uint8_t>> cPhaseTapsFEs(8, std::vector<uint8_t>(6, 0));
                 // read back phase aligner values
                 LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    if (cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-                    auto cTaps = fCicInterface->GetOptimalTaps(cCic, cChip->getId()); 
-                    for( size_t cIndx=0 ; cIndx <  cTaps.size(); cIndx++ )  cPhaseTapsFEs[ cChip->getId() ][cIndx] = cTaps[cIndx];
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    auto cTaps = fCicInterface->GetOptimalTaps(cCic, cChip->getId());
+                    for(size_t cIndx = 0; cIndx < cTaps.size(); cIndx++) cPhaseTapsFEs[cChip->getId()][cIndx] = cTaps[cIndx];
                 } // loop over FEs
 
                 for(auto cChip: *cHybrid)
                 {
-                    if (cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                     std::string cOutput;
                     for(uint8_t cInput = 0; cInput < 6; cInput += 1)
@@ -355,14 +357,14 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                 // put phase aligner in static mode
 
                 fCicInterface->SetStaticPhaseAlignment(cCic);
-            }//hybrid 
-        }//
+            } // hybrid
+        }     //
     }
 }
 bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 {
     // MPA phase alignment
-    bool cAligned = true; 
+    bool cAligned = true;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for MPAs .... " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -377,16 +379,16 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 uint8_t                  cAlignmentPattern = 0xAA;
                 std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
                 std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-                for(size_t cIndex = 0; cIndex < cRegValues.size() ; cIndex++)
+                for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if (cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                        if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                         cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
                         fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
                     } // loop over MPAs
-                }// loop over registers
+                }     // loop over registers
 
                 // send a resync
                 fBeBoardInterface->ChipReSync(cBoard);
@@ -395,11 +397,11 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic, true);
                 bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
                 // if locked .. switch to automatic phase aligner mode with best values
-                if( cLocked ) fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
+                if(cLocked) fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
                 cAligned = cAligned && cLocked;
-            }//hybrid
-        }//optical group
-    }// board 
+            } // hybrid
+        }     // optical group
+    }         // board
     //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
     // check alignment and use static phase from now on
     return cAligned;
@@ -603,7 +605,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                         LOG(INFO) << BOLDBLUE << "Optimal tap found on FE[Hybrid Count]" << +cChip->getId() << " : " << cOutput << RESET;
                     }
                     // put phase aligner in static mode
-                    //fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
+                    // fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
                 }
                 else
                 {
@@ -640,10 +642,10 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
 void CicFEAlignment::WordAlignmentPattern(ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns)
 {
     // enable stub logic
-    if( pChip->getFrontEndType() == FrontEndType::CBC3)
+    if(pChip->getFrontEndType() == FrontEndType::CBC3)
     {
         LOG(INFO) << GREEN << "Configuring CBC3 Alignment pattern" << RESET;
-        
+
         static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(pChip, "Sampled", true, true);
         // switch on HitOr
         fReadoutChipInterface->WriteChipReg(pChip, "HitOr", 0);
@@ -652,8 +654,9 @@ void CicFEAlignment::WordAlignmentPattern(ReadoutChip* pChip, std::vector<uint8_
 
         std::vector<uint8_t> cStubs{pAlignmentPatterns[0], pAlignmentPatterns[1], pAlignmentPatterns[2]};
         std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(pChip);
-        std::vector<uint8_t> cBendCodes{static_cast<uint8_t>(pAlignmentPatterns[3] & 0x0F), static_cast<uint8_t>((pAlignmentPatterns[3] & 0xF0) >> 4), static_cast<uint8_t>(pAlignmentPatterns[4] & 0x0F)};
-        std::vector<int>     cBends(3, 0);
+        std::vector<uint8_t> cBendCodes{
+            static_cast<uint8_t>(pAlignmentPatterns[3] & 0x0F), static_cast<uint8_t>((pAlignmentPatterns[3] & 0xF0) >> 4), static_cast<uint8_t>(pAlignmentPatterns[4] & 0x0F)};
+        std::vector<int> cBends(3, 0);
         for(size_t cIndex = 0; cIndex < cBendCodes.size(); cIndex += 1)
         {
             auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex]);
@@ -670,16 +673,12 @@ void CicFEAlignment::WordAlignmentPattern(ReadoutChip* pChip, std::vector<uint8_
     else
     {
         // enable MPA alignment pattern
-        LOG(INFO) << GREEN << "Configuring MPA Alignment pattern :" 
-            << " MPA will output 0x" << std::hex << +pAlignmentPatterns[0] << std::dec 
-            << RESET;
+        LOG(INFO) << GREEN << "Configuring MPA Alignment pattern :"
+                  << " MPA will output 0x" << std::hex << +pAlignmentPatterns[0] << std::dec << RESET;
         std::vector<uint8_t>     cOriginalValues;
         std::vector<uint8_t>     cRegValues{0x2, pAlignmentPatterns[0]};
         std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-        for( size_t cIndx=0; cIndx < cRegNames.size() ; cIndx++)
-        {
-            fReadoutChipInterface->WriteChipReg(pChip, cRegNames[cIndx], cRegValues[cIndx]);
-        }
+        for(size_t cIndx = 0; cIndx < cRegNames.size(); cIndx++) { fReadoutChipInterface->WriteChipReg(pChip, cRegNames[cIndx], cRegValues[cIndx]); }
     }
 }
 bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
@@ -693,8 +692,8 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 
     for(auto cBoard: *fDetectorContainer)
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
+        BeBoard* theBoard                = static_cast<BeBoard*>(cBoard);
+        auto&    cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -708,14 +707,15 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 
                 // now inject stubs that can generate word alignment pattern
                 std::vector<uint8_t> cAlignmentPatterns;
-                for(auto cChip: *cHybrid) { 
-                    if(  cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-                    cAlignmentPatterns = (  cChip->getFrontEndType() == FrontEndType::MPA ) ? cAlignmentPatterns_MPA : cAlignmentPatterns_CBC;
-    
-                    this->WordAlignmentPattern(static_cast<ReadoutChip*>(cChip), cAlignmentPatterns); 
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    cAlignmentPatterns = (cChip->getFrontEndType() == FrontEndType::MPA) ? cAlignmentPatterns_MPA : cAlignmentPatterns_CBC;
+
+                    this->WordAlignmentPattern(static_cast<ReadoutChip*>(cChip), cAlignmentPatterns);
                 }
                 // now send a fast reset
-                //fBeBoardInterface->ChipReSync(theBoard);
+                // fBeBoardInterface->ChipReSync(theBoard);
 
                 // run automated word alignment
                 cAligned                                               = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_ms);
@@ -726,7 +726,7 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                     std::vector<std::vector<uint8_t>> cValues = SortWordAlignmentValues(cWordAlignmentValues);
                     for(auto cChip: *cHybrid)
                     {
-                        if(  cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
                         std::string cOutput;
                         for(uint8_t cLine = 0; cLine < 5; cLine += 1)
                         {

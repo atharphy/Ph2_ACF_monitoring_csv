@@ -20,14 +20,16 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap)
+    {
 #ifdef __TCUSB__
-      fTC_PSROH = new TC_PSROH();
+        fTC_PSROH = new TC_PSROH();
 #endif
     }
-    ~D19clpGBTInterface() {
+    ~D19clpGBTInterface()
+    {
 #ifdef __TCUSB__
-      delete fTC_PSROH;
+        delete fTC_PSROH;
 #endif
     }
     // ###################################
@@ -205,9 +207,9 @@ class D19clpGBTInterface : public lpGBTInterface
 
     // OT specific objects
     bool fUseOpticalLink = true;
-    bool fUseCPB = true;
+    bool fUseCPB         = true;
 #ifdef __TCUSB__
-    TC_PSROH* fTC_PSROH;
+    TC_PSROH*                                    fTC_PSROH;
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},

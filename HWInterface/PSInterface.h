@@ -13,10 +13,9 @@
 #define __PSINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
+#include "MPAInterface.h"
 #include "ReadoutChipInterface.h"
 #include "SSAInterface.h"
-#include "MPAInterface.h"
-
 
 #include "pugixml.hpp"
 #include <vector>
@@ -41,11 +40,11 @@ class PSInterface : public ReadoutChipInterface
     ~PSInterface();
     Ph2_HwInterface::SSAInterface* theSSAInterface;
     Ph2_HwInterface::MPAInterface* theMPAInterface;
-    void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
-    void     setFileHandler(FileHandler* pHandler);
-    bool     ConfigureChip(Ph2_HwDescription::Chip* pPS, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
-    void     ReadPS(Ph2_HwDescription::ReadoutChip* pPS);
+    void                           LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
+    void                           setFileHandler(FileHandler* pHandler);
+    bool                           ConfigureChip(Ph2_HwDescription::Chip* pPS, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    uint32_t                       ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
+    void                           ReadPS(Ph2_HwDescription::ReadoutChip* pPS);
 
     bool     WriteChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
@@ -62,9 +61,9 @@ class PSInterface : public ReadoutChipInterface
     void                  PS_Start_counters_read(uint32_t duration = 0);
     void                  Activate_async(Ph2_HwDescription::Chip* pPS);
     void                  Activate_sync(Ph2_HwDescription::Chip* pPS);
-    void                  Activate_pp(Ph2_HwDescription::Chip* pPS, uint8_t win=0);
-    void                  Activate_ss(Ph2_HwDescription::Chip* pPS, uint8_t win=0);
-    void                  Activate_ps(Ph2_HwDescription::Chip* pPS, uint8_t win=8);
+    void                  Activate_pp(Ph2_HwDescription::Chip* pPS, uint8_t win = 0);
+    void                  Activate_ss(Ph2_HwDescription::Chip* pPS, uint8_t win = 0);
+    void                  Activate_ps(Ph2_HwDescription::Chip* pPS, uint8_t win = 8);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
     void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
@@ -72,21 +71,21 @@ class PSInterface : public ReadoutChipInterface
     void Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
 
-    void digiInjection(  Ph2_HwDescription::ReadoutChip* pChip , std::vector<Injection> pInjections ) ;
-    std::vector<int> decodeBendCode( Ph2_HwDescription::ReadoutChip* pChip , uint8_t pBendCode );
-    void ReadASEvent(Ph2_HwDescription::ReadoutChip* pPS, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
-    void Pix_Smode(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string smode);
-    void Enable_pix_BRcal(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string polarity = "rise", std::string smode = "edge");
-    void Pix_Set_enable(Ph2_HwDescription::ReadoutChip* pPS,
-                        uint32_t                        p,
-                        uint32_t                        PixelMask,
-                        uint32_t                        Polarity,
-                        uint32_t                        EnEdgeBR,
-                        uint32_t                        EnLevelBR,
-                        uint32_t                        Encount,
-                        uint32_t                        DigCal,
-                        uint32_t                        AnCal,
-                        uint32_t                        BRclk);
+    void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections);
+    std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
+    void             ReadASEvent(Ph2_HwDescription::ReadoutChip* pPS, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
+    void             Pix_Smode(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string smode);
+    void             Enable_pix_BRcal(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string polarity = "rise", std::string smode = "edge");
+    void             Pix_Set_enable(Ph2_HwDescription::ReadoutChip* pPS,
+                                    uint32_t                        p,
+                                    uint32_t                        PixelMask,
+                                    uint32_t                        Polarity,
+                                    uint32_t                        EnEdgeBR,
+                                    uint32_t                        EnLevelBR,
+                                    uint32_t                        Encount,
+                                    uint32_t                        DigCal,
+                                    uint32_t                        AnCal,
+                                    uint32_t                        BRclk);
 
     void Set_calibration(Ph2_HwDescription::Chip* pPS, uint32_t cal);
     void Set_threshold(Ph2_HwDescription::Chip* pPS, uint32_t th);
@@ -103,7 +102,6 @@ class PSInterface : public ReadoutChipInterface
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
 
     void Cleardata();
-
 };
 } // namespace Ph2_HwInterface
 

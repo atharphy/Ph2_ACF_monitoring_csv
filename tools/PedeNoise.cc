@@ -82,14 +82,12 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
                 {
                     if(!cAsyncEvent) continue;
 
-                    if( cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA ) // force this to work in async mode for now 
-                        fReadoutChipInterface->WriteChipReg(cROC,"AnalogueAsync",1);
+                    if(cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA) // force this to work in async mode for now
+                        fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
         }
     }
-
-                    
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -281,9 +279,9 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                 {
                     RegisterVector cRegVec;
 
-                    uint32_t       NCH = NCHANNELS;
-                    if (cROC->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
-                    if (cROC->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
+                    uint32_t NCH = NCHANNELS;
+                    if(cROC->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
+                    if(cROC->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;

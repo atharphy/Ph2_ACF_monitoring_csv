@@ -45,9 +45,9 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     uint16_t cIter = 0, cMaxIter = 2000;
     while(cPUSMStatus != 18 && cIter < cMaxIter)
     {
-    LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
-    cPUSMStatus = GetPUSMStatus(pChip);
-    cIter++;
+        LOG(INFO) << BOLDRED << "lpGBT not configured [NOT READY] -- PUSM status = " << +cPUSMStatus << RESET;
+        cPUSMStatus = GetPUSMStatus(pChip);
+        cIter++;
     }
     if(cPUSMStatus != 18) exit(0);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
@@ -65,8 +65,8 @@ bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std:
     return WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
-uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) 
-{ 
+uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)
+{
     uint8_t cReadBack = ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
     LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return cReadBack;
@@ -103,31 +103,31 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
 #endif
     }
     return true;
-    //FIXME USB interface needs verification loop here or library ? 
-    if(!pVerifLoop) 
-    // Verify success of Write
-    if(!fUseOpticalLink)
-    {
-        uint8_t cIter = 0, cMaxIter = 50;
-        while(cReadBack != pValue && cIter < cMaxIter)
+    // FIXME USB interface needs verification loop here or library ?
+    if(!pVerifLoop)
+        // Verify success of Write
+        if(!fUseOpticalLink)
         {
-            // Now pick one configuration mode
-            // use PS-ROH test card USB interface
+            uint8_t cIter = 0, cMaxIter = 50;
+            while(cReadBack != pValue && cIter < cMaxIter)
+            {
+                // Now pick one configuration mode
+                // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-            cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
+                cReadBack = fTC_PSROH.write_i2c(pAddress, static_cast<char>(pValue));
 #endif
-            cIter++;
+                cIter++;
+            }
+            if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
         }
-        if(cIter == cMaxIter)
-            throw std::runtime_error(std::string("lpGBT register write mismatch"));
-    }
     return true;
 }
 
 uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress)
 {
     setBoard(pChip->getBeBoardId());
-    if(fUseOpticalLink) { 
+    if(fUseOpticalLink)
+    {
         if(fUseCPB)
             return fBoardFW->ReadLpGBTRegister(pAddress);
         else
@@ -445,10 +445,7 @@ void D19clpGBTInterface::PrintChipMode(Ph2_HwDescription::Chip* pChip)
     }
 }
 
-uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
-{
-    return ReadChipReg(pChip, "PUSMStatus");
-}
+uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }
 
 uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
@@ -686,7 +683,7 @@ void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std
     uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
     uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
     uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
-    for(auto cGPIO : pGPIOs)
+    for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
         {
@@ -863,8 +860,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip, uint8_t 
             ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    // for now .. don't do this 
-    //PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // for now .. don't do this
+    // PhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // setting GPIO levels Uncomment this for Skeleton test
@@ -907,12 +904,12 @@ uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
 
 bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
-    bool cWriteOnlyReg = (pRegisterAddress & 0x7f) == 0x00; 
+    bool cWriteOnlyReg = (pRegisterAddress & 0x7f) == 0x00;
     LOG(DEBUG) << BOLDBLUE << "SSA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
-    
-    if( cWriteOnlyReg ) return true;
+
+    if(cWriteOnlyReg) return true;
 
     if(pRetry)
     {
@@ -927,7 +924,7 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
         if(cReadBack != pRegisterValue)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            //throw std::runtime_error(std::string("I2C readback mismatch"));
+            // throw std::runtime_error(std::string("I2C readback mismatch"));
         }
     }
     return true;
@@ -944,16 +941,14 @@ uint32_t D19clpGBTInterface::ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
 
 bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
-    bool cWriteOnlyReg = (pRegisterAddress & 0x7f) == 0x00; 
-    uint8_t cSlaveAddress = (0x2 << 5 ) + pChipId;
-    LOG (DEBUG) << BOLDBLUE << "MPA Write : SlaveAddress 0x" << std::hex << +cSlaveAddress << std::dec 
-        << " Register address : 0x" << std::hex << +pRegisterAddress << std::dec 
-        << " Register value : 0x" << std::hex << +pRegisterValue << std::dec 
-        << RESET;
+    bool    cWriteOnlyReg = (pRegisterAddress & 0x7f) == 0x00;
+    uint8_t cSlaveAddress = (0x2 << 5) + pChipId;
+    LOG(DEBUG) << BOLDBLUE << "MPA Write : SlaveAddress 0x" << std::hex << +cSlaveAddress << std::dec << " Register address : 0x" << std::hex << +pRegisterAddress << std::dec << " Register value : 0x"
+               << std::hex << +pRegisterValue << std::dec << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0,cSlaveAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, cSlaveAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
 
-    if( cWriteOnlyReg ) return true;
+    if(cWriteOnlyReg) return true;
 
     if(pRetry)
     {
@@ -976,7 +971,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
 
 uint32_t D19clpGBTInterface::mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress)
 {
-    uint8_t cSlaveAddress = (0x2 << 5 ) + pChipId;
+    uint8_t  cSlaveAddress     = (0x2 << 5) + pChipId;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, cSlaveAddress, cInvertedRegister, 2);
     uint8_t cReadBack = ReadI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, cSlaveAddress, 1);

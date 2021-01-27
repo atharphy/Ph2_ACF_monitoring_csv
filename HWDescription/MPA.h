@@ -25,11 +25,10 @@
 #include <string>
 #include <utility>
 
-
 // #############
 // # CONSTANTS #
 // #############
-#define NROWSMPA 16 // Total number of rows
+#define NROWSMPA 16  // Total number of rows
 #define NCOLSMPA 120 // Total number of columns
 
 /*!
@@ -46,16 +45,16 @@ class MPA : public ReadoutChip
   public:
     static constexpr size_t nRows = NROWSMPA;
     static constexpr size_t nCols = NCOLSMPA;
-    
+
     MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename);
     // C'tors with object FE Description
     MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename);
 
     using MPARegPair = std::pair<std::string, ChipRegItem>;
     uint8_t fPartnerId;
-    uint8_t getPartid() {return fPartnerId;}
-    void loadfRegMap(const std::string& filename) override;
-    void saveRegMap(const std::string& filename) override;
+    uint8_t getPartid() { return fPartnerId; }
+    void    loadfRegMap(const std::string& filename) override;
+    void    saveRegMap(const std::string& filename) override;
 
     bool isDACLocal(const std::string& dacName) override
     {
@@ -72,15 +71,14 @@ class MPA : public ReadoutChip
             return 8;
     }
 
-    // row, col starts at index 0, global pix number starts at number 1 
+    // row, col starts at index 0, global pix number starts at number 1
 
-    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN+1) / 120 +1, ((PN+1) % 120) - 1 ); }
+    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120 + 1, ((PN + 1) % 120) - 1); }
 
     uint32_t getNumberOfChannels() const override { return NMPACHANNELS; }
 
-    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first-1) * 120 + (PC.second-1) +1; }
+    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
 };
-
 
 struct MPARegItemComparer
 {

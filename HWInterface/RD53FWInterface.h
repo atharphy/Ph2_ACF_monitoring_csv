@@ -239,13 +239,13 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override;
     // # Read/Write new Command Processor Block #
     // ##########################################
-    //functions for new Command Processor Block
-    void     ResetCPB() {}
-    void     WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override {}
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override {return {0};}
-    //function to read/write lpGBT registers
-    bool WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override {return true;}
-    uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override {return 0;}
+    // functions for new Command Processor Block
+    void                  ResetCPB() {}
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override {}
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override { return {0}; }
+    // function to read/write lpGBT registers
+    bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override { return true; }
+    uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override { return 0; }
 
     // ###########################################
     // # Member functions to handle the firmware #

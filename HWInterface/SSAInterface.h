@@ -43,8 +43,6 @@ class SSAInterface : public ReadoutChipInterface
     void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
     void     Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
 
-
-
   private:
     D19clpGBTInterface*            flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT*      flpGBT          = nullptr;

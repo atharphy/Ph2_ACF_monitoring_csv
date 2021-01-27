@@ -34,8 +34,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
     if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    //For async only -- to fix
-    if(cWithMPA)fChannelGroupHandler->setChannelGroupParameters(16, 120);
+    // For async only -- to fix
+    if(cWithMPA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
 
     this->fAllChan = pAllChan;
 
@@ -61,35 +61,31 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-
-
     for(auto board: *fDetectorContainer)
     {
-            for(auto opticalGroup: *board)
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
             {
-                for(auto hybrid: *opticalGroup)
+                for(auto chip: *hybrid)
                 {
-                    for(auto chip: *hybrid)
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(chip);
+                    // if it is a CBC3, disable the stub logic for this procedure
+                    if(theChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        ReadoutChip* theChip = static_cast<ReadoutChip*>(chip);
-                        // if it is a CBC3, disable the stub logic for this procedure
-                        if(theChip->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            fReadoutChipInterface->WriteChipReg(theChip,"ENFLAGS_ALL",15);
-                            fReadoutChipInterface->WriteChipReg(theChip,"ReadoutMode",1);
-                        }
-                    
-                        if(theChip->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            fReadoutChipInterface->WriteChipReg(theChip,"ENFLAGS_ALL",0x57);
-                            fReadoutChipInterface->WriteChipReg(theChip,"ReadoutMode",1);
-                        }
-		    }
+                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
+                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
+                    }
+
+                    if(theChip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
+                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
+                    }
                 }
             }
-
+        }
     }
-
 
     if(fDisableStubLogic)
     {
@@ -225,7 +221,6 @@ void PedestalEqualization::FindOffsets()
 
     uint32_t NCH = NCHANNELS;
 
-
     if(cWithCBC) setSameDac("VCth", fTargetVcth);
     if(cWithSSA or cWithMPA) setSameDac("Threshold", fTargetVcth);
 
@@ -260,7 +255,7 @@ void PedestalEqualization::FindOffsets()
 
                     unsigned int channelNumber = 1;
                     int          cMeanOffset   = 0;
-                    ReadoutChip* roc = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
+                    ReadoutChip* roc           = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     for(auto& channel: *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                     {
                         char charRegName[20];
@@ -269,13 +264,12 @@ void PedestalEqualization::FindOffsets()
                         if(roc->getFrontEndType() == FrontEndType::SSA) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
                         if(roc->getFrontEndType() == FrontEndType::MPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
                         std::string cRegName = charRegName;
-                        channel = roc->getReg(cRegName);
+                        channel              = roc->getReg(cRegName);
                         cMeanOffset += channel;
                     }
 
-                    if (roc->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
-                    if (roc->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
-
+                    if(roc->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
+                    if(roc->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
 
                     LOG(INFO) << BOLDRED << "Mean offset on ROC" << +chip->getId() << " is : " << (cMeanOffset) / (double)NCH << " Vcth units." << RESET;
                 } // for on chip - end

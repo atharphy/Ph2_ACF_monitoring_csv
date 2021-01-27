@@ -67,15 +67,15 @@ class CicInterface : public ChipInterface
 
     // CIC specific functions
     std::pair<bool, uint16_t>         ReadChipReg(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
-    bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel , int pOffset=0);
-    bool                              SetOptimalTaps(Ph2_HwDescription::Chip* pChip, int pOffset=0);
-    uint8_t                           GetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, uint8_t pInput ); 
-    std::vector<uint8_t>              GetOptimalTaps(Ph2_HwDescription::Chip* pChip, uint8_t pFEId);  
+    bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset = 0);
+    bool                              SetOptimalTaps(Ph2_HwDescription::Chip* pChip, int pOffset = 0);
+    uint8_t                           GetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, uint8_t pInput);
+    std::vector<uint8_t>              GetOptimalTaps(Ph2_HwDescription::Chip* pChip, uint8_t pFEId);
     std::vector<std::vector<uint8_t>> GetOptimalTaps(Ph2_HwDescription::Chip* pChip);
     bool                              SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
     bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
-    bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip); 
-    //bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pFeId , uint8_t pLineId , uint8_t pPhase );
+    bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);
+    // bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pFeId , uint8_t pLineId , uint8_t pPhase );
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, std::vector<std::vector<uint8_t>> pPhaseTaps);
     bool                              SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
     bool                              SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pValue = 5);
@@ -114,18 +114,18 @@ class CicInterface : public ChipInterface
     bool WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
 
   protected:
-    std::vector<uint8_t>        fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t>        fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t>        fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
-    
-    bool                        ReadOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps);
-    std::map<uint8_t, uint8_t>  fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
-    uint8_t                     fMaxDriveStrength = 5;
-    std::vector<std::bitset<24>>  fPhaseValues;
+    std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
+
+    bool                         ReadOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps);
+    std::map<uint8_t, uint8_t>   fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
+    uint8_t                      fMaxDriveStrength = 5;
+    std::vector<std::bitset<24>> fPhaseValues;
     // 4 channels per phyPort ... 12 phyPorts per CIC
     std::vector<std::vector<uint8_t>> fPhaseTaps;
-    std::vector<std::bitset<6>> fFeStates;
-    std::vector<std::bitset<4>> fPortStates;
+    std::vector<std::bitset<6>>       fFeStates;
+    std::vector<std::bitset<4>>       fPortStates;
 };
 } // namespace Ph2_HwInterface
 

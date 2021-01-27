@@ -871,7 +871,7 @@ void PSROHHybridTester::TestADC(const std::vector<std::string>& pADCs, uint32_t 
 
 void PSROHHybridTester::TestOpticalRW(uint32_t pNTries)
 {
-    //this->PrepareFCMDTest(0);
+    // this->PrepareFCMDTest(0);
     /*
     for(auto cBoard: *fDetectorContainer)
     {
@@ -888,6 +888,4 @@ void PSROHHybridTester::TestOpticalRW(uint32_t pNTries)
         }
     }
     */
-    
-    
 }

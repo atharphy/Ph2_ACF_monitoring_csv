@@ -41,28 +41,26 @@ void DataChecker::Initialise()
     ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fDataMismatches);
     ContainerFactory::copyAndInitStructure<EventsList>(*fDetectorContainer, fBadEvents);
     ContainerFactory::copyAndInitStructure<EventsList>(*fDetectorContainer, fGoodEvents);
-    
-    
-    
-    //ContainerFactory::copyAndInitChip<std::vector<uint32_t>>(*fDetectorContainer, fBxIdsMatches);
-    //ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fBxIdsMismatches);
+
+    // ContainerFactory::copyAndInitChip<std::vector<uint32_t>>(*fDetectorContainer, fBxIdsMatches);
+    // ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fBxIdsMismatches);
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cInjections = fInjections.at(cBoard->getIndex());
         auto& cMismatches = fDataMismatches.at(cBoard->getIndex());
-        auto& cBadEvents = fBadEvents.at(cBoard->getIndex());
+        auto& cBadEvents  = fBadEvents.at(cBoard->getIndex());
         auto& cGoodEvents = fGoodEvents.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
             auto& cMismatchesOpticalGroup = cMismatches->at(cOpticalGroup->getIndex());
-            auto& cBadEventsOpticalGroup = cBadEvents->at(cBoard->getIndex());
+            auto& cBadEventsOpticalGroup  = cBadEvents->at(cBoard->getIndex());
             auto& cGoodEventsOpticalGroup = cGoodEvents->at(cBoard->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
                 auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
-                auto& cBadEventsHybrid = cBadEventsOpticalGroup->at(cHybrid->getIndex());
+                auto& cBadEventsHybrid  = cBadEventsOpticalGroup->at(cHybrid->getIndex());
                 auto& cGoodEventsHybrid = cGoodEventsOpticalGroup->at(cHybrid->getIndex());
                 // cBxIdsMatchesHybrid->getSummary<std::vector<uint32_t>().clear();
 
@@ -70,7 +68,7 @@ void DataChecker::Initialise()
                 {
                     auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
                     auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getIndex());
-                    auto& cBadEventsChip = cBadEventsHybrid->at(cChip->getIndex());
+                    auto& cBadEventsChip  = cBadEventsHybrid->at(cChip->getIndex());
                     auto& cGoodEventsChip = cGoodEventsHybrid->at(cChip->getIndex());
                     //
                     cBadEventsChip->getSummary<EventsList>().clear();
@@ -242,72 +240,72 @@ void DataChecker::Initialise()
         }
     }
 
-    // histograms 
-    // create some histograms that this tool needs  
+    // histograms
+    // create some histograms that this tool needs
     for(auto cBoard: *fDetectorContainer)
     {
-        // book histogram that I need for BxId check 
-        #ifdef __USE_ROOT__
-            for(auto cOpticalGroup: *cBoard)
+// book histogram that I need for BxId check
+#ifdef __USE_ROOT__
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    // number of P clusters per events 
-                    TString cName = Form("h_NPClusters_BxIds_Cic%d", cHybrid->getId());
-                    TObject* cObj  = gROOT->FindObject(cName);
-                    if(cObj) delete cObj;
-                    // make sure errors are standard deviation of y  
-                    TH2D* cHist = new TH2D(cName, Form("Number of P clusters found by CIC%d; Injection Time [Bx]; Number of P clusters", (int)cHybrid->getId()), 500 , 0 - 0.5 , 500 - 0.5, 10 , 0 - 0.5 , 10 - 0.5 );
-                    bookHistogram(cHybrid, "NPClusters", cHist);
+                // number of P clusters per events
+                TString  cName = Form("h_NPClusters_BxIds_Cic%d", cHybrid->getId());
+                TObject* cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                // make sure errors are standard deviation of y
+                TH2D* cHist =
+                    new TH2D(cName, Form("Number of P clusters found by CIC%d; Injection Time [Bx]; Number of P clusters", (int)cHybrid->getId()), 500, 0 - 0.5, 500 - 0.5, 10, 0 - 0.5, 10 - 0.5);
+                bookHistogram(cHybrid, "NPClusters", cHist);
 
-                    // number of stubs 
-                    cName = Form("h_NStubs_BxIds_Cic%d", cHybrid->getId());
-                    cObj  = gROOT->FindObject(cName);
-                    if(cObj) delete cObj;
-                    // make sure errors are standard deviation of y  
-                    cHist = new TH2D(cName, Form("Number of Stubs found by CIC%d; Injection Time [Bx]; Number of Stubs", (int)cHybrid->getId()), 500 , 0 - 0.5 , 500 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
-                    bookHistogram(cHybrid, "NStubs", cHist);
+                // number of stubs
+                cName = Form("h_NStubs_BxIds_Cic%d", cHybrid->getId());
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                // make sure errors are standard deviation of y
+                cHist = new TH2D(cName, Form("Number of Stubs found by CIC%d; Injection Time [Bx]; Number of Stubs", (int)cHybrid->getId()), 500, 0 - 0.5, 500 - 0.5, 10, 0 - 0.5, 10 - 0.5);
+                bookHistogram(cHybrid, "NStubs", cHist);
 
-                    // number of clusters per Bx 
-                    cName = Form("h_BxIds_NPclusters_Cic%d", cHybrid->getId());
-                    cObj  = gROOT->FindObject(cName);
-                    if(cObj) delete cObj;
-                    // make sure errors are standard deviation of y  
-                    cHist = new TH2D(cName, Form("Number of P clusters found by CIC%d; BxId; Number of P clusters", (int)cHybrid->getId()), 4000 , 0 - 0.5 , 4000 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
-                    bookHistogram(cHybrid, "BxId_Pclusters", cHist);
+                // number of clusters per Bx
+                cName = Form("h_BxIds_NPclusters_Cic%d", cHybrid->getId());
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                // make sure errors are standard deviation of y
+                cHist = new TH2D(cName, Form("Number of P clusters found by CIC%d; BxId; Number of P clusters", (int)cHybrid->getId()), 4000, 0 - 0.5, 4000 - 0.5, 10, 0 - 0.5, 10 - 0.5);
+                bookHistogram(cHybrid, "BxId_Pclusters", cHist);
 
-                    // number of clusters per Bx 
-                    cName = Form("h_BxIds_NStubs_Cic%d", cHybrid->getId());
-                    cObj  = gROOT->FindObject(cName);
-                    if(cObj) delete cObj;
-                    cHist = new TH2D(cName, Form("Number of Stubs found by CIC%d; BxId; Number of stubs", (int)cHybrid->getId()), 4000 , 0 - 0.5 , 4000 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
-                    bookHistogram(cHybrid, "BxId_Stubs", cHist);
+                // number of clusters per Bx
+                cName = Form("h_BxIds_NStubs_Cic%d", cHybrid->getId());
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cHist = new TH2D(cName, Form("Number of Stubs found by CIC%d; BxId; Number of stubs", (int)cHybrid->getId()), 4000, 0 - 0.5, 4000 - 0.5, 10, 0 - 0.5, 10 - 0.5);
+                bookHistogram(cHybrid, "BxId_Stubs", cHist);
 
-                    // event classification
-                    // first per bx Id 
-                    cName = Form("h_EventClass_Cic%d", cHybrid->getId());
-                    cObj  = gROOT->FindObject(cName);
-                    if(cObj) delete cObj;
-                    cHist = new TH2D(cName, Form("Event classification, digi-inject test CIC%d; #Delta_{Injection}; Classification", (int)cHybrid->getId()), 1000 , 0 - 0.5 , 1000 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
-                    cHist->GetYaxis()->SetBinLabel(1,"No P-clusters");
-                    cHist->GetYaxis()->SetBinLabel(2,"No Stubs");
-                    cHist->GetYaxis()->SetBinLabel(2,"Wrong number of Stubs");
-                    cHist->GetYaxis()->SetBinLabel(3,"Mismatch in P-clusters");
-                    cHist->GetYaxis()->SetBinLabel(4,"Mismatch in stubs");
-                    cHist->GetYaxis()->SetBinLabel(5,"Match");
-                    bookHistogram(cHybrid, "EventClass", cHist);
+                // event classification
+                // first per bx Id
+                cName = Form("h_EventClass_Cic%d", cHybrid->getId());
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cHist =
+                    new TH2D(cName, Form("Event classification, digi-inject test CIC%d; #Delta_{Injection}; Classification", (int)cHybrid->getId()), 1000, 0 - 0.5, 1000 - 0.5, 10, 0 - 0.5, 10 - 0.5);
+                cHist->GetYaxis()->SetBinLabel(1, "No P-clusters");
+                cHist->GetYaxis()->SetBinLabel(2, "No Stubs");
+                cHist->GetYaxis()->SetBinLabel(2, "Wrong number of Stubs");
+                cHist->GetYaxis()->SetBinLabel(3, "Mismatch in P-clusters");
+                cHist->GetYaxis()->SetBinLabel(4, "Mismatch in stubs");
+                cHist->GetYaxis()->SetBinLabel(5, "Match");
+                bookHistogram(cHybrid, "EventClass", cHist);
 
-
-                    // first per L1 Id 
-                    cName = Form("h_EventClass_L1Id_Cic%d", cHybrid->getId());
-                    cObj  = gROOT->FindObject(cName);
-                    if(cObj) delete cObj;
-                    cHist = new TH2D(cName, Form("Event classification, digi-inject test CIC%d; L1Id; Classification", (int)cHybrid->getId()), 512 , 0 - 0.5 , 512 - 0.5 , 10,  0 - 0.5 , 10 - 0.5 );
-                    bookHistogram(cHybrid, "EventClassL1Id", cHist);
-
-                }
+                // first per L1 Id
+                cName = Form("h_EventClass_L1Id_Cic%d", cHybrid->getId());
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cHist = new TH2D(cName, Form("Event classification, digi-inject test CIC%d; L1Id; Classification", (int)cHybrid->getId()), 512, 0 - 0.5, 512 - 0.5, 10, 0 - 0.5, 10 - 0.5);
+                bookHistogram(cHybrid, "EventClassL1Id", cHist);
             }
-        #endif
+        }
+#endif
     }
     zeroContainers();
 }
@@ -551,18 +549,18 @@ void DataChecker::AsyncTest()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cEventType = cBoard->getEventType();
-        // will only decode those events 
-        // check what kind of FEs I have and based on that .. set the event type 
+        // will only decode those events
+        // check what kind of FEs I have and based on that .. set the event type
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::MPA )
+                    if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
                         cBoard->setEventType(EventType::PSAS);
-                        //cBoard->setEventType(EventType::MPAAS);
+                        // cBoard->setEventType(EventType::MPAAS);
                     }
                     else
                         cBoard->setEventType(EventType::SSAAS);
@@ -573,7 +571,7 @@ void DataChecker::AsyncTest()
         for(uint8_t cThreshold = cThresholdStart; cThreshold < cThresholdStop; cThreshold += 5)
         {
             // set thresholds
-            // and configure injection 
+            // and configure injection
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -601,11 +599,12 @@ void DataChecker::AsyncTest()
                         for(auto cEvent: cEvents)
                         {
                             auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                            for(uint8_t cChnl = 0; cChnl < 5; cChnl++) { 
-                                if( cChip->getFrontEndType() == FrontEndType::SSA) 
-                                    LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET; 
+                            for(uint8_t cChnl = 0; cChnl < 5; cChnl++)
+                            {
+                                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                    LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET;
                                 else
-                                    LOG(INFO) << BOLDBLUE << "Counter value Pix#" << +cChnl << " is " << cHits[cChnl] << RESET; 
+                                    LOG(INFO) << BOLDBLUE << "Counter value Pix#" << +cChnl << " is " << cHits[cChnl] << RESET;
                             }
                         }
                     }
@@ -747,294 +746,251 @@ void DataChecker::CollectEvents()
         }
     }
 }
-void DataChecker::CheckPSData( BeBoard* pBoard, std::vector<Injection> pInjections )
+void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjections)
 {
-    auto& cBadEvents = fBadEvents.at(pBoard->getIndex());
+    auto& cBadEvents  = fBadEvents.at(pBoard->getIndex());
     auto& cGoodEvents = fGoodEvents.at(pBoard->getIndex());
-        
-    auto cSetting = fSettingsMap.find ( "Nevents" );
-    int cScale=1000;
-    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second)*cScale : 100;
-    LOG (DEBUG) << BOLDBLUE << "Checking PSdata by reading "
-            << +cNevents
-            << " from BeBoard#"
-            << +pBoard->getIndex()
-            << RESET;
+
+    auto     cSetting = fSettingsMap.find("Nevents");
+    int      cScale   = 1000;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? (cSetting->second) * cScale : 100;
+    LOG(DEBUG) << BOLDBLUE << "Checking PSdata by reading " << +cNevents << " from BeBoard#" << +pBoard->getIndex() << RESET;
 
     std::vector<uint32_t> cPixelIds(0);
-    std::vector<uint8_t> cRows(0);
-    std::vector<uint8_t> cColumns(0);
-    for( auto cInjection : pInjections )
+    std::vector<uint8_t>  cRows(0);
+    std::vector<uint8_t>  cColumns(0);
+    for(auto cInjection: pInjections)
     {
-        cRows.push_back ( cInjection.fRow );
-        cColumns.push_back ( cInjection.fColumn );
-        cPixelIds.push_back( (uint32_t)(cInjection.fColumn)*120+(uint32_t)cInjection.fRow );
-    }// injections 
+        cRows.push_back(cInjection.fRow);
+        cColumns.push_back(cInjection.fColumn);
+        cPixelIds.push_back((uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow);
+    } // injections
 
-    uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    uint16_t cCalPulseDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
-    uint16_t cTimeBetweenCalPulses =  cCalPulseDelay + cDelay;
-                
-    this->ReadNEvents(pBoard, cNevents );
+    uint16_t cDelay                = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    uint16_t cCalPulseDelay        = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
+    uint16_t cTimeBetweenCalPulses = cCalPulseDelay + cDelay;
+
+    this->ReadNEvents(pBoard, cNevents);
     const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
     LOG(DEBUG) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the FC7 ..." << RESET;
-    uint32_t cNMatchedEvents=0; 
+    uint32_t         cNMatchedEvents = 0;
     std::vector<int> cMatchedBxIds(0);
     std::vector<int> cMismatchedBxIds(0);
-    int cEventIndx=0; 
+    int              cEventIndx = 0;
     std::vector<int> cBxIdsGbl(0);
-    for( auto cEvent : cEvents ) 
-    {   
-        bool cEventMatchesL1=true ;
-        bool cEventMatchesStubs=true ;
+    for(auto cEvent: cEvents)
+    {
+        bool cEventMatchesL1    = true;
+        bool cEventMatchesStubs = true;
 
         for(auto cOpticalGroup: *pBoard)
         {
             auto& cBadEventsOpticalGroup = cBadEvents->at(cOpticalGroup->getIndex());
-            auto& cGdEventsOpticalGroup = cGoodEvents->at(cOpticalGroup->getIndex());
+            auto& cGdEventsOpticalGroup  = cGoodEvents->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cBadEventsHybrid = cBadEventsOpticalGroup->at(cHybrid->getIndex());
-                auto& cGdEventsHybrid = cGdEventsOpticalGroup->at(cOpticalGroup->getIndex());
-                
-                // for now I'm only checking one CIC 
-                if( cHybrid->getIndex() > 0 ) continue;
+                auto& cGdEventsHybrid  = cGdEventsOpticalGroup->at(cOpticalGroup->getIndex());
+
+                // for now I'm only checking one CIC
+                if(cHybrid->getIndex() > 0) continue;
 
                 auto cBxId = (int)cEvent->BxId(cHybrid->getId());
-                cBxIdsGbl.push_back( cBxId );
-                // only check for differences when 
-                // there is more than one bx here 
-                int cBxDifference=0; 
-                if( cBxIdsGbl.size() > 1 ) 
+                cBxIdsGbl.push_back(cBxId);
+                // only check for differences when
+                // there is more than one bx here
+                int cBxDifference = 0;
+                if(cBxIdsGbl.size() > 1)
                 {
-                    cBxDifference = cBxId - cBxIdsGbl[ cBxIdsGbl.size() -2] ; 
-                    if( cBxDifference < 0 )
-                        cBxDifference = cBxId + (3564 - cBxIdsGbl[ cBxIdsGbl.size() -2]);
+                    cBxDifference = cBxId - cBxIdsGbl[cBxIdsGbl.size() - 2];
+                    if(cBxDifference < 0) cBxDifference = cBxId + (3564 - cBxIdsGbl[cBxIdsGbl.size() - 2]);
                 }
-                
-                // now loop over chips and compare data 
+
+                // now loop over chips and compare data
                 for(auto cChip: *cHybrid)
                 {
                     auto& cBadEventsChip = cBadEventsHybrid->at(cHybrid->getIndex());
-                    auto& cGdEventsChip = cGdEventsHybrid->at(cOpticalGroup->getIndex());
+                    auto& cGdEventsChip  = cGdEventsHybrid->at(cOpticalGroup->getIndex());
 
-                    auto& cBadEventsList   = cBadEventsChip->getSummary<EventsList>();
-                    auto& cGoodEventsList  = cGdEventsChip->getSummary<EventsList>();
+                    auto&    cBadEventsList  = cBadEventsChip->getSummary<EventsList>();
+                    auto&    cGoodEventsList = cGdEventsChip->getSummary<EventsList>();
                     EventTag cEvntTag;
-                    auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cHybrid->getId(), cChip->getId());
-                    EventId cEventId; 
-                    cEventId.first = cL1Id;
-                    cEventId.second = cBxId; 
-                    cEvntTag.first = cEventId;
-                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-                    // check if it is in p-p or s-p mode 
-                    
+                    auto     cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cHybrid->getId(), cChip->getId());
+                    EventId  cEventId;
+                    cEventId.first  = cL1Id;
+                    cEventId.second = cBxId;
+                    cEvntTag.first  = cEventId;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    // check if it is in p-p or s-p mode
+
                     auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
                     auto cStubs    = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                    // check S and P clusters 
+                    // check S and P clusters
                     auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                    //auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                    
-                    // in pixel-pixel mode . only get P clusters 
-                    bool cMatchedPCluster= (cPClusters.size() > 0 );
-                    #ifdef __USE_ROOT__
-                        TH2D* cNPclusters = static_cast<TH2D*>(getHist(cHybrid, "NPClusters"));
-                        cNPclusters->Fill( cTimeBetweenCalPulses, cPClusters.size() );
-                        TH2D* cNStubs = static_cast<TH2D*>(getHist(cHybrid, "NStubs"));
-                        cNStubs->Fill( cTimeBetweenCalPulses, cStubs.size() );
-                        TH2D* cBxIdsPClusters = static_cast<TH2D*>(getHist(cHybrid, "BxId_Pclusters"));
-                        cBxIdsPClusters->Fill( cBxId, cPClusters.size() );
-                        TH2D* cBxIdsStubs = static_cast<TH2D*>(getHist(cHybrid, "BxId_Stubs"));
-                        cBxIdsStubs->Fill( cBxId, cStubs.size() );
-                    #endif
+                    // auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
 
-                    for( auto cPCluster : cPClusters )
+                    // in pixel-pixel mode . only get P clusters
+                    bool cMatchedPCluster = (cPClusters.size() > 0);
+#ifdef __USE_ROOT__
+                    TH2D* cNPclusters = static_cast<TH2D*>(getHist(cHybrid, "NPClusters"));
+                    cNPclusters->Fill(cTimeBetweenCalPulses, cPClusters.size());
+                    TH2D* cNStubs = static_cast<TH2D*>(getHist(cHybrid, "NStubs"));
+                    cNStubs->Fill(cTimeBetweenCalPulses, cStubs.size());
+                    TH2D* cBxIdsPClusters = static_cast<TH2D*>(getHist(cHybrid, "BxId_Pclusters"));
+                    cBxIdsPClusters->Fill(cBxId, cPClusters.size());
+                    TH2D* cBxIdsStubs = static_cast<TH2D*>(getHist(cHybrid, "BxId_Stubs"));
+                    cBxIdsStubs->Fill(cBxId, cStubs.size());
+#endif
+
+                    for(auto cPCluster: cPClusters)
                     {
-                        uint8_t cRow = cPCluster.fAddress; 
-                        uint8_t cColumn = cPCluster.fZpos; 
-                        // check column and row 
-                        bool cFound=false;
-                        for(  auto cInjectedCluster : pInjections )
+                        uint8_t cRow    = cPCluster.fAddress;
+                        uint8_t cColumn = cPCluster.fZpos;
+                        // check column and row
+                        bool cFound = false;
+                        for(auto cInjectedCluster: pInjections)
                         {
-                            if( cInjectedCluster.fRow == cRow && cInjectedCluster.fColumn == cColumn  )
-                            {
-                                cFound=true;
-                            }
+                            if(cInjectedCluster.fRow == cRow && cInjectedCluster.fColumn == cColumn) { cFound = true; }
                         }
-                        cMatchedPCluster = cMatchedPCluster && cFound;
-                        bool cRowNotFound = std::find(cRows.begin(), cRows.end() , cRow ) == cRows.end() ; 
-                        bool cColNotFound = std::find(cColumns.begin(), cColumns.end() , cColumn ) == cColumns.end() ; 
-                        if( cRowNotFound || cColNotFound )
+                        cMatchedPCluster  = cMatchedPCluster && cFound;
+                        bool cRowNotFound = std::find(cRows.begin(), cRows.end(), cRow) == cRows.end();
+                        bool cColNotFound = std::find(cColumns.begin(), cColumns.end(), cColumn) == cColumns.end();
+                        if(cRowNotFound || cColNotFound)
                         {
-                            if( cRowNotFound )
-                                LOG (INFO) << BOLDRED  << "\t Event#" << +cEventIndx 
-                                    << " BxId#" << +cBxId  
-                                    << " un-expected P-cluster.... Row " << +cRow << " does not match expected." RESET;
+                            if(cRowNotFound)
+                                LOG(INFO) << BOLDRED << "\t Event#" << +cEventIndx << " BxId#" << +cBxId << " un-expected P-cluster.... Row " << +cRow << " does not match expected." RESET;
                             else
-                                LOG (INFO) << BOLDRED  << "\t Event#" << +cEventIndx 
-                                    << " BxId#" << +cBxId  
-                                    << " un-expected P-cluster.... Column " << +cColumn << " does not match expected." RESET;
-                            
+                                LOG(INFO) << BOLDRED << "\t Event#" << +cEventIndx << " BxId#" << +cBxId << " un-expected P-cluster.... Column " << +cColumn << " does not match expected." RESET;
                         }
                     }
-                    if(  (cPClusters.size()) == 0 ) 
-                        LOG (DEBUG) << BOLDRED << "Event#" << +cEventIndx 
-                            << " BxId#" << +cBxId  
-                            << " has no n P clusters!" << RESET;
+                    if((cPClusters.size()) == 0) LOG(DEBUG) << BOLDRED << "Event#" << +cEventIndx << " BxId#" << +cBxId << " has no n P clusters!" << RESET;
 
-                    // also check stubs 
-                    // assumption is that #stubs == #injections 
-                    bool cMatchedStubs=(cStubs.size() ==  cPixelIds.size());
-                    for( auto cStub : cStubs ) 
+                    // also check stubs
+                    // assumption is that #stubs == #injections
+                    bool cMatchedStubs = (cStubs.size() == cPixelIds.size());
+                    for(auto cStub: cStubs)
                     {
-                        auto cStubAddress = cStub.getPosition(); 
-                        auto cRow = cStub.getRow();
-                        uint32_t cPixelId = (cStubAddress/2) + cRow*120; 
-                        bool cFound = (std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) != cPixelIds.end() ); 
-                        cMatchedStubs = cMatchedStubs && cFound ;
-                        if( std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) == cPixelIds.end()  )
-                        {
-                            LOG (DEBUG) << BOLDRED  << "\t Event# " << +cEventIndx 
-                                << " BxId#" << +cBxId  
-                                << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET;
-                        }
+                        auto     cStubAddress = cStub.getPosition();
+                        auto     cRow         = cStub.getRow();
+                        uint32_t cPixelId     = (cStubAddress / 2) + cRow * 120;
+                        bool     cFound       = (std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) != cPixelIds.end());
+                        cMatchedStubs         = cMatchedStubs && cFound;
+                        if(std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) == cPixelIds.end())
+                        { LOG(DEBUG) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET; }
                     }
-                    if(  (cStubs.size()) == 0 ) 
-                        LOG (DEBUG) << BOLDRED << "Event#" << +cEventIndx 
-                            << " BxId#" << +cBxId  
-                            << " has no stubs!" << RESET;
-                    else 
-                        LOG (DEBUG) << BOLDBLUE << "Have "
-                            << +cStubs.size() 
-                            << "  stub(s) in the event .. and it/they "
-                            << ((cMatchedStubs)?"match":"don't match")
-                            << " what I expect."
-                            << RESET;
-                    int cClass = 0 ;
-                    if( cPClusters.size() == 0 ) 
-                        cClass = 0 ;
-                    else if( cStubs.size() == 0 )
-                        cClass = 1; 
-                    else if( cStubs.size() != pInjections.size() )
+                    if((cStubs.size()) == 0)
+                        LOG(DEBUG) << BOLDRED << "Event#" << +cEventIndx << " BxId#" << +cBxId << " has no stubs!" << RESET;
+                    else
+                        LOG(DEBUG) << BOLDBLUE << "Have " << +cStubs.size() << "  stub(s) in the event .. and it/they " << ((cMatchedStubs) ? "match" : "don't match") << " what I expect." << RESET;
+                    int cClass = 0;
+                    if(cPClusters.size() == 0)
+                        cClass = 0;
+                    else if(cStubs.size() == 0)
+                        cClass = 1;
+                    else if(cStubs.size() != pInjections.size())
                     {
-                        cClass = 2;
-                        auto cPreviousBx = cBxIdsGbl[ cBxIdsGbl.size() - 2];
-                        LOG (INFO) << BOLDYELLOW  << "\t Event# " << +cEventIndx 
-                                << " BxId#" << +cBxId
-                                << " previous BxId#" << +cPreviousBx 
-                                << " expected difference in Bx is " << (cTimeBetweenCalPulses + 3)
-                                << " classified as an event type " << +cClass
-                                << " un-expected number of stubs in event.. expect " << +pInjections.size() 
-                                << " and I see " << +cStubs.size() << RESET;
-                        for( auto cStub : cStubs ) 
+                        cClass           = 2;
+                        auto cPreviousBx = cBxIdsGbl[cBxIdsGbl.size() - 2];
+                        LOG(INFO) << BOLDYELLOW << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " previous BxId#" << +cPreviousBx << " expected difference in Bx is "
+                                  << (cTimeBetweenCalPulses + 3) << " classified as an event type " << +cClass << " un-expected number of stubs in event.. expect " << +pInjections.size()
+                                  << " and I see " << +cStubs.size() << RESET;
+                        for(auto cStub: cStubs)
                         {
-                            auto cStubAddress = cStub.getPosition(); 
-                            auto cRow = cStub.getRow();
-                            LOG (INFO) << BOLDYELLOW << "\t\t... address " << +cStubAddress << " row " << +cRow << RESET;
-                        }//stubs
+                            auto cStubAddress = cStub.getPosition();
+                            auto cRow         = cStub.getRow();
+                            LOG(INFO) << BOLDYELLOW << "\t\t... address " << +cStubAddress << " row " << +cRow << RESET;
+                        } // stubs
                     }
-                    else if(  !cMatchedPCluster && cMatchedStubs ) 
+                    else if(!cMatchedPCluster && cMatchedStubs)
                     {
-                        cClass = 3 ;
+                        cClass = 3;
                     }
-                    else if( cMatchedPCluster && !cMatchedStubs ) 
+                    else if(cMatchedPCluster && !cMatchedStubs)
                     {
-                        cClass = 4; 
-                        // if the stubs don't match .. print out  why 
-                        for( auto cStub : cStubs ) 
+                        cClass = 4;
+                        // if the stubs don't match .. print out  why
+                        for(auto cStub: cStubs)
                         {
-                            auto cStubAddress = cStub.getPosition(); 
-                            auto cRow = cStub.getRow();
-                            LOG (INFO) << BOLDRED  << "\t Event# " << +cEventIndx 
-                                << " BxId#" << +cBxId
-                                << " classified as an event type " << +cClass
-                                << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET;
-                            for( auto cInjection : pInjections )
+                            auto cStubAddress = cStub.getPosition();
+                            auto cRow         = cStub.getRow();
+                            LOG(INFO) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " classified as an event type " << +cClass << " un-expected Stub in event.... Address "
+                                      << +cStubAddress << " row " << +cRow << RESET;
+                            for(auto cInjection: pInjections)
+                            { LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET; } // injections
+                        }                                                                                                                                           // stubs
+                    }
+                    else if(cMatchedPCluster && cMatchedStubs)
+                    {
+                        cClass = 5;
+                        if(cBxDifference != 0)
+                        {
+                            // if the difference in BxIds are ok
+                            if(cBxDifference != cTimeBetweenCalPulses + 3)
                             {
-                                LOG (INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow)*2
-                                    << " and row " << +cInjection.fColumn << RESET;
-                            }// injections 
-                        }//stubs
-                    }
-                    else if( cMatchedPCluster && cMatchedStubs ) 
-                    {
-                        cClass = 5; 
-                        if( cBxDifference != 0 )
-                        {
-                            // if the difference in BxIds are ok 
-                            if( cBxDifference != cTimeBetweenCalPulses + 3 )
-                            {
-                                cClass=6;
-                                for( auto cStub : cStubs ) 
+                                cClass = 6;
+                                for(auto cStub: cStubs)
                                 {
-                                    auto cStubAddress = cStub.getPosition(); 
-                                    auto cRow = cStub.getRow();
-                                    LOG (INFO) << BOLDYELLOW  << "\t Event# " << +cEventIndx 
-                                        << " expected Bx is " <<  (cBxIdsGbl[ cBxIdsGbl.size() -2]+cTimeBetweenCalPulses + 3)
-                                        << " instead I see BxId#" << +cBxId
-                                        << " classified as an event type " << +cClass
-                                        << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET;
-                                    for( auto cInjection : pInjections )
-                                    {
-                                        LOG (INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow)*2
-                                            << " and row " << +cInjection.fColumn << RESET;
-                                    }// injections 
-                                }//stubs
+                                    auto cStubAddress = cStub.getPosition();
+                                    auto cRow         = cStub.getRow();
+                                    LOG(INFO) << BOLDYELLOW << "\t Event# " << +cEventIndx << " expected Bx is " << (cBxIdsGbl[cBxIdsGbl.size() - 2] + cTimeBetweenCalPulses + 3)
+                                              << " instead I see BxId#" << +cBxId << " classified as an event type " << +cClass << " un-expected Stub in event.... Address " << +cStubAddress << " row "
+                                              << +cRow << RESET;
+                                    for(auto cInjection: pInjections)
+                                    { LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET; } // injections
+                                }                                                                                                                                           // stubs
                             }
-                        }// check number of Bxs
+                        } // check number of Bxs
                     }
-                    cEvntTag.second=cClass;
-                    
-                    // push back into evnent list 
-                    if( cClass != 5 ) cBadEventsList.push_back(cEvntTag);
-                    else cGoodEventsList.push_back(cEvntTag);
-                    
-                    bool cPrint = ( cClass !=5 );
-                    if( cPrint )
-                        LOG (DEBUG) << BOLDRED << "Event# " << +cEventIndx 
-                            << " L1 Id is " << +cL1Id 
-                            << " error bit for this FE is " << +cErrorBit
-                            << " Bx difference is " << +cBxDifference 
-                            << " event classification is " << +cClass << RESET; 
-                    #ifdef __USE_ROOT__
-                        TH2D* cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClass"));
-                        cEventClass->Fill( std::fabs(cBxDifference) , cClass );
-                        cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClassL1Id"));
-                        cEventClass->Fill( cL1Id , cClass );
-                    #endif
-                    cEventMatchesL1 = cEventMatchesL1 && cMatchedPCluster ;
-                    cEventMatchesStubs  = cEventMatchesStubs && cMatchedStubs ; 
-                }// ROCs 
-            } // hybrids or CICs
-        }// optical group loop 
-        cNMatchedEvents += (cEventMatchesL1 && cEventMatchesStubs) ? 1 : 0 ;
-        cEventIndx++; 
-    }//event loop 
-                    
+                    cEvntTag.second = cClass;
+
+                    // push back into evnent list
+                    if(cClass != 5)
+                        cBadEventsList.push_back(cEvntTag);
+                    else
+                        cGoodEventsList.push_back(cEvntTag);
+
+                    bool cPrint = (cClass != 5);
+                    if(cPrint)
+                        LOG(DEBUG) << BOLDRED << "Event# " << +cEventIndx << " L1 Id is " << +cL1Id << " error bit for this FE is " << +cErrorBit << " Bx difference is " << +cBxDifference
+                                   << " event classification is " << +cClass << RESET;
+#ifdef __USE_ROOT__
+                    TH2D* cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClass"));
+                    cEventClass->Fill(std::fabs(cBxDifference), cClass);
+                    cEventClass = static_cast<TH2D*>(getHist(cHybrid, "EventClassL1Id"));
+                    cEventClass->Fill(cL1Id, cClass);
+#endif
+                    cEventMatchesL1    = cEventMatchesL1 && cMatchedPCluster;
+                    cEventMatchesStubs = cEventMatchesStubs && cMatchedStubs;
+                } // ROCs
+            }     // hybrids or CICs
+        }         // optical group loop
+        cNMatchedEvents += (cEventMatchesL1 && cEventMatchesStubs) ? 1 : 0;
+        cEventIndx++;
+    } // event loop
 }
 // check L1 eye
 void DataChecker::Eye_CIC()
 {
-    int cLatencyOffset=-1;
-    auto cSetting = fSettingsMap.find ( "Nevents" );
-    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
-    LOG (DEBUG) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
-    
-    uint8_t  cStubWindow = 1; // stub window in half pixels (1)
-    uint8_t  cMode = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel 
-    std::vector<uint8_t> cColumns{2};// 5 , 10 };
-    std::vector<uint8_t> cRows{ 10};// 20 , 30};
+    int      cLatencyOffset = -1;
+    auto     cSetting       = fSettingsMap.find("Nevents");
+    uint32_t cNevents       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    LOG(DEBUG) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
+
+    uint8_t                cStubWindow = 1; // stub window in half pixels (1)
+    uint8_t                cMode       = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+    std::vector<uint8_t>   cColumns{2};     // 5 , 10 };
+    std::vector<uint8_t>   cRows{10};       // 20 , 30};
     std::vector<Injection> cInjections(0);
-    for( size_t cIndx=0; cIndx < cColumns.size(); cIndx++)
+    for(size_t cIndx = 0; cIndx < cColumns.size(); cIndx++)
     {
-        Injection cInjection; 
+        Injection cInjection;
         cInjection.fColumn = cColumns[cIndx];
-        cInjection.fRow = cRows[cIndx];
-        cInjections.push_back( cInjection );
-    }//create injection patterns
-    
-    // configure MPA to be in p-p mode 
-    // this is enough for this test 
+        cInjection.fRow    = cRows[cIndx];
+        cInjections.push_back(cInjection);
+    } // create injection patterns
+
+    // configure MPA to be in p-p mode
+    // this is enough for this test
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -1043,112 +999,106 @@ void DataChecker::Eye_CIC()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                    
-                   
-                        // digital sync this pattern on pixel 1 
-                        LOG (INFO) << BOLDBLUE << "Controlling injection .." << RESET;
-                        (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection( cChip , cInjections );
-                        // activate stub mode
-                        fReadoutChipInterface->WriteChipReg(cChip,"StubMode", cMode);
-                        fReadoutChipInterface->WriteChipReg(cChip,"StubWindow", cStubWindow);
-                }//chip
-            }//hybrid 
-        }//optical group
-    }//board
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-    // now configure latencies and timing between injections 
-    // check events for different latencies 
+                    // digital sync this pattern on pixel 1
+                    LOG(INFO) << BOLDBLUE << "Controlling injection .." << RESET;
+                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
+                    // activate stub mode
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
+                } // chip
+            }     // hybrid
+        }         // optical group
+    }             // board
+
+    // now configure latencies and timing between injections
+    // check events for different latencies
     for(auto cBoard: *fDetectorContainer)
     {
-        // check trigger source 
-        // and reload 
+        // check trigger source
+        // and reload
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
-        cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
-        
+        LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+        cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
         fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
 
-        uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        int cLatency = cDelay + cLatencyOffset;
-        int cReTimeValue = -1; 
+        uint16_t cDelay       = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+        int      cLatency     = cDelay + cLatencyOffset;
+        int      cReTimeValue = -1;
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cLatency);
-                    if( cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0 )
-                    {
-                        cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip,"RetimePix"); 
-                    } 
-                }// chip 
-            }// hybrid 
-        }//module 
-        auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
-        int cStubLatency = cLatency - ( cStubOffset + cReTimeValue );
-        LOG (INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
-        // read events 
+                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                    if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+                } // chip
+            }     // hybrid
+        }         // module
+        auto cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+        int  cStubLatency = cLatency - (cStubOffset + cReTimeValue);
+        LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
+        // read events
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
     }
 
-    // now .. loop over offsets and scan data 
-    for( int cOffset=-5; cOffset<+5; cOffset++)
+    // now .. loop over offsets and scan data
+    for(int cOffset = -5; cOffset < +5; cOffset++)
     {
-        // set offsets on CICs 
-        bool cValidOffset=true;
+        // set offsets on CICs
+        bool cValidOffset = true;
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                   auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                   cValidOffset = cValidOffset && fCicInterface->SetOptimalTaps(cCic, cOffset);
-                }//hybrid 
-            }//optical group
-        }//board
+                    auto& cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    cValidOffset = cValidOffset && fCicInterface->SetOptimalTaps(cCic, cOffset);
+                } // hybrid
+            }     // optical group
+        }         // board
         if(!cValidOffset) continue;
 
-        LOG (INFO) << BOLDBLUE << "Offset of " << +cOffset << " from optimal tap on CIC inputs.." << RESET;
+        LOG(INFO) << BOLDBLUE << "Offset of " << +cOffset << " from optimal tap on CIC inputs.." << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
-            this->CheckPSData( cBoard , cInjections );  
-            auto& cBadEvents = fBadEvents.at(cBoard->getIndex());
+            this->CheckPSData(cBoard, cInjections);
+            auto& cBadEvents  = fBadEvents.at(cBoard->getIndex());
             auto& cGoodEvents = fGoodEvents.at(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
                 auto& cBadEventsOG = cBadEvents->at(cOpticalGroup->getIndex());
-                auto& cGdEventsOG = cGoodEvents->at(cOpticalGroup->getIndex());
+                auto& cGdEventsOG  = cGoodEvents->at(cOpticalGroup->getIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     auto& cBadEventsHybrid = cBadEventsOG->at(cHybrid->getIndex());
-                    auto& cGdEventsHybrid = cGdEventsOG->at(cHybrid->getIndex());
+                    auto& cGdEventsHybrid  = cGdEventsOG->at(cHybrid->getIndex());
                     for(auto cChip: *cHybrid)
                     {
                         auto& cBadEventsChip = cBadEventsHybrid->at(cChip->getIndex());
-                        auto& cBadEventsList   = cBadEventsChip->getSummary<EventsList>();
+                        auto& cBadEventsList = cBadEventsChip->getSummary<EventsList>();
 
                         auto& cGdEventsChip = cGdEventsHybrid->at(cChip->getIndex());
                         auto& cGdEventsList = cGdEventsChip->getSummary<EventsList>();
 
-                        LOG (INFO) << BOLDBLUE << "Found " << +cBadEventsList.size() 
-                            << " bad events and "
-                            << +cGdEventsList.size() << " good events." << RESET;
-                        
-                        // // look at events in class 0 
+                        LOG(INFO) << BOLDBLUE << "Found " << +cBadEventsList.size() << " bad events and " << +cGdEventsList.size() << " good events." << RESET;
+
+                        // // look at events in class 0
                         // for( int cSelection=6; cSelection>=0; cSelection--)
                         // {
                         //     if( cSelection == 5 ) continue; // this is a good event
                         //     std::vector<int> cL1Ids_BdEvnts(0);
-                        //     for( auto cBadEventTag : cBadEventsList ) 
+                        //     for( auto cBadEventTag : cBadEventsList )
                         //     {
                         //         EventId cId=cBadEventTag.first;
                         //         uint8_t cTg=cBadEventTag.second;
-                        //         //no p clusters 
+                        //         //no p clusters
                         //         if(cTg==cSelection) cL1Ids_BdEvnts.push_back(cId.first);
                         //     }
                         //     LOG (INFO) << BOLDBLUE << "\t.. " << +cL1Ids_BdEvnts.size() << " events with classification " << +cSelection << RESET;
@@ -1171,8 +1121,8 @@ void DataChecker::Eye_CIC()
                         //                     {
                         //                         int cDiff = (int)(*cIter) - (int)(*(cIter-1));
                         //                         if( cDiff != 1  && cDiff != -511 ){
-                        //                             LOG (DEBUG) << BOLDRED << "\t.. L1 difference of " << +cDiff << " between bad events." 
-                        //                                 << " L1Id is " << *cIter 
+                        //                             LOG (DEBUG) << BOLDRED << "\t.. L1 difference of " << +cDiff << " between bad events."
+                        //                                 << " L1Id is " << *cIter
                         //                                 << " [L1Id mod 16 = " << +((int)(*cIter)%16)
                         //                                 << " ] previous event had an L1Id of " << *(cIter-1)
                         //                                 << RESET;
@@ -1184,24 +1134,24 @@ void DataChecker::Eye_CIC()
                         //                     cIter++;
                         //                 }while( cIter != cNextPosition );
                         //                 cNBadEvents_511.push_back(cNBad_511);
-                        //             }//look for next bad event in the list 
+                        //             }//look for next bad event in the list
                         //             cIterator = cNextPosition;
                         //             cN511sfound++;
-                        //         }// list of bad events 
+                        //         }// list of bad events
                         //         auto cSum = std::accumulate(cNBadEvents_511.begin(), cNBadEvents_511.end(), 0.0);
                         //         auto cMean = cSum/cNBadEvents_511.size();
                         //         auto cMax = std::max_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
                         //         auto cMin = std::min_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
                         //         double cSqSum = std::inner_product(cNBadEvents_511.begin(), cNBadEvents_511.end(), cNBadEvents_511.begin(), 0.0);
                         //         double cStdDev = std::sqrt(cSqSum / cNBadEvents_511.size() - cMean * cMean);
-                        //         LOG (INFO) << BOLDBLUE << "\t\t..Found " << +cN511sfound 
-                        //             << " times where an L1Id of 511 was found in a readout event.." 
-                        //             << +cSum 
-                        //             << " of those L1Ids are consecutive ones missing immediately after an L1Id of 511." 
+                        //         LOG (INFO) << BOLDBLUE << "\t\t..Found " << +cN511sfound
+                        //             << " times where an L1Id of 511 was found in a readout event.."
+                        //             << +cSum
+                        //             << " of those L1Ids are consecutive ones missing immediately after an L1Id of 511."
                         //             << RESET;
-                        //         LOG (INFO) << BOLDBLUE << "\t\t .. On average, the " << +cMean 
+                        //         LOG (INFO) << BOLDBLUE << "\t\t .. On average, the " << +cMean
                         //             << " events following an L1Id of 511 are bad..."
-                        //             << " StdDev : " << cStdDev 
+                        //             << " StdDev : " << cStdDev
                         //             << " Maxium :  " << (*cMax)
                         //             << " Minimum : " << (*cMin)
                         //             << RESET;
@@ -1209,37 +1159,36 @@ void DataChecker::Eye_CIC()
                         //             << RESET;
                         //     }
                         // }
-                        //remember to clear
+                        // remember to clear
                         cBadEventsList.clear();
                         cGdEventsList.clear();
-                    }// chip 
-                }// hybrid 
-            }//module   
+                    } // chip
+                }     // hybrid
+            }         // module
         }
     }
 }
-void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
+void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
 {
-
-    auto cSetting = fSettingsMap.find ( "Nevents" );
-    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
-    LOG (DEBUG) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
+    auto     cSetting = fSettingsMap.find("Nevents");
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    LOG(DEBUG) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
     uint8_t cPattern = 0x00;
-    
-    uint8_t  cStubWindow = 1; // stub window in half pixels (1)
-    uint8_t  cMode = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel 
 
-    std::vector<uint8_t> cColumns{2};// 5 , 10 };
-    std::vector<uint8_t> cRows{ 10};// 20 , 30};
+    uint8_t cStubWindow = 1; // stub window in half pixels (1)
+    uint8_t cMode       = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+
+    std::vector<uint8_t>   cColumns{2}; // 5 , 10 };
+    std::vector<uint8_t>   cRows{10};   // 20 , 30};
     std::vector<Injection> cInjections(0);
-    for( size_t cIndx=0; cIndx < cColumns.size(); cIndx++)
+    for(size_t cIndx = 0; cIndx < cColumns.size(); cIndx++)
     {
-        Injection cInjection; 
+        Injection cInjection;
         cInjection.fColumn = cColumns[cIndx];
-        cInjection.fRow = cRows[cIndx];
-        cInjections.push_back( cInjection );
-    }//create injection patterns
-    
+        cInjection.fRow    = cRows[cIndx];
+        cInjections.push_back(cInjection);
+    } // create injection patterns
+
     std::vector<uint16_t> cDelaysBetwn{90, 180, 360};
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1248,104 +1197,97 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                // let's try and look at CIC mux 
-                if( pBypassCic )
+                // let's try and look at CIC mux
+                if(pBypassCic)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    fCicInterface->SelectOutput(cCic, false);//force it to be off
+                    fCicInterface->SelectOutput(cCic, false); // force it to be off
                 }
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                    
-                    // I want to test my row configuration stuff 
-                    if( pShiftRegMode )
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip,"DigitalPattern", cPattern);
-                    }// shit register mode 
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+
+                    // I want to test my row configuration stuff
+                    if(pShiftRegMode) { fReadoutChipInterface->WriteChipReg(cChip, "DigitalPattern", cPattern); } // shit register mode
                     else
                     {
-                        // digital sync this pattern on pixel 1 
-                        LOG (INFO) << BOLDBLUE << "Controlling injection .." << RESET;
-                        (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection( cChip , cInjections );
+                        // digital sync this pattern on pixel 1
+                        LOG(INFO) << BOLDBLUE << "Controlling injection .." << RESET;
+                        (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
                         // activate stub mode
-                        fReadoutChipInterface->WriteChipReg(cChip,"StubMode", cMode);
-                        fReadoutChipInterface->WriteChipReg(cChip,"StubWindow", cStubWindow);
+                        fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
+                        fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                     }
-                }//chip
-                if( pBypassCic)
+                } // chip
+                if(pBypassCic)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    
-                    std::vector<uint8_t> cPhyPorts(12,0);
+
+                    std::vector<uint8_t> cPhyPorts(12, 0);
                     std::iota(cPhyPorts.begin(), cPhyPorts.end(), 0);
-                    for( auto cPhyPort : cPhyPorts ) 
+                    for(auto cPhyPort: cPhyPorts)
                     {
                         std::string cMPAHeader = "111111110";
-                        LOG (INFO) << BOLDBLUE << "PhyPort" << +cPhyPort << RESET;
-                        fCicInterface->SelectMux(cCic,cPhyPort);//0 , stubs MPA5(FE0) 
-                        if( !pShiftRegMode )
+                        LOG(INFO) << BOLDBLUE << "PhyPort" << +cPhyPort << RESET;
+                        fCicInterface->SelectMux(cCic, cPhyPort); // 0 , stubs MPA5(FE0)
+                        if(!pShiftRegMode)
                         {
-                            fBeBoardInterface->Start(cBeBoard); 
+                            fBeBoardInterface->Start(cBeBoard);
                             fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(cBeBoard));
                         }
-                        for( int cAttempt=0; cAttempt < 100; cAttempt++)
+                        for(int cAttempt = 0; cAttempt < 100; cAttempt++)
                         {
-                            auto cLines = (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
-                            int cLineIndx=0;
-                            for( auto cLine : cLines )
+                            auto cLines    = (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                            int  cLineIndx = 0;
+                            for(auto cLine: cLines)
                             {
-                                if (cLine.find(cMPAHeader) != std::string::npos) 
-                                    LOG (INFO) << BOLDBLUE << "Attempt# " << +cAttempt << " PhyPort#" << +cPhyPort
-                                        << ",Line#" << +cLineIndx << " : " << BOLDGREEN << cLine << RESET;
+                                if(cLine.find(cMPAHeader) != std::string::npos)
+                                    LOG(INFO) << BOLDBLUE << "Attempt# " << +cAttempt << " PhyPort#" << +cPhyPort << ",Line#" << +cLineIndx << " : " << BOLDGREEN << cLine << RESET;
                                 else
-                                    LOG (DEBUG) << BOLDBLUE << "Line#" << +cLineIndx << BOLDRED << cLine << RESET;
+                                    LOG(DEBUG) << BOLDBLUE << "Line#" << +cLineIndx << BOLDRED << cLine << RESET;
                                 cLineIndx++;
                             }
                             //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
-                            //std::this_thread::sleep_for(std::chrono::microseconds(10));
+                            // std::this_thread::sleep_for(std::chrono::microseconds(10));
                         }
 
-                        if( !pShiftRegMode )
+                        if(!pShiftRegMode)
                         {
-                            fBeBoardInterface->Stop(cBeBoard); 
+                            fBeBoardInterface->Stop(cBeBoard);
                             for(auto cChip: *cHybrid)
                             {
-                                if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                                auto cRegValue = fReadoutChipInterface->ReadChipReg(cChip,"ErrorL1");
-                                LOG (INFO) << BOLDBLUE << "ErrorL1 register is 0x" 
-                                    << std::hex << +cRegValue <<  std::dec << RESET;
+                                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                                auto cRegValue = fReadoutChipInterface->ReadChipReg(cChip, "ErrorL1");
+                                LOG(INFO) << BOLDBLUE << "ErrorL1 register is 0x" << std::hex << +cRegValue << std::dec << RESET;
                             }
                         }
                     }
                 }
-            }//hybrid 
-        }//optical group
-    }//configure CIC and MPA 
-    
-    
+            } // hybrid
+        }     // optical group
+    }         // configure CIC and MPA
 
-    // check events for different latencies 
+    // check events for different latencies
     for(auto cBoard: *fDetectorContainer)
     {
-        // check trigger source 
-        // and reload 
+        // check trigger source
+        // and reload
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        LOG (INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
-        cTriggerSrc = (cTriggerSrc==6) ? cTriggerSrc : 6 ;
-        for( auto cDelayBetwn : cDelaysBetwn )
+        LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+        cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+        for(auto cDelayBetwn: cDelaysBetwn)
         {
             std::vector<std::pair<std::string, uint32_t>> cRegVec;
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", cDelayBetwn});
             fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
 
-            // figure out what stub offset was set to 
-            auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
-            int cReTimeValue = -1; 
-            uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-            for(uint16_t cLatency = cDelay - 1 ; cLatency < cDelay ; cLatency++)
+            // figure out what stub offset was set to
+            auto     cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+            int      cReTimeValue = -1;
+            uint16_t cDelay       = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+            for(uint16_t cLatency = cDelay - 1; cLatency < cDelay; cLatency++)
             {
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -1353,137 +1295,124 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic,bool pShiftRegMode)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cLatency);
-                            if( cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0 )
-                            {
-                                cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip,"RetimePix"); 
-                            } 
-                        }// chip 
-                    }// hybrid 
-                }//module 
+                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                            if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+                        } // chip
+                    }     // hybrid
+                }         // module
 
-                int cStubLatency = cLatency - ( cStubOffset + cReTimeValue );
-                LOG (INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
-                // read events 
+                int cStubLatency = cLatency - (cStubOffset + cReTimeValue);
+                LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
+                // read events
                 fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
 
-                // do this 10 times 
-                for( int cAttempt= 0 ; cAttempt < 50 ; cAttempt++ )
+                // do this 10 times
+                for(int cAttempt = 0; cAttempt < 50; cAttempt++)
                 {
-                    if( cAttempt%10 == 0 ) LOG (INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
-                    this->CheckPSData( cBoard , cInjections );         
-                }// attempt loop
-            
-                // and now look at all the bad events 
-                uint16_t cCalPulseDelay = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
-                uint16_t cTimeBetweenCalPulses =  cCalPulseDelay + cDelay;
-                LOG (INFO) << BOLDBLUE << "An L1A/CalPulse is sent once every  " << (cTimeBetweenCalPulses) << " Bx." << RESET;
-                auto& cBadEvents = fBadEvents.at(cBoard->getIndex());
+                    if(cAttempt % 10 == 0) LOG(INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
+                    this->CheckPSData(cBoard, cInjections);
+                } // attempt loop
+
+                // and now look at all the bad events
+                uint16_t cCalPulseDelay        = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
+                uint16_t cTimeBetweenCalPulses = cCalPulseDelay + cDelay;
+                LOG(INFO) << BOLDBLUE << "An L1A/CalPulse is sent once every  " << (cTimeBetweenCalPulses) << " Bx." << RESET;
+                auto& cBadEvents  = fBadEvents.at(cBoard->getIndex());
                 auto& cGoodEvents = fGoodEvents.at(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& cBadEventsOG = cBadEvents->at(cOpticalGroup->getIndex());
-                    auto& cGdEventsOG = cGoodEvents->at(cOpticalGroup->getIndex());
+                    auto& cGdEventsOG  = cGoodEvents->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         auto& cBadEventsHybrid = cBadEventsOG->at(cHybrid->getIndex());
-                        auto& cGdEventsHybrid = cGdEventsOG->at(cHybrid->getIndex());
+                        auto& cGdEventsHybrid  = cGdEventsOG->at(cHybrid->getIndex());
                         for(auto cChip: *cHybrid)
                         {
                             auto& cBadEventsChip = cBadEventsHybrid->at(cChip->getIndex());
-                            auto& cBadEventsList   = cBadEventsChip->getSummary<EventsList>();
+                            auto& cBadEventsList = cBadEventsChip->getSummary<EventsList>();
 
                             auto& cGdEventsChip = cGdEventsHybrid->at(cChip->getIndex());
                             auto& cGdEventsList = cGdEventsChip->getSummary<EventsList>();
 
-                            LOG (INFO) << BOLDBLUE << "Found " << +cBadEventsList.size() 
-                                << " bad events and "
-                                << +cGdEventsList.size() << " good events." << RESET;
-                            
-                            // look at events in class 0 
-                            for( int cSelection=6; cSelection>=0; cSelection--)
+                            LOG(INFO) << BOLDBLUE << "Found " << +cBadEventsList.size() << " bad events and " << +cGdEventsList.size() << " good events." << RESET;
+
+                            // look at events in class 0
+                            for(int cSelection = 6; cSelection >= 0; cSelection--)
                             {
-                                if( cSelection == 5 ) continue; // this is a good event
+                                if(cSelection == 5) continue; // this is a good event
                                 std::vector<int> cL1Ids_BdEvnts(0);
-                                for( auto cBadEventTag : cBadEventsList ) 
+                                for(auto cBadEventTag: cBadEventsList)
                                 {
-                                    EventId cId=cBadEventTag.first;
-                                    uint8_t cTg=cBadEventTag.second;
-                                    //no p clusters 
-                                    if(cTg==cSelection) cL1Ids_BdEvnts.push_back(cId.first);
+                                    EventId cId = cBadEventTag.first;
+                                    uint8_t cTg = cBadEventTag.second;
+                                    // no p clusters
+                                    if(cTg == cSelection) cL1Ids_BdEvnts.push_back(cId.first);
                                 }
-                                LOG (INFO) << BOLDBLUE << "\t.. " << +cL1Ids_BdEvnts.size() << " events with classification " << +cSelection << RESET;
-                                if( cSelection == 0 )
+                                LOG(INFO) << BOLDBLUE << "\t.. " << +cL1Ids_BdEvnts.size() << " events with classification " << +cSelection << RESET;
+                                if(cSelection == 0)
                                 {
-                                    auto cIterator = std::find( cL1Ids_BdEvnts.begin(), cL1Ids_BdEvnts.end(), 511 );
+                                    auto             cIterator = std::find(cL1Ids_BdEvnts.begin(), cL1Ids_BdEvnts.end(), 511);
                                     std::vector<int> cNBadEvents_511(0);
                                     std::vector<int> cNBadEvents_Rndm(0);
-                                    int cN511sfound=0;
-                                    while( cIterator!= cL1Ids_BdEvnts.end() )
+                                    int              cN511sfound = 0;
+                                    while(cIterator != cL1Ids_BdEvnts.end())
                                     {
-                                        auto cNextPosition = std::find( cIterator+1, cL1Ids_BdEvnts.end(), 511 );
-                                        if( cNextPosition != cL1Ids_BdEvnts.end() )
+                                        auto cNextPosition = std::find(cIterator + 1, cL1Ids_BdEvnts.end(), 511);
+                                        if(cNextPosition != cL1Ids_BdEvnts.end())
                                         {
-                                            int cNBad_511=0;
-                                            auto cIter = cIterator;
+                                            int  cNBad_511 = 0;
+                                            auto cIter     = cIterator;
                                             do
                                             {
-                                                if( cIter!= cIterator)
+                                                if(cIter != cIterator)
                                                 {
-                                                    int cDiff = (int)(*cIter) - (int)(*(cIter-1));
-                                                    if( cDiff != 1  && cDiff != -511 ){
-                                                        LOG (DEBUG) << BOLDRED << "\t.. L1 difference of " << +cDiff << " between bad events." 
-                                                            << " L1Id is " << *cIter 
-                                                            << " [L1Id mod 16 = " << +((int)(*cIter)%16)
-                                                            << " ] previous event had an L1Id of " << *(cIter-1)
-                                                            << RESET;
+                                                    int cDiff = (int)(*cIter) - (int)(*(cIter - 1));
+                                                    if(cDiff != 1 && cDiff != -511)
+                                                    {
+                                                        LOG(DEBUG) << BOLDRED << "\t.. L1 difference of " << +cDiff << " between bad events."
+                                                                   << " L1Id is " << *cIter << " [L1Id mod 16 = " << +((int)(*cIter) % 16) << " ] previous event had an L1Id of " << *(cIter - 1)
+                                                                   << RESET;
                                                         cNBadEvents_Rndm.push_back(*cIter);
                                                     }
-                                                    else cNBad_511++;
+                                                    else
+                                                        cNBad_511++;
                                                 }
-                                                else cNBad_511++;
+                                                else
+                                                    cNBad_511++;
                                                 cIter++;
-                                            }while( cIter != cNextPosition );
+                                            } while(cIter != cNextPosition);
                                             cNBadEvents_511.push_back(cNBad_511);
-                                        }//look for next bad event in the list 
+                                        } // look for next bad event in the list
                                         cIterator = cNextPosition;
                                         cN511sfound++;
-                                    }// list of bad events 
-                                    auto cSum = std::accumulate(cNBadEvents_511.begin(), cNBadEvents_511.end(), 0.0);
-                                    auto cMean = cSum/cNBadEvents_511.size();
-                                    auto cMax = std::max_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
-                                    auto cMin = std::min_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
-                                    double cSqSum = std::inner_product(cNBadEvents_511.begin(), cNBadEvents_511.end(), cNBadEvents_511.begin(), 0.0);
+                                    } // list of bad events
+                                    auto   cSum    = std::accumulate(cNBadEvents_511.begin(), cNBadEvents_511.end(), 0.0);
+                                    auto   cMean   = cSum / cNBadEvents_511.size();
+                                    auto   cMax    = std::max_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
+                                    auto   cMin    = std::min_element(cNBadEvents_511.begin(), cNBadEvents_511.end());
+                                    double cSqSum  = std::inner_product(cNBadEvents_511.begin(), cNBadEvents_511.end(), cNBadEvents_511.begin(), 0.0);
                                     double cStdDev = std::sqrt(cSqSum / cNBadEvents_511.size() - cMean * cMean);
-                                    LOG (INFO) << BOLDBLUE << "\t\t..Found " << +cN511sfound 
-                                        << " times where an L1Id of 511 was found in a readout event.." 
-                                        << +cSum 
-                                        << " of those L1Ids are consecutive ones missing immediately after an L1Id of 511." 
-                                        << RESET;
-                                    LOG (INFO) << BOLDBLUE << "\t\t .. On average, the " << +cMean 
-                                        << " events following an L1Id of 511 are bad..."
-                                        << " StdDev : " << cStdDev 
-                                        << " Maxium :  " << (*cMax)
-                                        << " Minimum : " << (*cMin)
-                                        << RESET;
-                                    LOG (INFO) << BOLDBLUE << "\t\t .. " << +cNBadEvents_Rndm.size() << " are some others population. "
-                                        << RESET;
+                                    LOG(INFO) << BOLDBLUE << "\t\t..Found " << +cN511sfound << " times where an L1Id of 511 was found in a readout event.." << +cSum
+                                              << " of those L1Ids are consecutive ones missing immediately after an L1Id of 511." << RESET;
+                                    LOG(INFO) << BOLDBLUE << "\t\t .. On average, the " << +cMean << " events following an L1Id of 511 are bad..."
+                                              << " StdDev : " << cStdDev << " Maxium :  " << (*cMax) << " Minimum : " << (*cMin) << RESET;
+                                    LOG(INFO) << BOLDBLUE << "\t\t .. " << +cNBadEvents_Rndm.size() << " are some others population. " << RESET;
                                 }
                             }
-                            //remember to clear
+                            // remember to clear
                             cBadEventsList.clear();
                             cGdEventsList.clear();
-                        }// chip 
-                    }// hybrid 
-                }//module 
-            }//latency scan 
-        }//delay scan 
-    
-    }// board 
+                        } // chip
+                    }     // hybrid
+                }         // module
+            }             // latency scan
+        }                 // delay scan
+
+    } // board
 }
 void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
 {
-   
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(this);
     cBackEndAligner.Initialise();
@@ -1524,7 +1453,7 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
 
 void DataChecker::ReadNeventsTest()
 {
-    this->DigitalInjectionTest(false,false);
+    this->DigitalInjectionTest(false, false);
     // auto cSetting = fSettingsMap.find ( "Nevents" );
     // uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
     // LOG (INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
@@ -1551,8 +1480,8 @@ void DataChecker::ReadNeventsTest()
     //                 else if( cChip->getFrontEndType() == FrontEndType::MPA )
     //                 {
     //                     auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip,"ReadoutMode");
-    //                     LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
-    //                         << " : readout mode [" << +cReadoutMode << " ]" << RESET; 
+    //                     LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId()
+    //                         << " : readout mode [" << +cReadoutMode << " ]" << RESET;
     //                 }
     //             }
     //         }
@@ -1564,7 +1493,6 @@ void DataChecker::ReadNeventsTest()
     // //         << +cBoard->getIndex()
     // //         << RESET;
 
-        
     // //     BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
     // //     this->ReadNEvents(cBeBoard, cNevents);
     // //     // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
@@ -2601,8 +2529,6 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
         // fBeBoardInterface->ChipReSync ( cBoard );
     }
 }
-
-
 
 void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 {

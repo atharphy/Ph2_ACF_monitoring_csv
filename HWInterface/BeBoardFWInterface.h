@@ -268,22 +268,22 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty)                          = 0;
-    virtual void     ResetOptoLink(Ph2_HwDescription::Chip* pChip)                                                                     = 0;
+    virtual void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty)                           = 0;
+    virtual void     ResetOptoLink(Ph2_HwDescription::Chip* pChip)                                                                      = 0;
     virtual bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pValue, bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                           = 0;
+    virtual uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                            = 0;
 
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################
-    //functions for new Command Processor Block
-    virtual void     ResetCPB() = 0;
-    virtual void     WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) = 0;
-    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) = 0;
-    //function to read/write lpGBT registers
-    virtual bool WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) = 0;
-    virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress) = 0;
-    
+    // functions for new Command Processor Block
+    virtual void                  ResetCPB()                                                   = 0;
+    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) = 0;
+    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords)                                = 0;
+    // function to read/write lpGBT registers
+    virtual bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) = 0;
+    virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress)                                                  = 0;
+
   protected:
     uint32_t fBlockSize{0};
     uint32_t fNPackets{0};
