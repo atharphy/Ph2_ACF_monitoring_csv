@@ -54,9 +54,9 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     //for(uint8_t cIter = 0; cIter < 20; cIter++)
     ConfigurePSROH(pChip);
     //TESTING I2C
+/*
     uint8_t cMasterId = 2, cSlaveAddress = 0x60;
     uint16_t cRegisterAddress = 0x7c;
-/*
     uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
     LOG(INFO) << BOLDRED << " I2C Write " << RESET;
     fBoardFW->I2CWrite(cMasterId, cSlaveAddress, 0x44  << 16  | cInvertedRegister, 3);
@@ -75,10 +75,10 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
- */
     cicWrite(pChip, 0, cRegisterAddress, 0x44);
     cicRead(pChip, 0, cRegisterAddress);
     exit(0);
+ */
     return true;
 }
 
