@@ -36,7 +36,10 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     //       }
     // }
     // To be uncommented if crate is used
+    //for(uint32_t cTry = 0; cTry < 50; cTry++)
     PrintChipMode(pChip);
+
+    LOG(INFO) << BOLDBLUE << "value of 0x024 0x" << std::hex << ReadReg(pChip, 0x024) << std::dec << RESET;
     WriteChipReg(pChip, "POWERUP2", 0x06);
     uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
     uint16_t cIter = 0, cMaxIter = 2000;
@@ -47,8 +50,35 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     }
     if(cPUSMStatus != 18) exit(0);
-    ConfigurePSROH(pChip);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+    //for(uint8_t cIter = 0; cIter < 20; cIter++)
+    ConfigurePSROH(pChip);
+    //TESTING I2C
+    uint8_t cMasterId = 2, cSlaveAddress = 0x60;
+    uint16_t cRegisterAddress = 0x7c;
+/*
+    uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
+    LOG(INFO) << BOLDRED << " I2C Write " << RESET;
+    fBoardFW->I2CWrite(cMasterId, cSlaveAddress, 0x44  << 16  | cInvertedRegister, 3);
+    fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cInvertedRegister, 2);
+    LOG(INFO) << "read value register 0x7c = " << +fBoardFW->I2CRead(cMasterId, cSlaveAddress, 0) << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Data0 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Data0") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Data1 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data1") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Data2 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data2") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Data3 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Data3") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Status 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Status") << std::dec << RESET;
+    LOG(INFO) << BOLDRED << " I2C Read" << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+ */
+    cicWrite(pChip, 0, cRegisterAddress, 0x44);
+    cicRead(pChip, 0, cRegisterAddress);
+    exit(0);
     return true;
 }
 
@@ -58,14 +88,14 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
 uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) 
 { 
     uint8_t cReadBack = ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
-    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(INFO) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
@@ -576,7 +606,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     {
         LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
         uint8_t cStatus = GetI2CStatus(pChip, pMaster);
-        LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
+        LOG(INFO) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
         cSuccess = (cStatus == 4);
         cIter++;
     } while(cIter < cMaxIter && !cSuccess);
@@ -702,10 +732,11 @@ void D19clpGBTInterface::ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std
     uint8_t cOutL      = ReadChipReg(pChip, "PIOOutL");
     uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
     uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
-    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnaH");
+    uint8_t cPullEnH   = ReadChipReg(pChip, "PIOPullEnaH");            
     uint8_t cPullEnL   = ReadChipReg(pChip, "PIOPullEnaL");
     uint8_t cUpDownH   = ReadChipReg(pChip, "PIOUpDownH");
     uint8_t cUpDownL   = ReadChipReg(pChip, "PIOUpDownL");
+
     for(auto cGPIO : pGPIOs)
     {
         if(cGPIO < 8)
@@ -889,8 +920,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
-    ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
-    ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
+    //ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
+    ConfigureGPIO(pChip, {0, 1, 3, 6, 9}, 1, 1, 0, 0, 0);
+    ConfigureGPIO(pChip, {11}, 0, 0, 0, 1, 1);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
@@ -970,7 +1002,7 @@ bool D19clpGBTInterface::mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
         uint8_t cIter = 0, cMaxIter = 10;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
-            WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x00 | (1 + pChipId), (pRegisterValue << 16) | cInvertedRegister, 3);
+            WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x40 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
             cReadBack = mpaRead(pChip, pFeId, pChipId, pRegisterAddress);
             cIter++;
         }

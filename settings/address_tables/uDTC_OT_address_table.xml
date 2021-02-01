@@ -440,6 +440,9 @@
                 </node>
                 <node id="nreplies"                     address="0x004" description="nreplies present in reply fifo"/>
             </node>
+            <node id="worker">
+                <node id="lpgbtsc_fsm_state"    address="0x005" mask="0x000000ff"/>
+            </node>
         </node>
 
         <node id="fast_command_block"           address="0x2000">

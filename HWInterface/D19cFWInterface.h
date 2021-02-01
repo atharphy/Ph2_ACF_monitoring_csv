@@ -736,7 +736,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t  flpGBTAddress = 0x70;
+    const uint8_t  flpGBTAddress = 0x70;
+    const uint8_t  fI2CFrequency = 3; // 1 MHz
+    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x00}};
     //Functions for standard uDTC
     void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
     void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
@@ -753,6 +755,12 @@ class D19cFWInterface : public BeBoardFWInterface
     //function to read/write lpGBT registers
     bool WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;
+    //function for I2C transactions using lpGBT I2C Masters
+    bool I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
+    uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
+    //function for front-end slow control
+    bool WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue) override;
+    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
 };
 } // namespace Ph2_HwInterface
 

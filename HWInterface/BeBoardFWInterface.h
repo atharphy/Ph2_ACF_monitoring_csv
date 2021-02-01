@@ -283,6 +283,12 @@ class BeBoardFWInterface : public RegManager
     //function to read/write lpGBT registers
     virtual bool WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) = 0;
     virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress) = 0;
+    //function for I2C transactions using lpGBT I2C Masters
+    virtual bool I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) = 0;
+    virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) = 0;
+    //function for front-end slow control
+    virtual bool WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue) = 0;
+    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) = 0;
     
   protected:
     uint32_t fBlockSize{0};

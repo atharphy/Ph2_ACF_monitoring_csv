@@ -4515,7 +4515,7 @@ void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVecto
     uint8_t cWordIndex = 0;
     for(auto cCommandWord : pCommandVector)
     {        
-        LOG(DEBUG) << GREEN << "\t Write command word " << +cWordIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cCommandWord << std::dec << RESET;
+        LOG(INFO) << GREEN << "\t Write command word " << +cWordIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cCommandWord << std::dec << RESET;
         cWordIndex++;
     } 
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
@@ -4527,9 +4527,10 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords)
     uint8_t cFifoIndex = 0;
     for(auto cReplyWord : cReplyVector)
     {            
-        LOG(DEBUG) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
+        LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
         cFifoIndex++;
     }
+    LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
     return cReplyVector;
 }
 
@@ -4569,9 +4570,62 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
   WriteCommandCPB(cCommandVector);
   std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
   uint8_t cReadBack = cReplyVector[7] & 0xFF; 
-  LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+  LOG(INFO) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
   return cReadBack;
 }
 
+//function for I2C transactions using lpGBT I2C Masters
+bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
+{
+  uint8_t cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
+  std::vector<uint32_t> cCommandVector;
+  cCommandVector.clear();
+  cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
+  cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
+  WriteCommandCPB(cCommandVector);
+  std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
+  if( (cReplyVector[7] & 0xFF) != 4 )
+  {
+    //WriteCommandCPB(cCommandVector);
+    //cReplyVector = ReadReplyCPB(10);
+    LOG(INFO) << BOLDRED << "D19cFWInterface::I2CWrite -- I2C Transaction Failed" << RESET;
+    return false;
+  }
+  return true;
+}
+
+uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
+{
+  uint8_t cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
+  std::vector<uint32_t> cCommandVector;
+  cCommandVector.clear();
+  cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
+  cCommandVector.push_back( cMasterConfig << 24 );
+  WriteCommandCPB(cCommandVector);
+  std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
+  uint8_t cReadBack = cReplyVector[7] & 0xFF; 
+  //LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << RESET;
+  return cReadBack;
+}
+
+bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress,  uint8_t pRegisterValue)
+{
+  LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+  uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0 : pChip->getId();
+  uint8_t cChipAddress = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
+  uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+  return I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
+}
+
+uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
+{  
+  uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0 : pChip->getId();
+  uint8_t cChipAddress = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
+  uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+  I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cInvertedRegister, 2);
+  uint32_t cReadBack = I2CRead(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, 1);
+  //LOG(DEBUG) << BOLDYELLOW << +fChipAddressMap.find() << " Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+  return cReadBack;
+}
 
 } // namespace Ph2_HwInterface
