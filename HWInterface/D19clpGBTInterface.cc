@@ -23,6 +23,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
+    /*
     // Load register map from configuration file
     ChipRegMap clpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: clpGBTRegMap)
@@ -34,6 +35,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
     }
+    */
     // To be uncommented if crate is used
     PrintChipMode(pChip);
     WriteChipReg(pChip, "POWERUP2", 0x06);
