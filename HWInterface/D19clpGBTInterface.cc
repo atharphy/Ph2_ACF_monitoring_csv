@@ -35,10 +35,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         }
     }
     // To be uncommented if crate is used
-    // for(uint32_t cTry = 0; cTry < 50; cTry++)
     PrintChipMode(pChip);
-
-    LOG(INFO) << BOLDBLUE << "value of 0x024 0x" << std::hex << ReadReg(pChip, 0x024) << std::dec << RESET;
     WriteChipReg(pChip, "POWERUP2", 0x06);
     uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
     uint16_t cIter = 0, cMaxIter = 2000;
@@ -51,7 +48,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     // for(uint8_t cIter = 0; cIter < 20; cIter++)
     ConfigurePSROH(pChip);
-    // TESTING I2C
+    // TESTING I2C CPB #FIXME to be removed later
     /*
         uint8_t cMasterId = 2, cSlaveAddress = 0x60;
         uint16_t cRegisterAddress = 0x7B;
@@ -86,14 +83,14 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(INFO) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
 }
 
 uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)
 {
     uint8_t cReadBack = ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
-    LOG(INFO) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
@@ -609,8 +606,8 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     } while(cIter < cMaxIter && !cSuccess);
     if(!cSuccess)
     {
-        // LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
-        // throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+        LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
+        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
     return cSuccess;
 }
@@ -910,12 +907,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
-<<<<<<< HEAD
-    ConfigureGPIO(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1, 1, 0, 0, 0);
-=======
     ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
     ConfigureGPIO(pChip, {11}, 0, 0, 0, 1, 1);
->>>>>>> 28f847d9346dd85feddc2271109a23e616d111d4
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
@@ -973,7 +966,7 @@ bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
         if(cReadBack != pRegisterValue)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            // throw std::runtime_error(std::string("I2C readback mismatch"));
+            throw std::runtime_error(std::string("I2C readback mismatch"));
         }
     }
     return true;
