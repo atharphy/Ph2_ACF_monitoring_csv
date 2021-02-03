@@ -263,7 +263,7 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
             {
                 // Run( pBoard, cNthAcq );
                 ReadData(pBoard);
-                const std::vector<Event*>& events = GetEvents(pBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)

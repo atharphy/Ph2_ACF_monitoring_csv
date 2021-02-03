@@ -359,7 +359,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 
         // read back events
         this->ReadNEvents(pBoard, fEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         // iterate over FE objects and check occupancy
         for(auto cEvent: cEvents)
         {
@@ -451,7 +451,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
         auto& cThisHitsContainer   = fHitsContainer.at(pBoard->getIndex());
 
         this->ReadNEvents(pBoard, fEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         for(auto cEvent: cEvents)
         {
             auto cEventCount = cEvent->GetEventCount();

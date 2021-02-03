@@ -39,8 +39,8 @@ Tool::Tool()
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
     , fTestPulse(false)
-    , fDoHybridBroadcast(false)
     , fDoBoardBroadcast(false)
+    , fDoHybridBroadcast(false)
     , fChannelGroupHandler(nullptr)
 {
 #ifdef __HTTP__
@@ -64,8 +64,8 @@ Tool::Tool(THttpServer* pHttpServer)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
     , fTestPulse(false)
-    , fDoHybridBroadcast(false)
     , fDoBoardBroadcast(false)
+    , fDoHybridBroadcast(false)
     , fChannelGroupHandler(nullptr)
 {
 }
@@ -125,8 +125,8 @@ void Tool::Inherit(const Tool* pTool)
     fAllChan                     = pTool->fAllChan;
     fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
     fTestPulse                   = pTool->fTestPulse;
-    fDoHybridBroadcast           = pTool->fDoHybridBroadcast;
     fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
+    fDoHybridBroadcast           = pTool->fDoHybridBroadcast;
 
 #ifdef __HTTP__
     fHttpServer = pTool->fHttpServer;
@@ -149,14 +149,17 @@ void Tool::Destroy()
     LOG(INFO) << BOLDRED << "Destroying memory objects" << RESET;
     SystemController::Destroy();
 #ifdef __HTTP__
+    LOG(INFO) << BOLDRED << "Destroying HttpServer" << RESET;
     if(fHttpServer)
     {
         delete fHttpServer;
         fHttpServer = nullptr;
     }
+    LOG(INFO) << BOLDRED << "HttpServer Destroyed" << RESET;
 #endif
 
     SoftDestroy();
+    LOG(INFO) << BOLDRED << "Memory objects destroyed" << RESET;
 }
 
 void Tool::SoftDestroy()
@@ -704,7 +707,7 @@ void Tool::setFWTestPulse()
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
 
             if(!cAsync)
             {
@@ -1198,7 +1201,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
 
     void operator()() override
     {
-        uint16_t burstNumbers;
+        uint32_t burstNumbers;
         uint32_t lastBurstNumberOfEvents;
         if(fNumberOfEventsPerBurst <= 0)
         {
@@ -1222,7 +1225,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
             // Loop over Events from this Acquisition
-            const std::vector<Event*>& events = fTool->GetEvents(fDetectorContainer->at(fBoardIndex));
+            const std::vector<Event*>& events = fTool->GetEvents();
             for(auto& event: events) event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
             --burstNumbers;
         }
@@ -1349,17 +1352,9 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacNam
 void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer)
 {
     for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
-    {
         for(auto cHybrid: *cOpticalGroup)
-        {
             for(auto cChip: *cHybrid)
-            {
-                std::vector<uint16_t> dacVector; //= dacList.at(cHybrid->getHybridId()).at(cChip->getId());
                 fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-            }
-        }
-    }
-    return;
 }
 
 // Set same global DAC for all chips
@@ -1372,19 +1367,12 @@ void Tool::setSameGlobalDac(const std::string& dacName, const uint16_t dacValue)
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     if(fDoBoardBroadcast == false)
-    {
-        LOG(INFO) << BOLDBLUE << "Not broadcasting.." << RESET;
         for(auto cOpticalGroup: *pBoard)
-        {
             for(auto cHybrid: *cOpticalGroup)
-            {
                 if(fDoHybridBroadcast == false)
                     for(auto cChip: *cHybrid) fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
                 else
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
-            }
-        }
-    }
     else
     {
         LOG(INFO) << BOLDBLUE << "Broadcasting to chips on board.." << RESET;

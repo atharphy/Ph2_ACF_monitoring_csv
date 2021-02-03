@@ -22,11 +22,11 @@
 namespace Ph2_HwDescription
 { // open namespace
 
-SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide,  const std::string& filename) : ReadoutChip(pFeDesc, pSSAId)
+SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pSSAId)
 {
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = new ChannelGroup<120>;
-    fPartnerId = pPartnerId;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
 }
@@ -35,7 +35,7 @@ SSA::SSA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t p
 {
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = new ChannelGroup<120>;
-    fPartnerId = pPartnerId;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
 }
@@ -105,10 +105,6 @@ void SSA::loadfRegMap(const std::string& filename)
     }
 
 } // end loadfRegMap
-
-
-
-
 
 void SSA::saveRegMap(const std::string& filename)
 { // start saveRegMap

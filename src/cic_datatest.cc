@@ -16,7 +16,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
                 dynamic_cast<D19cFWInterface*>(cCicAligner.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, 75);
                 // read n events from the board
                 cCicAligner.ReadNEvents(pBoard, 10);
-                const std::vector<Event*>& events = cCicAligner.GetEvents(pBoard);
+                const std::vector<Event*>& events = cCicAligner.GetEvents();
                 LOG(INFO) << BOLDBLUE << "Read back " << +events.size() << " events from FC7." << RESET;
                 LOG(INFO) << BOLDBLUE << "Vcth = " << +cVcth << " DAC units." << RESET;
                 int               cNevents = 0;

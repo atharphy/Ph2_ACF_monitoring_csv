@@ -24,7 +24,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -134,7 +134,6 @@ int main(int argc, char* argv[])
     // second parameter disables stub logic on CBC3
     // cPedestalEqualization.Initialise ( false, true );
     cPedestalEqualization.Initialise(cAllChan, fDisableStubLogic);
-
     if(cVplus) cPedestalEqualization.FindVplus();
 
     cPedestalEqualization.FindOffsets();

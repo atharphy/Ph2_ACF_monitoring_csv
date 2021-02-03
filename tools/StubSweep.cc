@@ -205,7 +205,7 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
                             {
                                 cEvents.clear();
                                 ReadNEvents(theBoard, pNEvents);
-                                cEvents        = GetEvents(theBoard);
+                                cEvents        = GetEvents();
                                 unsigned int j = 0;
 
                                 do

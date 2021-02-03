@@ -151,10 +151,7 @@ void Gain::run()
     // ##########################
     // # Set new VCAL_MED value #
     // ##########################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
+    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "VCAL_MED", offset);
 
     for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     detectorContainerVector.clear();
@@ -363,6 +360,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                     LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << std::fixed << std::setprecision(4)
                               << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << std::setprecision(-1)
                               << RESET;
+                    RD53Shared::resetDefaultFloat();
                 }
 
     return theGainAndInterceptContainer;
@@ -472,7 +470,7 @@ void Gain::chipErrorReport()
 
 void Gain::saveChipRegisters(int currentRun)
 {
-    std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)

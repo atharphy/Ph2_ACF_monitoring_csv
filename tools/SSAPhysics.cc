@@ -165,7 +165,7 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents(static_cast<BeBoard*>(cBoard));
+    const std::vector<Event*>& events = SystemController::GetEvents();
     for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); }
 }
 

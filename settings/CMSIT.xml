@@ -2,7 +2,7 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="RD53" eventType="VR">
-    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/CMSIT_address_table.xml" />
     <!---
         <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://../settings/address_tables/CMSIT_address_table.xml" />
     -->
@@ -137,11 +137,9 @@
           <Register name="ext_clk_en"> 0 </Register>
         </Register>
 
-        <!--
         <Register name="fast_cmd_reg_3">
           <Register name="triggers_to_accept"> 10 </Register>
         </Register>
-        -->
 
       </Register>
     </Register>
@@ -149,15 +147,18 @@
   </BeBoard>
 
   <Settings>
-    <!--
-        === Calibration parameters ===
-        INJtype       = 0: no injection;                             INJtype       = 1: analog;         INJtype = 2: digital
-        DoFast        = 0: run on all pixels in the selected region; DoFast        = 1: run on a subset
-        DisplayHisto  = 0: don't display;                            DisplayHisto  = 1: display
-        UpdateChipCfg = 0: don't update;                             UpdateChipCfg = 1: update
+    <!-- === Calibration parameters ===
+         INJtype       = 0: no injection;                             INJtype         = 1: analog;                      INJtype = 2: digital
+         ResetMask     = 0: do not enable masked pixels;              ResetMask       = 1: enable all pixels
+         ResetTDAC     = 0: do not reset TDAC;                        ResetTDAC       = 1: reset TDAC to range midpoint
+         DoFast        = 0: run on all pixels in the selected region; DoFast          = 1: run on a subset
+         DisplayHisto  = 0: don't display;                            DisplayHisto    = 1: display
+         UpdateChipCfg = 0: don't update;                             UpdateChipCfg   = 1: update
 
-        TargetCharge: average charge (electrons) corresponding to ToT point = max value - 1
-        TargetOcc:    average fraction of acceptable hits per pixel
+         TargetCharge  (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
+         TargetOcc     (thrmin):           average pixel occupancy
+         TargetOcc     (pixelalive/noise): per pixel occupancy threhold below/above which pixels are masked
+         UnstuckPixels (pixelalive) = 0: do not try to unstuck pixels; UnstuckPixels = 1: set TDAC to 0 to unstuck pixels
     -->
     <Setting name="nEvents">          100 </Setting>
     <Setting name="nEvtsBurst">       100 </Setting>
@@ -168,6 +169,8 @@
 
     <Setting name="nTRIGxEvent">       10 </Setting>
     <Setting name="INJtype">            1 </Setting>
+    <Setting name="ResetMask">          0 </Setting>
+    <Setting name="ResetTDAC">          0 </Setting>
 
     <Setting name="ROWstart">           0 </Setting>
     <Setting name="ROWstop">          191 </Setting>
@@ -190,6 +193,7 @@
     <Setting name="ThrStop">          440 </Setting>
     <Setting name="TargetThr">       2000 </Setting>
     <Setting name="TargetOcc">       1e-6 </Setting>
+    <Setting name="UnstuckPixels">      0 </Setting>
 
     <Setting name="DoFast">             0 </Setting>
     <Setting name="DisplayHisto">       0 </Setting>
@@ -198,10 +202,12 @@
     <!-- === Expert settings ===
          SaveBinaryData = 0: do not save raw data in binary format; SaveBinaryData = 1: save raw data in binary format
          nHITxCol:      number of simultaneously injected pixels per column (it must be a divider of chip rows)
-         nClkDelays:    controls the delay between two consecutive injections in terms of 100ns period
+         InjLatency:    controls the latency of the injection in terms of 100ns period (up to 4095)
+         nClkDelays:    controls the delay between two consecutive injections in terms of 100ns period (up to 4095)
     -->
     <Setting name="SaveBinaryData">     0 </Setting>
     <Setting name="nHITxCol">           1 </Setting>
+    <Setting name="InjLatency">        32 </Setting>
     <Setting name="nClkDelays">       280 </Setting>
   </Settings>
 

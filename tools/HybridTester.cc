@@ -328,7 +328,7 @@ void HybridTester::ScanThresholds()
             {
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -439,7 +439,7 @@ void HybridTester::ScanThreshold()
             {
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -973,7 +973,7 @@ void HybridTester::FindShorts()
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
                 // ReadNEvents ( theBoard, cNthAcq );
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -1068,7 +1068,7 @@ void HybridTester::Measure()
             // Run( theBoard, cNthAcq );
             ReadData(theBoard);
             // ReadNEvents ( theBoard, cNthAcq );
-            const std::vector<Event*>& events = GetEvents(theBoard);
+            const std::vector<Event*>& events = GetEvents();
 
             // Loop over Events from this Acquisition
             for(auto& cEvent: events)
@@ -1223,7 +1223,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
 
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)

@@ -67,10 +67,9 @@ void RD53eudaqProducer::DoStopRun()
     // ###########################
     // # Copy configuration file #
     // ###########################
-    std::string fName2Add(std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_");
-    std::string output(RD53Shared::composeFileName(configFile, fName2Add));
-    std::string command("cp " + configFile + " " + output);
-    system(command.c_str());
+    const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
+    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
+    system(("cp " + configFile + " " + outputConfigFile).c_str());
 
     this->SetStatus(eudaq::Status::STATE_STOPPED, "RD53eudaqProducer::Stopped");
     this->SetStatus(eudaq::Status::STATE_CONF, "RD53eudaqProducer::Configured");

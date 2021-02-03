@@ -5,9 +5,9 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h> // inet_aton, struct sockaddr_in
-#include <strings.h>    // bzero
-#include <thread>
 #include <sstream>
+#include <strings.h> // bzero
+#include <thread>
 
 //========================================================================================================================
 TCPClientBase::TCPClientBase(const std::string& serverIP, int serverPort) : fServerIP(serverIP), fServerPort(serverPort), fConnected(false) {}

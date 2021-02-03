@@ -27,6 +27,7 @@ void PixelAlive::ConfigureCalibration()
     nHITxCol       = this->findValueInSettings("nHITxCol");
     doFast         = this->findValueInSettings("DoFast");
     thrOccupancy   = this->findValueInSettings("TargetOcc");
+    unstuckPixels  = this->findValueInSettings("UnstuckPixels");
     doDisplay      = this->findValueInSettings("DisplayHisto");
     doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings("SaveBinaryData");
@@ -159,6 +160,23 @@ void PixelAlive::run()
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
 
+    // #########################
+    // # Mark enabled channels #
+    // #########################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                    for(auto row = 0u; row < RD53::nRows; row++)
+                        for(auto col = 0u; col < RD53::nCols; col++)
+                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                                theOccContainer->at(cBoard->getIndex())
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<OccupancyAndPh>(row, col)
+                                    .fOccupancy = RD53Shared::ISDISABLED;
+
     // ################
     // # Error report #
     // ################
@@ -230,12 +248,21 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
-                                static_cast<RD53*>(cChip)->enablePixel(row, col, injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
-                                if((*static_cast<RD53*>(cChip)->getPixelsMask())[col].Enable[row] == false) nMaskedPixelsPerCalib++;
+                                bool enable = (injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
+                                if(unstuckPixels == false)
+                                    static_cast<RD53*>(cChip)->enablePixel(row, col, enable);
+                                else if(enable == false)
+                                    static_cast<RD53*>(cChip)->setTDAC(row, col, 0);
+                                if(enable == false) nMaskedPixelsPerCalib++;
                             }
 
-                    LOG(INFO) << BOLDBLUE << "\t--> Number of potentially masked pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Total number of potentially masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                    if(unstuckPixels == false)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t--> Number of potentially " << BOLDYELLOW << "masked" << BOLDBLUE << " pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> Total number of potentially masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                    }
+                    else
+                        LOG(INFO) << BOLDBLUE << "\t--> Number of potentially " << BOLDYELLOW << "unstuck" << BOLDBLUE << " pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
 
                     // ######################################
                     // # Copy register values for streaming #
@@ -352,7 +379,7 @@ void PixelAlive::chipErrorReport()
 
 void PixelAlive::saveChipRegisters(int currentRun)
 {
-    std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)

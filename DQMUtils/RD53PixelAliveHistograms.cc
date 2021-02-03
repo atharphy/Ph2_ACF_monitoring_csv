@@ -16,12 +16,16 @@ void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& t
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
-    size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    // #######################
+    // # Retrieve parameters #
+    // #######################
+    nEvents                = this->findValueInSettings(settingsMap, "nEvents");
+    const size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
-    auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", 200 + 1, 0, 1 + 1. / 200);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Number of hits", "Entries");
+    auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, 1 + 1. / nEvents);
+    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Efficiency", "Entries");
 
     auto hOcc2D = CanvasContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "Columns", "Rows");
@@ -93,9 +97,9 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                         {
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != 0)
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
                             {
-                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + Occupancy1DHist->GetBinWidth(0) / 2);
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                             }

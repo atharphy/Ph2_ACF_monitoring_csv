@@ -19,9 +19,13 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, const DetectorContain
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents = this->findValueInSettings(settingsMap, "nEvents");
-
+    nEvents         = this->findValueInSettings(settingsMap, "nEvents");
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
+
+    const size_t colStart = this->findValueInSettings(settingsMap, "COLstart");
+    const size_t colStop  = this->findValueInSettings(settingsMap, "COLstop");
+    frontEnd              = RD53::getMajorityFE(colStart, colStop);
+    if(frontEnd == &RD53::DIFF) TDACsize *= 2;
 
     auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
@@ -75,6 +79,7 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
 void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContainer)
 {
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
+    if(frontEnd == &RD53::DIFF) TDACsize *= 2;
 
     for(const auto cBoard: TDACContainer)
         for(const auto cOpticalGroup: *cBoard)

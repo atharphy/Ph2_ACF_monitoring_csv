@@ -59,6 +59,7 @@ class PixelAlive : public Tool
     size_t injType;
     size_t nHITxCol;
     float  thrOccupancy;
+    bool   unstuckPixels;
     enum INJtype
     {
         None,

@@ -18,6 +18,7 @@ void InjectionDelay::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
     // # Retrieve parameters #
@@ -248,10 +249,10 @@ void InjectionDelay::analyze()
                         }
                     }
 
-                    LOG(INFO) << GREEN << "Best delay for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (1.5625 ns) computed over two bx" << RESET;
-                    LOG(INFO) << GREEN << "New delay dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << (regVal & maxDelay) << RESET;
+                    LOG(INFO) << BOLDMAGENTA << ">>> Best injection delay for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (1.5625 ns) computed over two bx <<<" << RESET;
+                    LOG(INFO) << BOLDMAGENTA << ">>> New injection delay dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << (regVal & maxDelay) << BOLDMAGENTA << " <<<" << RESET;
 
                     // ####################################################
                     // # Fill delay container and download new DAC values #
@@ -263,8 +264,8 @@ void InjectionDelay::analyze()
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
                     if(regVal / (maxDelay + 1) == 0) latency--;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency, true);
-                    LOG(INFO) << GREEN << "New latency dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << latency << RESET;
+                    LOG(INFO) << BOLDMAGENTA << ">>> New latency dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << latency << BOLDMAGENTA << " <<<" << RESET;
                 }
 }
 
@@ -285,7 +286,7 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         // ###########################
         // # Download new DAC values #
         // ###########################
-        LOG(INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -356,7 +357,7 @@ void InjectionDelay::chipErrorReport()
 
 void InjectionDelay::saveChipRegisters(int currentRun)
 {
-    std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)

@@ -19,6 +19,7 @@
 #include "../HWInterface/CicInterface.h"
 #include "../HWInterface/D19clpGBTInterface.h"
 #include "../HWInterface/MPAInterface.h"
+#include "../HWInterface/PSInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
@@ -33,6 +34,7 @@
 #include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cMPAEvent.h"
 #include "../Utils/D19cMPAEventAS.h"
+#include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
 #include "../Utils/Event.h"
@@ -48,6 +50,7 @@
 #include <unordered_map>
 #include <vector>
 
+class DetectorMonitor;
 /*!
  * \namespace Ph2_System
  * \brief Namespace regrouping the framework wrapper
@@ -76,7 +79,9 @@ class SystemController
     std::string        fRawFileName;
     bool               fWriteHandlerEnabled;
     bool               fStreamerEnabled;
+    std::future<void>  fMonitorFuture;
     TCPPublishServer*  fNetworkStreamer;
+    DetectorMonitor*   fDetectorMonitor;
 
     /*!
      * \brief Constructor of the SystemController class
@@ -229,24 +234,7 @@ class SystemController
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const { return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr); }
 
-    /*!
-     * \brief Get next event from data buffer
-     * \param pBoard
-     * \return Next event
-     */
-    const Ph2_HwInterface::Event* GetNextEvent(const Ph2_HwDescription::BeBoard* pBoard)
-    {
-        if(fFuture.valid() == true) fFuture.get();
-        return ((fCurrentEvent >= fEventList.size()) ? nullptr : fEventList.at(fCurrentEvent++));
-    }
-
-    const Ph2_HwInterface::Event* GetEvent(const Ph2_HwDescription::BeBoard* pBoard, unsigned int i)
-    {
-        if(fFuture.valid() == true) fFuture.get();
-        return ((i >= fEventList.size()) ? nullptr : fEventList.at(i));
-    }
-
-    const std::vector<Ph2_HwInterface::Event*>& GetEvents(const Ph2_HwDescription::BeBoard* pBoard)
+    const std::vector<Ph2_HwInterface::Event*>& GetEvents()
     {
         if(fFuture.valid() == true) fFuture.get();
         return fEventList;
@@ -261,9 +249,7 @@ class SystemController
     std::vector<Ph2_HwInterface::Event*> fEventList;
 
     std::future<void> fFuture;
-    uint32_t          fCurrentEvent;
     uint32_t          fEventSize;
-    uint32_t          fNevents;
     uint32_t          fNCbc;
     FileParser        fParser;
 };

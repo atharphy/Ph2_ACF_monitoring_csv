@@ -22,9 +22,14 @@ fi
 ########
 # ROOT #
 ########
-source $ROOTSYS/bin/thisroot.sh
-# source /usr/local/root/bin/thisroot.sh
-# source /opt/local/root/bin/thisroot.sh
+THISROOTSH=${ROOTSYS}/bin/thisroot.sh
+[ ! -f ${THISROOTSH} ] || source ${THISROOTSH}
+unset THISROOTSH
+
+if ! command -v root &> /dev/null; then
+  printf "%s\n" ">> ERROR -- CERN ROOT is not available; please install it before using Ph2_ACF (see README)"
+  return 1
+fi
 
 #######
 # ZMQ #

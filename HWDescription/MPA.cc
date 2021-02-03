@@ -26,7 +26,7 @@ MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t p
 {
     fMaxRegValue      = 255;
     fChipOriginalMask = new ChannelGroup<1920>;
-    fPartnerId = pPartnerId;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
 }
@@ -35,7 +35,7 @@ MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId,
 {
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = new ChannelGroup<1920>;
-    fPartnerId = pPartnerId;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
 }
@@ -102,7 +102,6 @@ void MPA::loadfRegMap(const std::string& filename)
     }
 
 } // end loadfRegMap
-
 
 void MPA::saveRegMap(const std::string& filename)
 { // start saveRegMap

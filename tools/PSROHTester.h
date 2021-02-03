@@ -1,13 +1,14 @@
 /*!
 
         \file                   PSROHTester.h
-        \brief                  Class for PS-ROH hybrids test using a testcard 
+        \brief                  Class for PS-ROH hybrids test using a testcard
         \author                 Younes OTARID
         \version                1.0
         \date                   17/12/2020
         Support :               mail to : younes.otarid@cern.ch
 
- */#ifndef PSROHTester_h__
+ */
+#ifndef PSROHTester_h__
 #define PSROHTester_h__
 #include "OTHybridTester.h"
 

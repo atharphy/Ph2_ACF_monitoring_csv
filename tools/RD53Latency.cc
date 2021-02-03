@@ -18,6 +18,7 @@ void Latency::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
     // # Retrieve parameters #
@@ -184,12 +185,12 @@ void Latency::analyze()
                     }
 
                     if(nTRIGxEvent > 1)
-                        LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "] is within [" << BOLDYELLOW << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.")
-                                  << "," << regVal << GREEN << "] (n.bx)" << RESET;
+                        LOG(INFO) << BOLDMAGENTA << ">>> Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is within [" << BOLDYELLOW
+                                  << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.") << "," << regVal << BOLDMAGENTA << "] (n.bx) <<<" << RESET;
                     else
-                        LOG(INFO) << GREEN << "Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << regVal << RESET << GREEN << " (n.bx)" << RESET;
+                        LOG(INFO) << BOLDMAGENTA << ">>> Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (n.bx) <<<" << RESET;
 
                     // ######################################################
                     // # Fill latency container and download new DAC values #
@@ -216,7 +217,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ###########################
         // # Download new DAC values #
         // ###########################
-        LOG(INFO) << BOLDMAGENTA << ">>> Register value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
         for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
 
         // ################
@@ -275,7 +276,7 @@ void Latency::chipErrorReport()
 
 void Latency::saveChipRegisters(int currentRun)
 {
-    std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)

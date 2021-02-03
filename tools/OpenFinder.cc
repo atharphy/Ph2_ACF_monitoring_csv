@@ -162,7 +162,7 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
         fBeBoardInterface->ChipReSync(cBeBoard); // NEED THIS! ??
         LOG(DEBUG) << BOLDBLUE << "L1A latency set to " << +cLatency << RESET;
         this->ReadNEvents(cBeBoard, fEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         for(auto cOpticalGroup: *pBoard)
         {
             auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getIndex());
@@ -235,7 +235,7 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
     auto cSearchAntennaMap = cAntennaMap.find(fAntennaPosition);
     // scan latency and record optimal latency
     this->ReadNEvents(cBeBoard, fEventsPerPoint);
-    const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+    const std::vector<Event*>& cEvents = this->GetEvents();
 
     auto& cOpens            = fOpens.at(pBoard->getIndex());
     auto& cSummaryThisBoard = cMeasurement.at(pBoard->getIndex());
@@ -473,7 +473,7 @@ void OpenFinder::FindOpensPS()
 
             this->ReadNEvents(cBeBoard, fParameters.nTriggers);
             std::stringstream          outp;
-            const std::vector<Event*>& cEvents     = this->GetEvents(cBeBoard);
+            const std::vector<Event*>& cEvents     = this->GetEvents();
             bool                       cOpensFound = false;
             for(auto cEvent: cEvents)
             {

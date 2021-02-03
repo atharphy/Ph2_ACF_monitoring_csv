@@ -76,12 +76,12 @@ bool checkExitStatus(int status, std::string programName)
 
 int main(int argc, char* argv[])
 {
-    if(getenv("PH2ACF_BASE_DIR") == nullptr)
+    if(std::getenv("PH2ACF_BASE_DIR") == nullptr)
     {
         std::cout << "You must source setup.sh or export the PH2ACF_BASE_DIR environmental variable. Exiting..." << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::string baseDir = std::string(getenv("PH2ACF_BASE_DIR")) + "/";
+    std::string baseDir = std::string(std::getenv("PH2ACF_BASE_DIR")) + "/";
     std::string binDir  = baseDir + "bin/";
 
     // configure the logger

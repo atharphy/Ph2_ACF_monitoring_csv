@@ -177,7 +177,7 @@ void SSASCurve::run(void)
                 // now ReadNEvents takes care of all of this
                 // for both MPA and SSA
                 this->ReadNEvents(theBeBoard, NMpulse);
-                const std::vector<Event*>& cEvents = this->GetEvents(theBeBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
 
                 for(auto opticalGroup: *cBoard)
                 {

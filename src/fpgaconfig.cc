@@ -1,5 +1,7 @@
-#include <cstring>
+#include <cstdlib>
 #include <inttypes.h>
+#include <string>
+#include <vector>
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
@@ -17,7 +19,6 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 using namespace CommandLineProcessing;
-using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -35,7 +36,7 @@ class AcqVisitor : public HwInterfaceVisitor
     }
 };
 
-void verifyImageName(const string& strImage, const vector<string>& lstNames)
+void verifyImageName(const std::string& strImage, const std::vector<std::string>& lstNames)
 {
     if(lstNames.empty())
     {
@@ -68,9 +69,14 @@ void verifyImageName(const string& strImage, const vector<string>& lstNames)
 
 int main(int argc, char* argv[])
 {
-    std::string loggerConfigFile = std::getenv("PH2ACF_BASE_DIR");
-    loggerConfigFile += "/settings/logger.conf";
-    el::Configurations conf(loggerConfigFile);
+    auto* baseDirChar_p = std::getenv("PH2ACF_BASE_DIR");
+    if(baseDirChar_p == nullptr)
+    {
+        LOG(ERROR) << "Error, the environment variable PH2ACF_BASE_DIR is not initialized (hint: source setup.sh)";
+        exit(1);
+    }
+
+    el::Configurations conf(std::string(baseDirChar_p) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     SystemController cSystemController;
@@ -112,10 +118,10 @@ int main(int argc, char* argv[])
     std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     std::ostringstream cStr;
     cSystemController.InitializeHw(cHWFile, cStr);
-    BeBoard*       pBoard   = cSystemController.fDetectorContainer->at(0);
-    vector<string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
-    std::string    cFWFile;
-    string         strImage("1");
+    BeBoard*                 pBoard   = cSystemController.fDetectorContainer->at(0);
+    std::vector<std::string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
+    std::string              cFWFile;
+    std::string              strImage("1");
 
     if(cmd.foundOption("list"))
     {
@@ -194,7 +200,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            LOG(INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressString() << "                 \r" << flush;
+            LOG(INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressString() << "                 \r" << std::flush;
             sleep(1);
         }
     }

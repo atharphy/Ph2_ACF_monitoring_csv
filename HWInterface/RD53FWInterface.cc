@@ -152,7 +152,11 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##############################
     // # AURORA lock on data stream #
     // ##############################
-    while(RD53FWInterface::CheckChipCommunication() == false) RD53FWInterface::InitHybridByHybrid(pBoard);
+    if(RD53FWInterface::CheckChipCommunication() == false)
+    {
+        RD53FWInterface::InitHybridByHybrid(pBoard);
+        RD53FWInterface::CheckChipCommunication();
+    }
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -180,13 +184,16 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
 }
 
 void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hybridId)
-// #############################################
-// # hybridId < 0 --> broadcast to all hybrids #
-// #############################################
 {
-    size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
-    bool   retry;
-    int    nAttempts = 0;
+    std::vector<uint32_t> commandList;
+
+    RD53FWInterface::ComposeAndPackChipCommands(data, hybridId, commandList);
+    RD53FWInterface::SendChipCommandsPack(commandList);
+}
+
+void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
+{
+    const size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
 
     // #####################
     // # Check if all good #
@@ -194,25 +201,29 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     if(ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
     if(ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
 
-    // #######################
-    // # Load command vector #
-    // #######################
-    std::vector<uint32_t> stackRegisters;
-    stackRegisters.reserve(n32bitWords + 1);
+    // ##########
+    // # Header #
+    // ##########
+    commandList.emplace_back(bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
 
-    // Header
-    stackRegisters.emplace_back(bits::pack<6, 10, 4, 12>(HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), 0, n32bitWords));
-
-    // Commands
-    for(auto i = 1u; i < data.size(); i += 2) stackRegisters.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
+    // ############
+    // # Commands #
+    // ############
+    for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
-    if(data.size() % 2 != 0) stackRegisters.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+}
+
+void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandList)
+{
+    int  nAttempts = 0;
+    bool retry;
 
     // ###############################
     // # Send command(s) to the chip #
     // ###############################
-    RegManager::WriteBlockReg("user.ctrl_regs.Slow_cmd_fifo_din", stackRegisters);
+    RegManager::WriteBlockReg("user.ctrl_regs.Slow_cmd_fifo_din", commandList);
     RegManager::WriteStackReg({{"user.ctrl_regs.Slow_cmd.dispatch_packet", 1}, {"user.ctrl_regs.Slow_cmd.dispatch_packet", 0}});
 
     // ####################################
@@ -321,8 +332,8 @@ bool RD53FWInterface::CheckChipCommunication()
     // ###############################
     // # Check RD53 AURORA registers #
     // ###############################
-    unsigned int speed_flag = ReadReg("user.stat_regs.aurora_rx.speed");
-    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (speed_flag == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
+    auroraSpeed = ReadReg("user.stat_regs.aurora_rx.speed");
+    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbps" : "640 Mbps") << RESET;
 
     // ########################################
     // # Check communication with the chip(s) #
@@ -356,9 +367,9 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
         {
-            // #############################
-            // # Check if all lanes are up #
-            // #############################
+            // #################################
+            // # Check if all lanes are active #
+            // #################################
             const uint32_t hybrid_id         = cHybrid->getId();
             const uint32_t chips_en_to_check = RD53FWInterface::GetHybridEnabledChips(cHybrid);
             const uint32_t channel_up        = ReadReg("user.stat_regs.aurora_rx_channel_up");
@@ -384,12 +395,20 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
 
                 for(unsigned int i = 0; i < MAXATTEMPTS; i++)
                 {
+                    // ###########################
+                    // # Set proper AURORA speed #
+                    // ###########################
+                    if(auroraSpeed == 0)
+                        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::CDRCONFIG_ADDR, RD53Constants::CDRCONFIG_1Gbit).getFrames(), -1);
+                    else
+                        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::CDRCONFIG_ADDR, RD53Constants::CDRCONFIG_640Mbit).getFrames(), -1);
+
                     RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
                     usleep(DEEPSLEEP);
 
-                    // #############################
-                    // # Check if all lanes are up #
-                    // #############################
+                    // #################################
+                    // # Check if all lanes are active #
+                    // #################################
                     lanes_up            = false;
                     uint32_t channel_up = ReadReg("user.stat_regs.aurora_rx_channel_up");
 
@@ -408,7 +427,7 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                 if(lanes_up == true) break;
             }
 
-            if(lanes_up == false) LOG(ERROR) << BOLDRED << "Not all data lanes are up for hybrid: " << BOLDYELLOW << hybrid_id << RESET;
+            if(lanes_up == false) LOG(ERROR) << BOLDRED << "Not all data lanes are active for hybrid: " << BOLDYELLOW << hybrid_id << RESET;
         }
 }
 
@@ -687,20 +706,10 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 {
     uint32_t nWordsInMemoryOld, nWordsInMemory = 0;
 
-    // ########################################
-    // # Wait until we have something in DDR3 #
-    // ########################################
-    if(HANDSHAKE_EN == true)
-        while(ReadReg("user.stat_regs.readout4.readout_req") == 0)
-        {
-            LOG(ERROR) << BOLDRED << "Waiting for readout request, FSM status: " << BOLDYELLOW << ReadReg("user.stat_regs.readout4.fsm_status") << RESET;
-            usleep(READOUTSLEEP);
-        }
-    nWordsInMemory = ReadReg("user.stat_regs.words_to_read");
-
     // #############################################
     // # Wait for a stable number of words to read #
     // #############################################
+    nWordsInMemory = ReadReg("user.stat_regs.words_to_read");
     do
     {
         nWordsInMemoryOld = nWordsInMemory;
@@ -779,55 +788,57 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 // ##########################################
 // # Use of OpenMP (compiler flag -fopenmp) #
 // ##########################################
-uint16_t RD53FWInterface::DecodeEventsMultiThreads (const std::vector<uint32_t>& data,
-std::vector<RD53FWInterface::Event>& events)
+uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
 {
-  // ######################
-  // # Consistency checks #
-  // ######################
-  if (data.size() == 0) return RD53FWEvtEncoder::EMPTY;
+    // ######################
+    // # Consistency checks #
+    // ######################
+    if(data.size() == 0) return RD53FWEvtEncoder::EMPTY;
 
+    uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
 
-  uint16_t evtStatus = RD53FWEvtEncoder::GOOD;
-
-  std::vector<size_t> eventStart;
-  for (auto i = 0u; i < data.size(); i++)
-    if (data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStart.push_back(i);
-  if (eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
-  const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
-  eventStart.push_back(data.size());
-
-
-  // ######################
-  // # Unpack data vector #
-  // ######################
-  #pragma omp parallel
-    {
-      std::vector<RD53FWInterface::Event> vecEvents;
-      std::vector<size_t>                 vecEventStart;
-
-      if (eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
+    std::vector<size_t> eventStart;
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
         {
-          auto firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
-          auto lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
-          std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
+    if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
+    eventStart.push_back(data.size());
 
-          uint16_t status = RD53FWInterface::DecodeEvents(data, vecEvents, vecEventStart);
+    // ######################
+    // # Unpack data vector #
+    // ######################
+#pragma omp parallel
+    {
+        std::vector<RD53FWInterface::Event> vecEvents;
+        std::vector<size_t>                 vecEventStart;
 
-          #pragma omp atomic
-          evtStatus |= status;
+        if(eventStart.begin() + nEvents * omp_get_thread_num() < eventStart.end())
+        {
+            auto firstEvent = eventStart.begin() + nEvents * omp_get_thread_num();
+            auto lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
+            std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
 
+            uint16_t status = RD53FWInterface::DecodeEvents(data, vecEvents, vecEventStart);
 
-          // #####################
-          // # Pack event vector #
-          // #####################
-          #pragma omp critical
-          std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
+#pragma omp atomic
+            evtStatus |= status;
+
+            // #####################
+            // # Pack event vector #
+            // #####################
+#pragma omp critical
+            std::move(vecEvents.begin(), vecEvents.end(), std::back_inserter(events));
         }
     }
 
-
-  return evtStatus;
+    return evtStatus;
 }
 */
 uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events)
@@ -845,8 +856,15 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
     std::vector<std::vector<size_t>>                 vecEventStart(RD53Shared::NTHREADS);
 
     std::vector<size_t> eventStart;
-    for(auto i = 0u; i < data.size(); i++)
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStart.push_back(i);
+    size_t              i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+        {
+            eventStart.push_back(i);
+            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+        }
+        else
+            i++;
     if(eventStart.size() == 0) return RD53FWEvtEncoder::NOHEADER;
     const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
     eventStart.push_back(data.size());
@@ -854,8 +872,7 @@ uint16_t RD53FWInterface::DecodeEventsMultiThreads(const std::vector<uint32_t>& 
     // ######################
     // # Unpack data vector #
     // ######################
-    auto i = 0u;
-    for(; i < RD53Shared::NTHREADS - 1; i++)
+    for(i = 0u; i < RD53Shared::NTHREADS - 1; i++)
     {
         auto firstEvent = eventStart.begin() + nEvents * i;
         if(firstEvent + nEvents + 1 > eventStart.end() - 1) break;
@@ -892,9 +909,9 @@ void RD53FWInterface::DecodeEventsWrapper(const std::vector<uint32_t>& data, std
 
 uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53FWInterface::Event>& events, const std::vector<size_t>& eventStartExt)
 {
-    uint16_t             evtStatus = RD53FWEvtEncoder::GOOD;
     std::vector<size_t>  eventStartLocal;
     std::vector<size_t>& refEventStart = const_cast<std::vector<size_t>&>(eventStartExt);
+    uint16_t             evtStatus     = RD53FWEvtEncoder::GOOD;
     const size_t         maxL1Counter  = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
 
     // ######################
@@ -904,8 +921,15 @@ uint16_t RD53FWInterface::DecodeEvents(const std::vector<uint32_t>& data, std::v
 
     if(eventStartExt.size() == 0)
     {
-        for(auto i = 0u; i < data.size(); i++)
-            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER) eventStartLocal.push_back(i);
+        size_t i = 0u;
+        while(i < data.size())
+            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+            {
+                eventStartLocal.push_back(i);
+                i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+            }
+            else
+                i++;
         if(eventStartLocal.size() == 0) return RD53FWEvtEncoder::NOHEADER;
         eventStartLocal.push_back(data.size());
         refEventStart = eventStartLocal;
@@ -952,7 +976,7 @@ void RD53FWInterface::Event::fillDataContainer(BoardDataContainer* boardContaine
     for(const auto& cOpticalGroup: *boardContainer)
         for(const auto& cHybrid: *cOpticalGroup)
             for(const auto& cChip: *cHybrid)
-                if(RD53FWInterface::Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true)
+                if((evtStatus == RD53FWEvtEncoder::GOOD) && (RD53FWInterface::Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
                 {
                     if(vectorRequired == true)
                     {
@@ -1009,7 +1033,7 @@ RD53FWInterface::Event::Event(const uint32_t* data, size_t n)
     // ######################
     // # Consistency checks #
     // ######################
-    if(n < 4)
+    if(n < RD53FWEvtEncoder::EVT_HEADER_SIZE)
     {
         evtStatus = RD53FWEvtEncoder::INCOMPLETE;
         return;
@@ -1138,17 +1162,14 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 8, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
-
-    // #############################
-    // # Configuring readout block #
-    // #############################
-    RegManager::WriteStackReg({
-        {"user.ctrl_regs.readout_block.data_handshake_en", HANDSHAKE_EN},
-        {"user.ctrl_regs.readout_block.l1a_timeout_value", L1A_TIMEOUT},
-    });
 }
 
-void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t nTRIGxEvent, size_t injType, uint32_t nClkDelays, bool enableAutozero)
+void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
+                                                  const uint32_t nTRIGxEvent,
+                                                  const size_t   injType,
+                                                  const uint32_t injLatency,
+                                                  const uint32_t nClkDelays,
+                                                  const bool     enableAutozero)
 // ############################
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
@@ -1182,14 +1203,14 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         // #######################################
         // # Configuration for digital injection #
         // #######################################
-        RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_first(1, 2, 10, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-        RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_second(0, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = INJdelay::AfterInjectCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
@@ -1203,14 +1224,14 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
         // ######################################
         // # Configuration for analog injection #
         // ######################################
-        RD53::CalCmd calcmd_first(1, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_first(1, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = calcmd_first.getCalCmd(chipId);
-        RD53::CalCmd calcmd_second(0, 0, 2, 0, 0);
+        RD53::CalCmd calcmd_second(0, 0, 1, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = calcmd_second.getCalCmd(chipId);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = INJdelay::AfterInjectCal;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
 
@@ -1259,6 +1280,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard, size_t 
               << 1. / (FSMperiod * (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject +
                                     RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime))
               << std::setprecision(-1) << " Hz" << RESET;
+    RD53Shared::resetDefaultFloat();
 
     // ##############################
     // # Download the configuration #
@@ -1692,7 +1714,8 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     usleep(DEEPSLEEP);
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to half VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1)
+              << RESET;
 
     return value;
 }

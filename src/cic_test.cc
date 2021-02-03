@@ -25,7 +25,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -174,10 +174,9 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
 
         // manual alignment
-        // bool cBxAligned = cCicAligner.SetBx0Delay(8);
-
+        bool cBxAligned = cCicAligner.SetBx0Delay(8);
         // automatic alignment
-        bool cBxAligned = cCicAligner.Bx0Alignment(0, 4, 1, 100);
+        // bool cBxAligned = cCicAligner.Bx0Alignment(0, 4, 1, 100);
         if(!cBxAligned)
         {
             LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
@@ -276,7 +275,7 @@ int main(int argc, char* argv[])
                 }
             }
             cExtra.ReadNEvents(theBoard, 1);
-            const std::vector<Event*>& cEvents = cExtra.GetEvents(theBoard);
+            const std::vector<Event*>& cEvents = cExtra.GetEvents();
             uint32_t                   cN      = 0;
             for(auto& cEvent: cEvents)
             {
