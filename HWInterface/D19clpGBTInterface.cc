@@ -56,12 +56,12 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     //TESTING I2C
 /*
     uint8_t cMasterId = 2, cSlaveAddress = 0x60;
-    uint16_t cRegisterAddress = 0x7c;
+    uint16_t cRegisterAddress = 0x7B;
     uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
     LOG(INFO) << BOLDRED << " I2C Write " << RESET;
     fBoardFW->I2CWrite(cMasterId, cSlaveAddress, 0x44  << 16  | cInvertedRegister, 3);
     fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cInvertedRegister, 2);
-    LOG(INFO) << "read value register 0x7c = " << +fBoardFW->I2CRead(cMasterId, cSlaveAddress, 0) << RESET;
+    LOG(INFO) << "read value register = " << +fBoardFW->I2CRead(cMasterId, cSlaveAddress, 0) << RESET;
     LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "I2C Data0 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Data0") << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "I2C Data1 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data1") << std::dec << RESET;
@@ -921,7 +921,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
     //ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
-    ConfigureGPIO(pChip, {0, 1, 3, 6, 9}, 1, 1, 0, 0, 0);
+    ConfigureGPIO(pChip, {0, 1, 3, 6, 9, 12}, 1, 1, 0, 0, 0);
     ConfigureGPIO(pChip, {11}, 0, 0, 0, 1, 1);
 }
 
