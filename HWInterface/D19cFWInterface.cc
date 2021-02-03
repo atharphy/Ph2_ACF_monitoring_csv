@@ -4852,25 +4852,31 @@ void D19cFWInterface::ResetCPB()
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 
-void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector)
+void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose)
 {
     uint8_t cWordIndex = 0;
-    for(auto cCommandWord: pCommandVector)
+    if(pVerbose)
     {
-        LOG(INFO) << GREEN << "\t Write command word " << +cWordIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cCommandWord << std::dec << RESET;
-        cWordIndex++;
+	    for(auto cCommandWord: pCommandVector)
+	    {
+		LOG(INFO) << GREEN << "\t Write command word " << +cWordIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cCommandWord << std::dec << RESET;
+		cWordIndex++;
+	    }
     }
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
 }
 
-std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords)
+std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
 {
     std::vector<uint32_t> cReplyVector = ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
     uint8_t               cFifoIndex   = 0;
-    for(auto cReplyWord: cReplyVector)
+    if(pVerbose)
     {
-        LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
-        cFifoIndex++;
+	    for(auto cReplyWord: cReplyVector)
+	    {
+		LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
+		cFifoIndex++;
+	    }
     }
     LOG(DEBUG) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
     return cReplyVector;
@@ -4890,6 +4896,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     uint8_t cReadBack = cReplyVector[7] & 0xFF;
     // register address
     uint16_t cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    fWriteLpGBTRegTotalCount++;
     if(!pVerifLoop) return (cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress);
     uint8_t cIter = 0, cMaxIter = 50;
 
@@ -4897,10 +4904,11 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     {
         ResetCPB();
         cReplyVector.clear();
-        WriteCommandCPB(cCommandVector);
-        cReplyVector = ReadReplyCPB(10);
+        WriteCommandCPB(cCommandVector, true);
+        cReplyVector = ReadReplyCPB(10, true);
         cReadBack    = cReplyVector[7] & 0xFF;
         cIter++;
+        fWriteLpGBTRegFailCount++;
     };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
     return true;
@@ -4917,13 +4925,15 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
     uint8_t               cIter = 0, cMaxIter = 20;
+    fReadLpGBTRegTotalCount++;
     while(cReadBackRegAddr != pRegisterAddress && cIter < cMaxIter)
     {
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
-        cReplyVector = ReadReplyCPB(10);
+        cReplyVector = ReadReplyCPB(10, true);
         cIter++;
+        fReadLpGBTRegFailCount++;
     };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT not responding properly"));
     LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;

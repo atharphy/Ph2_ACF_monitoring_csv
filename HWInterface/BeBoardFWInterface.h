@@ -278,8 +278,8 @@ class BeBoardFWInterface : public RegManager
     // ##########################################
     // functions for new Command Processor Block
     virtual void                  ResetCPB()                                                   = 0;
-    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) = 0;
-    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords)                                = 0;
+    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) = 0;
+    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false)                                = 0;
     // function to read/write lpGBT registers
     virtual bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) = 0;
     virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress)                                                  = 0;

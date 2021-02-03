@@ -752,6 +752,9 @@ class D19cFWInterface : public BeBoardFWInterface
     const uint8_t                   flpGBTAddress = 0x70;
     const uint8_t                   fI2CFrequency = 3; // 1 MHz
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x00}};
+    //std::map<uint8_t, int> fFailureCounter = {{0x60, 0}, {0x20, 0}, {0x21, 0}, {0x22, 0}, {0x23, 0}, {0x24, 0}, {0x25, 0}, {0x26, 0}, {0x27, 0}, {0x40, 0}};
+    int fWriteLpGBTRegFailCount = 0, fReadLpGBTRegFailCount = 0;
+    int fWriteLpGBTRegTotalCount = 0, fReadLpGBTRegTotalCount = 0;
     // Functions for standard uDTC
     void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
     void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
@@ -763,8 +766,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##########################################
     // functions for new Command Processor Block
     void                  ResetCPB() override;
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) override;
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) override;
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;

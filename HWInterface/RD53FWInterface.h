@@ -246,8 +246,8 @@ class RD53FWInterface : public BeBoardFWInterface
     // ##########################################
     // functions for new Command Processor Block
     void                  ResetCPB() {}
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override {}
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override { return {0}; }
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) override {}
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) override { return {0}; }
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override { return true; }
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override { return 0; }
