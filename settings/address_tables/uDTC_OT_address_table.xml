@@ -344,6 +344,13 @@
             </node>
         </node>
 
+        <node id="fine_phase_tune"     address="0x3003">
+            <node id="control"                      address="0x000">
+                <node id="toggle_phase"             mask="0x000000FF"/>
+            </node>
+        </node>
+
+
         <node id="readout_block"                address="0x5000">
             <node id="control"                          address="0x000">
                 <node id="readout_reset"                    mask="0x00000001"/>

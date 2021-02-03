@@ -4884,10 +4884,15 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     cCommandVector.push_back(pRegisterValue << 0);
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
+    // register value 
     uint8_t               cReadBack    = cReplyVector[7] & 0xFF;
-    if(!pVerifLoop) return cReadBack == pRegisterValue;
+    // register address 
+    uint16_t cReadBackRegAddr = ( cReplyVector[6] << 8 | cReplyVector[5] );
+    if(!pVerifLoop) return ( cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress ) ;
     uint8_t cIter = 0, cMaxIter = 50;
-    while(cReadBack != pRegisterValue && cIter < cMaxIter)
+    
+    while(cReadBack != pRegisterValue && cReadBackRegAddr != pRegisterAddress && cIter < cMaxIter)
+    //while(cReadBack != pRegisterValue && cIter < cMaxIter)
     {
         ResetCPB();
         cReplyVector.clear();
@@ -4895,7 +4900,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
         cReplyVector = ReadReplyCPB(10);
         cReadBack    = cReplyVector[7] & 0xFF;
         cIter++;
-    }
+    };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
     return true;
 }
@@ -4909,6 +4914,16 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     uint8_t               cReadBack    = cReplyVector[7] & 0xFF;
+    uint16_t cReadBackRegAddr = ( cReplyVector[6] << 8 | cReplyVector[5] );
+    uint8_t cIter = 0, cMaxIter = 20; 
+    while(cReadBackRegAddr != pRegisterAddress && cIter < cMaxIter) {
+        ResetCPB();
+        cReplyVector.clear();
+        WriteCommandCPB(cCommandVector);
+        cReplyVector = ReadReplyCPB(10);
+        cIter++;
+    };
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT not responding properly"));
     LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
