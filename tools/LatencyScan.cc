@@ -138,16 +138,17 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
     // setFWTestPulse();
     // setSystemTestPulse ( 200, 0, true, false );
     // //Fabio - clean END
-
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
     for(auto pBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
         for(uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
         {
+            this->setSameDacBeBoard(theBoard, "TriggerLatency", cLat);
+            // fBeBoardInterface->ChipReSync(static_cast<BeBoard*>(pBoard));
             //  Set a Latency Value on all FEs
-            cVisitor.setLatency(cLat);
-            this->accept(cVisitor);
+            // cVisitor.setLatency(cLat);
+            // this->accept(cVisitor);
             ReadNEvents(theBoard, fNevents);
             const std::vector<Event*>& events = GetEvents();
             countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
@@ -159,7 +160,6 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLaten
         updateHists("hybrid_latency", false);
         cIterationCount++;
     }
-
     // analyze the Histograms
     std::map<HybridContainer*, uint8_t> cLatencyMap;
 
@@ -358,15 +358,18 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
                     bool  cMaskOthers = (cCic != NULL) ? true : false;
                     for(auto cChip: *cHybrid)
                     {
-                        auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        if(cMaskOthers && cChip->getId() == 0)
+                        if((cChip->getFrontEndType() == FrontEndType::CBC3))
                         {
-                            uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
-                            cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
-                        }
-                        else if(cMaskOthers)
-                        {
-                            fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
+                            auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                            if(cMaskOthers && cChip->getId() == 0)
+                            {
+                                uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
+                                cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
+                            }
+                            else if(cMaskOthers)
+                            {
+                                fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
+                            }
                         }
                     } // roc
                 }     // hybrid
@@ -561,18 +564,20 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
             TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(cFe, pHistName));
             for(auto& cEvent: pEventVec)
             {
-                // first, reset the hit counter - I need separate counters for each event
                 int cHitCounter = 0;
 
                 for(auto cCbc: *cFe)
                 {
                     // now loop the channels for this particular event and increment a counter
-                    if(cCbc->getFrontEndType() == FrontEndType::MPA)
-                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cFe->getId(), cCbc->getId());
+                    if(cCbc->getFrontEndType() == FrontEndType::MPA) { cHitCounter += static_cast<D19cCic2Event*>(cEvent)->GetNPixelClusters(cFe->getId()); }
                     else if(cCbc->getFrontEndType() == FrontEndType::SSA)
-                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cFe->getId(), static_cast<SSA*>(cCbc)->getPartid());
+                    {
+                        cHitCounter += static_cast<D19cCic2Event*>(cEvent)->GetNStripClusters(cFe->getId());
+                    }
                     else
+                    {
                         cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
+                    }
                 }
 
                 // now I have the number of hits in this particular event for all CBCs and the TDC value

@@ -22,19 +22,17 @@ class D19clpGBTInterface : public lpGBTInterface
   public:
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
     {
-        #ifdef __TCUSB__
-            fTC_PSROH = new TC_PSROH();
-        #endif
+#ifdef __TCUSB__
+        fTC_PSROH = new TC_PSROH();
+#endif
     }
- 
+
     ~D19clpGBTInterface()
     {
-        #ifdef __TCUSB__
-            if(fTC_PSROH != nullptr)
-                delete fTC_PSROH; 
-        #endif
-    } 
-
+#ifdef __TCUSB__
+        if(fTC_PSROH != nullptr) delete fTC_PSROH;
+#endif
+    }
 
     // ###################################
     // # LpGBT register access functions #
@@ -102,7 +100,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT specific routine functions #
     // ####################################
     // lpGBT Rx Groups(Channels) phase training
-    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain=false);
+    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain = false);
     // lpGBT Rx Groups(Channels) phase alignment
     void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
@@ -144,7 +142,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // configure current DAC
     void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
     // Read lpGBT ADC
-    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain=0);
+    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     // Get ADC Read Status
     bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
 
@@ -171,11 +169,11 @@ class D19clpGBTInterface : public lpGBTInterface
     // # Outer Tracker specific funtions #
     // ###################################
 #ifdef __TCUSB__
-    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH){fTC_PSROH = pTC_PSROH;}
-    TC_PSROH* GetTCUSBHandler(){return fTC_PSROH;}
+    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_PSROH = pTC_PSROH; }
+    TC_PSROH* GetTCUSBHandler() { return fTC_PSROH; }
 #endif
     // Sets the flag used to select which lpGBT configuration interface to use
-    void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC=false);
+    void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // cbc read/write
@@ -214,16 +212,34 @@ class D19clpGBTInterface : public lpGBTInterface
                                                    {"TEMP", 14},
                                                    {"VREF/2", 15}};
 
-    std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},{1, "RESET"},{2, "WAIT_VDD_STABLE"},{3, "WAIT_VDD_HIGHER_THAN_0V90"},{4, "FUSE_SAMPLING"},{5, "UPDATE_FROM_FUSES"},{6, "WAIT_FOR_PLL_CONFIG"},{7, "WAIT_POWER_GOOD"},{8, "RESETOUT"},{9, "I2C_TRANS"},{10, "RESET_PLL"},{11, "WAIT_PLL_LOCK"},{12, "INIT_SCRAM"},{13, "PAUSE_FOR_DLL_CONFIG"},{14, "RESET_DLLS"},{15, "WAIT_DLL_LOCK"},{16, "RESET_LOGIC_USING_DLL"},{17, "WAIT_CHNS_LOCKED"},{18, "READY"}};
-    std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+    std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},
+                                                     {1, "RESET"},
+                                                     {2, "WAIT_VDD_STABLE"},
+                                                     {3, "WAIT_VDD_HIGHER_THAN_0V90"},
+                                                     {4, "FUSE_SAMPLING"},
+                                                     {5, "UPDATE_FROM_FUSES"},
+                                                     {6, "WAIT_FOR_PLL_CONFIG"},
+                                                     {7, "WAIT_POWER_GOOD"},
+                                                     {8, "RESETOUT"},
+                                                     {9, "I2C_TRANS"},
+                                                     {10, "RESET_PLL"},
+                                                     {11, "WAIT_PLL_LOCK"},
+                                                     {12, "INIT_SCRAM"},
+                                                     {13, "PAUSE_FOR_DLL_CONFIG"},
+                                                     {14, "RESET_DLLS"},
+                                                     {15, "WAIT_DLL_LOCK"},
+                                                     {16, "RESET_LOGIC_USING_DLL"},
+                                                     {17, "WAIT_CHNS_LOCKED"},
+                                                     {18, "READY"}};
+    std::map<uint8_t, std::string> fI2CStatusMap  = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
     // ###################################
     // # Outer Tracker specific objects  #
     // ###################################
     bool fUseOpticalLink = true;
-    bool fUseCPB = true;
+    bool fUseCPB         = true;
 #ifdef __TCUSB__
-    TC_PSROH *fTC_PSROH;
+    TC_PSROH*                                    fTC_PSROH;
     std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},

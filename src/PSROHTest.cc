@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     // Timer t;
 
     // Initialize and Configure Back-End (Optical) FC7
-    Tool              cTool;
+    Tool cTool;
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
@@ -160,15 +160,15 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
-        if(cmd.foundOption("internal-pattern")) 
-        { 
+        if(cmd.foundOption("internal-pattern"))
+        {
             cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
-            cPSROHTester.LpGBTCheckULPattern(false); 
+            cPSROHTester.LpGBTCheckULPattern(false);
         }
         else if(cmd.foundOption("external-pattern"))
         {
             cPSROHTester.LpGBTInjectULExternalPattern(cExternalPattern);
-            cPSROHTester.LpGBTCheckULPattern(true); 
+            cPSROHTester.LpGBTCheckULPattern(true);
         }
     }
 
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testReset"))
     {
         std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
-        std::vector<uint8_t> cGPIOs = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+        std::vector<uint8_t>                    cGPIOs  = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         for(auto cLevel: cLevels)
         {
             cPSROHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
@@ -232,8 +232,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("scope-fcmd"))
     {
-        if(cmd.foundOption("fcmd-pattern"))
-            cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+        if(cmd.foundOption("fcmd-pattern")) cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
         cPSROHTester.FastCommandScope();
     }
 

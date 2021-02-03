@@ -24,9 +24,9 @@ void PSROHTester::Initialise()
     // reset I2C
     // fc7_daq_ctrl
     for(auto cBoard: *fDetectorContainer)
-    { 
-      if(cBoard->at(0)->flpGBT != nullptr) continue;
-      fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01); 
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
     }
 }
 
@@ -99,10 +99,10 @@ void PSROHTester::ClearBRAM(BeBoard* pBoard, const std::string& sBRAMToReset)
 void PSROHTester::ClearBRAM(const std::string& sBramToReset)
 {
     for(auto cBoard: *fDetectorContainer)
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->ClearBRAM(cBoard, sBramToReset); 
-		}
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->ClearBRAM(cBoard, sBramToReset);
+    }
 }
 
 void PSROHTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& filename = "fcmd_file.txt")
@@ -215,11 +215,11 @@ void PSROHTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& filenam
 
 void PSROHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.txt")
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->WritePatternToBRAM(cBoard, sFileName); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->WritePatternToBRAM(cBoard, sFileName);
+    }
 }
 
 void PSROHTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string& sFCMDLine)
@@ -256,11 +256,11 @@ void PSROHTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string& sFCM
 
 void PSROHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckFastCommandsBRAM(cBoard, sFCMDLine); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckFastCommandsBRAM(cBoard, sFCMDLine);
+    }
 }
 
 void PSROHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
@@ -367,11 +367,11 @@ void PSROHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastCom
 
 void PSROHTester::CheckFastCommands(const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckFastCommands(cBoard, sFastCommand, filename); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckFastCommands(cBoard, sFastCommand, filename);
+    }
 }
 
 void PSROHTester::ReadRefAddrBRAM(BeBoard* pBoard, int iRefBRAMAddr)
@@ -392,11 +392,11 @@ void PSROHTester::ReadRefAddrBRAM(BeBoard* pBoard, int iRefBRAMAddr)
 }
 void PSROHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr);
+    }
 }
 
 void PSROHTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
@@ -419,11 +419,11 @@ void PSROHTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
 
 void PSROHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr);
+    }
 }
 
 void PSROHTester::CheckClocks(BeBoard* pBoard)
@@ -502,11 +502,11 @@ void PSROHTester::CheckClocks(BeBoard* pBoard)
 
 void PSROHTester::CheckClocks()
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckClocks(cBoard); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckClocks(cBoard);
+    }
 }
 void PSROHTester::FastCommandScope(BeBoard* pBoard)
 {
@@ -523,11 +523,11 @@ void PSROHTester::FastCommandScope(BeBoard* pBoard)
 }
 void PSROHTester::FastCommandScope()
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->FastCommandScope(cBoard); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->FastCommandScope(cBoard);
+    }
 }
 void PSROHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
@@ -568,10 +568,10 @@ void PSROHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pI
 void PSROHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
     for(auto cBoard: *fDetectorContainer)
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckHybridInputs(cBoard, pInputs, pCounters); 
-		}
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckHybridInputs(cBoard, pInputs, pCounters);
+    }
 }
 
 void PSROHTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters)
@@ -679,11 +679,11 @@ void PSROHTester::PSROHInputsDebug()
 
 void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    for(auto cBoard: *fDetectorContainer) 
-		{ 
-            if(cBoard->at(0)->flpGBT != nullptr) continue;
-			this->CheckHybridOutputs(cBoard, pInputs, pCounters); 
-		}
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        this->CheckHybridOutputs(cBoard, pInputs, pCounters);
+    }
 }
 
 bool PSROHTester::TestResetLines(uint8_t pLevel)
@@ -696,7 +696,7 @@ bool PSROHTester::TestResetLines(uint8_t pLevel)
     {
         fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-        cValid = cValid && (cDifference_mV <= 100 );
+        cValid               = cValid && (cDifference_mV <= 100);
         if(cDifference_mV > 100)
             LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
         else
@@ -706,7 +706,6 @@ bool PSROHTester::TestResetLines(uint8_t pLevel)
 #endif
     return cValid;
 }
-
 
 void PSROHTester::Start(int currentRun)
 {
@@ -725,5 +724,3 @@ void PSROHTester::Stop()
 void PSROHTester::Pause() {}
 
 void PSROHTester::Resume() {}
-
-

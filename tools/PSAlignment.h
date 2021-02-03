@@ -1,6 +1,6 @@
 /*!
  *
- * \file BackEndAlignment.h
+ * \file PSAlignment.h
  * \brief CIC FE alignment class, automated alignment procedure for CICs
  * connected to FEs
  * \author Sarah SEIF EL NASR-STOREY
@@ -10,37 +10,25 @@
  *
  */
 
-#ifndef BackEndAlignment_h__
-#define BackEndAlignment_h__
+#ifndef PSAlignment_h__
+#define PSAlignment_h__
 
 #include "Tool.h"
 
 #include <map>
 
-namespace Ph2_HwInterface
-{
-class BackendAlignmentInterface;
-}
-
-// add breakcodes here
-const uint8_t FAILED_BACKEND_ALIGNMENT = 5;
-
-class BackEndAlignment : public Tool
+class PSAlignment : public Tool
 {
   public:
-    BackEndAlignment();
-    ~BackEndAlignment();
+    PSAlignment();
+    ~PSAlignment();
 
     void Initialise();
+    bool AlignStubInputs(Ph2_HwDescription::BeBoard* pBoard);
+    bool AlignL1Inputs(Ph2_HwDescription::BeBoard* pBoard);
+    void MapMPAOutputs(std::string pSetupType = "PSModule");
     bool Align();
 
-    void SetL1Debug(bool pDebug) { fL1Debug = pDebug; };
-    void SetStubDebug(bool pDebug) { fStubDebug = pDebug; };
-
-    bool Bx0Alignment(Ph2_HwDescription::BeBoard* pBoard);
-    bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
-    bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
-    bool PSAlignment(Ph2_HwDescription::BeBoard* pBoard);
     void Running() override;
     void Stop() override;
     void Pause() override;
@@ -52,9 +40,6 @@ class BackEndAlignment : public Tool
     bool getStatus() const { return fSuccess; }
 
   protected:
-    bool fL1Debug   = false;
-    bool fStubDebug = false;
-
   private:
     // status
     bool fSuccess;

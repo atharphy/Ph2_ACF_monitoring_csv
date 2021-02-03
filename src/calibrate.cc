@@ -134,7 +134,6 @@ int main(int argc, char* argv[])
     // second parameter disables stub logic on CBC3
     // cPedestalEqualization.Initialise ( false, true );
     cPedestalEqualization.Initialise(cAllChan, fDisableStubLogic);
-
     if(cVplus) cPedestalEqualization.FindVplus();
 
     cPedestalEqualization.FindOffsets();

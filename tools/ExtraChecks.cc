@@ -1642,28 +1642,28 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
 }
 void ExtraChecks::L1Eye()
 {
-    uint8_t cChipId = 2;
-    for(uint8_t cPhase = 0; cPhase < 15; cPhase += 1)
-    {
-        LOG(INFO) << BOLDBLUE << "Setting optimal phase tap in CIC to " << +cPhase << RESET;
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    fCicInterface->SetStaticPhaseAlignment(cCic, cChipId, 0, cPhase);
-                }
-            }
-        }
-        for(size_t cAttempt = 0; cAttempt < 10; cAttempt++)
-        {
-            // zero container
-            zeroContainers();
-            DataCheck({cChipId}, 10, 10, 0, false);
-        }
-    }
+    // uint8_t cChipId = 2;
+    // for(uint8_t cPhase = 0; cPhase < 15; cPhase += 1)
+    // {
+    //     LOG(INFO) << BOLDBLUE << "Setting optimal phase tap in CIC to " << +cPhase << RESET;
+    //     for(auto cBoard: *fDetectorContainer)
+    //     {
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //                 fCicInterface->SetStaticPhaseAlignment(cCic, cChipId, 0, cPhase);
+    //             }
+    //         }
+    //     }
+    //     for(size_t cAttempt = 0; cAttempt < 10; cAttempt++)
+    //     {
+    //         // zero container
+    //         zeroContainers();
+    //         DataCheck({cChipId}, 10, 10, 0, false);
+    //     }
+    // }
 }
 void ExtraChecks::StubCheck(uint8_t pChipId, bool pUseNoise, uint8_t pTestPulseAmplitude, int pTPgroup, int pAttempts)
 {
