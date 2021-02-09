@@ -10,6 +10,7 @@
 #include "SystemController.h"
 #include "../Utils/DetectorMonitorConfig.h"
 #include "../tools/CBCMonitor.h"
+#include <chrono>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -202,7 +203,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     else
                     {
                         LOG(ERROR) << BOLDRED << "No valid HWInterface found " << RESET;
-                        throw std::runtime_error(std::string("No valid HWInterface found ... stopping run."));
+                        //throw std::runtime_error(std::string("No valid HWInterface found ... stopping run."));
                     }
 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
@@ -289,7 +290,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     exit(0);
                 }
             }
-
+            auto cStart = std::chrono::high_resolution_clock::now(); 
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
@@ -312,19 +313,22 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         fCicInterface->ConfigureChip(cCic);
 
                         // CIC start-up
-                        auto         cFirstROC = static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0));
-                        FrontEndType cType     = FrontEndType::CBC3;
-                        if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
-                        uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
-                        // select CIC mode
-                        bool cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
-                        if(!cSuccess)
+                        bool cSuccess = true;
+                        if(theOuterTrackerHybrid->size() > 0) 
                         {
-                            LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-                            exit(0);
+                            auto         cFirstROC = static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0));
+                            FrontEndType cType     = FrontEndType::CBC3;
+                            if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
+                            uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                            // select CIC mode
+                            cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
+                            if(!cSuccess)
+                            {
+                                LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
+                                exit(0);
+                            }
+                            LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
                         }
-                        LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
-
                         // select CIC FE enable register
                         std::vector<uint8_t> cFeIds(0);
                         for(auto cReadoutChip: *cHybrid)
@@ -360,6 +364,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     }
                 }
             }
+            auto cEnd = std::chrono::high_resolution_clock::now();
+            auto cDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cEnd - cStart);
+            LOG(INFO) << BOLDYELLOW << "Configuration time : " << +cDuration.count() << " ms" << RESET;
+	    LOG(INFO) << BOLDRED << "LpGBT Write total count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fWriteLpGBTRegTotalCount << RESET;
+	    LOG(INFO) << BOLDRED << "LpGBT Write failure count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fWriteLpGBTRegFailCount << RESET;
+	    LOG(INFO) << BOLDRED << "LpGBT Read total count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fReadLpGBTRegTotalCount<< RESET;
+	    LOG(INFO) << BOLDRED << "LpGBT Read failure count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fReadLpGBTRegFailCount << RESET;
         }
         else
         {

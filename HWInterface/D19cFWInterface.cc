@@ -4899,7 +4899,6 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     fWriteLpGBTRegTotalCount++;
     if(!pVerifLoop) return (cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress);
     uint8_t cIter = 0, cMaxIter = 50;
-
     while(cReadBack != pRegisterValue && cReadBackRegAddr != pRegisterAddress && cIter < cMaxIter)
     {
         ResetCPB();
@@ -4930,8 +4929,10 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     {
         ResetCPB();
         cReplyVector.clear();
-        WriteCommandCPB(cCommandVector);
+        WriteCommandCPB(cCommandVector, true);
         cReplyVector = ReadReplyCPB(10, true);
+        cReadBack        = cReplyVector[7] & 0xFF;
+        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cIter++;
         fReadLpGBTRegFailCount++;
     };
@@ -4970,6 +4971,19 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     uint8_t               cReadBack    = cReplyVector[7] & 0xFF;
+    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    uint8_t cIter = 0, cMaxIter = 50;
+    while(cReadBackRegAddr != 0x018d && cIter < cMaxIter)
+    {
+        cReplyVector.clear();
+        WriteCommandCPB(cCommandVector, true);
+        cReplyVector = ReadReplyCPB(10, true);
+        cReadBack    = cReplyVector[7] & 0xFF;
+        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        cIter++;
+        fReadLpGBTRegFailCount++;
+    };
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT not responding properly"));
     // LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << RESET;
     return cReadBack;
 }
