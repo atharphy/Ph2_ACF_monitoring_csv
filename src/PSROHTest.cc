@@ -66,9 +66,9 @@ int main(int argc, char* argv[])
     // test ADC channels
     cmd.defineOption("testADC", "Test LpGBT ADCs on ROH");
     cmd.defineOptionAlternative("testADC", "a");
-    // test optical r/w
-    cmd.defineOption("optical", "Test LpGBT read/write through optical link");
-    cmd.defineOptionAlternative("optical", "o");
+    // run Eye Opening Monito
+    cmd.defineOption("eye-monitor", "Test LpGBT read/write through optical link");
+    cmd.defineOptionAlternative("eye-monitor", "eom");
     // clock test
     cmd.defineOption("clock-test", "Run clock tests", ArgvParser::NoOptionAttribute);
     // fast command test
@@ -215,6 +215,11 @@ int main(int argc, char* argv[])
     {
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
         cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
+    }
+
+    if(cmd.foundOption("eye-monitor"))
+    {
+        cPSROHTester.LpGBTRunEyeOpeningMonitor(7);
     }
 
     // Test Fast Commands

@@ -149,21 +149,44 @@ class D19clpGBTInterface : public lpGBTInterface
     // ########################
     // # LpGBT GPIO functions #
     // ########################
-    void ConfigureGPIO(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pInOut, uint8_t pHighLow, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pPullUpDown);
+    // Configure GPIO direction (In/Out)
+    void ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir);
+    // Configure GPIO Level (High/Low)
+    void ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut);
+    // Configure FPIO Driver Strenght
+    void ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr);
+    // Configure GPIO Pull (Up/Down) -- (Enable/Disable)
+    void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
 
-    // #####################
-    // # LpGBT BERT Tester #
-    // #####################
+    // ###############################
+    // # LpGBT Bit Error Rate Tester #
+    // ###############################
     // configure BER tester
-    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, bool pStart);
+    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable);
+    // start BER tester
+    void StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
     // configure BER pattern
     void ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     // get BER status
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
     // get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
-    // perform BER test
-    float PerformBERTest(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern);
+
+    // #####################################
+    // # LpGBT Eye Opening Monitor Tester  #
+    // ####################################
+    // Configure Eye Opening Monitor
+    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool pEnableEOM=true);
+    // Start Eye Opening Monitor
+    void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM=true);
+    // Select Eye Opening Monitor sampling phase
+    void SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase);
+    // Select Eye Opening Monitor comparator voltage
+    void SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof);
+    // Get Eye Opening Monitor status
+    uint8_t GetEOMStatus(Ph2_HwDescription::Chip* pChip);
+    // Get Eye Opening Monitor counter value
+    uint16_t GetEOMCounter(Ph2_HwDescription::Chip* pChip);
 
     // ###################################
     // # Outer Tracker specific funtions #
@@ -232,6 +255,8 @@ class D19clpGBTInterface : public lpGBTInterface
                                                      {17, "WAIT_CHNS_LOCKED"},
                                                      {18, "READY"}};
     std::map<uint8_t, std::string> fI2CStatusMap  = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+
+    std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
     // ###################################
     // # Outer Tracker specific objects  #
