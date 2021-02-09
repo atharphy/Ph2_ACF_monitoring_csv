@@ -30,12 +30,12 @@ void OTHybridTester::FindUSBHandler()
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
             LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
             clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
@@ -74,6 +74,7 @@ void OTHybridTester::LpGBTInjectULExternalPattern(uint8_t pPattern)
 
 void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 {
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -81,7 +82,6 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
         {
             if(pIsExternal)
             {
-                D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                 clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
                 clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -99,12 +99,12 @@ void OTHybridTester::LpGBTCheckULPattern(bool pIsExternal)
 
 void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
 {
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             uint8_t             cSource         = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
@@ -115,12 +115,12 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
 bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 {
     bool cTestSuccess = true;
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             for(const auto cMaster: pMasters)
             {
                 uint8_t cSlaveAddress = 0x60;
@@ -138,6 +138,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 
 void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
 {
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
 #ifdef __USE_ROOT__
     for(auto cBoard: *fDetectorContainer)
     {
@@ -163,7 +164,6 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCMultiGraph->SetName("mgDACtoADC");
             cDACtoADCMultiGraph->SetTitle("lpGBT - DAC to ADC conversion");
 
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
             for(const auto& cADC: pADCs)
             {
@@ -203,13 +203,125 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 
 void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t pLevel)
 {
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            clpGBTInterface->ConfigureGPIO(cOpticalGroup->flpGBT, pGPIOs, pLevel, pLevel, 0, 0, 0);
+            clpGBTInterface->ConfigureGPIODirection(cOpticalGroup->flpGBT, pGPIOs, pLevel);
+            clpGBTInterface->ConfigureGPIOLevel(cOpticalGroup->flpGBT, pGPIOs, pLevel);
         }
     }
+}
+
+void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
+{
+#ifdef __USE_ROOT__
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    for(auto cBoard : *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup : *cBoard)
+        {
+            // ROOT Tree for Eye Diagram from lpGBT Eye Opening Monitor
+            auto cEyeDiagramTree = new TTree(Form("tEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Diagram form lpGBT Eye Opening Monitor");
+            // vectors for Tree
+            std::vector<int> cVoltageVector;
+            std::vector<int> cTimeVector;
+            std::vector<int> cCounterVector;
+            // TBranches
+            cEyeDiagramTree->Branch("VoltageStep", &cVoltageVector);
+            cEyeDiagramTree->Branch("TimeStep", &cTimeVector);
+            cEyeDiagramTree->Branch("Counter", &cCounterVector);
+            // Create TCanvas & TH2I
+            auto cEyeDiagramCanvas = new TCanvas(Form("cEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 500, 500);
+            auto cObj = gROOT->FindObject(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()));
+            if(cObj) delete cObj;
+            auto cEyeDiagramHist = new TH2I(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 64, 0, 63, 32, 0, 31);
+            clpGBTInterface->ConfigureEOM(cOpticalGroup->flpGBT, pEndOfCountSelect, false, true);
+            for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
+            {
+                clpGBTInterface->SelectEOMVof(cOpticalGroup->flpGBT, cVoltageStep);
+                for(uint8_t cTimeStep = 0; cTimeStep < 64; cTimeStep++)
+                {
+                    clpGBTInterface->SelectEOMPhase(cOpticalGroup->flpGBT, cTimeStep);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    clpGBTInterface->StartEOM(cOpticalGroup->flpGBT, true);
+                    uint8_t cEOMStatus = clpGBTInterface->GetEOMStatus(cOpticalGroup->flpGBT);
+                    while((cEOMStatus & (0x1 << 1) >> 1) && !(cEOMStatus & (0x1 << 0)))
+                    {
+                        cEOMStatus = clpGBTInterface->GetEOMStatus(cOpticalGroup->flpGBT);
+                    }
+                    uint16_t cCounterValue = clpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
+                    uint16_t c40MCounterValue = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EOMCounter40MH") << 8 | clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EOMCounter40ML");
+                    LOG(INFO) << YELLOW << "voltage step " << +cVoltageStep << ", time step " << +cTimeStep << ", counter value " << +cCounterValue << ", 40M counter " << +c40MCounterValue << RESET;
+                    clpGBTInterface->StartEOM(cOpticalGroup->flpGBT, false);
+                    cVoltageVector.push_back(cVoltageStep);
+                    cTimeVector.push_back(cTimeStep);
+                    cCounterVector.push_back(cCounterValue);
+                    //ROOT related filling
+                    cEyeDiagramHist->Fill(cTimeStep, cVoltageStep, cCounterValue);
+                    cEyeDiagramTree->Fill();
+                }
+            }
+            cEyeDiagramHist->SetTitle("Eye Opening Diagram");
+            fResultFile->cd();
+            cEyeDiagramTree->Write();
+            cEyeDiagramHist->Write();
+            cEyeDiagramCanvas->cd();
+            cEyeDiagramHist->Draw("COLZ");
+        }
+    }
+#endif 
+}
+
+std::map<uint8_t, std::vector<float>> OTHybridTester::RunBERT(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint8_t pSkipDisable, uint32_t pPattern)
+{
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    std::map<uint8_t, std::vector<float>> fBERResultMap;
+    uint64_t cErrors = 0;
+    uint32_t cBitsChecked = 0;
+    for(auto cBoard : *fDetectorContainer)
+    {
+        std::vector<float> cOpticalGroupsBER;
+        for(auto cOpticalGroup : *cBoard)
+        {
+            if(pPattern == 0)
+                LOG(INFO) << BOLDMAGENTA << "Performing BER test with PRBS" << RESET;
+            else
+            {
+                LOG(INFO) << BOLDMAGENTA << "Performing BER test with Constant Pattern" << RESET;
+                clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
+                clpGBTInterface->ConfigureBERTPattern(cOpticalGroup->flpGBT, pPattern);
+            }
+            clpGBTInterface->ConfigureBERT(cOpticalGroup->flpGBT, pCoarseSource, pFineSource, pMeasTime, pSkipDisable);
+            clpGBTInterface->StartBERT(cOpticalGroup->flpGBT, true);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            uint8_t cBERTStatus = clpGBTInterface->GetBERTStatus(cOpticalGroup->flpGBT);
+            while((cBERTStatus & 0x1) != 1)
+            {
+                LOG(INFO) << BOLDBLUE << "BERT still running ... status is : " << std::bitset<3>(cBERTStatus) << RESET;
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cBERTStatus = clpGBTInterface->GetBERTStatus(cOpticalGroup->flpGBT);
+            }
+            bool    cAllZeros   = ((cBERTStatus & (0x1 << 2)) >> 2) == 1;
+            if(cAllZeros)
+            {
+                LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
+                throw std::runtime_error(std::string("BERT : All zeros at input"));
+            }
+            LOG(INFO) << BOLDBLUE << "Reading BERT counter" << RESET;
+            cErrors      = clpGBTInterface->GetBERTErrors(cOpticalGroup->flpGBT);
+            cBitsChecked = std::pow(2, 5 + pMeasTime * 2) * 16; // #FIXME currently hard coded for 640MHz
+            LOG(INFO) << BOLDBLUE << "Bits checked  : " << +cBitsChecked << " bits" << RESET;
+            LOG(INFO) << BOLDBLUE << "Bits in error : " << +cErrors << " bits" << RESET;
+            cOpticalGroupsBER.push_back(float(cErrors)/cBitsChecked);
+            clpGBTInterface->StartBERT(cOpticalGroup->flpGBT, false);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            LOG(INFO) << "BER test done !" << RESET;
+        }
+        fBERResultMap.insert({cBoard->getId(), cOpticalGroupsBER});
+    }
+    return fBERResultMap;
 }
