@@ -9,7 +9,7 @@ namespace Ph2_HwInterface
 DPInterface::DPInterface()
 {
     fEmulatorRunning = false;
-    fWait_us         = 1000;
+    fWait_us         = 10000;
 }
 
 DPInterface::~DPInterface() {}

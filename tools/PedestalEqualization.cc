@@ -188,7 +188,9 @@ void PedestalEqualization::FindVplus()
     LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     fillSummaryTree("VCth", fTargetVcth);
 }
-
+void PedestalEqualization::FindOffsets()
+{
+    LOG(INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
 
     uint32_t NCH = NCHANNELS;

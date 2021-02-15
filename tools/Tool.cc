@@ -87,6 +87,7 @@ void Tool::Inherit(const Tool* pTool)
     fType          = pTool->fType;
     fDirectoryName = pTool->fDirectoryName;
 #ifdef __USE_ROOT__
+    fSummaryTree    = pTool->fSummaryTree;
     fCanvasMap      = pTool->fCanvasMap;
     fChipHistMap    = pTool->fChipHistMap;
     fModuleHistMap  = pTool->fModuleHistMap;
@@ -222,7 +223,7 @@ void Tool::SoftDestroy()
 			if ( fSummaryTreeParameter == cParameter )
 				return fSummaryTreeValue;
 		}
-		return -1.;
+		return -1.0;
 	}
 
 	TString Tool::getDirectoryName() 
@@ -442,12 +443,10 @@ void Tool::SaveResults()
         std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
+
+    // fSummaryTree->Write();
 #endif
-
-    // fResultFile->Write();
-    // fResultFile->Close();
-
-    LOG(INFO) << "Results saved!";
+    // LOG(INFO) << "Results saved!";
 }
 
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)

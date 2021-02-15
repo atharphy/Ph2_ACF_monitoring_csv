@@ -23,173 +23,13 @@ void PSHybridTester::MPATest(uint32_t pPattern)
 {
     for(auto cBoard: *fDetectorContainer) { this->MPATest(cBoard, pPattern); }
 }
-void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
+void PSHybridTester::CheckI2C()
 {
-    std::string pPattern_str = std::bitset<8>(pPattern).to_string(); // String with the binary representation of the pattern
-    std::stringstream sstream;
-    sstream << std::hex << pPattern;
-    std::string pPattern_str_hex = sstream.str();
-    int         cBadLines    = 0;                                    // Number of bad CIC in lines
-    TString     cParameter   = "";                                   // Placeholder for the name of the summaryTree parameter name
-    TString     cValue       = "";
-    fResultFile->cd();
-    std::string cTitle = Form("CICinTree0x%s",pPattern_str_hex.c_str());
-    std::string cDesc = Form("Bad Lines in the CIC IN test for pattern %s", pPattern_str_hex.c_str());
-    TTree* CICinTree = new TTree( cTitle.c_str() , cDesc.c_str() );
-    CICinTree->Branch("Parameter", &cParameter);
-    CICinTree->Branch("Value", &cValue);
-    cParameter = "Pattern";
-    cValue     = pPattern_str;
-    CICinTree->Fill();
-        
-    DPInterface cDPInterfacer;
-    BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( this->fBeBoardFWMap.find(0)->second );
-
-    // enable CIC mux - phy port 0
-    for(uint8_t cPhyPort = 0; cPhyPort < 10; cPhyPort++)
-    {
-        for(auto cOpticalGroup : *pBoard)
-        {
-            for(auto cHybrid : *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                fCicInterface->SelectMux(cCic, cPhyPort);
-            } // hybrid
-        }     // module
-        // check output
-        std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-
-        cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.Configure(cInterface, 0xAA);
-        cDPInterfacer.Start(cInterface);
-        //Running phase alignment on the stub lines before running the CIC in lines.
-        // if(cPhyPort < 10) 
-        // {
-        //     bool cAligned=true;
-        //     for( int i= 0 ; i < 3 ; i ++ ) {  //Run Phase and Word alignment on the stub lines. Try up to three times if it fails 
-        //         cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning_noExit( pBoard, false );
-        //         if( !cAligned )
-        //             LOG (INFO) << BOLDRED << "Alignment attempt failed" << RESET;
-        //         else
-        //             break;
-        //     }
-        //     if (cAligned) 
-        //         LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << +cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDGREEN << "SUCCESSFUL" << RESET;
-        //     else
-        //         LOG (INFO) << BOLDBLUE << "Alignment on" << BOLDMAGENTA << " PhyPort " << +cPhyPort << BOLDBLUE << " for pattern " << BOLDMAGENTA << pPattern_str << BOLDBLUE << " was " << BOLDRED << "UNSUCCESSFUL" << RESET;            
-        // }
-
-        // align back-end
-        //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
-        for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
-        {
-            uint8_t cHybridId=0;
-            uint8_t cChipId=0; 
-            uint8_t cPatternPeriod=8;
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , pPattern , cPatternPeriod);
-        }
-
-        cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.Configure(cInterface, pPattern);
-        cDPInterfacer.Start(cInterface);
-        
-        // cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning (pBoard,fL1Debug);
-        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
-
-        for(int a = 0; a < (int)cReadLines.size(); a++)
-        {
-            // if( cReadLines[i] != pPattern ) {
-            //     cBadLines++;
-            // }
-
-            std::string cLine;
-            float       distance;
-            // int         aux      = 0;
-            int         badLines;
-            std::string cSubLine;
-            // bool bad = false;
-            for(int b = 0; b < (int)cReadLines[a].size(); b++)
-            {
-                badLines = 0;
-                cLine = cReadLines[a][b];
-                // Go throught the read line and compare with pattern
-                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length())
-                {
-                    cSubLine = cLine.substr(k, pPattern_str.length());
-                    // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
-                    // aux = k + 1;
-                    if (cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) {
-                        distance = FuzzyCompareStrings(cSubLine, pPattern_str);
-                        // LOG(INFO) << "Pattern: " << pPattern_str << " . Line: " << cSubLine << ". Distance: " << distance << RESET;
-                        if (distance>1)
-                            badLines++;
-                    }
-                }
-
-                // distance = distance / aux;
-
-                // LOG(INFO) << "The overall distance in line " << b << " is: " << distance << "." << RESET;
-
-                std::string recovered = "";
-                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
-                    recovered += cLine.substr(k, pPattern_str.length()) + "  ";
-                }
-                if(badLines > 2 ) //35
-                {
-                    cBadLines++;
-                    LOG(INFO) << "The pattern " << pPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "." << RESET;
-                    std::string recovered = "";
-                    for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
-                        recovered += cLine.substr(k, pPattern_str.length()) + "  ";
-                    }
-                    LOG (INFO) << "Recovered:  " << recovered << RESET;
-                    cParameter.Clear();
-                    cParameter = std::to_string(cPhyPort) + "_" + std::to_string(b);
-                    cValue     = cLine;
-                    CICinTree->Fill();
-                } 
-                else {
-                    LOG(DEBUG) << "The pattern 0x" << pPattern_str_hex << " was" << BOLDGREEN <<" recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
-                    LOG (DEBUG) << "Recovered:  " << recovered << RESET;
-                }
-            }
-        }
-        // CICinTree->Write();
-    }
-
-    LOG(INFO) << BOLDYELLOW << "***************************************Bad lines for pattern 0x" << pPattern_str_hex << ": " << cBadLines << RESET;
-    fillSummaryTree("CIC IN bad lines_0x" + pPattern_str_hex, cBadLines);
+    for(auto cBoard: *fDetectorContainer) { this->CheckI2C(cBoard); }
 }
-int PSHybridTester::FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str)
+void PSHybridTester::CheckCounters()
 {
-    // Levenshtein Distance Computing Algorithm copied from https://www.tutorialspoint.com/cplusplus-program-to-implement-levenshtein-distance-computing-algorithm
-    int t, track = 0;
-    int dist[50][50];
-
-    LOG(DEBUG) << cSubLine << RESET;
-    LOG(DEBUG) << pPattern_str << RESET;
-
-    int lSubLine = cSubLine.length();
-    int lPattern = pPattern_str.length();
-    for(int i = 0; i <= lSubLine; i++) { dist[0][i] = i; }
-    for(int j = 0; j <= lPattern; j++) { dist[j][0] = j; }
-    for(int j = 1; j <= lSubLine; j++)
-    {
-        for(int i = 1; i <= lPattern; i++)
-        {
-            if(cSubLine[i - 1] == pPattern_str[j - 1]) { track = 0; }
-            else
-            {
-                track = 1;
-            }
-            t          = MIN((dist[i - 1][j] + 1), (dist[i][j - 1] + 1));
-            dist[i][j] = MIN(t, (dist[i - 1][j - 1] + track));
-        }
-    }
-    LOG(DEBUG) << "The Levinstein distance is: " << dist[lPattern][lSubLine] << RESET;
-    return dist[lPattern][lSubLine];
+    for(auto cBoard: *fDetectorContainer) { this->CheckCounters(cBoard); }
 }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
@@ -391,6 +231,214 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 4 , pPattern , 8);
     }       
 }
+void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
+{
+    std::string pPattern_str = std::bitset<8>(pPattern).to_string(); // String with the binary representation of the pattern
+    std::stringstream sstream;
+    sstream << std::hex << pPattern;
+    std::string pPattern_str_hex = sstream.str();
+    int         cBadLines    = 0;                                    // Number of bad CIC in lines
+    TString     cParameter   = "";                                   // Placeholder for the name of the summaryTree parameter name
+    TString     cValue       = "";
+    fResultFile->cd();
+    std::string cTitle = Form("CICinTree0x%s",pPattern_str_hex.c_str());
+    std::string cDesc = Form("Bad Lines in the CIC IN test for pattern %s", pPattern_str_hex.c_str());
+    TTree* CICinTree = new TTree( cTitle.c_str() , cDesc.c_str() );
+    CICinTree->Branch("Parameter", &cParameter);
+    CICinTree->Branch("Value", &cValue);
+    cParameter = "Pattern";
+    cValue     = pPattern_str;
+    CICinTree->Fill();
+        
+    DPInterface cDPInterfacer;
+    BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( this->fBeBoardFWMap.find(0)->second );
+
+    // enable CIC mux - phy port 0 -- 10 are stub lines 
+    for( uint8_t cPhyPort=0; cPhyPort < 10 ; cPhyPort++)
+    {
+        for(auto cOpticalGroup : *pBoard)
+        {
+            for(auto cHybrid : *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                fCicInterface->SelectMux(cCic, cPhyPort ); 
+            }//hybrid 
+        }// module 
+
+        std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
+        // if the pattern used is not 0xCC, align back-end using 0xAA pattern
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.Configure(cInterface, 0xAA);
+        cDPInterfacer.Start(cInterface);
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+        for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
+        {
+            uint8_t cHybridId=0;
+            uint8_t cChipId=0; 
+            uint8_t cPatternPeriod=8;
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , 0xAA , cPatternPeriod);
+        }
+
+        //Stop 0xAA pattern and use test pattern
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.Configure(cInterface, pPattern);
+        cDPInterfacer.Start(cInterface);
+    
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // check output 
+        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
+
+        for(int a = 0; a < (int)cReadLines.size(); a++)
+        {
+            std::string cLine;
+            float       distance;
+            int         badLines;
+            std::string cSubLine;
+            // bool bad = false;
+            for(int b = 0; b < (int)cReadLines[a].size(); b++)
+            {
+                badLines = 0;
+                cLine = cReadLines[a][b];
+                // Go throught the read line and compare with pattern
+                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length())
+                {
+                    cSubLine = cLine.substr(k, pPattern_str.length());
+                    // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
+                    // aux = k + 1;
+                    // if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) ) {
+                    if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) && ( (cSubLine != pPattern_str.substr(2, 6) + pPattern_str.substr(0,2)) && (cSubLine != pPattern_str.substr(5,2) + pPattern_str.substr(0, 6)) ) ) {
+                        distance = FuzzyCompareStrings(cSubLine, pPattern_str);
+                        // LOG(INFO) << "Pattern: " << pPattern_str << " . Line: " << cSubLine << ". Distance: " << distance << RESET;
+                        if (distance>1)
+                            badLines++;
+                    }
+                }
+
+                // distance = distance / aux;
+
+                // LOG(INFO) << "The overall distance in line " << b << " is: " << distance << "." << RESET;
+
+                std::string recovered = "";
+                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
+                    recovered += cLine.substr(k, pPattern_str.length()) + "  ";
+                }
+                if(badLines > 2 ) //35
+                {
+                    cBadLines++;
+                    LOG(INFO) << "The pattern " << pPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                    std::string recovered = "";
+                    for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
+                        recovered += cLine.substr(k, pPattern_str.length()) + "  ";
+                    }
+                    LOG (INFO) << "Recovered:  " << recovered << RESET;
+                    cParameter.Clear();
+                    cParameter = std::to_string(cPhyPort) + "_" + std::to_string(b);
+                    cValue     = cLine;
+                    CICinTree->Fill();
+                } 
+                else {
+                    LOG(DEBUG) << "The pattern 0x" << pPattern_str_hex << " was" << BOLDGREEN <<" recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                    LOG (DEBUG) << "Recovered:  " << recovered << RESET;
+                }
+            }
+        }
+        // CICinTree->Write();
+    }
+
+    LOG(INFO) << BOLDYELLOW << "***************************************Bad lines for pattern 0x" << pPattern_str_hex << ": " << cBadLines << RESET;
+    fillSummaryTree("CIC IN bad lines_0x" + pPattern_str_hex, cBadLines);
+}
+void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
+{   
+    TString  cParameter;  
+    TString  cValue;
+    fResultFile->cd();
+
+    TTree* PATree = nullptr;
+    if ( gROOT->FindObject("PATree") != nullptr ) {
+        PATree = static_cast<TTree*>(gROOT->FindObject("PATree"));
+    }
+    else {
+        PATree = new TTree( "PATree" ,"Phase alignment test" );
+        PATree->Branch("Parameter", &cParameter);
+        PATree->Branch("Value", &cValue);
+    }
+
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                if(cCic != NULL)
+                {
+                    for (int cPhyPort = 0; cPhyPort < 10; cPhyPort ++ )
+                    {
+                        fCicInterface->SelectMux(cCic, cPhyPort ); 
+                        //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+                        for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
+                        {
+                            uint8_t cHybridId=0;
+                            uint8_t cChipId=0; 
+                            uint8_t cPatternPeriod=8;
+                            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, cHybridId , cChipId , cLineId , 0xAA, cPatternPeriod);
+                        }
+
+                        std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
+                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
+
+                        for (int i = 0; i < (int)cReadLines.size(); i++ ){
+                            cParameter.Clear();
+                            cValue.Clear();
+                            for (int j = 0; j < (int)cReadLines[i].size(); j ++)
+                            {
+                                cParameter = "Phase_" + std::to_string(pPhase) + "_Phy_" + std::to_string(cPhyPort) + "_" + std::to_string(j);
+                                LOG(INFO) << cParameter << RESET; 
+                                cValue = cReadLines[i][j];
+                                PATree->Fill();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+int PSHybridTester::FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str)
+{
+    // Levenshtein Distance Computing Algorithm copied from https://www.tutorialspoint.com/cplusplus-program-to-implement-levenshtein-distance-computing-algorithm
+    int t, track = 0;
+    int dist[50][50];
+
+    LOG(DEBUG) << cSubLine << RESET;
+    LOG(DEBUG) << pPattern_str << RESET;
+
+    int lSubLine = cSubLine.length();
+    int lPattern = pPattern_str.length();
+    for(int i = 0; i <= lSubLine; i++) { dist[0][i] = i; }
+    for(int j = 0; j <= lPattern; j++) { dist[j][0] = j; }
+    for(int j = 1; j <= lSubLine; j++)
+    {
+        for(int i = 1; i <= lPattern; i++)
+        {
+            if(cSubLine[i - 1] == pPattern_str[j - 1]) { track = 0; }
+            else
+            {
+                track = 1;
+            }
+            t          = MIN((dist[i - 1][j] + 1), (dist[i][j - 1] + 1));
+            dist[i][j] = MIN(t, (dist[i - 1][j - 1] + track));
+        }
+    }
+    LOG(DEBUG) << "The Levinstein distance is: " << dist[lPattern][lSubLine] << RESET;
+    return dist[lPattern][lSubLine];
+}
 
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAPairSel)
 {
@@ -408,7 +456,8 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 // add check for SSA
                 if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
-        		uint8_t cPattern= (uint8_t)cReadoutChip->getId()+1;
+        		// uint8_t cPattern= (uint8_t)cReadoutChip->getId()+1;
+                uint8_t cPattern = (cReadoutChip->getId() % 2 == 0) ? 0xFA : 0xF5;
 
                 LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
 
@@ -425,28 +474,49 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
             }//chip
 	    }//hybrid
     }//module 
-    // now capture output on pogo sockets 
-    //this->SSAOutputsPogoDebug(pBoard, false);
+    // now capture output on pogo sockets and store them
     std::vector<std::vector<std::string>> cReadLines; // Container for the scoped lines
     this->SSAOutputsPogoScope( cReadLines, pBoard, false); //Recover Scoped lines
     std::string pPattern_str;
-    // Needs SSAPairSelect
+
+    TString  cParameter;  
+    TString  cValue;
+    fResultFile->cd();
+
+    TTree* SSATree = nullptr;
+    if ( gROOT->FindObject("SSATree") != nullptr ) {
+        SSATree = static_cast<TTree*>(gROOT->FindObject("SSATree"));
+    }
+    else {
+        SSATree = new TTree( "SSATree" , "Bad Lines in the SSA test" );
+        SSATree->Branch("Parameter", &cParameter);
+        SSATree->Branch("Value", &cValue);
+    }
+
+    // Process scoped lines
     for(int a = 0; a < (int)cReadLines.size(); a++)
         {
-            pPattern_str = ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) ? std::bitset<8>(  (int)cSSAPairSel.at(a) - '0' + 1  ).to_string() : std::bitset<8>(  (int)cSSAPairSel.at(1-a) - '0' + 1  ).to_string() ;
-            if ( ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) && ( (int)cSSAPairSel.at(a) - '0' == 3) ) 
-                pPattern_str = std::bitset<8>( 5 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
-            else if ( ( ((int)cSSAPairSel.at(0)-'0')%2==0 ) && ( (int)cSSAPairSel.at(1-a) - '0' == 3 ) ) 
-                pPattern_str = std::bitset<8>( 5 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
+            if((((int)cSSAPairSel.at(0)-'0')%2==0)) {
+                pPattern_str = (((int)cSSAPairSel.at(a)-'0')%2==0) ? std::bitset<8>(0xF5).to_string() : std::bitset<8>(0xFA).to_string();
+                if ( (int)cSSAPairSel.at(1-a) - '0' == 3)
+                    pPattern_str = std::bitset<8>( 0xFA ).to_string(); //SSA3 is configured to output the same pattern as SSA4
+       
+            }
+            else {
+                pPattern_str = (((int)cSSAPairSel.at(a)-'0')%2==0) ? std::bitset<8>(0xFA).to_string() : std::bitset<8>(0xF5).to_string();
+                if ( (int)cSSAPairSel.at(a) - '0' == 3)
+                    pPattern_str = std::bitset<8>( 0xFA ).to_string(); //SSA3 is configured to output the same pattern as SSA4
+    
+            }
+            // pPattern_str = ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) ? std::bitset<8>(  (int)cSSAPairSel.at(a) - '0' + 1  ).to_string() : std::bitset<8>(  (int)cSSAPairSel.at(1-a) - '0' + 1  ).to_string() ;
             LOG(INFO) << "Checking for " << pPattern_str << RESET;
             std::string cLine    = "";
             float       distance = 0.0;
-            int         badLines;
+            int         badLines = 0;
             std::string cSubLine;
             for(int b = 0; b < (int)cReadLines[a].size(); b++)
             {
-                badLines = 0;
-                cLine = cReadLines[a][b];
+                cLine = cReadLines[a][b]; //Get scoped line
                 LOG(DEBUG) << cLine << RESET;
                 bool ok = false;
                 // Go throught the read line and compare with pattern
@@ -466,16 +536,21 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                             LOG (DEBUG) << BOLDRED << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << RESET;
                         }
                     }
-                    if( ok == true )
+                    if( ok )
                         break;
-                    else
-                        badLines++;
                 }
-                LOG (DEBUG) << badLines << RESET;
-                if( ok == true )
-                    break;
+                if( !ok ) {
+                    cParameter.Clear(); //TString
+                    cParameter = "FE" + std::to_string((int)cSSAPairSel.at(a)-'0') + "_" + std::to_string(b);
+                    cValue     = cLine;
+                    LOG(INFO) << cParameter << "  " << cValue << RESET;
+                    SSATree->Fill();
+                    badLines++;
+                }
             }
+            fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(a)-'0' ), badLines);
         }
+        // SSATree->Write();
 }
 void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPairSel)
 {
@@ -530,15 +605,197 @@ void PSHybridTester::SetHybridVoltage()
     cTC_PSFE.set_voltage(cTC_PSFE._1050mV, cTC_PSFE._1250mV);
 #endif
 }
+
+void PSHybridTester::CheckI2C(BeBoard* pBoard)
+{
+    #ifdef __ROOT__
+    TH1I* fI2CTransactions = new TH1I("I2CTransactions","I2C transactions status");
+    #endif
+
+    int total = 0;               
+    int value = 0;
+    int bad = 0;
+    while(true) {
+        for (int i = 0; i < 256; i++)
+        {
+            for(auto cOpticalReadout: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    // set AMUX on all SSAs to highZ
+                    for(auto cReadoutChip: *cHybrid)
+                    {
+                        // add check for SSA
+                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
+
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", i);
+                            // fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                        value = fReadoutChipInterface->ReadChipReg(cReadoutChip, "Threshold");
+                        if (value == i) {
+                            LOG (DEBUG) << "Successful read" << RESET;
+                        }
+                        else {
+                            LOG (INFO) << BOLDRED << "Failed read after " << total+1 << "tries. Real value: " << i << "Read value: " << value << RESET;
+                            bad ++;
+                            // TString parameter = Form("Bad I2C after ", total);
+                            // parameter += Form("tries, for value", i);
+                            // FillSummaryTree(parameter, value);
+                        }
+                        total ++;
+                    }
+                } // hybrid
+            }     // board  
+        }     // value
+        LOG (INFO) << "Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET; 
+    }
+    LOG (INFO) << "FINAL. Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET; 
+}
+void PSHybridTester::CheckCounters(BeBoard* pBoard)
+{
+    int fEventsPerPoint = this->findValueInSettings("Nevents");
+
+    auto cSetting            = fSettingsMap.find("ShortsPulseAmplitude");
+    auto fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    // make sure that the correct trigger source is enabled
+    // async injection trigger
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 0});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+
+    // make sure async mode is enabled
+    setSameDacBeBoard(pBoard, "AnalogueAsync", 1);
+    // first .. set injection amplitude to 0 and find pedestal
+    setSameDacBeBoard(pBoard, "InjectedCharge", 0);
+
+    // find pedestal
+    float cOccTarget = 0.5;
+    // this->bitWiseScan("Threshold", fEventsPerPoint, cOccTarget);
+    float cMeanValue       = 0;
+    int   cThresholdOffset = 5;
+    int   cNchips          = 0;
+    for(auto cOpticalGroupData: *pBoard) // for on opticalGroup - begin
+    {
+        for(auto cHybridData: *cOpticalGroupData) // for on module - begin
+        {
+            cNchips += cHybridData->size();
+            for(auto cROCData: *cHybridData) // for on chip - begin
+            {
+                ReadoutChip* cChip =
+                static_cast<ReadoutChip*>(fDetectorContainer->at(pBoard->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                auto cThreshold                  = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
+                // set threshold a little bit lower than 90% level
+                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+            } // for on chip - end
+        }     // for on module - end
+    }         // for on opticalGroup - end
+    LOG(INFO) << BOLDBLUE << "Mean Threshold at " << std::setprecision(2) << std::fixed << 100 * cOccTarget << " percent occupancy value " << cMeanValue / cNchips << RESET;
+
+    // now configure injection amplitude to
+    // whatever will be used for short finding
+    // this is in the xml
+    setSameDacBeBoard(pBoard, "InjectedCharge", fTestPulseAmplitude);
+
+    // configure injection
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            // set AMUX on all SSAs to highZ
+            for(auto cReadoutChip: *cHybrid)
+            {
+                // add check for SSA
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
+
+                LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
+
+                // let's say .. only enable injection in even channels first
+                for(uint8_t cChnl = 0; cChnl < cReadoutChip->size(); cChnl++)
+                {
+                    char    cRegName[100];
+                    uint8_t cEnable = (uint8_t)(1);
+                    std::sprintf(cRegName, "ENFLAGS_S%d", static_cast<int>(1 + cChnl));
+                    auto    cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                    uint8_t cNewValue = (cRegValue & 0xF) | (cEnable << 4);
+                    LOG(DEBUG) << BOLDBLUE << "\t\t..ENGLAG reg on channel#" << +cChnl << " is set to " << std::bitset<5>(cRegValue) << " want to set injection to : " << +cEnable
+                                << " so new value would be " << std::bitset<5>(cNewValue) << RESET;
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cNewValue);
+                }
+            } // chip
+        }     // hybrid
+    }         // module
+
+    int event_loop = 0;
+    int bad_events = 0;
+    while(event_loop < 1500) 
+    {       
+        this->ReadNEvents(pBoard, fEventsPerPoint);
+        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+        // iterate over FE objects and check occupancy
+        for(auto cEvent: cEvents)
+        {
+            for(auto cOpticalReadout: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalReadout)
+                {   
+                    int cTotalCountInjectedChnls = 0;
+                    // set AMUX on all SSAs to highZ
+                    for(auto cReadoutChip: *cHybrid)
+                    {
+                        int cChipCountInjectedChnls = 0;
+                        // add check for SSA
+                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
+
+                        LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
+                        auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
+                        for(uint8_t cChnl = 0; cChnl < cReadoutChip->size(); cChnl++)
+                        {
+                            // LOG (DEBUG) << cHitVector[cChnl];
+                            cChipCountInjectedChnls += cHitVector[cChnl];
+                            cTotalCountInjectedChnls += cHitVector[cChnl];
+                        } // chnl
+                        if(cChipCountInjectedChnls == 0)
+                            LOG(INFO) << BOLDMAGENTA << "All injected channels on chip " << +cReadoutChip->getId() << " have 0 hits." << RESET;
+                    } // chip
+
+                    if(cTotalCountInjectedChnls == 0) 
+                    {
+                        LOG(DEBUG) << BOLDRED << "All injected channels on all chips have 0 hits." << RESET;
+                        LOG(INFO) << BOLDRED << "Event number " << +event_loop << " is \'empty\'." << RESET;
+                        fillSummaryTree("Empty event",event_loop);
+                        bad_events++;
+                    }
+                    else
+                        LOG(INFO) << BOLDGREEN << "Event number " << +event_loop << " is not \'empty\'. Occupancy is: " << ((float)(cTotalCountInjectedChnls*100)/(fEventsPerPoint*6*cHybrid->at(0)->size())) << "%." << RESET;
+                    LOG(DEBUG) << fEventsPerPoint*6*cHybrid->at(0)->size()<<RESET;
+                    LOG(DEBUG) << cTotalCountInjectedChnls<< RESET;
+                    event_loop++;
+                } // hybrid
+            }   // module
+        }   // event loop
+    } // while
+    LOG(INFO) << "Out of " << +event_loop << " readouts, " << +bad_events << " were \'empty\'" << RESET;
+}
+
 void PSHybridTester::RunHybridETest()
 {
 #ifdef __TCUSB__
     TC_PSFE cTC_PSFE;
-
     float result;
 
-    // auto cMapIterator = fHybridVoltageMap.find(pVoltageName);
-    // if( cMapIterator != fHybridVoltageMap.end() )
+    // std::map<std::string, TC_PSFE::measurement>::iterator cMapIterator = fHybridVoltageMap.begin();
+
+    // while ( cMapIterator != fHybridVoltageMap.end() ) 
+    // {
+    //     TC_PSFE::measurement cMeasurement = cMapIterator->second;
+    //     cTC_PSFE.adc_get(cMeasurement, result);
+    //     std::string cMeasurementName = cMapIterator->first;
+    //     LOG(INFO) << cMeasurementName << " : " << result << RESET;
+    //     fillSummaryTree(cMeasurementName, result);  
+    //     cMapIterator++;     
+    // }
+
     for (auto cMapIterator : fHybridVoltageMap)
     {
         auto& cMeasurement = cMapIterator.second;
@@ -547,8 +804,6 @@ void PSHybridTester::RunHybridETest()
         fillSummaryTree(cMapIterator.first, result);
     }
 
-    // cMapIterator = fHybridCurrentMap.find(pVoltageName);
-    // if( cMapIterator != fHybridCurrentMap.end() )
     for (auto cMapIterator : fHybridCurrentMap)
     {
         auto& cMeasurement = cMapIterator.second;
@@ -557,8 +812,6 @@ void PSHybridTester::RunHybridETest()
         fillSummaryTree(cMapIterator.first, result);
     }
 
-    // cMapIterator = fHybridOtherMap.find(pVoltageName);
-    // if( cMapIterator != fHybridOtherMap.end() )
     for (auto cMapIterator : fHybridOtherMap)
     {
         auto& cMeasurement = cMapIterator.second;
@@ -566,107 +819,6 @@ void PSHybridTester::RunHybridETest()
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
         fillSummaryTree(cMapIterator.first, result);
     }
-
-    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V_3, result );
-    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V_4, result );
-    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V25A_4, result );
-    // // cTC_PSFE.adc_get(cTC_PSFE.MPA_1V25A_3, result );
-
-    // LOG(INFO) << "MPA1V_3" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA1V_3")->second, result);
-    // // fillSummaryTree("MPA1V_3", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V_3, result);
-    // fillSummaryTree("MPA1V_3", result);
-
-    // LOG(INFO) << "MPA_1V_4" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA_1V_4")->second, result);
-    // // fillSummaryTree("MPA_1V_4", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V_4, result);
-    // fillSummaryTree("MPA_1V_4", result);
-
-    // LOG(INFO) << "MPA_1V25A_3" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA_1V25A_3")->second, result);
-    // // fillSummaryTree("MPA_1V25A_3", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V25A_3, result);
-    // fillSummaryTree("MPA_1V25A_3", result);
-
-    // LOG(INFO) << "MPA_1V25A_4" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("MPA_1V25A_3")->second, result);
-    // // fillSummaryTree("MPA_1V25A_3", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_1V25A_4, result);
-    // fillSummaryTree("MPA_1V25A_4", result);
-
-    // LOG(INFO) << "ROH_GND_AMP" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("ROH_GND_AMP")->second, result);
-    // // fillSummaryTree("ROH_GND_AMP", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::ROH_GND_AMP, result);
-    // fillSummaryTree("ROH_GND_AMP", result);
-
-    // LOG(INFO) << "Hybrid1V00" << RESET;
-    // // cTC_PSFE.adc_get(fHybridCurrentMap.find("Hybrid1V00")->second, result);
-    // // fillSummaryTree("Hybrid1V00", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V, result);
-    // fillSummaryTree("Hybrid1V00", result);
-
-    // LOG(INFO) << "Hybrid1V25" << RESET;
-    // // cTC_PSFE.adc_get(fHybridCurrentMap.find("Hybrid1V25")->second, result);
-    // // fillSummaryTree("Hybrid1V25", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V25_OUT, result);
-    // fillSummaryTree("Hybrid1V25", result);
-
-    // LOG(INFO) << "MPAContinuity" << RESET;
-    // // cTC_PSFE.adc_get(fHybridOtherMap.find("MPAContinuity")->second, result);
-    // // fillSummaryTree("MPAContinuity", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::MPA_RST_TEST, result);
-    // fillSummaryTree("MPAContinuity", result);
-
-    // LOG(INFO) << "VDrop1V25" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop1V25")->second, result);
-    // // fillSummaryTree("VDrop1V25", result);
-    // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop1V25")->second, result);
-    // fillSummaryTree("VDrop1V25", result);
-
-    // LOG(INFO) << "VDrop2V55" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop2V55")->second, result);
-    // // fillSummaryTree("VDrop2V55", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3_AMP, result);
-    // fillSummaryTree("VDrop2V55", result);
-
-    // LOG(INFO) << "HybridLoadV" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("HybridLoadV")->second, result);
-    // // fillSummaryTree("HybridLoadV", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3_OUT, result);
-    // fillSummaryTree("HybridLoadV", result);
-
-    // LOG(INFO) << "VDrop1V00" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("VDrop1V00")->second, result);
-    // // fillSummaryTree("VDrop1V00", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V_AMP, result);
-    // fillSummaryTree("VDrop1V00", result);
-
-    // LOG(INFO) << "Panasonic1V00" << RESET;
-    // // cTC_PSFE.adc_get(fHybridVoltageMap.find("Panasonic1V00")->second, result);
-    // // fillSummaryTree("Panasonic1V00", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::_1V_OUT, result);
-    // fillSummaryTree("Panasonic1V00", result);
-
-    // LOG(INFO) << "Temperature" << RESET;
-    // // cTC_PSFE.adc_get(fHybridOtherMap.find("Temperature")->second, result);
-    // // fillSummaryTree("Temperature", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::THERM_SENSE, result);
-    // fillSummaryTree("Temperature", result);
-
-    // LOG(INFO) << "PGLineContinuity" << RESET;
-    // // cTC_PSFE.adc_get(fHybridOtherMap.find("PGLineContinuity")->second, result);
-    // // fillSummaryTree("PGLineContinuity", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::C_TEST_PG, result);
-    // fillSummaryTree("PGLineContinuity", result);
-
-    // LOG(INFO) << "12VLineContinuity" << RESET;
-    // // cTC_PSFE.adc_get(fHybridOtherMap.find("12VLineContinuity")->second, result);
-    // // fillSummaryTree("12VLineContinuity", result);
-    // cTC_PSFE.adc_get(TC_PSFE::measurement::C_TEST_P12, result);
-    // fillSummaryTree("12VLineContinuity", result);
 #endif
 }
 void PSHybridTester::ReadHybridVoltage(const std::string & pVoltageName )

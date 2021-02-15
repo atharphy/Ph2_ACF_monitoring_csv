@@ -14,9 +14,9 @@
             <SSA Id="0" configfile="SSA.txt" />
             <SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
-            <SSA Id="4" configfile="SSA.txt" />
-            <SSA Id="5" configfile="SSA.txt" />
-            <SSA Id="6" configfile="SSA.txt" />
+           <!--  <SSA Id="4" configfile="SSA.txt" /> -->
+             <SSA Id="5" configfile="SSA.txt" />
+             <SSA Id="6" configfile="SSA.txt" />
             <SSA Id="7" configfile="SSA.txt" /> 
             
             <CIC_Files path="./settings/CicFiles/" />
@@ -163,8 +163,8 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometerLowEnd">540</Setting>
-    <Setting name="AntennaPotentiometerHighEnd">840</Setting>
+    <Setting name="AntennaPotentiometerLowEnd">500</Setting>
+    <Setting name="AntennaPotentiometerHighEnd">950</Setting>
     <Setting name="ThresholdForOpens">15</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 

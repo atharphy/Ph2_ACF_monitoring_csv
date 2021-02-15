@@ -20,6 +20,7 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "TString.h"
 #endif
 
 class PedestalEqualization : public Tool

@@ -11,9 +11,9 @@
 #define PSHybridTester_h__
 
 #include "Tool.h"
-#ifdef __TCUSB__
-#include "USB_a.h"
-#endif
+// #ifdef __TCUSB__
+#include "../../cmsph2_tcusb/USB_a.h"
+// #endif
 
 #include "DPInterface.h"
 #define PSHYBRIDMAXV 1.32 
@@ -29,6 +29,8 @@ class PSHybridTester : public Tool
     void CheckHybridCurrents();
     void CheckHybridVoltages();
     void RunHybridETest();
+    void CheckI2C();
+    void CheckCounters();
     void CheckFastCommands(const std::string & pFastCommand, uint8_t pDuartion=1);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t> &pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t> &pCounters);
@@ -46,7 +48,12 @@ class PSHybridTester : public Tool
     void Pause() override;
     void Resume() override;
 
+
+    void SweepPhaseAlignment(uint8_t);
+
   private:
+    void CheckI2C(Ph2_HwDescription::BeBoard* pBoard);
+    void CheckCounters(Ph2_HwDescription::BeBoard* pBoard);
     void ReadSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
     void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
@@ -68,6 +75,8 @@ class PSHybridTester : public Tool
                                                      {"ssa2_trig_3", 28}, {"ssa2_trig_2", 29}, {"ssa2_trig_1", 30}, {"ssa2_trig_0", 31}, {"spare_out", 32},   {"antt_fb", 33},     {"cpg", 34},
                                                      {"bpg", 35},         {"na", 36}};
 
+    std::map<std::string, uint8_t> fOutputDebugMap = {};
+
     std::map<std::string, uint8_t> fSSAPairSelMap = {
         {"01", 0x4},
         {"12", 0x5}, // 0b0101},
@@ -80,35 +89,35 @@ class PSHybridTester : public Tool
 
     int FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str);
 
-#ifdef __TCUSB__
+    // #ifdef __TCUSB__
     std::map<std::string, TC_PSFE::measurement> fHybridVoltageMap = {{"TestCardGround", TC_PSFE::measurement::GROUND},
-                                                                     {"PanasonicGround", TC_PSFE::measurement::ROH_GND},
-                                                                     {"Hybrid1V00", TC_PSFE::measurement::_1V},
-                                                                     {"Hybrid1V25", TC_PSFE::measurement::_1V25},
-                                                                     {"Hybrid1V25_out", TC_PSFE::measurement::_1V25_OUT}, // end group 1V25O
-                                                                     {"Hybrid3V3", TC_PSFE::measurement::_3V3},       // end group 1V25O
-                                                                     {"HybridLoadV", TC_PSFE::measurement::_3V3_OUT},
-                                                                     {"VDrop2V55", TC_PSFE::measurement::_3V3_AMP},
-                                                                     {"ADC", TC_PSFE::measurement::AMUX},
-                                                                     {"Panasonic1V00", TC_PSFE::measurement::_1V_OUT},
-                                                                     {"VDrop1V00", TC_PSFE::measurement::_1V_AMP},
-                                                                     {"VDrop1V25", TC_PSFE::measurement::_1V25_AMP},
-                                                                     {"MPA1V_3", TC_PSFE::measurement::MPA_1V_3},
-                                                                     {"MPA_1V25A_3", TC_PSFE::measurement::MPA_1V25A_3},
-                                                                     {"ROH_GND_AMP", TC_PSFE::measurement::ROH_GND_AMP},
-                                                                     {"MPA_1V25A_4", TC_PSFE::measurement::MPA_1V25A_4},
-                                                                     {"MPA_1V_4", TC_PSFE::measurement::MPA_1V_4},
-                                                                     {"Hybrid2V5", TC_PSFE::measurement::_2V5},
-                                                                     {"Ref1V25", TC_PSFE::measurement::_1V25_REF},
-                                                                     {"RefV625", TC_PSFE::measurement::_625mV_REF}};
+                                                                  {"PanasonicGround", TC_PSFE::measurement::ROH_GND},
+                                                                  {"Hybrid1V00", TC_PSFE::measurement::_1V},
+                                                                  {"Hybrid1V25", TC_PSFE::measurement::_1V25},
+                                                                  {"Hybrid1V25_out", TC_PSFE::measurement::_1V25_OUT},
+                                                                  {"Hybrid3V3", TC_PSFE::measurement::_3V3},
+                                                                  {"HybridLoadV", TC_PSFE::measurement::_3V3_OUT},
+                                                                  {"VDrop2V55", TC_PSFE::measurement::_3V3_AMP},
+                                                                  {"ADC", TC_PSFE::measurement::AMUX},
+                                                                  {"Panasonic1V00", TC_PSFE::measurement::_1V_OUT},
+                                                                  {"VDrop1V00", TC_PSFE::measurement::_1V_AMP},
+                                                                  {"VDrop1V25", TC_PSFE::measurement::_1V25_AMP},
+                                                                  {"MPA1V_3", TC_PSFE::measurement::MPA_1V_3},
+                                                                  {"MPA_1V25A_3", TC_PSFE::measurement::MPA_1V25A_3},
+                                                                  {"ROH_GND_AMP", TC_PSFE::measurement::ROH_GND_AMP},
+                                                                  {"MPA_1V25A_4", TC_PSFE::measurement::MPA_1V25A_4},
+                                                                  {"MPA_1V_4", TC_PSFE::measurement::MPA_1V_4},
+                                                                  {"Hybrid2V5", TC_PSFE::measurement::_2V5},
+                                                                  {"Ref1V25", TC_PSFE::measurement::_1V25_REF},
+                                                                  {"RefV625", TC_PSFE::measurement::_625mV_REF}};
     std::map<std::string, TC_PSFE::measurement> fHybridCurrentMap = {{"Hybrid1V00_current", TC_PSFE::measurement::ISEN_1V},
-                                                                     {"Hybrid1V25_current", TC_PSFE::measurement::ISEN_1V25},
-                                                                     {"Hybrid3V30_current", TC_PSFE::measurement::ISEN_3V3}};
-    std::map<std::string, TC_PSFE::measurement> fHybridOtherMap   = {{"Temperature", TC_PSFE::measurement::THERM_SENSE},
-                                                                     {"PGLineContinuity", TC_PSFE::measurement::C_TEST_PG},
-                                                                     {"12VLineContinuity", TC_PSFE::measurement::C_TEST_P12},
-                                                                     {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST},};
-    #endif
+                                                                  {"Hybrid1V25_current", TC_PSFE::measurement::ISEN_1V25},
+                                                                  {"Hybrid3V30_current", TC_PSFE::measurement::ISEN_3V3}};
+    std::map<std::string, TC_PSFE::measurement> fHybridOtherMap =  {{"Temperature", TC_PSFE::measurement::THERM_SENSE},
+                                                                  {"PGLineContinuity", TC_PSFE::measurement::C_TEST_PG},
+                                                                  {"12VLineContinuity", TC_PSFE::measurement::C_TEST_P12},
+                                                                  {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST},};
+    // #endif
 
     int                     fVoltageMeasurementWait_ms = 100;
     int                     fNreadings                 = 3;

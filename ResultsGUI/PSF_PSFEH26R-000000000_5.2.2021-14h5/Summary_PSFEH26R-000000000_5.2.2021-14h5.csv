@@ -1,0 +1,60 @@
+Hybrid serial number;PSFEH26R-000000000
+Computer;hybridtesting
+Results path;/home/cmshytest/Development/test_irene/PSFEH/gui-for-hybrids-testing-on-crate-systems-PSFEHResultsGUI/PSF_PSFEH26R-000000000_5.2.2021-14h5
+ADC;282.258056640625
+Hybrid1V00;1005.6207275390625
+Hybrid1V25;1236.55908203125
+Hybrid1V25_out;1141.251220703125
+Hybrid2V5;2487.781005859375
+Hybrid3V3;3279.56982421875
+HybridLoadV;48.8758544921875
+MPA1V_3;915.2003784179688
+MPA_1V25A_3;1173.0205078125
+MPA_1V25A_4;1175.46435546875
+MPA_1V_4;916.4223022460938
+Panasonic1V00;333.57769775390625
+PanasonicGround;48.8758544921875
+ROH_GND_AMP;49.60899353027344
+Ref1V25;1250.0
+RefV625;625.6109619140625
+TestCardGround;0.0
+VDrop1V00;0.366568922996521
+VDrop1V25;95.43010711669922
+VDrop2V55;125.0
+Hybrid1V00_current;938.4164428710938
+Hybrid1V25_current;1221.8963623046875
+Hybrid3V30_current;2008.797607421875
+12VLineContinuity;0.0
+MPAContinuity;1.0
+PGLineContinuity;1.0
+Temperature;38.80952453613281
+SSA_01_0;7.0
+Bad lines on SSA0 stub output ; FE0_6  
+SSA_01_1;7.0
+Bad lines on SSA1 stub output ; FE1_6  
+SSA_12_1;7.0
+Bad lines on SSA1 stub output ; FE1_6  
+SSA_12_2;7.0
+Bad lines on SSA2 stub output ; FE2_6  
+SSA_23_2;7.0
+Bad lines on SSA2 stub output ; FE2_6  
+SSA_23_3;7.0
+Bad lines on SSA3 stub output ; FE3_6  
+SSA_34_3;7.0
+Bad lines on SSA3 stub output ; FE3_6  
+SSA_34_4;7.0
+Bad lines on SSA4 stub output ; FE4_6  
+SSA_45_4;7.0
+Bad lines on SSA4 stub output ; FE4_6  
+SSA_45_5;7.0
+Bad lines on SSA5 stub output ; FE5_6  
+SSA_56_5;7.0
+Bad lines on SSA5 stub output ; FE5_6  
+SSA_56_6;7.0
+Bad lines on SSA6 stub output ; FE6_6  
+SSA_67_6;7.0
+Bad lines on SSA6 stub output ; FE6_6  
+SSA_67_7;7.0
+Bad lines on SSA7 stub output ; FE7_6  
+TEST RESULT;Bad
+Comments;7.0 bad lines on SSA0 stub output7.0 bad lines on SSA1 stub output7.0 bad lines on SSA1 stub output7.0 bad lines on SSA2 stub output7.0 bad lines on SSA2 stub output7.0 bad lines on SSA3 stub output7.0 bad lines on SSA3 stub output7.0 bad lines on SSA4 stub output7.0 bad lines on SSA4 stub output7.0 bad lines on SSA5 stub output7.0 bad lines on SSA5 stub output7.0 bad lines on SSA6 stub output7.0 bad lines on SSA6 stub output7.0 bad lines on SSA7 stub output

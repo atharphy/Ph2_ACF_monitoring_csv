@@ -299,7 +299,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 for(auto cROCData: *cHybridData) // for on chip - begin
                 {
                     ReadoutChip* cChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                    static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
                     auto cThreshold                  = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                     cROCData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;
@@ -357,51 +357,72 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             }     // hybrid
         }         // module
 
-        // read back events
-        this->ReadNEvents(pBoard, fEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
-        // iterate over FE objects and check occupancy
-        for(auto cEvent: cEvents)
+        bool retry = true;
+        for(int i = 0; i < 2 && retry; i++)  // 'Retry' to read events when the event returns with 0 on every channel of every chip.
         {
-            for(auto cOpticalReadout: *pBoard)
+            retry = false;
+            // read back events
+            this->ReadNEvents(pBoard, fEventsPerPoint);
+            const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+            // iterate over FE objects and check occupancy
+            for(auto cEvent: cEvents)
             {
-                for(auto cHybrid: *cOpticalReadout)
+                for(auto cOpticalReadout: *pBoard)
                 {
-                    // set AMUX on all SSAs to highZ
-                    for(auto cReadoutChip: *cHybrid)
+                    for(auto cHybrid: *cOpticalReadout)
                     {
-                        // add check for SSA
-                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
-
-                        LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
-                        auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
-                        // let's say .. only enable injection in even channels first
-                        std::vector<uint8_t> cShorts(0);
-                        for(uint8_t cChnl = 0; cChnl < cReadoutChip->size(); cChnl++)
+                        int cTotalCountInjectedChnls = 0;
+                        // set AMUX on all SSAs to highZ
+                        for(auto cReadoutChip: *cHybrid)
                         {
-                            bool cInjectionEnabled = (((int)(cChnl) % cInjectionPeriod) == cInject);
-                            if(!cInjectionEnabled && cHitVector[cChnl] > THRESHOLD_SHORT * fEventsPerPoint)
-                            {
-                                LOG(INFO) << BOLDRED << "\t\t\t.. Potential Short in SSA" << +cReadoutChip->getId() << " channel#" << +cChnl << " when injecting in group#" << +cInject << " ... found "
-                                          << +cHitVector[cChnl] << " counts." << RESET;
-                                cShorts.push_back(cChnl);
-                            }
-                            if(cInjectionEnabled)
-                                LOG(DEBUG) << BOLDBLUE << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
-                            else
-                                LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
-                        } // chnl
-                        auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
-                        // first time .. set to 0
-                        if(cInject == 0) cShortsData->getSummary<uint16_t>() = 0;
-                        cShortsData->getSummary<uint16_t>() += (uint16_t)cShorts.size();
-                        LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << " found " << +cShorts.size() << " potential shorts..."
-                                   << " total shorts found are " << +cShortsData->getSummary<uint16_t>() << RESET;
+                            int cChipCountInjectedChnls = 0;
+                            // add check for SSA
+                            if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
-                    } // chip
-                }     // hybrid
-            }         // module
-        }             // event loop
+                            LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
+                            auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
+                            // let's say .. only enable injection in even channels first
+                            std::vector<uint8_t> cShorts(0);
+                            for(uint8_t cChnl = 0; cChnl < cReadoutChip->size(); cChnl++)
+                            {
+                                bool cInjectionEnabled = (((int)(cChnl) % cInjectionPeriod) == cInject);
+                                if(!cInjectionEnabled && cHitVector[cChnl] > THRESHOLD_SHORT * fEventsPerPoint)
+                                {
+                                    LOG(INFO) << BOLDRED << "\t\t\t.. Potential Short in SSA" << +cReadoutChip->getId() << " channel#" << +cChnl << " when injecting in group#" << +cInject
+                                              << " ... found " << +cHitVector[cChnl] << " counts." << RESET;
+                                    cShorts.push_back(cChnl);
+                                }
+                                if(cInjectionEnabled)
+                                {
+                                    cChipCountInjectedChnls += cHitVector[cChnl];
+                                    cTotalCountInjectedChnls += cHitVector[cChnl];
+                                    if(cHitVector[cChnl] == 0) LOG(INFO) << BOLDBLUE << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
+                                }
+                                else if(cHitVector[cChnl] != 0)
+                                    LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
+                            } // chnl
+                            auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
+                            // first time .. set to 0
+                            if(cInject == 0) cShortsData->getSummary<uint16_t>() = 0;
+                            cShortsData->getSummary<uint16_t>() += (uint16_t)cShorts.size();
+                            LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << " found " << +cShorts.size() << " potential shorts..."
+                                       << " total shorts found are " << +cShortsData->getSummary<uint16_t>() << RESET;
+                            if(cChipCountInjectedChnls == 0) {
+                                LOG(INFO) << BOLDRED << "All injected channels on chip " << +cReadoutChip->getId() << " have 0 hits." << RESET;
+                                retry = true;
+                            }
+                        } // chip
+
+                        if(cTotalCountInjectedChnls == 0) {
+                            LOG(INFO) << BOLDRED << "All injected channels on all chips have 0 hits." << RESET;
+                            fillSummaryTree("Empty readout (ShortFinder procedure)", 0.0);
+                            retry = true;
+                        }
+
+                    } // hybrid
+                }     // module
+            }         // event loop
+        }            // retry loop
     }
 
     // print summary
