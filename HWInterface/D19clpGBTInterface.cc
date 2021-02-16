@@ -52,47 +52,47 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     ConfigurePSROH(pChip);
     // TESTING I2C CPB #FIXME to be removed later
 
-    // uint8_t cMasterId = 2, cSlaveAddress = 0x60;
-    // uint16_t cRegisterAddress = 0x20;
-    // uint8_t cRegisterValue = 0x44;
-    // uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    // //
-    // auto cStart = std::chrono::high_resolution_clock::now();
-    // fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cRegisterValue  << 16  | cInvertedRegister, 3);
-    // auto cStop = std::chrono::high_resolution_clock::now();
-    // auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    // LOG(INFO) << BOLDYELLOW << "FE Write = " << +cDuration.count() << " us" << RESET;
-    // //
-    // cStart = std::chrono::high_resolution_clock::now();
-    // fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cInvertedRegister, 2);
-    // LOG(INFO) << "read value  = 0x" << std::hex << +fBoardFW->I2CRead(cMasterId, cSlaveAddress, 0) << std::dec << RESET;
-    // cStop = std::chrono::high_resolution_clock::now();
-    // cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    // LOG(INFO) << BOLDYELLOW << "FE Read = " << +cDuration.count() << " us" << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Data0 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Data0") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Data1 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data1") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Data2 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data2") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Data3 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Data3") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Status 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Status") << std::dec << RESET;
-    // // LOG(INFO) << BOLDRED << " I2C Read" << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
-    // // LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
-    // cStart = std::chrono::high_resolution_clock::now();
-    // cicWrite(pChip, 0, cRegisterAddress, cRegisterValue);
-    // cStop = std::chrono::high_resolution_clock::now();
-    // cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    // LOG(INFO) << BOLDYELLOW << "Cic Write = " << +cDuration.count() << " us" << RESET;
-    // //
-    // cStart = std::chrono::high_resolution_clock::now();
-    // cicRead(pChip, 0, cRegisterAddress);
-    // cStop = std::chrono::high_resolution_clock::now();
-    // cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    // LOG(INFO) << BOLDYELLOW << "Cic Read = " << +cDuration.count() << " us" << RESET;
-    // exit(0);
+    //uint8_t cMasterId = 2, cSlaveAddress = 0x60;
+    //uint16_t cRegisterAddress = 0x20;
+    //uint8_t cRegisterValue = 0x44;
+    //uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
+    ////
+    //auto cStart = std::chrono::high_resolution_clock::now();
+    //fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cRegisterValue  << 16  | cInvertedRegister, 3);
+    //auto cStop = std::chrono::high_resolution_clock::now();
+    //auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
+    //LOG(INFO) << BOLDYELLOW << "FE Write = " << +cDuration.count() << " us" << RESET;
+    ////
+    //cStart = std::chrono::high_resolution_clock::now();
+    //fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cInvertedRegister, 2);
+    //LOG(INFO) << "read value  = 0x" << std::hex << +fBoardFW->I2CRead(cMasterId, cSlaveAddress, 0) << std::dec << RESET;
+    //cStop = std::chrono::high_resolution_clock::now();
+    //cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
+    //LOG(INFO) << BOLDYELLOW << "FE Read = " << +cDuration.count() << " us" << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Data0 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Data0") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Data1 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data1") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Data2 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data2") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Data3 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Data3") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Status 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Status") << std::dec << RESET;
+    //// LOG(INFO) << BOLDRED << " I2C Read" << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
+    //// LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
+    //cStart = std::chrono::high_resolution_clock::now();
+    //cicWrite(pChip, 0, cRegisterAddress, cRegisterValue);
+    //cStop = std::chrono::high_resolution_clock::now();
+    //cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
+    //LOG(INFO) << BOLDYELLOW << "Cic Write = " << +cDuration.count() << " us" << RESET;
+    ////
+    //cStart = std::chrono::high_resolution_clock::now();
+    //cicRead(pChip, 0, cRegisterAddress);
+    //cStop = std::chrono::high_resolution_clock::now();
+    //cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
+    //LOG(INFO) << BOLDYELLOW << "Cic Read = " << +cDuration.count() << " us" << RESET;
+    //exit(0);
     
     return true;
 }
@@ -918,14 +918,14 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Configure High Speed Link Tx Rx Polarity
     ConfigureHighSpeedPolarity(pChip, 1, 0);
     // Clocks
-    //std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
-    std::vector<uint8_t> cClocks  = {26};
+    std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
+    //std::vector<uint8_t> cClocks  = {26};
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
-    //std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    std::vector<uint8_t> cTxGroups = {3}, cTxChannels = {0};
+    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
+    //std::vector<uint8_t> cTxGroups = {3}, cTxChannels = {0};
     uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
@@ -964,8 +964,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
-    ConfigureGPIODirection(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
-    ConfigureGPIOLevel(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
+    //ConfigureGPIODirection(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
+    //ConfigureGPIOLevel(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
+    ConfigureGPIODirection(pChip, {6, 12}, 1);
+    ConfigureGPIOLevel(pChip, {6, 12}, 1);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
