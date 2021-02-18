@@ -1,5 +1,5 @@
 /*!
-  \file                  D19clpGBTInterface.cc
+  \file                  D19clpGBTIn+erface.cc
   \brief                 Interface to access and control the low-power Gigabit Transceiver chip
   \author                Younes Otarid
   \version               1.0
@@ -48,10 +48,37 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cPUSMStatus != 18) exit(0);
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-    // for(uint8_t cIter = 0; cIter < 20; cIter++)
     ConfigurePSROH(pChip);
-    // TESTING I2C CPB #FIXME to be removed later
+    //TESTING I2C CPB #FIXME to be removed later
+/*
+    for(int cValue = 0xFF; cValue > 0x00; cValue--)
+    {
+      WriteChipReg(pChip, "I2CM2Address", cValue);
+      ReadChipReg(pChip, "I2CM2Address");
+      WriteChipReg(pChip, "I2CM2Data0", cValue);
+      ReadChipReg(pChip, "I2CM2Data0");
+      WriteChipReg(pChip, "I2CM2Data1", cValue);
+      ReadChipReg(pChip, "I2CM2Data1");
+      WriteChipReg(pChip, "I2CM2Data2", cValue);
+      ReadChipReg(pChip, "I2CM2Data2");
+      WriteChipReg(pChip, "I2CM2Data3", cValue);
+      ReadChipReg(pChip, "I2CM2Data3");
 
+      WriteChipReg(pChip, "I2CM0Address", cValue);
+      ReadChipReg(pChip, "I2CM0Address");
+      WriteChipReg(pChip, "I2CM0Data0", cValue);
+      ReadChipReg(pChip, "I2CM0Data0");
+      WriteChipReg(pChip, "I2CM0Data1", cValue);
+      ReadChipReg(pChip, "I2CM0Data1");
+      WriteChipReg(pChip, "I2CM0Data2", cValue);
+      ReadChipReg(pChip, "I2CM0Data2");
+      WriteChipReg(pChip, "I2CM0Data3", cValue);
+      ReadChipReg(pChip, "I2CM0Data3");
+      WriteChipReg(pChip, "I2CM0Cmd", cValue);
+      ReadChipReg(pChip, "I2CM0Cmd");
+    }
+    exit(0);
+*/
     //uint8_t cMasterId = 2, cSlaveAddress = 0x60;
     //uint16_t cRegisterAddress = 0x20;
     //uint8_t cRegisterValue = 0x44;

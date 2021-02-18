@@ -20,9 +20,9 @@
                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
+<!--
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" />
-<!--
             <SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
             <SSA Id="3" configfile="SSA.txt" />
@@ -31,7 +31,7 @@
             <SSA Id="7" configfile="SSA.txt" />
 -->         
             <CIC_Files path="./settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_TEST.txt" />
+            <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
     </OpticalGroup>
     
@@ -204,3 +204,25 @@
 
 </Settings>
 </HwDescription>
+
+<Devices>
+    <PowerSupply
+        ID          =   "MyRohdeSchwarz"
+        InUse       =   "Yes"
+        Model       =   "RohdeSchwarz"
+        Connection  =   "Serial"
+        Port        =   "/dev/ttyACM0"
+   	BaudRate    =   "9600"
+        FlowControl =   "true"
+        Parity      =   "false"
+  	RemoveEcho  =   "false"
+        Terminator  =   "\r\n"
+        Suffix      =   "\n"
+        Timeout     =   "1"
+        Series	    =   "TSX"
+    >
+    <Channel ID="LV_Module2" Channel="2" InUse ="Yes" />
+    <Channel ID="LV_Module3" Channel="3" InUse ="Yes" />
+    <Channel ID="LV_Module4" Channel="4" InUse ="Yes" />
+  </PowerSupply> 
+</Devices>
