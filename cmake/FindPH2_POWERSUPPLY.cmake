@@ -1,4 +1,4 @@
-file(GLOB_RECURSE PH2_POWERSUPPLY_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../power_supply/include/PowerSupply.h)
+file(GLOB_RECURSE PH2_POWERSUPPLY_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../power_supply/src/PowerSupply.h)
 if(PH2_POWERSUPPLY_SOURCE_DIR)
       set(PH2_POWERSUPPLY_FOUND TRUE)
       #strip to the blank path
@@ -6,7 +6,7 @@ if(PH2_POWERSUPPLY_SOURCE_DIR)
 message ("${PH2_POWERSUPPLY_SOURCE_DIR}")
          find_library(PH2_POWERSUPPLY_LIBRARY_DIRS
          NAMES
-           lib/libPh2_PowerSupply.so
+           lib/libPowerSupply.so
          PATHS
          ${PH2_POWERSUPPLY_SOURCE_DIR}/..
          )
