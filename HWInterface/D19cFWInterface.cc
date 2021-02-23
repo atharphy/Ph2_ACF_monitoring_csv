@@ -4950,11 +4950,12 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
-    WriteCommandCPB(cCommandVector, true);
-    std::vector<uint32_t> cReplyVector = ReadReplyCPB(10, true);
+    WriteCommandCPB(cCommandVector);
+    std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     uint8_t cIter = 0, cMaxIter = 50;
     while((cReplyVector[7] & 0xFF) != 4 && cIter < cMaxIter)
     {
+        ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector, true);
         cReplyVector = ReadReplyCPB(10, true);
@@ -4988,7 +4989,6 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
         fReadLpGBTRegFailCount++;
     };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("I2CRead : Corrupted CPB reply frame"));
-    // LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << RESET;
     return cReadBack;
 }
 
@@ -5008,7 +5008,6 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cInvertedRegister, 2);
     uint32_t cReadBack = I2CRead(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, 1);
-    // LOG(DEBUG) << BOLDYELLOW << +fChipAddressMap.find() << " Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 
