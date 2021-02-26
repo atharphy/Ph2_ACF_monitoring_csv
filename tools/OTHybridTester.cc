@@ -284,6 +284,7 @@ std::map<uint8_t, std::vector<float>> OTHybridTester::RunBERT(uint8_t pCoarseSou
     uint32_t cBitsChecked = 0;
     for(auto cBoard : *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
         std::vector<float> cOpticalGroupsBER;
         for(auto cOpticalGroup : *cBoard)
         {

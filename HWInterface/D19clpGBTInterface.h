@@ -50,6 +50,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
+    void SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
     // Configures the lpGBT Rx Groups
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
     // Configure lpGBT Rx Channels
@@ -119,6 +120,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
     // Get lpGBT Power Up State Machine status
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
+    bool IsPUSMDone(Ph2_HwDescription::Chip* pChip);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #

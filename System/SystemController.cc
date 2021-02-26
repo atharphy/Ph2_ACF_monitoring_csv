@@ -256,7 +256,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     }
 
     LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
-
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
@@ -290,7 +289,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     exit(0);
                 }
             }
-            auto cStart = std::chrono::high_resolution_clock::now(); 
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cLinkId = cOpticalGroup->getId();
@@ -364,13 +362,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     }
                 }
             }
-            auto cEnd = std::chrono::high_resolution_clock::now();
-            auto cDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cEnd - cStart);
-            LOG(INFO) << BOLDYELLOW << "Configuration time : " << +cDuration.count() << " ms" << RESET;
-	    LOG(INFO) << BOLDRED << "LpGBT Write total count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fWriteLpGBTRegTotalCount << RESET;
-	    LOG(INFO) << BOLDRED << "LpGBT Write failure count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fWriteLpGBTRegFailCount << RESET;
-	    LOG(INFO) << BOLDRED << "LpGBT Read total count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fReadLpGBTRegTotalCount<< RESET;
-	    LOG(INFO) << BOLDRED << "LpGBT Read failure count = " << +static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->fReadLpGBTRegFailCount << RESET;
         }
         else
         {

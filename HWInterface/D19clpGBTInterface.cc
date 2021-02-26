@@ -22,105 +22,31 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
-    SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
-    /*
     // Load register map from configuration file
-    ChipRegMap clpGBTRegMap = pChip->getRegMap();
-    for(const auto& cRegItem: clpGBTRegMap)
+    if(!fUseOpticalLink)
     {
+      ChipRegMap clpGBTRegMap = pChip->getRegMap();
+      for(const auto& cRegItem: clpGBTRegMap)
+      {
         if(cRegItem.second.fAddress < 0x13c)
         {
             LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec << "]"
                       << RESET;
             WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
+      }
     }
-    */
-    // To be uncommented if crate is used
     PrintChipMode(pChip);
-    WriteChipReg(pChip, "POWERUP2", 0x06);
-    uint8_t  cPUSMStatus = GetPUSMStatus(pChip);
-    uint16_t cIter = 0, cMaxIter = 2000;
-    while(cPUSMStatus != 18 && cIter < cMaxIter)
+    SetPUSMDone(pChip, true, true);
+    uint16_t cIter = 0, cMaxIter = 200;
+    while(!IsPUSMDone(pChip) && cIter < cMaxIter)
     {
-        cPUSMStatus = GetPUSMStatus(pChip);
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     }
-    if(cPUSMStatus != 18) exit(0);
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     ConfigurePSROH(pChip);
-    //TESTING I2C CPB #FIXME to be removed later
-/*
-    for(int cValue = 0xFF; cValue > 0x00; cValue--)
-    {
-      WriteChipReg(pChip, "I2CM2Address", cValue);
-      ReadChipReg(pChip, "I2CM2Address");
-      WriteChipReg(pChip, "I2CM2Data0", cValue);
-      ReadChipReg(pChip, "I2CM2Data0");
-      WriteChipReg(pChip, "I2CM2Data1", cValue);
-      ReadChipReg(pChip, "I2CM2Data1");
-      WriteChipReg(pChip, "I2CM2Data2", cValue);
-      ReadChipReg(pChip, "I2CM2Data2");
-      WriteChipReg(pChip, "I2CM2Data3", cValue);
-      ReadChipReg(pChip, "I2CM2Data3");
-
-      WriteChipReg(pChip, "I2CM0Address", cValue);
-      ReadChipReg(pChip, "I2CM0Address");
-      WriteChipReg(pChip, "I2CM0Data0", cValue);
-      ReadChipReg(pChip, "I2CM0Data0");
-      WriteChipReg(pChip, "I2CM0Data1", cValue);
-      ReadChipReg(pChip, "I2CM0Data1");
-      WriteChipReg(pChip, "I2CM0Data2", cValue);
-      ReadChipReg(pChip, "I2CM0Data2");
-      WriteChipReg(pChip, "I2CM0Data3", cValue);
-      ReadChipReg(pChip, "I2CM0Data3");
-      WriteChipReg(pChip, "I2CM0Cmd", cValue);
-      ReadChipReg(pChip, "I2CM0Cmd");
-    }
-    exit(0);
-*/
-    //uint8_t cMasterId = 2, cSlaveAddress = 0x60;
-    //uint16_t cRegisterAddress = 0x20;
-    //uint8_t cRegisterValue = 0x44;
-    //uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    ////
-    //auto cStart = std::chrono::high_resolution_clock::now();
-    //fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cRegisterValue  << 16  | cInvertedRegister, 3);
-    //auto cStop = std::chrono::high_resolution_clock::now();
-    //auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    //LOG(INFO) << BOLDYELLOW << "FE Write = " << +cDuration.count() << " us" << RESET;
-    ////
-    //cStart = std::chrono::high_resolution_clock::now();
-    //fBoardFW->I2CWrite(cMasterId, cSlaveAddress, cInvertedRegister, 2);
-    //LOG(INFO) << "read value  = 0x" << std::hex << +fBoardFW->I2CRead(cMasterId, cSlaveAddress, 0) << std::dec << RESET;
-    //cStop = std::chrono::high_resolution_clock::now();
-    //cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    //LOG(INFO) << BOLDYELLOW << "FE Read = " << +cDuration.count() << " us" << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Data0 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Data0") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Data1 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data1") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Data2 0x"  << std::hex << +ReadChipReg(pChip, "I2CM2Data2") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Data3 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Data3") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Status 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Status") << std::dec << RESET;
-    //// LOG(INFO) << BOLDRED << " I2C Read" << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Control 0x" << std::hex << +ReadChipReg(pChip, "I2CM2Ctrl") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Slave Address 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Address") << std::dec << RESET;
-    //// LOG(INFO) << BOLDBLUE << "I2C Command 0x" << std::hex  << +ReadChipReg(pChip, "I2CM2Cmd") << std::dec << RESET;
-    //cStart = std::chrono::high_resolution_clock::now();
-    //cicWrite(pChip, 0, cRegisterAddress, cRegisterValue);
-    //cStop = std::chrono::high_resolution_clock::now();
-    //cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    //LOG(INFO) << BOLDYELLOW << "Cic Write = " << +cDuration.count() << " us" << RESET;
-    ////
-    //cStart = std::chrono::high_resolution_clock::now();
-    //cicRead(pChip, 0, cRegisterAddress);
-    //cStop = std::chrono::high_resolution_clock::now();
-    //cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cStop - cStart);
-    //LOG(INFO) << BOLDYELLOW << "Cic Read = " << +cDuration.count() << " us" << RESET;
-    //exit(0);
-    
     return true;
 }
 
@@ -222,6 +148,10 @@ bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const 
 /*-------------------------------*/
 /* lpGBT configuration functions */
 /*-------------------------------*/
+void D19clpGBTInterface::SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone)
+{
+    WriteChipReg(pChip, "POWERUP2", pDllConfigDone << 2 | pPllConfigDone << 1);
+}
 
 void D19clpGBTInterface::ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
 {
@@ -449,6 +379,7 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
         else if(cGroup == 6)
             cTrainRxReg = "EPRXTrain32";
 
+	//Starting or Stopping training
         if(pTrain)
             WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
         else
@@ -538,6 +469,11 @@ uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
     uint8_t cPUSMStatus = ReadChipReg(pChip, "PUSMStatus");
     LOG(INFO) << BOLDBLUE << "lpGBT PUSM Status : " << ((cPUSMStatus == 18) ? BOLDGREEN : BOLDRED) << fPUSMStatusMap[cPUSMStatus] << RESET;
     return cPUSMStatus;
+}
+
+bool D19clpGBTInterface::IsPUSMDone(Ph2_HwDescription::Chip* pChip)
+{
+    return GetPUSMStatus(pChip) == 18;
 }
 
 uint8_t D19clpGBTInterface::GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
@@ -946,13 +882,11 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureHighSpeedPolarity(pChip, 1, 0);
     // Clocks
     std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
-    //std::vector<uint8_t> cClocks  = {26};
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    //std::vector<uint8_t> cTxGroups = {3}, cTxChannels = {0};
     uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
@@ -986,13 +920,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
             ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    // for now .. don't do this
-     PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    PhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
-    // Setting GPIO levels Uncomment this for Skeleton test
-    //ConfigureGPIODirection(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
-    //ConfigureGPIOLevel(pChip, {2, 4, 5, 7, 8, 10, 14, 15}, 1);
+    // Setting GPIO levels for Skeleton test
     ConfigureGPIODirection(pChip, {6, 12}, 1);
     ConfigureGPIOLevel(pChip, {6, 12}, 1);
 }
