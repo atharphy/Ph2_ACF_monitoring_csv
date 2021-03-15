@@ -69,7 +69,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
         pChip->setReg( fMap[pRegisterAddress] , static_cast<uint16_t>(pRegisterValue));
         // write register 
         bool cRetry=false;
-        LOG (INFO) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg" << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg" << RESET;
         cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
         if ( pVerifLoop && cSuccess )
         {
@@ -264,7 +264,7 @@ std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRe
     }
     else
     {
-         LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg" << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg" << RESET;
            
         // configure I2C 
         uint8_t cFrequency = 0 ; // 100 kHZ 
@@ -276,17 +276,17 @@ std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRe
         // if this is a status register then I can't really know what
         // to expect 
         if( pRegItem.fStatusReg == 0x1) {
-            LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg Status register not checking against memory" << RESET;
+            LOG (DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg Status register not checking against memory" << RESET;
             return std::make_pair(true, cValue);
         }
         // if its not I can check that it was read back correctly 
         // based on the most recent value in the map 
         auto cRegItem = pChip->getRegItem( fMap[pRegItem.fAddress]);
-        LOG (INFO) << BOLDMAGENTA << "Running verification loop for CicInterface::ReadChipReg" << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::ReadChipReg" << RESET;
         bool cSuccess = (cRegItem.fValue == cValue );
         if ( cSuccess )
         {
-            LOG(INFO) << BOLDGREEN << "\t...[DEBUG] Have written 0x" << std::hex << +pRegItem.fValue << std::dec 
+            LOG(DEBUG) << BOLDGREEN << "\t...[DEBUG] Have written 0x" << std::hex << +pRegItem.fValue << std::dec 
                 << " CIC register with address 0x" << std::hex << +pRegItem.fAddress << std::dec 
                 << " has a value " << std::hex << +cValue << std::dec 
                 << " value saved to memory is 0x" << std::hex << +cRegItem.fValue << std::dec 
