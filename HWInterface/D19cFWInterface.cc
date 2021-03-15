@@ -427,7 +427,6 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
 
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
-    if(pBoard->getId() == 50) return true;
     // reset lpGBT core
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -4803,6 +4802,7 @@ bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint
     uint8_t cIter = 0, cMaxIter = 50;
     while(cReadBack != pValue && cIter < cMaxIter)
     {
+	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteOptoLinkRegister] : lpGBT register write mismatch... retrying" << RESET;
         // Config transaction register
         this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pValue}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
         // Perform transaction
@@ -4877,8 +4877,8 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbo
 		LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
 		cFifoIndex++;
 	    }
+    	    LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
     }
-    LOG(DEBUG) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
     return cReplyVector;
 }
 
@@ -4899,16 +4899,17 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     uint8_t cIter = 0, cMaxIter = 50;
     while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
     {
+	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
-        WriteCommandCPB(cCommandVector, true);
-        cReplyVector = ReadReplyCPB(10, true);
+        WriteCommandCPB(cCommandVector);
+        cReplyVector = ReadReplyCPB(10);
     	cParityCheck = cReplyVector[2] & 0xFF;
     	cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cReadBack    = cReplyVector[7] & 0xFF;
         cIter++;
     };
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block"));
     return true;
 }
 
@@ -4925,15 +4926,16 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     uint8_t               cIter = 0, cMaxIter = 20;
     while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
     {
+	LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
-        WriteCommandCPB(cCommandVector, true);
-        cReplyVector = ReadReplyCPB(10, true);
+        WriteCommandCPB(cCommandVector);
+        cReplyVector = ReadReplyCPB(10);
         cReadBack        = cReplyVector[7] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cIter++;
     };
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT not responding properly"));
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block"));
     LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
@@ -4948,16 +4950,20 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
+    uint8_t cI2CStatus = cReplyVector[7] & 0xFF;
     uint8_t cIter = 0, cMaxIter = 50;
-    while((cReplyVector[7] & 0xFF) != 4 && cIter < cMaxIter)
+    while(cI2CStatus != 4 && cIter < cMaxIter)
     {
+        ResetCPB();
         cReplyVector.clear();
-        WriteCommandCPB(cCommandVector, true);
-        cReplyVector = ReadReplyCPB(10, true);
-        LOG(INFO) << BOLDRED << "D19cFWInterface::I2CWrite -- I2C Transaction Failed" << RESET;
+        WriteCommandCPB(cCommandVector);
+    	cReplyVector = ReadReplyCPB(10);
+    	cI2CStatus = cReplyVector[7] & 0xFF;
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
 	cIter++;
+	exit(0);
     }
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("I2CWrite : Corrupted CPB reply frame"));
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
     return true;
 }
 
@@ -4975,14 +4981,15 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     uint8_t cIter = 0, cMaxIter = 50;
     while(cReadBackRegAddr != 0x018d && cIter < cMaxIter)
     {
+        ResetCPB();
         cReplyVector.clear();
-        WriteCommandCPB(cCommandVector, true);
-        cReplyVector = ReadReplyCPB(10, true);
+        WriteCommandCPB(cCommandVector);
+        cReplyVector = ReadReplyCPB(10);
         cReadBack    = cReplyVector[7] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cIter++;
     };
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("I2CRead : Corrupted CPB reply frame"));
+    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
     return cReadBack;
 }
 

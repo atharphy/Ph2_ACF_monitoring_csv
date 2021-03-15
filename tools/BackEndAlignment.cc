@@ -614,18 +614,18 @@ bool BackEndAlignment::Align()
         auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
 
         OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->at(0)->at(0));
+        ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
         bool                cWithCIC     = cFirstHybrid->fCic != NULL;
+        bool         cWithCBC            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+        bool         cWithSSA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+        bool         cWithMPA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
         if(cWithCIC)
         {
             cAligned = this->CICAlignment(theBoard);
-            cAligned = cAligned && this->Bx0Alignment(theBoard);
+	    if(cWithMPA) { cAligned = cAligned && this->Bx0Alignment(theBoard); }
         }
         else
         {
-            ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
-            bool         cWithCBC            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-            bool         cWithSSA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-            bool         cWithMPA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
             if(cWithCBC) { this->CBCAlignment(theBoard); }
             else if(cWithMPA or cWithSSA)
             {
