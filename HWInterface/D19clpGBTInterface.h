@@ -219,7 +219,19 @@ class D19clpGBTInterface : public lpGBTInterface
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
 
+    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable)? 0 : 1 ); }
+    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable)? 0 : 1 ); }
+    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable)? 0 : 1 ); }
   private:
+    uint8_t fClock_RHS_Hybrid = 1; 
+    uint8_t fClock_LHS_Hybrid = 11;
+    uint8_t fClock_LHS_CIC = 6 ; 
+    uint8_t fClock_RHS_CIC= 26; 
+
+    uint8_t fReset_RHS_CIC = 6 ; 
+    uint8_t fReset_RHS_SSA = 12 ; 
+    uint8_t fReset_RHS_MPA = 9; 
+
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},
                                                    {"ADC2", 2},

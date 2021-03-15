@@ -57,7 +57,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 bool D19clpGBTInterface::WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     LOG(DEBUG) << BOLDBLUE << "\t Writing 0x" << std::hex << +pValue << std::dec << " to " << pRegNode << " [0x" << std::hex << +pChip->getRegItem(pRegNode).fAddress << std::dec << "]" << RESET;
-    return WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
+    bool cSuccess = WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
+    return cSuccess;
 }
 
 uint16_t D19clpGBTInterface::ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode)
@@ -242,9 +243,10 @@ void D19clpGBTInterface::ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
                                          uint8_t                     pPreEmphMode,
                                          uint8_t                     pPreEmphStr)
 {
-    LOG(INFO) << BOLDMAGENTA << "Configuring Clocks" << RESET;
     for(const auto& cClock: pClocks)
     {
+
+        LOG(INFO) << BOLDMAGENTA << "Configuring E-Clk " << +cClock << RESET;
         // Configure Clocks Frequency, Drive Strength, Inversion, Pre-Emphasis Width, Pre-Emphasis Mode, Pre-Emphasis Strength
         std::string cClkHReg = "EPCLK" + std::to_string(cClock) + "ChnCntrH";
         std::string cClkLReg = "EPCLK" + std::to_string(cClock) + "ChnCntrL";
@@ -532,6 +534,8 @@ void D19clpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vec
 
 void D19clpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
 {
+    LOG (DEBUG) << BOLDMAGENTA << "**********************" << RESET;
+    LOG (DEBUG) << BOLDMAGENTA << "Configuring I2C master" << RESET;
     // Configures I2C Masters
     // First let's write configuration data into the I2C Master Data register
     std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Data0";
@@ -541,28 +545,38 @@ void D19clpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pM
     // Now let's write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
+    LOG (DEBUG) << BOLDMAGENTA << "**********************" << RESET;
 }
 
 bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes)
 {
     // Write Data to Slave Address using I2C Master
+    // 0 , 1 , 2 , 3 
+    // 100, 200 , 400, 1000 
     uint8_t cFreq = 3; // 1 MHz
     ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
+
+    // Write Data to Data Register
+    for(uint8_t cByte = 0; cByte < 4 ; cByte++)
+    {
+        std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data" + std::to_string(cByte);
+        if(cByte < pNBytes) 
+        {
+            uint32_t cVal = (pData & (0xFF << 8 * cByte)) >> 8 * cByte;
+            LOG (DEBUG) << BOLDMAGENTA << "\t...Writing byte#" << +cByte 
+                << " using register " << cI2CDataReg
+                << " value is 0x" << std::hex << cVal << std::dec 
+                << RESET;
+            WriteChipReg(pChip, cI2CDataReg, cVal);
+        }
+        else
+            WriteChipReg(pChip, cI2CDataReg, 0x00);
+    }
 
     // Prepare Address Register
     // Write Slave Address
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
     WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress);
-
-    // Write Data to Data Register
-    for(uint8_t cByte = 0; cByte < 4; cByte++)
-    {
-        std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data" + std::to_string(cByte);
-        if(cByte < pNBytes)
-            WriteChipReg(pChip, cI2CDataReg, (pData & (0xFF << 8 * cByte)) >> 8 * cByte);
-        else
-            WriteChipReg(pChip, cI2CDataReg, 0x00);
-    }
 
     // Prepare Command Register
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
@@ -600,6 +614,7 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     // Read Data from Slave Address using I2C Master
     uint8_t cFreq = 3; // 1 MHz
     ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
+    
     // Prepare Address Register
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
     // Write Slave Address
@@ -873,7 +888,6 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
         fUseCPB         = false;
     }
 }
-
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
@@ -881,13 +895,19 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Configure High Speed Link Tx Rx Polarity
     ConfigureHighSpeedPolarity(pChip, 1, 0);
     // Clocks
-    std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
-    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
+
+    //std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid , fClock_LHS_Hybrid , fClock_RHS_CIC, fClock_LHS_CIC };
+    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // CIC
+    ConfigureClocks(pChip, {fClock_RHS_CIC}, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // ROCs 
+    cClkDriveStr = 0 ;
+    ConfigureClocks(pChip, {fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    ConfigureClocks(pChip, {fClock_RHS_Hybrid , fClock_LHS_Hybrid }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 1, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
@@ -920,19 +940,21 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
             ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    //PhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test
-    ConfigureGPIODirection(pChip, {6, 12}, 1);
-    ConfigureGPIOLevel(pChip, {6, 12}, 1);
+    ConfigureGPIODirection(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC }, 1);
+    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC }, 0);
+    //ConfigureGPIOLevel(pChip, {6, 12}, 1);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
+    uint8_t cNbytes=3;//
     LOG(DEBUG) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
+    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, cNbytes);
     if(pRetry)
     {
         uint8_t cReadBack = cicRead(pChip, pFeId, pRegisterAddress);

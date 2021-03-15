@@ -72,8 +72,25 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     // Iterate over the BeBoard Nodes
     for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
-        if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); }
+        if( static_cast<std::string>(cBeBoardNode.name()).find("BeBoard") != std::string::npos )
+        {
+            os << cBeBoardNode.name() << "\n";
+            this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); 
+        }
     }
+
+    // Iterate over devices 
+    // first power supplies 
+    // if( doc.child("Devices") != NULL )
+    // {
+    //     os << "Devices  ....\n";
+    //     // for(pugi::xml_node cPowerSupplyNode = doc.child("Devices").child("PowerSupply"); cPowerSupplyNode; cPowerSupplyNode = cPowerSupplyNode.next_sibling())
+    //     // {
+    //     //     os << "Parsing power supply ....\n";
+    //     //     //if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); }
+    //     // }
+    // }
+
 
     for(i = 0; i < 80; i++) os << "*";
 
@@ -113,9 +130,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     }
     cBeBoard->setCDCEconfiguration(cConfigureCDCE, cClockRateCDCE);
 
-    if(cBoardType == "D19C")
+    if(cBoardType.find("D19C") != std::string::npos )
         cBeBoard->setBoardType(BoardType::D19C);
-    else if(cBoardType == "RD53")
+    else if(cBoardType.find("RD53") != std::string::npos )
         cBeBoard->setBoardType(BoardType::RD53);
     else
     {
@@ -136,14 +153,14 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     else
     {
         cEventTypeString = cEventTypeAttribute.value();
-        std::cout << cEventTypeString << std::endl;
-        std::cout << cEventTypeString << std::endl;
-        std::cout << cEventTypeString << std::endl;
-        std::cout << cEventTypeString << std::endl;
-        std::cout << cEventTypeString << std::endl;
-        std::cout << cEventTypeString << std::endl;
-        std::cout << cEventTypeString << std::endl;
-        std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
         if(cEventTypeString == "ZS")
             cBeBoard->setEventType(EventType::ZS);
         else if(cEventTypeString == "SSAAS")
@@ -170,7 +187,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
     std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
 
-    if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
+    if(cBeBoard->getBoardType() == BoardType::D19C) { 
+        pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); 
+    }
     else if(cBeBoard->getBoardType() == BoardType::RD53)
         pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
@@ -613,6 +632,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "|"
                            << "----" << cName << "  "
                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
+                        
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);

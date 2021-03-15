@@ -107,11 +107,15 @@ class CicInterface : public ChipInterface
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
 
   private:
+    uint8_t fNbytesI2CWrite=3;
+    uint8_t fNbytesI2CRead=2;
+    
     D19clpGBTInterface*       flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
 
     bool WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
     bool WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
+    std::map<uint8_t, std::string> fMap;
 
   protected:
     std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
@@ -126,6 +130,8 @@ class CicInterface : public ChipInterface
     std::vector<std::vector<uint8_t>> fPhaseTaps;
     std::vector<std::bitset<6>>       fFeStates;
     std::vector<std::bitset<4>>       fPortStates;
+    // register map 
+
 };
 } // namespace Ph2_HwInterface
 

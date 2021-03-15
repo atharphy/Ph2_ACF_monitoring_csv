@@ -4848,7 +4848,7 @@ void D19cFWInterface::ResetCPB()
     // reset shoudl be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 
@@ -4884,6 +4884,7 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbo
 
 bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
 {
+    ResetCPB();
     // Use new Command Processor Block
     uint8_t               cWorkerId = 16, cFunctionId = 3;
     std::vector<uint32_t> cCommandVector;
@@ -4899,7 +4900,12 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     uint8_t cIter = 0, cMaxIter = 50;
     while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
     {
-	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+	    LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" 
+            << "\t.. Register is 0x" << std::hex << +pRegisterAddress << std::dec 
+            << "\t.. Register value is 0x" << std::hex << +pRegisterValue << std::dec 
+            << "\t.. Parity check bit is " << +cParityCheck
+            << RESET;
+
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
@@ -4909,12 +4915,19 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
         cReadBack    = cReplyVector[7] & 0xFF;
         cIter++;
     };
+    LOG(DEBUG) << BOLDGREEN << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" 
+            << "\t.. Register is 0x" << std::hex << +pRegisterAddress << std::dec 
+            << "\t.. Register value is 0x" << std::hex << +pRegisterValue << std::dec 
+            << "\t.. Parity check bit is " << +cParityCheck
+            << RESET;
+
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block"));
     return true;
 }
 
 uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
 {
+    ResetCPB();
     uint8_t               cWorkerId = 16, cFunctionId = 2;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
