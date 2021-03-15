@@ -73,7 +73,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
         cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
         if ( pVerifLoop && cSuccess )
         {
-            LOG (INFO) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteReg" << RESET;
+            LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteReg" << RESET;
             
             uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegisterAddress);
             auto cRegItem = pChip->getRegItem( fMap[pRegisterAddress]);
