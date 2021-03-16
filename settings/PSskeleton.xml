@@ -21,14 +21,13 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" />
-<!--           <SSA Id="3" configfile="SSA.txt" />
-            <SSA Id="1" configfile="SSA.txt" />
-            <SSA Id="2" configfile="SSA.txt" />
-            <SSA Id="5" configfile="SSA.txt" />
-            <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" />
--->
+            <SSA Id="0" configfile="SSA_minConfig.txt" />
+            <SSA Id="1" configfile="SSA_minConfig.txt" />
+            <SSA Id="2" configfile="SSA_minConfig.txt" />
+            <SSA Id="5" configfile="SSA_minConfig.txt" />
+            <SSA Id="6" configfile="SSA_minConfig.txt" />
+            <SSA Id="7" configfile="SSA_minConfig.txt" />
+
             <CIC_Files path="./settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>

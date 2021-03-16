@@ -17,6 +17,13 @@
 
 namespace Ph2_HwInterface
 {
+
+struct lpGBTClockConfig
+{
+    uint8_t              fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
+    uint8_t              fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
+};
+
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
@@ -222,15 +229,41 @@ class D19clpGBTInterface : public lpGBTInterface
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable)? 0 : 1 ); }
     void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable)? 0 : 1 ); }
     void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable)? 0 : 1 ); }
+
+    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk , lpGBTClockConfig pClkCnfg)
+    {
+        fClkConfig.fClkFreq=pClkCnfg.fClkFreq;
+        fClkConfig.fClkInvert = pClkCnfg.fClkInvert;
+        fClkConfig.fClkDriveStr=pClkCnfg.fClkDriveStr;
+        fClkConfig.fClkInvert=pClkCnfg.fClkInvert;
+        fClkConfig.fClkPreEmphWidth=pClkCnfg.fClkPreEmphWidth;
+        fClkConfig.fClkPreEmphMode=pClkCnfg.fClkPreEmphMode;
+        fClkConfig.fClkPreEmphStr=pClkCnfg.fClkPreEmphStr;
+
+        std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
+        std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
+        WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
+        WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
+    }
+    void cicClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_RHS_CIC, pClkCnfg ); }
+    void hybridClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_RHS_Hybrid, pClkCnfg); }
   private:
+    // default clock configuration 
+    lpGBTClockConfig fClkConfig; 
+
+    // clocks
     uint8_t fClock_RHS_Hybrid = 1; 
     uint8_t fClock_LHS_Hybrid = 11;
     uint8_t fClock_LHS_CIC = 6 ; 
     uint8_t fClock_RHS_CIC= 26; 
 
+    // reset GPIOs 
     uint8_t fReset_RHS_CIC = 6 ; 
-    uint8_t fReset_RHS_SSA = 12 ; 
     uint8_t fReset_RHS_MPA = 9; 
+    uint8_t fReset_RHS_SSA = 12 ; 
+    uint8_t fReset_LHS_CIC = 0 ; 
+    uint8_t fReset_LHS_MPA = 1; 
+    uint8_t fReset_LHS_SSA = 3 ; 
 
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},

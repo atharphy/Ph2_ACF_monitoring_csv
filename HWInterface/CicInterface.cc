@@ -266,11 +266,11 @@ std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRe
     {
         LOG (DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg" << RESET;
            
-        // configure I2C 
-        uint8_t cFrequency = 0 ; // 100 kHZ 
-        uint8_t cNBytes = 3; 
-        uint8_t cSCLdriveMode = 1; 
-        flpGBTInterface->ConfigureI2C(flpGBT, pChip->getHybridId(), cFrequency , cNBytes , cSCLdriveMode);
+        // // configure I2C 
+        // uint8_t cFrequency = 0 ; // 100 kHZ 
+        // uint8_t cNBytes = 3; 
+        // uint8_t cSCLdriveMode = 1; 
+        // flpGBTInterface->ConfigureI2C(flpGBT, pChip->getHybridId(), cFrequency , cNBytes , cSCLdriveMode);
 
         auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
         // if this is a status register then I can't really know what
@@ -1264,13 +1264,6 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     }
     LOG(INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET;
 
-    cSuccess = this->SetAutomaticPhaseAlignment(pChip, true);
-    if(!cSuccess)
-    {
-        LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
-        exit(0);
-    }
-
     // figure out which FEs have been enabled
     // so we can return to this state after
     // the reset
@@ -1285,6 +1278,16 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     this->WriteChipReg(pChip, cRegName, cEnableReg);
     cEnableReg = this->ReadChipReg(pChip, cRegName);
     LOG(INFO) << BOLDMAGENTA << "Enable chip register, after phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
+
+    // set phase aligner to static mode 
+    bool cAutoAlign=false;
+    cSuccess = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
+        exit(0);
+    }
+
 
     // select fast command edge
     bool cNegEdge = true;

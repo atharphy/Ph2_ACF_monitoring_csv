@@ -900,10 +900,12 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     // CIC
-    ConfigureClocks(pChip, {fClock_RHS_CIC}, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    //ConfigureClocks(pChip, {fClock_RHS_CIC}, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // ROCs 
+    // disable all clocks 
+    // by setting drive strength to 0 
     cClkDriveStr = 0 ;
-    ConfigureClocks(pChip, {fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    ConfigureClocks(pChip, {fClock_RHS_CIC, fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     ConfigureClocks(pChip, {fClock_RHS_Hybrid , fClock_LHS_Hybrid }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
@@ -944,8 +946,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test
-    ConfigureGPIODirection(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC }, 1);
-    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC }, 0);
+    ConfigureGPIODirection(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 1);
+    // make sure all resets are active 
+    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 0);
     //ConfigureGPIOLevel(pChip, {6, 12}, 1);
 }
 
