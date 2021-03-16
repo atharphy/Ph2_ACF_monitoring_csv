@@ -101,6 +101,11 @@ class CicInterface : public ChipInterface
     bool                              AutoBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
     bool                              SelectMux(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort);
     bool                              ControlMux(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
+    bool                              runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
+    std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
+    std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
+    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; };
+    void                              printErrorSummary();
 
     // return information on phase aligners
     std::vector<std::bitset<6>> getFeStates() { return fFeStates; }
@@ -116,6 +121,11 @@ class CicInterface : public ChipInterface
     bool WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
     bool WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
     std::map<uint8_t, std::string> fMap;
+    std::map<uint8_t, uint16_t> fWriteErrorMap;
+    std::map<uint8_t, uint16_t> fReadBackErrorMap;
+    uint16_t fRegisterWrites=0;
+    uint16_t fReadBackErrors=0;
+    uint16_t fWriteErrors=0;
 
   protected:
     std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
