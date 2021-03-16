@@ -43,9 +43,11 @@ class SSAInterface : public ReadoutChipInterface
     void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
     void     Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
 
+    bool     runVerification(Ph2_HwDescription::Chip* pSSA, uint16_t pValue,  std::string pRegName); 
   private:
     D19clpGBTInterface*            flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT*      flpGBT          = nullptr;
+    std::map<uint16_t, std::string> fMap;
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pSSA);
     bool                           WriteReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
