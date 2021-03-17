@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
                 }
                 float cMeanSlope = std::accumulate(cSlopes.begin(),cSlopes.end(),0.)/cSlopes.size();
                 float cIntcpt = cMeasurements[0]; 
-                int cCorr = std::floor(-1.0*cIntcpt/cMeanSlope);
+                int cCorr = std::min( std::floor(-1.0*cIntcpt/cMeanSlope), 63. );
                 LOG (INFO) << BOLDBLUE << "Mean slope is " << cMeanSlope 
                     << " , intercept is " << cIntcpt 
                     << " correction is " << cCorr
@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
                         cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
                     }
                     float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-                    LOG (INFO) << BOLDBLUE << "ADC_ " << cADCsel << " reading from lpGBT "
+                    LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
                         << +cMean*1e3 
                         << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
                         << " side of the module" << RESET;
@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
             if( cmd.foundOption("enableCIC") )
             {
                 LOG(INFO) << BOLDBLUE << "Disabling CIC reset" << RESET;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ciclReset(clpGBT, false);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false);
             }
             // enable clock for CIC 
             if( cmd.foundOption("enableCICclock"))
@@ -279,14 +279,14 @@ int main(int argc, char* argv[])
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
                 cClkCnfg.fClkPreEmphStr = 0;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ciclClock(clpGBT, cClkCnfg);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg);
             }
             
             // de-activate reset for SSA 
             if( cmd.foundOption("enableSSA"))
             {
                 LOG(INFO) << BOLDBLUE << "Disabling SSA reset" << RESET;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssalReset(clpGBT, false);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false);
             }
             if( cmd.foundOption("enableSSAclock"))
             {
@@ -298,7 +298,7 @@ int main(int argc, char* argv[])
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
                 cClkCnfg.fClkPreEmphStr = 0;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridlClock(clpGBT, cClkCnfg);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg);
             }
         } // enable ROCs 
 

@@ -955,8 +955,16 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     {
         for(auto cOpticalGroup: *pBoard)
         {
-            if(pBoard->ifOptical()) this->selectLink(cOpticalGroup->getId());
-            this->ChipReset();
+            auto& clpGBT =  cOpticalGroup->flpGBT ;
+            if(clpGBT != nullptr)
+            {
+                LOG (INFO) << BOLDBLUE << "Send chip reset from lpGBT" << RESET;
+            }
+            else
+            {
+                if(pBoard->ifOptical()) this->selectLink(cOpticalGroup->getId());
+                this->ChipReset();
+            }
         }
     }
     else

@@ -230,19 +230,17 @@ class D19clpGBTInterface : public lpGBTInterface
     // mpa read/write
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
+    // 0 [RHS], 1 [LHS]
+    // active reset functions 
+    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable)? 0 : 1 ); }
+    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_SSA}, (pEnable)? 0 : 1 ); }
+    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_MPA}, (pEnable)? 0 : 1 ); }
 
-    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_CIC,fReset_LHS_CIC}, (pEnable)? 0 : 1 ); }
-    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_SSA,fReset_LHS_SSA}, (pEnable)? 0 : 1 ); }
-    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_MPA,fReset_LHS_MPA}, (pEnable)? 0 : 1 ); }
-
-    void ciclReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable)? 0 : 1 ); }
-    void ssalReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_LHS_SSA}, (pEnable)? 0 : 1 ); }
-    void mpalReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_LHS_MPA}, (pEnable)? 0 : 1 ); }
-
-    void cicrReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable)? 0 : 1 ); }
-    void ssarReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable)? 0 : 1 ); }
-    void mparReset(Ph2_HwDescription::Chip* pChip, bool pEnable ){ ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable)? 0 : 1 ); }
-
+    // 0 [RHS], 1 [LHS]
+    // send reset functions 
+    void resetCic(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ cicReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); cicReset(pChip, 0 , pSide);}
+    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ ssaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); ssaReset(pChip, 0 , pSide);}
+    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ mpaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); mpaReset(pChip, 0 , pSide);}
     void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk , lpGBTClockConfig pClkCnfg)
     {
         fClkConfig.fClkFreq=pClkCnfg.fClkFreq;
@@ -258,14 +256,15 @@ class D19clpGBTInterface : public lpGBTInterface
         WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
         WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
     }
-    void cicrClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_RHS_CIC, pClkCnfg ); }
-    void hybridrClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_RHS_Hybrid, pClkCnfg); }
-    void ciclClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_LHS_CIC, pClkCnfg ); }
-    void hybridlClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_LHS_Hybrid , pClkCnfg); }
+    void cicClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fReset_RHS_CIC : fReset_LHS_CIC, pClkCnfg ); }
+    void hybridClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
   
   private:
     // default clock configuration 
     lpGBTClockConfig fClkConfig; 
+
+    // reset 
+    uint8_t  fResetMinPeriod   = 100;   // ms was 100
 
     // clocks
     uint8_t fClock_RHS_Hybrid = 1; 
