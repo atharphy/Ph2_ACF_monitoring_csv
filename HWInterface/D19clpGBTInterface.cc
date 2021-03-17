@@ -553,7 +553,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     // Write Data to Slave Address using I2C Master
     // 0 , 1 , 2 , 3 
     // 100, 200 , 400, 1000 
-    uint8_t cFreq = 3; // 1 MHz
+    uint8_t cFreq = 0; // 1 MHz
     ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
 
     // Write Data to Data Register

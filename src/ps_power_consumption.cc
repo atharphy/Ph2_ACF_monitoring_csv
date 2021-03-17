@@ -157,50 +157,50 @@ int main(int argc, char* argv[])
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(clpGBT);
             
-            // // correct Vref
-            // {
-            //     std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7"};
-            //     std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
-            //     std::vector<std::string> cModuleSide{"left","left","right","left"};
-            //     std::vector<float>       cADCs_Refs{1.0, 12, 1.25*0.645  , 2.55};
-            //     float cConversionFactor = VREF_LPGBT/ 1024.;
-            //     std::vector<float> cVals(10,0);
-            //     uint8_t cEnableVref=1;
-            //     size_t cIndx=2;
-            //     //int cBits = 6;
-            //     std::string cADCsel = cADCs_VoltageMonitors[cIndx];
-            //     size_t cNbits=6;
-            //     uint16_t cAllOne  = (0xFFFF >> (16 - cNbits));
-            //     uint8_t cCorrVref = cAllOne;
-            //     for(int cBt=0; cBt < 6; cBt++)
-            //     //for(int cCorrVref=0; cCorrVref < 64; cCorrVref++)
-            //     {
-            //         cCorrVref = cCorrVref  & (0xFFFF - (1 << cBt));
-            //         static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cCorrVref);
-            //         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            //         for(size_t cM=0; cM < cVals.size(); cM++)
-            //         {
-            //             cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
-            //         }
-            //         float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-            //         float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean );
-            //         if( cDifference_V < 1 ) 
-
-            //         LOG (INFO) << BOLDBLUE << "VREF corr is " 
-            //             << +cCorrVref
-            //             << " ADC reading from lpGBT [ " << cADCsel << " ]"
-            //             << +cMean*1e3 
-            //             << " volts. This is monitored via the " << cModuleSide[cIndx]
-            //             << " side of the module... difference between expected and measured "
-            //             << " values is "
-            //             << cDifference_V*1e3 
-            //             << " [ " 
-            //             << 100*cDifference_V/cADCs_Refs[cIndx] << " relative difference ]"
-            //             << RESET;
-
-            //     }
-            // } 
-            // // read all ADCs 
+            // correct Vref
+            if( cmd.foundOption("monitor") )
+            {
+                std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7"};
+                std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
+                std::vector<std::string> cModuleSide{"left","left","right","left"};
+                std::vector<float>       cADCs_Refs{1.0, 12, 1.25*0.645  , 2.55};
+                float cConversionFactor = VREF_LPGBT/ 1024.;
+                std::vector<float> cVals(10,0);
+                uint8_t cEnableVref=1;
+                //size_t cIndx=2;
+                //int cBits = 6;
+                size_t cNbits=6;
+                uint16_t cAllOne  = (0xFFFF >> (16 - cNbits));
+                uint8_t cCorrVref = cAllOne;
+                //for(int cBt=0; cBt < 6; cBt++)
+                //for(int cCorrVref=0; cCorrVref < 64; cCorrVref++)
+                for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
+                {
+                    cCorrVref = 0;//cCorrVref  & (0xFFFF - (1 << cBt));
+                    std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+                    if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
+                    
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cCorrVref);
+                    for(size_t cM=0; cM < cVals.size(); cM++)
+                    {
+                        cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                    }
+                    float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                    float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean );
+                    LOG (INFO) << BOLDBLUE << "VREF corr is " 
+                        << +cCorrVref
+                        << " ADC reading from lpGBT [ " << cADCsel << " ]"
+                        << +cMean*1e3 
+                        << " volts. This is monitored via the " << cModuleSide[cIndx]
+                        << " side of the module... difference between expected and measured "
+                        << " values is "
+                        << cDifference_V*1e3 
+                        << " [ " 
+                        << 100*cDifference_V/cADCs_Refs[cIndx] << " relative difference ]"
+                        << RESET;
+                }
+            } 
+            // read all ADCs 
         }// configure lpGBT 
 
         
