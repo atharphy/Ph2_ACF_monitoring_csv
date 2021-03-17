@@ -425,18 +425,83 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
 }
 
+// bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
+// {
+//     // reset lpGBT core
+//     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+//     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+//     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+//     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+//     // check links are up
+//     std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
+//     bool                     cLinksLocked = true;
+//     uint8_t                  cMaxAttempts = 10;
+//     uint8_t                  cAttempCount = 0;
+//     do
+//     {
+//         cLinksLocked = true;
+//         LOG(INFO) << BOLDBLUE << "RESET APPLIED" << RESET;
+//         for(auto cOpticalReadout: *pBoard)
+//         {
+//             uint8_t cLinkId = cOpticalReadout->getId();
+//             // reset here for good measure
+//             uint32_t cCommand = (0x0 << 22) | ((cLinkId & 0x3f) << 26);
+//             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
+//             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//             // get link status
+//             cCommand = (0x1 << 22) | ((cLinkId & 0x3f) << 26);
+//             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
+//             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+//             bool cGBTxLocked = true;
+//             // read back status register
+//             LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
+//             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
+//             LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
+//             std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
+//             uint8_t                  cIndex  = 1;
+//             for(auto cState: cStates)
+//             {
+//                 uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
+//                 cGBTxLocked &= (cStatus == 1);
+//                 if(cStatus == 1)
+//                     LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
+//                 else
+//                     LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
+//                 cIndex++;
+//             }
+//             cLinksLocked = cLinksLocked && cGBTxLocked;
+//         }
+//         if(cLinksLocked)
+//         {
+//             LOG(INFO) << BOLDGREEN << "All links locked." << RESET;
+//             break;
+//         }
+//         else
+//         {
+//             LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
+//             // reset lpGBT core
+//             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+//             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+//             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+//             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//         }
+//         cAttempCount++;
+//     } while(!cLinksLocked && cAttempCount < cMaxAttempts);
+//     return cLinksLocked;
+// }
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
     // reset lpGBT core
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+    // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // check links are up
-    std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
+        std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
     bool                     cLinksLocked = true;
-    uint8_t                  cMaxAttempts = 10;
+    uint8_t                  cMaxAttempts = 100;
     uint8_t                  cAttempCount = 0;
     do
     {
@@ -446,11 +511,14 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         {
             uint8_t cLinkId = cOpticalReadout->getId();
             // reset here for good measure
-            uint32_t cCommand = (0x0 << 22) | ((cLinkId & 0x3f) << 26);
+            // -- link id (31 downto 26), command id (25 downto 22), user space (21 downto 0)
+            uint8_t cResetCmd=0;
+            uint8_t cLinkStatCmd=1;
+            uint32_t cCommand = ((cLinkId & 0x3f) << 26) |  (cResetCmd << 22) |  0 ;
             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             // get link status
-            cCommand = (0x1 << 22) | ((cLinkId & 0x3f) << 26);
+            cCommand = ((cLinkId & 0x3f) << 26) |  (cLinkStatCmd << 22) |  0 ;
             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             bool cGBTxLocked = true;
@@ -458,7 +526,6 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
             LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
-            std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
             uint8_t                  cIndex  = 1;
             for(auto cState: cStates)
             {
@@ -481,10 +548,10 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         {
             LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
             // reset lpGBT core
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         cAttempCount++;
     } while(!cLinksLocked && cAttempCount < cMaxAttempts);

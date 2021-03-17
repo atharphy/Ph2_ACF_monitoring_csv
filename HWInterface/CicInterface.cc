@@ -181,6 +181,10 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             fRegisterWrites++;
             if( !cSuccess )
             {
+                auto cRegItem = pChip->getRegItem( fMap[cReg.first]  );
+                LOG (INFO) << BOLDRED << "Write error for CIC register 0x"
+                    << std::hex << +cReg.first << std::dec 
+                    << RESET;
                 auto cIter = fWriteErrorMap.find(cReg.first);
                 if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[cReg.first]=1;
                 else fWriteErrorMap[cReg.first]=fWriteErrorMap[cReg.first]+1;
@@ -203,6 +207,12 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                 cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
                 if( !cSuccess )
                 {
+                    auto cRegItem = pChip->getRegItem( fMap[cReg.first]  );
+                    LOG (INFO) << BOLDRED << "Readback error for CIC register 0x"
+                        << std::hex << +cReg.first << std::dec 
+                        << " have written " << +cRegItem.fValue
+                        << " and have read back " << cValue << RESET;
+                
                     auto cIter = fReadBackErrorMap.find(cReg.first);
                     if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[cReg.first]=1;
                     else fReadBackErrorMap[cReg.first]=fReadBackErrorMap[cReg.first]+1;

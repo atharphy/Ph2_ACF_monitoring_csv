@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("configureSSA", "Apply default configuration", ArgvParser::NoOptionAttribute);
     cmd.defineOption("readoutRate", "Readout rate [320 or 640]", ArgvParser::OptionRequiresValue);
 
+    cmd.defineOption("clockDriveCIC", "Clock drive strength for CIC", ArgvParser::OptionRequiresValue);
     
     // cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
     // cmd.defineOptionAlternative("tuneOffsets", "t");
@@ -175,6 +176,7 @@ int main(int argc, char* argv[])
     std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
     uint16_t    cReadoutRate = (cmd.foundOption("readoutRate")) ? convertAnyInt(cmd.optionValue("readoutRate").c_str()) : 320;
     uint16_t    cConfigurationAttempts = (cmd.foundOption("registerTest")) ? convertAnyInt(cmd.optionValue("registerTest").c_str()) : 10;
+    uint16_t    cCicClockDrive = (cmd.foundOption("clockDriveCIC")) ? convertAnyInt(cmd.optionValue("clockDriveCIC").c_str()) : 7;
     
     //std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
     //if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
@@ -245,7 +247,7 @@ int main(int argc, char* argv[])
                 // import from xml at some point 
                 lpGBTClockConfig cClkCnfg; 
                 cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
-                cClkCnfg.fClkDriveStr = 1; 
+                cClkCnfg.fClkDriveStr = cCicClockDrive; 
                 cClkCnfg.fClkInvert = 1;
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
