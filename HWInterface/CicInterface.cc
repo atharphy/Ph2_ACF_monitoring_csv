@@ -181,7 +181,6 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             fRegisterWrites++;
             if( !cSuccess )
             {
-                auto cRegItem = pChip->getRegItem( fMap[cReg.first]  );
                 LOG (INFO) << BOLDRED << "Write error for CIC register 0x"
                     << std::hex << +cReg.first << std::dec 
                     << RESET;

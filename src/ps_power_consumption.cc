@@ -41,61 +41,14 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
+// reference volage for lpgBT 
+float VREF_LPGBT = 1.0; 
+
 #ifndef Measurement
 typedef std::pair<float,float> Measurement;
 #endif
 
-// int MeasureCurrent(std::string pHwFile, std::string pPowerSupply
-//     , std::vector<Measurement> &pMeasurements)
-// {
-//     // power supply 
-//     pugi::xml_document cSettings;
-//     DeviceHandler cInstrumentHandler;
-//     cInstrumentHandler.readSettings(pHwFile, cSettings);
-//     try
-//     {
-//         cInstrumentHandler.getPowerSupply(pPowerSupply);
-//     }
-//     catch(const std::out_of_range& oor)
-//     {
-//         std::cerr << "Out of Range error: " << oor.what() << '\n';
-//         return -1;
-//     }
-
-//     pMeasurements.clear();
-//     // Get all channels of the powersupply
-//     std::vector<std::pair<std::string, bool>> channelNames;
-//     pugi::xml_document                        doc;
-//     if(!doc.load_file(pHwFile.c_str())) return -1;
-//     pugi::xml_node devices = doc.child("Devices");
-//     for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
-//     {
-//         std::string s(ps.attribute("ID").value());
-//         if(s == pPowerSupply)
-//         {
-//             for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
-//             {
-//                 std::string name(channel.attribute("ID").value());
-//                 std::string use(channel.attribute("InUse").value());
-
-//                 channelNames.push_back(std::make_pair(name, use == "Yes"));
-//             }
-//         }
-//     }
-//     doc.reset();
-
-//     LOG(INFO) << BOLDBLUE << "Measuring current consumption on all channels.." << RESET;
-//     for(auto channelName: channelNames) {
-//         Measurement cMeasurement;
-//         cMeasurement.first = cInstrumentHandler.getPowerSupply(pPowerSupply)->getChannel(channelName.first)->getVoltage();
-//         cMeasurement.second = cInstrumentHandler.getPowerSupply(pPowerSupply)->getChannel(channelName.first)->getCurrent();
-//         //std::string current = std::to_string(pInstrumentHandler.getPowerSupply(pPowerSupply)->getChannel(channelName.first)->getCurrent()); 
-//         //std::string voltage = std::to_string(pInstrumentHandler.getPowerSupply(pPowerSupply)->getChannel(channelName.first)->getVoltage());
-//         LOG(INFO) << "\tV(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << cMeasurement.first 
-//             << "\tI(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << cMeasurement.second << RESET;
-//     }
-//     return 0;
-// }
+ 
 int main(int argc, char* argv[])
 {
     // configure the logger
@@ -126,34 +79,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("enableSSAclock", "Enable SSA clock", ArgvParser::NoOptionAttribute);
     cmd.defineOption("configureSSA", "Apply default configuration", ArgvParser::NoOptionAttribute);
     cmd.defineOption("readoutRate", "Readout rate [320 or 640]", ArgvParser::OptionRequiresValue);
-
     cmd.defineOption("clockDriveCIC", "Clock drive strength for CIC", ArgvParser::OptionRequiresValue);
-    
-    // cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
-    // cmd.defineOptionAlternative("tuneOffsets", "t");
-
-    // cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
-    // cmd.defineOptionAlternative("measurePedeNoise", "m");
-
-    // cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
-    // cmd.defineOption("findOpens", "perform latency scan with antenna on UIB", ArgvParser::NoOptionAttribute);
-    // cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
-    // cmd.defineOption("ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
-
-    // cmd.defineOption("threshold", "Threshold value to set on chips for open and short finding", ArgvParser::OptionRequiresValue);
-    // cmd.defineOption("hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
-
-    // cmd.defineOption("pattern", "Data Player Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
-    // cmd.defineOptionAlternative("pattern", "p");
-
-    // cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
-    // cmd.defineOption("eyeScanCic", "Perform CIC eye scan", ArgvParser::NoOptionAttribute);
-    // cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
-    // cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
-
-    // cmd.defineOption("perType", "perform pedeNoise per chip flavour [MPA/SSA]");
-    // cmd.defineOptionAlternative("perType", "a");
-
+    cmd.defineOption("monitor", "ADC monitoring", ArgvParser::OptionRequiresValue);
+   
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -177,7 +105,8 @@ int main(int argc, char* argv[])
     uint16_t    cReadoutRate = (cmd.foundOption("readoutRate")) ? convertAnyInt(cmd.optionValue("readoutRate").c_str()) : 320;
     uint16_t    cConfigurationAttempts = (cmd.foundOption("registerTest")) ? convertAnyInt(cmd.optionValue("registerTest").c_str()) : 10;
     uint16_t    cCicClockDrive = (cmd.foundOption("clockDriveCIC")) ? convertAnyInt(cmd.optionValue("clockDriveCIC").c_str()) : 7;
-    
+    std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
+        
     //std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
     //if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
 
@@ -227,8 +156,54 @@ int main(int argc, char* argv[])
             uint8_t cLinkId = cOpticalGroup->getId();
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(clpGBT);
+            
+            // // correct Vref
+            // {
+            //     std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7"};
+            //     std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
+            //     std::vector<std::string> cModuleSide{"left","left","right","left"};
+            //     std::vector<float>       cADCs_Refs{1.0, 12, 1.25*0.645  , 2.55};
+            //     float cConversionFactor = VREF_LPGBT/ 1024.;
+            //     std::vector<float> cVals(10,0);
+            //     uint8_t cEnableVref=1;
+            //     size_t cIndx=2;
+            //     //int cBits = 6;
+            //     std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+            //     size_t cNbits=6;
+            //     uint16_t cAllOne  = (0xFFFF >> (16 - cNbits));
+            //     uint8_t cCorrVref = cAllOne;
+            //     for(int cBt=0; cBt < 6; cBt++)
+            //     //for(int cCorrVref=0; cCorrVref < 64; cCorrVref++)
+            //     {
+            //         cCorrVref = cCorrVref  & (0xFFFF - (1 << cBt));
+            //         static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cCorrVref);
+            //         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            //         for(size_t cM=0; cM < cVals.size(); cM++)
+            //         {
+            //             cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+            //         }
+            //         float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+            //         float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean );
+            //         if( cDifference_V < 1 ) 
+
+            //         LOG (INFO) << BOLDBLUE << "VREF corr is " 
+            //             << +cCorrVref
+            //             << " ADC reading from lpGBT [ " << cADCsel << " ]"
+            //             << +cMean*1e3 
+            //             << " volts. This is monitored via the " << cModuleSide[cIndx]
+            //             << " side of the module... difference between expected and measured "
+            //             << " values is "
+            //             << cDifference_V*1e3 
+            //             << " [ " 
+            //             << 100*cDifference_V/cADCs_Refs[cIndx] << " relative difference ]"
+            //             << RESET;
+
+            //     }
+            // } 
+            // // read all ADCs 
         }// configure lpGBT 
 
+        
         for(auto cOpticalGroup: *cBoard)
         {
             auto& clpGBT =  cOpticalGroup->flpGBT ;
@@ -238,7 +213,7 @@ int main(int argc, char* argv[])
             if( cmd.foundOption("enableCIC") )
             {
                 LOG(INFO) << BOLDBLUE << "Disabling CIC reset" << RESET;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicrReset(clpGBT, false);
             }
             // enable clock for CIC 
             if( cmd.foundOption("enableCICclock"))
@@ -252,14 +227,14 @@ int main(int argc, char* argv[])
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
                 cClkCnfg.fClkPreEmphStr = 0;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicrClock(clpGBT, cClkCnfg);
             }
             
             // de-activate reset for SSA 
             if( cmd.foundOption("enableSSA"))
             {
                 LOG(INFO) << BOLDBLUE << "Disabling SSA reset" << RESET;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssarReset(clpGBT, false);
             }
             if( cmd.foundOption("enableSSAclock"))
             {
@@ -271,7 +246,7 @@ int main(int argc, char* argv[])
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
                 cClkCnfg.fClkPreEmphStr = 0;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridrClock(clpGBT, cClkCnfg);
             }
         } // enable ROCs 
 

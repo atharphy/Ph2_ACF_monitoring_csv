@@ -670,20 +670,28 @@ void D19clpGBTInterface::ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, con
         WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
     }
 }
-
+bool D19clpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
+{
+    uint8_t cVal = pEnable << 7 | (pCorrection&0x3F);
+    bool cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
+    LOG (DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex 
+        << +cVal << std::dec << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    return cSuccess;
+}
 uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs
     uint8_t cADCInputP = fADCInputMap[pADCInputP];
     uint8_t cADCInputN = fADCInputMap[pADCInputN];
-    LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInputP << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Reading ADC value from " << pADCInputP << RESET;
     // Select ADC Input
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
     // Enable ADC Input without starting conversion
     ConfigureADC(pChip, pGain, true, false);
     // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    //this->ConfigureVref(pChip, 1, 0);
+    //WriteChipReg(pChip, "VREFCNTR", 1 << 7);
     // Start ADC conversion
     ConfigureADC(pChip, pGain, true, true);
     // Check conversion status
@@ -950,7 +958,12 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test
     ConfigureGPIODirection(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 1);
-    // make sure all resets are active 
+    // apply hard reset for 100 us 
+    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 0);
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 1);
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    // leave all resets active 
     ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 0);
     //ConfigureGPIOLevel(pChip, {6, 12}, 1);
 }
