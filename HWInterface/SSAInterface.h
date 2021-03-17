@@ -43,12 +43,23 @@ class SSAInterface : public ReadoutChipInterface
     void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
     void     Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
 
+    std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
+    std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
+    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; };
+    void                              printErrorSummary();
     bool     runVerification(Ph2_HwDescription::Chip* pSSA, uint16_t pValue,  std::string pRegName); 
   private:
     D19clpGBTInterface*            flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT*      flpGBT          = nullptr;
     std::map<uint16_t, std::string> fMap;
-    std::map<uint8_t, uint8_t> fWriteErrorMap;
+    // error counters 
+    std::map<uint8_t, uint16_t> fWriteErrorMap;
+    std::map<uint8_t, uint16_t> fReadBackErrorMap;
+    uint16_t fReadBackErrors=0;
+    uint16_t fWriteErrors=0;
+    // register write counter
+    uint16_t fRegisterWrites=0;
+    
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pSSA);
     bool                           WriteReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);

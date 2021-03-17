@@ -603,7 +603,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     } while(cIter < cMaxIter && !cSuccess);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
+        LOG(DEBUG) << BOLDRED << "I2C Transaction FAILED" << RESET;
         //return false;
         //throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
@@ -958,24 +958,17 @@ bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId,
     uint8_t cNbytes=3;//
     LOG(DEBUG) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, cNbytes);
-    if(pRetry)
+    bool cSuccess = WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, cNbytes);
+    if(pRetry && !cSuccess)
     {
-        uint8_t cReadBack = cicRead(pChip, pFeId, pRegisterAddress);
         uint8_t cIter = 0, cMaxIter = 10;
-        while(cReadBack != pRegisterValue && cIter < cMaxIter)
+        while(!cSuccess && cIter < cMaxIter)
         {
-            LOG(INFO) << BOLDRED << "CIC I2C ReadBack Mismatch in hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
-            cReadBack = cicRead(pChip, pFeId, pRegisterAddress);
+            cSuccess = WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x60, (pRegisterValue << 16) | cInvertedRegister, 3);
             cIter++;
         }
-        if(cReadBack != pRegisterValue)
-        {
-            throw std::runtime_error(std::string("CIC readback mismatch"));
-        }
     }
-    return true;
+    return cSuccess;
 }
 
 uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress)
@@ -989,30 +982,22 @@ uint32_t D19clpGBTInterface::cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFe
 
 bool D19clpGBTInterface::ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
-    bool cWriteOnlyReg = (pRegisterAddress & 0x7f) == 0x00;
     LOG(DEBUG) << BOLDBLUE << "SSA Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
+    bool cSuccess = WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
 
-    if(cWriteOnlyReg) return true;
-
-    if(pRetry)
+    // re-try the write procedure 
+    if(pRetry && !cSuccess)
     {
-        uint8_t cReadBack = ssaRead(pChip, pFeId, pChipId, pRegisterAddress);
         uint8_t cIter = 0, cMaxIter = 10;
-        while(cReadBack != pRegisterValue && cIter < cMaxIter)
+        while(!cSuccess && cIter < cMaxIter)
         {
             LOG(INFO) << BOLDRED << "SSA I2C ReadBack Mismatch in hybrid " << +pFeId << " Chip " << +pChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
-            cReadBack = ssaRead(pChip, pFeId, pChipId, pRegisterAddress);
+            cSuccess = WriteI2C(pChip, ((pFeId % 2) == 0) ? 2 : 0, 0x20 + pChipId, (pRegisterValue << 16) | cInvertedRegister, 3);
             cIter++;
         }
-        if(cReadBack != pRegisterValue)
-        {
-            throw std::runtime_error(std::string("SSA readback mismatch"));
-        }
     }
-    return true;
+    return cSuccess;
 }
 
 uint32_t D19clpGBTInterface::ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress)

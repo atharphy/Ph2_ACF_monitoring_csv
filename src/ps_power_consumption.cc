@@ -347,60 +347,93 @@ int main(int argc, char* argv[])
                     }//ROCs
                 }//OG
             }//configure SSA 
+            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
         } // configure ROCs + CICs
 
         if( cmd.foundOption("registerTest"))
         {
-            for(auto cOpticalGroup: *cBoard)
+            // reset error summaries
+            static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
+            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->resetErrorSummary();
+            // try and configure all chips N times 
+            for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
             {
-                auto& clpGBT =  cOpticalGroup->flpGBT ;
-                if(clpGBT == nullptr) continue;
-
-                // configure CIC 
-                for(auto cHybrid: *cOpticalGroup)
+                for(auto cOpticalGroup: *cBoard)
                 {
-                    OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-                    auto& cCic = cOuterTrackerHybrid->fCic;
-                    static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
-                    std::vector<float> cErrors( cConfigurationAttempts, 0 );
-                    std::vector<float> cRelErrorUnc( cConfigurationAttempts, 0 );
-                    for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
+                    for(auto cHybrid: *cOpticalGroup)
                     {
+                        OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                        auto& cCic = cOuterTrackerHybrid->fCic;
+                        LOG (INFO) << BOLDBLUE << "Configuring CIC"<< RESET;
                         cTool.fCicInterface->ConfigureChip(cCic);
-                        std::pair<uint16_t,uint16_t>  cErrorSummary =  static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
-                        float cCorrect = (float)(cErrorSummary.second - cErrorSummary.first); 
-                        float cFrcCrct = cCorrect/cErrorSummary.second;
-                        float cFrcCrctErr  = std::pow( std::sqrt(cCorrect)/cCorrect,2.0);
-                        cFrcCrctErr += std::pow( std::sqrt(cErrorSummary.second)/(float)cErrorSummary.second,2.0);
-                        cFrcCrctErr = std::sqrt( cFrcCrctErr );
-                        static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
-                        static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
-                        cErrors[cAttempt]=cFrcCrct;
-                        cRelErrorUnc[cAttempt]=cFrcCrctErr;
-                        LOG (INFO) << BOLDBLUE << "\t...Configuration Attempt#" << +cAttempt 
-                            << " number of correct transactions is " << cCorrect
-                            << " fraction correct is " << cFrcCrct
-                            << " relative error is " << cFrcCrctErr
-                            << RESET;
-                    }
-                    // summarize 
-                    // summarize noise hits
-                    auto cSum = std::accumulate(cErrors.begin(), cErrors.end(), 0.0);
-                    auto cMean = cSum/cErrors.size();
-                    auto cMax = std::max_element(cErrors.begin(), cErrors.end());
-                    auto cMin = std::min_element(cErrors.begin(), cErrors.end());
-                    double cSqSum = std::inner_product(cErrors.begin(), cErrors.end(), cErrors.begin(), 0.0);
-                    double cStdDev = std::sqrt(cSqSum / cErrors.size() - cMean * cMean);
-                    LOG (INFO) << BOLDBLUE << "Summary configuration test " 
-                            << " fraction of correct transactions is " << cMean
-                            << " standard deviation is  " << cStdDev
-                            << " maximum error fraction found is " << *cMax 
-                            << " minimum error fraction found is " << *cMin
-                            << RESET;
+                        for(auto cReadoutChip: *cHybrid)
+                        {
+                            LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
+                            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA)
+                            {
+                                cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
+                            }//SSAs
+                        }//ROCs
+                    }//OG
+                }//board
+            }// configuration attempts 
+
+            // summarize 
+            // static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
+            // auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
+            // auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
+            // float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
+            // float cCicCrctW = (float)(cCicWriteErrSummary.second - cCicWriteErrSummary.first); 
+
+            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
+            auto cSsaErrSummary = static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->getReadBackErrorSummary();
+            auto cSssaWriteErrSummary = static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->getWriteErrorSummary();
+            float cSsaCrct = (float)(cSsaErrSummary.second - cSsaErrSummary.first); 
+            float cSsaCrctW = (float)(cSssaWriteErrSummary.second - cSssaWriteErrSummary.first); 
+            //LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cSsaErrSummary.second << RESET;
+            //LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrct << " out of " << cSsaErrSummary.second << RESET;
+            LOG (INFO) << BOLDBLUE << "SSA register read-back successes : " << cSsaCrct << " out of " << cSsaErrSummary.second << RESET;
+            LOG (INFO) << BOLDBLUE << "SSA register write successes : " << cSsaCrctW << " out of " << cSssaWriteErrSummary.second << RESET;
+
+                    // std::vector<float> cErrors( cConfigurationAttempts, 0 );
+                    // std::vector<float> cRelErrorUnc( cConfigurationAttempts, 0 );
+                    // for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
+                    // {
+                    //     cTool.fCicInterface->ConfigureChip(cCic);
+                    //     std::pair<uint16_t,uint16_t>  cErrorSummary =  static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
+                    //     float cCorrect = (float)(cErrorSummary.second - cErrorSummary.first); 
+                    //     float cFrcCrct = cCorrect/cErrorSummary.second;
+                    //     float cFrcCrctErr  = std::pow( std::sqrt(cCorrect)/cCorrect,2.0);
+                    //     cFrcCrctErr += std::pow( std::sqrt(cErrorSummary.second)/(float)cErrorSummary.second,2.0);
+                    //     cFrcCrctErr = std::sqrt( cFrcCrctErr );
+                    //     static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
+                    //     static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
+                    //     cErrors[cAttempt]=cFrcCrct;
+                    //     cRelErrorUnc[cAttempt]=cFrcCrctErr;
+                    //     LOG (INFO) << BOLDBLUE << "\t...Configuration Attempt#" << +cAttempt 
+                    //         << " number of correct transactions is " << cCorrect
+                    //         << " fraction correct is " << cFrcCrct
+                    //         << " relative error is " << cFrcCrctErr
+                    //         << RESET;
+                    // }
+                    // // summarize 
+                    // // summarize noise hits
+                    // auto cSum = std::accumulate(cErrors.begin(), cErrors.end(), 0.0);
+                    // auto cMean = cSum/cErrors.size();
+                    // auto cMax = std::max_element(cErrors.begin(), cErrors.end());
+                    // auto cMin = std::min_element(cErrors.begin(), cErrors.end());
+                    // double cSqSum = std::inner_product(cErrors.begin(), cErrors.end(), cErrors.begin(), 0.0);
+                    // double cStdDev = std::sqrt(cSqSum / cErrors.size() - cMean * cMean);
+                    // LOG (INFO) << BOLDBLUE << "Summary configuration test " 
+                    //         << " fraction of correct transactions is " << cMean
+                    //         << " standard deviation is  " << cStdDev
+                    //         << " maximum error fraction found is " << *cMax 
+                    //         << " minimum error fraction found is " << *cMin
+                    //         << RESET;
                     //static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
-                }
-            } 
-        }
+                //}
+            
+        }// register test
        
     }
 

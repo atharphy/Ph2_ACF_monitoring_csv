@@ -64,7 +64,7 @@ bool CicInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValu
             << " value read back is 0x"  << std::hex << +cValue << std::dec 
             << RESET;
     else if( !cSuccess )
-        LOG(INFO) << BOLDRED << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec 
+        LOG(DEBUG) << BOLDRED << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec 
             << " CIC register with address 0x" << std::hex << +cRegItem.fAddress << std::dec 
             << " value read back is 0x"  << std::hex << +cValue << std::dec 
             << RESET;
@@ -123,25 +123,10 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
 }
 void CicInterface::printErrorSummary()
 {
-    fWriteErrors=0;
-    for( auto fWriteError : fWriteErrorMap )
-    {
-        fWriteErrors += fWriteError.second;
-        LOG (INFO) << BOLDRED << "Register 0x" << std::hex << +fWriteError.first << std::dec 
-            << " found " << +fWriteError.second << " write errors." << RESET;
-    }
     LOG (INFO) << BOLDRED << "CIC total write error count : " << +fWriteErrors 
         << " out of a total of " << +fRegisterWrites << " writes"
         << RESET;
 
-
-    fReadBackErrors=0;
-    for( auto fReadBackError : fReadBackErrorMap )
-    {
-        fReadBackErrors += fReadBackError.second;
-        LOG (INFO) << BOLDRED << "Register 0x" << std::hex << +fReadBackError.first << std::dec 
-            << " found " << +fReadBackError.second << " read-back error." << RESET;
-    }
     LOG (INFO) << BOLDRED << "CIC total read-back error count : " << +fReadBackErrors 
         << " out of a total of " << +fRegisterWrites << " writes"
         << RESET;
@@ -178,17 +163,20 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
         LOG (DEBUG) << BOLDMAGENTA << "Writing registers CicInterface::WriteRegs" << RESET;
         size_t cCount=0;
         bool cRetry=false;
+        std::vector<uint8_t> pSuccesses(pRegs.size(), 1);
+        size_t cWritesCounter = fRegisterWrites; 
+        size_t cWriteErrCounter = fWriteErrors;  
+        size_t cReadBackCounter = fReadBackErrors; 
+        
         for(const auto& cReg: pRegs)
         {
-            //if(!cSuccess) continue;
-
+        
             auto cRegItem = pChip->getRegItem( fMap[cReg.first] );
             cRegItem.fPage    = 0x00;
             cRegItem.fAddress = cReg.first;
             cRegItem.fValue   = cReg.second & 0xFF;
             // update register map
             pChip->setReg( fMap[cReg.first] , cRegItem.fValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg);
-        
             cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
             fRegisterWrites++;
             if( !cSuccess )
@@ -196,37 +184,45 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                 auto cIter = fWriteErrorMap.find(cReg.first);
                 if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[cReg.first]=1;
                 else fWriteErrorMap[cReg.first]=fWriteErrorMap[cReg.first]+1;
+                fWriteErrors++;
             }
-
-                
+            pSuccesses[cCount] = (cSuccess) ? 1 : 0 ;     
             cCount++;
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
         }
 
-        if ( pVerifLoop && cSuccess )
+        if ( pVerifLoop )
         {
             cCount=0;
             LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteRegs" << RESET;
             for(const auto& cReg: pRegs)
             {
-                // this means I don't even try 
-                // the rest once 
-                // if this fails 
-                //if(!cSuccess) continue;
-                
                 uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
-                cSuccess = this->runVerification(pChip, cValue, fMap[cReg.first]);
+                cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
                 if( !cSuccess )
                 {
                     auto cIter = fReadBackErrorMap.find(cReg.first);
                     if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[cReg.first]=1;
                     else fReadBackErrorMap[cReg.first]=fReadBackErrorMap[cReg.first]+1;
+                    fReadBackErrors++;
                 }
+                pSuccesses[cCount] = ( pSuccesses[cCount] == 1 && cSuccess ) ? 1 : 0 ;  
                 cCount++;
             }
         }
+
+        // check sum 
+        auto cSum = std::accumulate(pSuccesses.begin(), pSuccesses.end(), 0.0);
+        cSuccess = (cSum == pRegs.size() );
+        if( cSuccess )
+            LOG (INFO) << BOLDGREEN << "Register write successfull for CIC#" << +pChip->getId() << RESET;
+        else
+            LOG (INFO) << BOLDRED << "Register write failed for CIC# : " << +pChip->getId() 
+                << " found " << +(fWriteErrors-cWriteErrCounter) << " write errors in " << (fRegisterWrites-cWritesCounter) << " attempts "
+                << " and " << +(fReadBackErrors-cReadBackCounter) << " read-back errors found in those " << (fRegisterWrites-cWritesCounter-fWriteErrors+cWriteErrCounter) << " successfull writes"
+                << RESET;
 
     }
     return cSuccess;
