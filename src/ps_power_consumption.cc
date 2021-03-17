@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
                 lpGBTClockConfig cClkCnfg; 
                 cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
                 cClkCnfg.fClkDriveStr = cCicClockDrive; 
-                cClkCnfg.fClkInvert = 1;
+                cClkCnfg.fClkInvert = 0;
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
                 cClkCnfg.fClkPreEmphStr = 0;
@@ -349,9 +349,10 @@ int main(int argc, char* argv[])
                     }//ROCs
                 }//OG
             }//configure SSA 
-            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
         } // configure ROCs + CICs
 
+        if( cmd.foundOption("configureSSA"))     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
+        
         if( cmd.foundOption("registerTest"))
         {
             // reset error summaries

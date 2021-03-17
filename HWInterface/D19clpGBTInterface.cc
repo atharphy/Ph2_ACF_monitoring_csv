@@ -904,6 +904,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     //ConfigureClocks(pChip, {fClock_RHS_CIC}, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // ROCs 
     // disable all clocks 
+    // by setting frequency to 0 
+    cClkFreq = 0 ;
     // by setting drive strength to 0 
     cClkDriveStr = 0 ;
     ConfigureClocks(pChip, {fClock_RHS_CIC, fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
