@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
             if( cmd.foundOption("enableCIC") )
             {
                 LOG(INFO) << BOLDBLUE << "Disabling CIC reset" << RESET;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicrReset(clpGBT, false);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ciclReset(clpGBT, false);
             }
             // enable clock for CIC 
             if( cmd.foundOption("enableCICclock"))
@@ -227,14 +227,14 @@ int main(int argc, char* argv[])
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
                 cClkCnfg.fClkPreEmphStr = 0;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicrClock(clpGBT, cClkCnfg);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ciclClock(clpGBT, cClkCnfg);
             }
             
             // de-activate reset for SSA 
             if( cmd.foundOption("enableSSA"))
             {
                 LOG(INFO) << BOLDBLUE << "Disabling SSA reset" << RESET;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssarReset(clpGBT, false);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssalReset(clpGBT, false);
             }
             if( cmd.foundOption("enableSSAclock"))
             {
@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
                 cClkCnfg.fClkPreEmphWidth = 0; 
                 cClkCnfg.fClkPreEmphMode = 0; 
                 cClkCnfg.fClkPreEmphStr = 0;
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridrClock(clpGBT, cClkCnfg);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridlClock(clpGBT, cClkCnfg);
             }
         } // enable ROCs 
 
