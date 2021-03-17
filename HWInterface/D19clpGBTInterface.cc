@@ -908,15 +908,14 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     //std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid , fClock_LHS_Hybrid , fClock_RHS_CIC, fClock_LHS_CIC };
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    // CIC
-    //ConfigureClocks(pChip, {fClock_RHS_CIC}, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
-    // ROCs 
     // disable all clocks 
     // by setting frequency to 0 
     cClkFreq = 0 ;
-    // by setting drive strength to 0 
+    // and by setting drive strength to 0 
     cClkDriveStr = 0 ;
+    // CIC 
     ConfigureClocks(pChip, {fClock_RHS_CIC, fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // SSA
     ConfigureClocks(pChip, {fClock_RHS_Hybrid , fClock_LHS_Hybrid }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
@@ -957,16 +956,16 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test
-    std::vector<uint8_t> cResetPins{fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC, fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC };
-    ConfigureGPIODirection(pChip, cResetPins, 1);
-    // apply hard reset for 100 us 
-    ConfigureGPIOLevel(pChip, cResetPins, 0);
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-    ConfigureGPIOLevel(pChip, cResetPins, 1);
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-    // leave all resets active 
-    ConfigureGPIOLevel(pChip, cResetPins, 0);
-    //ConfigureGPIOLevel(pChip, {6, 12}, 1);
+    std::vector<uint8_t> cResetPinsRHS{fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC};
+    std::vector<uint8_t> cResetPinsLHS{fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC};
+    ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
+    ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    for(size_t cSide=0; cSide<2; cSide++)
+    {
+        ssaReset(pChip, false, cSide);
+        mpaReset(pChip, false, cSide);
+        cicReset(pChip, false, cSide);
+    }
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
