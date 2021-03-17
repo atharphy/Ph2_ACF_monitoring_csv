@@ -957,14 +957,15 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test
-    ConfigureGPIODirection(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 1);
+    std::vector<uint8_t> cResetPins{fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC, fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC };
+    ConfigureGPIODirection(pChip, cResetPins, 1);
     // apply hard reset for 100 us 
-    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 0);
+    ConfigureGPIOLevel(pChip, cResetPins, 0);
     std::this_thread::sleep_for(std::chrono::microseconds(100));
-    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 1);
+    ConfigureGPIOLevel(pChip, cResetPins, 1);
     std::this_thread::sleep_for(std::chrono::microseconds(100));
     // leave all resets active 
-    ConfigureGPIOLevel(pChip, {fReset_RHS_SSA, fReset_RHS_MPA, fReset_LHS_SSA, fReset_LHS_MPA, fReset_RHS_CIC, fReset_LHS_CIC }, 0);
+    ConfigureGPIOLevel(pChip, cResetPins, 0);
     //ConfigureGPIOLevel(pChip, {6, 12}, 1);
 }
 

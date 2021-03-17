@@ -261,7 +261,7 @@ class D19clpGBTInterface : public lpGBTInterface
     void cicrClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_RHS_CIC, pClkCnfg ); }
     void hybridrClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_RHS_Hybrid, pClkCnfg); }
     void ciclClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_LHS_CIC, pClkCnfg ); }
-    void hybridlClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_LHS_CIC, pClkCnfg); }
+    void hybridlClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg){ configureClockSettings(pChip, fClock_LHS_Hybrid , pClkCnfg); }
   
   private:
     // default clock configuration 
@@ -274,12 +274,13 @@ class D19clpGBTInterface : public lpGBTInterface
     uint8_t fClock_RHS_CIC= 26; 
 
     // reset GPIOs 
-    uint8_t fReset_RHS_CIC = 6 ; 
-    uint8_t fReset_RHS_MPA = 9; 
-    uint8_t fReset_RHS_SSA = 12 ; 
     uint8_t fReset_LHS_CIC = 0 ; 
     uint8_t fReset_LHS_MPA = 1; 
     uint8_t fReset_LHS_SSA = 3 ; 
+    // rhs 
+    uint8_t fReset_RHS_CIC = 6 ; 
+    uint8_t fReset_RHS_MPA = 9; 
+    uint8_t fReset_RHS_SSA = 12 ; 
 
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},
