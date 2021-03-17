@@ -85,19 +85,28 @@ int main(int argc, char* argv[])
     cmd.defineOption("powerSupply", "Name of the power supply as described in the HW file", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableCIC", "Disable CIC reset", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableCICclock", "Enable CIC clock", ArgvParser::OptionRequiresValue);
+    //
     cmd.defineOption("configureCIC", "Apply default configuration", ArgvParser::NoOptionAttribute);
     cmd.defineOption("prepareCIC", "CIC start-up sequence", ArgvParser::NoOptionAttribute);
+    //
     cmd.defineOption("registerTest","run register test", ArgvParser::OptionRequiresValue);
+    //
     cmd.defineOption("enableSSA", "Disable SSA reset", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableSSAclock", "Enable SSA clock", ArgvParser::OptionRequiresValue);
+    //
     cmd.defineOption("configureSSA", "Apply default configuration", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("enableMPA", "Disable MPA reset", ArgvParser::OptionRequiresValue);
+    // 
     cmd.defineOption("resetCIC", "Send a reset to the CIC", ArgvParser::NoOptionAttribute);
     cmd.defineOption("resetSSA", "Send a reset to the SSA", ArgvParser::NoOptionAttribute);
     cmd.defineOption("resetMPA", "Send a reset to the MPA", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("resetHybrid", "Send a reset to the hybrid", ArgvParser::OptionRequiresValue);
+    //
     cmd.defineOption("readoutRate", "Readout rate [320 or 640]", ArgvParser::OptionRequiresValue);
+    //
     cmd.defineOption("clockDriveCIC", "Clock drive strength for CIC", ArgvParser::OptionRequiresValue);
     cmd.defineOption("clockDriveSSA", "Clock drive strength for SSA", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("resetHybrid", "Send a reset to the hybrid", ArgvParser::OptionRequiresValue);
+    //
     cmd.defineOption("monitor", "ADC monitoring", ArgvParser::OptionRequiresValue);
    
     // general
@@ -128,6 +137,7 @@ int main(int argc, char* argv[])
     std::string cCicsToClk = (cmd.foundOption("enableCICclock")) ? cmd.optionValue("enableCICclock") : "" ;
     std::string cSsasToEnable = (cmd.foundOption("enableSSA")) ? cmd.optionValue("enableSSA") : "" ;
     std::string cSsasToClk = (cmd.foundOption("enableSSAclock")) ? cmd.optionValue("enableSSAclock") : "" ;
+    std::string cMPAsToEnable = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "" ;
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
     
     //std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
@@ -325,6 +335,18 @@ int main(int argc, char* argv[])
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false,cSide);
                 }
             }
+            // de-activate reset for MPA 
+            if( cmd.foundOption("enableMPA"))
+            {
+                auto cSides = getSides( cMPAsToEnable );
+                for(auto cSide : cSides ) 
+                {
+                    LOG(INFO) << BOLDBLUE << "Disabling MPA reset [Side == " << +cSide  << "]" << RESET;
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, false,cSide);
+                }
+            }
+            
+            
             if( cmd.foundOption("enableSSAclock"))
             {
                 auto cSides = getSides( cSsasToClk );
