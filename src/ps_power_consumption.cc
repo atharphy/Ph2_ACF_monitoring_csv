@@ -212,17 +212,19 @@ int main(int argc, char* argv[])
                 float cMeanSlope = std::accumulate(cSlopes.begin(),cSlopes.end(),0.)/cSlopes.size();
                 float cIntcpt = cMeasurements[0]; 
                 int cCorr = std::floor(-1.0*cIntcpt/cMeanSlope);
-                LOG (DEBUG) << BOLDBLUE << "Mean slope is " << cMeanSlope 
+                LOG (INFO) << BOLDBLUE << "Mean slope is " << cMeanSlope 
                     << " , intercept is " << cIntcpt 
                     << " correction is " << cCorr
                     << RESET;
-                
                 // apply correction and check
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
                 for(size_t cM=0; cM < cVals.size(); cM++)
                 {
                     cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
                 }
+                // turn off ADC mon
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
+                
                 float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
                 float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean );
                 LOG (INFO) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
