@@ -736,7 +736,6 @@ int main(int argc, char* argv[])
                                 LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
                             else
                                 LOG(INFO) << BOLDBLUE << "Configuring MPA [chip id " << +cChip->getId() << " ]" << RESET;
-                            
                             cTool.fReadoutChipInterface->ConfigureChip(cChip);
                         }//ROCs
 
@@ -793,24 +792,28 @@ int main(int argc, char* argv[])
                             LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
                         }
 
-                        // then start-up CIC 
-                        // first  
-                        // select CIC FE enable register
-                        std::vector<uint8_t> cFeIds(0);
-                        for(auto cReadoutChip: *cHybrid)
-                        {
-                            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
-                            cFeIds.push_back(cReadoutChip->getId());
-                        }
-                        cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
 
-                        // CIC start-up sequence
-                        uint8_t cDriveStrength = 1;
-                        cSuccess               = cTool.fCicInterface->StartUp(cCic, cDriveStrength);
-                        cTool.fBeBoardInterface->ChipReSync(cBoard);
-                        if( cSuccess )
-                            LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
-                                  << +cOuterTrackerHybrid->getLinkId() << RESET;
+                        if( cmd.foundOption("prepareCIC"))
+                        {
+                            // then start-up CIC 
+                            // first  
+                            // select CIC FE enable register
+                            std::vector<uint8_t> cFeIds(0);
+                            for(auto cReadoutChip: *cHybrid)
+                            {
+                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                cFeIds.push_back(cReadoutChip->getId());
+                            }
+                            cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
+
+                            // CIC start-up sequence
+                            uint8_t cDriveStrength = 1;
+                            cSuccess               = cTool.fCicInterface->StartUp(cCic, cDriveStrength);
+                            cTool.fBeBoardInterface->ChipReSync(cBoard);
+                            if( cSuccess )
+                                LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
+                                      << +cOuterTrackerHybrid->getLinkId() << RESET;
+                        }//prepare CIC
                     }//OG
                 }//inter2
                 else if( cHybrifCnfg == 3 )
