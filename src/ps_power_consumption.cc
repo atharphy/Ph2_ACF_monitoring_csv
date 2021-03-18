@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     std::string cSsasToClk = (cmd.foundOption("enableSSAclock")) ? cmd.optionValue("enableSSAclock") : "" ;
     std::string cMPAsToEnable = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "" ;
     std::string cHybridsToReset = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "" ;  
-    std::string cMPAsToDisableClock = (cmd.foundOption("disableMPAclock")) ? cmd.optionValue("resetHybrid") : "" ;  
+    std::string cMPAsToDisableClock = (cmd.foundOption("disableMPAclock")) ? cmd.optionValue("disableMPAclock") : "" ;  
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
     uint16_t    cHybrifCnfg = (cmd.foundOption("configureHybrid")) ? convertAnyInt(cmd.optionValue("configureHybrid").c_str()) : 0;
     
