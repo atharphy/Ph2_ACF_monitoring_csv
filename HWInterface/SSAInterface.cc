@@ -298,7 +298,7 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     {
         LOG(DEBUG) << BOLDBLUE << "Writing address 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
         cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, pRegisterValue, pVerifLoop);
-        // cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue);
+        //cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue);
     }
     return cSuccess;
 }
@@ -336,7 +336,7 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         {
             if(cRegCount % 50 == 0) LOG(INFO) << BOLDBLUE << "Writing SSA register with address " << std::hex << +cReg.first << std::dec << RESET;
             cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
-            // cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second);
+            //cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second);
             if(!cSuccess) continue;
 #ifdef COUNT_FLAG
             fRegisterCount++;
@@ -368,7 +368,7 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     {
         // FIXME the FeId is hard coded for now, need to get the FeId info here
         cRegItem.fValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress);
-        // cRegItem.fValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
+        //cRegItem.fValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
     }
     return cRegItem.fValue & 0xFF;
 }
@@ -389,7 +389,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     else
     {
         cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
-        // cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue);
+        //cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue);
     }
     if(cSuccess)
     {

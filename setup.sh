@@ -79,6 +79,8 @@ export ZmqFlag='-D__ZMQ__'
 export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
+export TCUSBforROHFlag='-D__ROH_USB__'
+export TCUSBforSEHFlag='-D__SEH_USB__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -109,9 +111,10 @@ export CompileForShep=false
 export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
-export CompileWithTCUSB=false
+export CompileWithTCUSB=true
+export UseTCUSBforROH=true
 
-# Clang-format command
+ #Clang-format command
 alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
 
 echo "=== DONE ==="

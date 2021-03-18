@@ -20,17 +20,11 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
-    {
-#ifdef __TCUSB__
-        fTC_PSROH = new TC_PSROH();
-#endif
-    }
-
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB){}
     ~D19clpGBTInterface()
     {
 #ifdef __TCUSB__
-        if(fTC_PSROH != nullptr) delete fTC_PSROH;
+        if(fTC_USB != nullptr) delete fTC_USB;
 #endif
     }
 
@@ -50,6 +44,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
+    void SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
     // Configures the lpGBT Rx Groups
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
     // Configure lpGBT Rx Channels
@@ -94,7 +89,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // Configure lpGBT Rx channels phase
     void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     // Configure lpGBT Phase Shifter
-    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
+    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint16_t pDelay, uint8_t pDriveStr=0, uint8_t pEnFTune=0);
 
     // ####################################
     // # LpGBT specific routine functions #
@@ -119,6 +114,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
     // Get lpGBT Power Up State Machine status
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
+    bool IsPUSMDone(Ph2_HwDescription::Chip* pChip);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
@@ -162,15 +158,21 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT Bit Error Rate Tester #
     // ###############################
     // configure BER tester
-    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable);
+    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable=false);
     // start BER tester
     void StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
     // configure BER pattern
     void ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     // get BER status
     uint8_t GetBERTStatus(Ph2_HwDescription::Chip* pChip);
+    // get if BER done
+    bool IsBERTDone(Ph2_HwDescription::Chip* pChip);
+    // get if BER tester received empty data
+    bool IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
     // get BERT errors
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
+    // Run Bit Error Test
+    float GetBERTResult(Ph2_HwDescription::Chip* pChip);
 
     // #####################################
     // # LpGBT Eye Opening Monitor Tester  #
@@ -192,8 +194,15 @@ class D19clpGBTInterface : public lpGBTInterface
     // # Outer Tracker specific funtions #
     // ###################################
 #ifdef __TCUSB__
-    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_PSROH = pTC_PSROH; }
-    TC_PSROH* GetTCUSBHandler() { return fTC_PSROH; }
+    void      InitialiseTCUSBHandler();
+    #ifdef __ROH_USB__
+        void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
+        TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+    #elif __SEH_USB__
+        void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
+        TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
+    #endif
+
 #endif
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
@@ -264,13 +273,17 @@ class D19clpGBTInterface : public lpGBTInterface
     bool fUseOpticalLink = true;
     bool fUseCPB         = true;
 #ifdef __TCUSB__
-    TC_PSROH*                                    fTC_PSROH;
-    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+    #ifdef __ROH_USB__
+        TC_PSROH*                                    fTC_USB;
+        std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
+    #elif __SEH_USB__
+        TC_2SSEH*                                    fTC_USB;
+    #endif
 #endif
 };
 } // namespace Ph2_HwInterface

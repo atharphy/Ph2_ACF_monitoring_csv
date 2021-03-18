@@ -30,7 +30,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
       set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-    endif()
+      if($ENV{UseTCUSBforROH})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
+      else($ENV{UseTCUSBforROH})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+      endif($ENV{UseTCUSBforROH})
+    endif(${PH2_TCUSB_FOUND})
 
 
     ####################################

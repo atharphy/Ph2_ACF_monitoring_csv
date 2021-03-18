@@ -66,7 +66,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     else
     {
         cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, pVerifLoop);
-        // cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue);
+        //cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue);
     }
     return cSuccess;
 }
@@ -102,7 +102,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
         {
             LOG(DEBUG) << BOLDBLUE << "Writing CIC register with address " << std::hex << +cReg.first << std::dec << RESET;
             cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, pVerifLoop);
-            // cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second);
+            //cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second);
             if(!cSuccess) continue;
 #ifdef COUNT_FLAG
             fRegisterCount++;
@@ -170,7 +170,7 @@ std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRe
     else
     {
         auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
-        // auto cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
+        //auto cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
         return std::make_pair(true, cValue);
     }
 }

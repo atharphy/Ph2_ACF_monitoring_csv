@@ -246,8 +246,8 @@ class RD53FWInterface : public BeBoardFWInterface
     // ##########################################
     // functions for new Command Processor Block
     void                  ResetCPB() {}
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override {}
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override { return {0}; }
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) override {}
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) override { return {0}; }
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override { return true; }
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override { return 0; }
@@ -255,7 +255,7 @@ class RD53FWInterface : public BeBoardFWInterface
     bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override { return true; };
     uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override { return 0; };
     // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue) override { return true; };
+    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true) override { return true; };
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override { return 0; };
 
     // ###########################################

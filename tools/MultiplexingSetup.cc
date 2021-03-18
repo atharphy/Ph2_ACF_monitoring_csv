@@ -18,6 +18,7 @@ void MultiplexingSetup::Initialise()
     // If I do this here.. DLL does not lock
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         auto     cBeBoard   = static_cast<BeBoard*>(cBoard);
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         fBeBoardInterface->setBoard(theBoardId);
@@ -39,6 +40,7 @@ void MultiplexingSetup::Scan()
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Scanning all available backplanes and cards on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
@@ -54,6 +56,7 @@ void MultiplexingSetup::Disconnect()
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Disconnecting all backplanes and cards on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
@@ -65,6 +68,7 @@ void MultiplexingSetup::ConfigureSingleCard(uint8_t pBackPlaneId, uint8_t pCardI
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Configuring backplane " << +pBackPlaneId << " card " << +pCardId << " on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
@@ -77,6 +81,7 @@ void MultiplexingSetup::ConfigureAll()
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Configuring all cards on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
@@ -95,6 +100,7 @@ void MultiplexingSetup::Power(bool pEnable)
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Powering FMCs on " << +theBoardId << RESET;
         // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitFMCPower();
