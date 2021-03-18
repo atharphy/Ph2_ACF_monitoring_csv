@@ -149,11 +149,9 @@ int main(int argc, char* argv[])
     
     float cStartUpMontior=0;
     float cEndMonitor=0;
-    //std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
-    //if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
+    std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
+    if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
 
-    //uint8_t           cPattern = (cmd.foundOption("mpaTest")) ? convertAnyInt(cmd.optionValue("mpaTest").c_str()) : 0;
-    //const std::string cSSAPair = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
     cDirectory += Form("FEH_PS_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
@@ -167,10 +165,6 @@ int main(int argc, char* argv[])
     Timer       t, T;
 
     
-    // std::vector<Measurement> cMeasurements;
-    // MeasureCurrent(cHWFile, cPowerSupply , cMeasurements);
-        
-
     T.start();
     std::stringstream outp;
     // use a generic tool 
@@ -180,8 +174,6 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
-    //cTool.ConfigureHw();
-    //cTool.ConfigureHw();
     // first ..configure BeBoard
     // setting up back-end board
     for( auto cBoard: *cTool.fDetectorContainer)

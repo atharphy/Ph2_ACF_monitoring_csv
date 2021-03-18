@@ -1726,7 +1726,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard, bool pScope)
     return cSuccess;
 }
 // tuning of stub lines
-bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
+bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope )
 {
     PhaseTuner pTuner;
     bool       cSuccess = true;
@@ -1740,11 +1740,18 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
 
+            // check value in register map 
+            std::string cRegName = (cCic->getFrontEndType() == FrontEndType::CIC ) ? "N_OUTPUT_TRIGGER_LINES_SEL" : "FE_CONFIG";
+            auto cRegItem =  cCic->getRegItem( cRegName ); 
+            uint8_t cValue = (cCic->getFrontEndType() == FrontEndType::CIC ) ? (cRegItem.fValue )  : ((cRegItem.fValue & (1<<3))>>3);
+            // configure number of lines based on that 
+            uint8_t cNlines = 5 + cValue ; 
+            
+            
             // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
             if(pScope) this->StubDebug();
 
             LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
-            uint8_t cNlines = 6;
             for(uint8_t cLineId = 1; cLineId < 1 + cNlines; cLineId += 1)
             {
                 if(fOptical)
@@ -1752,32 +1759,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                     LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
                     pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
                     cSuccess = cSuccess && pTuner.fDone;
-                    // why was I doing it like this?
-                    // pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, 1, 0, 0);
-                    // pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
-                    // pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
-                    // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    // LOG(DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
-                    // uint8_t cAttempts = 0;
-                    // if(pTuner.fBitslip == 0)
-                    // {
-                    //     do
-                    //     {
-                    //         if(cAttempts > 10)
-                    //         {
-                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                    //             exit(0);
-                    //         }
-                    //         // try again
-                    //         LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
-                    //         GbtInterface cGBTx;
-                    //         cGBTx.gbtxSetPhase(this, fGBTphase);
-                    //         pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
-                    //         cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    //         LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                    //         cAttempts++;
-                    //     } while(pTuner.fBitslip == 0);
-                    // }
                 }
                 else
                 {
