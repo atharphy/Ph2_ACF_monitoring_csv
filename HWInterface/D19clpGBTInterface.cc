@@ -960,11 +960,19 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cResetPinsLHS{fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC};
     ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
     ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    // Reset all ASICs
     for(size_t cSide=0; cSide<2; cSide++)
     {
-        ssaReset(pChip, false, cSide);
-        mpaReset(pChip, false, cSide);
-        cicReset(pChip, false, cSide);
+        resetSSA(pChip, cSide);
+        resetMPA(pChip, cSide);
+        resetCic(pChip, cSide);
+    }
+    // Keep resets active after start-up  
+    for(size_t cSide=0; cSide<2; cSide++)
+    {
+        ssaReset(pChip, true, cSide);
+        mpaReset(pChip, true, cSide);
+        cicReset(pChip, true, cSide);
     }
 }
 

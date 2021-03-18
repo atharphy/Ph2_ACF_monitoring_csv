@@ -86,7 +86,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("enableCIC", "Disable CIC reset", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableCICclock", "Enable CIC clock", ArgvParser::OptionRequiresValue);
     //
-    cmd.defineOption("configureCIC", "Apply default configuration", ArgvParser::NoOptionAttribute);
     cmd.defineOption("prepareCIC", "CIC start-up sequence", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("registerTest","run register test", ArgvParser::OptionRequiresValue);
@@ -94,9 +93,13 @@ int main(int argc, char* argv[])
     cmd.defineOption("enableSSA", "Disable SSA reset", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableSSAclock", "Enable SSA clock", ArgvParser::OptionRequiresValue);
     //
-    cmd.defineOption("configureSSA", "Apply default configuration", ArgvParser::NoOptionAttribute);
     cmd.defineOption("enableMPA", "Disable MPA reset", ArgvParser::OptionRequiresValue);
     // 
+    cmd.defineOption("configureCIC", "Apply default configuration to CIC", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("configureSSA", "Apply default configuration to SSA", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("configureMPA", "Apply default configuration to MPA", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("configureHybrid", "Apply default start-up sequence for hybrid", ArgvParser::NoOptionAttribute);
+    //
     cmd.defineOption("resetCIC", "Send a reset to the CIC", ArgvParser::NoOptionAttribute);
     cmd.defineOption("resetSSA", "Send a reset to the SSA", ArgvParser::NoOptionAttribute);
     cmd.defineOption("resetMPA", "Send a reset to the MPA", ArgvParser::NoOptionAttribute);
@@ -294,7 +297,7 @@ int main(int argc, char* argv[])
             if(clpGBT == nullptr) continue;
 
             // de-activate reset for CIC 
-            if( cmd.foundOption("enableCIC") )
+            if( cmd.foundOption("enableCIC") && !cmd.foundOption("configureHybrid")) 
             {
                 auto cSides = getSides(cCicsToEnable);
 
@@ -305,7 +308,7 @@ int main(int argc, char* argv[])
                 }
             }
             // enable clock for CIC 
-            if( cmd.foundOption("enableCICclock"))
+            if( cmd.foundOption("enableCICclock")  && !cmd.foundOption("configureHybrid")) 
             {
                 // import from xml at some point 
                 lpGBTClockConfig cClkCnfg; 
@@ -326,7 +329,7 @@ int main(int argc, char* argv[])
             }
             
             // de-activate reset for SSA 
-            if( cmd.foundOption("enableSSA"))
+            if( cmd.foundOption("enableSSA")  && !cmd.foundOption("configureHybrid")) 
             {
                 auto cSides = getSides( cSsasToEnable );
                 for(auto cSide : cSides ) 
@@ -336,7 +339,7 @@ int main(int argc, char* argv[])
                 }
             }
             // de-activate reset for MPA 
-            if( cmd.foundOption("enableMPA"))
+            if( cmd.foundOption("enableMPA")  && !cmd.foundOption("configureHybrid")) 
             {
                 auto cSides = getSides( cMPAsToEnable );
                 for(auto cSide : cSides ) 
@@ -347,7 +350,7 @@ int main(int argc, char* argv[])
             }
             
             
-            if( cmd.foundOption("enableSSAclock"))
+            if( cmd.foundOption("enableSSAclock")  && !cmd.foundOption("configureHybrid")) 
             {
                 auto cSides = getSides( cSsasToClk );
                 
@@ -395,7 +398,7 @@ int main(int argc, char* argv[])
             if(clpGBT == nullptr) continue;
 
             // CIC configure 
-            if( cmd.foundOption("configureCIC") )
+            if( cmd.foundOption("configureCIC") && !cmd.foundOption("configureHybrid"))
             {
                 // configure CIC 
                 for(auto cHybrid: *cOpticalGroup)
@@ -448,7 +451,7 @@ int main(int argc, char* argv[])
                 }
             }
 
-            if( cmd.foundOption("configureSSA"))
+            if( cmd.foundOption("configureSSA") && !cmd.foundOption("configureHybrid"))
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
@@ -465,8 +468,46 @@ int main(int argc, char* argv[])
             }//configure SSA 
         } // configure ROCs + CICs
 
-        if( cmd.foundOption("configureSSA"))     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
+        if( cmd.foundOption("configureSSA")&& !cmd.foundOption("configureHybrid"))     
+            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
         
+        if( cmd.foundOption("monitor") )
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT =  cOpticalGroup->flpGBT ;
+                if(clpGBT == nullptr) continue;
+
+                // enable voltage 
+                std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7","VDD"};
+                std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
+                std::vector<std::string> cModuleSide{"left","left","right","left","internal"};
+                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
+                
+                LOG (INFO) << BOLDBLUE << "Reading monitoring voltaages : " << RESET;
+                for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
+                {
+                    std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+                    if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
+                    
+                    std::vector<float> cVals(10,0);
+                    for(size_t cM=0; cM < cVals.size(); cM++)
+                    {
+                        cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                    }
+                    float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                    float cSqSum = std::inner_product(cVals.begin(), cVals.end(), cVals.begin(), 0.0);
+                    float cStdDev = std::sqrt(cSqSum / cVals.size() - cMean * cMean);
+
+                    LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
+                        << +cMean*1e3 
+                        << " milli-volt [ RMS = "
+                        << cStdDev*1e3 << " ] milli-volts." 
+                        << RESET;
+                }//read all monitors 
+            }// configure lpGBT 
+        }
+
         if( cmd.foundOption("registerTest"))
         {
             // reset error summaries
@@ -552,38 +593,7 @@ int main(int argc, char* argv[])
             
         }// register test
         
-        if( cmd.foundOption("monitor") )
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& clpGBT =  cOpticalGroup->flpGBT ;
-                if(clpGBT == nullptr) continue;
 
-                // enable voltage 
-                std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7","VDD"};
-                std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
-                std::vector<std::string> cModuleSide{"left","left","right","left","internal"};
-                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
-                
-                LOG (INFO) << BOLDBLUE << "Reading monitoring voltaages : " << RESET;
-                for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
-                {
-                    std::string cADCsel = cADCs_VoltageMonitors[cIndx];
-                    if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
-                    
-                    std::vector<float> cVals(10,0);
-                    for(size_t cM=0; cM < cVals.size(); cM++)
-                    {
-                        cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
-                    }
-                    float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-                    LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
-                        << +cMean*1e3 
-                        << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
-                        << " side of the module" << RESET;
-                }//read all monitors 
-            }// configure lpGBT 
-        }
 
     }
 
