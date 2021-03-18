@@ -93,6 +93,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("enableSSA", "Disable SSA reset", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableSSAclock", "Enable SSA clock", ArgvParser::OptionRequiresValue);
     cmd.defineOption("disableMPAclock", "Disable MPA clock for hybrid configuration 0", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("enableMPAclock", "Disable MPA clock for hybrid configuration 0", ArgvParser::OptionRequiresValue);
     
     //
     cmd.defineOption("enableMPA", "Disable MPA reset", ArgvParser::OptionRequiresValue);
@@ -145,6 +146,9 @@ int main(int argc, char* argv[])
     std::string cMPAsToEnable = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "" ;
     std::string cHybridsToReset = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "" ;  
     std::string cMPAsToDisableClock = (cmd.foundOption("disableMPAclock")) ? cmd.optionValue("disableMPAclock") : "" ;  
+    std::string cMPAsToEnableClock = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("disableMPAclock") : "" ;  
+    
+
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
     uint16_t    cHybrifCnfg = (cmd.foundOption("configureHybrid")) ? convertAnyInt(cmd.optionValue("configureHybrid").c_str()) : 0;
     
@@ -705,6 +709,8 @@ int main(int argc, char* argv[])
                 else if( cHybrifCnfg == 2 )
                 {
                     auto cMPAsToDisable  = getSides(cMPAsToDisableClock);
+                    auto cMPAsToEnable  = getSides(cMPAsToEnableClock);
+                    
                     // now .. configure all SSAs 
                     for(auto cHybrid: *cOpticalGroup)
                     {
@@ -742,7 +748,6 @@ int main(int argc, char* argv[])
                         // disable clock from one MPA 
                         if( cmd.foundOption("disableMPAclock") )
                         {
-
                             // first . . all connected SSAs produce a clock 
                             for(auto cReadoutChip: *cHybrid)
                             {
@@ -762,6 +767,23 @@ int main(int argc, char* argv[])
                                     {
                                         LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cMpaId << " to 0x00" << RESET;
                                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
+                                    }//SSAs
+                                }//ROCs
+                            }
+                        }
+
+                        // disable clock from one MPA 
+                        if( cmd.foundOption("enableMPAclock") )
+                        {
+                            // then disable selected 
+                            for(auto cMpaId : cMPAsToDisable )
+                            {
+                               for(auto cReadoutChip: *cHybrid)
+                                {
+                                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cMpaId)
+                                    {
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cMpaId << " to 0x07" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
                                     }//SSAs
                                 }//ROCs
                             }
