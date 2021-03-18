@@ -275,9 +275,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // are these needed?
                 uint8_t cLinkId = cOpticalGroup->getId();
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT);
-            } // configure lpGBT
-
+                if(cOpticalGroup->flpGBT != nullptr)
+                {
+                    cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
+                    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                    if(cIslpGBTI2C){ clpGBTInterface->InitialiseTCUSBHandler(); }
+                    clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT);
+                }
+            }
             // Check lpGBT Link Lock
             if(cIslpGBTI2C)
             {

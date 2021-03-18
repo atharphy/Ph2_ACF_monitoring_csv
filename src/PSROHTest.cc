@@ -66,12 +66,18 @@ int main(int argc, char* argv[])
     // test ADC channels
     cmd.defineOption("testADC", "Test LpGBT ADCs on ROH");
     cmd.defineOptionAlternative("testADC", "a");
-    // run Eye Opening Monito
-    cmd.defineOption("eye-monitor", "Test LpGBT read/write through optical link");
+    // run Eye Opening Monitor
+    cmd.defineOption("eye-monitor", "Run Eye Opening Monitor test");
     cmd.defineOptionAlternative("eye-monitor", "eom");
+    // run Bit Error Test
+    cmd.defineOption("bit-error-rate", "Run Bit Error Rate test");
+    cmd.defineOptionAlternative("bit-error-rate", "ber");
+    cmd.defineOption("ber-pattern", "Define pattern to be used for Bit Error Rate test", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOptionAlternative("ber-pattern", "bp");
     // clock test
     cmd.defineOption("clock-test", "Run clock tests", ArgvParser::NoOptionAttribute);
     // fast command test
+    cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
     cmd.defineOption("fcmd-pattern", "Injected pattern (simulates FCMD) on the DownLink", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("fcmd-pattern", "fp");
     //
@@ -96,7 +102,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("debug", "Run debug", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("debug", "d");
     // scope
-    cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -114,7 +119,7 @@ int main(int argc, char* argv[])
     std::string       cDirectory            = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     std::string       cHybridId             = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
     bool              cDebug                = (cmd.foundOption("debug"));
-    bool              cClockTest            = (cmd.foundOption("clock-test")) ? true : false;
+    //Test to perform
     bool              cFCMDTest             = (cmd.foundOption("fcmd-test")) ? true : false;
     std::string       cFCMDTestStartPattern = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";
     std::string       cFCMDTestUserFileName = (cmd.foundOption("fcmd-test-userfile")) ? cmd.optionValue("fcmd-test-userfile") : "fcmd_file.txt";
@@ -123,10 +128,6 @@ int main(int argc, char* argv[])
     std::string       cConvertUserFileName  = (cmd.foundOption("convert-userfile")) ? cmd.optionValue("convert-userfile") : "fcmd_file.txt";
     std::string       cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
     std::string       cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
-    uint8_t           cExternalPattern      = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
-    uint8_t           cInternalPattern8     = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
-    uint32_t          cInternalPattern32    = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
-    uint8_t           cFCMDPattern          = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -158,33 +159,32 @@ int main(int argc, char* argv[])
     cPSROHTester.Inherit(&cTool);
     cPSROHTester.FindUSBHandler();
 
+
+    /***************/
+    /* TEST UPLINK */
+    /***************/
     if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
     {
+        /* INTERNALLY GENERATED PATTERN */
         if(cmd.foundOption("internal-pattern"))
         {
+            uint8_t           cInternalPattern8     = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
+            uint32_t          cInternalPattern32    = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
             cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
             cPSROHTester.LpGBTCheckULPattern(false);
         }
+        /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
-            cPSROHTester.LpGBTInjectULExternalPattern(cExternalPattern);
+            uint8_t           cExternalPattern      = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
+            cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
             cPSROHTester.LpGBTCheckULPattern(true);
+            cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
         }
     }
-
-    if(cmd.foundOption("cic-pattern"))
-    {
-        LOG(INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
-        // align back-end
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cTool);
-        cBackEndAligner.Align();
-        // cBackEndAligner.Start(0);
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        // cBackEndAligner.Reset();
-    }
-    // Test PS ROH Reset Lines
+    /****************************/
+    /* TEST RESET LINES (GPIOs) */
+    /****************************/
     if(cmd.foundOption("testReset"))
     {
         std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
@@ -200,7 +200,9 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Test LpGBT I2C Masters
+    /********************/
+    /* TEST I2C MASTERS */
+    /********************/
     if(cmd.foundOption("testI2C"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
@@ -211,34 +213,59 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
     }
 
+    /**********************************/
+    /* TEST ANALOG-DIGITAL-CONVERTERS */
+    /**********************************/
     if(cmd.foundOption("testADC"))
     {
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
         cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
     }
 
+    /********************/
+    /* TEST EYE OPENING */
+    /********************/
     if(cmd.foundOption("eye-monitor"))
     {
         cPSROHTester.LpGBTRunEyeOpeningMonitor(7);
     }
 
-    // Test Fast Commands
-    if(cDebug)
+    /***********************/
+    /* TEST BIT ERROR RATE */
+    /***********************/
+    if(cmd.foundOption("bit-error-rate"))
     {
-        LOG(INFO) << "Start debugging" << RESET;
-        cPSROHTester.PSROHInputsDebug();
+        uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
+        uint8_t cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
+        cPSROHTester.LpGBTRunBitErrorRateTest(cCoarseSource, cFineSource, cMeasTime, cBERTPattern32);
     }
 
-    if(cClockTest)
+    /***************/
+    /* TEST CLOCKS */
+    /***************/
+    if(cmd.foundOption("clock-test"))
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
         cPSROHTester.CheckClocks();
     }
 
+    /*********************/
+    /* TEST FAST COMMAND */
+    /*********************/
     if(cmd.foundOption("scope-fcmd"))
     {
-        if(cmd.foundOption("fcmd-pattern")) cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+        if(cmd.foundOption("fcmd-pattern")) 
+        {
+            uint8_t           cFCMDPattern          = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+            cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+        }
         cPSROHTester.FastCommandScope();
+    }
+
+    if(cDebug)
+    {
+        LOG(INFO) << "Start debugging" << RESET;
+        cPSROHTester.PSROHInputsDebug();
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
@@ -290,13 +317,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cPSROHTester.ClearBRAM(std::string("test"));
     }
-    /*
-        D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-        LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-        cFWInterface->StubDebug(true, 6);
-        LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-        cFWInterface->L1ADebug();
-    */
+
     // Save Result File
     cTool.SaveResults();
     cTool.WriteRootFile();
