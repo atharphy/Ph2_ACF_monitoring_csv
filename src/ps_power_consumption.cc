@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
     std::string cMPAsToEnable = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "" ;
     std::string cHybridsToReset = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "" ;  
     std::string cMPAsToDisableClock = (cmd.foundOption("disableMPAclock")) ? cmd.optionValue("disableMPAclock") : "" ;  
-    std::string cMPAsToEnableClock = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("disableMPAclock") : "" ;  
+    std::string cMPAsToEnableClock = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("enableMPAclock") : "" ;  
     
 
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
