@@ -822,7 +822,7 @@ bool D19cCic2Event::DataBit(uint8_t pFeId, uint8_t pReadoutChipId, uint32_t i) c
     if(fIsSparsified) { return (decodeClusters(pFeId, pReadoutChipId)[i] > 0); }
     else
     {
-        size_t cOffset = 2 + 9 + 9;
+        size_t cOffset = 0; // 2 + 9 + 9;
         return (getRawL1Word(pFeId, pReadoutChipId)[cOffset + i] > 0);
     }
 }

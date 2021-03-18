@@ -59,6 +59,9 @@ class CbcInterface : public ReadoutChipInterface
 
     bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = true) override;
 
+    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
+    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
+
     /*!
      * \brief Reapply the stored mask for the CBC, use it after group masking is applied
      * \param pCbc: pointer to CBC object

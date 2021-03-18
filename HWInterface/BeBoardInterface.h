@@ -222,14 +222,13 @@ class BeBoardInterface
      * \param args
      * \return none
      */
-    template <typename... Ts>
-    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const Ts&... args)
+    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
     {
         std::lock_guard<std::mutex> theGuard(theMtx);
 
         pReadoutChipInterface->ReadHybridVoltage(pChip);
         pReadoutChipInterface->ReadHybridTemperature(pChip);
-        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args...);
+        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args);
     }
 
     /*!

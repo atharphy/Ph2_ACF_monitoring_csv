@@ -29,12 +29,12 @@ int main(int argc, char** argv)
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription("CMS Ph2_ACF  system test application");
+    cmd.setIntroductoryDescription("CMS Ph2_ACF power supply example application");
     // error codes
     cmd.addErrorCode(0, "Success");
     cmd.addErrorCode(1, "Error");
     // options
-    cmd.setHelpOption("h", "help", "Print this help page");
+    cmd.setHelpOption("h", "help", "Example: powersupply -f CMSIT.xml --name TestKeithley --channel Front -v 1.8");
 
     cmd.defineOption("name", "Name of the power supply as described in the HW file", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("name", "n");

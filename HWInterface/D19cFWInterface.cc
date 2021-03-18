@@ -4779,17 +4779,17 @@ void D19cFWInterface::Align_out()
     }
 }
 
-void D19cFWInterface::ResetOptoLink(Ph2_HwDescription::Chip* pChip)
+void D19cFWInterface::ResetOptoLink()
 {
     // cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x1});
     // cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x0});
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.gbtx", 0x00}});
 }
 
-bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pValue, bool pVerifLoop)
+bool D19cFWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
 {
     // Reset
-    ResetOptoLink(pChip);
+    ResetOptoLink();
     // Config transaction register
     this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pValue}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
     // Perform transaction
@@ -4816,10 +4816,10 @@ bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint
     return true;
 }
 
-uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)
+uint32_t D19cFWInterface::ReadOptoLinkRegister(uint32_t pAddress)
 {
     // Reset
-    ResetOptoLink(pChip);
+    ResetOptoLink();
     // Config transaction register
     this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}, {"fc7_daq_cnfg.optical_block.ic.nwords", 0x01}});
     // Perform transaction
@@ -4836,11 +4836,6 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, u
 // #########################################
 void D19cFWInterface::ResetCPB()
 {
-    /*
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0x01);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0x01);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0x01);
-    */
     // Soft reset the GBT-SC worker
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -4877,7 +4872,7 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbo
 		LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
 		cFifoIndex++;
 	    }
-    	    LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
+    	LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
     }
     return cReplyVector;
 }
@@ -4899,7 +4894,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     uint8_t cIter = 0, cMaxIter = 50;
     while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
     {
-	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+	    LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);

@@ -61,7 +61,7 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
 
-    for(j = 0; j < 40; j++) os << " ";
+    for(j = 0; j < 35; j++) os << " ";
     os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
 
     for(i = 0; i < 80; i++) os << "*";
@@ -79,7 +79,7 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
 
     os << "\n";
 
-    for(j = 0; j < 40; j++) os << " ";
+    for(j = 0; j < 32; j++) os << " ";
 
     os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
 
@@ -971,10 +971,9 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
         if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
 
         throw Exception("Unable to parse XML source!");
-        return;
     }
 
-    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings; nSettings = nSettings.next_sibling())
+    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
         os << "\n" << std::endl;
 
@@ -1047,6 +1046,7 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
         }
     }
 }
+// ########################
 
 std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
 {
@@ -1055,7 +1055,7 @@ std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonit
     else if(!pIsFile)
         return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
     else
-        LOG(ERROR) << BOLDRED << "Could not parse monitor file " << pFilename << " - it is not .xm" << RESET;
+        LOG(ERROR) << BOLDRED << "Could not parse monitor file " << pFilename << " - it is not .xml" << RESET;
     return "None";
 }
 
@@ -1080,32 +1080,31 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
         return "None";
     }
 
-    if(!bool(doc.child("MonitoringSettings")))
+    if(!bool(doc.child("HwDescription").child("MonitoringSettings")))
     {
         os << BOLDYELLOW << "Monitoring not defined in " << pFilename << RESET << std::endl;
         os << BOLDYELLOW << "No monitoring will be run" << RESET << std::endl;
         return "None";
     }
 
-    pugi::xml_node theMonitorNode = doc.child("MonitoringSettings").child("Monitoring");
+    pugi::xml_node theMonitorNode = doc.child("HwDescription").child("MonitoringSettings").child("Monitoring");
     if(std::string(theMonitorNode.attribute("enable").value()) == "0") return "None";
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child("MonitoringSleepTime").first_child().value());
+
+    os << "\n" << std::endl;
 
     for(pugi::xml_node monitorElement = theMonitorNode.child("Enable"); monitorElement; monitorElement = monitorElement.next_sibling())
     {
         std::string monitorElementName = monitorElement.attribute("name").value();
         if(atoi(monitorElement.first_child().value()) > 0)
         {
+            os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << monitorElementName << RESET;
             theDetectorMonitorConfig.fMonitorElementList.emplace_back(std::move(monitorElementName));
-            os << BOLDRED << "Monitoring:" << RESET << " -- " << BOLDCYAN << monitorElementName << RESET << std::endl;
         }
     }
 
     if(theDetectorMonitorConfig.fMonitorElementList.size() == 0) return "None";
     return theMonitorNode.attribute("type").value();
 }
-
-// ########################
-
 } // namespace Ph2_System

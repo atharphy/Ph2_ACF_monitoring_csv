@@ -38,10 +38,13 @@ const uint8_t  NBIT_MAXREG       = 16;   // Maximum number of bits for a chip re
 const uint8_t  NPIX_REGION       = 4;    // Number of pixels in a region (1x4)
 const uint8_t  NROW_CORE         = 8;    // Number of rows in a core
 const uint8_t  NBIT_ADDR         = 9;    // Number of address bits
-const uint8_t  NSYNC_WORS        = 32;   // Number of Sync words for synchronization
+const uint8_t  NSYNC_WORS        = 128;  // Number of Sync words for synchronization
 const uint8_t  CDRCONFIG_ADDR    = 0x40; // Address of CDR_CONFIG register
 const uint16_t CDRCONFIG_1Gbit   = 1048; // Value for 1.28 Gbit/s
 const uint16_t CDRCONFIG_640Mbit = 1049; // Value for 640 Mbit/s
+const uint8_t  PATTERN_PRBS      = 0x2;  // Start PRBS pattern
+const uint8_t  PATTERN_AURORA    = 0x1;  // Start AURORA pattern
+const uint8_t  PATTERN_CLOCK     = 0x0;  // Start clock pattern
 } // namespace RD53Constants
 
 // ############
@@ -178,7 +181,7 @@ class RD53 : public ReadoutChip
         uint16_t             bc_id;
         std::vector<HitData> hit_data;
 
-        uint16_t evtStatus;
+        uint16_t eventStatus;
 
       private:
         void DecodeQuad(uint32_t data);

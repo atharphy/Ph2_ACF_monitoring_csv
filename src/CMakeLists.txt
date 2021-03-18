@@ -5,7 +5,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    #includes
+    # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
@@ -15,14 +15,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-    #library dirs
+    # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
-    #initial set of libraries
+    # Initial set of libraries
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils Ph2_NetworkUtils)
 
-    #check for ZMQ installed
+    # Check for ZMQ installed
     if(ZMQ_FOUND)
         #here, now check for UsbInstLib
         if(PH2_USBINSTLIB_FOUND)
@@ -38,7 +38,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif()
     endif()
 
-    #check for AMC13 libraries
+    # Check for AMC13 libraries
     if(${CACTUS_AMC13_FOUND})
         include_directories(${PROJECT_SOURCE_DIR}/AMC13)
         include_directories(${UHAL_AMC13_INCLUDE_PREFIX})
@@ -47,7 +47,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{Amc13Flag}")
     endif()
 
-    #check for AntennaDriver
+    # Check for AntennaDriver
     if(${PH2_ANTENNA_FOUND})
         include_directories(${PH2_ANTENNA_INCLUDE_DIRS})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
@@ -55,15 +55,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
-    #check for PowerSupply
+    # Check for PowerSupply
     if(${PH2_POWERSUPPLY_FOUND})
       include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
       link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-    #   set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
     endif()
 
-    #check for TestCard USBDriver
+    # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
@@ -76,13 +76,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       endif($ENV{UseTCUSBforROH})
     endif(${PH2_TCUSB_FOUND})
 
-    #boost also needs to be linked
-    if(Boost_FOUND)
-        set(LIBS ${LIBS} ${Boost_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
-    endif()
-
-    #find root and link against it
+    # Find root and link against it
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
@@ -114,7 +108,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
 
-    #to remove binaries
+    # Remove binaries
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
         file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc fpgaconfig.cc)

@@ -10,29 +10,31 @@
 ###  A short guide to write the GoldenImage to the SD card
 
 1. Connect the SD card
-2. Download the golden firmware from https://indico.cern.ch/event/842824/attachments/1920624/3178547/sdgoldenimage.img
+2. Download the golden firmware from the [cms-tracker-daq webpage](https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img)
 3. `sudo fdisk -l` - find the name of the SD card (for example, /dev/mmcblk0)
 4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
-5. `./imgtool /dev/sd_card_name format Firmware` - to format the SD card
-6. Go to the folder were you saved the sdgoldenimage.img file
-7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card. Alternatively, to only copy the needed bytes: `imageName=sdgoldenimage.img; dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device coun
-t=$(ls -s --block-size=1 $imageName | awk '{print $1}')`. If the SD card is partitioned (formatted), pay attention to write on the block devive (e.g. `/dev/mmcblk0`) and not inside the partition (e.g. `/dev/mmcblk0p1`)
-8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
-9. Insert the SD card into the FC7
+5. Go to the folder were you saved the sdgoldenimage.img file
+6. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card.
+If the SD card is partitioned (formatted), pay attention to write on the block device (e.g. `/dev/mmcblk0`) and not inside the partition (e.g. `/dev/mmcblk0p1`)
+7. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
+8. Insert the SD card into the FC7
 
-Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP <br/>
-More informations can be found at https://indico.cern.ch/event/842824/attachments/1920624/3177632/PreparingFC7.pdf
+Alternatively, instead of the `dd` command above, to only copy the needed bytes you can do:
+```bash
+imageName=sdgoldenimage.img
+dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --block-size=1 $imageName | awk '{print $1}')
+```
 <hr>
 
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 14/12/2020
++ Last change made to this section: 23/02/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `master` / `IT-v3.9.9`
-- Firmware tag: `3.4`
+- Software git branch / tag : `master` / `IT-v3.9.10`
+- Firmware tag: `3.6`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
@@ -40,7 +42,7 @@ More informations can be found at https://indico.cern.ch/event/842824/attachment
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
 4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
-5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
@@ -92,6 +94,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 10. Injection delay scan
 11. Clock delay scan
 12. Physics
+13. Bit Error Rate test
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
@@ -221,6 +224,7 @@ For more information on the firmware, please check the doc directory of https://
 ### clang-format (required to submit merge requests!!!)
 1. install 7.0 llvm toolset:
 
+        $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):

@@ -20,7 +20,7 @@
     add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
     # this is what was used in OT...
     # add_library(Ph2_Utils SHARED ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} pugixml boost_thread)
+    set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 
     # Check for ZMQ installed
@@ -38,7 +38,6 @@
             list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/UsbUtilities.cc)
             list(REMOVE_ITEM HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/UsbUtilities.h)
     endif(ZMQ_FOUND)
-
 
     ####################################
     ## EXECUTABLES
@@ -70,7 +69,7 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
-        
+
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
      )

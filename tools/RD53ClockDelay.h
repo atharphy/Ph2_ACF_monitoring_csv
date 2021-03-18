@@ -62,13 +62,13 @@ class ClockDelay : public PixelAlive
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
     void chipErrorReport();
+    void writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay);
 
   protected:
     std::string fileRes;
     int         theCurrentRun;
-    size_t      shiftData;
-    size_t      saveData;
-    size_t      maxDelay;
+    uint16_t    maxClkDelay;
+    uint16_t    maxCmdDelay;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
