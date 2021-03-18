@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("enableSSA", "Disable SSA reset", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableSSAclock", "Enable SSA clock", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("disableMPAclock", "Disable MPA clock for hybrid configuration 0", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("disableMPAclock", "Disable MPA clock for hybrid configuration 0", ArgvParser::OptionRequiresValue);
     
     //
     cmd.defineOption("enableMPA", "Disable MPA reset", ArgvParser::OptionRequiresValue);
@@ -144,6 +144,7 @@ int main(int argc, char* argv[])
     std::string cSsasToClk = (cmd.foundOption("enableSSAclock")) ? cmd.optionValue("enableSSAclock") : "" ;
     std::string cMPAsToEnable = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "" ;
     std::string cHybridsToReset = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "" ;  
+    std::string cMPAsToDisableClock = (cmd.foundOption("disableMPAclock")) ? cmd.optionValue("resetHybrid") : "" ;  
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
     uint16_t    cHybrifCnfg = (cmd.foundOption("configureHybrid")) ? convertAnyInt(cmd.optionValue("configureHybrid").c_str()) : 0;
     
@@ -609,7 +610,7 @@ int main(int argc, char* argv[])
                             LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
                                   << +cOuterTrackerHybrid->getLinkId() << RESET;
                     }//OG
-                }
+                }//safe
                 else if( cHybrifCnfg == 1 )
                 {
                     // now .. configure all SSAs 
@@ -700,8 +701,119 @@ int main(int argc, char* argv[])
                             LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
                                   << +cOuterTrackerHybrid->getLinkId() << RESET;
                     }//OG
-                }
+                }//inter
                 else if( cHybrifCnfg == 2 )
+                {
+                    auto cMPAsToDisable  = getSides(cMPAsToDisableClock);
+                    // now .. configure all SSAs 
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        // first .. send clock to the SSAs on this hybrid  
+                        uint8_t cSide=cHybrid->getId()%2;
+                        
+                        lpGBTClockConfig cClkCnfg; 
+                        cClkCnfg.fClkFreq = 4;  
+                        cClkCnfg.fClkDriveStr = cSsaClockDrive; 
+                        cClkCnfg.fClkInvert = 1;
+                        cClkCnfg.fClkPreEmphWidth = 0; 
+                        cClkCnfg.fClkPreEmphMode = 0; 
+                        cClkCnfg.fClkPreEmphStr = 0;
+                        LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+                        cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
+                        cClkCnfg.fClkDriveStr = cCicClockDrive; 
+                        LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
+
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, false,cSide);
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false,cSide);
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
+
+                        // Configure SSAs+MPAs on this hybrid 
+                        for(auto cChip: *cHybrid)
+                        {
+                            if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
+                            else
+                                LOG(INFO) << BOLDBLUE << "Configuring MPA [chip id " << +cChip->getId() << " ]" << RESET;
+                            
+                            cTool.fReadoutChipInterface->ConfigureChip(cChip);
+                        }//ROCs
+
+                        // disable clock from one MPA 
+                        if( cmd.foundOption("disableMPAclock") )
+                        {
+
+                            // first . . all connected SSAs produce a clock 
+                            for(auto cReadoutChip: *cHybrid)
+                            {
+                                if( cReadoutChip->getFrontEndType() == FrontEndType::SSA )
+                                {
+                                    LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
+                                    cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                                }//SSAs
+                            }//ROC
+
+                            // then disable selected 
+                            for(auto cMpaId : cMPAsToDisable )
+                            {
+                               for(auto cReadoutChip: *cHybrid)
+                                {
+                                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cMpaId)
+                                    {
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cMpaId << " to 0x00" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
+                                    }//SSAs
+                                }//ROCs
+                            }
+                        }
+
+                        // configuring CIC 
+                        LOG(INFO) << BOLDBLUE << "Configuring CIC(s)" << RESET;
+                        OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                        auto& cCic = cOuterTrackerHybrid->fCic;
+                        cTool.fCicInterface->ConfigureChip(cCic);
+                        static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
+
+                        // CIC start-up
+                        bool cSuccess = true;
+                        if(cOuterTrackerHybrid->size() > 0) 
+                        {
+                            auto         cFirstROC = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
+                            FrontEndType cType     = FrontEndType::CBC3;
+                            if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
+                            uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                            // select CIC mode
+                            cSuccess = cTool.fCicInterface->SelectMode(cCic, cModeSelect);
+                            if(!cSuccess)
+                            {
+                                LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
+                                exit(0);
+                            }
+                            LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
+                        }
+
+                        // then start-up CIC 
+                        // first  
+                        // select CIC FE enable register
+                        std::vector<uint8_t> cFeIds(0);
+                        for(auto cReadoutChip: *cHybrid)
+                        {
+                            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            cFeIds.push_back(cReadoutChip->getId());
+                        }
+                        cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
+
+                        // CIC start-up sequence
+                        uint8_t cDriveStrength = 1;
+                        cSuccess               = cTool.fCicInterface->StartUp(cCic, cDriveStrength);
+                        cTool.fBeBoardInterface->ChipReSync(cBoard);
+                        if( cSuccess )
+                            LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
+                                  << +cOuterTrackerHybrid->getLinkId() << RESET;
+                    }//OG
+                }//inter2
+                else if( cHybrifCnfg == 3 )
                 {
                     // now .. configure all SSAs 
                     for(auto cHybrid: *cOpticalGroup)
@@ -783,7 +895,7 @@ int main(int argc, char* argv[])
                             cTool.fReadoutChipInterface->ConfigureChip(cChip);
                         }//ROCs
                     }//OG
-                }
+                }//original 
             }// configure hybrid 
         } // configure ROCs + CICs
 

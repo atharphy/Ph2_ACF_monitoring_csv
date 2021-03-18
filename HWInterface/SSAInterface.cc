@@ -406,7 +406,7 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
     else
     {
         cSuccess = true;
-        LOG (INFO) << BOLDMAGENTA << "Writing registers SSAInterface::WriteRegs" << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "Writing registers SSAInterface::WriteRegs" << RESET;
         size_t cCount=0;
         bool cRetry=false;
         std::vector<uint8_t> pSuccesses(pRegs.size(), 1);
@@ -484,7 +484,6 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     else
     {   
         auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress);
-        LOG (INFO) << BOLDMAGENTA << "Running verification loop for SSAInterface::ReadReg" << RESET;
         pChip->setReg( fMap[pRegisterAddress], cValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg );
     }
     return cRegItem.fValue & 0xFF;
@@ -518,7 +517,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
         }
         if( pVerifLoop )
         {
-            LOG (INFO) << BOLDMAGENTA << "Running verification loop for SSAInterface::WriteChipSingleReg" << RESET;
+            LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for SSAInterface::WriteChipSingleReg" << RESET;
             uint32_t cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cRegItem.fAddress );
             cSuccess =  cSuccess && runVerification(pChip, cValue, fMap[cRegItem.fAddress] );
             if( !cSuccess )

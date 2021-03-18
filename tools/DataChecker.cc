@@ -570,6 +570,7 @@ void DataChecker::AsyncTest()
 
         for(uint8_t cThreshold = cThresholdStart; cThreshold < cThresholdStop; cThreshold += 5)
         {
+            LOG (INFO) << BOLDBLUE << "Threshold set to " << +cThreshold << RESET;
             // set thresholds
             // and configure injection
             for(auto cOpticalGroup: *cBoard)
