@@ -776,7 +776,7 @@ int main(int argc, char* argv[])
                         if( cmd.foundOption("enableMPAclock") )
                         {
                             // then disable selected 
-                            for(auto cMpaId : cMPAsToDisable )
+                            for(auto cMpaId : cMPAsToEnable )
                             {
                                for(auto cReadoutChip: *cHybrid)
                                 {
