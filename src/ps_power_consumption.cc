@@ -536,6 +536,11 @@ int main(int argc, char* argv[])
                                         LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x07" << RESET;
                                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
                                     }//SSAs
+                                    else
+                                    {
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x00" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
+                                    }
                                 }
                                 else if(cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cId)
                                 {
