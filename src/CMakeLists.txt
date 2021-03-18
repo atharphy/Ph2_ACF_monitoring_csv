@@ -59,7 +59,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(${PH2_POWERSUPPLY_FOUND})
       include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
       link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      #set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
     endif()
 
@@ -75,6 +75,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforROH})
     endif(${PH2_TCUSB_FOUND})
+
+    #boost also needs to be linked
+    if(Boost_FOUND)
+        set(LIBS ${LIBS} ${Boost_LIBRARIES})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
+    endif()
 
     # Find root and link against it
     if(${ROOT_FOUND})

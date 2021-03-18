@@ -5,7 +5,6 @@
 #include "../Utils/gui_logger.h"
 #include "../tools/Channel.h"
 #ifdef __POWERSUPPLY__
-// Libraries
 #include "DeviceHandler.h"
 #include "PowerSupply.h"
 #include "PowerSupplyChannel.h"

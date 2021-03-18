@@ -40,6 +40,9 @@ class D19clpGBTInterface : public lpGBTInterface
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
+    bool     RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override {return true;};
+    void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
+    void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
 
     // #######################################
     // # LpGBT block configuration functions #

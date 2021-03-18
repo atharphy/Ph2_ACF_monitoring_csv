@@ -4791,25 +4791,25 @@ bool D19cFWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, b
     // Reset
     ResetOptoLink();
     // Config transaction register
-    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pValue}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
     // Perform transaction
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
     //
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
 
     if(!pVerifLoop) return true;
-    uint8_t cReadBack = ReadOptoLinkRegister(pChip, pAddress);
+    uint8_t cReadBack = ReadOptoLinkRegister(pAddress);
     uint8_t cIter = 0, cMaxIter = 50;
-    while(cReadBack != pValue && cIter < cMaxIter)
+    while(cReadBack != pData && cIter < cMaxIter)
     {
 	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteOptoLinkRegister] : lpGBT register write mismatch... retrying" << RESET;
         // Config transaction register
-        this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pValue}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
+        this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
         // Perform transaction
         this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
         //
         this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
-        cReadBack = ReadOptoLinkRegister(pChip, pAddress);
+        cReadBack = ReadOptoLinkRegister(pAddress);
         cIter++;
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
@@ -4894,8 +4894,8 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     uint8_t cIter = 0, cMaxIter = 50;
     while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
     {
-	    LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
-        ResetCPB();
+    	ResetCPB();
+	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);
@@ -4921,8 +4921,8 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     uint8_t               cIter = 0, cMaxIter = 20;
     while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
     {
+    	ResetCPB();
 	LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
-        ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);
