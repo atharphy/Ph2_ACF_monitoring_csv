@@ -141,8 +141,11 @@ int main(int argc, char* argv[])
     std::string cSsasToEnable = (cmd.foundOption("enableSSA")) ? cmd.optionValue("enableSSA") : "" ;
     std::string cSsasToClk = (cmd.foundOption("enableSSAclock")) ? cmd.optionValue("enableSSAclock") : "" ;
     std::string cMPAsToEnable = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "" ;
+    std::string cHybridsToReset = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "" ;  
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
     
+    float cStartUpMontior=0;
+    float cEndMonitor=0;
     //std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
     //if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
 
@@ -281,6 +284,7 @@ int main(int argc, char* argv[])
                         cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
                     }
                     float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                    cStartUpMontior = cMean;
                     LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
                         << +cMean*1e3 
                         << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
@@ -369,10 +373,16 @@ int main(int argc, char* argv[])
             }
             if( cmd.foundOption("resetHybrid"))
             {
+                auto cSides = getSides( cHybridsToReset );
+                
                 // then send reset 
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT);
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetSSA(clpGBT);
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT);
+                for(auto cSide : cSides ) 
+                {
+                    LOG (INFO) << BOLDBLUE  << "Resetting hybrid [Side == " << +cSide  << "]" << RESET;
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT,cSide);
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetSSA(clpGBT,cSide);
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT,cSide);
+                }
             }
             if( cmd.foundOption("resetSSA"))
             {
@@ -466,6 +476,124 @@ int main(int argc, char* argv[])
                     }//ROCs
                 }//OG
             }//configure SSA 
+
+
+            if( cmd.foundOption("configureHybrid") ) 
+            {
+                // now .. configure all SSAs 
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    // first .. send clock to the SSAs on this hybrid  
+                    uint8_t cSide=cHybrid->getId()%2;
+                    
+                    lpGBTClockConfig cClkCnfg; 
+                    cClkCnfg.fClkFreq = 4;  
+                    cClkCnfg.fClkDriveStr = cSsaClockDrive; 
+                    cClkCnfg.fClkInvert = 1;
+                    cClkCnfg.fClkPreEmphWidth = 0; 
+                    cClkCnfg.fClkPreEmphMode = 0; 
+                    cClkCnfg.fClkPreEmphStr = 0;
+                    LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+
+                    // then .. reset SSAs on this hybrid  
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetSSA(clpGBT, cSide);
+
+                    // Configure SSAs on this hybrid 
+                    std::vector<uint8_t> pIds(0);
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                        {
+                            LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
+                            cTool.fReadoutChipInterface->ConfigureChip(cChip);
+                            pIds.push_back( cChip->getId() );
+                        }//SSAs
+                    }//ROCs
+
+                    // now .. reset MPAs on this hybrid 
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
+
+                    for( auto cId : pIds )
+                    {
+                        LOG (INFO) << BOLDBLUE << "Configuring MPA#" << +cId << RESET;
+                        // first . . enable clock out to one MPA at a time 
+                        for(auto cReadoutChip: *cHybrid)
+                        {
+                            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cId)
+                            {
+                                cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                            }//SSAs
+                        }//ROCs
+
+                        // then .. configure that MPA 
+                        for(auto cReadoutChip: *cHybrid)
+                        {
+                            if(cReadoutChip->getFrontEndType() == FrontEndType::MPA && cReadoutChip->getId() == cId)
+                            {
+                                cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
+                            }//MPAs
+                        }//ROCs
+                    }
+
+                    // enable clock to CIC 
+                    cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
+                    cClkCnfg.fClkDriveStr = cCicClockDrive; 
+                    cClkCnfg.fClkInvert = 0;
+                    cClkCnfg.fClkPreEmphWidth = 0; 
+                    cClkCnfg.fClkPreEmphMode = 0; 
+                    cClkCnfg.fClkPreEmphStr = 0;
+                    LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
+
+                    // now .. reset CICs on this hybrid 
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+
+
+                    LOG(INFO) << BOLDBLUE << "Configuring CIC(s)" << RESET;
+                    OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                    auto& cCic = cOuterTrackerHybrid->fCic;
+                    cTool.fCicInterface->ConfigureChip(cCic);
+                    static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
+
+                    // CIC start-up
+                    bool cSuccess = true;
+                    if(cOuterTrackerHybrid->size() > 0) 
+                    {
+                        auto         cFirstROC = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
+                        FrontEndType cType     = FrontEndType::CBC3;
+                        if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
+                        uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
+                        // select CIC mode
+                        cSuccess = cTool.fCicInterface->SelectMode(cCic, cModeSelect);
+                        if(!cSuccess)
+                        {
+                            LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
+                            exit(0);
+                        }
+                        LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
+                    }
+
+                    // then start-up CIC 
+                    // first  
+                    // select CIC FE enable register
+                    std::vector<uint8_t> cFeIds(0);
+                    for(auto cReadoutChip: *cHybrid)
+                    {
+                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                        cFeIds.push_back(cReadoutChip->getId());
+                    }
+                    cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
+
+                    // CIC start-up sequence
+                    uint8_t cDriveStrength = 1;
+                    cSuccess               = cTool.fCicInterface->StartUp(cCic, cDriveStrength);
+                    cTool.fBeBoardInterface->ChipReSync(cBoard);
+                    if( cSuccess )
+                        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
+                              << +cOuterTrackerHybrid->getLinkId() << RESET;
+                }//OG
+            }// configure hybrid 
         } // configure ROCs + CICs
 
         if( cmd.foundOption("configureSSA")&& !cmd.foundOption("configureHybrid"))     
@@ -499,6 +627,8 @@ int main(int argc, char* argv[])
                     float cSqSum = std::inner_product(cVals.begin(), cVals.end(), cVals.begin(), 0.0);
                     float cStdDev = std::sqrt(cSqSum / cVals.size() - cMean * cMean);
 
+
+                    cEndMonitor = cMean;
                     LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
                         << +cMean*1e3 
                         << " milli-volt [ RMS = "
@@ -512,7 +642,6 @@ int main(int argc, char* argv[])
         {
             // reset error summaries
             static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
-            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->resetErrorSummary();
             // try and configure all chips N times 
             for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
             {
@@ -522,79 +651,29 @@ int main(int argc, char* argv[])
                     {
                         OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                         auto& cCic = cOuterTrackerHybrid->fCic;
-                        LOG (INFO) << BOLDBLUE << "Configuring CIC"<< RESET;
+                        LOG (INFO) << BOLDBLUE << "Configuring CIC [ Attempt#"<< +cAttempt << " ]" << RESET;
                         cTool.fCicInterface->ConfigureChip(cCic);
-                        for(auto cReadoutChip: *cHybrid)
-                        {
-                            LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA)
-                            {
-                                cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
-                            }//SSAs
-                        }//ROCs
                     }//OG
                 }//board
             }// configuration attempts 
 
             // summarize 
-            // static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
-            // auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
-            // auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
-            // float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
-            // float cCicCrctW = (float)(cCicWriteErrSummary.second - cCicWriteErrSummary.first); 
-
-            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
-            auto cSsaErrSummary = static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->getReadBackErrorSummary();
-            auto cSssaWriteErrSummary = static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->getWriteErrorSummary();
-            float cSsaCrct = (float)(cSsaErrSummary.second - cSsaErrSummary.first); 
-            float cSsaCrctW = (float)(cSssaWriteErrSummary.second - cSssaWriteErrSummary.first); 
-            //LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cSsaErrSummary.second << RESET;
-            //LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrct << " out of " << cSsaErrSummary.second << RESET;
-            LOG (INFO) << BOLDBLUE << "SSA register read-back successes : " << cSsaCrct << " out of " << cSsaErrSummary.second << RESET;
-            LOG (INFO) << BOLDBLUE << "SSA register write successes : " << cSsaCrctW << " out of " << cSssaWriteErrSummary.second << RESET;
-
-                    // std::vector<float> cErrors( cConfigurationAttempts, 0 );
-                    // std::vector<float> cRelErrorUnc( cConfigurationAttempts, 0 );
-                    // for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
-                    // {
-                    //     cTool.fCicInterface->ConfigureChip(cCic);
-                    //     std::pair<uint16_t,uint16_t>  cErrorSummary =  static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
-                    //     float cCorrect = (float)(cErrorSummary.second - cErrorSummary.first); 
-                    //     float cFrcCrct = cCorrect/cErrorSummary.second;
-                    //     float cFrcCrctErr  = std::pow( std::sqrt(cCorrect)/cCorrect,2.0);
-                    //     cFrcCrctErr += std::pow( std::sqrt(cErrorSummary.second)/(float)cErrorSummary.second,2.0);
-                    //     cFrcCrctErr = std::sqrt( cFrcCrctErr );
-                    //     static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
-                    //     static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
-                    //     cErrors[cAttempt]=cFrcCrct;
-                    //     cRelErrorUnc[cAttempt]=cFrcCrctErr;
-                    //     LOG (INFO) << BOLDBLUE << "\t...Configuration Attempt#" << +cAttempt 
-                    //         << " number of correct transactions is " << cCorrect
-                    //         << " fraction correct is " << cFrcCrct
-                    //         << " relative error is " << cFrcCrctErr
-                    //         << RESET;
-                    // }
-                    // // summarize 
-                    // // summarize noise hits
-                    // auto cSum = std::accumulate(cErrors.begin(), cErrors.end(), 0.0);
-                    // auto cMean = cSum/cErrors.size();
-                    // auto cMax = std::max_element(cErrors.begin(), cErrors.end());
-                    // auto cMin = std::min_element(cErrors.begin(), cErrors.end());
-                    // double cSqSum = std::inner_product(cErrors.begin(), cErrors.end(), cErrors.begin(), 0.0);
-                    // double cStdDev = std::sqrt(cSqSum / cErrors.size() - cMean * cMean);
-                    // LOG (INFO) << BOLDBLUE << "Summary configuration test " 
-                    //         << " fraction of correct transactions is " << cMean
-                    //         << " standard deviation is  " << cStdDev
-                    //         << " maximum error fraction found is " << *cMax 
-                    //         << " minimum error fraction found is " << *cMin
-                    //         << RESET;
-                    //static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
-                //}
-            
+            static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
+            auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
+            auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
+            float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
+            float cCicCrctW = (float)(cCicWriteErrSummary.second - cCicWriteErrSummary.first); 
+            LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cCicErrSummary.second << RESET;
+            LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrctW << " out of " << cCicWriteErrSummary.second << RESET;
         }// register test
         
 
-
+        if( cmd.foundOption("monitor") )
+        {
+            LOG (INFO) << BOLDBLUE << "Start-up .. monitor : " 
+                << cStartUpMontior*1e3  << " mV, after configuration monitor shows " 
+                << cEndMonitor*1e3  << " mV." << RESET;
+        }
     }
 
     cTool.SaveResults();

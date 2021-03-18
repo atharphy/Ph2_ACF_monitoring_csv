@@ -681,12 +681,12 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                             }
                         }
                     }
-                    else if(cName == "SSA")
+                    else if(cName.find("SSA") != std::string::npos)
                     {
                         pBoard->setFrontEndType(FrontEndType::SSA);
                         this->parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                     }
-                    else if(cName == "MPA")
+                    else if(cName.find("MPA") != std::string::npos)
                     {
                         pBoard->setFrontEndType(FrontEndType::MPA);
                         this->parseMPA(cChild, cHybrid, cConfigFileDirectory);
