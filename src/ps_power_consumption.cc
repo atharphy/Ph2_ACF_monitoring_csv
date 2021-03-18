@@ -529,11 +529,14 @@ int main(int argc, char* argv[])
                             // first . . enable clock out to one MPA at a time 
                             for(auto cReadoutChip: *cHybrid)
                             {
-                                if( cmd.foundOption("configureMPA") && cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cId)
+                                if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cId )
                                 {
-                                    LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x07" << RESET;
-                                    cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
-                                }//SSAs
+                                    if( std::find( cMPAsToEnable.begin(), cMPAsToEnable.end(), cId ) != cMPAsToEnable.end() ) 
+                                    {
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x07" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                                    }//SSAs
+                                }
                                 else if(cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cId)
                                 {
                                     LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x00" << RESET;
@@ -544,7 +547,7 @@ int main(int argc, char* argv[])
                             // then .. configure that MPA 
                             for(auto cReadoutChip: *cHybrid)
                             {
-                                if(cmd.foundOption("configureMPA") && !cmd.foundOption("disableMPAclock") && cReadoutChip->getFrontEndType() == FrontEndType::MPA && cReadoutChip->getId() == cId)
+                                if(cmd.foundOption("configureMPA") && cReadoutChip->getFrontEndType() == FrontEndType::MPA && cReadoutChip->getId() == cId)
                                 {
                                     LOG (INFO) << BOLDBLUE << "Configuring MPA#" << +cId << RESET;
                                     cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
@@ -553,49 +556,49 @@ int main(int argc, char* argv[])
                         }
 
                         
-                        // disable clock from one MPA 
-                        if( cmd.foundOption("disableMPAclock") )
-                        {
-                            // first . . all connected SSAs produce a clock 
-                            for(auto cReadoutChip: *cHybrid)
-                            {
-                                if( cReadoutChip->getFrontEndType() == FrontEndType::SSA )
-                                {
-                                    LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
-                                    cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
-                                }//SSAs
-                            }//ROC
+                        // // disable clock from one MPA 
+                        // if( cmd.foundOption("disableMPAclock") )
+                        // {
+                        //     // first . . all connected SSAs produce a clock 
+                        //     for(auto cReadoutChip: *cHybrid)
+                        //     {
+                        //         if( cReadoutChip->getFrontEndType() == FrontEndType::SSA )
+                        //         {
+                        //             LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
+                        //             cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                        //         }//SSAs
+                        //     }//ROC
 
-                            // then disable selected 
-                            for(auto cMpaId : cMPAsToDisable )
-                            {
-                               for(auto cReadoutChip: *cHybrid)
-                                {
-                                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cMpaId)
-                                    {
-                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cMpaId << " to 0x00" << RESET;
-                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
-                                    }//SSAs
-                                }//ROCs
-                            }
-                        }
+                        //     // then disable selected 
+                        //     for(auto cMpaId : cMPAsToDisable )
+                        //     {
+                        //        for(auto cReadoutChip: *cHybrid)
+                        //         {
+                        //             if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cMpaId)
+                        //             {
+                        //                 LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cMpaId << " to 0x00" << RESET;
+                        //                 cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
+                        //             }//SSAs
+                        //         }//ROCs
+                        //     }
+                        // }
 
-                        // disable clock from one MPA 
-                        if( cmd.foundOption("enableMPAclock") )
-                        {
-                            // then disable selected 
-                            for(auto cMpaId : cMPAsToEnable )
-                            {
-                               for(auto cReadoutChip: *cHybrid)
-                                {
-                                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cMpaId)
-                                    {
-                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cMpaId << " to 0x07" << RESET;
-                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
-                                    }//SSAs
-                                }//ROCs
-                            }
-                        }
+                        // // disable clock from one MPA 
+                        // if( cmd.foundOption("enableMPAclock") )
+                        // {
+                        //     // then disable selected 
+                        //     for(auto cMpaId : cMPAsToEnable )
+                        //     {
+                        //        for(auto cReadoutChip: *cHybrid)
+                        //         {
+                        //             if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cMpaId)
+                        //             {
+                        //                 LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cMpaId << " to 0x07" << RESET;
+                        //                 cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                        //             }//SSAs
+                        //         }//ROCs
+                        //     }
+                        // }
 
 
                         // enable clock to CIC 
