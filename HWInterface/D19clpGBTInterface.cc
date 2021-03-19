@@ -970,10 +970,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cResetPinsLHS{fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC};
     //
     ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
-    ConfigureGPIODriverStrength(pChip, cResetPinsRHS , 0x7);
+    //ConfigureGPIODriverStrength(pChip, cResetPinsRHS , 0x7);
     //
     ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
-    ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x7);
+   //ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x7);
     
     // // Reset all ASICs
     // for(size_t cSide=0; cSide<2; cSide++)

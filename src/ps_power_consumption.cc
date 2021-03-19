@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     
     //
     cmd.defineOption("enableMPA", "Disable MPA reset", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("holdMPAreset", "Holed MPA reset", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("holdMPAreset", "Hold MPA reset", ArgvParser::NoOptionAttribute);
     // 
     cmd.defineOption("configureCIC", "Apply default configuration to CIC", ArgvParser::NoOptionAttribute);
     cmd.defineOption("configureSSA", "Apply default configuration to SSA", ArgvParser::NoOptionAttribute);
