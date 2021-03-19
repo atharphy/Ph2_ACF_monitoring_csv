@@ -629,7 +629,7 @@ int main(int argc, char* argv[])
                             cClkCnfg.fClkDriveStr = cSsaClockDrive; 
                             cClkCnfg.fClkInvert = 0;
                             cClkCnfg.fClkPreEmphWidth = 0; 
-                            cClkCnfg.fClkPreEmphMode = 1; 
+                            cClkCnfg.fClkPreEmphMode = 3; 
                             cClkCnfg.fClkPreEmphStr = 7;
                             LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
