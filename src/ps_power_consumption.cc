@@ -220,9 +220,10 @@ int main(int argc, char* argv[])
                 std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7","VDD"};
                 std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
                 std::vector<std::string> cModuleSide{"left","left","right","left","internal"};
-                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
+                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.33  , 2.55, 1.25*0.42};
+                //std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
                 // use Vddd as reference 
-                size_t cIndx=4;
+                size_t cIndx=3;
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
                 // find correction 
                 std::vector<float> cVals(10,0);
