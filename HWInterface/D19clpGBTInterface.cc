@@ -769,7 +769,7 @@ void D19clpGBTInterface::ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pC
     //     else
     //         cDriveStrH |= (pDriveStr << (cGPIO - 8));
     // }
-    WriteChipReg(pChip, "PIODriveStrengthH", (pDriveStr&0x100)>>8);
+    WriteChipReg(pChip, "PIODriveStrengthH", (pDriveStr&0xFF00)>>16);
     WriteChipReg(pChip, "PIODriveStrengthL", (pDriveStr&0xFF));
 }
 
