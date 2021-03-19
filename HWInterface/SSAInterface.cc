@@ -372,7 +372,7 @@ bool SSAInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint16_t pVal
             << " value read back is 0x"  << std::hex << +cValue << std::dec 
             << RESET;
     else if( !cSuccess )
-        LOG(DEBUG) << BOLDRED << "Have written 0x" << std::hex << +cRegItem.fValue << std::dec 
+        LOG(INFO) << BOLDRED << "Have written 0x" << std::hex << +cRegItem.fValue << std::dec 
             << " SSA register with address 0x" << std::hex << +cRegItem.fAddress << std::dec 
             << " value read back is 0x"  << std::hex << +cValue << std::dec 
             << RESET;
