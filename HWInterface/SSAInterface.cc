@@ -491,6 +491,21 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
 
 bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
+    //
+    if( fMap.size() == 0 ) 
+    {
+        ChipRegMap            cSSARegMap = pChip->getRegMap();
+        for(auto& cRegItem: cSSARegMap) { 
+            fMap[cRegItem.second.fAddress] = cRegItem.first; 
+            // update map to indicate that there are not registers that 
+            // can be read back from 
+            if(cRegItem.first.find("_ALL") != std::string::npos)
+            {
+                LOG (DEBUG) << BOLDMAGENTA << "\t.. found a status register : " << cRegItem.first << RESET;
+                pChip->setReg(cRegItem.first, cRegItem.second.fValue, cRegItem.second.fPrmptCfg , 1);
+            }
+        }
+    }
     setBoard(pChip->getBeBoardId());
     bool        cSuccess = true;
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
