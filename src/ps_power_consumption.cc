@@ -489,6 +489,8 @@ int main(int argc, char* argv[])
 
         if( cmd.foundOption("configureHybrid") ) 
         {
+            Timer       cGlobalTimer;
+            cGlobalTimer.start();
             auto cMPAsToEnable  = getSides(cMPAsToEnableClock);
             for( int cConfigAttempt=0; cConfigAttempt < cConfigurationAttempts ; cConfigAttempt++)
             { 
@@ -500,7 +502,6 @@ int main(int argc, char* argv[])
                     auto& clpGBT =  cOpticalGroup->flpGBT ;
                     if(clpGBT == nullptr) continue;
 
-                       
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(clpGBT);
                     // Check lpGBT Link Lock
                     LOG(INFO) << BOLDBLUE << "Checking optical link link .." << RESET;
@@ -997,9 +998,10 @@ int main(int argc, char* argv[])
                         cLog.close();
                     }
                     // try and configure all chips N times 
-                    for( size_t cTst=0; cTst < 10; cTst++)
+                    for( size_t cTst=0; cTst < 30; cTst++)
                     {
                         std::ofstream cErrorLog ;
+
                         if( cConfigAttempt == 0  && cTst == 0 )
                             cErrorLog.open (cTool.getDirectoryName() + "/ConfigHybrid_Test.tab",std::ios::out);
                         else
@@ -1017,7 +1019,8 @@ int main(int argc, char* argv[])
                                 cTool.fCicInterface->ConfigureChip(cCic);
                             }//OG
                         }//board
-                        
+                        double cTimeElapsed = cGlobalTimer.getElapsedTime();
+
                         // summarize 
                         static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
                         auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
@@ -1027,12 +1030,46 @@ int main(int argc, char* argv[])
                         LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cCicErrSummary.second << RESET;
                         LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrctW << " out of " << cCicWriteErrSummary.second << RESET;
                         cErrorLog << cConfigAttempt << "\t" << cMPAsToEnable.size() << "\t" ;
-                        cErrorLog << cCicCrct << "\t" << cCicCrctW  << "\t" << cCicWriteErrSummary.second << "\n" ;
+                        cErrorLog << cCicCrct << "\t" << cCicCrctW  << "\t" << cCicWriteErrSummary.second << "\t" ;
+                        cErrorLog << cTimeElapsed << "\n";
                         cErrorLog.close();
                     }// configuration attempts 
                 }// register test
                 LOG (INFO) << BOLDBLUE << "#############################" << RESET; 
+                // here make sure everything is off again 
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    auto& clpGBT =  cOpticalGroup->flpGBT ;
+                    if(clpGBT == nullptr) continue;
+
+                    // now .. configure all SSAs 
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        // first .. send clock to the SSAs on this hybrid  
+                        uint8_t cSide=cHybrid->getId()%2;
+                        
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, true, cSide);
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true, cSide);
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, true, cSide);
+
+                        lpGBTClockConfig cClkCnfg; 
+                        cClkCnfg.fClkFreq = 0;  
+                        cClkCnfg.fClkDriveStr = 0; 
+                        cClkCnfg.fClkInvert = 1;
+                        cClkCnfg.fClkPreEmphWidth = 0; 
+                        cClkCnfg.fClkPreEmphMode = 0; 
+                        cClkCnfg.fClkPreEmphStr = 0;
+                        LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+                        cClkCnfg.fClkFreq = 0;
+                        cClkCnfg.fClkDriveStr = 0; 
+                        LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
+                    }
+                }// board 
             } // configuration attempt 
+            cGlobalTimer.stop();
+            cGlobalTimer.show("Total execution time: ");
         }//if configure hybrid 
 
         if( cmd.foundOption("configureSSA")&& !cmd.foundOption("configureHybrid"))     
@@ -1084,6 +1121,9 @@ int main(int argc, char* argv[])
             // try and configure all chips N times 
             for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
             {
+
+                Timer       cGlobalTimer;
+                cGlobalTimer.start();
                 for(auto cOpticalGroup: *cBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
@@ -1094,6 +1134,8 @@ int main(int argc, char* argv[])
                         cTool.fCicInterface->ConfigureChip(cCic);
                     }//OG
                 }//board
+                cGlobalTimer.stop();
+                cGlobalTimer.show("Total execution time: ");
             }// configuration attempts 
 
             // summarize 
