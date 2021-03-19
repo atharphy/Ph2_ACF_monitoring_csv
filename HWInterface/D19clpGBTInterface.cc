@@ -760,17 +760,17 @@ void D19clpGBTInterface::ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, cons
 
 void D19clpGBTInterface::ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr)
 {
-    uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
-    uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
-    for(auto cGPIO: pGPIOs)
-    {
-        if(cGPIO < 8)
-            cDriveStrL |= (pDriveStr << cGPIO);
-        else
-            cDriveStrH |= (pDriveStr << (cGPIO - 8));
-    }
-    WriteChipReg(pChip, "PIODriveStrengthH", cDriveStrH);
-    WriteChipReg(pChip, "PIODriveStrengthL", cDriveStrL);
+    // uint8_t cDriveStrH = ReadChipReg(pChip, "PIODriveStrengthH");
+    // uint8_t cDriveStrL = ReadChipReg(pChip, "PIODriveStrengthL");
+    // for(auto cGPIO: pGPIOs)
+    // {
+    //     if(cGPIO < 8)
+    //         cDriveStrL |= (pDriveStr << cGPIO);
+    //     else
+    //         cDriveStrH |= (pDriveStr << (cGPIO - 8));
+    // }
+    WriteChipReg(pChip, "PIODriveStrengthH", (pDriveStr&0xFF));
+    WriteChipReg(pChip, "PIODriveStrengthL", (pDriveStr&0x100)>>8);
 }
 
 void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pEnable, uint8_t pUpDown)
@@ -969,7 +969,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cResetPinsRHS{fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC};
     std::vector<uint8_t> cResetPinsLHS{fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC};
     ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
+    ConfigureGPIODriverStrength(pChip, cResetPinsRHS , 0x7);
     ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x7);
 
     // // Reset all ASICs
     // for(size_t cSide=0; cSide<2; cSide++)
