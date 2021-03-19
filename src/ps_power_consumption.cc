@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
     
     //
     cmd.defineOption("enableMPA", "Disable MPA reset", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("holdMPAreset", "Holed MPA reset", ArgvParser::OptionRequiresValue);
     // 
     cmd.defineOption("configureCIC", "Apply default configuration to CIC", ArgvParser::NoOptionAttribute);
     cmd.defineOption("configureSSA", "Apply default configuration to SSA", ArgvParser::NoOptionAttribute);
@@ -114,7 +115,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("clockDriveSSA", "Clock drive strength for SSA", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("monitor", "ADC monitoring", ArgvParser::OptionRequiresValue);
-   
+    cmd.defineOption("speedI2C", "Configure I2C speed of communication", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("modeI2C", "Configure I2C mode", ArgvParser::OptionRequiresValue);
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -146,6 +148,8 @@ int main(int argc, char* argv[])
     std::string cMPAsToEnable = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "" ;
     std::string cHybridsToReset = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "" ;  
     std::string cMPAsToEnableClock = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("enableMPAclock") : "" ;  
+    uint16_t    cI2CSpeed = (cmd.foundOption("speedI2C")) ? convertAnyInt(cmd.optionValue("speedI2C").c_str()) : 1000 ;
+    uint8_t    cModeI2C = (cmd.foundOption("modeI2C")) ? convertAnyInt(cmd.optionValue("modeI2C").c_str()) : 0;
     
 
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
@@ -184,6 +188,7 @@ int main(int argc, char* argv[])
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
         cTool.fBeBoardInterface->ConfigureBoard(cBeBoard);
+        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->configI2C( cI2CSpeed, cModeI2C);
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -489,6 +494,7 @@ int main(int argc, char* argv[])
 
         if( cmd.foundOption("configureHybrid") ) 
         {
+            double cTimeElapsed=0;
             Timer       cGlobalTimer;
             cGlobalTimer.start();
             auto cMPAsToEnable  = getSides(cMPAsToEnableClock);
@@ -641,7 +647,6 @@ int main(int argc, char* argv[])
                                 }//SSAs
                             }//ROCs
 
-                            
                             // provide clock to one MPA at a time 
                             for( auto cId : pIds )
                             {
@@ -654,18 +659,24 @@ int main(int argc, char* argv[])
                                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
                                     }
                                 }//ROCs
+                            }
 
-                                // then .. configure that MPA 
+                            if(cmd.foundOption("configureMPA") )
+                            {
                                 for(auto cReadoutChip: *cHybrid)
                                 {
-                                    if(cmd.foundOption("configureMPA") && cReadoutChip->getFrontEndType() == FrontEndType::MPA && cReadoutChip->getId() == cId)
+                                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA )
                                     {
-                                        LOG (INFO) << BOLDBLUE << "Configuring MPA#" << +cId << RESET;
+                                        LOG (INFO) << BOLDBLUE << "Configuring MPA#" << +cReadoutChip->getId() << RESET;
                                         cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
                                     }//MPAs
                                 }//ROCs
                             }
 
+                            // now .. reset MPAs on this hybrid 
+                            LOG (INFO) << BOLDBLUE << "Resetting MPA before configuration.." << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
+                            
                             // then only enable clock for those MPAs that I want 
                             // first . . enable clock out MPAs I've asked for
                             for(auto cReadoutChip: *cHybrid)
@@ -685,9 +696,6 @@ int main(int argc, char* argv[])
                                 }
                             }//ROCs
 
-                            // now .. reset MPAs on this hybrid 
-                            LOG (INFO) << BOLDBLUE << "Resetting MPA before configuration.." << RESET;
-                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
                             
                             // enable clock to CIC 
                             cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
@@ -701,6 +709,12 @@ int main(int argc, char* argv[])
 
                             // now .. reset CICs on this hybrid 
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+
+                            // keep MPA in-active 
+                            if( cmd.foundOption("holdMPAreset") )
+                            {
+                                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true,cSide);
+                            }
                         }//OG
                     }//safe
                     else if( cHybrifCnfg == 1 )
@@ -983,6 +997,46 @@ int main(int argc, char* argv[])
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
                         }//OG
                     }//original 
+                    else if( cHybrifCnfg == 4 )
+                    {
+                        // now .. configure all SSAs 
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            // first .. send clock to the SSAs on this hybrid  
+                            uint8_t cSide=cHybrid->getId()%2;
+                            
+                            lpGBTClockConfig cClkCnfg; 
+                            cClkCnfg.fClkFreq = 4;  
+                            cClkCnfg.fClkDriveStr = cSsaClockDrive; 
+                            cClkCnfg.fClkInvert = 1;
+                            cClkCnfg.fClkPreEmphWidth = 0; 
+                            cClkCnfg.fClkPreEmphMode = 0; 
+                            cClkCnfg.fClkPreEmphStr = 0;
+                            LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+                            cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
+                            cClkCnfg.fClkDriveStr = cCicClockDrive; 
+                            LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
+                            // release resets 
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false,cSide);
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
+
+                           
+                            // first . . enable clock out MPAs I've asked for
+                            for(auto cReadoutChip: *cHybrid)
+                            {
+                                if( cReadoutChip->getFrontEndType() == FrontEndType::SSA  )
+                                {
+                                    if( std::find( cMPAsToEnable.begin(), cMPAsToEnable.end(), cReadoutChip->getId() ) != cMPAsToEnable.end() ) 
+                                    {
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                                    }//SSAs
+                                }
+                            }//ROCs
+                        }
+                    }
                 }// OG
 
                 if( cmd.foundOption("registerTest"))
@@ -1019,8 +1073,10 @@ int main(int argc, char* argv[])
                                 cTool.fCicInterface->ConfigureChip(cCic);
                             }//OG
                         }//board
-                        double cTimeElapsed = cGlobalTimer.getElapsedTime();
-
+                        cGlobalTimer.stop();
+                        cTimeElapsed += cGlobalTimer.getElapsedTime();
+                        cGlobalTimer.start();
+            
                         // summarize 
                         static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
                         auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();

@@ -553,8 +553,13 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     // Write Data to Slave Address using I2C Master
     // 0 , 1 , 2 , 3 
     // 100, 200 , 400, 1000 
-    uint8_t cFreq = 0; // 1 MHz
-    ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
+    uint8_t cFreq = 0; // default is 1 kHz speed
+    if( fI2CSpeed == 1000 ) cFreq = 3 ; 
+    else if( fI2CSpeed == 400 ) cFreq = 2 ; 
+    else if( fI2CSpeed == 200 ) cFreq = 1 ; 
+    else if( fI2CSpeed == 100 ) cFreq = 0 ; 
+
+    ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, fI2CMode);
 
     // Write Data to Data Register
     for(uint8_t cByte = 0; cByte < 4 ; cByte++)
@@ -613,8 +618,13 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
 uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
     // Read Data from Slave Address using I2C Master
-    uint8_t cFreq = 3; // 1 MHz
-    ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
+    
+    uint8_t cFreq = 0; // default is 1 kHz speed
+    if( fI2CSpeed == 1000 ) cFreq = 3 ; 
+    else if( fI2CSpeed == 400 ) cFreq = 2 ; 
+    else if( fI2CSpeed == 200 ) cFreq = 1 ; 
+    else if( fI2CSpeed == 100 ) cFreq = 0 ; 
+    ConfigureI2C(pChip, pMaster, cFreq, pNBytes, fI2CMode);
     
     // Prepare Address Register
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";

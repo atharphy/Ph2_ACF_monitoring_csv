@@ -259,7 +259,11 @@ class D19clpGBTInterface : public lpGBTInterface
     void cicClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg ); }
     void hybridClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
 
+    void configI2C( uint16_t pSpeed, uint8_t pMode = 0 ) { fI2CSpeed = pSpeed; fI2CMode = pMode; }
   private:
+    // default i2c configuration 
+    uint16_t fI2CSpeed = 1000; // 1000, 400, 200 , 100 
+    uint8_t  fI2CMode = 0 ; // 
     // default clock configuration 
     lpGBTClockConfig fClkConfig; 
 
