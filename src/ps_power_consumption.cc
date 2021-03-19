@@ -625,7 +625,7 @@ int main(int argc, char* argv[])
                             uint8_t cSide=cHybrid->getId()%2;
                             
                             lpGBTClockConfig cClkCnfg; 
-                            cClkCnfg.fClkFreq = 4;  
+                            cClkCnfg.fClkFreq = 3;  
                             cClkCnfg.fClkDriveStr = cSsaClockDrive; 
                             cClkCnfg.fClkInvert = 0;
                             cClkCnfg.fClkPreEmphWidth = 0; 
