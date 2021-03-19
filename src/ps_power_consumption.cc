@@ -649,6 +649,14 @@ int main(int argc, char* argv[])
                                 }//SSAs
                             }//ROCs
 
+
+
+                            // keep MPA in-active 
+                            if( cmd.foundOption("holdMPAreset") )
+                            {
+                                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true,cSide);
+                            }
+
                             // provide clock to one MPA at a time 
                             for( auto cId : pIds )
                             {
