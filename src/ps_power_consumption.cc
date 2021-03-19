@@ -625,7 +625,7 @@ int main(int argc, char* argv[])
                             uint8_t cSide=cHybrid->getId()%2;
                             
                             lpGBTClockConfig cClkCnfg; 
-                            cClkCnfg.fClkFreq = 3;  
+                            cClkCnfg.fClkFreq = 4;  
                             cClkCnfg.fClkDriveStr = cSsaClockDrive; 
                             cClkCnfg.fClkInvert = 0;
                             cClkCnfg.fClkPreEmphWidth = 0; 
@@ -704,8 +704,8 @@ int main(int argc, char* argv[])
                             cClkCnfg.fClkDriveStr = cCicClockDrive; 
                             cClkCnfg.fClkInvert = 0;
                             cClkCnfg.fClkPreEmphWidth = 0; 
-                            cClkCnfg.fClkPreEmphMode = 0; 
-                            cClkCnfg.fClkPreEmphStr = 0;
+                            cClkCnfg.fClkPreEmphMode = 3; 
+                            cClkCnfg.fClkPreEmphStr = 7;
                             LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
 
