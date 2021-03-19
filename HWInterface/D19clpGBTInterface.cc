@@ -769,8 +769,8 @@ void D19clpGBTInterface::ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pC
     //     else
     //         cDriveStrH |= (pDriveStr << (cGPIO - 8));
     // }
-    WriteChipReg(pChip, "PIODriveStrengthH", (pDriveStr&0xFF));
-    WriteChipReg(pChip, "PIODriveStrengthL", (pDriveStr&0x100)>>8);
+    WriteChipReg(pChip, "PIODriveStrengthH", (pDriveStr&0x100)>>8);
+    WriteChipReg(pChip, "PIODriveStrengthL", (pDriveStr&0xFF));
 }
 
 void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pEnable, uint8_t pUpDown)
