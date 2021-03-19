@@ -223,7 +223,9 @@ int main(int argc, char* argv[])
                 std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.33  , 2.55, 1.25*0.42};
                 //std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
                 // use Vddd as reference 
-                size_t cIndx=3;
+                // use P1V25 as reference
+                size_t cIndx=2;
+
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
                 // find correction 
                 std::vector<float> cVals(10,0);
