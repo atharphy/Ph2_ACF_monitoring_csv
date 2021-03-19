@@ -225,7 +225,6 @@ int main(int argc, char* argv[])
                 // use Vddd as reference 
                 // use P1V25 as reference
                 size_t cIndx=2;
-
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
                 // find correction 
                 std::vector<float> cVals(10,0);
@@ -628,10 +627,10 @@ int main(int argc, char* argv[])
                             lpGBTClockConfig cClkCnfg; 
                             cClkCnfg.fClkFreq = 4;  
                             cClkCnfg.fClkDriveStr = cSsaClockDrive; 
-                            cClkCnfg.fClkInvert = 1;
+                            cClkCnfg.fClkInvert = 0;
                             cClkCnfg.fClkPreEmphWidth = 0; 
-                            cClkCnfg.fClkPreEmphMode = 0; 
-                            cClkCnfg.fClkPreEmphStr = 0;
+                            cClkCnfg.fClkPreEmphMode = 1; 
+                            cClkCnfg.fClkPreEmphStr = 7;
                             LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
                             // then .. reset SSAs on this hybrid  
