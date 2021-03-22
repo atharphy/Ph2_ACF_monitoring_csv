@@ -62,7 +62,7 @@ class SSAInterface : public ReadoutChipInterface
     
   private:
     // I2C config 
-    bool    fRetryI2C=true;
+    bool    fRetryI2C=false;
     uint8_t fMaxI2CAttempts=20;
     
     D19clpGBTInterface*            flpGBTInterface = nullptr;

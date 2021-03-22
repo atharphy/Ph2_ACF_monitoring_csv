@@ -975,17 +975,99 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
    //ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x7);
     
-    uint8_t cEnable=1;
-    uint8_t cUpDown=1;
-    ConfigureGPIODirection(pChip, cResetPinsRHS, 0);
-    ConfigureGPIOPull(pChip, cResetPinsRHS, cEnable, cUpDown);
-    uint8_t cReadIOstateH = this->ReadChipReg(pChip,"PIOInH");
-    uint8_t cReadIOstateL = this->ReadChipReg(pChip,"PIOInL");
-    LOG (INFO) << BOLDBLUE << "IO state H " << std::bitset<8>(cReadIOstateH) << RESET;
-    LOG (INFO) << BOLDBLUE << "IO state L " << std::bitset<8>(cReadIOstateL) << RESET;
-    // set back
-    ConfigureGPIOPull(pChip, cResetPinsRHS, 0, 0);
-    ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    // test GPIO
+    {
+        uint8_t cEnable=1;
+        uint8_t cUpDown=1;
+        ConfigureGPIODirection(pChip, cResetPinsRHS, 0);
+        ConfigureGPIOPull(pChip, cResetPinsRHS, cEnable, cUpDown);
+
+        ConfigureGPIODirection(pChip, cResetPinsLHS, 0);
+        ConfigureGPIOPull(pChip, cResetPinsLHS, cEnable, cUpDown);
+
+        uint8_t cReadIOstateH = this->ReadChipReg(pChip,"PIOInH");
+        uint8_t cReadIOstateL = this->ReadChipReg(pChip,"PIOInL");
+        // check RHS
+        for(auto cResetPin : cResetPinsRHS )
+        {
+            if( cResetPin < 8 )
+            {
+                uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }   
+            }
+            else
+            {
+                uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x"  
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+            }
+        }
+        // check LHS 
+        for(auto cResetPin : cResetPinsLHS )
+        {
+            if( cResetPin < 8 )
+            {
+                uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }   
+            }
+            else
+            {
+                uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+            }
+        }
+        
+        // set back
+        cEnable=0;
+        cUpDown=0;
+        ConfigureGPIOPull(pChip, cResetPinsRHS, 0, 0);
+        ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
+        ConfigureGPIOPull(pChip, cResetPinsLHS, 0, 0);
+        ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    }
     
     
     // // Reset all ASICs
