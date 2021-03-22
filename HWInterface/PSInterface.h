@@ -34,7 +34,12 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  */
 
 class PSInterface : public ReadoutChipInterface
-{ // begin class
+{ // begin class 
+  private : 
+    // I2C config 
+    bool    fRetryI2C=true;
+    uint8_t fMaxI2CAttempts=20;
+    
   public:
     PSInterface(const BeBoardFWMap& pBoardMap);
     ~PSInterface();
@@ -102,6 +107,11 @@ class PSInterface : public ReadoutChipInterface
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
 
     void Cleardata();
+
+    //
+    void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; }
+    void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; }
+  
 };
 } // namespace Ph2_HwInterface
 

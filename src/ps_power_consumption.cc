@@ -187,7 +187,10 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
     // set-up I2C
-    if( cmd.foundOption("retryI2C")) cTool.fCicInterface->setRetryI2C(true);       
+    if( cmd.foundOption("retryI2C")){ 
+        cTool.fCicInterface->setRetryI2C(true);       
+        //cTool.fReadoutChipInterface->setRetryI2C(true);       
+    }
     else    cTool.fCicInterface->setRetryI2C(false);       
     cTool.fCicInterface->setMaxI2CAttempts(cMaxI2Cattempts);
     
