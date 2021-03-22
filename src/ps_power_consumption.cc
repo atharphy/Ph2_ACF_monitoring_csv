@@ -117,6 +117,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("monitor", "ADC monitoring", ArgvParser::OptionRequiresValue);
     cmd.defineOption("speedI2C", "Configure I2C speed of communication", ArgvParser::OptionRequiresValue);
     cmd.defineOption("modeI2C", "Configure I2C mode", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("retryI2C" ,"Allow I2C to re-try writes if fail/read-back does not match");
+    cmd.defineOption("maxI2Cattempts" ,"Maximum number of I2C attempts", ArgvParser::OptionRequiresValue);
+
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -150,7 +153,8 @@ int main(int argc, char* argv[])
     std::string cMPAsToEnableClock = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("enableMPAclock") : "" ;  
     uint16_t    cI2CSpeed = (cmd.foundOption("speedI2C")) ? convertAnyInt(cmd.optionValue("speedI2C").c_str()) : 1000 ;
     uint8_t    cModeI2C = (cmd.foundOption("modeI2C")) ? convertAnyInt(cmd.optionValue("modeI2C").c_str()) : 0;
-    
+    uint8_t    cMaxI2Cattempts = (cmd.foundOption("maxI2Cattempts")) ? convertAnyInt(cmd.optionValue("maxI2Cattempts").c_str()) : 10;
+
 
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
     uint16_t    cHybrifCnfg = (cmd.foundOption("configureHybrid")) ? convertAnyInt(cmd.optionValue("configureHybrid").c_str()) : 0;
@@ -182,6 +186,11 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
+    // set-up I2C
+    if( cmd.foundOption("retryI2C")) cTool.fCicInterface->setRetryI2C(true);       
+    else    cTool.fCicInterface->setRetryI2C(false);       
+    cTool.fCicInterface->setMaxI2CAttempts(cMaxI2Cattempts);
+    
     // first ..configure BeBoard
     // setting up back-end board
     for( auto cBoard: *cTool.fDetectorContainer)
@@ -1088,15 +1097,27 @@ int main(int argc, char* argv[])
                         cGlobalTimer.start();
             
                         // summarize 
-                        static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
+                        auto cRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getWRattempts();
+                        auto cMinMaxRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getMinMaxWRattempts();
+                        auto cCicRetrySummary = static_cast<CicInterface*>(cTool.fCicInterface)->getRetrySummary();
                         auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
                         auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
                         float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
                         float cCicCrctW = (float)(cCicWriteErrSummary.second - cCicWriteErrSummary.first); 
+                        LOG (INFO) << BOLDBLUE << "CIC register write re-tries " << cCicRetrySummary.first << RESET;
+                        LOG (INFO) << BOLDBLUE << "CIC register read-back re-tries " << cCicRetrySummary.second << RESET; 
+                        LOG (INFO) << BOLDBLUE << "Found " << cRetries.first << "  cic registers where a write had to be re-attempted " 
+                            << "\t..Min retries needed " << cMinMaxRetries.first 
+                            << "\t..Max retires needed " << cMinMaxRetries.second 
+                            << "\t.. on avg " << cRetries.second << " re-tries per register."
+                            << RESET;
                         LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cCicErrSummary.second << RESET;
                         LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrctW << " out of " << cCicWriteErrSummary.second << RESET;
                         cErrorLog << cConfigAttempt << "\t" << cMPAsToEnable.size() << "\t" ;
                         cErrorLog << cCicCrct << "\t" << cCicCrctW  << "\t" << cCicWriteErrSummary.second << "\t" ;
+                        cErrorLog << cCicRetrySummary.first << "\t" << cCicRetrySummary.second << "\t"; 
+                        cErrorLog << cMinMaxRetries.first <<  "\t" << cMinMaxRetries.second << "\t" ;
+                        cErrorLog << cRetries.first << "\t" << cRetries.second << "\t";
                         cErrorLog << cTimeElapsed << "\n";
                         cErrorLog.close();
                     }// configuration attempts 

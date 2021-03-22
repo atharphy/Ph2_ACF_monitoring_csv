@@ -101,19 +101,25 @@ class CicInterface : public ChipInterface
     bool                              AutoBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
     bool                              SelectMux(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort);
     bool                              ControlMux(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
+    // 
     bool                              runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
+    std::pair<uint16_t, uint16_t>     getRetrySummary(){ return std::make_pair(fReW, fReWR); }
+    std::pair<int,float>              getWRattempts();
+    std::pair<float, float>           getMinMaxWRattempts();
     std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
     std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
-    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; fReadBackErrors=0; fWriteErrors=0;};
+    void                              resetRetrySummary(){ fReWMap.clear(); fReWrMap.clear(); fReW=0; fReWR=0; }
+    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; fReadBackErrors=0; fWriteErrors=0; resetRetrySummary(); };
     void                              printErrorSummary();
-
+    void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; }
+    void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; }
     // return information on phase aligners
     std::vector<std::bitset<6>> getFeStates() { return fFeStates; }
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
 
   private:
-    uint8_t fNbytesI2CWrite=3;
-    uint8_t fNbytesI2CRead=2;
+    bool    fRetryI2C=true;
+    uint8_t fMaxI2CAttempts=20;
     
     D19clpGBTInterface*       flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
@@ -121,11 +127,15 @@ class CicInterface : public ChipInterface
     bool WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
     bool WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
     std::map<uint8_t, std::string> fMap;
+    std::map<uint8_t, uint16_t> fReWMap; 
+    std::map<uint8_t, uint16_t> fReWrMap;
     std::map<uint8_t, uint16_t> fWriteErrorMap;
     std::map<uint8_t, uint16_t> fReadBackErrorMap;
     uint16_t fRegisterWrites=0;
     uint16_t fReadBackErrors=0;
     uint16_t fWriteErrors=0;
+    uint16_t fReW=0;
+    uint16_t fReWR=0;
 
   protected:
     std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id

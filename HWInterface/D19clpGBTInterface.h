@@ -261,6 +261,7 @@ class D19clpGBTInterface : public lpGBTInterface
 
     void configI2C( uint16_t pSpeed, uint8_t pMode = 0 ) { fI2CSpeed = pSpeed; fI2CMode = pMode; }
   private:
+    
     // default i2c configuration 
     uint16_t fI2CSpeed = 1000; // 1000, 400, 200 , 100 
     uint8_t  fI2CMode = 0 ; // 

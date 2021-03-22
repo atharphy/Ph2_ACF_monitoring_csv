@@ -121,6 +121,32 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     }
     return cSuccess;
 }
+std::pair<int,float>   CicInterface::getWRattempts()
+{
+    float cReWR=0; 
+    float cN=0; 
+    for(auto cIter : fReWrMap)
+    {  
+        if(cIter.second !=0 ){ cN++; cReWR+= cIter.second;}
+    } 
+    float cMean =  (cN==0)? 0 : cReWR/cN;
+    return std::make_pair(cN, cMean);
+}
+std::pair<float,float> CicInterface::getMinMaxWRattempts()
+{
+    float cReWRmin=0; 
+    float cReWRmax=0; 
+    for(auto cIter : fReWrMap)
+    { 
+        if(cIter.second !=0 && cReWRmin == 0 ) cReWRmin = cIter.second; 
+        else 
+        {
+            if( cIter.second < cReWRmin) cReWRmin = cIter.second;
+        }
+        if(cIter.second > cReWRmax ) cReWRmax = cIter.second; 
+    }
+    return std::make_pair(cReWRmin, cReWRmax);
+}
 void CicInterface::printErrorSummary()
 {
     LOG (INFO) << BOLDRED << "CIC total write error count : " << +fWriteErrors 
@@ -180,6 +206,27 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
             //std::this_thread::sleep_for(std::chrono::milliseconds(2));
             fRegisterWrites++;
+            if( !cSuccess && fRetryI2C )
+            {
+                // keep trying 
+                uint8_t cWriteAttempt=0; 
+                LOG (DEBUG) << BOLDRED << "Write error for CIC register 0x" 
+                        << std::hex << +cReg.first << std::dec  
+                        << RESET;  
+                do
+                {
+                    auto cIter = fReWMap.find(cReg.first);
+                    if( cIter == fReWMap.end() ) fReWMap[cReg.first]=1;
+                    else fReWMap[cReg.first]=fReWMap[cReg.first]+1;
+                    fReW++;
+
+                    LOG (DEBUG) << BOLDRED << "\t.. attempt#" 
+                        << +cWriteAttempt
+                        << RESET;
+                    cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
+                    cWriteAttempt++;
+                }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
+            }
             if( !cSuccess )
             {
                 LOG (INFO) << BOLDRED << "Write error for CIC register 0x"
@@ -205,6 +252,41 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             {
                 uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
                 cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
+                if( !cSuccess && fRetryI2C )
+                {
+                    // keep trying 
+                    uint8_t cWriteAttempt=0; 
+                    LOG (DEBUG) << BOLDRED << "Readback error for CIC register 0x" 
+                        << std::hex << +cReg.first << std::dec  
+                        << RESET;
+                    do
+                    {
+                        LOG (DEBUG) << BOLDRED << "\t.. attempt#" 
+                            << +cWriteAttempt
+                            << RESET;
+                        cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
+                        if( cSuccess )
+                        {
+                            uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
+                            cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
+                            if( !cSuccess )
+                            {
+                                auto cIter = fReWrMap.find(cReg.first);
+                                if( cIter == fReWrMap.end() ) fReWrMap[cReg.first]=1;
+                                else fReWrMap[cReg.first]=fReWrMap[cReg.first]+1;
+                                fReWR++;
+                            }//update WR map 
+                        }
+                        else
+                        {
+                            auto cIter = fReWMap.find(cReg.first);
+                            if( cIter == fReWMap.end() ) fReWMap[cReg.first]=1;
+                            else fReWMap[cReg.first]=fReWMap[cReg.first]+1;
+                            fReW++;
+                        }// update W map
+                        cWriteAttempt++;
+                    }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
+                }
                 if( !cSuccess )
                 {
                     auto cRegItem = pChip->getRegItem( fMap[cReg.first]  );
@@ -212,7 +294,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                         << std::hex << +cReg.first << std::dec 
                         << " have written " << +cRegItem.fValue
                         << " and have read back " << cValue << RESET;
-                
+                    
                     auto cIter = fReadBackErrorMap.find(cReg.first);
                     if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[cReg.first]=1;
                     else fReadBackErrorMap[cReg.first]=fReadBackErrorMap[cReg.first]+1;
@@ -229,7 +311,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
         if( cSuccess )
             LOG (INFO) << BOLDGREEN << "Register write successfull for CIC#" << +pChip->getId() << RESET;
         else
-            LOG (INFO) << BOLDRED << "Register write failed for CIC# : " << +pChip->getId() 
+            LOG (INFO) << BOLDRED << "Register write failed for CIC#" << +pChip->getId() 
                 << " found " << +(fWriteErrors-cWriteErrCounter) << " write errors in " << (fRegisterWrites-cWritesCounter) << " attempts "
                 << " and " << +(fReadBackErrors-cReadBackCounter) << " read-back errors found in those " << (fRegisterWrites-cWritesCounter-fWriteErrors+cWriteErrCounter) << " successfull writes"
                 << RESET;

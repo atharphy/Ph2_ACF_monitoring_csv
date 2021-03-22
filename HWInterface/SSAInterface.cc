@@ -346,6 +346,32 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     return cSuccess;
 }
+std::pair<int,float>   SSAInterface::getWRattempts()
+{
+    float cReWR=0; 
+    float cN=0; 
+    for(auto cIter : fReWrMap)
+    {  
+        if(cIter.second !=0 ){ cN++; cReWR+= cIter.second;}
+    } 
+    float cMean =  (cN==0)? 0 : cReWR/cN;
+    return std::make_pair(cN, cMean);
+}
+std::pair<float,float> SSAInterface::getMinMaxWRattempts()
+{
+    float cReWRmin=0; 
+    float cReWRmax=0; 
+    for(auto cIter : fReWrMap)
+    { 
+        if(cIter.second !=0 && cReWRmin == 0 ) cReWRmin = cIter.second; 
+        else 
+        {
+            if( cIter.second < cReWRmin) cReWRmin = cIter.second;
+        }
+        if(cIter.second > cReWRmax ) cReWRmax = cIter.second; 
+    }
+    return std::make_pair(cReWRmin, cReWRmax);
+}
 void SSAInterface::printErrorSummary()
 {
     LOG (INFO) << BOLDRED << "SSA total write error count : " << +fWriteErrors 
@@ -420,7 +446,29 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
             // update value of register in memory 
             auto cRegItem =  pChip->getRegItem( fMap[cReg.first] );
             pChip->setReg( fMap[cReg.first], static_cast<uint16_t>(cReg.second), cRegItem.fPrmptCfg , cRegItem.fStatusReg);
-            if( !cSuccess )
+            if( !cSuccess && fRetryI2C )
+            {
+                // keep trying 
+                uint8_t cWriteAttempt=0; 
+                LOG (DEBUG) << BOLDRED << "Write error for SSA register 0x" 
+                        << std::hex << +cReg.first << std::dec  
+                        << RESET;  
+                do
+                {
+                    auto cIter = fReWMap.find(cReg.first);
+                    if( cIter == fReWMap.end() ) fReWMap[cReg.first]=1;
+                    else fReWMap[cReg.first]=fReWMap[cReg.first]+1;
+                    fReW++;
+
+                    LOG (DEBUG) << BOLDRED << "\t.. attempt#" 
+                        << +cWriteAttempt
+                        << RESET;
+                    cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, cRetry);
+                    cWriteAttempt++;
+                }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
+            }// retry if failed 
+
+            if( !cSuccess)
             {
                 auto cIter = fWriteErrorMap.find(cReg.first);
                 if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[cReg.first]=1;
@@ -439,6 +487,42 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
             {
                 auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cReg.first);
                 cSuccess = ( pSuccesses[cCount]  == 1 ) ? runVerification(pChip, cValue, fMap[cReg.first] ) : true;
+                if( !cSuccess && fRetryI2C )
+                {
+                    // keep trying 
+                    uint8_t cWriteAttempt=0; 
+                    LOG (DEBUG) << BOLDRED << "Readback error for SSA register 0x" 
+                        << std::hex << +cReg.first << std::dec  
+                        << RESET;
+                    do
+                    {
+                        LOG (DEBUG) << BOLDRED << "\t.. attempt#" 
+                            << +cWriteAttempt
+                            << RESET;
+                        cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
+                        if( cSuccess )
+                        {
+                            uint32_t cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cReg.first);
+                            cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
+                            if( !cSuccess )
+                            {
+                                auto cIter = fReWrMap.find(cReg.first);
+                                if( cIter == fReWrMap.end() ) fReWrMap[cReg.first]=1;
+                                else fReWrMap[cReg.first]=fReWrMap[cReg.first]+1;
+                                fReWR++;
+                            }//update WR map 
+                        }
+                        else
+                        {
+                            auto cIter = fReWMap.find(cReg.first);
+                            if( cIter == fReWMap.end() ) fReWMap[cReg.first]=1;
+                            else fReWMap[cReg.first]=fReWMap[cReg.first]+1;
+                            fReW++;
+                        }// update W map
+                        cWriteAttempt++;
+                    }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
+                }
+                
                 if( !cSuccess )
                 {
                     auto cIter = fReadBackErrorMap.find(cReg.first);
