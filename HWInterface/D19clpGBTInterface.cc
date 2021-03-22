@@ -975,6 +975,19 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
    //ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x7);
     
+    uint8_t cEnable=1;
+    uint8_t cUpDown=1;
+    ConfigureGPIODirection(pChip, cResetPinsRHS, 0);
+    ConfigureGPIOPull(pChip, cResetPinsRHS, cEnable, cUpDown);
+    uint8_t cReadIOstateH = this->ReadChipReg(pChip,"PIOInH");
+    uint8_t cReadIOstateL = this->ReadChipReg(pChip,"PIOInL");
+    LOG (INFO) << BOLDBLUE << "IO state H " << std::bitset<8>(cReadIOstateH) << RESET;
+    LOG (INFO) << BOLDBLUE << "IO state L " << std::bitset<8>(cReadIOstateL) << RESET;
+    // set back
+    ConfigureGPIOPull(pChip, cResetPinsRHS, 0, 0);
+    ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    
+    
     // // Reset all ASICs
     // for(size_t cSide=0; cSide<2; cSide++)
     // {

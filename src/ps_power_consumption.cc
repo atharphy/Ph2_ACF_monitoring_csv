@@ -191,8 +191,12 @@ int main(int argc, char* argv[])
         cTool.fCicInterface->setRetryI2C(true);       
         //cTool.fReadoutChipInterface->setRetryI2C(true);       
     }
-    else    cTool.fCicInterface->setRetryI2C(false);       
+    else{ 
+        cTool.fCicInterface->setRetryI2C(false);       
+        //cTool.fReadoutChipInterface->setRetryI2C(false);       
+    }
     cTool.fCicInterface->setMaxI2CAttempts(cMaxI2Cattempts);
+    //cTool.fReadoutChipInterface->setMaxI2CAttempts(cMaxI2Cattempts);
     
     // first ..configure BeBoard
     // setting up back-end board

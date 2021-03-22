@@ -109,8 +109,18 @@ class PSInterface : public ReadoutChipInterface
     void Cleardata();
 
     //
-    void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; }
-    void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; }
+    void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; theSSAInterface->setRetryI2C(fRetryI2C); }
+    void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; theSSAInterface->setMaxI2CAttempts(fMaxI2CAttempts); }
+    std::pair<uint16_t, uint16_t>     getSsaRetrySummary(){ return theSSAInterface->getRetrySummary(); };
+    std::pair<int,float>              getSsaWRattempts(){return theSSAInterface->getWRattempts(); };
+    std::pair<float, float>           getSsaMinMaxWRattempts(){return theSSAInterface->getMinMaxWRattempts(); };
+    std::pair<uint16_t,uint16_t>      getSsaReadBackErrorSummary(){ return theSSAInterface->getReadBackErrorSummary();};
+    std::pair<uint16_t,uint16_t>      getSsaWriteErrorSummary(){ return theSSAInterface->getWriteErrorSummary();}; 
+    void                              resetSsaRetrySummary(){ theSSAInterface->resetRetrySummary();};
+    void                              resetSsaErrorSummary(){ theSSAInterface->resetErrorSummary();};
+    // void                              printErrorSummary();
+    
+    
   
 };
 } // namespace Ph2_HwInterface
