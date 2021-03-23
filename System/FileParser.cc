@@ -61,7 +61,7 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
 
-    for(j = 0; j < 40; j++) os << " ";
+    for(j = 0; j < 35; j++) os << " ";
     os << BOLDRED << "HW SUMMARY" << RESET << std::endl;
 
     for(i = 0; i < 80; i++) os << "*";
@@ -72,31 +72,14 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     // Iterate over the BeBoard Nodes
     for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
-        if( static_cast<std::string>(cBeBoardNode.name()).find("BeBoard") != std::string::npos )
-        {
-            os << cBeBoardNode.name() << "\n";
-            this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); 
-        }
+        if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); }
     }
-
-    // Iterate over devices 
-    // first power supplies 
-    // if( doc.child("Devices") != NULL )
-    // {
-    //     os << "Devices  ....\n";
-    //     // for(pugi::xml_node cPowerSupplyNode = doc.child("Devices").child("PowerSupply"); cPowerSupplyNode; cPowerSupplyNode = cPowerSupplyNode.next_sibling())
-    //     // {
-    //     //     os << "Parsing power supply ....\n";
-    //     //     //if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); }
-    //     // }
-    // }
-
 
     for(i = 0; i < 80; i++) os << "*";
 
     os << "\n";
 
-    for(j = 0; j < 40; j++) os << " ";
+    for(j = 0; j < 32; j++) os << " ";
 
     os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
 
@@ -130,9 +113,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     }
     cBeBoard->setCDCEconfiguration(cConfigureCDCE, cClockRateCDCE);
 
-    if(cBoardType.find("D19C") != std::string::npos )
+    if(cBoardType == "D19C")
         cBeBoard->setBoardType(BoardType::D19C);
-    else if(cBoardType.find("RD53") != std::string::npos )
+    else if(cBoardType == "RD53")
         cBeBoard->setBoardType(BoardType::RD53);
     else
     {
@@ -153,14 +136,14 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     else
     {
         cEventTypeString = cEventTypeAttribute.value();
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
+        //std::cout << cEventTypeString << std::endl;
         if(cEventTypeString == "ZS")
             cBeBoard->setEventType(EventType::ZS);
         else if(cEventTypeString == "SSAAS")
@@ -187,9 +170,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
     std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
 
-    if(cBeBoard->getBoardType() == BoardType::D19C) { 
-        pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); 
-    }
+    if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
     else if(cBeBoard->getBoardType() == BoardType::RD53)
         pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
 
@@ -632,7 +613,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "|"
                            << "----" << cName << "  "
                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
-                        
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
@@ -681,12 +661,12 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                             }
                         }
                     }
-                    else if(cName.find("SSA") != std::string::npos)
+                    else if(cName == "SSA")
                     {
                         pBoard->setFrontEndType(FrontEndType::SSA);
                         this->parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                     }
-                    else if(cName.find("MPA") != std::string::npos)
+                    else if(cName == "MPA")
                     {
                         pBoard->setFrontEndType(FrontEndType::MPA);
                         this->parseMPA(cChild, cHybrid, cConfigFileDirectory);
@@ -991,10 +971,9 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
         if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
 
         throw Exception("Unable to parse XML source!");
-        return;
     }
 
-    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings; nSettings = nSettings.next_sibling())
+    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
         os << "\n" << std::endl;
 
@@ -1067,6 +1046,7 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
         }
     }
 }
+// ########################
 
 std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
 {
@@ -1075,7 +1055,7 @@ std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonit
     else if(!pIsFile)
         return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
     else
-        LOG(ERROR) << BOLDRED << "Could not parse monitor file " << pFilename << " - it is not .xm" << RESET;
+        LOG(ERROR) << BOLDRED << "Could not parse monitor file " << pFilename << " - it is not .xml" << RESET;
     return "None";
 }
 
@@ -1100,32 +1080,31 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
         return "None";
     }
 
-    if(!bool(doc.child("MonitoringSettings")))
+    if(!bool(doc.child("HwDescription").child("MonitoringSettings")))
     {
         os << BOLDYELLOW << "Monitoring not defined in " << pFilename << RESET << std::endl;
         os << BOLDYELLOW << "No monitoring will be run" << RESET << std::endl;
         return "None";
     }
 
-    pugi::xml_node theMonitorNode = doc.child("MonitoringSettings").child("Monitoring");
+    pugi::xml_node theMonitorNode = doc.child("HwDescription").child("MonitoringSettings").child("Monitoring");
     if(std::string(theMonitorNode.attribute("enable").value()) == "0") return "None";
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child("MonitoringSleepTime").first_child().value());
+
+    os << "\n" << std::endl;
 
     for(pugi::xml_node monitorElement = theMonitorNode.child("Enable"); monitorElement; monitorElement = monitorElement.next_sibling())
     {
         std::string monitorElementName = monitorElement.attribute("name").value();
         if(atoi(monitorElement.first_child().value()) > 0)
         {
+            os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << monitorElementName << RESET;
             theDetectorMonitorConfig.fMonitorElementList.emplace_back(std::move(monitorElementName));
-            os << BOLDRED << "Monitoring:" << RESET << " -- " << BOLDCYAN << monitorElementName << RESET << std::endl;
         }
     }
 
     if(theDetectorMonitorConfig.fMonitorElementList.size() == 0) return "None";
     return theMonitorNode.attribute("type").value();
 }
-
-// ########################
-
 } // namespace Ph2_System

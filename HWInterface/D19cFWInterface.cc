@@ -23,7 +23,7 @@
 #include <uhal/uhal.hpp>
 
 // #pragma GCC diagnostic ignored "-Wpedantic"
-// #pragma GCC diagnostic pop
+
 
 using namespace Ph2_HwDescription;
 
@@ -425,83 +425,18 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
 }
 
-// bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
-// {
-//     // reset lpGBT core
-//     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-//     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-//     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-//     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-//     // check links are up
-//     std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
-//     bool                     cLinksLocked = true;
-//     uint8_t                  cMaxAttempts = 10;
-//     uint8_t                  cAttempCount = 0;
-//     do
-//     {
-//         cLinksLocked = true;
-//         LOG(INFO) << BOLDBLUE << "RESET APPLIED" << RESET;
-//         for(auto cOpticalReadout: *pBoard)
-//         {
-//             uint8_t cLinkId = cOpticalReadout->getId();
-//             // reset here for good measure
-//             uint32_t cCommand = (0x0 << 22) | ((cLinkId & 0x3f) << 26);
-//             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
-//             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//             // get link status
-//             cCommand = (0x1 << 22) | ((cLinkId & 0x3f) << 26);
-//             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
-//             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-//             bool cGBTxLocked = true;
-//             // read back status register
-//             LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
-//             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
-//             LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
-//             std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
-//             uint8_t                  cIndex  = 1;
-//             for(auto cState: cStates)
-//             {
-//                 uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
-//                 cGBTxLocked &= (cStatus == 1);
-//                 if(cStatus == 1)
-//                     LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
-//                 else
-//                     LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
-//                 cIndex++;
-//             }
-//             cLinksLocked = cLinksLocked && cGBTxLocked;
-//         }
-//         if(cLinksLocked)
-//         {
-//             LOG(INFO) << BOLDGREEN << "All links locked." << RESET;
-//             break;
-//         }
-//         else
-//         {
-//             LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
-//             // reset lpGBT core
-//             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-//             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-//             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-//             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//         }
-//         cAttempCount++;
-//     } while(!cLinksLocked && cAttempCount < cMaxAttempts);
-//     return cLinksLocked;
-// }
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
     // reset lpGBT core
-    // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // check links are up
-        std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
+    std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
     bool                     cLinksLocked = true;
-    uint8_t                  cMaxAttempts = 100;
+    uint8_t                  cMaxAttempts = 10;
     uint8_t                  cAttempCount = 0;
     do
     {
@@ -511,14 +446,11 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         {
             uint8_t cLinkId = cOpticalReadout->getId();
             // reset here for good measure
-            // -- link id (31 downto 26), command id (25 downto 22), user space (21 downto 0)
-            uint8_t cResetCmd=0;
-            uint8_t cLinkStatCmd=1;
-            uint32_t cCommand = ((cLinkId & 0x3f) << 26) |  (cResetCmd << 22) |  0 ;
+            uint32_t cCommand = (0x0 << 22) | ((cLinkId & 0x3f) << 26);
             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             // get link status
-            cCommand = ((cLinkId & 0x3f) << 26) |  (cLinkStatCmd << 22) |  0 ;
+            cCommand = (0x1 << 22) | ((cLinkId & 0x3f) << 26);
             this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             bool cGBTxLocked = true;
@@ -526,6 +458,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
             uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
             LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
+            std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
             uint8_t                  cIndex  = 1;
             for(auto cState: cStates)
             {
@@ -548,10 +481,10 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         {
             LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
             // reset lpGBT core
-            // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         cAttempCount++;
     } while(!cLinksLocked && cAttempCount < cMaxAttempts);
@@ -955,16 +888,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     {
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& clpGBT =  cOpticalGroup->flpGBT ;
-            if(clpGBT != nullptr)
-            {
-                LOG (INFO) << BOLDBLUE << "Send chip reset from lpGBT" << RESET;
-            }
-            else
-            {
-                if(pBoard->ifOptical()) this->selectLink(cOpticalGroup->getId());
-                this->ChipReset();
-            }
+            if(pBoard->ifOptical()) this->selectLink(cOpticalGroup->getId());
+            this->ChipReset();
         }
     }
     else
@@ -1726,7 +1651,7 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard, bool pScope)
     return cSuccess;
 }
 // tuning of stub lines
-bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope )
+bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
 {
     PhaseTuner pTuner;
     bool       cSuccess = true;
@@ -1740,18 +1665,11 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope )
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
 
-            // check value in register map 
-            std::string cRegName = (cCic->getFrontEndType() == FrontEndType::CIC ) ? "N_OUTPUT_TRIGGER_LINES_SEL" : "FE_CONFIG";
-            auto cRegItem =  cCic->getRegItem( cRegName ); 
-            uint8_t cValue = (cCic->getFrontEndType() == FrontEndType::CIC ) ? (cRegItem.fValue )  : ((cRegItem.fValue & (1<<3))>>3);
-            // configure number of lines based on that 
-            uint8_t cNlines = 5 + cValue ; 
-            
-            
             // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
             if(pScope) this->StubDebug();
 
             LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
+            uint8_t cNlines = 6;
             for(uint8_t cLineId = 1; cLineId < 1 + cNlines; cLineId += 1)
             {
                 if(fOptical)
@@ -1759,6 +1677,32 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope )
                     LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
                     pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
                     cSuccess = cSuccess && pTuner.fDone;
+                    // why was I doing it like this?
+                    // pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, 1, 0, 0);
+                    // pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
+                    // pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
+                    // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    // LOG(DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
+                    // uint8_t cAttempts = 0;
+                    // if(pTuner.fBitslip == 0)
+                    // {
+                    //     do
+                    //     {
+                    //         if(cAttempts > 10)
+                    //         {
+                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                    //             exit(0);
+                    //         }
+                    //         // try again
+                    //         LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
+                    //         GbtInterface cGBTx;
+                    //         cGBTx.gbtxSetPhase(this, fGBTphase);
+                    //         pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
+                    //         cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    //         LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                    //         cAttempts++;
+                    //     } while(pTuner.fBitslip == 0);
+                    // }
                 }
                 else
                 {
@@ -2061,7 +2005,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
             {
                 for(auto cChip: *cFe)
                 {
-                    uint8_t cMaster  = (cChip->getHybridId() % 2 == 0) ? 2 : 0;
+                    // uint8_t cMaster  = (cChip->getHybridId() % 2 == 0) ? 2 : 0;
                     bool    cWithMPA = cChip->getFrontEndType() == FrontEndType::MPA;
                     if(clpGBT == nullptr)
                     {
@@ -2119,14 +2063,14 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                     }
                     else
                     {
-                        // I2C configuration
-                        uint8_t cFreq         = 3;
-                        uint8_t cSCLDriveMode = 0;
+                        // // I2C configuration
+                        // uint8_t cFreq         = 3;
+                        // uint8_t cSCLDriveMode = 0;
                         //
                         uint32_t cDataWord       = 0x0000;
                         uint32_t cWordCounter    = 0;
-                        uint8_t  cBaseSlaveAddrs = cWithMPA ? 0x40 : 0x20;
-                        uint8_t  cSlaveAddress   = cBaseSlaveAddrs + cChip->getId();
+                        // uint8_t  cBaseSlaveAddrs = cWithMPA ? 0x40 : 0x20;
+                        // uint8_t  cSlaveAddress   = cBaseSlaveAddrs + cChip->getId();
                         int      cPrintDebug     = cWithMPA ? 250 : 25;
                         for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
@@ -2145,130 +2089,131 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                                 ChipRegItem cReg_Counters_MSB;
                                 cReg_Counters_MSB.fPage    = 0x00;
                                 cReg_Counters_MSB.fAddress = cReg;
-                                uint16_t cInvertedRegister = ((cReg_Counters_MSB.fAddress & (0xFF << 8 * 0)) << 8) | ((cReg_Counters_MSB.fAddress & (0xFF << 8 * 1)) >> 8);
+                                // uint16_t cInvertedRegister = ((cReg_Counters_MSB.fAddress & (0xFF << 8 * 0)) << 8) | ((cReg_Counters_MSB.fAddress & (0xFF << 8 * 1)) >> 8);
                                 // write address
                                 // dummy write
                                 // configure I2C
-                                uint8_t cNBytes = 2;
-                                {
-                                    std::string cI2CCntrlReg = "I2CM" + std::to_string(cMaster) + "Data0";
-                                    uint8_t     cValueCntrl  = (cFreq << 0) | (cNBytes << 2) | (cSCLDriveMode << 7);
-                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
-                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+                                // uint8_t cNBytes = 2;
+                                // {
+                                //     std::string cI2CCntrlReg = "I2CM" + std::to_string(cMaster) + "Data0";
+                                //     uint8_t     cValueCntrl  = (cFreq << 0) | (cNBytes << 2) | (cSCLDriveMode << 7);
+                                //     // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+                                //     WriteLpGBTRegister(clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
 
-                                    std::string cI2CCmdReg0 = "I2CM" + std::to_string(cMaster) + "Cmd";
-                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg0).fAddress, 0x0, true);
-                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg0).fAddress, 0x0, true);
+                                //     std::string cI2CCmdReg0 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                //     // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg0).fAddress, 0x0, true);
+                                //     WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg0).fAddress, 0x0, true);
 
-                                    // Prepare Address Register
-                                    std::string cI2CAddressReg = "I2CM" + std::to_string(cMaster) + "Address";
-                                    // Write Slave Address
-                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
-                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+                                //     // Prepare Address Register
+                                //     std::string cI2CAddressReg = "I2CM" + std::to_string(cMaster) + "Address";
+                                //     // Write Slave Address
+                                //     // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+                                //     WriteLpGBTRegister(clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
 
-                                    // Write Data to Data Register
-                                    for(uint8_t cByte = 0; cByte < 4; cByte++)
-                                    {
-                                        std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "Data" + std::to_string(cByte);
-                                        if(cByte < cNBytes)
-                                        {
-                                            // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress, (cInvertedRegister & (0xFF << 8 * cByte)) >> 8 * cByte, true);
-                                            WriteLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress, (cInvertedRegister & (0xFF << 8 * cByte)) >> 8 * cByte, true);
-                                        }
-                                        else
-                                        {
-                                            // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress, 0x00, true);
-                                            WriteLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress, 0x00, true);
-                                        }
-                                    }
+                                //     // Write Data to Data Register
+                                //     for(uint8_t cByte = 0; cByte < 4; cByte++)
+                                //     {
+                                //         std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "Data" + std::to_string(cByte);
+                                //         if(cByte < cNBytes)
+                                //         {
+                                //             // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress, (cInvertedRegister & (0xFF << 8 * cByte)) >> 8 * cByte, true);
+                                //             WriteLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress, (cInvertedRegister & (0xFF << 8 * cByte)) >> 8 * cByte, true);
+                                //         }
+                                //         else
+                                //         {
+                                //             // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress, 0x00, true);
+                                //             WriteLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress, 0x00, true);
+                                //         }
+                                //     }
 
-                                    // Prepare Command Register
-                                    std::string cI2CCmdReg1 = "I2CM" + std::to_string(cMaster) + "Cmd";
-                                    // If Multi-Byte, write command to save data locally before transfer to slave
-                                    // FIXME for now this only provides a maximum of 32 bits (4 Bytes) write
-                                    // Write Command to launch I2C transaction
-                                    if(cNBytes == 1)
-                                    {
-                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x2, true);
-                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x2, true);
-                                    }
-                                    else
-                                    {
-                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x8, true);
-                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x8, true);
-                                        //
-                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0xc, true);
-                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0xc, true);
-                                    }
-                                    // wait until the transaction is done
-                                    uint8_t cMaxIter = 10, cIter = 0;
-                                    bool    cSuccess = false;
-                                    do
-                                    {
-                                        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
-                                        std::string cI2CStatReg = "I2CM" + std::to_string(cMaster) + "Status";
-                                        // uint8_t     cStatus = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CStatReg).fAddress);
-                                        uint8_t cStatus = ReadLpGBTRegister(clpGBT->getRegItem(cI2CStatReg).fAddress);
-                                        cSuccess        = (cStatus == 4);
-                                        cIter++;
-                                    } while(cIter < cMaxIter && !cSuccess);
-                                    if(!cSuccess)
-                                    {
-                                        LOG(INFO) << BOLDRED << "ERROR I2C write" << RESET;
-                                        exit(0);
-                                    }
-                                } // write
+                                //     // Prepare Command Register
+                                //     std::string cI2CCmdReg1 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                //     // If Multi-Byte, write command to save data locally before transfer to slave
+                                //     // FIXME for now this only provides a maximum of 32 bits (4 Bytes) write
+                                //     // Write Command to launch I2C transaction
+                                //     if(cNBytes == 1)
+                                //     {
+                                //         // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x2, true);
+                                //         WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x2, true);
+                                //     }
+                                //     else
+                                //     {
+                                //         // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x8, true);
+                                //         WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0x8, true);
+                                //         //
+                                //         // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0xc, true);
+                                //         WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg1).fAddress, 0xc, true);
+                                //     }
+                                //     // wait until the transaction is done
+                                //     uint8_t cMaxIter = 10, cIter = 0;
+                                //     bool    cSuccess = false;
+                                //     do
+                                //     {
+                                //         LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
+                                //         std::string cI2CStatReg = "I2CM" + std::to_string(cMaster) + "Status";
+                                //         // uint8_t     cStatus = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CStatReg).fAddress);
+                                //         uint8_t cStatus = ReadLpGBTRegister(clpGBT->getRegItem(cI2CStatReg).fAddress);
+                                //         cSuccess        = (cStatus == 4);
+                                //         cIter++;
+                                //     } while(cIter < cMaxIter && !cSuccess);
+                                //     if(!cSuccess)
+                                //     {
+                                //         LOG(INFO) << BOLDRED << "ERROR I2C write" << RESET;
+                                //         exit(0);
+                                //     }
+                                // } // write
 
-                                // then read
-                                uint8_t cValue = 0;
-                                {
-                                    // Read Data from Slave Address using I2C Master
-                                    // configure I2C
-                                    // cFreq                    = 3; // 1 MHz
-                                    cNBytes                  = 1;
-                                    std::string cI2CCntrlReg = "I2CM" + std::to_string(cMaster) + "Data0";
-                                    uint8_t     cValueCntrl  = (cFreq << 0) | (cNBytes << 2) | (cSCLDriveMode << 7);
-                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
-                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
-                                    //
-                                    std::string cI2CCmdReg2 = "I2CM" + std::to_string(cMaster) + "Cmd";
-                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg2).fAddress, 0x0, true);
-                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg2).fAddress, 0x0, true);
+                                // // then read
+                                // uint8_t cValue = 0;
+                                // {
+                                //     // Read Data from Slave Address using I2C Master
+                                //     // configure I2C
+                                //     // cFreq                    = 3; // 1 MHz
+                                //     cNBytes                  = 1;
+                                //     std::string cI2CCntrlReg = "I2CM" + std::to_string(cMaster) + "Data0";
+                                //     uint8_t     cValueCntrl  = (cFreq << 0) | (cNBytes << 2) | (cSCLDriveMode << 7);
+                                //     // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+                                //     WriteLpGBTRegister(clpGBT->getRegItem(cI2CCntrlReg).fAddress, cValueCntrl, true);
+                                //     //
+                                //     std::string cI2CCmdReg2 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                //     // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg2).fAddress, 0x0, true);
+                                //     WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg2).fAddress, 0x0, true);
 
-                                    // Prepare Address Register
-                                    std::string cI2CAddressReg = "I2CM" + std::to_string(cMaster) + "Address";
-                                    // Prepare Command Register
-                                    std::string cI2CCmdReg3 = "I2CM" + std::to_string(cMaster) + "Cmd";
-                                    // Write Slave Address
-                                    // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
-                                    WriteLpGBTRegister(clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
-                                    // Write Read Command and then Read from Read Data Register
-                                    // Procedure and registers depend on number on Bytes
-                                    if(cNBytes == 1)
-                                    {
-                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0x3, true);
-                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0x3, true);
+                                //     // Prepare Address Register
+                                //     std::string cI2CAddressReg = "I2CM" + std::to_string(cMaster) + "Address";
+                                //     // Prepare Command Register
+                                //     std::string cI2CCmdReg3 = "I2CM" + std::to_string(cMaster) + "Cmd";
+                                //     // Write Slave Address
+                                //     // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+                                //     WriteLpGBTRegister(clpGBT->getRegItem(cI2CAddressReg).fAddress, cSlaveAddress, true);
+                                //     // Write Read Command and then Read from Read Data Register
+                                //     // Procedure and registers depend on number on Bytes
+                                //     if(cNBytes == 1)
+                                //     {
+                                //         // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0x3, true);
+                                //         WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0x3, true);
 
-                                        std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "ReadByte";
-                                        // cValue = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress);
-                                        cValue = ReadLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress);
-                                    }
-                                    else
-                                    {
-                                        // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0xD, true);
-                                        WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0xD, true);
+                                //         std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "ReadByte";
+                                //         // cValue = ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress);
+                                //         cValue = ReadLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress);
+                                //     }
+                                //     else
+                                //     {
+                                //         // WriteOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0xD, true);
+                                //         WriteLpGBTRegister(clpGBT->getRegItem(cI2CCmdReg3).fAddress, 0xD, true);
 
-                                        uint32_t cReadData = 0;
-                                        for(uint8_t cByte = 0; cByte < cNBytes; cByte++)
-                                        {
-                                            std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "Read" + std::to_string(15 - cByte);
-                                            // cReadData |= ((uint32_t)ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress) << cByte);
-                                            cReadData |= ((uint32_t)ReadLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress) << cByte);
-                                        }
-                                        cValue = cReadData;
-                                    }
-                                } // read
-                                cValues.push_back(cValue);
+                                //         uint32_t cReadData = 0;
+                                //         for(uint8_t cByte = 0; cByte < cNBytes; cByte++)
+                                //         {
+                                //             std::string cI2CDataReg = "I2CM" + std::to_string(cMaster) + "Read" + std::to_string(15 - cByte);
+                                //             // cReadData |= ((uint32_t)ReadOptoLinkRegister(clpGBT, clpGBT->getRegItem(cI2CDataReg).fAddress) << cByte);
+                                //             cReadData |= ((uint32_t)ReadLpGBTRegister(clpGBT->getRegItem(cI2CDataReg).fAddress) << cByte);
+                                //         }
+                                //         cValue = cReadData;
+                                //     }
+                                // } // read
+
+                                cValues.push_back(ReadFERegister(cChip, cReg));
                             }
                             uint16_t cCounterValue = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF);
                             if(cChnl % cPrintDebug == 0)
@@ -4835,47 +4780,47 @@ void D19cFWInterface::Align_out()
     }
 }
 
-void D19cFWInterface::ResetOptoLink(Ph2_HwDescription::Chip* pChip)
+void D19cFWInterface::ResetOptoLink()
 {
     // cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x1});
     // cVecReg.push_back({"fc7_daq_ctrl.optical_block.ic.reset", 0x0});
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.gbtx", 0x00}});
 }
 
-bool D19cFWInterface::WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pValue, bool pVerifLoop)
+bool D19cFWInterface::WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop)
 {
     // Reset
-    ResetOptoLink(pChip);
+    ResetOptoLink();
     // Config transaction register
-    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pValue}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
     // Perform transaction
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
     //
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
 
     if(!pVerifLoop) return true;
-    uint8_t cReadBack = ReadOptoLinkRegister(pChip, pAddress);
+    uint8_t cReadBack = ReadOptoLinkRegister(pAddress);
     uint8_t cIter = 0, cMaxIter = 50;
-    while(cReadBack != pValue && cIter < cMaxIter)
+    while(cReadBack != pData && cIter < cMaxIter)
     {
 	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteOptoLinkRegister] : lpGBT register write mismatch... retrying" << RESET;
         // Config transaction register
-        this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pValue}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
+        this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
         // Perform transaction
         this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
         //
         this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
-        cReadBack = ReadOptoLinkRegister(pChip, pAddress);
+        cReadBack = ReadOptoLinkRegister(pAddress);
         cIter++;
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
     return true;
 }
 
-uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)
+uint32_t D19cFWInterface::ReadOptoLinkRegister(uint32_t pAddress)
 {
     // Reset
-    ResetOptoLink(pChip);
+    ResetOptoLink();
     // Config transaction register
     this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}, {"fc7_daq_cnfg.optical_block.ic.nwords", 0x01}});
     // Perform transaction
@@ -4892,11 +4837,6 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, u
 // #########################################
 void D19cFWInterface::ResetCPB()
 {
-    /*
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0x01);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0x01);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0x01);
-    */
     // Soft reset the GBT-SC worker
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -4904,7 +4844,7 @@ void D19cFWInterface::ResetCPB()
     // reset shoudl be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 
@@ -4920,7 +4860,6 @@ void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVecto
 	    }
     }
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
-    //std::this_thread::sleep_for(std::chrono::milliseconds(2));
 }
 
 std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
@@ -4934,14 +4873,13 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbo
 		LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
 		cFifoIndex++;
 	    }
-    	    LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
+    	LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
     }
     return cReplyVector;
 }
 
 bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
 {
-    ResetCPB();
     // Use new Command Processor Block
     uint8_t               cWorkerId = 16, cFunctionId = 3;
     std::vector<uint32_t> cCommandVector;
@@ -4957,13 +4895,8 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     uint8_t cIter = 0, cMaxIter = 50;
     while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
     {
-	    LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" 
-            << "\t.. Register is 0x" << std::hex << +pRegisterAddress << std::dec 
-            << "\t.. Register value is 0x" << std::hex << +pRegisterValue << std::dec 
-            << "\t.. Parity check bit is " << +cParityCheck
-            << RESET;
-
-        ResetCPB();
+    	ResetCPB();
+	LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);
@@ -4972,19 +4905,12 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
         cReadBack    = cReplyVector[7] & 0xFF;
         cIter++;
     };
-    LOG(DEBUG) << BOLDGREEN << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" 
-            << "\t.. Register is 0x" << std::hex << +pRegisterAddress << std::dec 
-            << "\t.. Register value is 0x" << std::hex << +pRegisterValue << std::dec 
-            << "\t.. Parity check bit is " << +cParityCheck
-            << RESET;
-
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block"));
     return true;
 }
 
 uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
 {
-    ResetCPB();
     uint8_t               cWorkerId = 16, cFunctionId = 2;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -4996,8 +4922,8 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     uint8_t               cIter = 0, cMaxIter = 20;
     while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
     {
+    	ResetCPB();
 	LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
-        ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);
@@ -5030,8 +4956,8 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     	cReplyVector = ReadReplyCPB(10);
     	cI2CStatus = cReplyVector[7] & 0xFF;
         LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
-    	cIter++;
-    	exit(0);
+	cIter++;
+	exit(0);
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
     return true;

@@ -199,9 +199,9 @@ HighGain_LIN              0xA0          0b1                     0b1             
 INJECTION_SELECT_DELAY    0xA1          0b0000                  0b0000                              4
 VOLTAGE_TRIM_DIG          0xA2          0b10000                 0b10000                             5
 VOLTAGE_TRIM_ANA          0xA3          0b10000                 0b10000                             5
-CLK_DATA_DELAY_DATA_DELAY 0xA4          0b0000                  0b0000                              4
+CLK_DATA_DELAY_CMD_DELAY  0xA4          0b0000                  0b0000                              4
 CLK_DATA_DELAY_CLK_DELAY  0xA5          0b0000                  0b0000                              4
-CLK_DATA_DELAY_CLK_PHASE  0xA6          0b0                     0b0                                 1
+CLK_DATA_DELAY_2INV_DELAY 0xA6          0b0                     0b0                                 1
 MONITOR_CONFIG_ADC        0xA7          0d5                     0d5                                 6
 MONITOR_CONFIG_BG         0xA8          0d12                    0d12                                5
 

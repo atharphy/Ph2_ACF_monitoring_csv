@@ -25,6 +25,9 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 
+#include <chrono>
+#include <thread>
+
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #endif
@@ -42,7 +45,7 @@
 #define SETBATCH 0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
-#define ARBITRARYDELAY 2e6 // [us]
+#define ARBITRARYDELAY 2 // [seconds]
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -64,7 +67,7 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 }
 
-void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     const unsigned int    wordDataSize = 32;
     unsigned int          errors       = 0;
@@ -75,15 +78,16 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
 
-    RD53FWInterface::DecodeEventsMultiThreads(data, decodedEvents);
+    uint16_t status;
+    RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
     LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
-        if(RD53FWInterface::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
+        if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
-            RD53FWInterface::PrintEvents({decodedEvents[i]});
+            RD53Event::PrintEvents({decodedEvents[i]});
         }
 
     LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
@@ -109,7 +113,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq prbstime prbsframes]",
+                     "injdelay clkdelay physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -266,9 +270,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(ARBITRARYDELAY);
+                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                     theMiddlewareInterface.stop();
-                    usleep(ARBITRARYDELAY);
+                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
@@ -297,7 +301,7 @@ int main(int argc, char** argv)
     {
         SystemController mySysCntr;
 
-        if((reset == true) || (binaryFile != ""))
+        if((reset == true) || (binaryFile != "") || (whichCalib == "prbstime") || (whichCalib == "prbsframes"))
         {
             // ######################################
             // # Reset hardware or read binary file #
@@ -308,10 +312,13 @@ int main(int argc, char** argv)
             mySysCntr.InitializeSettings(configFile, outp);
             if(reset == true)
             {
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence();
+                if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
+                    static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+                else
+                    static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
                 exit(EXIT_SUCCESS);
             }
-            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
+            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
         }
         else if(binaryFile == "")
         {
@@ -508,7 +515,7 @@ int main(int argc, char** argv)
             id.analyze();
             id.draw();
         }
-        else if(whichCalib == "clockdelay")
+        else if(whichCalib == "clkdelay")
         {
             // ###################
             // # Run Clock Delay #
@@ -537,7 +544,7 @@ int main(int argc, char** argv)
             {
                 ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
-                usleep(ARBITRARYDELAY);
+                std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                 ph.Stop();
             }
             else
@@ -579,40 +586,31 @@ int main(int argc, char** argv)
         }
         else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
         {
-            // #################
-            // # Run PRBS test #
-            // #################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Pseudo Random Bit Sequence test @@@" << RESET;
+            // ################
+            // # Run BER test #
+            // ################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
 
             if(cmd.argument(0) == "")
             {
-                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of PRBS test; use \"-c prbstime <TIME IN SECONDS>\"" << RESET; }
+                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of BER test; use \"-c prbstime <TIME IN SECONDS (e.g. 10)>\"" << RESET; }
                 else if(whichCalib == "prbsframes")
                 {
-                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for PRBS test; use \"-c prbsframes <NUMBER OF FRAMES>\"" << RESET;
+                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for BER test; use \"-c prbsframes <NUMBER OF FRAMES (e.g. 1e9)>\"" << RESET;
                 }
-
+                exit(EXIT_FAILURE);
+            }
+            if(cmd.argument(1) == "")
+            {
+                LOG(ERROR) << BOLDRED << "Failed to specify which connection to test [BE-LPGBT-FE, BE-LPGBT, LPGBT-FE]" << RESET;
                 exit(EXIT_FAILURE);
             }
 
-            unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
-            bool               given_time     = false;
+            double frames_or_time = atof(cmd.argument(0).c_str());
+            bool   given_time     = false;
             if(whichCalib == "prbstime") given_time = true;
 
-            for(const auto cBoard: *mySysCntr.fDetectorContainer)
-                for(const auto cOpticalGroup: *cBoard)
-                    for(const auto cHybrid: *cOpticalGroup)
-                        for(const auto cChip: *cHybrid)
-                        {
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
-                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                      << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
-                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
-                                              ? "PASSED"
-                                              : "NOT PASSED")
-                                      << RESET;
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
-                        }
+            mySysCntr.RunBERtest(cmd.argument(1), given_time, frames_or_time);
         }
         else if((program == false) && (whichCalib != ""))
         {
@@ -635,6 +633,12 @@ int main(int argc, char** argv)
         fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
         if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
         fileRunNumberOut.close();
+
+        // #############################
+        // # Destroy System Controller #
+        // #############################
+        mySysCntr.Destroy();
+        // fDetectorMonitor->startMonitoring();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }

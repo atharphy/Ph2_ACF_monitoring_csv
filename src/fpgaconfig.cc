@@ -107,6 +107,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("image", "Without -f: load image from SD card to FPGA\nWith    -f: name of image written to SD card\n-f specifies the source filename", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("image", "i");
 
+    cmd.defineOption("board", "In case of multiple boards in the same file, specify board Id", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("board", "b");
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -118,7 +121,7 @@ int main(int argc, char* argv[])
     std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     std::ostringstream cStr;
     cSystemController.InitializeHw(cHWFile, cStr);
-    BeBoard*                 pBoard   = cSystemController.fDetectorContainer->at(0);
+    BeBoard*                 pBoard   = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
     std::vector<std::string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
     std::string              cFWFile;
     std::string              strImage("1");
@@ -168,7 +171,7 @@ int main(int argc, char* argv[])
         if(!cmd.foundOption("file"))
         {
             verifyImageName(strImage, lstNames);
-            LOG(INFO) << ">>> Done <<<";
+            LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
         }
     }
     else if(!lstNames.empty())
@@ -196,7 +199,7 @@ int main(int argc, char* argv[])
         if(progress == 100)
         {
             cDone = 1;
-            LOG(INFO) << "\n 100% Done";
+            LOG(INFO) << BOLDBLUE << ">>> 100% Done <<<" << RESET;
         }
         else
         {

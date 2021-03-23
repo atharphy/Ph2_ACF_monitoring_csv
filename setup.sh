@@ -14,6 +14,9 @@ export KERNELRELEASE=$(uname -r)
 if [[ $KERNELRELEASE == *"el6"* ]]; then
     export BOOST_LIB=/opt/cactus/lib
     export BOOST_INCLUDE=/opt/cactus/include
+elif [[ $KERNELRELEASE == "5."*"-generic" ]]; then
+    export BOOST_INCLUDE=/usr/include
+    export BOOST_LIB=/usr/lib/x86_64-linux-gnu
 else
     export BOOST_INCLUDE=/usr/include
     export BOOST_LIB=/usr/lib64
@@ -79,6 +82,8 @@ export ZmqFlag='-D__ZMQ__'
 export USBINSTFlag='-D__USBINST__'
 export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
+export TCUSBforROHFlag='-D__ROH_USB__'
+export TCUSBforSEHFlag='-D__SEH_USB__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -110,8 +115,9 @@ export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
 export CompileWithTCUSB=false
+export UseTCUSBforROH=false
 
-# Clang-format command
+ #Clang-format command
 alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
 
 echo "=== DONE ==="
