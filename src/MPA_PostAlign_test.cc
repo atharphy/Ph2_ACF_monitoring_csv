@@ -48,23 +48,28 @@ int main(int argc, char* argv[])
     cTool.InitializeSettings(cHWFile, outp);
 
     cTool.ConfigureHw();
+    // align ASICs on PS module
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    cPSAlignment.MapMPAOutputs();
+    cPSAlignment.Reset();
+
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
     cCicAligner.Start(0);
     cCicAligner.waitForRunToBeCompleted();
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
 
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Initialise();
-    cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    cBackEndAligner.Reset();
 
-    PSAlignment cPSAligner;
-    cPSAligner.Inherit(&cTool);
-    cBackEndAligner.Initialise();
-    cPSAligner.Align();
-    // cPSAligner.Reset(); something noot working here -- for next push
+    cPSAlignment.Align();
 
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 
@@ -82,7 +87,7 @@ int main(int argc, char* argv[])
     // uint32_t dvallat   = cTool.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
     // auto cStubOffset = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->getStubOffset();
     std::pair<uint32_t, uint32_t> rows = {5, 8};
-    std::pair<uint32_t, uint32_t> cols = {40, 45};
+    std::pair<uint32_t, uint32_t> cols = {41, 42};
 
     std::vector<TH1F*> scurves;
     std::string        title;
