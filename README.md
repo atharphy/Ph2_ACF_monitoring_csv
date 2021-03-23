@@ -10,36 +10,39 @@
 ###  A short guide to write the GoldenImage to the SD card
 
 1. Connect the SD card
-2. Download the golden firmware from https://indico.cern.ch/event/842824/attachments/1920624/3178547/sdgoldenimage.img
+2. Download the golden firmware from the [cms-tracker-daq webpage](https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img)
 3. `sudo fdisk -l` - find the name of the SD card (for example, /dev/mmcblk0)
 4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
-5. `./imgtool /dev/sd_card_name format Firmware` - to format the SD card
-6. Go to the folder were you saved the sdgoldenimage.img file
-7. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card
-8. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
-9. Insert the SD card into the FC7
+5. Go to the folder were you saved the sdgoldenimage.img file
+6. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card.
+If the SD card is partitioned (formatted), pay attention to write on the block device (e.g. `/dev/mmcblk0`) and not inside the partition (e.g. `/dev/mmcblk0p1`)
+7. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
+8. Insert the SD card into the FC7
 
-Use the guide (https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/IPAddress_Tutorial.md) to find the MAC address of the FC7 (Wireshark option) and to set the proper IP.
-
-More informations can be found at https://indico.cern.ch/event/842824/attachments/1920624/3177632/PreparingFC7.pdf
+Alternatively, instead of the `dd` command above, to only copy the needed bytes you can do:
+```bash
+imageName=sdgoldenimage.img
+dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --block-size=1 $imageName | awk '{print $1}')
+```
+<hr>
 
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 09/10/2020
++ Last change made to this section: 23/02/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `master` / `IT-v3.9.7`
-- Firmware tag: `3.4`
+- Software git branch / tag : `master` / `IT-v3.9.10`
+- Firmware tag: `3.6`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
-4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://centos.pkgs.org/6/epel-x86_64/rarpd-ss981107-42.el6.x86_64.rpm.html
-5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
+5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
 More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
 
@@ -68,6 +71,8 @@ A detailed manual about the firmware can be found here: https://gitlab.cern.ch/c
 10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
+**N.B.:** a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
+
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
 - Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
@@ -89,6 +94,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 10. Injection delay scan
 11. Clock delay scan
 12. Physics
+13. Bit Error Rate test
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
@@ -172,7 +178,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
-**N.B.:** steps **4** and **5** are meant to measure the so called "in-time threhsold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
+**N.B.:** steps **4** and **5** are meant to measure the so called "in-time threshold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 
@@ -208,10 +214,17 @@ For more information on the firmware, please check the doc directory of https://
 
     ii. click the `Allow shared Runners` button
 
+3. Enable specific Runners (if not enabled)
+
+    i. from `settings > CI/CD` expand the `Runners` section
+
+    ii. in the section `Available specific runners` click button `Enable for this project` for the Ph2_ACF runner with the `FNAL`
+
 
 ### clang-format (required to submit merge requests!!!)
 1. install 7.0 llvm toolset:
 
+        $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):

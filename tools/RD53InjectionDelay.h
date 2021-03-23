@@ -32,8 +32,12 @@ class InjectionDelay : public PixelAlive
     void   run();
     void   draw();
     void   analyze();
-    size_t getNumberIterations() { return PixelAlive::getNumberIterations() * (stopValue - startValue); }
-    void   saveChipRegisters(int currentRun);
+    size_t getNumberIterations()
+    {
+        return PixelAlive::getNumberIterations() *
+               (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     InjectionDelayHistograms* histos;

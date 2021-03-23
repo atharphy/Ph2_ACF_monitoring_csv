@@ -64,35 +64,34 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
             // loop over chips
             for(auto cChip: *cFe)
             {
-                // data is packed SSAs then all MPAs 
-                // so if MPA just continue and do nothing 
-                if( cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                // data is packed SSAs then all MPAs
+                // so if MPA just continue and do nothing
+                if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
 
                 auto& cChipCounterData = cHybridCounterData[cRocIndex];
                 for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                 {
-                    if( cChnl%2 == 0)
+                    if(cChnl % 2 == 0)
                     {
-                        if( cDataIterator != pData.end() )
+                        if(cDataIterator != pData.end())
                         {
-                            auto cWord = *(cDataIterator);
-                            int cFrstStrp = cChnl; 
-                            int cNxtStrp = cChnl+1;
+                            auto cWord     = *(cDataIterator);
+                            int  cFrstStrp = cChnl;
+                            int  cNxtStrp  = cChnl + 1;
                             cChipCounterData.push_back((cWord & 0xFFFF));
                             cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
-                            if( cFrstStrp% 25 == 0 )
-                                LOG(INFO) << BOLDBLUE << "ROC#" << +cRocIndex << " [Strip#" << +cFrstStrp 
-                                    << " ,Strip#" << cNxtStrp << " ]"
-                                    << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
+                            if(cFrstStrp % 25 == 0)
+                                LOG(INFO) << BOLDBLUE << "ROC#" << +cRocIndex << " [Strip#" << +cFrstStrp << " ,Strip#" << cNxtStrp << " ]"
+                                          << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                             cDataIterator++;
                         }
-                    } //every 2 channels are packed into one 32 bit word 
-                }// chnl loop
+                    } // every 2 channels are packed into one 32 bit word
+                }     // chnl loop
                 cRocIndex++;
-            }// chips
+            } // chips
             cFeIndex++;
         } // hybrids
-    }// opticalGroup
+    }     // opticalGroup
 }
 
 // required by event but not sure if makes sense for AS

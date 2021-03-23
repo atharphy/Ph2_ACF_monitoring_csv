@@ -67,10 +67,9 @@ void RD53eudaqProducer::DoStopRun()
     // ###########################
     // # Copy configuration file #
     // ###########################
-    std::string fName2Add(std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_");
-    std::string output(RD53Shared::composeFileName(configFile, fName2Add));
-    std::string command("cp " + configFile + " " + output);
-    system(command.c_str());
+    const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
+    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
+    system(("cp " + configFile + " " + outputConfigFile).c_str());
 
     this->SetStatus(eudaq::Status::STATE_STOPPED, "RD53eudaqProducer::Stopped");
     this->SetStatus(eudaq::Status::STATE_CONF, "RD53eudaqProducer::Configured");
@@ -97,16 +96,16 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             eudaqSubEvent->SetTag("TLU_TRIGGER_ID", evt.tlu_trigger_id);
             eudaqSubEvent->SetTriggerN(evt.tlu_trigger_id);
 
-            for(auto i = 0u; i < evt.chip_events.size(); i++)
+            for(auto i = 0u; i < evt.chip_frames_events.size(); i++)
             {
                 std::vector<uint8_t> eudaq_hits;
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 0) & 0xFF);
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 8) & 0xFF);
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 0) & 0xFF);
-                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 8) & 0xFF);
-                eudaq_hits.push_back((evt.chip_events[i].hit_data.size() >> 0) & 0xFF);
-                eudaq_hits.push_back((evt.chip_events[i].hit_data.size() >> 8) & 0xFF);
-                for(const auto& hit: evt.chip_events[i].hit_data)
+                eudaq_hits.push_back((RD53::nRows >> 0) & 0xFF);
+                eudaq_hits.push_back((RD53::nRows >> 8) & 0xFF);
+                eudaq_hits.push_back((RD53::nCols >> 0) & 0xFF);
+                eudaq_hits.push_back((RD53::nCols >> 8) & 0xFF);
+                eudaq_hits.push_back((evt.chip_frames_events[i].second.hit_data.size() >> 0) & 0xFF);
+                eudaq_hits.push_back((evt.chip_frames.events[i].second.hit_data.size() >> 8) & 0xFF);
+                for(const auto& hit: evt.chip_frames_events[i].second.hit_data)
                 {
                     // #######
                     // # ROW #
@@ -127,7 +126,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
                 // ###########
                 // # Chip ID #
                 // ###########
-                eudaqSubEvent->AddBlock(evt.chip_frames[i].chip_id, eudaq_hits);
+                eudaqSubEvent->AddBlock(evt.chip_frames_events[i].first.chip_id, eudaq_hits);
             }
 
             eudaqSubEvent->SetTimestamp(timeStamp, timeStamp);

@@ -333,8 +333,8 @@ class Tool : public Ph2_System::SystemController
     bool                 fAllChan;
     bool                 fMaskChannelsFromOtherGroups;
     bool                 fTestPulse;
-    bool                 fDoHybridBroadcast;
     bool                 fDoBoardBroadcast;
+    bool                 fDoHybridBroadcast;
     ChannelGroupHandler* fChannelGroupHandler;
 
     std::string getCalibrationName();

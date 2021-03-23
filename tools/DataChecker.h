@@ -18,6 +18,15 @@
 #ifndef ChannelList
 typedef std::vector<uint8_t> ChannelList;
 #endif
+#ifndef EventTag
+#ifndef EventId
+typedef std::pair<uint16_t, uint16_t> EventId;
+#endif
+typedef std::pair<EventId, uint8_t> EventTag; // [L1Id, BxId],Tag
+#endif
+#ifndef EventsList
+typedef std::vector<EventTag> EventsList;
+#endif
 
 #include <map>
 #ifdef __USE_ROOT__
@@ -45,8 +54,11 @@ class DataChecker : public Tool
     void L1Eye(std::vector<uint8_t> pChipIds);
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
-    void DigitalInjectionTest(bool pBypassCic=false, bool pShiftRegMode=true);
-    
+
+    void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
+    void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
+    void Eye_CIC();
+
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void AsyncTest();
@@ -87,7 +99,8 @@ class DataChecker : public Tool
     DetectorDataContainer fHitCheckContainer, fStubCheckContainer;
     DetectorDataContainer fThresholds, fLogic, fHIPs;
     DetectorDataContainer fInjections;
-    DetectorDataContainer fDataMismatches;
+    DetectorDataContainer fDataMismatches, fGoodEvents, fBadEvents;
+    DetectorDataContainer fBxIdsMatches, fBxIdsMismatches;
 
     int fPhaseTap     = 8;
     int fAttempt      = 0;

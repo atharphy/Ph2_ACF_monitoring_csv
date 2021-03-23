@@ -34,9 +34,10 @@
 #include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cMPAEvent.h"
 #include "../Utils/D19cMPAEventAS.h"
+#include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
-#include "../Utils/D19cPSEventAS.h"
+#include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
@@ -50,6 +51,7 @@
 #include <unordered_map>
 #include <vector>
 
+class DetectorMonitor;
 /*!
  * \namespace Ph2_System
  * \brief Namespace regrouping the framework wrapper
@@ -79,6 +81,7 @@ class SystemController
     bool               fWriteHandlerEnabled;
     bool               fStreamerEnabled;
     TCPPublishServer*  fNetworkStreamer;
+    DetectorMonitor*   fDetectorMonitor;
 
     /*!
      * \brief Constructor of the SystemController class
@@ -134,14 +137,14 @@ class SystemController
     /*!
      * \brief Initialize the Hardware via a config file
      * \param pFilename : HW Description file
-     *\param os : ostream to dump output
+     *\param os         : ostream to dump output
      */
     void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false);
 
     /*!
      * \brief Initialize the settings
-     * \param pFilename :   settings file
-     *\param os : ostream to dump output
+     * \param pFilename : settings file
+     *\param os         : ostream to dump output
      */
     void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
 
@@ -151,25 +154,21 @@ class SystemController
     void ConfigureHw(bool bIgnoreI2c = false);
 
     /*!
+     * \brief Run Bit Error Rate test
+     * \param chain2test     : which part of the chain to be tested
+     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
+     * \param frames_or_time : time [s] or number of frames
+     * \return: none
+     */
+    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
+
+    /*!
      * \brief Read Monitor Data from pBoard
      * \param pBeBoard
      * \param args
      * \return: none
      */
-    template <typename... Ts>
-    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const Ts&... args)
-    {
-        if(sizeof...(Ts) > 0)
-            for(const auto cOpticalGroup: *pBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                        fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args...);
-                        LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                    }
-    }
+    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const std::vector<std::string>& args) const;
 
     /*!
      * \brief Read Data from pBoard
@@ -231,24 +230,7 @@ class SystemController
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const { return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr); }
 
-    /*!
-     * \brief Get next event from data buffer
-     * \param pBoard
-     * \return Next event
-     */
-    const Ph2_HwInterface::Event* GetNextEvent(const Ph2_HwDescription::BeBoard* pBoard)
-    {
-        if(fFuture.valid() == true) fFuture.get();
-        return ((fCurrentEvent >= fEventList.size()) ? nullptr : fEventList.at(fCurrentEvent++));
-    }
-
-    const Ph2_HwInterface::Event* GetEvent(const Ph2_HwDescription::BeBoard* pBoard, unsigned int i)
-    {
-        if(fFuture.valid() == true) fFuture.get();
-        return ((i >= fEventList.size()) ? nullptr : fEventList.at(i));
-    }
-
-    const std::vector<Ph2_HwInterface::Event*>& GetEvents(const Ph2_HwDescription::BeBoard* pBoard)
+    const std::vector<Ph2_HwInterface::Event*>& GetEvents()
     {
         if(fFuture.valid() == true) fFuture.get();
         return fEventList;
@@ -261,13 +243,10 @@ class SystemController
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
     std::vector<Ph2_HwInterface::Event*> fEventList;
-
-    std::future<void> fFuture;
-    uint32_t          fCurrentEvent;
-    uint32_t          fEventSize;
-    uint32_t          fNevents;
-    uint32_t          fNCbc;
-    FileParser        fParser;
+    std::future<void>                    fFuture;
+    uint32_t                             fEventSize;
+    uint32_t                             fNCbc;
+    FileParser                           fParser;
 };
 } // namespace Ph2_System
 

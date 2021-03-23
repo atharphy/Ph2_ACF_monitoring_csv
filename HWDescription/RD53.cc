@@ -232,17 +232,14 @@ void RD53::loadfRegMap(const std::string& fileName)
         file.close();
     }
     else
-    {
-        LOG(ERROR) << BOLDRED << "The RD53 file settings " << BOLDYELLOW << fileName << BOLDRED << " does not exist" << RESET;
-        exit(EXIT_FAILURE);
-    }
+        throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
 }
 
 void RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26;
 
-    std::string   output = RD53Shared::composeFileName(configFileName, fName2Add);
+    std::string   output = RD53::getFileName(fName2Add);
     std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
 
     if(file)
@@ -380,6 +377,11 @@ void RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixel
 
 void RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask[col].TDAC[row] = TDAC; }
 
+void RD53::resetTDAC()
+{
+    for(auto col = 0u; col < fPixelsMask.size(); col++) fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+}
+
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 
 uint32_t RD53::getNumberOfChannels() const { return nRows * nCols; }
@@ -409,17 +411,17 @@ void RD53::Event::DecodeQuad(uint32_t data)
 
     for(int i = 0; i < RD53Constants::NPIX_REGION; i++)
         if(tots[i] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
-    if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1)))) evtStatus |= RD53EvtEncoder::CHIPPIX;
+    if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1)))) eventStatus |= RD53EvtEncoder::CHIPPIX;
 }
 
 RD53::Event::Event(const uint32_t* data, size_t n)
 {
     uint32_t header;
 
-    evtStatus = RD53EvtEncoder::CHIPGOOD;
+    eventStatus = RD53EvtEncoder::CHIPGOOD;
 
     std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if(header != RD53EvtEncoder::HEADER) evtStatus |= RD53EvtEncoder::CHIPHEAD;
+    if(header != RD53EvtEncoder::HEADER) eventStatus |= RD53EvtEncoder::CHIPHEAD;
 
     const size_t noHitToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT);
     for(auto i = 1u; i < n; i++)
@@ -429,7 +431,7 @@ RD53::Event::Event(const uint32_t* data, size_t n)
     // # number of 128bit words, then 0x0000FFFF words are   #
     // # added to the event                                  #
     // #######################################################
-    if(n == 1) evtStatus |= RD53EvtEncoder::CHIPNOHIT;
+    if(n == 1) eventStatus |= RD53EvtEncoder::CHIPNOHIT;
 }
 
 RD53::CalCmd::CalCmd(const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)

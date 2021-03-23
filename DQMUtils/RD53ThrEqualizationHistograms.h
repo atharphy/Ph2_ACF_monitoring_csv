@@ -39,6 +39,8 @@ class ThrEqualizationHistograms : public DQMHistogramBase
 
     size_t nEvents;
     size_t VCalHnsteps;
+
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 };
 
 #endif

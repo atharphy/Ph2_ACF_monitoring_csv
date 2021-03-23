@@ -1,6 +1,6 @@
 /*!
   \file                  CMSITminiDAQ.cc
-  \brief                 Mini DAQ to test RD53 readout
+  \brief                 Mini DAQ to test RD53 readout chip
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -25,6 +25,9 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 
+#include <chrono>
+#include <thread>
+
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #endif
@@ -41,6 +44,8 @@
 #define RUNNUMBER 0
 #define SETBATCH 0 // Set batch mode when running supervisor
 #define FILERUNNUMBER "./RunNumber.txt"
+#define BASEDIR "PH2ACF_BASE_DIR"
+#define ARBITRARYDELAY 2 // [seconds]
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -62,9 +67,10 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 }
 
-void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
-    unsigned int          errors = 0;
+    const unsigned int    wordDataSize = 32;
+    unsigned int          errors       = 0;
     std::vector<uint32_t> data;
 
     LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
@@ -72,28 +78,27 @@ void readBinaryData(std::string binaryFile, SystemController& mySysCntr, std::ve
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
 
-    RD53FWInterface::DecodeEventsMultiThreads(data, decodedEvents);
+    uint16_t status;
+    RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
     LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
-        if(RD53FWInterface::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
+        if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
+            RD53Event::PrintEvents({decodedEvents[i]});
         }
 
-    LOG(INFO) << GREEN << "Percentage of corrupted events: " << std::setprecision(3) << BOLDYELLOW << 1. * errors / decodedEvents.size() * 100. << "%" << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
+    int avgEventSize = data.size() / decodedEvents.size();
+    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events"
+              << RESET;
+    mySysCntr.closeFileHandler();
 }
 
 int main(int argc, char** argv)
 {
-    // ########################
-    // # Configure the logger #
-    // ########################
-    el::Configurations conf("../settings/logger.conf");
-    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
-    el::Loggers::reconfigureAllLoggers(conf);
-
     // #############################
     // # Initialize command parser #
     // #############################
@@ -103,32 +108,32 @@ int main(int argc, char** argv)
 
     cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption("file", "Hardware description file. Default value: CMSIT.xml", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clockdelay physics eudaq prbstime prbsframes]. Default: pixelalive",
+                     "injdelay clkdelay physics eudaq prbstime prbsframes]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
-    cmd.defineOption("binary", "Binary file to decode.", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("binary", "Binary file to decode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("binary", "b");
 
-    cmd.defineOption("prog", "Program the system components.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("prog", "Just program the system components", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("prog", "p");
 
-    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode.", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("sup", "Run in producer(Middleware) - consumer(DQM) mode", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("sup", "s");
 
-    cmd.defineOption("eudaqRunCtr", "EUDA-IT run control address. Defaut: tcp://localhost:44000", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address [e.g. tcp://localhost:44000]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
-    cmd.defineOption("capture", "Capture communication with board (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("capture", "Capture communication with board (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("replay", "Replay previously captured communication (extension .raw).", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("replay", "Replay previously captured communication (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != CommandLineProcessing::ArgvParser::NoParserError)
@@ -145,13 +150,13 @@ int main(int argc, char** argv)
     fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
     if(fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
     fileRunNumberIn.close();
-    system(std::string("mkdir " + std::string(RD53Shared::RESULTDIR)).c_str());
+    system(std::string("mkdir -p " + std::string(RD53Shared::RESULTDIR)).c_str());
 
     // ####################
     // # Retrieve options #
     // ####################
-    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "CMSIT.xml";
-    std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "pixelalive";
+    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
+    std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        supervisor = cmd.foundOption("sup") == true ? true : false;
@@ -161,6 +166,18 @@ int main(int argc, char** argv)
     else if(cmd.foundOption("replay") == true)
         RegManager::enableReplay(cmd.optionValue("replay"));
     std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
+
+    // ########################
+    // # Configure the logger #
+    // ########################
+    std::string fileName("logs/CMSITminiDAQ" + RD53Shared::fromInt2Str(runNumber));
+    if(whichCalib != "") fileName += "_" + whichCalib;
+    fileName += ".log";
+    el::Configurations conf(std::string(std::getenv(BASEDIR)) + "/settings/logger.conf");
+    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%thread|%levshort| %msg");
+    conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
+    el::Loggers::reconfigureAllLoggers(conf);
+    // el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, fileName);
 
     // ######################
     // # Supervisor section #
@@ -182,7 +199,7 @@ int main(int argc, char** argv)
         else if(runControllerPid == 0)
         {
             char* argv[] = {(char*)"RunController", NULL};
-            execv((std::string(getenv("BASE_DIR")) + "/bin/RunController").c_str(), argv);
+            execv((std::string(std::getenv(BASEDIR)) + "/bin/RunController").c_str(), argv);
             LOG(ERROR) << BOLDRED << "I can't run RunController, error occured" << RESET;
             exit(EXIT_FAILURE);
         }
@@ -253,9 +270,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    usleep(2e6);
+                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                     theMiddlewareInterface.stop();
-                    usleep(2e6);
+                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
@@ -284,7 +301,7 @@ int main(int argc, char** argv)
     {
         SystemController mySysCntr;
 
-        if((reset == true) || (binaryFile != ""))
+        if((reset == true) || (binaryFile != "") || (whichCalib == "prbstime") || (whichCalib == "prbsframes"))
         {
             // ######################################
             // # Reset hardware or read binary file #
@@ -295,10 +312,13 @@ int main(int argc, char** argv)
             mySysCntr.InitializeSettings(configFile, outp);
             if(reset == true)
             {
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence();
+                if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
+                    static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+                else
+                    static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
                 exit(EXIT_SUCCESS);
             }
-            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
+            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
         }
         else if(binaryFile == "")
         {
@@ -309,11 +329,6 @@ int main(int argc, char** argv)
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
             mySysCntr.Configure(configFile);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
-            if(program == true)
-            {
-                LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
-                exit(EXIT_SUCCESS);
-            }
         }
 
         std::cout << std::endl;
@@ -500,7 +515,7 @@ int main(int argc, char** argv)
             id.analyze();
             id.draw();
         }
-        else if(whichCalib == "clockdelay")
+        else if(whichCalib == "clkdelay")
         {
             // ###################
             // # Run Clock Delay #
@@ -525,15 +540,16 @@ int main(int argc, char** argv)
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
             Physics     ph;
             ph.Inherit(&mySysCntr);
-            ph.localConfigure(fileName, -1);
             if(binaryFile == "")
             {
+                ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
-                usleep(2e6);
+                std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
                 ph.Stop();
             }
             else
             {
+                ph.localConfigure(fileName, runNumber);
                 ph.analyze(true);
                 ph.draw();
             }
@@ -570,39 +586,33 @@ int main(int argc, char** argv)
         }
         else if((whichCalib == "prbstime") || (whichCalib == "prbsframes"))
         {
-            // #################
-            // # Run PRBS test #
-            // #################
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Pseudo Random Bit Sequence test @@@" << RESET;
+            // ################
+            // # Run BER test #
+            // ################
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
 
             if(cmd.argument(0) == "")
             {
-                LOG(ERROR) << BOLDRED
-                           << "Neither the time (to be given with -t <TIME IN SECONDS>) nor the number of frames (to be given with -n <NUMBER OF FRAMES>) was specified for the PRBS test. Abort."
-                           << RESET;
+                if(whichCalib == "prbstime") { LOG(ERROR) << BOLDRED << "Failed to specify duration of BER test; use \"-c prbstime <TIME IN SECONDS (e.g. 10)>\"" << RESET; }
+                else if(whichCalib == "prbsframes")
+                {
+                    LOG(ERROR) << BOLDRED << "Failed to specify number of frames for BER test; use \"-c prbsframes <NUMBER OF FRAMES (e.g. 1e9)>\"" << RESET;
+                }
+                exit(EXIT_FAILURE);
+            }
+            if(cmd.argument(1) == "")
+            {
+                LOG(ERROR) << BOLDRED << "Failed to specify which connection to test [BE-LPGBT-FE, BE-LPGBT, LPGBT-FE]" << RESET;
                 exit(EXIT_FAILURE);
             }
 
-            unsigned long long frames_or_time = strtoull(cmd.argument(0).c_str(), NULL, 0);
-            bool               given_time     = false;
+            double frames_or_time = atof(cmd.argument(0).c_str());
+            bool   given_time     = false;
             if(whichCalib == "prbstime") given_time = true;
 
-            for(const auto cBoard: *mySysCntr.fDetectorContainer)
-                for(const auto cOpticalGroup: *cBoard)
-                    for(const auto cHybrid: *cOpticalGroup)
-                        for(const auto cChip: *cHybrid)
-                        {
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 2, true);
-                            LOG(INFO) << GREEN << "PRBS test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                      << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW
-                                      << ((static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->RunPRBStest(given_time, frames_or_time, cHybrid->getId(), cChip->getId()) == true)
-                                              ? "PASSED"
-                                              : "NOT PASSED")
-                                      << RESET;
-                            mySysCntr.fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "SER_SEL_OUT", 1, true);
-                        }
+            mySysCntr.RunBERtest(cmd.argument(1), given_time, frames_or_time);
         }
-        else
+        else if((program == false) && (whichCalib != ""))
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             exit(EXIT_FAILURE);
@@ -611,10 +621,9 @@ int main(int argc, char** argv)
         // ###########################
         // # Copy configuration file #
         // ###########################
-        std::string fName2Add(std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_");
-        std::string output(RD53Shared::composeFileName(configFile, fName2Add));
-        std::string command("cp " + configFile + " " + output);
-        system(command.c_str());
+        const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
+        const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
+        system(("cp " + configFile + " " + outputConfigFile).c_str());
 
         // #####################
         // # Update run number #
@@ -624,6 +633,12 @@ int main(int argc, char** argv)
         fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
         if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
         fileRunNumberOut.close();
+
+        // #############################
+        // # Destroy System Controller #
+        // #############################
+        mySysCntr.Destroy();
+        // fDetectorMonitor->startMonitoring();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }

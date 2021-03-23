@@ -237,7 +237,7 @@ void CMTester::ScanNoiseChannels()
         //{
         BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
         ReadNEvents(theBoard, cTotalEvents);
-        const std::vector<Event*>& events = GetEvents(theBoard);
+        const std::vector<Event*>& events = GetEvents();
 
         // Loop over Events from this Acquisition
         for(auto& cEvent: events)
@@ -340,7 +340,7 @@ void CMTester::TakeData()
         // Run( theBoard, cNthAcq );
         // ReadData (theBoard);
         ReadNEvents(theBoard, fNevents);
-        const std::vector<Event*>& events = GetEvents(theBoard);
+        const std::vector<Event*>& events = GetEvents();
 
         // Loop over Events from this Acquisition
 

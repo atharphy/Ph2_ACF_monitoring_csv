@@ -82,14 +82,12 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
                 {
                     if(!cAsyncEvent) continue;
 
-                    if( cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA ) // force this to work in async mode for now 
-                        fReadoutChipInterface->WriteChipReg(cROC,"AnalogueAsync",1);
+                    if(cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA) // force this to work in async mode for now
+                        fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
         }
     }
-
-                    
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -171,8 +169,18 @@ void PedeNoise::sweepSCurves()
     // configure TP amplitude
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cWithSSA or cWithMPA)
+        if(cWithSSA || cWithMPA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
+        else if(cWithMPA)
+        {
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC3", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fPulseAmplitude);
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fPulseAmplitude);
+        }
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
@@ -201,7 +209,7 @@ void PedeNoise::sweepSCurves()
     {
         this->enableTestPulse(false);
         if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
-        if(cWithMPA)
+        else if(cWithMPA)
         {
             setSameGlobalDac("CalDAC0", 0);
             setSameGlobalDac("CalDAC1", 0);
@@ -261,12 +269,13 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
+    LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
 #endif
-
+    LOG(INFO) << "7 ";
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -280,10 +289,9 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                 for(auto cROC: *cFe)
                 {
                     RegisterVector cRegVec;
-
                     uint32_t       NCH = NCHANNELS;
-                    if (cROC->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
-                    if (cROC->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
+                    if(cWithSSA) NCH = NSSACHANNELS;
+                    if(cWithMPA) NCH = NMPACHANNELS;
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;

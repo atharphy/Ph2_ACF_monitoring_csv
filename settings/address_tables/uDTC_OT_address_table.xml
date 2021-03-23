@@ -323,6 +323,7 @@
                 <node id="setup_disconnect"                 mask="0x00000002"/>
                 <node id="check_return_clock"               mask="0x00000004" description="user request to check the return clock from SSAs"/>
                 <node id="check_payload_ntriggers"          mask="0x00000ff0" description="user required number of trigger commands to test the paylaod of the return fast command from SSAs"/>
+                <node id="setup_scan"                       mask="0x00010000"/>
             </node>
 
             <node id="fe_data_player"              address="0x019">
@@ -342,6 +343,13 @@
                 <node id="stop_output"                mask="0x00008000"/>
             </node>
         </node>
+
+        <node id="fine_phase_tune"     address="0x3003">
+            <node id="control"                      address="0x000">
+                <node id="toggle_phase"             mask="0x000000FF"/>
+            </node>
+        </node>
+
 
         <node id="readout_block"                address="0x5000">
             <node id="control"                          address="0x000">
@@ -443,6 +451,9 @@
                         <node id="full"                     mask="0x00000002"/>
                 </node>
                 <node id="nreplies"                     address="0x004" description="nreplies present in reply fifo"/>
+            </node>
+            <node id="worker">
+                <node id="lpgbtsc_fsm_state"    address="0x005" mask="0x000000ff"/>
             </node>
         </node>
 

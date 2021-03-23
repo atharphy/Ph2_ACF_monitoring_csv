@@ -17,7 +17,6 @@
 
 #include <map>
 
-
 class PSAlignment : public Tool
 {
   public:
@@ -27,7 +26,7 @@ class PSAlignment : public Tool
     void Initialise();
     bool AlignStubInputs(Ph2_HwDescription::BeBoard* pBoard);
     bool AlignL1Inputs(Ph2_HwDescription::BeBoard* pBoard);
-    void MapMPAOutputs(std::string pSetupType="PSModule");
+    void MapMPAOutputs(std::string pSetupType = "PSModule");
     bool Align();
 
     void Running() override;
@@ -41,7 +40,6 @@ class PSAlignment : public Tool
     bool getStatus() const { return fSuccess; }
 
   protected:
-
   private:
     // status
     bool fSuccess;

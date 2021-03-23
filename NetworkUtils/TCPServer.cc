@@ -6,7 +6,7 @@
 #include <iostream>
 
 //========================================================================================================================
-TCPServer::TCPServer(int serverPort, unsigned int maxNumberOfClients) : TCPServerBase(serverPort, maxNumberOfClients), fInDestructor(false)
+TCPServer::TCPServer(unsigned int serverPort, unsigned int maxNumberOfClients) : TCPServerBase(serverPort, maxNumberOfClients), fInDestructor(false)
 {
     fReceiveTimeout.tv_sec  = 0;
     fReceiveTimeout.tv_usec = 0;

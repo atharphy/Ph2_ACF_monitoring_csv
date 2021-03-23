@@ -19,7 +19,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NSTDEV 1. // Number of standard deviations for gain tolerance
+#define NSTDEV 1.5 // Number of standard deviations for gain tolerance
 
 // ################################
 // # Gain optimization test suite #
@@ -39,9 +39,9 @@ class GainOptimization : public Gain
     void   draw();
     size_t getNumberIterations()
     {
-        uint16_t nBitKrumCurr   = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
-        uint16_t moreIterations = 1;
-        return Gain::getNumberIterations() * (nBitKrumCurr + moreIterations);
+        uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
+        uint16_t moreIterations      = 2;
+        return Gain::getNumberIterations() * (nIterationsKrumCurr + moreIterations);
     }
     void saveChipRegisters(int currentRun);
 

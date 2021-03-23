@@ -40,7 +40,7 @@ void CalibrationExample::runCalibrationExample(void)
         ReadNEvents(theBeBoard, fEventsPerPoint);
         // Get the event vector (as it was in the past)
 
-        const std::vector<Event*>& eventVector = GetEvents(theBeBoard);
+        const std::vector<Event*>& eventVector = GetEvents();
 
         for(auto& event: eventVector) // for on events - begin
         {

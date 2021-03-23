@@ -93,6 +93,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
 
     bool cWithCBC = true;
     bool cWithSSA = false;
+    bool cWithMPA = false;
 
     bool fPlotSCurves{false};
     bool fFitSCurves{false};

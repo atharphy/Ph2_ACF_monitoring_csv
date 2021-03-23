@@ -1,35 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="SSAAS">
-    <!-- PS half module -->
-    <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
-
     <!-- B598 skeleton, direct powering -->
-    <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+    <!--<connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <!-- B14 skeleton, POH -->
-    <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
+    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
      <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0">
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
         </lpGBT>
+
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-               <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
+               <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
+            <SSA Id="0" configfile="SSA.txt" />
+<!--           <SSA Id="3" configfile="SSA.txt" />
             <SSA Id="1" configfile="SSA.txt" />
-            
-            <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="1" partid="0" configfile="MPA.txt" />
-
-
+            <SSA Id="2" configfile="SSA.txt" />
+            <SSA Id="5" configfile="SSA.txt" />
+            <SSA Id="6" configfile="SSA.txt" />
+            <SSA Id="7" configfile="SSA.txt" />
+-->
             <CIC_Files path="./settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
     </OpticalGroup>
     
@@ -152,7 +153,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">500</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -202,3 +203,25 @@
 
 </Settings>
 </HwDescription>
+
+<Devices>
+    <PowerSupply
+        ID          =   "MyRohdeSchwarz"
+        InUse       =   "Yes"
+        Model       =   "RohdeSchwarz"
+        Connection  =   "Serial"
+        Port        =   "/dev/ttyACM0"
+   	BaudRate    =   "9600"
+        FlowControl =   "true"
+        Parity      =   "false"
+  	RemoveEcho  =   "false"
+        Terminator  =   "\r\n"
+        Suffix      =   "\n"
+        Timeout     =   "1"
+        Series	    =   "TSX"
+    >
+    <Channel ID="LV_Module2" Channel="2" InUse ="Yes" />
+    <Channel ID="LV_Module3" Channel="3" InUse ="Yes" />
+    <Channel ID="LV_Module4" Channel="4" InUse ="Yes" />
+  </PowerSupply> 
+</Devices>

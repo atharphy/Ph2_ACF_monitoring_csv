@@ -25,7 +25,7 @@ void SCurveHistograms::book(TFile* theOutputFile, const DetectorContainer& theDe
     stopValue  = this->findValueInSettings(settingsMap, "VCalHstop");
     offset     = this->findValueInSettings(settingsMap, "VCalMED");
 
-    auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue - offset, stopValue - offset, nEvents + 1, 0, 1 + 1. / nEvents);
+    auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue - offset, stopValue - offset, 2 * nEvents + 1, 0, 2 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "Efficiency");
 
     auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
@@ -90,6 +90,8 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                                 hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
+
+                    hOcc2D->GetYaxis()->SetRangeUser(0, 1 + 1. / nEvents);
                 }
 }
 

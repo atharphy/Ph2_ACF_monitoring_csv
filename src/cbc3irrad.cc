@@ -52,7 +52,7 @@ void exitme()
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
                 else
                     cTool.ReadNEvents(pBoard, cAcqSize);
 
-                const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+                const std::vector<Event*>& events = cTool.GetEvents();
 
                 for(auto& ev: events)
                 {

@@ -35,7 +35,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     LOG(INFO) << BOLDRED << "=============" << RESET;
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/D19C_MPA_PreCalib.xml";
     std::stringstream outp;

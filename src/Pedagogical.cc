@@ -37,7 +37,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     LOG(INFO) << BOLDRED << "=============" << RESET;
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/D19C_2xSSA_PreCalibSYNC.xml";
     std::stringstream outp;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
             cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", thd);
         }
         cTool.ReadNEvents(pBoard, 500);
-        const std::vector<Event*>& eventVector = cTool.GetEvents(pBoard);
+        const std::vector<Event*>& eventVector = cTool.GetEvents();
         for(auto& event: eventVector) // for on events - begin
         {
             LOG(INFO) << BOLDRED << "L1N: " << static_cast<D19cSSAEvent*>(event)->GetL1Number() << RESET;

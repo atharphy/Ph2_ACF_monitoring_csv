@@ -19,8 +19,13 @@ void TCPTransmitterSocket::sendPacket(char const* buffer, std::size_t size) { se
 void TCPTransmitterSocket::sendPacket(const std::string& buffer) { send(TCPPacket::encode(buffer)); }
 
 //========================================================================================================================
-void TCPTransmitterSocket::send(char const* buffer, std::size_t size)
+void TCPTransmitterSocket::send(char const* buffer, std::size_t size, bool forceEmptyPacket)
 {
+    if(size == 0 && !forceEmptyPacket)
+    {
+        std::cout << __PRETTY_FUNCTION__ << "I am sorry but I won't send an empty packet!" << std::endl;
+        return;
+    }
     std::size_t sentBytes = ::send(getSocketId(), buffer, size, MSG_NOSIGNAL);
     if(sentBytes == static_cast<std::size_t>(-1))
     {
@@ -61,37 +66,13 @@ void TCPTransmitterSocket::send(char const* buffer, std::size_t size)
 }
 
 //========================================================================================================================
-void TCPTransmitterSocket::send(const std::string& buffer)
-{
-    if(buffer.size() == 0)
-    {
-        std::cout << __PRETTY_FUNCTION__ << "I am sorry but I won't send an empty packet!" << std::endl;
-        return;
-    }
-    send(&buffer.at(0), buffer.size());
-}
+void TCPTransmitterSocket::send(const std::string& buffer) { send(&buffer.at(0), buffer.size()); }
 
 //========================================================================================================================
-void TCPTransmitterSocket::send(const std::vector<char>& buffer)
-{
-    if(buffer.size() == 0)
-    {
-        std::cout << __PRETTY_FUNCTION__ << "I am sorry but I won't send an empty packet!" << std::endl;
-        return;
-    }
-    send(&buffer.at(0), buffer.size());
-}
+void TCPTransmitterSocket::send(const std::vector<char>& buffer) { send(&buffer.at(0), buffer.size()); }
 
 //==============================================================================
-void TCPTransmitterSocket::send(const std::vector<uint16_t>& buffer)
-{
-    if(buffer.size() == 0)
-    {
-        std::cout << __PRETTY_FUNCTION__ << "I am sorry but I won't send an empty packet!" << std::endl;
-        return;
-    }
-    send((const char*)&buffer.at(0), buffer.size());
-}
+void TCPTransmitterSocket::send(const std::vector<uint16_t>& buffer) { send((const char*)&buffer.at(0), buffer.size()); }
 
 //========================================================================================================================
 void TCPTransmitterSocket::setSendTimeout(unsigned int timeoutSeconds, unsigned int timeoutMicroSeconds)

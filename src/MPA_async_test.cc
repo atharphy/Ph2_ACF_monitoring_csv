@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
     LOG(INFO) << BOLDRED << "=============" << RESET;
 
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/PS_HalfModulePSAS.xml";
     std::stringstream outp;
@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
 
     std::string        title;
     auto theMPAInterface = static_cast<PSInterface*>(cTool.fReadoutChipInterface);
+
 
 
 
@@ -114,6 +115,7 @@ int main(int argc, char* argv[])
 
         impa+=1;
     }
+
     std::vector<uint16_t> countersfifo;
     //uint32_t curpnum = 0;
     uint32_t totalevents     = 0;
@@ -134,10 +136,11 @@ int main(int argc, char* argv[])
 	      }
 
 
-            std::this_thread::sleep_for(ShortWait);
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
-            // open shutter
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
+
+        std::this_thread::sleep_for(ShortWait);
+        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
+        // open shutter
+        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
 
             // sleep            // close shutter
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
@@ -150,8 +153,8 @@ int main(int argc, char* argv[])
 
             scurvecsv << ith << ",";
 
-            // FIFO readout
-            // TURNED OFF
+        // FIFO readout
+        // TURNED OFF
 
             // I2C readout
             std::vector<uint32_t> countersfifo;
@@ -244,7 +247,7 @@ int main(int argc, char* argv[])
             scurvecsv << "\n";
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
-        
+  
     }
 	//TFile *curf = TFile::Open("scurves.root","RECREATE");
 	//curf->cd();
@@ -270,11 +273,8 @@ int main(int argc, char* argv[])
 
             ihist += 1;
     		curf->Write();
+
     }
-    
-
- 
-
 
     scurvecsv.close();
 

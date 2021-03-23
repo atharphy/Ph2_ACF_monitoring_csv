@@ -152,7 +152,7 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
             // LOG(INFO) << "Reading N Events";
             ReadNEvents(theBoard, fNevents);
             // LOG(INFO) << "End Reading N Events";
-            const std::vector<Event*>& events = GetEvents(theBoard);
+            const std::vector<Event*>& events = GetEvents();
             if(events.empty()) LOG(INFO) << " EMPTY EVENT VECTOR !!!";
             // LOG (INFO) <<"events size, VCTH value " << events.size()<< "  "<< (uint16_t) cVcth;
             // int iii=0;

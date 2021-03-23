@@ -35,7 +35,6 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
             cROCIds.clear();
             for(auto cChip: *cFe)
             {
-                
                 RocCounterData cRocData;
                 cRocData.clear();
                 cHybridCounterData.push_back(cRocData);
@@ -45,11 +44,11 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
             fROCIds.push_back(cROCIds);
         } // hybrids
     }     // opticalGroup
-    // // first check if there are also SSAs here 
-    // // if there are then data will come SSAs then MPAs 
-    // // because of the order of the configuration 
-    // // so reverse the list 
-    // std::reverse(list.begin(),list.end());   
+    // // first check if there are also SSAs here
+    // // if there are then data will come SSAs then MPAs
+    // // because of the order of the configuration
+    // // so reverse the list
+    // std::reverse(list.begin(),list.end());
     this->Set(pBoard, list);
 }
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
@@ -66,30 +65,29 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             // loop over chips
             for(auto cChip: *cFe)
             {
-                int cDebugCnt = (cChip->getFrontEndType()==FrontEndType::MPA) ? 250 : 25; 
-                std::string cTypePrnt = (cChip->getFrontEndType()==FrontEndType::MPA) ? "Pxl" : "Strp"; 
-                auto& cChipCounterData = cHybridCounterData[cRocIndex];
+                int         cDebugCnt        = (cChip->getFrontEndType() == FrontEndType::MPA) ? 250 : 25;
+                std::string cTypePrnt        = (cChip->getFrontEndType() == FrontEndType::MPA) ? "Pxl" : "Strp";
+                auto&       cChipCounterData = cHybridCounterData[cRocIndex];
                 for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                 {
-                    if(cChnl % 2 == 0 )
+                    if(cChnl % 2 == 0)
                     {
-                        auto cWord = *(cDataIterator);
-                        int cFrstPxl = cChnl; 
-                        int cNxtPxl = cChnl+1;
+                        auto cWord    = *(cDataIterator);
+                        int  cFrstPxl = cChnl;
+                        int  cNxtPxl  = cChnl + 1;
                         cChipCounterData.push_back((cWord & 0xFFFF));
                         cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
-                        if( cFrstPxl % cDebugCnt == 0 )
-                                LOG(INFO) << BOLDBLUE << "ROC#" << +cRocIndex << " [" << cTypePrnt << "#" << +cFrstPxl 
-                                    << " ," << cTypePrnt << "#" << cNxtPxl << " ]"
-                                    << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
+                        if(cFrstPxl % cDebugCnt == 0)
+                            LOG(INFO) << BOLDBLUE << "ROC#" << +cRocIndex << " [" << cTypePrnt << "#" << +cFrstPxl << " ," << cTypePrnt << "#" << cNxtPxl << " ]"
+                                      << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                         cDataIterator++;
-                    } //every 2 channels are packed into one 32 bit word 
-                } // chnl loop
+                    } // every 2 channels are packed into one 32 bit word
+                }     // chnl loop
                 cRocIndex++;
             } // chips
             cFeIndex++;
         } // hybrids
-    }// opticalGroup
+    }     // opticalGroup
 }
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)

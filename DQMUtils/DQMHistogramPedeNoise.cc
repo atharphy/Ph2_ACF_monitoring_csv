@@ -53,7 +53,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& 
         uint16_t nYbins = 1024;
         float    minY   = -0.5;
         float    maxY   = 1023.5;
-        if(cWithSSA)
+        if(cWithSSA or cWithMPA)
         {
             nYbins = 255;
             minY   = -0.5;
@@ -406,7 +406,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                                                            .fTheHistogram;
 
                     if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr) continue;
-                    uint8_t channelNumber = 0;
+                    uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>())
                     {
                         chipPedestalHistogram->Fill(channel.fThreshold);
@@ -458,7 +458,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
                         fDetectorSCurveHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
-                    uint8_t channelNumber = 0;
+                    uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
                         float tmpOccupancy      = channel.fOccupancy;

@@ -32,8 +32,13 @@ class Latency : public PixelAlive
     void   run();
     void   draw(bool saveData = true);
     void   analyze();
-    size_t getNumberIterations() { return PixelAlive::getNumberIterations() * (stopValue - startValue) / nTRIGxEvent; }
-    void   saveChipRegisters(int currentRun);
+    size_t getNumberIterations()
+    {
+        return PixelAlive::getNumberIterations() * ((stopValue - startValue) / nTRIGxEvent + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1
+                                                        ? (stopValue - startValue) / nTRIGxEvent + 1
+                                                        : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     LatencyHistograms* histos;

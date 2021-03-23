@@ -28,7 +28,7 @@
 // #######################
 class Physics : public Tool
 {
-    using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)>;
+    using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53Event>&)>;
 
   public:
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
@@ -45,9 +45,13 @@ class Physics : public Tool
     void analyze(bool doReadBinary = false);
     void saveChipRegisters(int currentRun);
     void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
-    void monitor();
+    /* void monitor(); */
 
-    void setGenericEvtConverter(evtConvType arg) { genericEvtConverter = std::move(arg); }
+    void setGenericEvtConverter(evtConvType arg)
+    {
+        std::lock_guard<std::mutex> theGuard(theMtx);
+        genericEvtConverter = std::move(arg);
+    }
 
 #ifdef __USE_ROOT__
     PhysicsHistograms* histos;
@@ -68,12 +72,12 @@ class Physics : public Tool
 
     void fillHisto();
     void chipErrorReport();
-    void clearContainers();
+    void clearContainers(Ph2_HwDescription::BeBoard* cBoard);
 
   protected:
     struct RD53dummyEvtConverter
     {
-        void operator()(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList){};
+        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList){};
     };
 
     std::string fileRes;
@@ -82,7 +86,7 @@ class Physics : public Tool
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
-    std::thread thrMonitor;
+    std::mutex  theMtx;
     evtConvType genericEvtConverter;
 };
 

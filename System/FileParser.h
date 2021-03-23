@@ -18,6 +18,7 @@
 #include "../HWInterface/RD53FWInterface.h"
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Exception.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
@@ -49,8 +50,9 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
-    void parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
+    void        parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
+    void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
+    std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile);
 
   protected:
     /*!
@@ -75,8 +77,10 @@ class FileParser
      */
     void parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
 
+    std::string parseMonitorxml(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile);
+
     void parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
+    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseSLink(pugi::xml_node pSLinkNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseHybridContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os, Ph2_HwDescription::BeBoard* pBoard);

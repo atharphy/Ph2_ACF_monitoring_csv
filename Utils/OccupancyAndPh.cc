@@ -37,7 +37,7 @@ void OccupancyAndPh::makeSummaryAverage(const std::vector<OccupancyAndPh>* theOc
         totalNumberOfEnableChannels += theNumberOfEnabledChannelsList[iContainer];
     }
 
-    fOccupancy /= totalNumberOfEnableChannels;
+    fOccupancy /= (totalNumberOfEnableChannels > 0 ? totalNumberOfEnableChannels : 1);
 
     if(fPhError > 0)
     {

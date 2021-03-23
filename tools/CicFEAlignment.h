@@ -74,11 +74,11 @@ class CicFEAlignment : public Tool
     std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC [2S]
     void                 SetStubWindowOffsets(uint8_t pBendCode, int pBend);
 
-    // expected number of bx first stub 
-    // appears after resync 
-    // different for CBC and MPA 
-    uint8_t fStubBxDelay2S = 8 ; 
-    uint8_t fStubBxDelayPS = 22 ; 
+    // expected number of bx first stub
+    // appears after resync
+    // different for CBC and MPA
+    uint8_t fStubBxDelay2S = 8;
+    uint8_t fStubBxDelayPS = 22;
 };
 
 #endif

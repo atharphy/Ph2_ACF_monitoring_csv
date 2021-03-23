@@ -5,33 +5,37 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")  
     MESSAGE(STATUS " ")
 
-    #includes
+    # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR})
 
-    #replace this with find_package
+    # Replace this with find_package
     link_directories(${UHAL_UHAL_LIB_PREFIX})
 
-    #find source files
+    # Find source files
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
-    #add the library
+    # Add the library
     add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
     set(LIBS ${LIBS} Ph2_Description cactus_uhal_uhal cactus_uhal_log boost_regex)
     TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})
 
-    #check for TestCard USBDriver
+    # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
       set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-    endif()
-
+      if($ENV{UseTCUSBforROH})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
+      else($ENV{UseTCUSBforROH})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+      endif($ENV{UseTCUSBforROH})
+    endif(${PH2_TCUSB_FOUND})
 
     ####################################
     ## EXECUTABLES
@@ -62,7 +66,7 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
-    #library dirs
+    # Library dirs
     #link_directories(${UHAL_UHAL_LIB_PREFIX})
 
     cet_set_compiler_flags(
