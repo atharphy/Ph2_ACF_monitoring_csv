@@ -776,7 +776,7 @@ class D19cFWInterface : public BeBoardFWInterface
     bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
     uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
     // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true) override;
+    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
 };
 } // namespace Ph2_HwInterface

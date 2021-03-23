@@ -285,7 +285,7 @@ class BeBoardFWInterface : public RegManager
     virtual bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) = 0;
     virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)                       = 0;
     // function for front-end slow control
-    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true) = 0;
+    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) = 0;
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)                          = 0;
 
   protected:
