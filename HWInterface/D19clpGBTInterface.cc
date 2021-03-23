@@ -199,7 +199,7 @@ void D19clpGBTInterface::ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const
         else if(cGroup == 2 || cGroup == 3)
             cEnableTxReg = "EPTX32Enable";
         uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
-        for(const auto cChannel: pChannels) cValueEnableTx += (1 << (cChannel + 4 * (cGroup % 2)));
+        for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
         WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
     }
 }
@@ -701,9 +701,9 @@ void D19clpGBTInterface::ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, 
     for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
-            cDirL |= (pDir << cGPIO);
+            cDirL = (cDirL & ~(1 << cGPIO)) | (pDir << cGPIO);
         else
-            cDirH |= (pDir << (cGPIO - 8));
+            cDirH = (cDirH & ~(1 << (cGPIO - 8))) | (pDir << (cGPIO - 8));
     }
     WriteChipReg(pChip, "PIODirH", cDirH);
     WriteChipReg(pChip, "PIODirL", cDirL);
@@ -716,9 +716,9 @@ void D19clpGBTInterface::ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, cons
     for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
-            cOutL |= (pOut << cGPIO);
+            cOutL = (cOutL & ~(1 << cGPIO)) | (pOut << cGPIO);
         else
-            cOutH |= (pOut << (cGPIO - 8));
+            cOutH = (cOutH & ~(1 << (cGPIO - 8))) | (pOut << (cGPIO - 8));
     }
     WriteChipReg(pChip, "PIOOutH", cOutH);
     WriteChipReg(pChip, "PIOOutL", cOutL);
@@ -731,9 +731,9 @@ void D19clpGBTInterface::ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pC
     for(auto cGPIO: pGPIOs)
     {
         if(cGPIO < 8)
-            cDriveStrL |= (pDriveStr << cGPIO);
+            cDriveStrL = (cDriveStrL & ~(1 << cGPIO)) | (pDriveStr << cGPIO);
         else
-            cDriveStrH |= (pDriveStr << (cGPIO - 8));
+            cDriveStrH = (cDriveStrH & ~(1 << (cGPIO - 8))) | (pDriveStr << (cGPIO - 8));
     }
     WriteChipReg(pChip, "PIODriveStrengthH", cDriveStrH);
     WriteChipReg(pChip, "PIODriveStrengthL", cDriveStrL);
@@ -747,13 +747,13 @@ void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const
     {
         if(cGPIO < 8)
         {
-            cPullEnL |= (pEnable << cGPIO);
-            cUpDownL |= (pUpDown << cGPIO);
+            cPullEnL = (cPullEnL & ~(1 << cGPIO)) | (pEnable << cGPIO);
+            cUpDownL = (cUpDownL & ~(1 << cGPIO)) | (pUpDown << cGPIO);
         }
         else
         {
-            cPullEnH |= (pEnable << (cGPIO - 8));
-            cUpDownH |= (pUpDown << (cGPIO - 8));
+            cPullEnH = (cPullEnH & ~(1 << (cGPIO - 8))) | (pEnable << (cGPIO - 8));
+            cUpDownH = (cUpDownH & ~(1 << (cGPIO - 8))) | (pUpDown << (cGPIO - 8));
         }
     }
     WriteChipReg(pChip, "PIOPullEnaH", cPullEnH);
