@@ -240,6 +240,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // mpa read/write
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
+
     // 0 [RHS], 1 [LHS]
     // active reset functions 
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable)? 0 : 1 ); }
@@ -266,8 +267,8 @@ class D19clpGBTInterface : public lpGBTInterface
         WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
         WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
     }
-    void cicClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg ); }
-    void hybridClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
+    void cicClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==1)? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg ); }
+    void hybridClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==1)? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
 
     void configI2C( uint16_t pSpeed, uint8_t pMode = 0 ) { fI2CSpeed = pSpeed; fI2CMode = pMode; }
   private:

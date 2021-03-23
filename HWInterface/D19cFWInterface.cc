@@ -4939,6 +4939,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
 // function for I2C transactions using lpGBT I2C Masters
 bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
 {
+    ResetCPB();
     uint8_t               cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -4956,8 +4957,8 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     	cReplyVector = ReadReplyCPB(10);
     	cI2CStatus = cReplyVector[7] & 0xFF;
         LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
-	cIter++;
-	exit(0);
+	    cIter++;
+	    //exit(0);
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
     return true;
@@ -4965,6 +4966,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
 
 uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
+    //ResetCPB();
     uint8_t               cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -4992,7 +4994,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
 bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
     LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
-    uint8_t  cChipId           = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0 : pChip->getId();
+    uint8_t  cChipId           = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2 ) ? 0 : pChip->getId();
     uint8_t  cChipAddress      = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
@@ -5017,7 +5019,7 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
 
 uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
-    uint8_t  cChipId           = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0 : pChip->getId();
+    uint8_t  cChipId           = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2 ) ? 0 : pChip->getId();
     uint8_t  cChipAddress      = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
     uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
     I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cInvertedRegister, 2);

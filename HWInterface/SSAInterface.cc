@@ -322,8 +322,10 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     else
     {
+        bool cRetry=true;
         LOG(DEBUG) << BOLDBLUE << "Writing address 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-        cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, cRegItem.fValue, pVerifLoop);
+        //cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, cRegItem.fValue, pVerifLoop);
+        cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cRetry);
         fRegisterWrites++;
         if( !cSuccess )
         {
@@ -334,7 +336,8 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
         fRegisterWrites++;
         if( pVerifLoop && cSuccess)
         {
-            auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  pRegisterAddress );
+            //auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  pRegisterAddress );
+            auto cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
             cSuccess = cSuccess && runVerification(pChip, cValue, fMap[pRegisterAddress] ); 
             if( !cSuccess )
             {
@@ -441,7 +444,8 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         size_t cReadBackCounter = fReadBackErrors; 
         for(const auto& cReg: pRegs)
         {
-            cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, cRetry);
+            //cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, cRetry);
+            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry);
             fRegisterWrites++;
             // update value of register in memory 
             auto cRegItem =  pChip->getRegItem( fMap[cReg.first] );
@@ -463,7 +467,9 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
                     LOG (DEBUG) << BOLDRED << "\t.. attempt#" 
                         << +cWriteAttempt
                         << RESET;
-                    cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, cRetry);
+                    //cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, cRetry);
+                    cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry);
+            
                     cWriteAttempt++;
                 }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
             }// retry if failed 
@@ -485,7 +491,8 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
             LOG (INFO) << BOLDMAGENTA << "Running verification loop for SSAInterface::WriteRegs" << RESET;
             for(const auto& cReg: pRegs)
             {
-                auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cReg.first);
+                //auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cReg.first);
+                auto cValue = fBoardFW->ReadFERegister(pChip, cReg.first);
                 cSuccess = ( pSuccesses[cCount]  == 1 ) ? runVerification(pChip, cValue, fMap[cReg.first] ) : true;
                 if( !cSuccess && fRetryI2C )
                 {
@@ -502,7 +509,8 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
                         cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
                         if( cSuccess )
                         {
-                            uint32_t cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cReg.first);
+                            //uint32_t cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cReg.first);
+                            cValue = fBoardFW->ReadFERegister(pChip, cReg.first);
                             cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
                             if( !cSuccess )
                             {
@@ -567,7 +575,8 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     }
     else
     {   
-        auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress);
+        //auto cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress);
+        auto cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
         pChip->setReg( fMap[pRegisterAddress], cValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg );
     }
     return cRegItem.fValue & 0xFF;
@@ -606,7 +615,9 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     else
     {
         bool cRetry=false;
-        cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, cRetry);
+        //cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, cRetry);
+        cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue, cRetry);
+            
         fRegisterWrites++;
         if( !cSuccess )
         {
@@ -617,7 +628,10 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
         if( pVerifLoop )
         {
             LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for SSAInterface::WriteChipSingleReg" << RESET;
-            uint32_t cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cRegItem.fAddress );
+            //uint32_t cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cRegItem.fAddress );
+            auto cValue = fBoardFW->ReadFERegister(pChip, cRegItem.fAddress );
+            
+
             cSuccess =  cSuccess && runVerification(pChip, cValue, fMap[cRegItem.fAddress] );
             if( !cSuccess )
             {
