@@ -19,7 +19,7 @@
 
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" partid="0" configfile="SSAPreCalib.txt" />
-            <SSA Id="1" partid="1" configfile="SSAPreCalib.txt" />
+            <!--<SSA Id="1" partid="1" configfile="SSAPreCalib.txt" />
             <SSA Id="2" partid="2" configfile="SSAPreCalib.txt" />
             <SSA Id="4" partid="4" configfile="SSAPreCalib.txt" />
             <SSA Id="5" partid="5" configfile="SSAPreCalib.txt" />
@@ -33,7 +33,7 @@
             <MPA Id="4" partid="4" configfile="MPATST.txt" />
             <MPA Id="5" partid="5" configfile="MPATST.txt" />
             <MPA Id="6" partid="6" configfile="MPATST.txt" />
-            <MPA Id="7" partid="7" configfile="MPATST.txt" />
+            <MPA Id="7" partid="7" configfile="MPATST.txt" />-->
 
 
             <CIC_Files path="./settings/CicFiles/" />

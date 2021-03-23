@@ -47,95 +47,92 @@ int main(int argc, char* argv[])
 
     el::Configurations conf("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
-    std::string       cHWFile = "settings/D19C_MPA_PreCalib.xml";
+    std::string       cHWFile = "settings/PS_HalfModulePSAS.xml";
     std::stringstream outp;
     Tool              cTool;
+    std::cout <<"   1   " << std::endl;
     cTool.InitializeHw(cHWFile, outp);
+    std::cout <<"   2   " << std::endl;
     cTool.InitializeSettings(cHWFile, outp);
-    LOG(INFO) << BOLDRED << "1" << RESET;
-    // D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a
-    // better way! IB->PSInterfaceBoard_PowerOff_SSA();
+    std::cout <<"   3   " << std::endl;
     cTool.ConfigureHw();
-    LOG(INFO) << BOLDRED << "2" << RESET;
+    std::cout <<"   4   " << std::endl;
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    LOG(INFO) << BOLDRED << "3" << RESET;
 
     HybridContainer* ChipVec = pBoard->at(0)->at(0);
 
-    LOG(INFO) << BOLDRED << "4" << RESET;
 
     std::chrono::milliseconds LongPOWait(500);
     std::chrono::milliseconds ShortWait(10);
-
+    std::chrono::milliseconds MEGAWait(70000);
     // should be done from configure hw
 
-    LOG(INFO) << BOLDRED << "5" << RESET;
 
-    std::pair<uint32_t, uint32_t> rows = {0, 16};
-    std::pair<uint32_t, uint32_t> cols = {0, 120};
-    std::pair<uint32_t, uint32_t> th   = {100, 140};
+    //std::pair<uint32_t, uint32_t> rows = {1, 17};
+    //std::pair<uint32_t, uint32_t> cols = {1, 121};
+    std::pair<uint32_t, uint32_t> th   = {20, 195};
 
-    std::vector<TH1F*> scurves;
+
     std::vector<TH2F*> scurves2D;
+
     std::string        title;
-    LOG(INFO) << BOLDRED << "6" << RESET;
     auto theMPAInterface = static_cast<PSInterface*>(cTool.fReadoutChipInterface);
+
+
+
+	std::vector<int> totalev;
+	std::vector<int> totalevPRE;
     int impa=0;
     for(auto cMPA: *ChipVec)
     {
+		totalev.push_back(0);
+		totalevPRE.push_back(0);
+		uint16_t npix=1920;
+        if(cMPA->getFrontEndType() == FrontEndType::SSA) 
+			{
+			npix=120;
 
-        if(cMPA->getFrontEndType() == FrontEndType::SSA) continue;
-        MPA* theMPA = static_cast<MPA*>(cMPA);
-
-
+			}
+        if(cMPA->getFrontEndType() == FrontEndType::MPA) 
+			{		
+			theMPAInterface->WriteChipReg(cMPA,"ReadoutMode",0x1);
+			theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0xd7);
+			//theMPAInterface->WriteChipReg(cMPA,"TrimDAC_ALL",0x31);
+			}
+	else
+		{		
+		theMPAInterface->WriteChipReg(cMPA,"ReadoutMode",0x1);
+		theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0x5);
+		theMPAInterface->WriteChipReg(cMPA,"AnalogueAsync",0x1);
+		}
         
         theMPAInterface->Activate_async(cMPA);
-        theMPAInterface->Set_calibration(cMPA, 200);
+        if(cMPA->getFrontEndType() == FrontEndType::MPA) theMPAInterface->Set_calibration(cMPA, 30);
+        if(cMPA->getFrontEndType() == FrontEndType::SSA) theMPAInterface->Set_calibration(cMPA, 100);
         title = "mpa"+std::to_string(impa);
-        scurves2D.push_back(new TH2F(title.c_str(), title.c_str(), 1920,-0.5,1919.5,255, -0.5, 254.5));
-        uint32_t npixtot = 0;
-        for(uint16_t row = rows.first; row < rows.second; row++)
-        {
-            for(uint16_t col = cols.first; col < cols.second; col++)
-            {
+        scurves2D.push_back(new TH2F(title.c_str(), title.c_str(), float(npix),-0.5,float(npix)-0.5,255, -0.5, 254.5));
 
-
-                uint32_t gpix = theMPA->PNglobal(std::pair<uint32_t, uint32_t>(row, col));
-                //std::cout <<  "r "<<row<<" c " << col<<" png "<< gpix<< std::endl;
-
-                theMPAInterface->Enable_pix_counter(theMPA, gpix-1);
-                if (impa==6 or impa==1)
-			{
-			if (gpix>200 and gpix<800)                 theMPAInterface->Disable_pixel(theMPA, gpix-1);
-			}
-                title = "mpa"+std::to_string(impa) +":"+std::to_string(row) + "," + std::to_string(col);
-                scurves.push_back(new TH1F(title.c_str(), title.c_str(), 255, -0.5, 254.5));
-                npixtot += 1;
-            }
-        }
-        std::cout << "Numpix -- " << npixtot << std::endl;
         impa+=1;
     }
-    int nmpas=impa;
     std::vector<uint16_t> countersfifo;
-    // uint32_t curpnum = 0;
+    //uint32_t curpnum = 0;
     uint32_t totalevents     = 0;
-    uint32_t totaleventsprev = 0;
     uint32_t nrep            = 0;
     for(uint16_t ith = th.first; ith < th.second; ith++)
     {
+			//if (not (ith%10==0)) continue;
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
 
             std::cout << "ITH= " << ith << std::endl;
     	    for(auto cMPA: *ChipVec)
     	      {
-              if(cMPA->getFrontEndType() == FrontEndType::SSA) continue;
+
               MPA* theMPA = static_cast<MPA*>(cMPA);
               theMPAInterface->Set_threshold(theMPA, ith);
+              //if(cMPA->getFrontEndType() == FrontEndType::SSA)theMPAInterface->Set_threshold(theMPA, ith);
 	      }
 
-            std::cout << "1"<< std::endl;
 
             std::this_thread::sleep_for(ShortWait);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
@@ -143,35 +140,28 @@ int main(int argc, char* argv[])
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
 
             // sleep            // close shutter
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(3000);
+            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(8);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
 
-            std::cout << "2"<< std::endl;
 
             std::this_thread::sleep_for(ShortWait);
-            //uint16_t curpnum = 0;
+
             scurvecsv << ith << ",";
 
             // FIFO readout
             // TURNED OFF
 
             // I2C readout
-            /*std::vector<uint32_t> counters;
-
-
-            theMPAInterface->ReadASEvent(cMPA,counters);
-            for(uint16_t row=rows.first; row<rows.second; row++)
-                {
-                for(uint16_t col=cols.first; col<cols.second; col++)
-                    {
-                        std::cout <<row<<","<<col<<" "<<counters[curpnum]<< std::endl;
-                        curpnum+=1;
-                    }
-                }*/
-
             std::vector<uint32_t> countersfifo;
+    	    /*for(auto cMPA: *ChipVec)
+			    {
+		        theMPAInterface->ReadASEvent(cMPA,countersfifo);
+				}*/
+
+ 
+            //std::vector<uint32_t> countersfifo;
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetData(pBoard,countersfifo);
 
 
@@ -181,89 +171,109 @@ int main(int argc, char* argv[])
 
 
             totalevents = std::accumulate(countersfifo.begin() + 1, countersfifo.end(), 0);
-            std::cout << "3 "<<countersfifo.size()<<" "<<totalevents<< std::endl;
-            std::cout << totalevents << std::endl;
-            if(totaleventsprev > 50 and totalevents == 0)
-            {
-                ith -= 1;
-                nrep += 1;
-                std::cout << "Repeat " << nrep << std::endl;
-                if(nrep < 5) continue;
-                totaleventsprev = 0;
-            }
-	    int icf=0;
-    	    for(auto cf: countersfifo)
-		{
-		std::cout << "CF " <<icf<<" "<< cf << std::endl;
-		icf+=1;
-		}
+            //std::cout << "3 "<<countersfifo.size()<<" "<<totalevents<< std::endl;
+            std::cout << "totalevents "<<totalevents << std::endl;
+  
+	    	bool torepeat=false;
             int impa=0;
+            uint32_t curindex=0;
     	    for(auto cMPA: *ChipVec)
-    	      {
-              if(cMPA->getFrontEndType() == FrontEndType::SSA) continue;
-	      
-	      for(size_t icc = 0; icc < 1920; icc++)
-		    {
-			int  curc = countersfifo[impa*(1920)+60*nmpas+icc];
-		        std::cout << "i " << icc<<" "<< curc<< std::endl;
-		        scurves2D[impa]->SetBinContent(icc,scurves[icc]->FindBin(ith),curc);
-		        scurves[impa*1920+icc]->SetBinContent(scurves[icc]->FindBin(ith), curc);
-		        scurvecsv << curc << ",";
-		    }
-		    nrep = 0;
-	      impa+=1;
-	      }
+    	    {
 
+				uint16_t npix=1920;
+        		if(cMPA->getFrontEndType() == FrontEndType::SSA) 
+					{
+						std::cout << "SSA"<< std::endl;
+						npix=120;
+					}
+				
+	        	for(size_t icc = 0; icc < (npix); icc++)
+					{
+
+
+						int  curc = countersfifo[curindex];
+						totalev[impa]+=curc;
+						//std::cout << "i " << icc<<" "<< curc<< std::endl;
+						scurves2D[impa]->SetBinContent(icc,scurves2D[impa]->GetYaxis()->FindBin(ith),curc);
+						//std::pair<uint32_t, uint32_t>pnlocal = static_cast<MPA*>(cMPA)->PNlocal(icc+1);
+						//std::cout << "pix "<<icc<<","<<pnlocal.first<<","<<pnlocal.second<<","<<curc<< std::endl;
+						//std::cout << "REGLOBAL "<<icc<<","<<static_cast<MPA*>(cMPA)->PNglobal(pnlocal)<< std::endl;
+						
+		
+						//scurves[impa*npix+icc]->SetBinContent(scurves[icc]->FindBin(ith), curc);
+						scurvecsv << curc << ",";
+						curindex+=1;
+					}
+				/*if (ith%3==0)
+				{
+					std::cout << "Oh no! " << std::endl;
+					totalev[impa]=0;
+				}*/
+		        std::cout << "totalevPRE " << totalevPRE[impa]<< " totalev " <<totalev[impa] << std::endl;
+				if (totalev[impa]==0 and totalevPRE[impa]>50)
+		        {
+		            std::cout << "To Repeat " << std::endl;
+					torepeat=true;
+		        }
+				else
+				{
+					totalevPRE[impa]=totalev[impa];
+				}
+
+				
+
+				
+	      		impa+=1;
+	      	}
+
+
+
+    	  
+			if (torepeat)
+			{
+		            if(nrep < 2)
+					{
+				        ith -= 1;
+				        nrep += 1;
+				        std::cout << "Repeat " << nrep << std::endl;
+	 					continue;
+					}
+
+					nrep=0;
+			}
             scurvecsv << "\n";
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
-            totaleventsprev = totalevents;
         
     }
-
-    TCanvas* c1    = new TCanvas("c1", "c1", 1000, 500);
-    int      ihist = 0;
-    for(auto& hist: scurves)
-    {
-        // std::cout<<"drawing "<<ihist<<hist->>Integral()<<std::endl;
-        if(ihist == 0)
-        {
-            hist->SetLineColor(1);
-            hist->SetTitle(";Thresh DAC;Counts");
-            hist->SetMaximum(3001);
-            hist->SetStats(0);
-            hist->Draw("L");
-        }
-        else
-        {
-            hist->SetLineColor(ihist % 60 + 1);
-            hist->Draw("sameL");
-        }
-        ihist += 1;
-    }
-    c1->Print("scurvetemp.root", "root");
+	//TFile *curf = TFile::Open("scurves.root","RECREATE");
+	//curf->cd();
 
 
-
-    ihist = 0;
+    uint32_t ihist = 0;
     for(auto& hist: scurves2D)
     {
+			TFile *curf = TFile::Open(("scurves_MPA"+std::to_string(ihist)+".root").c_str(),"RECREATE");
+			curf->cd();
             std::string curt;
-	    curt="scurvetempmpa"+std::to_string(ihist);
+	    	curt="scurvetempmpa"+std::to_string(ihist);
     	    TCanvas* c2    = new TCanvas(curt.c_str(), curt.c_str(), 1000, 500);
             hist->SetLineColor(1);
             hist->SetTitle(";pix num;Thresh DAC");
-            hist->SetMaximum(3001);
+            //hist->SetMaximum(3001);
             hist->SetStats(0);
             hist->Draw("COLZ");
-	    curt+=".root";
-	    c2->Print(curt.c_str(), "root");
+
+	    	c2->Print(("c1"+curt).c_str(), "root");
+    	    c2->Write(("c1"+curt).c_str());
+	    	hist->Write(curt.c_str());
 
             ihist += 1;
+    		curf->Write();
     }
+    
 
-
-
+ 
 
 
     scurvecsv.close();

@@ -273,6 +273,25 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
                         auto& cCic = theOuterTrackerHybrid->fCic;
 
+
+
+
+
+                		LOG(INFO) << BOLDMAGENTA << "SSA pad current..." << RESET;
+                        for(uint8_t issa = 0; issa < 8; issa++)
+                            {
+							   uint8_t Vwr=0x7;
+                               if (issa==3) continue;
+                			   LOG(INFO) << BOLDMAGENTA << "SSA " <<+issa<<" current set to " << +Vwr <<""<< RESET;
+
+                               SSA* newssa = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), issa, 0, 0,"./settings/SSAFiles/SSAPreCalibSYNC.txt");
+                               fReadoutChipInterface->WriteChipReg(newssa,"SLVS_pad_current",Vwr);
+                            }
+                		LOG(INFO) << BOLDMAGENTA << "..SSA pad current done" << RESET;
+
+
+
+
                         // read CIC sparsification setting
                         bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
                         cBoard->setSparsification(cSparsified);
