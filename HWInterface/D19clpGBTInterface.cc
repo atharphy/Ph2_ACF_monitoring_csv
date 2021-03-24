@@ -508,7 +508,9 @@ uint8_t D19clpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t
 {
     // Gets I2C Master status
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
-    return ReadChipReg(pChip, cI2CStatReg);
+    uint8_t cStatus =  ReadChipReg(pChip, cI2CStatReg);
+    LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
+    return cStatus;
 }
 
 /*----------------------------*/
@@ -578,21 +580,17 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     }
     // wait until the transaction is done
     uint8_t cMaxIter = 100, cIter = 0;
-    bool    cSuccess = false;
     do
     {
         LOG(DEBUG) << BOLDBLUE << "Waiting for I2C Write transaction to finisih" << RESET;
-        uint8_t cStatus = GetI2CStatus(pChip, pMaster);
-        LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Write Status : " << fI2CStatusMap[cStatus] << RESET;
-        cSuccess = (cStatus == 4);
         cIter++;
-    } while(cIter < cMaxIter && !cSuccess);
-    if(!cSuccess)
+    } while(cIter < cMaxIter && !IsI2CSuccess(pChip, pMaster));
+    if(cIter == cMaxIter)
     {
         LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
         throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
-    return cSuccess;
+    return true;
 }
 
 uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes)
@@ -614,16 +612,12 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     else { WriteChipReg(pChip, cI2CCmdReg, 0xD); }
     // wait until the transaction is done
     uint8_t cMaxIter = 100, cIter = 0;
-    bool    cSuccess = false;
     do
     {
         LOG(DEBUG) << BOLDBLUE << "Waiting for I2C Read transaction to finisih" << RESET;
-        uint8_t cStatus = GetI2CStatus(pChip, pMaster);
-        LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Read Status : " << fI2CStatusMap[cStatus] << RESET;
-        cSuccess = (cStatus == 4);
         cIter++;
-    } while(cIter < cMaxIter && !cSuccess);
-    if(!cSuccess)
+    } while(cIter < cMaxIter && !IsI2CSuccess(pChip, pMaster));
+    if(cIter == cMaxIter)
     {
         LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
         throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
@@ -645,6 +639,9 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
         return cReadData;
     }
 }
+
+bool D19clpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+{ return (GetI2CStatus(pChip, pMaster) == 4); }
 
 /*-------------------------*/
 /* lpGBT ADC-DAC functions */
