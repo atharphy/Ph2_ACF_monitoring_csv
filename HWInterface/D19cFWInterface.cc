@@ -4951,13 +4951,13 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     uint8_t cIter = 0, cMaxIter = 50;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fReTryCPB)
     {
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
     	cReplyVector = ReadReplyCPB(10);
     	fI2Cstatus = cReplyVector[7] & 0xFF;
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
-	    cIter++;
+        cIter++;
 	    //exit(0);
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
