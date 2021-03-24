@@ -946,60 +946,6 @@ void D19clpGBTInterface::InitialiseTCUSBHandler()
 }
 #endif
 
-void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
-{
-    uint8_t cChipRate = GetChipRate(pChip);
-    LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
-    // Configure High Speed Link Tx Rx Polarity
-    ConfigureHighSpeedPolarity(pChip, 1, 0);
-    // Clocks
-    std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
-    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
-    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
-    // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
-    for(const auto& cGroup: cTxGroups)
-    {
-        cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
-    }
-    // Rx configuration and Phase Align
-    // Configure Rx Groups
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
-    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
-    // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
-    for(const auto& cGroup: cRxGroups)
-    {
-        for(const auto cChannel: cRxChannels)
-        {
-            // Right Hybrid
-            if(cGroup == 0 && cChannel == 0)
-                cRxInvert = 1;
-            else if(cGroup == 4 || cGroup == 5 || cGroup == 6)
-                cRxInvert = 0;
-            // Left Hybrid
-            else if(cGroup == 1 && cChannel == 0)
-                cRxInvert = 1;
-            else if(cGroup == 3 && cChannel == 2)
-                cRxInvert = 1;
-            else if(cGroup == 2)
-                cRxInvert = 0;
-            ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-        }
-    }
-    PhaseAlignRx(pChip, cRxGroups, cRxChannels);
-    // Reset I2C Masters
-    ResetI2C(pChip, {0, 1, 2});
-    // Setting GPIO levels for Skeleton test
-    ConfigureGPIODirection(pChip, {6, 12}, 1);
-    ConfigureGPIOLevel(pChip, {6, 12}, 1);
-}
-
 // void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 // {
 //     uint8_t cChipRate = GetChipRate(pChip);
@@ -1007,22 +953,13 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 //     // Configure High Speed Link Tx Rx Polarity
 //     ConfigureHighSpeedPolarity(pChip, 1, 0);
 //     // Clocks
-
-//     //std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid , fClock_LHS_Hybrid , fClock_RHS_CIC, fClock_LHS_CIC };
-//     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
+//     std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
+//     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
 //     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-//     // disable all clocks 
-//     // by setting frequency to 0 
-//     cClkFreq = 0 ;
-//     // and by setting drive strength to 0 
-//     cClkDriveStr = 0 ;
-//     // CIC 
-//     ConfigureClocks(pChip, {fClock_RHS_CIC, fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
-//     // SSA
-//     ConfigureClocks(pChip, {fClock_RHS_Hybrid , fClock_LHS_Hybrid }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+//     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
 //     // Tx Groups and Channels
 //     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-//     uint8_t              cTxDataRate = 3, cTxDriveStr = 1, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+//     uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
 //     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
 //     for(const auto& cGroup: cTxGroups)
 //     {
@@ -1059,125 +996,188 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 //     // Reset I2C Masters
 //     ResetI2C(pChip, {0, 1, 2});
 //     // Setting GPIO levels for Skeleton test
-//     std::vector<uint8_t> cResetPinsRHS{fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC};
-//     std::vector<uint8_t> cResetPinsLHS{fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC};
-//     //
-//     ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
-//     //ConfigureGPIODriverStrength(pChip, cResetPinsRHS , 0x1);
-//     //
-//     ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
-//     //ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x1);
-    
-//     // test GPIO
-//     {
-//         uint8_t cEnable=1;
-//         uint8_t cUpDown=1;
-//         ConfigureGPIODirection(pChip, cResetPinsRHS, 0);
-//         ConfigureGPIOPull(pChip, cResetPinsRHS, cEnable, cUpDown);
-
-//         ConfigureGPIODirection(pChip, cResetPinsLHS, 0);
-//         ConfigureGPIOPull(pChip, cResetPinsLHS, cEnable, cUpDown);
-
-//         uint8_t cReadIOstateH = this->ReadChipReg(pChip,"PIOInH");
-//         uint8_t cReadIOstateL = this->ReadChipReg(pChip,"PIOInL");
-//         // check RHS
-//         for(auto cResetPin : cResetPinsRHS )
-//         {
-//             if( cResetPin < 8 )
-//             {
-//                 uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
-//                 if( cVal == 0 ) 
-//                 {
-//                     LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
-//                         << std::hex << (+cReadIOstateL)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }
-//                 else
-//                 {
-//                     LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x" 
-//                         << std::hex << (+cReadIOstateL)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }   
-//             }
-//             else
-//             {
-//                 uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
-//                 if( cVal == 0 ) 
-//                 {
-//                     LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
-//                         << std::hex << (+cReadIOstateH)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }
-//                 else
-//                 {
-//                     LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x"  
-//                         << std::hex << (+cReadIOstateH)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }
-//             }
-//         }
-//         // check LHS 
-//         for(auto cResetPin : cResetPinsLHS )
-//         {
-//             if( cResetPin < 8 )
-//             {
-//                 uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
-//                 if( cVal == 0 ) 
-//                 {
-//                     LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
-//                         << std::hex << (+cReadIOstateL)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }
-//                 else
-//                 {
-//                     LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
-//                         << std::hex << (+cReadIOstateL)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }   
-//             }
-//             else
-//             {
-//                 uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
-//                 if( cVal == 0 ) 
-//                 {
-//                     LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
-//                         << std::hex << (+cReadIOstateH)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }
-//                 else
-//                 {
-//                     LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
-//                         << std::hex << (+cReadIOstateH)  << std::dec
-//                         << " - " << +cVal << RESET;
-//                 }
-//             }
-//         }
-        
-//         // set back
-//         cEnable=0;
-//         cUpDown=0;
-//         ConfigureGPIOPull(pChip, cResetPinsRHS, 0, 0);
-//         ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
-//         ConfigureGPIOPull(pChip, cResetPinsLHS, 0, 0);
-//         ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
-//     }
-
-//     // // Reset all ASICs
-//     // for(size_t cSide=0; cSide<2; cSide++)
-//     // {
-//     //     resetSSA(pChip, cSide);
-//     //     resetMPA(pChip, cSide);
-//     //     resetCic(pChip, cSide);
-//     // }
-    
-//     // Keep resets active after start-up  
-//     for(size_t cSide=0; cSide<2; cSide++)
-//     {
-//         ssaReset(pChip, true, cSide);
-//         mpaReset(pChip, true, cSide);
-//         cicReset(pChip, true, cSide);
-//     }
+//     ConfigureGPIODirection(pChip, {6, 12}, 1);
+//     ConfigureGPIOLevel(pChip, {6, 12}, 1);
 // }
+
+void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
+{
+    uint8_t cChipRate = GetChipRate(pChip);
+    LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
+    // Configure High Speed Link Tx Rx Polarity
+    ConfigureHighSpeedPolarity(pChip, 1, 0);
+    // Clocks
+
+    //std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid , fClock_LHS_Hybrid , fClock_RHS_CIC, fClock_LHS_CIC };
+    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
+    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
+    // disable all clocks 
+    // by setting frequency to 0 
+    cClkFreq = 0 ;
+    // and by setting drive strength to 0 
+    cClkDriveStr = 0 ;
+    // CIC 
+    ConfigureClocks(pChip, {fClock_RHS_CIC, fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // SSA
+    ConfigureClocks(pChip, {fClock_RHS_Hybrid , fClock_LHS_Hybrid }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // Tx Groups and Channels
+    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 1, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+    for(const auto& cGroup: cTxGroups)
+    {
+        cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
+        for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+    }
+    // Rx configuration and Phase Align
+    // Configure Rx Groups
+    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
+    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
+    // Configure Rx Channels
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
+    for(const auto& cGroup: cRxGroups)
+    {
+        for(const auto cChannel: cRxChannels)
+        {
+            // Right Hybrid
+            if(cGroup == 0 && cChannel == 0)
+                cRxInvert = 1;
+            else if(cGroup == 4 || cGroup == 5 || cGroup == 6)
+                cRxInvert = 0;
+            // Left Hybrid
+            else if(cGroup == 1 && cChannel == 0)
+                cRxInvert = 1;
+            else if(cGroup == 3 && cChannel == 2)
+                cRxInvert = 1;
+            else if(cGroup == 2)
+                cRxInvert = 0;
+            ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        }
+    }
+    //PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // Setting GPIO levels for Skeleton test
+    std::vector<uint8_t> cResetPinsRHS{fReset_RHS_SSA, fReset_RHS_MPA, fReset_RHS_CIC};
+    std::vector<uint8_t> cResetPinsLHS{fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC};
+    //
+    ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
+    //ConfigureGPIODriverStrength(pChip, cResetPinsRHS , 0x1);
+    //
+    ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    //ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x1);
+    
+    // test GPIO
+    {
+        uint8_t cEnable=1;
+        uint8_t cUpDown=1;
+        ConfigureGPIODirection(pChip, cResetPinsRHS, 0);
+        ConfigureGPIOPull(pChip, cResetPinsRHS, cEnable, cUpDown);
+
+        ConfigureGPIODirection(pChip, cResetPinsLHS, 0);
+        ConfigureGPIOPull(pChip, cResetPinsLHS, cEnable, cUpDown);
+
+        uint8_t cReadIOstateH = this->ReadChipReg(pChip,"PIOInH");
+        uint8_t cReadIOstateL = this->ReadChipReg(pChip,"PIOInL");
+        // check RHS
+        for(auto cResetPin : cResetPinsRHS )
+        {
+            if( cResetPin < 8 )
+            {
+                uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }   
+            }
+            else
+            {
+                uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x"  
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+            }
+        }
+        // check LHS 
+        for(auto cResetPin : cResetPinsLHS )
+        {
+            if( cResetPin < 8 )
+            {
+                uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
+                        << std::hex << (+cReadIOstateL)  << std::dec
+                        << " - " << +cVal << RESET;
+                }   
+            }
+            else
+            {
+                uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
+                if( cVal == 0 ) 
+                {
+                    LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+                else
+                {
+                    LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
+                        << std::hex << (+cReadIOstateH)  << std::dec
+                        << " - " << +cVal << RESET;
+                }
+            }
+        }
+        
+        // set back
+        cEnable=0;
+        cUpDown=0;
+        ConfigureGPIOPull(pChip, cResetPinsRHS, 0, 0);
+        ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
+        ConfigureGPIOPull(pChip, cResetPinsLHS, 0, 0);
+        ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
+    }
+
+    // // Reset all ASICs
+    // for(size_t cSide=0; cSide<2; cSide++)
+    // {
+    //     resetSSA(pChip, cSide);
+    //     resetMPA(pChip, cSide);
+    //     resetCic(pChip, cSide);
+    // }
+    
+    // Keep resets active after start-up  
+    for(size_t cSide=0; cSide<2; cSide++)
+    {
+        ssaReset(pChip, true, cSide);
+        mpaReset(pChip, true, cSide);
+        cicReset(pChip, true, cSide);
+    }
+}
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {

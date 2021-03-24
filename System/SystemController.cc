@@ -425,9 +425,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         // if SSA + ASYNC
                         // make sure ROCs are configured for that
                         if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
-                        uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
-                        if( cAsync ) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", 1); }
-                        else { static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "Sync", 1); }
+                        // uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+                        // if( cAsync ) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", 1); }
+                        // else { static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cReadoutChip, "Sync", 1); }
                     }
                 }
             }

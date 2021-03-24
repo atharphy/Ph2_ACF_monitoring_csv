@@ -304,6 +304,7 @@ uint8_t SSAInterface::ReadChipId(Chip* pChip)
 
 bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop)
 {
+    bool cRetry=false;
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
     auto cRegItem = pChip->getRegItem( fMap[pRegisterAddress] );
@@ -322,7 +323,6 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     else
     {
-        bool cRetry=true;
         LOG(DEBUG) << BOLDBLUE << "Writing address 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
         //cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, cRegItem.fValue, pVerifLoop);
         cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cRetry);
@@ -584,11 +584,11 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
 
 bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    //
     if( fMap.size() == 0 ) 
     {
         ChipRegMap            cSSARegMap = pChip->getRegMap();
-        for(auto& cRegItem: cSSARegMap) { 
+        for(auto& cRegItem: cSSARegMap) 
+        { 
             fMap[cRegItem.second.fAddress] = cRegItem.first; 
             // update map to indicate that there are not registers that 
             // can be read back from 
@@ -599,6 +599,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
             }
         }
     }
+
     setBoard(pChip->getBeBoardId());
     bool        cSuccess = true;
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
@@ -617,7 +618,6 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
         bool cRetry=false;
         //cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, cRetry);
         cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue, cRetry);
-            
         fRegisterWrites++;
         if( !cSuccess )
         {

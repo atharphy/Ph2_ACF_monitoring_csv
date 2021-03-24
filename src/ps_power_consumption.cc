@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     uint16_t    cReadoutRate = (cmd.foundOption("readoutRate")) ? convertAnyInt(cmd.optionValue("readoutRate").c_str()) : 320;
     uint16_t    cConfigurationAttempts = (cmd.foundOption("registerTest")) ? convertAnyInt(cmd.optionValue("registerTest").c_str()) : 1;
     uint16_t    cCicClockDrive = (cmd.foundOption("clockDriveCIC")) ? convertAnyInt(cmd.optionValue("clockDriveCIC").c_str()) : 7;
-    uint16_t    cSsaClockDrive = (cmd.foundOption("clockDriveCIC")) ? convertAnyInt(cmd.optionValue("clockDriveSSA").c_str()) : 7;
+    uint16_t    cSsaClockDrive = (cmd.foundOption("clockDriveSSA")) ? convertAnyInt(cmd.optionValue("clockDriveSSA").c_str()) : 7;
     std::string cCicsToEnable = (cmd.foundOption("enableCIC")) ? cmd.optionValue("enableCIC") : "" ;
     std::string cCicsToClk = (cmd.foundOption("enableCICclock")) ? cmd.optionValue("enableCICclock") : "" ;
     std::string cSsasToEnable = (cmd.foundOption("enableSSA")) ? cmd.optionValue("enableSSA") : "" ;
@@ -159,8 +159,6 @@ int main(int argc, char* argv[])
     std::string cMonitor = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none" ;
     uint16_t    cHybrifCnfg = (cmd.foundOption("configureHybrid")) ? convertAnyInt(cmd.optionValue("configureHybrid").c_str()) : 0;
     
-    float cStartUpMontior=0;
-    float cEndMonitor=0;
     std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
     if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
 
@@ -185,26 +183,27 @@ int main(int argc, char* argv[])
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory);
-    cTool.InitResultFile(cResultfile);
-    // set-up I2C
-    if( cmd.foundOption("retryI2C")){ 
+
+    if( cTool.flpGBTInterface != nullptr ) 
+        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->configI2C( cI2CSpeed, cModeI2C);
+    
+    if( cmd.foundOption("retryI2C"))
+    { 
         cTool.fCicInterface->setRetryI2C(true);       
-        //cTool.fReadoutChipInterface->setRetryI2C(true);       
     }
-    else{ 
+    else
+    { 
         cTool.fCicInterface->setRetryI2C(false);       
-        //cTool.fReadoutChipInterface->setRetryI2C(false);       
     }
     cTool.fCicInterface->setMaxI2CAttempts(cMaxI2Cattempts);
-    //cTool.fReadoutChipInterface->setMaxI2CAttempts(cMaxI2Cattempts);
     
     // first ..configure BeBoard
     // setting up back-end board
-    for( auto cBoard: *cTool.fDetectorContainer)
+    for(const auto cBoard: *cTool.fDetectorContainer)
     {
-        BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-        cTool.fBeBoardInterface->ConfigureBoard(cBeBoard);
-        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->configI2C( cI2CSpeed, cModeI2C);
+        cTool.fBeBoardInterface->ConfigureBoard(cBoard);
+        LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
+        LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -214,18 +213,13 @@ int main(int argc, char* argv[])
             // are these needed?
             uint8_t cLinkId = cOpticalGroup->getId();
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
-            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(clpGBT);
-            // Check lpGBT Link Lock
-            LOG(INFO) << BOLDBLUE << "Checking optical link link .." << RESET;
-            bool clpGBTlock = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
-            if(!clpGBTlock)
-            {
-                LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
-                exit(0);
-            }
+            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT);
         }
+    }//board
         
-        if( cmd.foundOption("monitor"))
+    if( cmd.foundOption("monitor"))
+    {
+        for(const auto cBoard: *cTool.fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
             {
@@ -236,11 +230,11 @@ int main(int argc, char* argv[])
                 std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7","VDD"};
                 std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
                 std::vector<std::string> cModuleSide{"left","left","right","left","internal"};
-                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.33  , 2.55, 1.25*0.42};
+                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.25  , 2.55, 1.25*0.42};
                 //std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
                 // use Vddd as reference 
                 // use P1V25 as reference
-                size_t cIndx=2;
+                size_t cIndx=4;
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
                 // find correction 
                 std::vector<float> cVals(10,0);
@@ -318,7 +312,7 @@ int main(int argc, char* argv[])
                         cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
                     }
                     float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-                    cStartUpMontior = cMean;
+                    //float cStartUpMontior = cMean;
                     LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
                         << +cMean*1e3 
                         << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
@@ -326,7 +320,10 @@ int main(int argc, char* argv[])
                 }//read all monitors 
             }// configure lpGBT 
         }
-        
+    }
+    
+    for(const auto cBoard: *cTool.fDetectorContainer)
+    {
         for(auto cOpticalGroup: *cBoard)
         {
             auto& clpGBT =  cOpticalGroup->flpGBT ;
@@ -509,35 +506,37 @@ int main(int argc, char* argv[])
                 }//OG
             }//configure SSA 
         }
+    }
 
-        if( cmd.foundOption("configureHybrid") ) 
-        {
-            double cTimeElapsed=0;
-            Timer       cGlobalTimer;
-            cGlobalTimer.start();
-            auto cMPAsToEnable  = getSides(cMPAsToEnableClock);
-            for( int cConfigAttempt=0; cConfigAttempt < cConfigurationAttempts ; cConfigAttempt++)
-            { 
-                LOG (INFO) << BOLDBLUE << "#############################" << RESET;
-                LOG (INFO) << BOLDBLUE << "Configuration Attempt#" << +cConfigAttempt << RESET;
+    if( cmd.foundOption("configureHybrid") ) 
+    {
+        
+        double cTimeElapsed=0;
+        Timer       cGlobalTimer;
+        cGlobalTimer.start();
+        auto cMPAsToEnable  = getSides(cMPAsToEnableClock);
+        for( int cConfigAttempt=0; cConfigAttempt < cConfigurationAttempts ; cConfigAttempt++)
+        { 
+            LOG (INFO) << BOLDBLUE << "#############################" << RESET;
+            LOG (INFO) << BOLDBLUE << "Configuration Attempt#" << +cConfigAttempt << RESET;
+            for(const auto cBoard: *cTool.fDetectorContainer)
+            {
+                cTool.fBeBoardInterface->ConfigureBoard(cBoard);
+                LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
+                LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& clpGBT =  cOpticalGroup->flpGBT ;
                     if(clpGBT == nullptr) continue;
 
-                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(clpGBT);
-                    // Check lpGBT Link Lock
-                    LOG(INFO) << BOLDBLUE << "Checking optical link link .." << RESET;
-                    bool clpGBTlock = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
-                    if(!clpGBTlock)
-                    {
-                        LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
-                        exit(0);
-                    }
-
-                    // correct Vref
-                    // and monitor
+                    // are these needed?
+                    uint8_t cLinkId = cOpticalGroup->getId();
+                    static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT);
+                
+                    //correct Vref
+                    //and monitor
                     if( cmd.foundOption("monitor") )
                     {
                         // enable voltage 
@@ -624,7 +623,7 @@ int main(int argc, char* argv[])
                                 cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
                             }
                             float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-                            cStartUpMontior = cMean;
+                            //float cStartUpMontior = cMean;
                             LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
                                 << +cMean*1e3 
                                 << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
@@ -659,13 +658,12 @@ int main(int argc, char* argv[])
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                                 {
+                                    ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
                                     LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
-                                    cTool.fReadoutChipInterface->ConfigureChip(cChip);
+                                    cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
                                     pIds.push_back( cChip->getId() );
                                 }//SSAs
                             }//ROCs
-
-
 
                             // keep MPA in-active 
                             if( cmd.foundOption("holdMPAreset") )
@@ -978,28 +976,27 @@ int main(int argc, char* argv[])
                         // now .. configure all SSAs 
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            // // first .. send clock to the SSAs on this hybrid  
-                            // uint8_t cSide=cHybrid->getId()%2;
+                            // first .. send clock to the SSAs on this hybrid  
+                            uint8_t cSide=cHybrid->getId()%2;
                             
-                            // lpGBTClockConfig cClkCnfg; 
-                            // cClkCnfg.fClkFreq = 4;  
-                            // cClkCnfg.fClkDriveStr = cSsaClockDrive; 
-                            // cClkCnfg.fClkInvert = 1;
-                            // cClkCnfg.fClkPreEmphWidth = 0; 
-                            // cClkCnfg.fClkPreEmphMode = 0; 
-                            // cClkCnfg.fClkPreEmphStr = 0;
-                            // LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
-                            // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
-                            // cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
-                            // cClkCnfg.fClkDriveStr = cCicClockDrive; 
-                            // LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
-                            // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
+                            lpGBTClockConfig cClkCnfg; 
+                            cClkCnfg.fClkFreq = 4;  
+                            cClkCnfg.fClkDriveStr = cSsaClockDrive; 
+                            cClkCnfg.fClkInvert = 1;
+                            cClkCnfg.fClkPreEmphWidth = 0; 
+                            cClkCnfg.fClkPreEmphMode = 0; 
+                            cClkCnfg.fClkPreEmphStr = 0;
+                            LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+                            cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
+                            cClkCnfg.fClkDriveStr = cCicClockDrive; 
+                            LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
 
-                            // // release resets 
-                            // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false,cSide);
-                            // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
+                            // release resets 
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false,cSide);
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
 
-                           
                             // first . . enable clock out MPAs I've asked for
                             for(auto cReadoutChip: *cHybrid)
                             {
@@ -1008,19 +1005,19 @@ int main(int argc, char* argv[])
                                     if( std::find( cMPAsToEnable.begin(), cMPAsToEnable.end(), cReadoutChip->getId() ) != cMPAsToEnable.end() ) 
                                     {
                                         LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
-                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                                        (cTool.fReadoutChipInterface)->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
                                     }//SSAs
                                     else
                                     {
                                         LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x00" << RESET;
-                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
+                                        (cTool.fReadoutChipInterface)->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
                                     }
                                 }
                             }//ROCs
 
                             // now .. reset MPAs on this hybrid 
-                            //LOG (INFO) << BOLDBLUE << "Resetting MPA before configuration.." << RESET;
-                            //static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
+                            LOG (INFO) << BOLDBLUE << "Resetting MPA before configuration.." << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
                         }//OG
                     }//original 
                     else if( cHybrifCnfg == 4 )
@@ -1078,7 +1075,7 @@ int main(int argc, char* argv[])
                         cLog.close();
                     }
                     // try and configure all chips N times 
-                    for( size_t cTst=0; cTst < 30; cTst++)
+                    for( size_t cTst=0; cTst < 10; cTst++)
                     {
                         std::ofstream cErrorLog ;
 
@@ -1160,100 +1157,95 @@ int main(int argc, char* argv[])
                         LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
                         static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
                     }
-                }// board 
-            } // configuration attempt 
-            cGlobalTimer.stop();
-            cGlobalTimer.show("Total execution time: ");
-        }//if configure hybrid 
-
-        if( cmd.foundOption("configureSSA")&& !cmd.foundOption("configureHybrid"))     
-            static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
+                }// OG
+            }//board 
+        } // configuration attempt 
+        cGlobalTimer.stop();
+        cGlobalTimer.show("Total execution time: ");
+        
+        // if( cmd.foundOption("configureSSA")&& !cmd.foundOption("configureHybrid"))     
+        //     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
         
         if( cmd.foundOption("monitor") )
         {
-            for(auto cOpticalGroup: *cBoard)
+            for(const auto cBoard: *cTool.fDetectorContainer)
             {
-                auto& clpGBT =  cOpticalGroup->flpGBT ;
-                if(clpGBT == nullptr) continue;
-
-                // enable voltage 
-                std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7","VDD"};
-                std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
-                std::vector<std::string> cModuleSide{"left","left","right","left","internal"};
-                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
-                
-                LOG (INFO) << BOLDBLUE << "Reading monitoring voltaages : " << RESET;
-                for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
-                {
-                    std::string cADCsel = cADCs_VoltageMonitors[cIndx];
-                    if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
-                    
-                    std::vector<float> cVals(10,0);
-                    for(size_t cM=0; cM < cVals.size(); cM++)
-                    {
-                        cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
-                    }
-                    float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-                    float cSqSum = std::inner_product(cVals.begin(), cVals.end(), cVals.begin(), 0.0);
-                    float cStdDev = std::sqrt(cSqSum / cVals.size() - cMean * cMean);
-
-
-                    cEndMonitor = cMean;
-                    LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
-                        << +cMean*1e3 
-                        << " milli-volt [ RMS = "
-                        << cStdDev*1e3 << " ] milli-volts." 
-                        << RESET;
-                }//read all monitors 
-            }// configure lpGBT 
-        }
-
-        if( cmd.foundOption("registerTest") && !cmd.foundOption("configureHybrid"))
-        {
-            // reset error summaries
-            static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
-            // try and configure all chips N times 
-            for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
-            {
-
-                Timer       cGlobalTimer;
-                cGlobalTimer.start();
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    for(auto cHybrid: *cOpticalGroup)
+                    auto& clpGBT =  cOpticalGroup->flpGBT ;
+                    if(clpGBT == nullptr) continue;
+
+                    // enable voltage 
+                    std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7","VDD"};
+                    std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
+                    std::vector<std::string> cModuleSide{"left","left","right","left","internal"};
+                    std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
+                    
+                    LOG (INFO) << BOLDBLUE << "Reading monitoring voltaages : " << RESET;
+                    for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
                     {
-                        OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-                        auto& cCic = cOuterTrackerHybrid->fCic;
-                        LOG (INFO) << BOLDBLUE << "Configuring CIC [ Attempt#"<< +cAttempt << " ]" << RESET;
-                        cTool.fCicInterface->ConfigureChip(cCic);
-                    }//OG
-                }//board
-                cGlobalTimer.stop();
-                cGlobalTimer.show("Total execution time: ");
-            }// configuration attempts 
+                        std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+                        if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
+                        
+                        std::vector<float> cVals(10,0);
+                        for(size_t cM=0; cM < cVals.size(); cM++)
+                        {
+                            cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                        }
+                        float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                        float cSqSum = std::inner_product(cVals.begin(), cVals.end(), cVals.begin(), 0.0);
+                        float cStdDev = std::sqrt(cSqSum / cVals.size() - cMean * cMean);
 
-            // summarize 
-            static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
-            auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
-            auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
-            float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
-            float cCicCrctW = (float)(cCicWriteErrSummary.second - cCicWriteErrSummary.first); 
-            LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cCicErrSummary.second << RESET;
-            LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrctW << " out of " << cCicWriteErrSummary.second << RESET;
-        }// register test
-        
 
-        if( cmd.foundOption("monitor") )
-        {
-            LOG (INFO) << BOLDBLUE << "Start-up .. monitor : " 
-                << cStartUpMontior*1e3  << " mV, after configuration monitor shows " 
-                << cEndMonitor*1e3  << " mV." << RESET;
+                        //float cEndMonitor = cMean;
+                        LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
+                            << +cMean*1e3 
+                            << " milli-volt [ RMS = "
+                            << cStdDev*1e3 << " ] milli-volts." 
+                            << RESET;
+                    }//read all monitors 
+                }// configure lpGBT 
+            }
         }
-    }
+        
+    }//configureHybrid
 
-    cTool.SaveResults();
-    cTool.WriteRootFile();
-    cTool.CloseResultFile();
+    // if( cmd.foundOption("registerTest") && !cmd.foundOption("configureHybrid"))
+    // {
+    //     // reset error summaries
+    //     static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
+    //     // try and configure all chips N times 
+    //     for( size_t cAttempt=0; cAttempt < cConfigurationAttempts; cAttempt++)
+    //     {
+
+    //         Timer       cGlobalTimer;
+    //         cGlobalTimer.start();
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+    //                 auto& cCic = cOuterTrackerHybrid->fCic;
+    //                 LOG (INFO) << BOLDBLUE << "Configuring CIC [ Attempt#"<< +cAttempt << " ]" << RESET;
+    //                 cTool.fCicInterface->ConfigureChip(cCic);
+    //             }//OG
+    //         }//board
+    //         cGlobalTimer.stop();
+    //         cGlobalTimer.show("Total execution time: ");
+    //     }// configuration attempts 
+
+    //     // summarize 
+    //     static_cast<CicInterface*>(cTool.fCicInterface)->printErrorSummary();
+    //     auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
+    //     auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
+    //     float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
+    //     float cCicCrctW = (float)(cCicWriteErrSummary.second - cCicWriteErrSummary.first); 
+    //     LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cCicErrSummary.second << RESET;
+    //     LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrctW << " out of " << cCicWriteErrSummary.second << RESET;
+    // }// register test
+    
+
+
     cTool.Destroy();
 
     if(!batchMode) cApp.Run();

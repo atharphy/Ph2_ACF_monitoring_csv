@@ -166,6 +166,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
 {
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
+    bool cRetry=false;
     if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
@@ -192,7 +193,6 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
         cSuccess = true;
         LOG (DEBUG) << BOLDMAGENTA << "Writing registers CicInterface::WriteRegs" << RESET;
         size_t cCount=0;
-        bool cRetry=false;
         std::vector<uint8_t> pSuccesses(pRegs.size(), 1);
         size_t cWritesCounter = fRegisterWrites; 
         size_t cWriteErrCounter = fWriteErrors;  
