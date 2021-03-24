@@ -581,15 +581,15 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     bool    cSuccess = false;
     do
     {
-        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C Write transaction to finisih" << RESET;
         uint8_t cStatus = GetI2CStatus(pChip, pMaster);
-        LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
+        LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Write Status : " << fI2CStatusMap[cStatus] << RESET;
         cSuccess = (cStatus == 4);
         cIter++;
     } while(cIter < cMaxIter && !cSuccess);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
         throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
     return cSuccess;
@@ -609,15 +609,33 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
     // Write Read Command and then Read from Read Data Register
     // Procedure and registers depend on number on Bytes
+
+    if(pNBytes == 1){ WriteChipReg(pChip, cI2CCmdReg, 0x3); }
+    else { WriteChipReg(pChip, cI2CCmdReg, 0xD); }
+    // wait until the transaction is done
+    uint8_t cMaxIter = 100, cIter = 0;
+    bool    cSuccess = false;
+    do
+    {
+        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C Read transaction to finisih" << RESET;
+        uint8_t cStatus = GetI2CStatus(pChip, pMaster);
+        LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Read Status : " << fI2CStatusMap[cStatus] << RESET;
+        cSuccess = (cStatus == 4);
+        cIter++;
+    } while(cIter < cMaxIter && !cSuccess);
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
+        throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
+    }
+    //return read back value
     if(pNBytes == 1)
     {
-        WriteChipReg(pChip, cI2CCmdReg, 0x3);
         std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "ReadByte";
         return ReadChipReg(pChip, cI2CDataReg);
     }
     else
     {
-        WriteChipReg(pChip, cI2CCmdReg, 0xD);
         uint32_t cReadData = 0;
         for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
         {
