@@ -152,7 +152,6 @@ int main(int argc, char* argv[])
     std::string cHybridsToReset = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "" ;  
     std::string cMPAsToEnableClock = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("enableMPAclock") : "" ;  
     uint16_t    cI2CSpeed = (cmd.foundOption("speedI2C")) ? convertAnyInt(cmd.optionValue("speedI2C").c_str()) : 1000 ;
-    uint8_t    cModeI2C = (cmd.foundOption("modeI2C")) ? convertAnyInt(cmd.optionValue("modeI2C").c_str()) : 0;
     uint8_t    cMaxI2Cattempts = (cmd.foundOption("maxI2Cattempts")) ? convertAnyInt(cmd.optionValue("maxI2Cattempts").c_str()) : 10;
 
 
@@ -184,17 +183,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory);
 
-    if( cTool.flpGBTInterface != nullptr ) 
-        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->configI2C( cI2CSpeed, cModeI2C);
-    
-    if( cmd.foundOption("retryI2C"))
-    { 
-        cTool.fCicInterface->setRetryI2C(true);       
-    }
-    else
-    { 
-        cTool.fCicInterface->setRetryI2C(false);       
-    }
+    cTool.fCicInterface->setRetryI2C(cmd.foundOption("retryI2C")) ;
     cTool.fCicInterface->setMaxI2CAttempts(cMaxI2Cattempts);
     
     // first ..configure BeBoard
@@ -205,6 +194,21 @@ int main(int argc, char* argv[])
         LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
         LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 
+        if( cI2CSpeed == 1000 ) 
+            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency( 3 );
+        else if( cI2CSpeed == 400 ) 
+            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency( 2 );
+        else if( cI2CSpeed == 200 ) 
+            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency( 1 );
+        else if( cI2CSpeed == 100 ) 
+            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency( 0 );
+        else
+        {
+            LOG (INFO) << BOLDBLUE << "Un-defined I2C frequency, valid options are 100 , 200 , 400 , 1000 [kHz] " << RESET;
+            LOG (INFO) << BOLDBLUE << "Will configure for 100 kHz." << RESET;
+            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency( 0 );
+        }    
+        
         for(auto cOpticalGroup: *cBoard)
         {
             auto& clpGBT =  cOpticalGroup->flpGBT ;
@@ -1078,14 +1082,21 @@ int main(int argc, char* argv[])
                     for( size_t cTst=0; cTst < 10; cTst++)
                     {
                         std::ofstream cErrorLog ;
-
                         if( cConfigAttempt == 0  && cTst == 0 )
                             cErrorLog.open (cTool.getDirectoryName() + "/ConfigHybrid_Test.tab",std::ios::out);
                         else
                             cErrorLog.open (cTool.getDirectoryName() + "/ConfigHybrid_Test.tab",std::ios::app);
 
+                        std::ofstream cStatusLog ;
+                        if( cConfigAttempt == 0  && cTst == 0 )
+                            cStatusLog.open (cTool.getDirectoryName() + "/ConfigHybrid_I2Cstatus.tab",std::ios::out);
+                        else
+                            cStatusLog.open (cTool.getDirectoryName() + "/ConfigHybrid_I2Cstatus.tab",std::ios::app);
+
+
                         // reset error summaries
                         static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
+                        static_cast<CicInterface*>(cTool.fCicInterface)->resetStatusLog();
                         for(auto cOpticalGroup: *cBoard)
                         {
                             for(auto cHybrid: *cOpticalGroup)
@@ -1099,7 +1110,20 @@ int main(int argc, char* argv[])
                         cGlobalTimer.stop();
                         cTimeElapsed += cGlobalTimer.getElapsedTime();
                         cGlobalTimer.start();
-            
+                        
+                        // print statutes to file
+                        LOG (INFO) << BOLDBLUE << "Looking at I2C statuses for failed write." << RESET;
+                        for( auto cStatus :  static_cast<CicInterface*>(cTool.fCicInterface)->getI2CStatus() )
+                        {
+                            cStatusLog << +cStatus << "\n";
+                            uint8_t cAck = (cStatus & (0x1 << 2)) >> 2; 
+                            uint8_t cSdaLow = (cStatus & (0x1 << 3)) >> 3; 
+                            LOG (INFO) << BOLDBLUE << "I2C ACK bit -  " << +cAck
+                                << " SDA low bit - " << +cSdaLow 
+                                << RESET;
+                        }
+                        cStatusLog.close();
+                        
                         // summarize 
                         auto cRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getWRattempts();
                         auto cMinMaxRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getMinMaxWRattempts();

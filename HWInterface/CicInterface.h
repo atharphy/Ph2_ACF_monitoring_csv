@@ -108,15 +108,16 @@ class CicInterface : public ChipInterface
     std::pair<float, float>           getMinMaxWRattempts();
     std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
     std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
+    void                              resetStatusLog(){ fI2CStatus.clear();}
     void                              resetRetrySummary(){ fReWMap.clear(); fReWrMap.clear(); fReW=0; fReWR=0; }
-    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; fReadBackErrors=0; fWriteErrors=0; resetRetrySummary(); };
+    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; fReadBackErrors=0; fWriteErrors=0; resetRetrySummary(); }
     void                              printErrorSummary();
     void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; }
     void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; }
     // return information on phase aligners
     std::vector<std::bitset<6>> getFeStates() { return fFeStates; }
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
-
+    std::vector<uint8_t> getI2CStatus(){ return fI2CStatus; }
   private:
     bool    fRetryI2C=true;
     uint8_t fMaxI2CAttempts=20;
@@ -131,6 +132,8 @@ class CicInterface : public ChipInterface
     std::map<uint8_t, uint16_t> fReWrMap;
     std::map<uint8_t, uint16_t> fWriteErrorMap;
     std::map<uint8_t, uint16_t> fReadBackErrorMap;
+    std::vector<uint8_t> fI2CStatus; 
+
     uint16_t fRegisterWrites=0;
     uint16_t fReadBackErrors=0;
     uint16_t fWriteErrors=0;

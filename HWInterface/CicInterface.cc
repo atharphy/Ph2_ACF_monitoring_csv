@@ -209,6 +209,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             pChip->setReg( fMap[cReg.first] , cRegItem.fValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg);
             //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
             cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry);
+            auto cStatus = (static_cast<D19cFWInterface*>(fBoardFW))->getI2Cstatus(); 
             fRegisterWrites++;
             if( !cSuccess && fRetryI2C )
             {
@@ -216,6 +217,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                 uint8_t cWriteAttempt=0; 
                 LOG (DEBUG) << BOLDRED << "Write error for CIC register 0x" 
                         << std::hex << +cReg.first << std::dec  
+                        << " I2C status is " << +cStatus
                         << RESET;  
                 do
                 {
@@ -236,7 +238,9 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             {
                 LOG (INFO) << BOLDRED << "Write error for CIC register 0x"
                     << std::hex << +cReg.first << std::dec 
-                    << RESET;
+                    << " I2C status is " << std::bitset<8>(cStatus)
+                    << RESET; 
+                fI2CStatus.push_back(cStatus);
                 auto cIter = fWriteErrorMap.find(cReg.first);
                 if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[cReg.first]=1;
                 else fWriteErrorMap[cReg.first]=fWriteErrorMap[cReg.first]+1;
