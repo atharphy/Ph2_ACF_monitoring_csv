@@ -613,7 +613,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDBLUE << "MPACONFIG" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "MPACONFIG" << RESET;
     setBoard(pMPA->getBeBoardId());
     std::vector<uint32_t> cVec;
     ChipRegMap            cMPARegMap = pMPA->getRegMap();
@@ -639,7 +639,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 
 bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
-    LOG(INFO) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
+    LOG(DEBUG) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     if(flpGBTInterface == nullptr)

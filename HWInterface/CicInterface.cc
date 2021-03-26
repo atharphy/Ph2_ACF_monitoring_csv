@@ -208,9 +208,10 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             // update register map
             pChip->setReg( fMap[cReg.first] , cRegItem.fValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg);
             //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
-            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry);
+            cRetry=false; 
+            bool cVerify=false;
+            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry, cVerify);
             auto cStatus = (static_cast<D19cFWInterface*>(fBoardFW))->getI2Cstatus(); 
-            fRegisterWrites++;
             if( !cSuccess && fRetryI2C )
             {
                 // keep trying 
@@ -246,6 +247,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                 else fWriteErrorMap[cReg.first]=fWriteErrorMap[cReg.first]+1;
                 fWriteErrors++;
             }
+            fRegisterWrites++;
             pSuccesses[cCount] = (cSuccess) ? 1 : 0 ;     
             cCount++;
 #ifdef COUNT_FLAG
@@ -299,6 +301,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                         cWriteAttempt++;
                     }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
                 }
+                // only log if the write failed 
                 if( !cSuccess )
                 {
                     auto cRegItem = pChip->getRegItem( fMap[cReg.first]  );
@@ -322,12 +325,17 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
         cSuccess = (cSum == pRegs.size() );
         if( cSuccess )
             LOG (INFO) << BOLDGREEN << "Register write successfull for CIC#" << +pChip->getId() << RESET;
-        else
-            LOG (INFO) << BOLDRED << "Register write failed for CIC#" << +pChip->getId() 
-                << " found " << +(fWriteErrors-cWriteErrCounter) << " write errors in " << (fRegisterWrites-cWritesCounter) << " attempts "
-                << " and " << +(fReadBackErrors-cReadBackCounter) << " read-back errors found in those " << (fRegisterWrites-cWritesCounter-fWriteErrors+cWriteErrCounter) << " successfull writes"
-                << RESET;
-
+        else 
+            LOG (INFO) << BOLDRED << "Register write faile for CIC#" << +pChip->getId() << RESET;
+        fAttemptedWrites = fRegisterWrites-cWritesCounter; 
+        fSuccRegisterWrites = fAttemptedWrites - (fWriteErrors - cWriteErrCounter); 
+        fSuccRegisterRbs  = fSuccRegisterWrites - (fReadBackErrors - cReadBackCounter);
+        LOG (DEBUG) << BOLDRED << "Register write failed for CIC#" << +pChip->getId() 
+            << +fSuccRegisterWrites << " in " << fAttemptedWrites << " attempted and "
+            << " of those " << +fSuccRegisterRbs << " were read back correctly"
+            //<< " found " << +(fWriteErrors-cWriteErrCounter) << " write errors in " << cAttemptedWrites << " attempts "
+            //<< " and " << +(fReadBackErrors-cReadBackCounter) << " read-back errors found in those " << (fRegisterWrites-cWritesCounter-fWriteErrors+cWriteErrCounter) << " successfull writes"
+            << RESET;
     }
     return cSuccess;
 }

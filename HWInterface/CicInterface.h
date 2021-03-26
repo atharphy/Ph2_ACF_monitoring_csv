@@ -108,6 +108,7 @@ class CicInterface : public ChipInterface
     std::pair<float, float>           getMinMaxWRattempts();
     std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
     std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
+    std::pair<uint16_t,uint16_t>      getConfigSumary(){ return std::make_pair(fSuccRegisterWrites, fSuccRegisterRbs); }
     void                              resetStatusLog(){ fI2CStatus.clear();}
     void                              resetRetrySummary(){ fReWMap.clear(); fReWrMap.clear(); fReW=0; fReWR=0; }
     void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; fReadBackErrors=0; fWriteErrors=0; resetRetrySummary(); }
@@ -134,6 +135,9 @@ class CicInterface : public ChipInterface
     std::map<uint8_t, uint16_t> fReadBackErrorMap;
     std::vector<uint8_t> fI2CStatus; 
 
+    uint16_t fAttemptedWrites=0;
+    uint16_t fSuccRegisterWrites=0;
+    uint16_t fSuccRegisterRbs=0;
     uint16_t fRegisterWrites=0;
     uint16_t fReadBackErrors=0;
     uint16_t fWriteErrors=0;

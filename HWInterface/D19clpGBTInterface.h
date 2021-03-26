@@ -249,9 +249,9 @@ class D19clpGBTInterface : public lpGBTInterface
 
     // 0 [RHS], 1 [LHS]
     // send reset functions 
-    void resetCic(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ cicReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); cicReset(pChip, 0 , pSide);}
-    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ ssaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); ssaReset(pChip, 0 , pSide);}
-    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ mpaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); mpaReset(pChip, 0 , pSide);}
+    void resetCic(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ cicReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); cicReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
+    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ ssaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); ssaReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
+    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ mpaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); mpaReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
     void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk , lpGBTClockConfig pClkCnfg)
     {
         fClkConfig.fClkFreq=pClkCnfg.fClkFreq;

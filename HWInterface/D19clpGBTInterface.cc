@@ -1162,7 +1162,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
     }
 
-    // // Reset all ASICs
+    // Reset all ASICs at least once
     // for(size_t cSide=0; cSide<2; cSide++)
     // {
     //     resetSSA(pChip, cSide);

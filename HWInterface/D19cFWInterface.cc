@@ -4966,7 +4966,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
 
 uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
-    //ResetCPB();
+    ResetCPB();
     uint8_t               cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();

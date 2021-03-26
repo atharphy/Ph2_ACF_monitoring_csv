@@ -519,26 +519,33 @@ int main(int argc, char* argv[])
         Timer       cGlobalTimer;
         cGlobalTimer.start();
         auto cMPAsToEnable  = getSides(cMPAsToEnableClock);
-        for( int cConfigAttempt=0; cConfigAttempt < cConfigurationAttempts ; cConfigAttempt++)
+        bool cTestSuccessful = true;
+        int cConfigAttempt=0 ; 
+        do
+        //for( int cConfigAttempt=0; cConfigAttempt < cConfigurationAttempts ; cConfigAttempt++)
         { 
             LOG (INFO) << BOLDBLUE << "#############################" << RESET;
             LOG (INFO) << BOLDBLUE << "Configuration Attempt#" << +cConfigAttempt << RESET;
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
-                cTool.fBeBoardInterface->ConfigureBoard(cBoard);
-                LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
-                LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
-
+                if(!cTestSuccessful)
+                {
+                    cTool.fBeBoardInterface->ConfigureBoard(cBoard);
+                    LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
+                    LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
+                }
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& clpGBT =  cOpticalGroup->flpGBT ;
                     if(clpGBT == nullptr) continue;
 
-                    // are these needed?
-                    uint8_t cLinkId = cOpticalGroup->getId();
-                    static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
-                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT);
-                
+                    if( !cTestSuccessful )
+                    {
+                        // are these needed?
+                        uint8_t cLinkId = cOpticalGroup->getId();
+                        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureChip(cOpticalGroup->flpGBT);
+                    }
                     //correct Vref
                     //and monitor
                     if( cmd.foundOption("monitor") )
@@ -635,6 +642,11 @@ int main(int argc, char* argv[])
                         }//read all monitors 
                     } 
 
+                    bool cReconfigure = (cConfigAttempt == 0 ) || !cTestSuccessful ; 
+                    cTestSuccessful = true;
+
+                    if(!cReconfigure) continue;
+
                     if( cHybrifCnfg == 0 )
                     {
                         // now .. configure all SSAs 
@@ -646,104 +658,92 @@ int main(int argc, char* argv[])
                             lpGBTClockConfig cClkCnfg; 
                             cClkCnfg.fClkFreq = 4;  
                             cClkCnfg.fClkDriveStr = cSsaClockDrive; 
-                            cClkCnfg.fClkInvert = 0;
-                            cClkCnfg.fClkPreEmphWidth =0;// 0; 
-                            cClkCnfg.fClkPreEmphMode =0;// 3; 
-                            cClkCnfg.fClkPreEmphStr =0;// 7;
+                            cClkCnfg.fClkInvert = 1;
+                            cClkCnfg.fClkPreEmphWidth = 0; 
+                            cClkCnfg.fClkPreEmphMode = 0;//3; 
+                            cClkCnfg.fClkPreEmphStr = 0;//7;
                             LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
-                            // release resets 
-                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false,cSide);
-
-                            // // then .. reset SSAs on this hybrid  
-                            // // reset is asynchronous but .. I prefer resetting after the clock is there 
-                            // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetSSA(clpGBT, cSide);
-
-                            // // // Configure SSAs on this hybrid 
-                            // std::vector<uint8_t> pIds(0);
-                            // for(auto cChip: *cHybrid)
-                            // {
-                            //     if(cChip->getFrontEndType() == FrontEndType::SSA)
-                            //     {
-                            //         ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                            //         LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
-                            //         cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
-                            //         pIds.push_back( cChip->getId() );
-                            //     }//SSAs
-                            // }//ROCs
-
-                            // // keep MPA in-active 
-                            // if( cmd.foundOption("holdMPAreset") )
-                            // {
-                            //     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true,cSide);
-                            // }
-
-                            // // provide clock to one MPA at a time 
-                            // for( auto cId : pIds )
-                            // {
-                            //     // first . . enable clock out to one MPA at a time 
-                            //     for(auto cReadoutChip: *cHybrid)
-                            //     {
-                            //         if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cId )
-                            //         {
-                            //             LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x07" << RESET;
-                            //             cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
-                            //         }
-                            //     }//ROCs
-                            // }
-
-                            // if(cmd.foundOption("configureMPA") )
-                            // {
-                            //     for(auto cReadoutChip: *cHybrid)
-                            //     {
-                            //         if( cReadoutChip->getFrontEndType() == FrontEndType::MPA )
-                            //         {
-                            //             LOG (INFO) << BOLDBLUE << "Configuring MPA#" << +cReadoutChip->getId() << RESET;
-                            //             cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
-                            //         }//MPAs
-                            //     }//ROCs
-                            // }
+                            // enable clock to CIC 
+                            cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
+                            cClkCnfg.fClkDriveStr = cCicClockDrive; 
+                            LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
                             
+                            // hold MPA reset 
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true,cSide);
+                            // Configure SSAs on this hybrid 
+                            LOG (INFO) << BOLDBLUE << "Resetting SSA" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetSSA(clpGBT, cSide);
+                            std::vector<uint8_t> pIds(0);
+                            for(auto cChip: *cHybrid)
+                            {
+                                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                {
+                                    ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
+                                    LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
+                                    cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
+                                    pIds.push_back( cChip->getId() );
+                                }//SSAs
+                            }//ROCs
+                            // release MPA reset 
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, false,cSide);
+                            
+                            // provide clock to one MPA at a time 
+                            if(cmd.foundOption("configureMPA") )
+                            {
+                                for( auto cId : pIds )
+                                {
+                                    // first . . enable clock out to one MPA at a time 
+                                    for(auto cReadoutChip: *cHybrid)
+                                    {
+                                        if( cReadoutChip->getFrontEndType() == FrontEndType::SSA && cReadoutChip->getId() == cId )
+                                        {
+                                            LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x07" << RESET;
+                                            cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                                        }
+                                    }//SSAs
+                                    if(cmd.foundOption("configureMPA") )
+                                    {
+                                        for(auto cReadoutChip: *cHybrid)
+                                        {
+                                            if( cReadoutChip->getFrontEndType() == FrontEndType::MPA && cReadoutChip->getId() == cId  )
+                                            {
+                                                LOG (INFO) << BOLDBLUE << "Configuring MPA#" << +cReadoutChip->getId() << RESET;
+                                                cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
+                                            }//MPAs
+                                        }//ROCs
+                                    }//MPAs
+                                }
+                            }
+
+                        
                             // then only enable clock for those MPAs that I want 
-                            // first . . enable clock out MPAs I've asked for
                             for(auto cReadoutChip: *cHybrid)
                             {
                                 if( cReadoutChip->getFrontEndType() == FrontEndType::SSA  )
                                 {
                                     if( std::find( cMPAsToEnable.begin(), cMPAsToEnable.end(), cReadoutChip->getId() ) != cMPAsToEnable.end() ) 
                                     {
-                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
-                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x00" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
                                     }//SSAs
                                     else
                                     {
-                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x00" << RESET;
-                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
                                     }
                                 }
                             }//ROCs
 
                             
-                            // enable clock to CIC 
-                            cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
-                            cClkCnfg.fClkDriveStr = cCicClockDrive; 
-                            cClkCnfg.fClkInvert = 0;
-                            cClkCnfg.fClkPreEmphWidth =0;// 0; 
-                            cClkCnfg.fClkPreEmphMode =0;// 3; 
-                            cClkCnfg.fClkPreEmphStr =0;// 7;
-                            LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
-                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
-                            // release resets 
-                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
+                            // // release resets 
+                            // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
 
                             // keep MPA in-active 
                             if( cmd.foundOption("holdMPAreset") )
                             {
                                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true,cSide);
-                            }
-                            else
-                            {
-                                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
                             }
                         }//OG
                     }//safe
@@ -1047,11 +1047,7 @@ int main(int argc, char* argv[])
                             cClkCnfg.fClkDriveStr = cCicClockDrive; 
                             LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
-                            // release resets 
-                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, false,cSide);
-                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
-
-                           
+                            
                             // first . . enable clock out MPAs I've asked for
                             for(auto cReadoutChip: *cHybrid)
                             {
@@ -1062,12 +1058,41 @@ int main(int argc, char* argv[])
                                         LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x07" << RESET;
                                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x7);
                                     }//SSAs
+                                    else
+                                    {
+                                        LOG (INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cReadoutChip->getId() << " to 0x00" << RESET;
+                                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip,"SLVS_pad_current",0x0);
+                                    }
                                 }
                             }//ROCs
                         }
                     }
                 }// OG
 
+                // if( cmd.foundOption("ssaRegisterTest") )
+                // {
+                //     // disable CIC clock 
+                //     lpGBTClockConfig cClkCnfg; 
+                //     cClkCnfg.fClkFreq = 0;
+                //     for(auto cHybrid: *cOpticalGroup)
+                //     {
+                //         uint8_t cSide=cHybrid->getId()%2;
+                //         LOG(INFO) << BOLDBLUE << "Disabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                //         static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+                //     }   
+                //     // hold CIC reset active
+                //     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, true,cSide);
+
+                //     // Configure SSAs on this hybrid
+                //     for(auto cChip: *cHybrid)
+                //     {
+                //         if(cChip->getFrontEndType() == FrontEndType::SSA)
+                //         {
+                //             LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
+                //             cTool.fReadoutChipInterface->ConfigureChip(cChip);
+                //         }
+                //     }//ROCs
+                // }
                 if( cmd.foundOption("registerTest"))
                 {
                     // if this is te first try .. record MPAs active 
@@ -1081,8 +1106,10 @@ int main(int argc, char* argv[])
                         cLog.close();
                     }
                     // try and configure all chips N times 
-                    for( size_t cTst=0; cTst < 10; cTst++)
+                    for( size_t cTst=0; cTst < 1; cTst++)
                     {
+                        if( !cTestSuccessful ) continue;
+
                         std::ofstream cErrorLog ;
                         if( cConfigAttempt == 0  && cTst == 0 )
                             cErrorLog.open (cTool.getDirectoryName() + "/ConfigHybrid_Test.tab",std::ios::out);
@@ -1101,8 +1128,13 @@ int main(int argc, char* argv[])
                         static_cast<CicInterface*>(cTool.fCicInterface)->resetStatusLog();
                         for(auto cOpticalGroup: *cBoard)
                         {
+                            auto& clpGBT =  cOpticalGroup->flpGBT ;
                             for(auto cHybrid: *cOpticalGroup)
                             {
+                                // reset CIC 
+                                uint8_t cSide=cHybrid->getId()%2;
+                                LOG (INFO) << BOLDBLUE << "Applying reset to the CIC" << RESET;
+                                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
                                 OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                                 auto& cCic = cOuterTrackerHybrid->fCic;
                                 LOG (INFO) << BOLDBLUE << "Configuring CIC [ Attempt#"<< +cTst << " ]" << RESET;
@@ -1127,9 +1159,15 @@ int main(int argc, char* argv[])
                         cStatusLog.close();
                         
                         // summarize 
+                        auto cCnfgSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getConfigSumary();
                         auto cRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getWRattempts();
                         auto cMinMaxRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getMinMaxWRattempts();
                         auto cCicRetrySummary = static_cast<CicInterface*>(cTool.fCicInterface)->getRetrySummary();
+                        LOG (INFO) << BOLDBLUE << "CIC register write re-tries " << cCicRetrySummary.first << RESET;
+                        LOG (INFO) << BOLDBLUE << "CIC register read-back re-tries " << cCicRetrySummary.second << RESET; 
+                        LOG (INFO) << BOLDBLUE << "CIC register writes [succ] " << cCnfgSummary.first << RESET;
+                        LOG (INFO) << BOLDBLUE << "CIC register read-back [succ] " << cCnfgSummary.second << RESET;
+                        // 
                         auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
                         auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
                         float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
@@ -1147,62 +1185,59 @@ int main(int argc, char* argv[])
                         cErrorLog << cCicCrct << "\t" << cCicCrctW  << "\t" << cCicWriteErrSummary.second << "\t" ;
                         cErrorLog << cCicRetrySummary.first << "\t" << cCicRetrySummary.second << "\t"; 
                         cErrorLog << cMinMaxRetries.first <<  "\t" << cMinMaxRetries.second << "\t" ;
-                        cErrorLog << cRetries.first << "\t" << cRetries.second << "\t";
+                        //cErrorLog << cRetries.first << "\t" << cRetries.second << "\t";
+                        cErrorLog << cCnfgSummary.first << "\t" << cCnfgSummary.second << "\t";
                         cErrorLog << cTimeElapsed << "\n";
                         cErrorLog.close();
 
-                        if( cCicCrctW == 0 )
+                        if( cCnfgSummary.first <= 0 )
                         {
-                            LOG (INFO) << BOLDBLUE << "All CIC writes failed.. trying to reset  the MPA." << RESET;
-                            for(auto cOpticalGroup: *cBoard)
-                            {
-                                auto& clpGBT =  cOpticalGroup->flpGBT ;
-                                for(auto cHybrid: *cOpticalGroup)
-                                {
-                                    // first .. send clock to the SSAs on this hybrid  
-                                    uint8_t cSide=cHybrid->getId()%2;
-                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
-                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetSSA(clpGBT, cSide);
-                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
-                                }
-                            }
+                            LOG (INFO) << BOLDBLUE << "All CIC writes failed.. stopping here and going to another iteration." << RESET;
+                            cTestSuccessful=false;
                         }
                     }// configuration attempts 
                 }// register test
                 LOG (INFO) << BOLDBLUE << "#############################" << RESET; 
-                // here make sure everything is off again 
-                for(auto cOpticalGroup: *cBoard)
+                
+                if(!cTestSuccessful)
                 {
-                    auto& clpGBT =  cOpticalGroup->flpGBT ;
-                    if(clpGBT == nullptr) continue;
-
-                    // now .. configure all SSAs 
-                    for(auto cHybrid: *cOpticalGroup)
+                    // here make sure everything is off again 
+                    for(auto cOpticalGroup: *cBoard)
                     {
-                        // first .. send clock to the SSAs on this hybrid  
-                        uint8_t cSide=cHybrid->getId()%2;
-                        
-                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, true, cSide);
-                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true, cSide);
-                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, true, cSide);
+                        auto& clpGBT =  cOpticalGroup->flpGBT ;
+                        if(clpGBT == nullptr) continue;
 
-                        lpGBTClockConfig cClkCnfg; 
-                        cClkCnfg.fClkFreq = 0;  
-                        cClkCnfg.fClkDriveStr = 0; 
-                        cClkCnfg.fClkInvert = 1;
-                        cClkCnfg.fClkPreEmphWidth = 0; 
-                        cClkCnfg.fClkPreEmphMode = 0; 
-                        cClkCnfg.fClkPreEmphStr = 0;
-                        LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
-                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
-                        cClkCnfg.fClkFreq = 0;
-                        cClkCnfg.fClkDriveStr = 0; 
-                        LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
-                        static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
-                    }
-                }// OG
+                        // now .. configure all SSAs 
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            // first .. send clock to the SSAs on this hybrid  
+                            uint8_t cSide=cHybrid->getId()%2;
+                            
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ssaReset(clpGBT, true, cSide);
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, true, cSide);
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, true, cSide);
+
+                            lpGBTClockConfig cClkCnfg; 
+                            cClkCnfg.fClkFreq = 0;  
+                            cClkCnfg.fClkDriveStr = 0; 
+                            cClkCnfg.fClkInvert = 1;
+                            cClkCnfg.fClkPreEmphWidth = 0; 
+                            cClkCnfg.fClkPreEmphMode = 0; 
+                            cClkCnfg.fClkPreEmphStr = 0;
+                            LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide  << "]" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+                            cClkCnfg.fClkFreq = 0;
+                            cClkCnfg.fClkDriveStr = 0; 
+                            LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
+                        }
+                    }// OG
+                }
+                // reset CIC here 
+
+                cConfigAttempt += cTestSuccessful ? 1 : 0;
             }//board 
-        } // configuration attempt 
+        }while(cConfigAttempt < cConfigurationAttempts); // configuration attempt 
         cGlobalTimer.stop();
         cGlobalTimer.show("Total execution time: ");
         
