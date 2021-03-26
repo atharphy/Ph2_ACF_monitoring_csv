@@ -1003,8 +1003,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test
-    ConfigureGPIODirection(pChip, {6, 12}, 1);
-    ConfigureGPIOLevel(pChip, {6, 12}, 1);
+    ConfigureGPIODirection(pChip, {0, 1, 3, 6, 9, 12}, 1);
+    ConfigureGPIOLevel(pChip, {0, 1, 3, 6, 9, 12}, 1);
 }
 
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
