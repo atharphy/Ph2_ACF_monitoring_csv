@@ -162,6 +162,30 @@ void CicInterface::printErrorSummary()
         << RESET;
         
 }
+void CicInterface::CheckConfig( Chip* pChip )
+{
+    LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteRegs" << RESET;
+    fReadBackErrors=0;
+    for(const auto& cMapItem: fMap)
+    {
+        auto cRegItem = pChip->getRegItem( cMapItem.second );
+        bool cRetry = false;
+        uint32_t cValue = fBoardFW->ReadFERegister(pChip, cRegItem.fAddress, cRetry);
+        bool cSuccess = this->runVerification(pChip, cValue, cMapItem.second );
+        if( !cSuccess )
+        {
+            LOG (INFO) << BOLDRED << "Readback error for CIC register 0x"
+                << std::hex << +cRegItem.fAddress << std::dec 
+                << " have written " << +cRegItem.fValue
+                << " and have read back " << cValue << RESET;
+            
+            auto cIter = fReadBackErrorMap.find(cRegItem.fAddress);
+            if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[cRegItem.fAddress]=1;
+            else fReadBackErrorMap[cRegItem.fAddress]=fReadBackErrorMap[cRegItem.fAddress]+1;
+            fReadBackErrors++;
+        }
+    }
+}
 bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
@@ -339,6 +363,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
     }
     return cSuccess;
 }
+
 
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
 {

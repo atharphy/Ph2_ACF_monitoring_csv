@@ -42,6 +42,7 @@ class CicInterface : public ChipInterface
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
     bool ConfigureChip(Ph2_HwDescription::Chip* pCic, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    void CheckConfig( Ph2_HwDescription::Chip* pChip ); 
 
     /*!
      * \brief Write the designated register in both Chip and Chip Config File

@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("prepareCIC", "CIC start-up sequence", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("registerTest","run register test", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("readBackTest","run register read-back test", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("enableSSA", "Disable SSA reset", ArgvParser::OptionRequiresValue);
     cmd.defineOption("enableSSAclock", "Enable SSA clock", ArgvParser::OptionRequiresValue);
@@ -142,6 +143,7 @@ int main(int argc, char* argv[])
     std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
     uint16_t    cReadoutRate = (cmd.foundOption("readoutRate")) ? convertAnyInt(cmd.optionValue("readoutRate").c_str()) : 320;
     uint16_t    cConfigurationAttempts = (cmd.foundOption("registerTest")) ? convertAnyInt(cmd.optionValue("registerTest").c_str()) : 1;
+    uint16_t    cReadBackAttempts = (cmd.foundOption("readBackTest")) ? convertAnyInt(cmd.optionValue("readBackTest").c_str()) : 10;
     uint16_t    cCicClockDrive = (cmd.foundOption("clockDriveCIC")) ? convertAnyInt(cmd.optionValue("clockDriveCIC").c_str()) : 7;
     uint16_t    cSsaClockDrive = (cmd.foundOption("clockDriveSSA")) ? convertAnyInt(cmd.optionValue("clockDriveSSA").c_str()) : 7;
     std::string cCicsToEnable = (cmd.foundOption("enableCIC")) ? cmd.optionValue("enableCIC") : "" ;
@@ -1124,23 +1126,72 @@ int main(int argc, char* argv[])
 
 
                         // reset error summaries
-                        static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
-                        static_cast<CicInterface*>(cTool.fCicInterface)->resetStatusLog();
-                        for(auto cOpticalGroup: *cBoard)
+                        // configure then read-back N times test 
+                        std::vector<float> cReadBackErrs(cReadBackAttempts,0);
+                        if( cmd.foundOption("readBackTest"))
                         {
-                            auto& clpGBT =  cOpticalGroup->flpGBT ;
-                            for(auto cHybrid: *cOpticalGroup)
+                        
+                            static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
+                            static_cast<CicInterface*>(cTool.fCicInterface)->resetStatusLog();
+                            for(auto cOpticalGroup: *cBoard)
                             {
-                                // reset CIC 
-                                uint8_t cSide=cHybrid->getId()%2;
-                                LOG (INFO) << BOLDBLUE << "Applying reset to the CIC" << RESET;
-                                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
-                                OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-                                auto& cCic = cOuterTrackerHybrid->fCic;
-                                LOG (INFO) << BOLDBLUE << "Configuring CIC [ Attempt#"<< +cTst << " ]" << RESET;
-                                cTool.fCicInterface->ConfigureChip(cCic);
+                                auto& clpGBT =  cOpticalGroup->flpGBT ;
+                                for(auto cHybrid: *cOpticalGroup)
+                                {
+                                    // reset CIC 
+                                    uint8_t cSide=cHybrid->getId()%2;
+                                    LOG (INFO) << BOLDBLUE << "Applying reset to the CIC" << RESET;
+                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+                                    OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                                    auto& cCic = cOuterTrackerHybrid->fCic;
+                                    LOG (INFO) << BOLDBLUE << "Configuring CIC [ Attempt#"<< +cTst << " ]" << RESET;
+                                    // make sure re-try is on for the first test .. because I want to make sure the writes work 
+                                    cTool.fCicInterface->setRetryI2C(true);
+                                    cTool.fCicInterface->ConfigureChip(cCic,false);
+                                }//OG
                             }//OG
-                        }//board
+
+                            for( size_t cReadBack=0; cReadBack < cReadBackAttempts ; cReadBack++)
+                            {
+                                for(auto cOpticalGroup: *cBoard)
+                                {
+                                    for(auto cHybrid: *cOpticalGroup)
+                                    {
+                                        OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                                        auto& cCic = cOuterTrackerHybrid->fCic;
+                                        LOG (INFO) << BOLDBLUE << "\t...Checking configuration.... CIC [ Attempt#"<< +cReadBack << " ]" << RESET;
+                                        cTool.fCicInterface->CheckConfig(cCic);
+                                        auto cSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
+                                        cReadBackErrs[cReadBack] = (float)cSummary.first;
+                                    }//hybrid
+                                }//OG
+                            }
+                        }
+                        auto cStats = cTool.getStats(cReadBackErrs); 
+                        
+                        // then just configure N times 
+                        {
+                            static_cast<CicInterface*>(cTool.fCicInterface)->resetErrorSummary();
+                            static_cast<CicInterface*>(cTool.fCicInterface)->resetStatusLog();
+                            for(auto cOpticalGroup: *cBoard)
+                            {
+                                auto& clpGBT =  cOpticalGroup->flpGBT ;
+                                for(auto cHybrid: *cOpticalGroup)
+                                {
+                                    // reset CIC 
+                                    uint8_t cSide=cHybrid->getId()%2;
+                                    LOG (INFO) << BOLDBLUE << "Applying reset to the CIC" << RESET;
+                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+                                    OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                                    auto& cCic = cOuterTrackerHybrid->fCic;
+                                    LOG (INFO) << BOLDBLUE << "Configuring CIC [ Attempt#"<< +cTst << " ]" << RESET;
+                                    // make sure re-try is on for the first test .. because I want to make sure the writes work 
+                                    cTool.fCicInterface->setRetryI2C(false);
+                                    cTool.fCicInterface->ConfigureChip(cCic,true);
+                                }//OG
+                            }//OG
+                        }
+
                         cGlobalTimer.stop();
                         cTimeElapsed += cGlobalTimer.getElapsedTime();
                         cGlobalTimer.start();
@@ -1152,7 +1203,7 @@ int main(int argc, char* argv[])
                             cStatusLog << +cStatus << "\n";
                             uint8_t cAck = (cStatus & (0x1 << 2)) >> 2; 
                             uint8_t cSdaLow = (cStatus & (0x1 << 3)) >> 3; 
-                            LOG (INFO) << BOLDBLUE << "I2C ACK bit -  " << +cAck
+                            LOG (DEBUG) << BOLDBLUE << "I2C ACK bit -  " << +cAck
                                 << " SDA low bit - " << +cSdaLow 
                                 << RESET;
                         }
@@ -1160,31 +1211,32 @@ int main(int argc, char* argv[])
                         
                         // summarize 
                         auto cCnfgSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getConfigSumary();
-                        auto cRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getWRattempts();
-                        auto cMinMaxRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getMinMaxWRattempts();
+                        //auto cRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getWRattempts();
+                        //auto cMinMaxRetries = static_cast<CicInterface*>(cTool.fCicInterface)->getMinMaxWRattempts();
                         auto cCicRetrySummary = static_cast<CicInterface*>(cTool.fCicInterface)->getRetrySummary();
-                        LOG (INFO) << BOLDBLUE << "CIC register write re-tries " << cCicRetrySummary.first << RESET;
-                        LOG (INFO) << BOLDBLUE << "CIC register read-back re-tries " << cCicRetrySummary.second << RESET; 
+                        //LOG (INFO) << BOLDBLUE << "CIC register write re-tries " << cCicRetrySummary.first << RESET;
+                        //LOG (INFO) << BOLDBLUE << "CIC register read-back re-tries " << cCicRetrySummary.second << RESET; 
                         LOG (INFO) << BOLDBLUE << "CIC register writes [succ] " << cCnfgSummary.first << RESET;
                         LOG (INFO) << BOLDBLUE << "CIC register read-back [succ] " << cCnfgSummary.second << RESET;
+                        LOG (INFO) << BOLDBLUE << "Mean read-back errors " << cStats.first << " RMS " << cStats.second << RESET;
                         // 
                         auto cCicErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getReadBackErrorSummary();
                         auto cCicWriteErrSummary = static_cast<CicInterface*>(cTool.fCicInterface)->getWriteErrorSummary();
                         float cCicCrct = (float)(cCicErrSummary.second - cCicErrSummary.first); 
                         float cCicCrctW = (float)(cCicWriteErrSummary.second - cCicWriteErrSummary.first); 
-                        LOG (INFO) << BOLDBLUE << "CIC register write re-tries " << cCicRetrySummary.first << RESET;
-                        LOG (INFO) << BOLDBLUE << "CIC register read-back re-tries " << cCicRetrySummary.second << RESET; 
-                        LOG (INFO) << BOLDBLUE << "Found " << cRetries.first << "  cic registers where a write had to be re-attempted " 
-                            << "\t..Min retries needed " << cMinMaxRetries.first 
-                            << "\t..Max retires needed " << cMinMaxRetries.second 
-                            << "\t.. on avg " << cRetries.second << " re-tries per register."
-                            << RESET;
-                        LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cCicErrSummary.second << RESET;
-                        LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrctW << " out of " << cCicWriteErrSummary.second << RESET;
+                        //LOG (INFO) << BOLDBLUE << "CIC register write re-tries " << cCicRetrySummary.first << RESET;
+                        //LOG (INFO) << BOLDBLUE << "CIC register read-back re-tries " << cCicRetrySummary.second << RESET; 
+                        //LOG (INFO) << BOLDBLUE << "Found " << cRetries.first << "  cic registers where a write had to be re-attempted " 
+                        //    << "\t..Min retries needed " << cMinMaxRetries.first 
+                        //    << "\t..Max retires needed " << cMinMaxRetries.second 
+                        //    << "\t.. on avg " << cRetries.second << " re-tries per register."
+                        //    << RESET;
+                        //LOG (INFO) << BOLDBLUE << "CIC register read-back successes : " << cCicCrct << " out of " << cCicErrSummary.second << RESET;
+                        //LOG (INFO) << BOLDBLUE << "CIC register write successes : " << cCicCrctW << " out of " << cCicWriteErrSummary.second << RESET;
                         cErrorLog << cConfigAttempt << "\t" << cMPAsToEnable.size() << "\t" ;
                         cErrorLog << cCicCrct << "\t" << cCicCrctW  << "\t" << cCicWriteErrSummary.second << "\t" ;
                         cErrorLog << cCicRetrySummary.first << "\t" << cCicRetrySummary.second << "\t"; 
-                        cErrorLog << cMinMaxRetries.first <<  "\t" << cMinMaxRetries.second << "\t" ;
+                        cErrorLog << cStats.first <<  "\t" << cStats.second << "\t" ;
                         //cErrorLog << cRetries.first << "\t" << cRetries.second << "\t";
                         cErrorLog << cCnfgSummary.first << "\t" << cCnfgSummary.second << "\t";
                         cErrorLog << cTimeElapsed << "\n";
