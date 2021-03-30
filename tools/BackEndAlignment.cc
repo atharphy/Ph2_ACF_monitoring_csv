@@ -612,17 +612,29 @@ bool BackEndAlignment::Align()
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         // read back register map before you've done anything
         auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
-
-        OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->at(0)->at(0));
-        ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
-        bool                cWithCIC     = cFirstHybrid->fCic != NULL;
-        bool         cWithCBC            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-        bool         cWithSSA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-        bool         cWithMPA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+        bool         cWithCIC            = false;
+        bool         cWithCBC            = false;
+        bool         cWithSSA            = false;
+        bool         cWithMPA            = false;
+        for(auto cOpticalReadout: *cBoard)
+        {
+            if( cOpticalReadout->getIndex() > 0 ) break;
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                if( cHybrid->getIndex() > 0 ) break;
+                cWithCIC = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
+                for(auto cReadoutChip: *cHybrid)
+                {
+                    cWithCBC = cWithCBC || cReadoutChip->getFrontEndType() ==  FrontEndType::CBC3;
+                    cWithSSA = cWithSSA || cReadoutChip->getFrontEndType() ==  FrontEndType::SSA;
+                    cWithMPA = cWithMPA || cReadoutChip->getFrontEndType() ==  FrontEndType::MPA;
+                }//ROcs
+            }//Hybrids
+        }//OGs
         if(cWithCIC)
         {
             cAligned = this->CICAlignment(theBoard);
-	    if(cWithMPA) { cAligned = cAligned && this->Bx0Alignment(theBoard); }
+	        if(cWithMPA) { cAligned = cAligned && this->Bx0Alignment(theBoard); }
         }
         else
         {

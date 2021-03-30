@@ -747,6 +747,7 @@ void DataChecker::CollectEvents()
         }
     }
 }
+//void DataChecker::
 void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjections)
 {
     auto& cBadEvents  = fBadEvents.at(pBoard->getIndex());
@@ -794,7 +795,7 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                 auto& cGdEventsHybrid  = cGdEventsOpticalGroup->at(cOpticalGroup->getIndex());
 
                 // for now I'm only checking one CIC
-                if(cHybrid->getIndex() > 0) continue;
+                //if(cHybrid->getIndex() > 0) continue;
 
                 auto cBxId = (int)cEvent->BxId(cHybrid->getId());
                 cBxIdsGbl.push_back(cBxId);

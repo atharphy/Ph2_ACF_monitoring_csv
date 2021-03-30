@@ -148,6 +148,9 @@ class SystemController
      */
     void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
 
+    // start-up PS modiule 
+    void PSModuleStartUp();
+    
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */

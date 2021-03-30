@@ -41,7 +41,7 @@ void PSAlignment::Reset()
                         {
                             if(cReg.first.find("OutSetting") != std::string::npos || cReg.first.find("LatencyRx320") != std::string::npos || cReg.first.find("LatencyRx40") != std::string::npos ||
                                cReg.first.find("RetimePix") != std::string::npos)
-                            { LOG(INFO) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
+                            { LOG(DEBUG) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
                         }
                         else
                         {
