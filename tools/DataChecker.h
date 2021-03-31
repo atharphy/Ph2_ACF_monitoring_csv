@@ -58,6 +58,7 @@ class DataChecker : public Tool
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
     void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
     void Eye_CIC();
+    void PSNominal();
 
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);

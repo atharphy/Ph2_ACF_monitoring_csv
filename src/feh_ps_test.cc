@@ -274,7 +274,8 @@ int main(int argc, char* argv[])
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cDataChecker.Inherit(&cHybridTester);
         cDataChecker.Initialise();
-        cDataChecker.Eye_CIC();
+        cDataChecker.PSNominal();
+        //cDataChecker.Eye_CIC();
         // reset
         cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
         cDataChecker.writeObjects();
