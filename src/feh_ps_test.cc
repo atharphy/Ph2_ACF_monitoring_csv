@@ -13,6 +13,7 @@
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/PSAlignment.h"
+#include "tools/PSBiasCal.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -128,6 +129,9 @@ int main(int argc, char* argv[])
     cHybridTester.InitializeSettings(cHWFile, outp);
     cHybridTester.CreateResultDirectory(cDirectory);
     cHybridTester.InitResultFile(cResultfile);
+
+
+
     // set voltage  on PS FEH
     // cHybridTester.SetHybridVoltage();
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
@@ -138,6 +142,13 @@ int main(int argc, char* argv[])
     // select CIC readout
     // cHybridTester.SelectCIC(true);
     cHybridTester.ConfigureHw();
+
+
+    PSBiasCal cPSBiasCal;
+    cPSBiasCal.Inherit(&cHybridTester);
+    cPSBiasCal.Initialise();
+    BeBoard* pBoard = static_cast<BeBoard*>(cHybridTester.fDetectorContainer->at(0));
+    cPSBiasCal.CalibrateBias(pBoard);
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
 
@@ -156,6 +167,8 @@ int main(int argc, char* argv[])
     DPInterface         cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(cHybridTester.fBeBoardFWMap.find(0)->second);
 
+
+
     // need to do this if
     // reading out CIC
     // or testing MPA
@@ -164,7 +177,7 @@ int main(int argc, char* argv[])
         // TO-DO
         // add condirion to check if USB is being used
         cHybridTester.SelectCIC(true);
-
+            LOG(INFO) << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cHybridTester);
         cCicAligner.Start(0);
@@ -173,7 +186,7 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         cCicAligner.Reset();
         cCicAligner.dumpConfigFiles();
-
+            LOG(INFO) << "BackEndAlignment" << RESET;
         // align back-end
         BackEndAlignment cBackEndAligner;
         cBackEndAligner.Inherit(&cHybridTester);
@@ -304,7 +317,11 @@ int main(int argc, char* argv[])
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         // hard coded for now
-        FrontEndType cFrontEndType   = FrontEndType::SSA;
+
+    	ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cHybridTester.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+
+        FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
         auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cPedeNoise.Inherit(&cHybridTester);
@@ -318,6 +335,7 @@ int main(int argc, char* argv[])
 
         // reset
         cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
+
     }
 
     if(cmd.foundOption("findOpens"))

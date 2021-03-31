@@ -12,13 +12,15 @@
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWInterface/MPAInterface.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/PSAlignment.h"
 #include "../Utils/Utilities.h"
 #include "../tools/Tool.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <numeric> // for std::accumulate
-
+#include "../tools/BackEndAlignment.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ConsoleColor.h"
@@ -47,19 +49,56 @@ int main(int argc, char* argv[])
 
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
-    std::string       cHWFile = "settings/PS_HalfModulePSAS.xml";
+
+    ArgvParser cmd;
+    cmd.defineOption("file", "Hw Description File . Default value: settings/PS_HalfModule.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("file", "f");
+
+    int result = cmd.parse(argc, argv);
+
+    if(result != ArgvParser::NoParserError)
+    {
+        LOG(INFO) << cmd.parseErrorDescription(result);
+        exit(1);
+    }
+
+
+    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/PS_HalfModule.xml";
+
+    //std::string       cHWFile = "settings/PS_HalfModulePSAS.xml";
+    std::cout <<cHWFile<< std::endl;
     std::stringstream outp;
     Tool              cTool;
-    std::cout <<"   1   " << std::endl;
-    cTool.InitializeHw(cHWFile, outp);
-    std::cout <<"   2   " << std::endl;
-    cTool.InitializeSettings(cHWFile, outp);
-    std::cout <<"   3   " << std::endl;
-    cTool.ConfigureHw();
-    std::cout <<"   4   " << std::endl;
-    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 
-    HybridContainer* ChipVec = pBoard->at(0)->at(0);
+    cTool.InitializeHw(cHWFile, outp);
+    cTool.InitializeSettings(cHWFile, outp);
+    cTool.ConfigureHw();
+/*
+    // align ASICs on PS module
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    cPSAlignment.MapMPAOutputs();
+    cPSAlignment.Reset();
+
+
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cTool);
+    cCicAligner.Start(0);
+    cCicAligner.waitForRunToBeCompleted();
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
+
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    cBackEndAligner.Reset();
+
+    cPSAlignment.Align();
+
+*/
+
 
 
     std::chrono::milliseconds LongPOWait(500);
@@ -70,7 +109,7 @@ int main(int argc, char* argv[])
 
     //std::pair<uint32_t, uint32_t> rows = {1, 17};
     //std::pair<uint32_t, uint32_t> cols = {1, 121};
-    std::pair<uint32_t, uint32_t> th   = {20, 195};
+    std::pair<uint32_t, uint32_t> th   = {0, 200};
 
 
     std::vector<TH2F*> scurves2D;
@@ -80,7 +119,26 @@ int main(int argc, char* argv[])
 
 
 
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+	pBoard->setEventType( EventType::PSAS);
+    HybridContainer* ChipVec = pBoard->at(0)->at(0);
 
+    if(pBoard->getEventType()==EventType::PSAS)
+		{
+        LOG(INFO) << BOLDRED << "PSAS" << RESET;
+        LOG(INFO) << BOLDRED << "PSAS" << RESET;
+        LOG(INFO) << BOLDRED << "PSAS" << RESET;
+        LOG(INFO) << BOLDRED << "PSAS" << RESET;
+
+		}
+	else
+		{
+        LOG(INFO) << BOLDRED << "BADEVENT" << RESET;
+        LOG(INFO) << BOLDRED << "BADEVENT" << RESET;
+        LOG(INFO) << BOLDRED << "BADEVENT" << RESET;
+        LOG(INFO) << BOLDRED << "BADEVENT" << RESET;
+
+		}
 	std::vector<int> totalev;
 	std::vector<int> totalevPRE;
     int impa=0;
@@ -89,23 +147,19 @@ int main(int argc, char* argv[])
 		totalev.push_back(0);
 		totalevPRE.push_back(0);
 		uint16_t npix=1920;
-        if(cMPA->getFrontEndType() == FrontEndType::SSA) 
-			{
-			npix=120;
-
-			}
+        if(cMPA->getFrontEndType() == FrontEndType::SSA) npix=120;
         if(cMPA->getFrontEndType() == FrontEndType::MPA) 
 			{		
 			theMPAInterface->WriteChipReg(cMPA,"ReadoutMode",0x1);
 			theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0xd7);
 			//theMPAInterface->WriteChipReg(cMPA,"TrimDAC_ALL",0x31);
 			}
-	else
-		{		
-		theMPAInterface->WriteChipReg(cMPA,"ReadoutMode",0x1);
-		theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0x5);
-		theMPAInterface->WriteChipReg(cMPA,"AnalogueAsync",0x1);
-		}
+		else
+			{		
+			theMPAInterface->WriteChipReg(cMPA,"ReadoutMode",0x1);
+			theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0x5);
+			theMPAInterface->WriteChipReg(cMPA,"AnalogueAsync",0x1);
+			}
         
         theMPAInterface->Activate_async(cMPA);
         if(cMPA->getFrontEndType() == FrontEndType::MPA) theMPAInterface->Set_calibration(cMPA, 30);
@@ -133,14 +187,14 @@ int main(int argc, char* argv[])
               MPA* theMPA = static_cast<MPA*>(cMPA);
               theMPAInterface->Set_threshold(theMPA, ith);
               //if(cMPA->getFrontEndType() == FrontEndType::SSA)theMPAInterface->Set_threshold(theMPA, ith);
-	      }
+	      	  }
 
 
 
-        std::this_thread::sleep_for(ShortWait);
-        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
-        // open shutter
-        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
+        	std::this_thread::sleep_for(ShortWait);
+        	static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
+        	// open shutter
+       		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
 
             // sleep            // close shutter
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
@@ -196,8 +250,9 @@ int main(int argc, char* argv[])
 
 						int  curc = countersfifo[curindex];
 						totalev[impa]+=curc;
-						//std::cout << "i " << icc<<" "<< curc<< std::endl;
-						scurves2D[impa]->SetBinContent(icc,scurves2D[impa]->GetYaxis()->FindBin(ith),curc);
+						//std::cout <<icc<<","<<scurves2D[impa]->GetYaxis()->FindBin(ith)<<","<<curc<<std::endl;
+
+						scurves2D[impa]->SetBinContent(scurves2D[impa]->GetXaxis()->FindBin(icc),scurves2D[impa]->GetYaxis()->FindBin(ith),curc);
 						//std::pair<uint32_t, uint32_t>pnlocal = static_cast<MPA*>(cMPA)->PNlocal(icc+1);
 						//std::cout << "pix "<<icc<<","<<pnlocal.first<<","<<pnlocal.second<<","<<curc<< std::endl;
 						//std::cout << "REGLOBAL "<<icc<<","<<static_cast<MPA*>(cMPA)->PNglobal(pnlocal)<< std::endl;

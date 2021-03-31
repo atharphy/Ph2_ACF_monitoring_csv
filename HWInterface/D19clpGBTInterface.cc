@@ -47,6 +47,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     ConfigurePSROH(pChip);
+
     return true;
 }
 
@@ -685,6 +686,8 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
     uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
     // Clear ADC conversion bit and disable ADC
     ConfigureADC(pChip, pGain, false, false);
+    LOG(INFO) << BOLDMAGENTA << "cADCvalue1 " << +cADCvalue1 << RESET;
+    LOG(INFO) << BOLDMAGENTA << "cADCvalue2 " << +cADCvalue2 << RESET;
     return (cADCvalue1 << 8 | cADCvalue2);
 }
 

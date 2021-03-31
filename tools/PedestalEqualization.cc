@@ -135,16 +135,6 @@ void PedestalEqualization::FindVplus()
         {
             if(cWithSSA or cWithMPA)
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
-            else if(cWithMPA)
-            {
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC3", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fTestPulseAmplitude);
-            }
             else
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
         }
@@ -194,8 +184,11 @@ void PedestalEqualization::FindVplus()
                     uint16_t     tmpVthr = 0;
                     if(cWithCBC) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
                     if(cWithSSA) tmpVthr = theChip->getReg("Bias_THDAC");
-                    if(cWithMPA) tmpVthr = theChip->getReg("ThDAC0");
-
+                    if(cWithMPA) 
+						{
+						tmpVthr = theChip->getReg("ThDAC0");
+                    	LOG(INFO) << GREEN << "tmpVthr "<<tmpVthr<< RESET;
+						}
                     chip->getSummary<uint16_t>() = tmpVthr;
 
                     LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " ROC " << +chip->getId()
@@ -242,9 +235,10 @@ void PedestalEqualization::FindOffsets()
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-
+    LOG(INFO) << BOLDBLUE << "BWS" << RESET;
     if(cWithCBC) this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(cWithSSA or cWithMPA) this->bitWiseScan("ThresholdTrim", fEventsPerPoint, 0.56, fNEventsPerBurst);
+    LOG(INFO) << BOLDBLUE << "BWSDONE" << RESET;    LOG(INFO) << BOLDBLUE << "BWS" << RESET;
     dumpConfigFiles();
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer, theOffsetsCointainer);
@@ -291,16 +285,18 @@ void PedestalEqualization::FindOffsets()
             }     // for on hybrid - end
         }         // for on opticalGroup - end
     }             // for on board - end
-
+    LOG(INFO) << BOLDRED << "FILL1" << RESET;
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
     fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);
 #else
+    LOG(INFO) << BOLDRED << "FILL2" << RESET;
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
     for(auto board: theOccupancyContainer)
     {
         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
+    LOG(INFO) << BOLDRED << "FILL3" << RESET;
 
     auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
     for(auto board: theOffsetsCointainer)

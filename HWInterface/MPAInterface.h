@@ -154,7 +154,6 @@ class MPAInterface : public ReadoutChipInterface
 
     void Cleardata();
     void LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
-
     //
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections);
     std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
@@ -166,9 +165,10 @@ class MPAInterface : public ReadoutChipInterface
     uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
 
   private:
+
+
     D19clpGBTInterface*       flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
-
     bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
     bool     WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);

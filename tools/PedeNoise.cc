@@ -37,24 +37,30 @@ void PedeNoise::clearDataMembers()
 
 void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
+    LOG(INFO) << BOLDRED << "I1" << RESET;
+
     fDisableStubLogic = pDisableStubLogic;
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-
+    LOG(INFO) << BOLDRED << "I2" << RESET;
     cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    LOG(INFO) << BOLDRED << "I3" << RESET;
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
     if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
+    LOG(INFO) << BOLDRED << "I4" << RESET;
 
     initializeRecycleBin();
-
+    LOG(INFO) << BOLDRED << "I5" << RESET;
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    LOG(INFO) << BOLDRED << "I6" << RESET;
     // For async only -- to fix
     if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
     fAllChan = pAllChan;
+    LOG(INFO) << BOLDRED << "I7" << RESET;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
     fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
@@ -63,7 +69,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-
+    LOG(INFO) << BOLDRED << "I8" << RESET;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
@@ -171,16 +177,6 @@ void PedeNoise::sweepSCurves()
     {
         if(cWithSSA || cWithMPA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
-        else if(cWithMPA)
-        {
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC3", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fPulseAmplitude);
-        }
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
@@ -208,17 +204,7 @@ void PedeNoise::sweepSCurves()
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(false);
-        if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
-        else if(cWithMPA)
-        {
-            setSameGlobalDac("CalDAC0", 0);
-            setSameGlobalDac("CalDAC1", 0);
-            setSameGlobalDac("CalDAC2", 0);
-            setSameGlobalDac("CalDAC3", 0);
-            setSameGlobalDac("CalDAC4", 0);
-            setSameGlobalDac("CalDAC5", 0);
-            setSameGlobalDac("CalDAC6", 0);
-        }
+        if(cWithSSA || cWithMPA) setSameGlobalDac("InjectedCharge", 0);
         else
             setSameGlobalDac("TestPulsePotNodeSel", 0);
 

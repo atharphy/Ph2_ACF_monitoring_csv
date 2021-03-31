@@ -75,6 +75,9 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
         return this->ReadReg(pMPA, cRegItem.fAddress) & 0xFF;
     }
 }
+
+
+
 uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
@@ -484,6 +487,7 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     {
         flpGBT->setBeBoardId(pChip->getBeBoardId());
         //cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
+        pChip->setReg(pRegNode, pValue);
         cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue);
     }
     if(cSuccess && flpGBTInterface == nullptr) // check is done in lpGBTInterface for opto
@@ -605,6 +609,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     // takes forever
     std::map<uint16_t, ChipRegItem> cMap;
     cMap.clear();
+    for(auto& cRegInMap: cMPARegMap) { cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
     for(auto& cRegItem: cMap)
     {
@@ -612,6 +617,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         //  <<
         //  << " with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
         LOG(DEBUG) << BOLDBLUE << "Register map for MPA contains a register with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
+        //LOG(INFO) << BOLDBLUE << " And Value " << std::hex << +cRegItem.second.fValue << std::dec << RESET;
         std::pair<uint16_t, uint16_t> cReg;
         cReg.first  = cRegItem.second.fAddress;
         cReg.second = cRegItem.second.fValue;
@@ -619,6 +625,9 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     } // loop over map
     return this->WriteRegs(pMPA, cRegs, pVerifLoop);
 }
+
+
+
 
 bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {

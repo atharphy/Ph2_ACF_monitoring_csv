@@ -104,6 +104,9 @@ class PSInterface : public ReadoutChipInterface
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
 
     void Cleardata();
+
+
+
 };
 } // namespace Ph2_HwInterface
 

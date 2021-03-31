@@ -1439,3 +1439,4 @@ std::string Tool::getCalibrationName(void)
     }
     return className;
 }
+

@@ -41,19 +41,14 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDRED << "=============" << RESET;
     el::Configurations conf("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
-    std::string       cHWFile = "settings/PS_HalfModulePSAS.xml";
+    std::string       cHWFile = "settings/PS_HalfModule.xml";
     std::stringstream outp;
     Tool              cTool;
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
 
-
     cTool.ConfigureHw();
-    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     // align ASICs on PS module
-
-	//pBoard->setEventType(EventType::VR);
-
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
     cPSAlignment.Initialise();
@@ -76,7 +71,7 @@ int main(int argc, char* argv[])
 
     cPSAlignment.Align();
 
-	//pBoard->setEventType(EventType::PSAS);
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 
     HybridContainer* ChipVec = pBoard->at(0)->at(0);
 
@@ -151,9 +146,15 @@ int main(int argc, char* argv[])
                     // thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+2), 0x37);
                     thePSInterface->WriteChipReg(cMPA, "DigPattern_ALL", 0x01);
                     thePSInterface->WriteChipReg(cMPA, "TriggerLatency", truelat - 1, false);
+
+                    //thePSInterface->WriteChipReg(cMPA, "ClusterCut_ALL", 0x01);
+                    //thePSInterface->WriteChipReg(cMPA, "HipCut_ALL", 0x01);
+                    //thePSInterface->WriteChipReg(cMPA, "ModeSel_ALL", 0x01);
+                    //thePSInterface->WriteChipReg(cMPA, "StubWindow", 0x01);
                 }
                 if(cMPA->getFrontEndType() == FrontEndType::SSA)
                 {
+
                     thePSInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
                     thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col), 0x9);
                     // thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col+2), 0x9);
@@ -161,6 +162,17 @@ int main(int argc, char* argv[])
                     thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_L_ALL", 0x01);
                     thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_H_ALL", 0x00);
                     thePSInterface->WriteChipReg(cMPA, "TriggerLatency", truelat - 2, false);
+
+
+                    /*thePSInterface->WriteChipReg(cMPA, "ReadoutMode", 0x0);
+                    thePSInterface->WriteChipReg(cMPA, "ClusterCut", 0x0);
+                    thePSInterface->WriteChipReg(cMPA, "ClusterCut", 0x0);
+                    thePSInterface->WriteChipReg(cMPA, "Offset0", 0x00);
+                    thePSInterface->WriteChipReg(cMPA, "Offset1", 0x00);
+                    thePSInterface->WriteChipReg(cMPA, "Offset2", 0x00);
+                    thePSInterface->WriteChipReg(cMPA, "Offset3", 0x00);
+                    thePSInterface->WriteChipReg(cMPA, "Offset4", 0x00);
+                    thePSInterface->WriteChipReg(cMPA, "Offset5", 0x00);*/
                 }
             }
 
