@@ -1022,8 +1022,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, {fClock_RHS_Hybrid , fClock_LHS_Hybrid }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 1, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 4, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+    // uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    // ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
         cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
@@ -1035,7 +1037,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
+    uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -1056,6 +1058,13 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         }
     }
     //PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    cRxTrackMode=0;
+    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
+    // Turn off PRBS for channels 0,2
+    ConfigureRxPRBS(pChip, cRxGroups, cRxChannels, false);
+    // Set back Rx source to Normal data
+    ConfigureRxSource(pChip, cRxGroups, 0);
+
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test

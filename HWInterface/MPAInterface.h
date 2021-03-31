@@ -166,6 +166,7 @@ class MPAInterface : public ReadoutChipInterface
     uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
 
   private:
+    std::map<uint16_t, std::string> fMap;
     D19clpGBTInterface*       flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
 

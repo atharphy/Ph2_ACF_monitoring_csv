@@ -26,24 +26,24 @@ void CicFEAlignment::Reset()
         for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
-        uint16_t boardIndex = cBoard->getIndex();
-        for(auto cOpticalGroup: *cBoard)
-        {
-            uint16_t opticalGroupIndex = cOpticalGroup->getIndex();
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                uint16_t hybridIndex = cHybrid->getIndex();
-                LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-                for(auto cChip: *cHybrid)
-                {
-                    uint16_t                                      chipIndex = cChip->getIndex();
-                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
-                    for(auto cReg: fRegMapContainer.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<ChipRegMap>())
-                        cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
-                }
-            }
-        }
+        //uint16_t boardIndex = cBoard->getIndex();
+        // for(auto cOpticalGroup: *cBoard)
+        // {
+        //     uint16_t opticalGroupIndex = cOpticalGroup->getIndex();
+        //     for(auto cHybrid: *cOpticalGroup)
+        //     {
+        //         uint16_t hybridIndex = cHybrid->getIndex();
+        //         LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+        //         for(auto cChip: *cHybrid)
+        //         {
+        //             uint16_t                                      chipIndex = cChip->getIndex();
+        //             std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+        //             for(auto cReg: fRegMapContainer.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<ChipRegMap>())
+        //                 cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+        //             fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
+        //         }
+        //     }
+        // }
     }
     resetPointers();
 }
@@ -376,6 +376,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 // enable MPA alignment pattern
                 LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
                 std::vector<uint8_t>     cOriginalValues;
+                std::vector<std::string> cRegs;
                 uint8_t                  cAlignmentPattern = 0xAA;
                 std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
                 std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
@@ -386,6 +387,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                         if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                         cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
+                        cRegs.push_back( cRegNames[cIndex] );
                         fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
                     } // loop over MPAs
                 }     // loop over registers
@@ -399,9 +401,20 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 // if locked .. switch to automatic phase aligner mode with best values
                 if(cLocked) fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
                 cAligned = cAligned && cLocked;
+
+                //reset original values 
+                for(size_t cIndex = 0; cIndex < cRegs.size(); cIndex++)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+
+                        fReadoutChipInterface->WriteChipReg(cChip, cRegs[cIndex], cOriginalValues[cIndex]);
+                    } // loop over MPAs
+                }   
             } // hybrid
-        }     // optical group
-    }         // board
+        }// optical group
+    }// board
     //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
     // check alignment and use static phase from now on
     return cAligned;
@@ -706,6 +719,20 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 if(cCic == NULL) continue;
 
                 // now inject stubs that can generate word alignment pattern
+                std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
+                std::vector<uint8_t>     cOriginalValues;
+                std::vector<std::string> cRegs;
+                for( auto cRegName : cRegNames )
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::MPA) 
+                        {
+                            cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cChip, cRegName));
+                            cRegs.push_back(cRegName);
+                        }
+                    }
+                }
                 std::vector<uint8_t> cAlignmentPatterns;
                 for(auto cChip: *cHybrid)
                 {
@@ -740,11 +767,25 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 }
                 else
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
+            
+                // reset original register values
+                for( size_t cIndx=0; cIndx < cRegs.size(); cIndx++)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::MPA) 
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegs[cIndx], cOriginalValues[cIndx]);
+                        }
+                    }
+                }
             }
         }
         // now send a fast reset
         fBeBoardInterface->ChipReSync(theBoard);
     }
+    
+
     return cAligned;
 }
 uint8_t CicFEAlignment::getPhaseAlignmentValue(BeBoard* pBoard, OpticalGroup* pOpticalGroup, Hybrid* pFe, ReadoutChip* pChip, uint8_t pLine)

@@ -756,6 +756,10 @@ bool CicInterface::SetAutomaticPhaseAlignment(Chip* pChip, bool pAuto)
         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
         exit(0);
     }
+    if( pAuto )
+    {
+        this->ResetPhaseAligner(pChip);
+    }
     return cSuccess;
 }
 bool CicInterface::PhaseAlignerPorts(Chip* pChip, uint8_t pState)
@@ -1137,7 +1141,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         cRegItem.fStatusReg                 = 0x01;
 
         std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-        LOG(INFO) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
 
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
@@ -1402,23 +1406,23 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     }
     LOG(INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET;
 
-    // figure out which FEs have been enabled
-    // so we can return to this state after
-    // the reset
-    cRegName            = "FE_ENABLE";
-    uint16_t cEnableReg = this->ReadChipReg(pChip, cRegName);
-    LOG(INFO) << BOLDMAGENTA << "Enable chip register, before phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
-    // disable all FEs
-    this->WriteChipReg(pChip, cRegName, 0x00);
-    // reset
-    this->ResetPhaseAligner(pChip, 200);
-    // enable original FEs
-    this->WriteChipReg(pChip, cRegName, cEnableReg);
-    cEnableReg = this->ReadChipReg(pChip, cRegName);
-    LOG(INFO) << BOLDMAGENTA << "Enable chip register, after phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
+    // // figure out which FEs have been enabled
+    // // so we can return to this state after
+    // // the reset
+    // cRegName            = "FE_ENABLE";
+    // uint16_t cEnableReg = this->ReadChipReg(pChip, cRegName);
+    // LOG(INFO) << BOLDMAGENTA << "Enable chip register, before phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
+    // // disable all FEs
+    // this->WriteChipReg(pChip, cRegName, 0x00);
+    // // reset
+    // this->ResetPhaseAligner(pChip, 200);
+    // // enable original FEs
+    // this->WriteChipReg(pChip, cRegName, cEnableReg);
+    // cEnableReg = this->ReadChipReg(pChip, cRegName);
+    // LOG(INFO) << BOLDMAGENTA << "Enable chip register, after phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
 
     // set phase aligner to static mode 
-    bool cAutoAlign=false;
+    bool cAutoAlign=true;
     cSuccess = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
     if(!cSuccess)
     {
@@ -1428,7 +1432,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
 
 
     // select fast command edge
-    bool cNegEdge = true;
+    bool cNegEdge = false;
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else

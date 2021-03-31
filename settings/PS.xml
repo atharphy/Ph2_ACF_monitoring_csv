@@ -32,14 +32,13 @@
             <SSA Id="7" configfile="SSA_minConfig.txt" />
 
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="0" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="1" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="2" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="3" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="4" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="5" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="6" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="7" partid="0" configfile="MPA_minConfig.txt" />
+            <MPA Id="0" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="1" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="2" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="4" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="5" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="6" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="7" partid="0" configfile="MPATSTSYNC.txt" />
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -63,9 +62,9 @@
             <Register name="trigger_source"> 6 </Register>
             <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
-                    <!--this is the delay for the stub trigger-->
+            <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
-                    <Register name="stub_trigger_veto_length"> 0 </Register>
+            <Register name="stub_trigger_veto_length"> 0 </Register>
             <Register name="test_pulse">
                 <Register name="delay_after_fast_reset"> 80 </Register>
                 <Register name="delay_after_test_pulse"> 100 </Register>

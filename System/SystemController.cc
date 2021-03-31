@@ -309,8 +309,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
 
 void SystemController::PSModuleStartUp()
 {
-    uint8_t cSsaClockDrive = 3; 
-    uint8_t cCicClockDrive = 3; 
+    uint8_t cSsaClockDrive = 4; 
+    uint8_t cCicClockDrive = 4; 
     uint16_t cReadoutRate = 320; 
     uint8_t  cCicDriveStrength = 1; 
     // configure PS-ROH + PS FEHs 
@@ -343,6 +343,7 @@ void SystemController::PSModuleStartUp()
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
                 // enable clock to CIC 
                 cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
+                cClkCnfg.fClkInvert = 0;
                 cClkCnfg.fClkDriveStr = cCicClockDrive; 
                 LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
