@@ -30,10 +30,10 @@ class PSBiasCal : public Tool
     void Initialise();
 
 
-    uint32_t CalibrateChipBias(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr);
+    uint32_t CalibrateChipBias(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str);
 	void CalibrateBias(Ph2_HwDescription::BeBoard* pBoard);
 	void DisableTest(Ph2_HwDescription::Chip* cChip);
-	float MeasureGnd(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT);
+	float MeasureGnd(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, std::string dac_str);
 
 
     void Running() override;

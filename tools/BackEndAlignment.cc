@@ -156,7 +156,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                         std::ostringstream cRegName;
                         cRegName << "DigitalSyncP" << std::to_string(cPixelId);
                         LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET;
-                        fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0xFF);
+                        fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0xAA);
                     }
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
 

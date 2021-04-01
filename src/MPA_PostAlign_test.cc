@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDRED << "=============" << RESET;
     el::Configurations conf("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
-    std::string       cHWFile = "settings/PS_HalfModulePSAS.xml";
+    std::string       cHWFile = "settings/PS_HalfModule.xml";
     std::stringstream outp;
     Tool              cTool;
     cTool.InitializeHw(cHWFile, outp);

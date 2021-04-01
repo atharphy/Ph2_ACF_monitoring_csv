@@ -141,14 +141,15 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     uint32_t cGpix = static_cast<MPA*>(cChip)->PNglobal(std::pair<uint32_t, uint32_t>(cRow, cCol));
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_P" + std::to_string(cGpix), 0x01); // enable 1 pix
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_P" + std::to_string(cGpix), 0x37);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_P" + std::to_string(cGpix), 0xAA); // enable 1 pix
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0xAA);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0xAA);
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cCol), 0x9);
                 }
             } // chip
@@ -187,7 +188,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
         for(uint8_t cPhase = 0; cPhase < 8; cPhase++)
         {
             if(cCurPhaseFound == true) break; // break loops if chip phase already found
-            for(uint8_t cRetime = 5; cRetime < 8; cRetime++)
+            for(uint8_t cRetime = 0; cRetime < 8; cRetime++)
             {
                 if(cCurPhaseFound == true) break;
                 for(auto cOpticalReadout: *pBoard)
@@ -289,14 +290,15 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     uint32_t cGpix = static_cast<MPA*>(cChip)->PNglobal(std::pair<uint32_t, uint32_t>(cRow, cCol));
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_P" + std::to_string(cGpix), 0x01); // enable 1 pix
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_P" + std::to_string(cGpix), 0x37);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_P" + std::to_string(cGpix), 0xAA); // enable 1 pix
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0xAA);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0xAA);
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cCol), 0x9);
                 }
             } // chip

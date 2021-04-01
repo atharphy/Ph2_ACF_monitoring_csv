@@ -661,7 +661,7 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
     // Read differential (converted) data on two ADC inputs
     uint8_t cADCInputP = fADCInputMap[pADCInputP];
     uint8_t cADCInputN = fADCInputMap[pADCInputN];
-    LOG(INFO) << BOLDBLUE << "Reading ADC value from " << pADCInputP << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Reading ADC value from " << pADCInputP << RESET;
     // Select ADC Input
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
     // Enable ADC Input without starting conversion
@@ -686,8 +686,6 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
     uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
     // Clear ADC conversion bit and disable ADC
     ConfigureADC(pChip, pGain, false, false);
-    LOG(INFO) << BOLDMAGENTA << "cADCvalue1 " << +cADCvalue1 << RESET;
-    LOG(INFO) << BOLDMAGENTA << "cADCvalue2 " << +cADCvalue2 << RESET;
     return (cADCvalue1 << 8 | cADCvalue2);
 }
 
