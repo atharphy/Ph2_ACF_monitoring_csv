@@ -309,8 +309,8 @@ void SystemController::RunBERtest(std::string chain2test, bool given_time, doubl
 
 void SystemController::PSModuleStartUp()
 {
-    uint8_t cSsaClockDrive = 4; 
-    uint8_t cCicClockDrive = 4; 
+    uint8_t cSsaClockDrive = 4;//4; 
+    uint8_t cCicClockDrive = 4;//4; 
     uint16_t cReadoutRate = 320; 
     uint8_t  cCicDriveStrength = 1; 
     // configure PS-ROH + PS FEHs 

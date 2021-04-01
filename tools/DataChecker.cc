@@ -1046,30 +1046,38 @@ void DataChecker::PSNominal()
     std::uniform_int_distribution<int> cFlatDistCols(2, 13);
     std::uniform_int_distribution<int> cFlatDistRows(2, 118); // avoid colums 1 and 120 
     std::uniform_int_distribution<int> cNClusterDist(0, nMaxClusters); 
+    std::uniform_int_distribution<int> cMPAsDist(1, 7);
+    std::uniform_int_distribution<int> cMPAIdDist(0, 7);
+
 
     for( size_t cAttempt = 0 ; cAttempt < cMaxAttempts ; cAttempt++ )
     {
-        LOG (INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
+        //if( cAttempt%10 == 0 )
+            LOG (INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
         
         // prepare data container 
         // zero what needs zeroing
 
-        DetectorDataContainer fInjectedPClusters, fReadoutPClusters; 
+        DetectorDataContainer fInjectedPClusters, fReadoutPClusters;
+        DetectorDataContainer fPixelInjections;  
         ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fInjectedPClusters);
         ContainerFactory::copyAndInitChip<std::vector<uint32_t>>(*fDetectorContainer, fReadoutPClusters);
+        ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, fPixelInjections);
         for(auto cBoard: *fDetectorContainer)
         {
             auto& cInjections = fInjectedPClusters.at(cBoard->getIndex());
             auto& cMatched = fReadoutPClusters.at(cBoard->getIndex());
-            
+            auto& cInj = fPixelInjections.at(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
                 auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
                 auto& cMatchedOGs = cMatched->at(cOpticalGroup->getIndex());
+                auto& cInjOG = cInj->at(cOpticalGroup->getIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
                     auto& cMatchedHybrid = cMatchedOGs->at(cHybrid->getIndex());
+                    auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
                     for(auto cChip: *cHybrid)
                     {
                         auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
@@ -1077,6 +1085,9 @@ void DataChecker::PSNominal()
                         auto& cMatchedChip = cMatchedHybrid->at(cChip->getIndex());
                         auto& cSummary = cMatchedChip->getSummary<std::vector<uint32_t>>();
                         cSummary.clear();
+                        auto& cInjChip = cInjHybrid->at(cChip->getIndex());
+                        auto& cSummaryInj = cInjChip->getSummary<std::vector<Injection>>();
+                        cSummaryInj.clear();
                     }
                 }
             }
@@ -1087,18 +1098,42 @@ void DataChecker::PSNominal()
         for(auto cBoard: *fDetectorContainer)
         {
             auto& cInjections = fInjectedPClusters.at(cBoard->getIndex());
+            auto& cInj = fPixelInjections.at(cBoard->getIndex());
             for(auto cOpticalReadout: *cBoard)
             {
                 auto& cInjectionsOpticalGroup = cInjections->at(cOpticalReadout->getIndex());
+                auto& cInjOG = cInj->at(cOpticalReadout->getIndex());
                 for(auto cHybrid: *cOpticalReadout)
                 {
                     auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+                    auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
+                    
+                    // size_t cNMPAs = cMPAsDist(cGen); 
+                    // std::vector<int> cMPAs; cMPAs.clear();
+                    // do
+                    // {
+                    //     int cMPA = cMPAIdDist(cGen);
+                    //     if ( std::find( cMPAs.begin(), cMPAs.end(), cMPA ) == cMPAs.end() )
+                    //     {
+                    //         cMPAs.push_back( cMPA );
+                    //     }
+
+                    // }while( cMPAs.size() < cNMPAs ) ;
+
+                    // if( cMPAs.size() == 0 ) continue;
+
+                    // LOG (INFO) << BOLDMAGENTA << "Injecting clusters in " 
+                    //     << +cMPAs.size() << " MPAs." << RESET;
                     for(auto cChip: *cHybrid) // for each chip (makes sense)
                     {
                         // for the moment - only written for CBC3
                         if(cChip->getFrontEndType() == FrontEndType::MPA)
                         {
+                            // if( std::find( cMPAs.begin(), cMPAs.end(), cChip->getId()) == cMPAs.end() ) 
+                            //     continue;
+
                             auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
+                            auto& cInjChp = cInjHybrid->at(cChip->getIndex());
                             // activate stub mode
                             fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
                             fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
@@ -1114,6 +1149,7 @@ void DataChecker::PSNominal()
                             if( cNclstrs == 0 || cTotalNumberOfClusters >= cMaxNstubs ) continue;
 
                             std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
+                            auto& cSummaryInj = cInjChp->getSummary<std::vector<Injection>>();
                             do
                             {
                                 Injection cInjection;
@@ -1146,30 +1182,33 @@ void DataChecker::PSNominal()
                                             << RESET;
                                         cPixelIds.push_back( cPixelId );
                                         cInjections.push_back(cInjection);
+                                        cSummaryInj.push_back(cInjection);
                                         cTotalNumberOfClusters += 1; 
                                     }
                                 }
-                            }while( cPixelIds.size() != cNclstrs && cTotalNumberOfClusters < cMaxNstubs );  // create injection patterns
+                            }while( cPixelIds.size() < cNclstrs && cTotalNumberOfClusters < cMaxNstubs );  // create injection patterns
                             cInjectionsChip->getSummary<uint32_t>() = cInjections.size();
-                            LOG (INFO) << BOLDBLUE << "Injecting " << +cInjections.size() << " clusters/stubs in MPA#" << +cChip->getId() << RESET;
+                            LOG (INFO) << BOLDBLUE << "Injecting " << +cInjectionsChip->getSummary<uint32_t>()<< " clusters/stubs in MPA#" << +cChip->getId() << RESET;
                             (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
                         }
                     } // chip
                 }// hybrid
             }// module
         }//boards
-        LOG (INFO) << BOLDMAGENTA << "In total have " 
-            << +cTotalNumberOfClusters
-            << " in this run."
-            << RESET;
+        if( cAttempt%10 == 0 )
+            LOG (INFO) << BOLDMAGENTA << "In total have " 
+                << +cTotalNumberOfClusters
+                << " in this run."
+                << RESET;
 
         for(auto cBoard: *fDetectorContainer)
         {
             auto& cInjections = fReadoutPClusters.at(cBoard->getIndex());
-            LOG(INFO) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+            LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
             ReadNEvents(cBoard, cNevents);
             const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
-            LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+            auto& cInj = fPixelInjections.at(cBoard->getIndex());
             for(auto cEvent: cEventsWithStubs)
             {
                 // skip the last event since I know its
@@ -1180,62 +1219,133 @@ void DataChecker::PSNominal()
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
+                    auto& cInjOG = cInj->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+                        auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
+                        auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
+                        auto cErrorBitCic = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), 8);
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                            auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
-                            auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            //if(cStubs.size() == cPixelIds.size())
-                            //{
-                                auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                                auto& cSummary = cInjectionsThisChip->getSummary<std::vector<uint32_t>>();
-                                cSummary.push_back( cPClusters.size() ); 
-                                if( (1+cEvent->GetEventCount())%100 ==  0 ) 
-                                {
-                                    LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
-                                            << "\t\tMPA#" << +cChip->getId()
-                                            << "\t... found the " << +cStubs.size() 
-                                            << " stubs in this event, "
-                                            << +cPClusters.size() 
-                                            << " pixel clusters and "
-                                            << +cSClusters.size() 
-                                            << " strip clusters "
-                                            << " summary has "
-                                            << +cSummary.size() << " entries "
-                                            << RESET;
-                                }
-                                // check stubs are where you put them
-                                // not checking bend for now
-                                // for(auto cStub: cStubs)
-                                // {
-                                //     auto     cStubAddress = cStub.getPosition();
-                                //     auto     cRow         = cStub.getRow();
-                                //     uint32_t cPixelId     = (cStubAddress / 2) + cRow * 120;
-                                //     cEventsMatch          = cEventsMatch && (std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) != cPixelIds.end());
-                                // }
-                                // if(cEventsMatch && cPClusters.size() == cInjections.size() )
-                                // {
-                                //     LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
-                                //         << "\t\tMPA#" << +cChip->getId()
-                                //         << "\t... found the " << +cStubs.size() 
-                                //         << " EXPECTED stubs in this event." 
-                                //         << RESET;
-                                // }
-                                // else
-                                //     LOG(DEBUG) << BOLDRED << "\t... found " << +cStubs.size() << " UN-EXPECTED stubs in this event." << RESET;
+                            auto& cInjChp = cInjHybrid->at(cChip->getIndex());
+                            auto& cSummaryInj = cInjChp->getSummary<std::vector<Injection>>();
+                            // don't bother checking when I havne't injected
+                            if ( cSummaryInj.size() == 0 ) continue; 
 
-                                // if( cEventsMatch )
-                                // {
-                                //     for(auto cPCluster: cPClusters)
-                                //         LOG(INFO) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) << ", width " << unsigned(cPCluster.fWidth) << ", row "
-                                //                   << unsigned(cPCluster.fZpos) << RESET;
-                                // }
-                            //}
+
+                            auto cMPAL1Error = fReadoutChipInterface->ReadChipReg(cChip, "ErrorL1");
+                            uint32_t cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId() );
+                            if( cChip->getId() == 0 ) LOG (DEBUG) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " L1Id " << +cL1Id << RESET;
+                            auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                            auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                            auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
+                            // check pixel clusters
+                            size_t cNmatched=0;
+                            for( auto cM : cSummaryInj) 
+                            {
+                                bool cFound=false;
+                                for( auto cPCluster :  cPClusters) 
+                                {
+                                    if( cPCluster.fAddress == cM.fRow && cPCluster.fZpos == cM.fColumn ) 
+                                        cFound = true;
+                                }
+                                cNmatched += (cFound) ? 1 : 0; 
+                                if( !cFound )
+                                    LOG (DEBUG) << BOLDRED << "MPA#" << +cChip->getId() 
+                                        << "\t\t\t\t L1Id " << +cL1Id
+                                        << " MISSING PCluster : address : " << unsigned(cM.fRow) 
+                                        << ", row " << unsigned(cM.fColumn) 
+                                        << " FE status bit from is " 
+                                        << +cErrorBit 
+                                        << " CIC status bit is "
+                                        << +cErrorBitCic
+                                        << std::bitset<9>(cL1Status&0x1FF)
+                                        << " L1 error is "
+                                        << std::bitset<8>(+cMPAL1Error)
+                                        << RESET;
+                                else
+                                    LOG (DEBUG) << BOLDGREEN << "MPA#" << +cChip->getId() 
+                                        << "\t\t\t\t L1Id " << +cL1Id
+                                        << " FOUND PCluster : address : " << unsigned(cM.fRow) 
+                                        << ", row " << unsigned(cM.fColumn) 
+                                        << " FE status bit from is " 
+                                        << +cErrorBit 
+                                        << " CIC status bit is "
+                                        << +cErrorBitCic
+                                        << std::bitset<9>(cL1Status&0x1FF)
+                                        << " L1 error is "
+                                        << std::bitset<8>(+cMPAL1Error)
+                                        << RESET;
+                                    
+                            }
+                            // for(auto cPCluster: cPClusters)
+                            // {
+                            //     bool cFound=false;
+                            //     LOG(DEBUG) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) 
+                            //         << ", width " << unsigned(cPCluster.fWidth) << ", row "
+                            //         << unsigned(cPCluster.fZpos) << RESET;
+                            //     for( size_t cIndx=0; cIndx < cSummaryInj.size(); cIndx++) 
+                            //     {
+                            //         if( cPCluster.fAddress == cSummaryInj[cIndx].fRow && cPCluster.fZpos == cSummaryInj[cIndx].fColumn ) 
+                            //             cFound = true;
+                            //     }
+                            //     cNmatched += (cFound) ? 1 : 0; 
+                            //     if( !cFound )
+                            //         LOG(DEBUG) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) 
+                            //             << ", width " << unsigned(cPCluster.fWidth) << ", row "
+                            //             << unsigned(cPCluster.fZpos) << RESET;
+                                        
+                            // }
+                            LOG (DEBUG) << BOLDMAGENTA  << "MPA#" << +cChip->getId() 
+                                << " have found "
+                                << +cNmatched 
+                                << " P-clusters out of "
+                                << +cSummaryInj.size() 
+                                << " injected."
+                                << RESET;
+                            auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
+                            auto& cSummary = cInjectionsThisChip->getSummary<std::vector<uint32_t>>();
+                            cSummary.push_back( cNmatched ); 
+                            if( (1+cEvent->GetEventCount())%100 ==  0 ) 
+                            {
+                                LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
+                                        << "\t\tMPA#" << +cChip->getId()
+                                        << "\t... found the " << +cStubs.size() 
+                                        << " stubs in this event, "
+                                        << +cPClusters.size() 
+                                        << " pixel clusters and "
+                                        << +cSClusters.size() 
+                                        << " strip clusters "
+                                        << " summary has "
+                                        << +cSummary.size() << " entries "
+                                        << RESET;
+                            }
+                            
+                            //check stubs are where you put them
+                            //not checking bend for now
+                            size_t cNMatchedStubs=0;
+                            for(auto cStub: cStubs)
+                            {
+                                auto     cStubAddress = cStub.getPosition();
+                                auto     cRow         = cStub.getRow();
+                                uint32_t cPixelId     = (cStubAddress / 2) + cRow * 120;
+                                bool cMatch=false;
+                                for( auto cInj : cSummaryInj) 
+                                {
+                                    uint32_t           cId = (uint32_t)(cInj.fColumn) * 120 + (uint32_t)cInj.fRow;
+                                    if( cPixelId == cId ) cMatch = true;
+                                }
+                                if( cMatch )
+                                    LOG (DEBUG) << "Matched stub " 
+                                        << " address " << +cStubAddress 
+                                        << " row " << +cRow 
+                                        << RESET;
+                                cNMatchedStubs += (cMatch) ? 1 : 0; 
+                            }
                         } // ROCs
                     } // hybrids or CICs
                 } // optical group loop
@@ -1261,6 +1371,7 @@ void DataChecker::PSNominal()
 
                         auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
                         auto& cExpectedClstrsThisChip = cExpectedHybrid->at(cChip->getIndex());
+                        
                         auto cSummary = cInjectionsThisChip->getSummary<std::vector<uint32_t>>(); 
                         float cExpected = (float)(cExpectedClstrsThisChip->getSummary<uint32_t>());
                         if( cExpected ==0 ) continue;
@@ -1271,7 +1382,7 @@ void DataChecker::PSNominal()
                             cData.push_back( (float)cPt );
                             if( (float)cPt != cExpected ) 
                             {
-                                LOG (INFO) << BOLDRED << "MPA#" << +cChip->getId() 
+                                LOG (DEBUG) << BOLDRED << "MPA#" << +cChip->getId() 
                                     << " expected  " << +cExpected << " clusters and have found "
                                     << +cPt << RESET;
                             }
@@ -1281,11 +1392,14 @@ void DataChecker::PSNominal()
                             #endif
                         }
                         auto cStats = getStats(cData); 
-                        LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
-                            << " on average have found " << +cStats.first 
-                            << " clusters and expect "
-                            << +cExpectedClstrsThisChip->getSummary<uint32_t>() 
-                            << RESET;
+                        //if( cAttempt%10 == 0 )
+                        {
+                            LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
+                                << " on average have found " << +cStats.first 
+                                << " clusters and expect "
+                                << +cExpectedClstrsThisChip->getSummary<uint32_t>() 
+                                << RESET;
+                        }
                         // #ifdef __USE_ROOT__
                         //     TProfile2D* cMatched = static_cast<TProfile2D*>(getHist(cHybrid, "PclusterMatchRawN"));
                         //     cMatched->Fill( cChip->getId(), cTotalNumberOfClusters , cStats.first/cExpected ) ; 

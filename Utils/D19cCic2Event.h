@@ -203,6 +203,7 @@ class D19cCic2Event : public Event
     void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
 
     void     print(std::ostream& out) const override;
+    uint16_t L1Status(uint8_t pFeId) const;
     uint32_t L1Id(uint8_t pFeId, uint8_t pReadoutChipId) const;
     uint32_t BxId(uint8_t pFeId) const override;
     uint16_t Status(uint8_t pFeId) const;

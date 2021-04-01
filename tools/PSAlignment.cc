@@ -256,6 +256,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
 
     return cPhaseFound;
 }
+
 bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
 {
     bool cPhaseFound = true;
@@ -408,13 +409,13 @@ bool PSAlignment::Align()
 
         cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
 
-        cStubAligned = cStubAligned && this->AlignStubInputs(cBoard);
+        // cStubAligned = cStubAligned && this->AlignStubInputs(cBoard);
 
         LOG(INFO) << BOLDBLUE << "L1 alignemnt " << RESET;
         cl1Aligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
 
-        LOG(INFO) << BOLDBLUE << "Stub alignemnt " << RESET;
-        cStubAligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
+        // LOG(INFO) << BOLDBLUE << "Stub alignemnt " << RESET;
+        // cStubAligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
     }
     return cStubAligned && cl1Aligned;
 }

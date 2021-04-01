@@ -299,24 +299,6 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "StubInputPhase")
     {
-        uint8_t cBitShift = 1;
-        uint8_t cRegMask  = (0x7 << cBitShift); //
-        cRegMask          = ~(cRegMask);
-        auto    cReg      = this->readPeri(pMPA, "LatencyRx320");
-        uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        return this->configPeri(pMPA, "LatencyRx320", cValue);
-    }
-    else if(pRegName == "L1InputPhase")
-    {
-        uint8_t cBitShift = 0;
-        uint8_t cRegMask  = (0x1 << cBitShift); //
-        cRegMask          = ~(cRegMask);
-        auto    cReg      = this->readPeri(pMPA, "LatencyRx320");
-        uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        return this->configPeri(pMPA, "LatencyRx320", cValue);
-    }
-    else if(pRegName == "StubInputPhase")
-    {
         uint8_t cBitShift = 3;
         uint8_t cRegMask  = (0x7 << cBitShift); //
         cRegMask          = ~(cRegMask);
@@ -332,7 +314,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         cRegMask          = ~(cRegMask);
         auto    cReg      = this->ReadChipReg(pMPA, "LatencyRx320");
         uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        // LOG (INFO) << BOLDBLUE << "Writing " << std::hex <<  +cValue <<" "<<+( cReg  & cRegMask )<<" "<<(pValue <<  cBitShift )<< std::dec << RESET;
+        LOG (INFO) << BOLDBLUE << "Writing " << std::bitset<8>(+cValue) << " mask is "<< std::bitset<8>( cReg  & cRegMask ) << RESET;//"  "<<(pValue <<  cBitShift )<< std::dec << RESET;
         return this->WriteChipReg(pMPA, "LatencyRx320", cValue);
     }
     else if(pRegName == "StubMode")
