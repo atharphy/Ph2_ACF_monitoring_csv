@@ -137,9 +137,121 @@ int main(int argc, char* argv[])
     // LOG(INFO) << outp.str();
     // select CIC readout
     // cHybridTester.SelectCIC(true);
-    cHybridTester.ConfigureHw();
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
+
+    bool cMonitorLPGBT=true;
+    std::string cMonitor = "right";
+    cHybridTester.ConfigureHw();
+    
+    if( cMonitorLPGBT )
+    {
+        float VREF_LPGBT = 1.0; 
+        float cConversionFactor = VREF_LPGBT/ 1024.;
+        for(const auto cBoard: *cHybridTester.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT =  cOpticalGroup->flpGBT ;
+                if(clpGBT == nullptr) continue;
+
+                // enable voltage 
+                std::vector<std::string> cADCs_VoltageMonitors{"ADC1","ADC2","ADC6","ADC7","VDD"};
+                std::vector<std::string> cADCs_Names{"1V_Monitor","12V_Monitor","1V25_Monitor","2V55_Monitor"};
+                std::vector<std::string> cModuleSide{"left","left","right","left","internal"};
+                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.25  , 2.55, 1.25*0.42};
+                //std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
+                // use Vddd as reference 
+                // use P1V25 as reference
+                size_t cIndx=4;
+                static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
+                // find correction 
+                std::vector<float> cVals(10,0);
+                uint8_t cEnableVref=1;
+                std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+                std::vector<uint8_t> cRefPoints{0, 0x05, 0x10, 0x20, 0x3F };
+                std::vector<float> cMeasurements(0);
+                std::vector<float> cSlopes(0);
+                for( auto cRef : cRefPoints) 
+                {
+                    static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
+                    for(size_t cM=0; cM < cVals.size(); cM++)
+                    {
+                        cVals[cM] = static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                    }
+                    float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                    float cDifference_V = (cADCs_Refs[cIndx] - cMean );
+                    LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                            << " correction applied is " << +cRef 
+                            << " reading [mean] is "
+                            << +cMean*1e3 
+                            << " milli-volts."
+                            << "\t...Difference between expected and measured "
+                            << " values is "
+                            << cDifference_V*1e3 
+                            << " milli-volts." << RESET;
+
+                    cMeasurements.push_back(cDifference_V);
+                    if( cMeasurements.size() > 1 ) 
+                    {
+                        for(int cI=cMeasurements.size()-2; cI>=0; cI--)
+                        {
+                            float cSlope = (cMeasurements[cMeasurements.size()-1] - cMeasurements[cI])/(cRefPoints[cMeasurements.size()-1 ]-cRefPoints[cI]);
+                            LOG (DEBUG) << BOLDBLUE << "Index " << +(cMeasurements.size()-1 )
+                                << " -- index " << cI
+                                << " slope is " << cSlope 
+                                << RESET;
+                            cSlopes.push_back(cSlope);
+                        }
+                    }
+                }
+                float cMeanSlope = std::accumulate(cSlopes.begin(),cSlopes.end(),0.)/cSlopes.size();
+                float cIntcpt = cMeasurements[0]; 
+                int cCorr = std::min( std::floor(-1.0*cIntcpt/cMeanSlope), 63. );
+                LOG (DEBUG) << BOLDBLUE << "Mean slope is " << cMeanSlope 
+                    << " , intercept is " << cIntcpt 
+                    << " correction is " << cCorr
+                    << RESET;
+                // apply correction and check
+                static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
+                for(size_t cM=0; cM < cVals.size(); cM++)
+                {
+                    cVals[cM] = static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                }
+                // turn off ADC mon
+                static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
+                
+                float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean );
+                LOG (INFO) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                            << +cMean*1e3 
+                            << " milli-volts."
+                            << "\t...Difference between expected and measured "
+                            << " values is "
+                            << cDifference_V*1e3 
+                            << " milli-volts." << RESET;
+
+                for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
+                {
+                    std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+                    if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
+                    
+                    for(size_t cM=0; cM < cVals.size(); cM++)
+                    {
+                        cVals[cM] = static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                    }
+                    float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                    //float cStartUpMontior = cMean;
+                    LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
+                        << +cMean*1e3 
+                        << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
+                        << " side of the module" << RESET;
+                }//read all monitors 
+            }// configure lpGBT 
+        }
+    }
+
+    
 
     // align ASICs on PS module
     PSAlignment cPSAlignment;

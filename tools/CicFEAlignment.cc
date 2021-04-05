@@ -365,6 +365,8 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 {
     // MPA phase alignment
     bool cAligned = true;
+    auto cSetting  = fSettingsMap.find("SLVSDrive"); 
+    uint8_t  cSLVSDrive = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 7;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for MPAs .... " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -390,7 +392,14 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                         cRegs.push_back( cRegNames[cIndex] );
                         fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
                     } // loop over MPAs
-                }     // loop over registers
+                }// loop over registers
+
+                // configure SLVS drive
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    fReadoutChipInterface->WriteChipReg(cChip, "SLVSDrive", cSLVSDrive);
+                } // loop over MPAs
 
                 // send a resync
                 fBeBoardInterface->ChipReSync(cBoard);
@@ -399,7 +408,36 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic, true);
                 bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
                 // if locked .. switch to automatic phase aligner mode with best values
-                if(cLocked) fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
+                if(cLocked){ 
+                    fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
+                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
+                    auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                    size_t cPhyPort=0; 
+                    size_t cPhyPortChnl=0; 
+                    size_t cCounter=0; 
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                        std::string cOutput;
+                        char cBuffer[80];
+                        // first all the stub lines 
+                        for(uint8_t cInput = 0; cInput < 5; cInput += 1)
+                        {
+                            sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnl][cPhyPort]);
+                            cOutput += cBuffer;
+                            cPhyPort = ( (cCounter+1)%4 == 0 ) ? (cPhyPort+1) : cPhyPort; 
+                            cPhyPortChnl = cCounter%4; 
+                            cCounter++; 
+                        }
+                        // then the L1 line 
+                        size_t cPhyPortL1 = (cChip->getId() >3 ) ? 11 : 10; 
+                        size_t cPhyPortChnlL1   = (cChip->getId()%4); 
+                        sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnlL1][cPhyPortL1]);
+                        cOutput += cBuffer;
+                        LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
+                    }
+
+                }
                 cAligned = cAligned && cLocked;
 
                 //reset original values 

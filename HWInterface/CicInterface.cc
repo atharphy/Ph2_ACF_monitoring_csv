@@ -1017,12 +1017,20 @@ bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPort
     cRegMask           = ~(cRegMask);
     uint16_t cRegValue = this->ReadChipReg(pChip, cRegItem).second;
     int      cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]) + pOffset;
-    if(cPhaseTap < 0 || cPhaseTap > 0xF) return false;
+    if(cPhaseTap < 0 || cPhaseTap > 0xF){ 
+        LOG(DEBUG) << BOLDRED << "FAILED TO modify optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " .. wanted to set a phase tap of " 
+            << +cPhaseTap
+            << " when original was "
+            << +fPhaseTaps[pPhyPortChannel][pPhyPort]
+            << RESET;
+        cPhaseTap =  int(fPhaseTaps[pPhyPortChannel][pPhyPort]);
+    }// revert to optimal if offset makes no sense
     uint8_t cValue = (cRegValue & cRegMask) | (cPhaseTap << cBitShift);
 
-    LOG(DEBUG) << BOLDBLUE << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
+    LOG(DEBUG) << BOLDGREEN << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
                << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of "
-               << +(fPhaseTaps[pPhyPortChannel][pPhyPort]) << RESET;
+               << +cPhaseTap 
+               << " original tap value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort]) << RESET;
     return WriteReg(pChip, cRegItem.fAddress, cValue, cVerifloop);
 }
 bool CicInterface::SetOptimalTaps(Chip* pChip, int pOffset)
@@ -1062,7 +1070,6 @@ uint8_t CicInterface::GetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyP
     {
         cSuccess                              = cSuccess && cReadBack.first;
         cPhaseTap                             = (cReadBack.second & (0xF << (cBitOffset * 4))) >> (cBitOffset * 4);
-        fPhaseTaps[pPhyPortChannel][pPhyPort] = cPhaseTap;
         LOG(DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Optimal tap " << +cPhaseTap << RESET;
     }
     return cPhaseTap;
@@ -1152,14 +1159,15 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
             cFeCounter               = (cLastStubLineFound) ? cBitIndex : cFeCounter;
             auto     cPhaseTap       = this->GetOptimalTap(pChip, cPortCounter, cInputCounter);
             uint32_t cPhaseValue     = (cInputLineCounter == 0) ? cPhaseTap : (fPhaseValues[cFeCounter].to_ulong() | (cPhaseTap << cInputLineCounter * 4));
-            fPhaseValues[cFeCounter] = std::bitset<24>(cPhaseValue);
-
-            LOG(DEBUG) << BOLDBLUE << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
-                       << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
-
-            fPhaseTaps[cInputCounter][cPortCounter] = cPhaseTap;
+            
             // and save to register
-            if(cAligned == 0x1) this->SetOptimalTap(pChip, cPortCounter, cInputCounter);
+            if(cAligned == 0x1){ 
+                fPhaseValues[cFeCounter] = std::bitset<24>(cPhaseValue);
+                fPhaseTaps[cInputCounter][cPortCounter] = cPhaseTap;
+                this->SetOptimalTap(pChip, cPortCounter, cInputCounter);
+                LOG(DEBUG) << BOLDBLUE << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
+                    << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+            }
             fPortStates[cPortCounter][cInputCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
             fFeStates[cFeCounter][cInputLineCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
 
@@ -1186,10 +1194,10 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
             cLocked = cLocked & (fFeStates[cFeCounter][cInputLineCounter] == cCheckValue);
         }
         if(cLocked)
-            LOG(INFO) << BOLDGREEN << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
+            LOG(DEBUG) << BOLDGREEN << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
                       << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDGREEN << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
         else
-            LOG(INFO) << BOLDRED << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
+            LOG(DEBUG) << BOLDRED << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
                       << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDRED << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
     }
     if(cLocked)

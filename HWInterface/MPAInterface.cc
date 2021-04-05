@@ -263,6 +263,18 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
+    else if(pRegName.find("SLVSDrive") != std::string::npos) 
+    {
+        uint8_t cBitShift    = 0;
+        uint8_t cRegMask     = (0x7 << cBitShift); //
+        cRegMask             = ~(cRegMask);
+        auto    cRegValue      = this->ReadChipReg(pMPA, "ConfSLVS");
+        uint8_t cValue =  (cRegValue & cRegMask) | (pValue << cBitShift);
+        LOG (DEBUG) << BOLDMAGENTA << "Setting SLVS register to 0x" 
+            << std::hex << +cValue << std::dec 
+            << RESET;
+        return this->WriteChipReg(pMPA, "ConfSLVS", cValue);
+    }   
     else if(pRegName.find("BendCode") != std::string::npos) // configure bend LUT
     {
         std::string cSubStr = pRegName.substr(pRegName.find("BendCode") + std::string("BendCode").length(), pRegName.length());

@@ -204,8 +204,10 @@
     <Setting name="AsyncCalDac">30</Setting>
 
     <!-- Sync Test --> 
-    <Setting name="Attempts">100</Setting>
-    <Setting name="MaxPClusters">2</Setting>
+    <Setting name="Attempts">40</Setting>
+    <Setting name="MaxPClusters">1</Setting>
+    <Setting name="SLVSDrive">3</Setting>
+    <Setting name="MaxOffset">7</Setting>
 
     <Setting name="StartTHDAC">0x40</Setting>
     <Setting name="StopTHDAC">0x90</Setting>
