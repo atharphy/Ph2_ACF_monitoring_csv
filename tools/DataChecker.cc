@@ -313,9 +313,61 @@ void DataChecker::Initialise()
                 cName = Form("h_L1Eye_Cic%d", cHybrid->getId() );
                 cObj  = gROOT->FindObject(cName);
                 if(cObj) delete cObj;
-                cProfile2D = new TProfile2D(cName, Form("P-cluster Matching [L1-eye], digi-inject test CIC%d; MPA Id; Phase ", (int)cHybrid->getId()), 8, 0 - 0.5, 8 - 0.5, 20 , 0 - 0.5, 20 - 0.5);
+                cProfile2D = new TProfile2D(cName, Form("P-cluster Matching [L1-eye], digi-inject test CIC%d; MPA Id; Phase ", (int)cHybrid->getId()), 10, 0 , 10, 20 , 0 , 20);
                 bookHistogram(cHybrid, "PclusterMatchingL1Eye", cProfile2D);
-                   
+                
+                // first per L1 Id
+                cName = Form("h_BxDifference_Cic%d", cHybrid->getId());
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                TH1D* cHist1D = new TH1D(cName, Form("Bx Id, digi-inject test CIC%d; Bx Id difference", (int)cHybrid->getId()), 1000 , -500 - 0.5, 500 -0.5 );
+                bookHistogram(cHybrid, "BxIdDifference", cHist1D);
+
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
+                    cName = Form("h_Inj_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist = new TH2D(cName, Form("Injected P-cluster, digi-inject test MPA%d CIC%d; Row; Column", (int)cChip->getId(), (int)cHybrid->getId()), 20 , 0 , 20 , 130 , 0 , 130);
+                    bookHistogram(cChip, "InjectionMap", cHist);
+
+
+                    cName = Form("h_MatchedInj_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist = new TH2D(cName, Form("Matched P-cluster, digi-inject test MPA%d CIC%d; Row; Column", (int)cChip->getId(), (int)cHybrid->getId()), 20 , 0 , 20 , 130 , 0 , 130);
+                    bookHistogram(cChip, "MatchedInjectionMap", cHist);
+
+
+                    cName = Form("h_PInj_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist1D = new TH1D(cName, Form("P-cluster Matching [Inj], digi-inject test MPA%d CIC%d; Number of Clusters; Count", (int)cChip->getId(), (int)cHybrid->getId()), 10, 0 - 0.5, 10 - 0.5 );
+                    bookHistogram(cChip, "PclusterInjCount", cHist1D);
+
+                    cName = Form("h_PInj2D_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist = new TH2D(cName, Form("P-cluster Matching [Inj], digi-inject test MPA%d CIC%d; Number of Clusters; Total number of clusters", (int)cChip->getId(), (int)cHybrid->getId()), 10, 0 - 0.5, 10 - 0.5, 100, 0 - 0.5 ,100 - 0.5 );
+                    bookHistogram(cChip, "PclusterInjCount2D", cHist);
+
+
+                    cName = Form("h_PMatched_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist1D = new TH1D(cName, Form("P-cluster Matching [Matched], digi-inject test CIC%d MPA%d; Number of Clusters; Count",  (int)cChip->getId(), (int)cHybrid->getId()), 10, 0 - 0.5, 10 - 0.5 );
+                    bookHistogram(cChip, "PclusterMatchedCount", cHist1D);
+
+                    cName = Form("h_PMatched2D_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist = new TH2D(cName, Form("P-cluster Matching [Matched], digi-inject test CIC%d MPA%d; Number of Clusters; Total number of clusters", (int)cChip->getId(), (int)cHybrid->getId()), 10, 0 - 0.5, 10 - 0.5, 100, 0 - 0.5 ,100 - 0.5 );
+                    bookHistogram(cChip, "PclusterMatchedCount2D", cHist);
+
+                }
+
             }
         }
 #endif
@@ -1052,6 +1104,10 @@ void DataChecker::PSNominal()
         LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
         // read events
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+
+        auto cPackageDelay  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+        LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
+        //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
     }//boards
 
     // configure SLVS drive 
@@ -1076,11 +1132,55 @@ void DataChecker::PSNominal()
     // generate injections in this MPA 
     std::uniform_int_distribution<int> cFlatDistCols(2, 13);
     std::uniform_int_distribution<int> cFlatDistRows(2, 118); // avoid colums 1 and 120 
-    std::uniform_int_distribution<int> cNClusterDist(0, nMaxClusters); 
-    std::uniform_int_distribution<int> cMPAsDist(1, 7);
+    std::uniform_int_distribution<int> cNClusterDist(1, nMaxClusters); 
+    std::uniform_int_distribution<int> cMPAsDist(1, 8);
     std::uniform_int_distribution<int> cMPAIdDist(0, 7);
 
 
+    // original phase taps 
+    DetectorDataContainer fOriginalPhaseTaps; 
+    ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fOriginalPhaseTaps);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& fTapsOrig = fOriginalPhaseTaps.at( cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& fTapsOrigOG = fTapsOrig->at( cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& fTapsOrigHybrid = fTapsOrigOG->at( cHybrid->getIndex());
+                auto& cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                //auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                //size_t cPhyPort=0; 
+                //size_t cPhyPortChnl=0; 
+                //size_t cCounter=0; 
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    std::string cOutput="";
+                    char cBuffer[80];
+                    // first all the stub lines 
+                    // for(uint8_t cInput = 0; cInput < 5; cInput += 1)
+                    // {
+                    //     sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnl][cPhyPort]);
+                    //     cOutput += cBuffer;
+                    //     cPhyPort = ( (cCounter+1)%4 == 0 ) ? (cPhyPort+1) : cPhyPort; 
+                    //     cPhyPortChnl = cCounter%4; 
+                    //     cCounter++; 
+                    // }
+                    // then the L1 line 
+                    size_t cPhyPortL1 = (cChip->getId() >3 ) ? 11 : 10; 
+                    size_t cPhyPortChnlL1   = (cChip->getId()%4); 
+                    auto& fTapsOrigChip = fTapsOrigHybrid->at(cChip->getIndex());
+                    auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                    fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
+                    sprintf(cBuffer, "%.2d ", fTapsOrigChip->getSummary<uint8_t>());
+                    cOutput += cBuffer;
+                    LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
+                }
+            } // hybrid
+        }// optical group
+    }// board    
 
     // set offsets on CICs
     bool cModifyL1Phase=true; 
@@ -1093,15 +1193,15 @@ void DataChecker::PSNominal()
             cOffsets.push_back( cExtraOffset*-1 );
         }
     }
+    int cDebugPrintOut=10;
     for( auto cOffset : cOffsets )
     {
         LOG (INFO) << BOLDMAGENTA << "Offset from optimal phase of "
             << +cOffset 
             << " taps." 
             << RESET;
-        DetectorDataContainer fPhaseTaps, fOriginalPhaseTaps; 
+        DetectorDataContainer fPhaseTaps; 
         ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fPhaseTaps);
-        ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fOriginalPhaseTaps);
         for(auto cBoard: *fDetectorContainer)
         {
             auto& fTaps = fPhaseTaps.at(cBoard->getIndex());
@@ -1123,7 +1223,6 @@ void DataChecker::PSNominal()
                     {
                         if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
                         std::string cOutput="";
-                        char cBuffer[80];
                         // first all the stub lines 
                         // for(uint8_t cInput = 0; cInput < 5; cInput += 1)
                         // {
@@ -1138,14 +1237,11 @@ void DataChecker::PSNominal()
                         size_t cPhyPortChnlL1   = (cChip->getId()%4); 
                         auto& fTapsChip = fTapsHybrid->at(cChip->getIndex());
                         auto& fTapsOrigChip = fTapsOrigHybrid->at(cChip->getIndex());
+                        int cPhase = fTapsOrigChip->getSummary<uint8_t>();
+                        int cPhaseMod = cPhase + cOffset;
                         fCicInterface->SetOptimalTap(cCic, cPhyPortL1, cPhyPortChnlL1, cOffset);
-                        auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
-                        fTapsChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
-                        if( cOffset == 0 ) fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
-                        sprintf(cBuffer, "%.2d ", fTapsChip->getSummary<uint8_t>());
-                        cOutput += cBuffer;
-                        LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
-                        
+                        cPhaseMod = (cPhaseMod < 0 || cPhaseMod > 0xF) ? cPhase : cPhaseMod;
+                        fTapsChip->getSummary<uint8_t>() = cPhaseMod;
                     }
                 } // hybrid
             }// optical group
@@ -1153,32 +1249,50 @@ void DataChecker::PSNominal()
 
         for( size_t cAttempt = 0 ; cAttempt < cMaxAttempts ; cAttempt++ )
         {
-            if( cAttempt%10 == 0 )
+            if( cAttempt%cDebugPrintOut == 0 )
                 LOG (INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
             
             // prepare data container 
             // zero what needs zeroing
 
+            DetectorDataContainer fBxIds, fCicInjections; 
+            ContainerFactory::copyAndInitHybrid<std::vector<uint32_t>>(*fDetectorContainer, fBxIds);
+            ContainerFactory::copyAndInitHybrid<uint32_t>(*fDetectorContainer, fCicInjections);
             DetectorDataContainer fInjectedPClusters, fReadoutPClusters;
-            DetectorDataContainer fPixelInjections;  
             ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fInjectedPClusters);
             ContainerFactory::copyAndInitChip<std::vector<uint32_t>>(*fDetectorContainer, fReadoutPClusters);
+            DetectorDataContainer fPixelInjections , fPixelExpected;
             ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, fPixelInjections);
+            ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, fPixelExpected);
             for(auto cBoard: *fDetectorContainer)
             {
+                auto& cBxIds = fBxIds.at(cBoard->getIndex());
                 auto& cInjections = fInjectedPClusters.at(cBoard->getIndex());
                 auto& cMatched = fReadoutPClusters.at(cBoard->getIndex());
                 auto& cInj = fPixelInjections.at(cBoard->getIndex());
+                auto& cExp = fPixelExpected.at(cBoard->getIndex());
+                auto& cCicInj = fCicInjections.at(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
                     auto& cMatchedOGs = cMatched->at(cOpticalGroup->getIndex());
                     auto& cInjOG = cInj->at(cOpticalGroup->getIndex());
+                    auto& cExpOG = cExp->at(cOpticalGroup->getIndex());
+                    auto &cBxIdsOG = cBxIds->at(cOpticalGroup->getIndex());
+                    auto& cCicInjOG = cCicInj->at(cOpticalGroup->getIndex());
+                
                     for(auto cHybrid: *cOpticalGroup)
                     {
+
+                        auto& cExpHybrid = cExpOG->at(cHybrid->getIndex());
                         auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
                         auto& cMatchedHybrid = cMatchedOGs->at(cHybrid->getIndex());
                         auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
+                        auto& cBxIdsHybrid = cBxIdsOG->at(cHybrid->getIndex());
+                        auto& cSummaryBxIds = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
+                        cSummaryBxIds.clear();
+                        auto& cCicInjHybrid = cCicInjOG->at(cHybrid->getIndex());
+                        cCicInjHybrid->getSummary<uint32_t>() = 0 ; 
                         for(auto cChip: *cHybrid)
                         {
                             auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
@@ -1189,6 +1303,9 @@ void DataChecker::PSNominal()
                             auto& cInjChip = cInjHybrid->at(cChip->getIndex());
                             auto& cSummaryInj = cInjChip->getSummary<std::vector<Injection>>();
                             cSummaryInj.clear();
+                            auto& cExpChip = cExpHybrid->at(cChip->getIndex());
+                            auto& cSummaryExp = cExpChip->getSummary<std::vector<Injection>>();
+                            cSummaryExp.clear();
                         }
                     }
                 }
@@ -1200,38 +1317,41 @@ void DataChecker::PSNominal()
             {
                 auto& cInjections = fInjectedPClusters.at(cBoard->getIndex());
                 auto& cInj = fPixelInjections.at(cBoard->getIndex());
+                auto& cCicInj = fCicInjections.at(cBoard->getIndex());
                 for(auto cOpticalReadout: *cBoard)
                 {
                     auto& cInjectionsOpticalGroup = cInjections->at(cOpticalReadout->getIndex());
                     auto& cInjOG = cInj->at(cOpticalReadout->getIndex());
+                    auto& cCicInjOG = cCicInj->at(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
                         auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
                         auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
-                        
-                        // size_t cNMPAs = cMPAsDist(cGen); 
-                        // std::vector<int> cMPAs; cMPAs.clear();
-                        // do
-                        // {
-                        //     int cMPA = cMPAIdDist(cGen);
-                        //     if ( std::find( cMPAs.begin(), cMPAs.end(), cMPA ) == cMPAs.end() )
-                        //     {
-                        //         cMPAs.push_back( cMPA );
-                        //     }
+                        auto& cCicInjHybrid = cCicInjOG->at(cHybrid->getIndex());
+                        auto& cCicInjSummary = cCicInjHybrid->getSummary<uint32_t>(); 
+                        size_t cNMPAs = cMPAsDist(cGen); 
+                        std::vector<int> cMPAs; cMPAs.clear();
+                        do
+                        {
+                            int cMPA = cMPAIdDist(cGen);
+                            if ( std::find( cMPAs.begin(), cMPAs.end(), cMPA ) == cMPAs.end() )
+                            {
+                                cMPAs.push_back( cMPA );
+                            }
 
-                        // }while( cMPAs.size() < cNMPAs ) ;
+                        }while( cMPAs.size() < cNMPAs ) ;
+                        if( cMPAs.size() == 0 ) continue;
 
-                        // if( cMPAs.size() == 0 ) continue;
-
-                        // LOG (INFO) << BOLDMAGENTA << "Injecting clusters in " 
-                        //     << +cMPAs.size() << " MPAs." << RESET;
+                        if( cAttempt%cDebugPrintOut == 0 )
+                            LOG (INFO) << BOLDMAGENTA << "Injecting clusters in " 
+                                 << +cMPAs.size() << " MPAs." << RESET;
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
                             // for the moment - only written for CBC3
                             if(cChip->getFrontEndType() == FrontEndType::MPA)
                             {
-                                // if( std::find( cMPAs.begin(), cMPAs.end(), cChip->getId()) == cMPAs.end() ) 
-                                //     continue;
+                                if( std::find( cMPAs.begin(), cMPAs.end(), cChip->getId()) == cMPAs.end() ) 
+                                    continue;
 
                                 auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
                                 auto& cInjChp = cInjHybrid->at(cChip->getIndex());
@@ -1289,21 +1409,29 @@ void DataChecker::PSNominal()
                                     }
                                 }while( cPixelIds.size() < cNclstrs && cTotalNumberOfClusters < cMaxNstubs );  // create injection patterns
                                 cInjectionsChip->getSummary<uint32_t>() = cInjections.size();
-                                LOG (DEBUG) << BOLDBLUE << "Injecting " << +cInjectionsChip->getSummary<uint32_t>()<< " clusters/stubs in MPA#" << +cChip->getId() << RESET;
+                                cCicInjSummary += cInjections.size();
+                                if( cAttempt%cDebugPrintOut == 0 )
+                                    LOG (INFO) << BOLDBLUE << "Injecting " << +cInjectionsChip->getSummary<uint32_t>()<< " clusters/stubs in MPA#" << +cChip->getId() << RESET;
                                 (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
                             }
                         } // chip
                     }// hybrid
                 }// module
             }//boards
-            if( cAttempt%10 == 0 )
+            if( cAttempt%cDebugPrintOut == 0 )
                 LOG (INFO) << BOLDMAGENTA << "In total have " 
                     << +cTotalNumberOfClusters
                     << " clusters in this run."
                     << RESET;
 
+            // read events 
+            DetectorDataContainer fPClusters;
+            ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, fPClusters);
             for(auto cBoard: *fDetectorContainer)
             {
+                auto& cExp = fPixelExpected.at(cBoard->getIndex());
+                auto& cPClusters = fPClusters.at(cBoard->getIndex());
+                auto& cBxIds = fBxIds.at(cBoard->getIndex());
                 auto& cInjections = fReadoutPClusters.at(cBoard->getIndex());
                 LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
                 ReadNEvents(cBoard, cNevents);
@@ -1319,20 +1447,36 @@ void DataChecker::PSNominal()
                     
                     for(auto cOpticalGroup: *cBoard)
                     {
+
+                        auto& cExpOG = cExp->at(cOpticalGroup->getIndex());
+                        auto& cPClustersOG = cPClusters->at(cOpticalGroup->getIndex());
                         auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
                         auto& cInjOG = cInj->at(cOpticalGroup->getIndex());
+                        auto &cBxIdsOG = cBxIds->at(cOpticalGroup->getIndex());
+                                    
                         for(auto cHybrid: *cOpticalGroup)
                         {
+                            auto& cExpHybrid = cExpOG->at(cHybrid->getIndex());
+                            auto& cPClustersHybrid = cPClustersOG->at(cHybrid->getIndex());
                             auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
                             auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
                             auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
                             auto cErrorBitCic = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), 8);
+                            auto& cBxIdsHybrid = cBxIdsOG->at(cHybrid->getIndex());
+                            auto& cSummaryBxIds = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
+                            auto     cBxId     = cEvent->BxId(cHybrid->getId());
+                            cSummaryBxIds.push_back(cBxId);
                             for(auto cChip: *cHybrid)
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
+                                auto& cPClustersChip = cPClustersHybrid->at(cChip->getIndex());
+                                auto& cPClustersSmry = cPClustersChip->getSummary<std::vector<Injection>>();
                                 auto& cInjChp = cInjHybrid->at(cChip->getIndex());
                                 auto& cSummaryInj = cInjChp->getSummary<std::vector<Injection>>();
+                                auto& cExpChip = cExpHybrid->at(cChip->getIndex());
+                                auto& cExpPClusterSmry = cExpChip->getSummary<std::vector<Injection>>();
+                            
                                 // don't bother checking when I havne't injected
                                 if ( cSummaryInj.size() == 0 ) continue; 
 
@@ -1346,9 +1490,14 @@ void DataChecker::PSNominal()
                                 auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
                                 // check pixel clusters
                                 size_t cNmatched=0;
+                                
                                 for( auto cM : cSummaryInj) 
                                 {
                                     bool cFound=false;
+                                    Injection cInjection;
+                                    cInjection.fRow = cM.fRow;
+                                    cInjection.fColumn    = cM.fColumn; 
+                                    cExpPClusterSmry.push_back( cInjection );
                                     for( auto cPCluster :  cPClusters) 
                                     {
                                         if( cPCluster.fAddress == cM.fRow && cPCluster.fZpos == cM.fColumn ) 
@@ -1380,40 +1529,36 @@ void DataChecker::PSNominal()
                                             << std::bitset<9>(cL1Status&0x1FF)
                                             << " L1 error is "
                                             << std::bitset<8>(+cMPAL1Error)
+                                            << " BxId is "
+                                            << +cSummaryBxIds[cSummaryBxIds.size()-1]
+                                            << " "
+                                            << +cBxId
                                             << RESET;
                                         
                                 }
-                                // for(auto cPCluster: cPClusters)
-                                // {
-                                //     bool cFound=false;
-                                //     LOG(DEBUG) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) 
-                                //         << ", width " << unsigned(cPCluster.fWidth) << ", row "
-                                //         << unsigned(cPCluster.fZpos) << RESET;
-                                //     for( size_t cIndx=0; cIndx < cSummaryInj.size(); cIndx++) 
-                                //     {
-                                //         if( cPCluster.fAddress == cSummaryInj[cIndx].fRow && cPCluster.fZpos == cSummaryInj[cIndx].fColumn ) 
-                                //             cFound = true;
-                                //     }
-                                //     cNmatched += (cFound) ? 1 : 0; 
-                                //     if( !cFound )
-                                //         LOG(DEBUG) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) 
-                                //             << ", width " << unsigned(cPCluster.fWidth) << ", row "
-                                //             << unsigned(cPCluster.fZpos) << RESET;
-                                            
-                                // }
-                                LOG (DEBUG) << BOLDMAGENTA  << "MPA#" << +cChip->getId() 
-                                    << " have found "
-                                    << +cNmatched 
-                                    << " P-clusters out of "
-                                    << +cSummaryInj.size() 
-                                    << " injected."
-                                    << RESET;
+
+                                for( auto cPCluster :  cPClusters) 
+                                {
+                                    Injection cInjection; 
+                                    cInjection.fRow = cPCluster.fAddress;
+                                    cInjection.fColumn    = cPCluster.fZpos; 
+                                    cPClustersSmry.push_back( cInjection );
+                                }
+                                // LOG (INFO) << BOLDMAGENTA  << "MPA#" << +cChip->getId() 
+                                //     << " have found "
+                                //     << +cPClusters.size() 
+                                //     << " P-clusters out of "
+                                //     << +cSummaryInj.size() 
+                                //     << " injected... of those "
+                                //     << +cNmatched 
+                                //     << " match."
+                                //     << RESET;
                                 auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
                                 auto& cSummary = cInjectionsThisChip->getSummary<std::vector<uint32_t>>();
                                 cSummary.push_back( cNmatched ); 
-                                if( (1+cEvent->GetEventCount())%100 ==  0 ) 
-                                {
-                                    LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
+                                //if( (1+cEvent->GetEventCount())%100 ==  0 ) 
+                                //{
+                                    LOG (DEBUG) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
                                             << "\t\tMPA#" << +cChip->getId()
                                             << "\t... found the " << +cStubs.size() 
                                             << " stubs in this event, "
@@ -1423,8 +1568,16 @@ void DataChecker::PSNominal()
                                             << " strip clusters "
                                             << " summary has "
                                             << +cSummary.size() << " entries "
+                                            << " p-cluster readout summary has "
+                                            << +cPClustersSmry.size() << " entries "
+                                            << " p-cluster injection summary has "
+                                            << +cExpPClusterSmry.size() << " entries. "
+                                            << " BxId is "
+                                            << +cSummaryBxIds[cSummaryBxIds.size()-1]
+                                            << " "
+                                            << +cBxId
                                             << RESET;
-                                }
+                                //}
                                 
                                 //check stubs are where you put them
                                 //not checking bend for now
@@ -1454,83 +1607,327 @@ void DataChecker::PSNominal()
             }
 
             // summarize results 
+            // hit maps 
+            // injected - fPixelExpected 
+            // readout - fPClusters
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cInjections = fReadoutPClusters.at(cBoard->getIndex());
-                auto& cExpected = fInjectedPClusters.at(cBoard->getIndex());
-                auto& cTaps = fPhaseTaps.at(cBoard->getIndex());
-                auto& cTapsOrig = fOriginalPhaseTaps.at(cBoard->getIndex());
+                auto& cInjected = fPixelExpected.at(cBoard->getIndex());
+                auto& cReadout = fPClusters.at(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
-                    auto& cExpectedOpticalGroup = cExpected->at(cOpticalGroup->getIndex());
-                    auto& cTapsOpticalGroup = cTaps->at(cOpticalGroup->getIndex());
-                    auto& cTapsOrigOpticalGroup = cTapsOrig->at(cOpticalGroup->getIndex());
+                    auto& cInjOG = cInjected->at(cOpticalGroup->getIndex());
+                    auto& cReadoutOG = cReadout->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-                        auto& cExpectedHybrid = cExpectedOpticalGroup->at(cHybrid->getIndex());
-                        auto& cTapsHybrid = cTapsOpticalGroup->at(cHybrid->getIndex());
+                        auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
+                        auto& cReadoutHybrid = cReadoutOG->at(cHybrid->getIndex());
+                        for(auto cChip: *cHybrid)
+                        {
+                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            
+                            auto& cInjChip = cInjHybrid->at(cChip->getIndex());
+                            auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
+
+                            auto& cReadoutChip = cReadoutHybrid->at(cChip->getIndex());
+                            auto& cReadoutInjs = cReadoutChip->getSummary<std::vector<Injection>>();
+                            
+                            LOG (DEBUG) << BOLDMAGENTA << "MPA#" << +cChip->getId()
+                                << " found " << +cExpInjs.size() << " in injection log "
+                                << " and " << +cReadoutInjs.size() << " in readout log "
+                                << RESET;
+
+
+                            // injection map 
+                            for( auto cInj : cExpInjs )
+                            {
+                                #ifdef __USE_ROOT__
+                                    TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"InjectionMap"));
+                                    cInjMap->Fill( cInj.fColumn, cInj.fRow, 1 );
+                                #endif
+                            }
+
+                            // readout map 
+                            for( auto cInj : cReadoutInjs )
+                            {
+                                #ifdef __USE_ROOT__
+                                    TH2D* cInjMapMatched = static_cast<TH2D*>(getHist(cChip,"MatchedInjectionMap"));
+                                    cInjMapMatched->Fill( cInj.fColumn, cInj.fRow , 1 );
+                                #endif
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            // summarize results 
+            // bx Id 
+            for(auto cBoard: *fDetectorContainer)
+            {
+                auto& cBxIds = fBxIds.at(cBoard->getIndex());
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    auto& cBxIdsOG = cBxIds->at(cOpticalGroup->getIndex());
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        auto& cBxIdsHybrid = cBxIdsOG->at(cHybrid->getIndex());
+                        auto& cSummaryBxIds = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
+                        int              cNRollOvers = 0;
+                        uint16_t cMaxBxCounter = 3564;
+                        for( size_t cIndx=1; cIndx < cSummaryBxIds.size(); cIndx++)
+                        {
+                            int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cSummaryBxIds[cIndx-1] % cMaxBxCounter);
+                            cNRollOvers += ((cSummaryBxIds[cIndx- 1] >= 2500) && (cSummaryBxIds[cIndx - 1] < cMaxBxCounter)) && ( cSummaryBxIds[cIndx] < cSummaryBxIds[cIndx - 1]) ? 1 : 0;
+                            cBxDifference = (cNRollOvers)*cMaxBxCounter + (cSummaryBxIds[cIndx] % cMaxBxCounter) - cBxDifference;
+                            LOG (DEBUG) << BOLDMAGENTA << "\t.. Bx Difference is " << +cBxDifference  << RESET;
+                            #ifdef __USE_ROOT__
+                                TH1D* cBxDiffHist = static_cast<TH1D*>(getHist(cHybrid,"BxIdDifference"));
+                                cBxDiffHist->Fill( cBxDifference ); 
+                            #endif
+                        }
+                    } // hybrids or CICs
+                } // optical group loop
+            }
+
+            for(auto cBoard: *fDetectorContainer)
+            {
+                auto& cCicInj = fCicInjections.at(cBoard->getIndex());
+                auto& cInjected = fPixelExpected.at(cBoard->getIndex());
+                auto& cReadout = fPClusters.at(cBoard->getIndex());
+                auto& cTaps = fPhaseTaps.at(cBoard->getIndex());
+                auto& cTapsOrig = fOriginalPhaseTaps.at(cBoard->getIndex());
+                auto& cClusters = fInjectedPClusters.at(cBoard->getIndex());
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    auto& cCicInjOG = cCicInj->at(cOpticalGroup->getIndex());
+                    auto& cInjOG = cInjected->at(cOpticalGroup->getIndex());
+                    auto& cReadoutOG = cReadout->at(cOpticalGroup->getIndex());
+                    auto& cTapsOpticalGroup = cTaps->at(cOpticalGroup->getIndex());
+                    auto& cTapsOrigOpticalGroup = cTapsOrig->at(cOpticalGroup->getIndex());
+                    auto& cClustersOpticalGroup = cClusters->at(cOpticalGroup->getIndex());
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        auto& cCicInjHybrid = cCicInjOG->at(cHybrid->getIndex());
+                        auto& cCicInjSummary = cCicInjHybrid->getSummary<uint32_t>(); 
+                        LOG (DEBUG) << BOLDMAGENTA << "Injecting " 
+                            << +cCicInjSummary
+                            << " clusters in CIC#" << +cHybrid->getId()
+                            << RESET;
+                        auto& cInjHybrid = cInjOG->at(cHybrid->getIndex());
+                        auto& cReadoutHybrid = cReadoutOG->at(cHybrid->getIndex());
+                        auto& cTapsHybrid= cTapsOpticalGroup->at(cHybrid->getIndex());
                         auto& cTapsOrigHybrid = cTapsOrigOpticalGroup->at(cHybrid->getIndex());
+                        auto& cClustersHybrid = cClustersOpticalGroup->at(cHybrid->getIndex());
+                        
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                            auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
-                            auto& cExpectedClstrsThisChip = cExpectedHybrid->at(cChip->getIndex());
+                            auto& cInjChip = cInjHybrid->at(cChip->getIndex());
+                            auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
+
+                            auto& cReadoutChip = cReadoutHybrid->at(cChip->getIndex());
+                            auto& cReadoutInjs = cReadoutChip->getSummary<std::vector<Injection>>();
+                            
                             auto& cTapsChip = cTapsHybrid->at(cChip->getIndex());
                             auto& cTapsOrigChip = cTapsOrigHybrid->at(cChip->getIndex());
-                            
-                            auto cSummary = cInjectionsThisChip->getSummary<std::vector<uint32_t>>(); 
-                            float cExpected = (float)(cExpectedClstrsThisChip->getSummary<uint32_t>());
-                            if( cExpected ==0 ) continue;
 
-                            std::vector<float> cData(0);
-                            for(auto cPt : cSummary )
-                            {
-                                cData.push_back( (float)cPt );
-                                if( (float)cPt != cExpected ) 
+                            auto& cClustersChip = cClustersHybrid->at(cChip->getIndex());
+                            size_t cExpectedNClusters = cClustersChip->getSummary<uint32_t>();
+                            if( cExpInjs.size() ==0 ) continue;
+
+                            LOG (DEBUG) << BOLDMAGENTA << "\t..MPA#" << +cChip->getId()
+                                << " found " << +cExpInjs.size() << " in injection log "
+                                << " and " << +cReadoutInjs.size() << " in readout log "
+                                << " this run had " << +cExpectedNClusters
+                                << " clusters injected; "
+                                << " phase tap is " << +cTapsChip->getSummary<uint8_t>() 
+                                << "; original tap is " << +cTapsOrigChip->getSummary<uint8_t>() 
+                                << RESET;
+
+                            #ifdef __USE_ROOT__
+                                if( cTapsChip->getSummary<uint8_t>() == cTapsOrigChip->getSummary<uint8_t>() )
                                 {
-                                    LOG (DEBUG) << BOLDRED << "MPA#" << +cChip->getId() 
-                                        << " expected  " << +cExpected << " clusters and have found "
-                                        << +cPt << RESET;
-                                }
-                                #ifdef __USE_ROOT__
-                                    for( size_t cIndx=0; cIndx < cExpected; cIndx++)
+                                    for( size_t cIndx=0; cIndx< cExpInjs.size(); cIndx++)
                                     {
-                                        int cFill = (cIndx < (float)cPt) ? 1 : 0 ; 
-                                        TProfile2D* cMatched = static_cast<TProfile2D*>(getHist(cHybrid,"PclusterMatchingL1Eye"));
-                                        cMatched->Fill( cChip->getId(), (float)(cTapsChip->getSummary<uint8_t>()) , cFill) ; 
-                                        if( cTapsChip->getSummary<uint8_t>() == cTapsOrigChip->getSummary<uint8_t>() )
-                                        {
-                                            cMatched = static_cast<TProfile2D*>(getHist(cHybrid, "PclusterMatchRawN"));
-                                            cMatched->Fill( cChip->getId(), cTotalNumberOfClusters , cFill);//(float)cPt/cExpected ) ; 
-                                        }
+                                        int cFill = (cIndx < (float)cReadoutInjs.size()) ? 1 : 0 ; 
+                                        TProfile2D* cMatched = static_cast<TProfile2D*>(getHist(cHybrid,"PclusterMatchRawN"));
+                                        cMatched->Fill( cChip->getId(), cCicInjSummary , cFill);
+
+                                        TH1D* cInjCount = static_cast<TH1D*>(getHist(cChip,"PclusterInjCount"));
+                                        cInjCount->Fill( cExpectedNClusters, 1 );
+                                        TH2D* cInjCount2D = static_cast<TH2D*>(getHist(cChip,"PclusterInjCount2D"));
+                                        cInjCount2D->Fill( cExpectedNClusters, cCicInjSummary, 1 );
+
+                                        if( cIndx >= cReadoutInjs.size() ) continue;
+
+                                        TH1D* cMatchCount = static_cast<TH1D*>(getHist(cChip,"PclusterMatchedCount"));
+                                        cMatchCount->Fill( cExpectedNClusters, 1 );
+                                        TH2D* cMtchCount2D = static_cast<TH2D*>(getHist(cChip,"PclusterMatchedCount2D"));
+                                        cMtchCount2D->Fill( cExpectedNClusters, cCicInjSummary, 1 );
                                     }
-                                #endif
-                            }
-                            auto cStats = getStats(cData); 
-                            if( cAttempt%10 == 0 )
-                            {
-                                LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
-                                    << " phase tap " << +cTapsChip->getSummary<uint8_t>()
-                                    << " [offset of " << cOffset
-                                    << " ]\t..."
-                                    << " on average have found " << +cStats.first 
-                                    << " clusters and expect "
-                                    << +cExpectedClstrsThisChip->getSummary<uint32_t>() 
-                                    << RESET;
-                            }
-                            // #ifdef __USE_ROOT__
-                            //     TProfile2D* cMatched = static_cast<TProfile2D*>(getHist(cHybrid, "PclusterMatchRawN"));
-                            //     cMatched->Fill( cChip->getId(), cTotalNumberOfClusters , cStats.first/cExpected ) ; 
-                            // #endif
-                    
-                            
+                                }
+                                for( size_t cIndx=0; cIndx< cExpInjs.size(); cIndx++)
+                                {
+                                    int cFill = (cIndx < (float)cReadoutInjs.size()) ? 1 : 0 ; 
+                                    TProfile2D* cEye = static_cast<TProfile2D*>(getHist(cHybrid,"PclusterMatchingL1Eye"));
+                                    cEye->Fill( cChip->getId(), cTapsChip->getSummary<uint8_t>(), cFill); 
+                                }    
+                                //
+                            #endif
+                                
                         } // ROCs
                     } // hybrids or CICs
                 } // optical group loop
             }
+
+            // for(auto cBoard: *fDetectorContainer)
+            // {
+            //     auto& cExp = fPixelExpected.at(cBoard->getIndex());
+            //     auto& cInjPxls = fPixelInjections.at(cBoard->getIndex());
+            //     auto& cInjections = fReadoutPClusters.at(cBoard->getIndex());
+            //     auto& cExpected = fInjectedPClusters.at(cBoard->getIndex());
+            //     auto& cTaps = fPhaseTaps.at(cBoard->getIndex());
+            //     auto& cTapsOrig = fOriginalPhaseTaps.at(cBoard->getIndex());
+            //     auto& cBxIds = fBxIds.at(cBoard->getIndex());
+            //     auto& cCicInj = fCicInjections.at(cBoard->getIndex());
+            //     for(auto cOpticalGroup: *cBoard)
+            //     {
+            //         auto& cExpOG = cExp->at(cOpticalGroup->getIndex());
+            //         auto& cInjPxlOGs = cInjPxls->at(cOpticalGroup->getIndex());
+            //         auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
+            //         auto& cExpectedOpticalGroup = cExpected->at(cOpticalGroup->getIndex());
+            //         auto& cTapsOpticalGroup = cTaps->at(cOpticalGroup->getIndex());
+            //         auto& cTapsOrigOpticalGroup = cTapsOrig->at(cOpticalGroup->getIndex());
+            //         auto& cBxIdsOG = cBxIds->at(cOpticalGroup->getIndex());
+            //         auto& cCicInjOG = cCicInj->at(cOpticalGroup->getIndex());
+            //         for(auto cHybrid: *cOpticalGroup)
+            //         {
+            //             auto& cExpHybrid = cExpOG->at(cHybrid->getIndex());
+            //             auto& cInjPxlHybrid = cInjPxlOGs->at(cHybrid->getIndex());
+            //             auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+            //             auto& cExpectedHybrid = cExpectedOpticalGroup->at(cHybrid->getIndex());
+            //             auto& cTapsHybrid = cTapsOpticalGroup->at(cHybrid->getIndex());
+            //             auto& cTapsOrigHybrid = cTapsOrigOpticalGroup->at(cHybrid->getIndex());
+            //             auto& cBxIdsHybrid = cBxIdsOG->at(cHybrid->getIndex());
+            //             auto& cSummaryBxIds = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
+            //             auto& cCicInjHybrid = cCicInjOG->at(cHybrid->getIndex());
+            //             auto& cCicInjSummary = cCicInjHybrid->getSummary<uint32_t>(); 
+            //             int              cNRollOvers = 0;
+            //             uint16_t cMaxBxCounter = 3564;
+            //             for( size_t cIndx=1; cIndx < cSummaryBxIds.size(); cIndx++)
+            //             {
+            //                 int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cSummaryBxIds[cIndx-1] % cMaxBxCounter);
+            //                 cNRollOvers += ((cSummaryBxIds[cIndx- 1] >= 2500) && (cSummaryBxIds[cIndx - 1] < cMaxBxCounter)) && ( cSummaryBxIds[cIndx] < cSummaryBxIds[cIndx - 1]) ? 1 : 0;
+            //                 cBxDifference = (cNRollOvers)*cMaxBxCounter + (cSummaryBxIds[cIndx] % cMaxBxCounter) - cBxDifference;
+            //                 LOG (DEBUG) << BOLDMAGENTA << "\t.. Bx Difference is " << +cBxDifference  << RESET;
+            //                 #ifdef __USE_ROOT__
+            //                     TH1D* cBxDiffHist = static_cast<TH1D*>(getHist(cHybrid,"BxIdDifference"));
+            //                     cBxDiffHist->Fill( cBxDifference ); 
+            //                 #endif
+            //             }
+            //             for(auto cChip: *cHybrid)
+            //             {
+            //                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+
+            //                 auto& cExpChip = cExpHybrid->at(cChip->getIndex());
+            //                 auto& cExpPClusterSmry = cExpChip->getSummary<std::vector<Injection>>();
+            //                 //
+            //                 auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
+            //                 auto cSummary = cInjectionsThisChip->getSummary<std::vector<uint32_t>>(); 
+            //                 //
+            //                 auto& cExpectedClstrsThisChip = cExpectedHybrid->at(cChip->getIndex());
+            //                 //
+            //                 auto& cTapsChip = cTapsHybrid->at(cChip->getIndex());
+            //                 auto& cTapsOrigChip = cTapsOrigHybrid->at(cChip->getIndex());
+            //                 //
+            //                 auto& cInjPxlThisChip = cInjPxlHybrid->at(cChip->getIndex());
+            //                 auto cPxlInjections = cInjPxlThisChip->getSummary<std::vector<Injection>>();
+            //                 float cExpected = (float)(cExpectedClstrsThisChip->getSummary<uint32_t>());
+            //                 if( cExpected ==0 ) continue;
+
+            //                 LOG (INFO) << BOLDMAGENTA << "MPA#" << +cChip->getId()
+            //                     << " found " << +cPxlInjections.size() << " in injection log "
+            //                     << " and " << +cExpPClusterSmry.size() << " in readout log "
+            //                     << RESET;
+
+            //                 // injection map 
+            //                 for( auto cInj : cPxlInjections )
+            //                 {
+            //                     #ifdef __USE_ROOT__
+            //                         TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"InjectionMap"));
+            //                         cInjMap->Fill( cInj.fColumn, cInj.fRow, 1 );
+            //                     #endif
+            //                 }
+
+            //                 // readout map 
+            //                 for( auto cInj : cExpPClusterSmry )
+            //                 {
+            //                     #ifdef __USE_ROOT__
+            //                         TH2D* cInjMapMatched = static_cast<TH2D*>(getHist(cChip,"MatchedInjectionMap"));
+            //                         cInjMapMatched->Fill( cInj.fColumn, cInj.fRow , 1 );
+            //                     #endif
+            //                 }
+
+
+            //                 #ifdef __USE_ROOT__
+            //                     if( cTapsChip->getSummary<uint8_t>() == cTapsOrigChip->getSummary<uint8_t>() )
+            //                     {
+            //                         TH1D* cInjCount = static_cast<TH1D*>(getHist(cChip,"PclusterInjCount"));
+            //                         cInjCount->Fill( cExpected, cSummary.size()*cExpected );
+            //                         TH1D* cMtchCount = static_cast<TH1D*>(getHist(cChip,"PclusterMatchedCount"));
+            //                         cMtchCount->Fill( cExpected, std::accumulate(cSummary.begin(), cSummary.end(), 0.) );
+            //                         TH2D* cInjCount2D = static_cast<TH2D*>(getHist(cChip,"PclusterInjCount2D"));
+            //                         cInjCount2D->Fill( cExpected, cCicInjSummary,  cSummary.size()*cExpected );
+            //                         TH2D* cMtchCount2D = static_cast<TH2D*>(getHist(cChip,"PclusterMatchedCount2D"));
+            //                         cMtchCount2D->Fill( cExpected, cCicInjSummary, std::accumulate(cSummary.begin(), cSummary.end(), 0.) );
+            //                     }
+            //                 #endif
+            //                 std::vector<float> cData(0);
+            //                 for(auto cPt : cSummary )
+            //                 {
+            //                     cData.push_back( (float)cPt );
+            //                     if( (float)cPt != cExpected ) 
+            //                     {
+            //                         LOG (DEBUG) << BOLDRED << "MPA#" << +cChip->getId() 
+            //                             << " expected  " << +cExpected << " clusters and have found "
+            //                             << +cPt << RESET;
+            //                     }
+            //                     #ifdef __USE_ROOT__
+                                    
+            //                         for( size_t cIndx=0; cIndx < cExpected; cIndx++)
+            //                         {
+            //                             int cFill = (cIndx < (float)cPt) ? 1 : 0 ; 
+            //                             TProfile2D* cMatched = static_cast<TProfile2D*>(getHist(cHybrid,"PclusterMatchingL1Eye"));
+            //                             cMatched->Fill( cChip->getId(), (float)(cTapsChip->getSummary<uint8_t>()) , cFill) ; 
+            //                             if( cTapsChip->getSummary<uint8_t>() == cTapsOrigChip->getSummary<uint8_t>() )
+            //                             {
+            //                                 cMatched = static_cast<TProfile2D*>(getHist(cHybrid, "PclusterMatchRawN"));
+            //                                 cMatched->Fill( cChip->getId(), cTotalNumberOfClusters , cFill);//(float)cPt/cExpected ) ; 
+            //                             }
+            //                         }
+            //                     #endif
+            //                 }
+            //                 auto cStats = getStats(cData); 
+            //                 if( cAttempt%cDebugPrintOut == 0 )
+            //                 {
+            //                     LOG (INFO) << BOLDBLUE << "MPA#" << +cChip->getId() 
+            //                         << " phase tap " << +cTapsChip->getSummary<uint8_t>()
+            //                         << " original phase tap is " << +cTapsOrigChip->getSummary<uint8_t>() 
+            //                         << " [offset of " << cOffset
+            //                         << " ]\t..."
+            //                         << " on average have found " << +cStats.first 
+            //                         << " clusters and expect "
+            //                         << +cExpectedClstrsThisChip->getSummary<uint32_t>() 
+            //                         << " total number of clusters injected in this hybrid are "
+            //                         << +cCicInjSummary
+            //                         << RESET;
+            //                 }
+            //             } // ROCs
+            //         } // hybrids or CICs
+            //     } // optical group loop
+            // }
         }
     }
 }

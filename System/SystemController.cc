@@ -312,7 +312,7 @@ void SystemController::PSModuleStartUp()
     uint8_t cSsaClockDrive = 4;//4; 
     uint8_t cCicClockDrive = 4;//4; 
     uint16_t cReadoutRate = 320; 
-    uint8_t  cCicDriveStrength = 1; 
+    uint8_t  cCicDriveStrength = 4; 
     // configure PS-ROH + PS FEHs 
     for(const auto cBoard: *fDetectorContainer)
     {

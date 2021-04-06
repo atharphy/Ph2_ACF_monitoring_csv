@@ -338,7 +338,7 @@ int main(int argc, char* argv[])
     // need to do this if you're going to do any kind
     // of data tests
     //cPSAlignment.Align();
-    cPSAlignment.Reset();
+    //cPSAlignment.Reset();
 
     if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync"))
     {
