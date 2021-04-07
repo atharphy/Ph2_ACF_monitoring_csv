@@ -297,7 +297,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             uint8_t  cNStubs        = (cStubInfo & (0x3F << 16)) >> 16;
                             cStubInformation.first  = (cStubInfo & 0xFFF);
                             cStubInformation.second = (cStubInfo & (0x1FF << 22)) >> 22;
-                            if(cNStubs > 0)
+                            if(cNStubs >= 10)
                                 LOG(DEBUG) << BOLDGREEN << "BxId for this event : " << +cStubInformation.first << " . Stub data size is " << +cStubInfoSize << " status "
                                            << std::bitset<9>(cStubInformation.second) << " -- number of stubs in packet : " << +cNStubs << RESET;
                             fEventStubList[cFe->getIndex()].first = cStubInformation;

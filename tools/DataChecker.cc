@@ -323,6 +323,33 @@ void DataChecker::Initialise()
                 TH1D* cHist1D = new TH1D(cName, Form("Bx Id, digi-inject test CIC%d; Bx Id difference", (int)cHybrid->getId()), 1000 , -500 - 0.5, 500 -0.5 );
                 bookHistogram(cHybrid, "BxIdDifference", cHist1D);
 
+                cName = Form("h_StubLatency_FE%d", cHybrid->getId() );
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cProfile2D = new TProfile2D(cName, Form("Stub counter, digi-inject test CIC%d; Stub Latency Offset; Number of injected Stubs;", (int)cHybrid->getId()), 40 , -20 , 20 , 20 , 0 , 20);
+                bookHistogram(cHybrid, "StubLatency", cProfile2D);
+
+                //
+                cName = Form("h_StubCounter_FE%d", cHybrid->getId() );
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cHist = new TH2D(cName, Form("Stub counter, digi-inject test CIC%d; Number of injected Stubs; Number of stubs in the readout", (int)cHybrid->getId()), 20 , 0 , 20 , 20 , 0 , 20);
+                bookHistogram(cHybrid, "StubCounter", cHist);
+
+                cName = Form("h_StubCounter2_FE%d", cHybrid->getId() );
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cProfile2D = new TProfile2D(cName, Form("Stub counter, digi-inject test CIC%d; Number of injected Stubs; MPA Id;", (int)cHybrid->getId()), 20 , 0 , 20 , 10 , 0 , 10);
+                bookHistogram(cHybrid, "StubCounterIds", cProfile2D);
+                
+
+                cName = Form("h_BxCounter_FE%d", cHybrid->getId() );
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cHist = new TH2D(cName, Form("Bx counter, digi-inject test CIC%d; #Delta Bx_{Injection}; #Delta Bx_{Readout}", (int)cHybrid->getId()), 500, 0, 500, 500, 0 ,500 );
+                bookHistogram(cHybrid, "BxCounter", cHist);
+
+
                 for(auto cChip: *cHybrid)
                 {
                     if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
@@ -365,6 +392,18 @@ void DataChecker::Initialise()
                     if(cObj) delete cObj;
                     cHist = new TH2D(cName, Form("P-cluster Matching [Matched], digi-inject test CIC%d MPA%d; Number of Clusters; Total number of clusters", (int)cChip->getId(), (int)cHybrid->getId()), 10, 0 - 0.5, 10 - 0.5, 100, 0 - 0.5 ,100 - 0.5 );
                     bookHistogram(cChip, "PclusterMatchedCount2D", cHist);
+
+                    cName = Form("h_StubCounter_H%d_FE%d", cHybrid->getId() , cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cProfile2D = new TProfile2D(cName, Form("Stub counter, digi-inject test CIC%d; Number of injected Stubs; Number of stubs in this MPA", (int)cHybrid->getId()), 20 , 0 , 20 , 20 , 0 , 20);
+                    bookHistogram(cChip, "StubCounter", cProfile2D);
+
+                    cName = Form("h_StubCounter2_H%d_FE%d", cHybrid->getId() , cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist = new TH2D(cName, Form("Stub counter, digi-inject test CIC%d; Number of stubs in this MPA; Number of stubs in readout [in this MPA]", (int)cHybrid->getId()), 20 , 0 , 20 , 20 , 0 , 20);
+                    bookHistogram(cChip, "StubCounter2", cHist);
 
                 }
 
@@ -1034,6 +1073,797 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
         cNMatchedEvents += (cEventMatchesL1 && cEventMatchesStubs) ? 1 : 0;
         cEventIndx++;
     } // event loop
+}
+uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
+{
+    LOG (DEBUG) << BOLDMAGENTA << "DataChecker setting TriggerConfig " << RESET;
+
+    // n events 
+    auto cSetting = fSettingsMap.find ( "Nevents" );
+    uint32_t cNevents = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 100;
+
+    // configure trigger blocks
+    auto cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    int cNInjectedTriggers = fNInjectedTriggers*cNrepetitions;
+    cNevents = cNrepetitions*cNInjectedTriggers*(1+cTriggerMult);
+    // repeat the sequence N times 
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", cNrepetitions ) ;
+    // make sure fast command duration is 0 
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
+
+    // make sure I accept all trgigers 
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents );
+    
+    // when using generic fast commands I want to read data 
+    // so first stop the trigger sources in the FC7
+    uint32_t cNWords = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+    uint32_t cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+    LOG (DEBUG) << BOLDMAGENTA << "Before stopping triggers : "
+        << +cNWords << " words in the readout and "
+        << +cNtriggers << " triggers in the trigger_in counter."
+        << RESET;
+
+    // stop triggers 
+    fBeBoardInterface->Stop(pBoard);
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    // re-load configuration 
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    
+    cNWords = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+    cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+    LOG (DEBUG) << BOLDMAGENTA << "After stopping triggers [no reset]: "
+        << +cNWords << " words in the readout and "
+        << +cNtriggers << " triggers in the trigger_in counter "
+        << RESET;
+
+    // make sure data handshake is disabled
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable",0x00);
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    // set the packet size to be exactly equal to the number we expect 
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.packet_nbr", cNevents -1 );
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    // make sure this is set 
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents );
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+
+    // re-load configuration 
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    // also .. reset the readout 
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    // and just check trigger config 
+
+    return cNevents;
+}
+void DataChecker::PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme)
+{
+    uint8_t                cStubWindow = 1; // stub window in half pixels (1)
+    uint8_t                cMode       = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+    // set-up MPA for injection
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cInjections = pInjectionScheme.at(cBoard->getIndex());
+        for(auto cOpticalReadout: *cBoard)
+        {
+            auto& cInjectionsOG = cInjections->at(cOpticalReadout->getIndex());
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid) // for each chip (makes sense)
+                {
+                    // for the moment - only written for CBC3
+                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
+                        auto& cSummaryInj = cInjectionsChip->getSummary<std::vector<Injection>>();
+                        // activate stub mode
+                        fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
+                        fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
+                        // mask all pixels first 
+                        (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
+    
+                        if( cSummaryInj.size() == 0 ) continue;
+                        LOG (DEBUG) << BOLDMAGENTA << "Injecting " << +cSummaryInj.size() << " in MPA#" << +cChip->getId() << RESET;
+                        (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cSummaryInj);
+                    }
+                } // chip
+            }// hybrid
+        }// module
+    }//boards
+}
+void DataChecker::FastCommandInjections(int cNtrials)
+{
+    LOG (DEBUG) << BOLDMAGENTA << "Cal Pulse Injections with GFCMDs " << RESET;
+
+    auto cSetting = fSettingsMap.find ( "DelayAfterInjection" );
+    size_t cCalPulseDelay = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 85;
+    cSetting = fSettingsMap.find ( "InjectionDuration" );
+    size_t cCalPulseDuration = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1 ;
+    cSetting = fSettingsMap.find ( "TriggerSeparation" );
+    size_t cSeparation = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10 ;
+    
+    if( cCalPulseDelay < 85 )
+    {
+        LOG (INFO) << BOLDMAGENTA << "Minimum delay is 85 clocks... changing to that" << RESET;
+        cCalPulseDelay = 85;
+    }
+    
+    // random c++
+    std::srand (std::time(NULL));
+    std::random_device cRndm{};
+    std::mt19937 cGen{cRndm()};
+    std::poisson_distribution<> cDistTrigSep(cSeparation);
+    
+   
+    std::vector<uint16_t> fTriggerSeparation; 
+    fTriggerSeparation.clear();
+    // clear fast command vector 
+    fFastCommands.clear();
+    fNInjectedTriggers=0;
+    
+    // start with fSizeGap empty fast commands 
+    // then 1 BC0
+    // then fSizeGap empty fast commands
+    size_t fSizeGap=20;
+    for( size_t cIndx=0; cIndx < 2*fSizeGap; cIndx++)
+    {
+        if( cIndx == fSizeGap ) fFastCommands.push_back( 0xC3 );
+        fFastCommands.push_back( 0xC1 );
+    }
+    // count triggers 
+    
+    size_t cTriggerCounter=0;
+    //size_t cGap = cTriggerSpacing - (cCalPulseDuration+cCalPulseDelay);
+    size_t cBxId=0;
+    fTriggeredBxs.clear();
+    for( size_t cIndx=0; cIndx < (size_t)cNtrials; cIndx++)
+    {
+        // TP lasts N clock cycles
+        for( size_t cBx=0 ; cBx < cCalPulseDuration ; cBx++)
+        {
+            fFastCommands.push_back( 0xC5 );
+            cBxId++;
+        }
+        // cCalPulseDelay Bx then L1A 
+        for( size_t cBx = 0 ; cBx <= cCalPulseDelay ; cBx++ )
+        {
+            fFastCommands.push_back( 0xC1 );
+            cBxId++;
+        }
+        for( size_t cBx=0 ; cBx < cCalPulseDuration ; cBx++)
+        {
+            fFastCommands.push_back( 0xC9 );
+            if( cBx == 0 ) fTriggeredBxs.push_back( cBxId );
+            cBxId++;
+            cTriggerCounter++; 
+            fNInjectedTriggers++;
+        }
+        // gap then next tP 
+        // if I want to make this a random distribution of triggers then 
+        // rather than always using the same gap I need to change this 
+        // only thing is I am limited by the fact that I need 
+        // approximately 80 Bx in the back-end 
+        size_t cTriggerGap = std::round(cDistTrigSep(cGen)); 
+        for( size_t cBx = 0 ; cBx < cTriggerGap ; cBx++ )
+        {
+            fFastCommands.push_back( 0xC1 );
+            cBxId++;
+        }
+    }
+    // and then make sure you end with fSizeGap empty fast command
+    for( size_t cIndx=0; cIndx < fSizeGap; cIndx++)
+    {
+        fFastCommands.push_back( 0xC1 );
+    }
+}
+void DataChecker::GenericFastCommands()
+{
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
+    for( auto cBoard : *fDetectorContainer )
+    {
+        // trigger configuration 
+        uint32_t cNevents = this->GenericTriggerConfig(cBoard);
+        LOG (DEBUG) << BOLDMAGENTA << "Trigger configured to ensure " << +cNevents << " events in the readout" << RESET;
+        
+        // start generic  - ctrl signal high 
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.start_generic", 0x1);
+        // stop generic  - ctrl signal low 
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
+
+        // wait until number of words in the 
+        // readout have stopped increasing 
+        uint32_t cCounter=0;
+        uint32_t cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+        uint32_t cNWordsPrev = 0;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            cNWordsPrev = (cCounter == 0 ) ? 0 : cNWords;
+            cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+            //cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+            // print to screen
+            LOG(DEBUG) << BOLDGREEN << "Iter#" << +cCounter << " : " 
+                << +cNWords << " words in the readout and "
+                << " previous iteration found "
+                << +cNWordsPrev
+                << RESET;
+            cCounter++;
+        }while( cCounter < 100 && (cNWordsPrev != cNWords) );//cNWords == 0 && cNtriggers < cNInjectedTriggers);
+        LOG(DEBUG) << BOLDGREEN << "After " << +cCounter << " iterations: " 
+                << +cNWords << " words in the readout"
+                << RESET;
+        // stop triggers
+        // Read Data 
+        this->ReadData(cBoard, true);
+    }
+}
+
+// retreive BxIds 
+// taking into account rollover 
+std::vector<float> DataChecker::GetBxIds(std::vector<float> pRawBxIds )
+{
+    std::vector<float> cBxIds(0);
+    int              cNRollOvers = 0;
+    uint16_t cMaxBxCounter = 3564;
+    for( size_t cIndx=1; cIndx < pRawBxIds.size(); cIndx++)
+    {
+        uint16_t cBxIdPrev = pRawBxIds[cIndx-1];
+        uint16_t cBxId = pRawBxIds[cIndx];
+        int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIdPrev % cMaxBxCounter);
+        cNRollOvers +=  ( cBxId < cBxIdPrev);//((cBxIdPrev >= 2500) && (cBxIdPrev < cMaxBxCounter)) && ( cBxId < cBxIdPrev) ? 1 : 0;
+        cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
+        cBxIds.push_back( cBxDifference );
+        LOG (DEBUG) << BOLDMAGENTA << "\t.. Bx Difference is " << +cBxDifference  << RESET;
+    }
+    return cBxIds;
+}
+std::vector<int> DataChecker::GenerateIds()
+{
+    // 
+    auto cSetting  = fSettingsMap.find("ActiveMPAs"); 
+    uint32_t cActiveMPAs       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8;
+    
+    // random c++
+    std::srand (std::time(NULL));
+    std::random_device cRndm{};
+    std::mt19937 cGen{cRndm()};
+
+    std::uniform_int_distribution<int> cDist(1, cActiveMPAs);
+    std::uniform_int_distribution<int> cIdDist(0, 7);
+    size_t cNFEs = cDist(cGen); 
+    std::vector<int> cIds; cIds.clear();
+    do
+    {
+        int cId = cIdDist(cGen);
+        if ( std::find( cIds.begin(), cIds.end(), cId ) == cIds.end() )
+        {
+            cIds.push_back( cId );
+        }
+
+    }while( cIds.size() < cNFEs ) ;
+    return cIds;
+}
+//pixel-pixel mode 
+std::vector<Injection> DataChecker::GenerateInjections(int pMaxClusters, int pMaxNstubs)
+{
+    std::vector<Injection> cInjections(0);
+    
+    // random c++
+    std::srand (std::time(NULL));
+    std::random_device cRndm{};
+    std::mt19937 cGen{cRndm()};
+
+    // generate injections in this MPA 
+    std::uniform_int_distribution<int> cFlatDistCols(2, 13);
+    std::uniform_int_distribution<int> cFlatDistRows(2, 118); // avoid colums 1 and 120 
+    std::uniform_int_distribution<int> cNClusterDist(1, pMaxClusters); 
+
+    std::vector<uint8_t>   cColumns(0);     // 5 , 10 };
+    std::vector<uint8_t>   cRows(0);       // 20 , 30};
+    size_t cNclstrs = cNClusterDist(cGen);
+
+    int cTotalNumberOfClusters=0;
+    std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
+    do
+    {
+        Injection cInjection;
+        cInjection.fColumn = (cFlatDistCols(cGen));
+        cInjection.fRow    = (cFlatDistRows(cGen));
+        uint32_t           cPixelId = (uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow;
+        if( std::find( cPixelIds.begin(), cPixelIds.end(), cPixelId ) == cPixelIds.end() ) 
+        {
+            // check if the pixel is displaced by at least 4 pixels 
+            bool cTooClose=false;
+            for( size_t cIndx= 0; cIndx < cInjections.size(); cIndx++)
+            {
+                if( cInjection.fColumn == cInjections[cIndx].fColumn ) 
+                {
+                    cTooClose = cTooClose || std::fabs( cInjection.fRow - cInjections[cIndx].fRow) < 5; 
+                }
+
+                if( cInjection.fRow == cInjections[cIndx].fRow ) 
+                {
+                    cTooClose = cTooClose || std::fabs( cInjection.fColumn - cInjections[cIndx].fColumn) < 5; 
+                }
+            }
+            if( !cTooClose && cTotalNumberOfClusters < pMaxNstubs)
+            {
+                LOG (DEBUG) << BOLDMAGENTA << "Iinjecting in row " 
+                    << +cInjection.fRow  
+                    << " columnn "
+                    << +cInjection.fColumn 
+                    << RESET;
+                cPixelIds.push_back( cPixelId );
+                cInjections.push_back(cInjection);
+                cTotalNumberOfClusters += 1; 
+            }
+        }
+    }while( cPixelIds.size() < cNclstrs && cTotalNumberOfClusters < pMaxNstubs );  // create injection patterns
+    return cInjections;
+}
+//strip-strip mode 
+std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
+{
+    std::vector<Injection> cInjections(0);
+    
+    // random c++
+    std::srand (std::time(NULL));
+    std::random_device cRndm{};
+    std::mt19937 cGen{cRndm()};
+
+    // generate injections in this MPA 
+    std::uniform_int_distribution<int> cFlatDistSeeds(2, 13);
+    std::uniform_int_distribution<int> cFlatDistStrips(5, 110); 
+    std::uniform_int_distribution<int> cNStubDist(1, pMaxNstubs); 
+
+    std::vector<uint8_t>   cColumns(0);     // 5 , 10 };
+    std::vector<uint8_t>   cRows(0);       // 20 , 30};
+    size_t cStubs = cNStubDist(cGen);
+    int cTotalNumberOfStubs=0;
+    std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
+    do
+    {
+        // Seed 
+        Injection cInjection;
+        cInjection.fColumn = (cFlatDistSeeds(cGen));
+        cInjection.fRow    = (cFlatDistStrips(cGen));
+        uint32_t           cPixelId = (uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow;
+        if( std::find( cPixelIds.begin(), cPixelIds.end(), cPixelId ) == cPixelIds.end() ) 
+        {
+            // check if the pixel is displaced by at least 4 pixels 
+            bool cTooClose=false;
+            for( size_t cIndx= 0; cIndx < cInjections.size(); cIndx++)
+            {
+                if( cInjection.fColumn == cInjections[cIndx].fColumn ) 
+                {
+                    cTooClose = cTooClose || std::fabs( cInjection.fRow - cInjections[cIndx].fRow) < 5; 
+                }
+
+                if( cInjection.fRow == cInjections[cIndx].fRow ) 
+                {
+                    cTooClose = cTooClose || std::fabs( cInjection.fColumn - cInjections[cIndx].fColumn) < 5; 
+                }
+            }
+            if( !cTooClose && cTotalNumberOfStubs < pMaxNstubs)
+            {
+                LOG (DEBUG) << BOLDMAGENTA << "Iinjecting in row " 
+                    << +cInjection.fRow  
+                    << " columnn "
+                    << +cInjection.fColumn 
+                    << RESET;
+                cPixelIds.push_back( cPixelId );
+                cInjections.push_back(cInjection);
+                cTotalNumberOfStubs += 1; 
+            }
+        }
+    }while( cPixelIds.size() < cStubs && cTotalNumberOfStubs < pMaxNstubs );  // create injection patterns
+    return cInjections;
+}
+void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
+{
+    auto cSetting  = fSettingsMap.find("Bend"); 
+    // in strips
+    int cBend       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t                cStubWindow = (std::fabs(cBend)+1)*2; // stub window in half pixels (1)
+    uint8_t                cMode       = 0; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+    // set-up MPA for injection
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cInjections = pInjectionScheme.at(cBoard->getIndex());
+        for(auto cOpticalReadout: *cBoard)
+        {
+            auto& cInjectionsOG = cInjections->at(cOpticalReadout->getIndex());
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                std::map<uint8_t, std::vector<uint8_t>> cInjectionsPerChip; 
+                for(auto cChip: *cHybrid) // for each chip (makes sense)
+                {
+                    // for the moment - only written for CBC3
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+
+                    auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
+                    auto& cSummaryInj = cInjectionsChip->getSummary<std::vector<Injection>>();
+                    // activate stub mode
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
+                    // mask all pixels first 
+                    (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
+                    if( cSummaryInj.size() == 0 ) continue;
+
+                    LOG (DEBUG) << BOLDMAGENTA << "Injecting " << +cSummaryInj.size() << " in MPA#" << +cChip->getId() << RESET;
+                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cSummaryInj);
+                    auto cIterator = cInjectionsPerChip.find(cChip->getId());
+                    if( cIterator == cInjectionsPerChip.end() ) 
+                    {
+                        std::vector<uint8_t> cRows(0); 
+                        for(auto cInj : cSummaryInj )
+                        {
+                            LOG (DEBUG) << BOLDMAGENTA << "\t...Injecting in pixel#" << +cInj.fColumn 
+                                << " strip#" << +cInj.fRow 
+                                << " in MPA#" << +cChip->getId() << RESET;
+                            cRows.push_back( cInj.fRow );
+                        }
+                        cInjectionsPerChip.insert( std::make_pair( cChip->getId() , cRows) ); 
+                    }
+                }//chip
+
+                // mask all channels in all SSAs 
+                for(auto cChip: *cHybrid) 
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                }// chip
+
+                // inject in some rows 
+                for( const auto& cInjection : cInjectionsPerChip ) 
+                {
+                    auto cRows = cInjection.second; 
+                    for(auto cChip: *cHybrid) 
+                    {
+                        if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                        
+                        if(cChip->getId() != cInjection.first ) continue;
+
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0xFF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                        for(auto cRow : cRows ) 
+                        {
+                            LOG (DEBUG) << BOLDMAGENTA << "\t...Injecting in"
+                                << " strip#" << +cRow 
+                                << " in SSA#" << +cChip->getId() << RESET;
+                            fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cRow+cBend), 0x9);
+                        }   
+                    }// chip
+                }
+            }// hybrid
+        }// module
+    }//boards
+}
+void DataChecker::PSTriggerTests()
+{
+    //decode setting 
+    auto cSetting  = fSettingsMap.find("Attempts"); 
+    uint32_t cAttempts       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    for(size_t cAttempt=0; cAttempt < cAttempts; cAttempt++)
+    {
+        LOG (INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << RESET;
+        this->PSTriggerTest();
+    }
+}
+void DataChecker::PSTriggerTest()
+{   
+    //decode setting 
+    auto cSetting  = fSettingsMap.find("Nevents"); 
+    uint32_t cNtrials       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    cSetting = fSettingsMap.find("MaxPClusters"); 
+    int cMaxClustersPerMPA =  (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    cSetting = fSettingsMap.find ( "DelayAfterInjection" );
+    size_t cCalPulseDelay = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 85;
+    cSetting  = fSettingsMap.find("InjectionDuration"); 
+    int cInjectionDuration = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    
+    // prepare injection scheme 
+    DetectorDataContainer cInjectionScheme;
+    ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, cInjectionScheme);
+    std::vector<int> cIds = GenerateIds(); 
+    // data container holding number
+    // of P-clusters 
+    DetectorDataContainer cCicInjections; 
+    ContainerFactory::copyAndInitHybrid<uint32_t>(*fDetectorContainer, cCicInjections);
+    // in pixel-pixel mode this is the same 
+    // as the number of stubs 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cInjections = cInjectionScheme.at(cBoard->getIndex());
+        auto& cCicInjc    = cCicInjections.at(cBoard->getIndex());
+        for(auto cOpticalReadout: *cBoard)
+        {
+            auto& cInjectionsOG = cInjections->at(cOpticalReadout->getIndex());
+            auto& cCicInjcOG    = cCicInjc->at(cOpticalReadout->getIndex());
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                auto& cCicInjHybrid    = cCicInjcOG->at(cHybrid->getIndex());
+                auto& cCicInjSummary   = cCicInjHybrid->getSummary<uint32_t>(); 
+                cCicInjSummary = 0; 
+                for(auto cChip: *cHybrid) // for each chip (makes sense)
+                {
+                    // for the moment - only written for CBC3
+                    if(cChip->getFrontEndType() == FrontEndType::SSA)
+                        continue;
+
+                    if( std::find( cIds.begin(), cIds.end(), cChip->getId() ) == cIds.end() ) 
+                        continue;
+
+                    auto cInjections = GeneratePSInjections(cMaxClustersPerMPA);
+                    //auto cInjections = GenerateInjections(cMaxClustersPerMPA); 
+                    auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
+                    auto& cSummaryInj = cInjectionsChip->getSummary<std::vector<Injection>>();
+                    cSummaryInj.clear(); 
+                    for( auto cInjection : cInjections )
+                    {
+                        cSummaryInj.push_back( cInjection ); 
+                        cCicInjSummary++;  
+                    }
+                    LOG (DEBUG) << BOLDMAGENTA << "Injecting " << +cSummaryInj.size() 
+                        << " P-clusters in MPA#" << +cChip->getId() 
+                        << RESET;
+                }// chip
+                // if injection lasts more than one Bx 
+                // need to mulitple here 
+                cCicInjSummary = cCicInjSummary*cInjectionDuration; 
+                LOG (DEBUG) << BOLDMAGENTA << "Injected " << +cCicInjSummary 
+                    << " stubs in CIC#" << +cHybrid->getId()
+                    << RESET;
+            }// hybrid
+        }// module
+    }//boards
+    PreparePSInjection(cInjectionScheme);
+    //PrepareDigitalInjection(cInjectionScheme);
+
+    // generate fast commands
+    this->FastCommandInjections(cNtrials);
+    std::vector<float> cDifferences(fTriggeredBxs.size());
+    std::adjacent_difference(fTriggeredBxs.begin(), fTriggeredBxs.end(), cDifferences.begin());
+    cDifferences.erase(cDifferences.begin(), cDifferences.begin() + 1);
+    cDifferences.erase(cDifferences.end()-1, cDifferences.end());
+    
+    auto cStats = getStats(cDifferences);
+    LOG (INFO) << BOLDMAGENTA << "\t...Generic fast command block used to send " 
+        << +fNInjectedTriggers << " triggers have " 
+        << fTriggeredBxs.size() << " Bx with a trigger "
+        << " <Trigger Seperation> " << +cStats.first << " Bx." 
+        << " RMS Trigger Separation " << +cStats.second << " Bx." 
+        << RESET;
+    // rough latency scan 
+    auto cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+    int cOptimalOffset = -1 + (cInjectionDuration-1);
+    for( int cLatencyOffset = cOptimalOffset ; cLatencyOffset < cOptimalOffset+1; cLatencyOffset++ ) 
+    {
+        LOG (INFO) << BOLDMAGENTA << "L1 Latency offset is " << +cLatencyOffset << RESET;
+        for( int cStubLatencyOffset = 0 ; cStubLatencyOffset < 1 ; cStubLatencyOffset++)
+        {
+            LOG (INFO) << BOLDMAGENTA << "Stub Latency offset is " << +cStubLatencyOffset << RESET;
+            // configure latencies 
+            for(auto cBoard: *fDetectorContainer)
+            {
+                uint16_t cDelay   = cCalPulseDelay;
+                int      cReTimeValue = -1;
+                int     cStubLatency = 0 ;
+                for(auto cOpticalReadout: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalReadout)
+                    {
+                        for(auto cChip: *cHybrid) // for each chip (makes sense)
+                        {
+                            if(cChip->getFrontEndType() != FrontEndType::SSA)
+                            {
+                                uint16_t cLatency = cDelay + cLatencyOffset ;
+                                LOG (DEBUG) << BOLDBLUE << "Setting L1 latency in MPA#" 
+                                    << +cChip->getId()
+                                    << " to " << +cLatency 
+                                    << RESET;
+                                fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                                if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) 
+                                { 
+                                    cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); 
+                                    cStubLatency = cLatency - (cStubOffset + cReTimeValue) + cStubLatencyOffset;
+                                }
+                            }
+                            else // SSA needs an additional clock cycle of delay 
+                            {
+                                uint16_t cLatency = cDelay + (cLatencyOffset-1) ;
+                                fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                            }
+                        } // chip
+                    } // hybrid
+                }// module
+                auto cPackageDelay  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+                fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+                LOG(DEBUG) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay 
+                    << "... stub latency set to " << +cStubLatency << RESET;
+            }//boards
+
+            // transmit fast comamnds and readout data
+            this->GenericFastCommands();
+            // retrieve events 
+            const std::vector<Event*>& cNewEvents = this->GetEvents();
+            LOG (DEBUG) << BOLDMAGENTA << "Have read-back "
+                << +cNewEvents.size() << " events"
+                << RESET;
+
+            DetectorDataContainer cStubsInReadout , cBxIdsInReadout; 
+            ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, cStubsInReadout);
+            ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, cBxIdsInReadout);
+            DetectorDataContainer cStubsPerFE;
+            ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cStubsPerFE);
+             
+            for( auto cBoard : *fDetectorContainer )
+            {
+                auto& cReadoutStubs    = cStubsInReadout.at(cBoard->getIndex());
+                auto& cBxIds           = cBxIdsInReadout.at(cBoard->getIndex());
+                auto& cFeStubs         = cStubsPerFE.at(cBoard->getIndex());
+                for(auto cEvent: cNewEvents)
+                {
+                    // skip the last event since I know its
+                    // going to be weird by construction 
+                    if( cEvent->GetEventCount()  == cNewEvents.size() - 1 ) 
+                        continue;
+                    
+                    LOG (DEBUG) << BOLDMAGENTA << "\t..Event#" << +cEvent->GetEventCount() << RESET;
+                    for(auto cOpticalGroup: *cBoard)
+                    {
+                        auto& cReadoutStubsOG    = cReadoutStubs->at(cOpticalGroup->getIndex());
+                        auto& cBxIdsOG           = cBxIds->at(cOpticalGroup->getIndex());
+                        auto& cFeStubsOG         = cFeStubs->at(cOpticalGroup->getIndex());
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            auto& cReadoutStubsHybrid    = cReadoutStubsOG->at(cHybrid->getIndex());
+                            auto& cReadoutStubsSmry = cReadoutStubsHybrid->getSummary<std::vector<float>>();
+                            //
+                            auto& cBxIdsHybrid           = cBxIdsOG->at(cHybrid->getIndex());
+                            auto& cBxIdsSmry    = cBxIdsHybrid->getSummary<std::vector<float>>();
+
+                            // clear vector if 
+                            // this is the first event
+                            if( cEvent->GetEventCount()==0){ 
+                                cReadoutStubsSmry.clear(); 
+                                cBxIdsSmry.clear();
+                            }
+
+                            size_t cNstubsInReadout=0;
+                            auto& cFeStubsHybrid         = cFeStubsOG->at(cHybrid->getIndex());
+                            for(auto cChip: *cHybrid)
+                            {
+                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+
+                                if( std::find( cIds.begin(), cIds.end(), cChip->getId() ) == cIds.end() ) 
+                                    continue;
+
+                                //auto cMPAL1Error = fReadoutChipInterface->ReadChipReg(cChip, "ErrorL1");
+                                //auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
+                                uint32_t cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId() );
+                                auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                                auto& cFeStubsChip = cFeStubsHybrid->at(cChip->getIndex());
+                                auto& cFeStubsSmry    = cFeStubsChip->getSummary<std::vector<float>>();
+                                if( cEvent->GetEventCount() == 0 ) cFeStubsSmry.clear();
+                                cFeStubsSmry.push_back( cStubs.size() );
+
+                                cNstubsInReadout += cStubs.size(); 
+                                auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                
+                                LOG (DEBUG) << BOLDMAGENTA << "\t\t..MPA#" << +cChip->getId()
+                                    << "\t\t L1Id is " << +cL1Id
+                                    << "\t... found the " << +cStubs.size() 
+                                    << " stubs in this event, "
+                                    << +cPClusters.size() 
+                                    << " pixel clusters and "
+                                    << +cSClusters.size() 
+                                    << " strip clusters "
+                                    << RESET;
+                            } // ROCs
+                            // log of number of stubs 
+                            // in the readout 
+                            cReadoutStubsSmry.push_back(cNstubsInReadout); 
+                            // log of BxIds
+                            // from event header
+                            auto cBxId = cEvent->BxId(cHybrid->getId());
+                            cBxIdsSmry.push_back( cBxId );
+                            
+                        } // hybrids or CICs
+                    } // optical group loop
+                }// event loop
+            }//Board loop
+
+            // print out loop 
+            for( auto cBoard : *fDetectorContainer )
+            {
+                auto& cClusterInjections = cInjectionScheme.at(cBoard->getIndex());
+                auto& cReadoutStubs    = cStubsInReadout.at(cBoard->getIndex());
+                auto& cCicInjc    = cCicInjections.at(cBoard->getIndex());
+                auto& cBxReadout  = cBxIdsInReadout.at(cBoard->getIndex());
+                auto& cFeStubs         = cStubsPerFE.at(cBoard->getIndex());
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    auto& cClusterInjectionsOG = cClusterInjections->at(cOpticalGroup->getIndex());
+                    auto& cCicInjcOG    = cCicInjc->at(cOpticalGroup->getIndex());
+                    auto& cReadoutStubsOG    = cReadoutStubs->at(cOpticalGroup->getIndex());
+                    auto& cBxOG  = cBxReadout->at(cOpticalGroup->getIndex());
+                    auto& cFeStubsOG         = cFeStubs->at(cOpticalGroup->getIndex());
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+
+                        auto& cClusterInjectionHybrid = cClusterInjectionsOG->at(cOpticalGroup->getIndex());
+                        auto& cFeStubsHybrid         = cFeStubsOG->at(cHybrid->getIndex());
+                        auto& cReadoutStubsHybrid    = cReadoutStubsOG->at(cHybrid->getIndex());
+                        auto& cReadoutStubsSmry = cReadoutStubsHybrid->getSummary<std::vector<float>>();
+                        auto& cCicInjHybrid    = cCicInjcOG->at(cHybrid->getIndex());
+                        auto& cCicInjSummary   = cCicInjHybrid->getSummary<uint32_t>(); 
+                        auto& cBxHybrid  = cBxOG->at(cHybrid->getIndex());
+                        auto& cBxSummary   = cBxHybrid->getSummary<std::vector<float>>(); 
+                        auto  cBxDifferences = GetBxIds(cBxSummary);
+                        auto cStubReadoutStats = getStats(cReadoutStubsSmry);
+                        LOG (INFO) << BOLDMAGENTA << "\t..Injected " << +cCicInjSummary
+                            << " stub in CIC#" << +cHybrid->getId()
+                            << " on  average found " << +cStubReadoutStats.first 
+                            << " stubs in the readout."
+                            << RESET;
+                        // fill histograms as needed 
+                        #ifdef __USE_ROOT__
+                            TH2D* cStubCounter = static_cast<TH2D*>(getHist(cHybrid, "StubCounter"));
+                            TProfile2D* cStubLatencyHist = static_cast<TProfile2D*>(getHist(cHybrid, "StubLatency"));
+                            cStubLatencyHist->Fill( cStubLatencyOffset, cCicInjSummary, std::accumulate( cReadoutStubsSmry.begin(), cReadoutStubsSmry.end(), 0.)/cReadoutStubsSmry.size() );
+                            if( cStubLatencyOffset != 0 ) continue;
+
+                            for( auto cStubCount : cReadoutStubsSmry )
+                            {
+                                cStubCounter->Fill( cCicInjSummary, cStubCount ) ; 
+                            }
+                            TH2D* cBxCounter     = static_cast<TH2D*>(getHist(cHybrid, "BxCounter"));
+                            for( size_t cIndx=0; cIndx < cBxDifferences.size() ; cIndx++)
+                            {
+                                LOG (DEBUG) << BOLDMAGENTA << "\t\t.." << cIndx
+                                    << " BxDifference from injection is "
+                                    << +cDifferences[cIndx]
+                                    << " from event readout is "
+                                    << +cBxDifferences[cIndx]
+                                    << RESET;
+                                cBxCounter->Fill( cDifferences[cIndx] , cBxDifferences[cIndx] ) ; 
+                            }
+                        #endif
+                        
+                        if( cStubLatencyOffset != 0 ) continue;
+                            
+                        for( auto cChip : *cHybrid)
+                        {
+                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+
+                            if( std::find( cIds.begin(), cIds.end(), cChip->getId() ) == cIds.end() ) 
+                                    continue;
+                            auto& cFeStubsChip = cFeStubsHybrid->at(cChip->getIndex());
+                            auto& cFeStubsSmry    = cFeStubsChip->getSummary<std::vector<float>>();
+                            auto& cClusterInjChip = cClusterInjectionHybrid->at(cChip->getIndex());
+                            auto& cClusterSmry    = cClusterInjChip->getSummary<std::vector<Injection>>();
+                        
+                            #ifdef __USE_ROOT__
+                                TProfile2D* cStubCounterId = static_cast<TProfile2D*>(getHist(cHybrid, "StubCounterIds")); 
+                                TProfile2D* cStubCounter = static_cast<TProfile2D*>(getHist(cChip, "StubCounter"));
+                                TH2D* cStubCounter2 = static_cast<TH2D*>(getHist(cChip, "StubCounter2")); 
+                                for( auto cNstub : cFeStubsSmry)
+                                {
+                                    cStubCounter->Fill( cCicInjSummary, cClusterSmry.size(),  cNstub/cClusterSmry.size() ) ; 
+                                    cStubCounter2->Fill( cClusterSmry.size(), cNstub ); 
+                                    cStubCounterId->Fill( cCicInjSummary, cChip->getId(), cNstub/cClusterSmry.size() ); 
+                                }
+                            #endif                       
+                        }
+                    }
+                }
+            }//board 
+        }
+    }//latency loop
 }
 // first I would just like to test the nominal 
 // data transmission 

@@ -72,6 +72,7 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("eyeScanCic", "Perform CIC eye scan", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("triggerTestCIC", "Perform CIC trigger test", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
     cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
 
@@ -386,6 +387,14 @@ int main(int argc, char* argv[])
         //cDataChecker.Eye_CIC();
         // reset
         cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
+        cDataChecker.writeObjects();
+    }
+    if( cmd.foundOption("triggerTestCIC"))
+    {
+        DataChecker cDataChecker;
+        cDataChecker.Inherit(&cHybridTester);
+        cDataChecker.Initialise();
+        cDataChecker.PSTriggerTests();
         cDataChecker.writeObjects();
     }
 

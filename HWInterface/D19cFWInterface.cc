@@ -1247,7 +1247,24 @@ void D19cFWInterface::Stop()
     WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 }
+// reconfigure trigger
+void D19cFWInterface::ResetTriggerFSM()
+{
+    // stop trigger 
+    this->Stop();
 
+    // reset trigger
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*1));
+    // load new trigger configuration
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*1));
+
+    // // check trigger source and rate 
+    // // print out config
+    // LOG (DEBUG) << BOLDMAGENTA << "Verifying trigger configuration after reset..." << RESET;
+    // this->TriggerConfiguration();
+}
 void D19cFWInterface::Pause()
 {
     LOG(INFO) << BOLDBLUE << "................................ Pausing run ... " << RESET;
@@ -2496,61 +2513,168 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     fReadoutAttempts = 0;
     return cNEvents;
 }
+// uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
+// {
+//     uint32_t cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+//     uint32_t data_handshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+
+//     bool      pFailed    = false;
+//     int       cCounter   = 0;
+//     EventType cEventType = pBoard->getEventType();
+//     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
+
+//     while(cNWords == 0 && cCounter < 1000 && !cAsync)
+//     {
+//         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+//         if(cNWords == 0 && cCounter % 100 == 0 && cCounter > 0)
+//             LOG(INFO) << BOLDRED << "Zero events in FIFO, waiting for the triggers" << RESET;
+//         else if(cNWords > 0)
+//             LOG(INFO) << BOLDGREEN << "Iter#" << +cCounter << " " << +cNWords << " events in FIFO.. going to readout data" << RESET;
+//         cCounter++;
+
+//         if(!pWait) return cNWords;
+//     }
+//     if(cCounter == 0 && !cAsync) LOG(INFO) << BOLDGREEN << "Iter#" << +cCounter << " " << +cNWords << " words in FIFO.. going to readout data" << RESET;
+
+//     pFailed = (!cAsync) ? (cNWords == 0 || cCounter >= 1000) : false;
+
+//     uint32_t cNEvents        = 0;
+//     uint32_t cNtriggers      = 0;
+//     uint32_t cNtriggers_prev = cNtriggers;
+
+//     if(data_handshake == 1 && !pFailed && !cAsync)
+//     {
+//         cNWords         = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+//         cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+//         cNtriggers_prev = cNtriggers;
+//         // uint32_t cNWords_prev = cNWords;
+//         uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+//         cCounter             = 0;
+//         while(cReadoutReq == 0)
+//         {
+//             if(!pWait) { return 0; }
+//             // cNWords_prev = cNWords;
+//             cNtriggers_prev = cNtriggers;
+//             cReadoutReq     = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+//             cNWords         = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+//             cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+//             LOG(DEBUG) << BOLDBLUE << "Received " << +cNtriggers << " --- have " << +cNWords << " in the readout." << RESET;
+
+//             if(cNtriggers == cNtriggers_prev && cCounter > 0)
+//             {
+//                 if(cCounter % 100 == 0) LOG(DEBUG) << BOLDRED << " ..... waiting for more triggers .... got " << +cNtriggers << " so far." << RESET;
+//             }
+//             cCounter++;
+//             std::this_thread::sleep_for(std::chrono::microseconds(10));
+//         }
+//         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+
+//         // read all the words
+//         cNEvents = this->GetData(pBoard, pData);
+//     }
+//     else if(!pFailed)
+//     {
+//         if(pBoard->getEventType() == EventType::ZS)
+//         {
+//             LOG(ERROR) << "ZS Event only with handshake!!! Exiting...";
+//             exit(1);
+//         }
+//         cNEvents = this->GetData(pBoard, pData);
+//         // read all the words
+//         if(fIsDDR3Readout)
+//         {
+//             // readout_req high when buffer is almost full
+//             uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+//             if(cReadoutReq == 1)
+//             {
+//                 LOG(INFO) << BOLDGREEN << "Resetting the address in the DDR3 to zero " << RESET;
+//                 fDDR3Offset = 0;
+//             }
+//         }
+//     }
+
+//     if(pFailed)
+//     {
+//         pData.clear();
+
+//         LOG(INFO) << BOLDRED << "Re-starting the run and resetting the readout" << RESET;
+
+//         this->Stop();
+//         std::this_thread::sleep_for(std::chrono::milliseconds(500));
+//         LOG(INFO) << BOLDGREEN << " ... Run Stopped, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+
+//         // RESET the readout
+//         this->ResetReadout();
+//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+//         this->Start();
+//         std::this_thread::sleep_for(std::chrono::milliseconds(500));
+//         LOG(INFO) << BOLDGREEN << " ... Run Started, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+
+//         LOG(INFO) << BOLDRED << " ... trying to read data again .... " << RESET;
+//         cNEvents = this->ReadData(pBoard, pBreakTrigger, pData, pWait);
+//     }
+//     if(fSaveToFile) fFileHandler->setData(pData);
+
+//     // need to return the number of events read
+//     return cNEvents;
+// }
 uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
+    LOG (DEBUG) << BOLDYELLOW << "ReadData D19cFWInterface" << RESET;
     uint32_t cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    uint32_t cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
     uint32_t data_handshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
 
     bool      pFailed    = false;
-    int       cCounter   = 0;
     EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
+    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
 
-    while(cNWords == 0 && cCounter < 1000 && !cAsync)
-    {
+    // don't wait 
+    // check what happens in system controller
+    if( pWait )
+    { 
+
+        // first ... wait to see 'some' triggers 
+        size_t cCounter   = 0;
+        while( cNWords == 0 )
+        {
+            if( (1+cCounter)%100 == 0 )
+                LOG (INFO) << BOLDYELLOW << "\t.. after " << +cCounter 
+                    << " waits have counted " << +cNWords << " words in the readout "
+                    << RESET;
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+            cCounter++;   
+        }
+        // now .. see how many words are in the readout 
+        cCounter=0;
+        cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        if(cNWords == 0 && cCounter % 100 == 0 && cCounter > 0)
-            LOG(INFO) << BOLDRED << "Zero events in FIFO, waiting for the triggers" << RESET;
-        else if(cNWords > 0)
-            LOG(INFO) << BOLDGREEN << "Iter#" << +cCounter << " " << +cNWords << " events in FIFO.. going to readout data" << RESET;
-        cCounter++;
-
-        if(!pWait) return cNWords;
+        
+        // failed to read any data 
+        pFailed = (!cAsync) ? (cNWords == 0 ) : false;
+        LOG (DEBUG) << BOLDYELLOW << "ReadData has found " << +cNtriggers << " triggers received by FC7 and "
+            << +cNWords << " words in the readout." << RESET;
     }
-    if(cCounter == 0 && !cAsync) LOG(INFO) << BOLDGREEN << "Iter#" << +cCounter << " " << +cNWords << " words in FIFO.. going to readout data" << RESET;
-
-    pFailed = (!cAsync) ? (cNWords == 0 || cCounter >= 1000) : false;
 
     uint32_t cNEvents        = 0;
-    uint32_t cNtriggers      = 0;
-    uint32_t cNtriggers_prev = cNtriggers;
-
     if(data_handshake == 1 && !pFailed && !cAsync)
     {
-        cNWords         = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        cNtriggers_prev = cNtriggers;
-        // uint32_t cNWords_prev = cNWords;
+        LOG (DEBUG) << BOLDYELLOW << "Data handshake enabled with ReadData" << RESET;
         uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        cCounter             = 0;
+        size_t cCounter             = 0;
         while(cReadoutReq == 0)
         {
             if(!pWait) { return 0; }
-            // cNWords_prev = cNWords;
-            cNtriggers_prev = cNtriggers;
-            cReadoutReq     = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+            
             cNWords         = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-            cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-            LOG(DEBUG) << BOLDBLUE << "Received " << +cNtriggers << " --- have " << +cNWords << " in the readout." << RESET;
-
-            if(cNtriggers == cNtriggers_prev && cCounter > 0)
-            {
-                if(cCounter % 100 == 0) LOG(DEBUG) << BOLDRED << " ..... waiting for more triggers .... got " << +cNtriggers << " so far." << RESET;
-            }
-            cCounter++;
+            LOG(INFO) << BOLDRED << " ..... waiting for more words .... got " << +cNWords << " so far." << RESET;
+        cCounter++;
             std::this_thread::sleep_for(std::chrono::microseconds(10));
         }
         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        LOG(DEBUG) << BOLDRED << " Final word count is " << +cNWords << " so far." << RESET;
 
         // read all the words
         cNEvents = this->GetData(pBoard, pData);
@@ -2602,7 +2726,6 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // need to return the number of events read
     return cNEvents;
 }
-
 void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     uint32_t raw_mode_en = 0;
@@ -5031,6 +5154,63 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
     I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cInvertedRegister, 2);
     uint32_t cReadBack = I2CRead(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, 1);
     return cReadBack;
+}
+
+void D19cFWInterface::ResetFCMDBram()
+{
+    LOG (DEBUG) << BOLDBLUE << "Resetting FCMD BRAM from sw.... started" << RESET;
+    uint16_t cBRAMdepth=0x3FFF;
+    std::vector< std::pair<std::string, uint32_t> > cRegs;
+    for( uint16_t cBx=0; cBx < cBRAMdepth ; cBx++ )
+    {
+        cRegs.push_back( {"fc7_daq_cnfg.fast_command_block.generic_fcmd_data",  0x00});
+        cRegs.push_back( {"fc7_daq_cnfg.fast_command_block.generic_fcmd_addr",   cBx }); 
+        cRegs.push_back( {"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x1 }); 
+        cRegs.push_back( {"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x0 }); 
+       if( cBx%(cBRAMdepth/10) == 0 ) LOG (INFO) << BOLDBLUE << "\t... Bx..." << +cBx << RESET;
+    }
+    this->WriteStackReg( cRegs ) ;
+    LOG (DEBUG) << BOLDBLUE << "Resetting FCMD BRAM from sw..... done" << RESET;
+}
+void D19cFWInterface::ConfigureFCMDBram(std::vector<uint8_t> pFastCommands)
+{
+    LOG (DEBUG) << BOLDBLUE << "Configuring FCMD BRAM from sw.." << RESET;
+    uint16_t cBRAMdepth=0x3FFF;
+    uint32_t cWait = fWait_us*10;
+    std::vector< std::pair<std::string, uint32_t> > cRegs;
+    for( size_t cBx=0; cBx< pFastCommands.size(); cBx++)
+    {
+        if( cBx >= cBRAMdepth ) 
+        {
+            LOG (INFO) << "Maximum BRAM depth is " << +cBRAMdepth << RESET;
+            break;
+        }
+        // fast command BRAM data and address 
+        // bram only takes the fcmd code (so not the header and not the trailer)
+        uint8_t cCode = (pFastCommands[cBx] & (0xF << 1) ) >> 1;
+        cRegs.push_back( {"fc7_daq_cnfg.fast_command_block.generic_fcmd_data",  cCode});
+        cRegs.push_back( {"fc7_daq_cnfg.fast_command_block.generic_fcmd_addr",  1+cBx  }); 
+        cRegs.push_back( {"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x1 }); 
+        cRegs.push_back( {"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x0 }); 
+
+        LOG (DEBUG) << BOLDBLUE << "\t..Fast command from sw is " << std::bitset<8>(pFastCommands[cBx])
+            << " writing " << std::bitset<4>(cCode) 
+            << " to generic fast command player in address  " << (1+cBx)
+            << RESET;
+    }// configure fast command bram 
+    this->WriteStackReg( cRegs ) ;
+    // make sure the last address written to the configuration register is 0 
+    this->WriteReg( "fc7_daq_cnfg.fast_command_block.generic_fcmd_data", 0x00 );
+    this->WriteReg( "fc7_daq_cnfg.fast_command_block.generic_fcmd_addr", 0x00 );
+    std::this_thread::sleep_for (std::chrono::microseconds (cWait) );
+    this->WriteReg( "fc7_daq_ctrl.fast_command_block.control.write_generic", 0x1 );
+    std::this_thread::sleep_for (std::chrono::microseconds (cWait) );
+    this->WriteReg( "fc7_daq_ctrl.fast_command_block.control.write_generic", 0x0 );
+    std::this_thread::sleep_for (std::chrono::microseconds (cWait) );
+    // configure number of fast commands to  play 
+    this->WriteReg( "fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_cmds_to_play", pFastCommands.size() ) ;
+    this->WriteReg( "fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", 0x0 ) ;
+    LOG (DEBUG) << BOLDBLUE << "Configuring FCMD BRAM from sw..... done" << RESET;
 }
 
 } // namespace Ph2_HwInterface

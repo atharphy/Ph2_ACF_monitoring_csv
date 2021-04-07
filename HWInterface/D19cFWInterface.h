@@ -221,6 +221,7 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     void Resume() override;
 
+    void ResetTriggerFSM();
     /*!
      * \brief Reset Readout
      */
@@ -782,6 +783,9 @@ private:
     // function for front-end slow control
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify = false) override;
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false) override;
+    // fast command generic block 
+    void ResetFCMDBram();
+    void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
 };
 } // namespace Ph2_HwInterface
 
