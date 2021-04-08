@@ -100,7 +100,7 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     }
     return cRegItem.fValue & 0xFF;
 }
-void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections)
+void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
     // std::vector<uint32_t> cPixelIds(0);
     // for( auto pInjection : pInjections )
@@ -116,7 +116,7 @@ void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInj
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
         LOG(DEBUG) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET;
-        this->WriteChipReg(pChip, cRegName.str(), 0xFF);
+        this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
 }
 std::vector<int> MPAInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode)

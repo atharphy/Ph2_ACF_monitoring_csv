@@ -1440,7 +1440,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
 
 
     // select fast command edge
-    bool cNegEdge = false;
+    bool cNegEdge = false;//true;
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else

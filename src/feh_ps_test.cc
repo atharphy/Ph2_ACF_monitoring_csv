@@ -53,6 +53,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
+    cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue);
+
     cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
     cmd.defineOptionAlternative("tuneOffsets", "t");
 
@@ -95,6 +97,7 @@ int main(int argc, char* argv[])
     std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
     // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
     // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
+    bool cSaveToFile = cmd.foundOption("save");
     bool        batchMode  = (cmd.foundOption("batch")) ? true : false;
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
@@ -125,6 +128,13 @@ int main(int argc, char* argv[])
     // allows me to initialize voltages
     // and check voltages
     PSHybridTester cHybridTester;
+    if(cSaveToFile)
+    {
+        std::string cRawFile = cmd.optionValue("save");
+        cHybridTester.addFileHandler(cRawFile, 'w');
+        LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
+    }
+    
     cHybridTester.InitializeHw(cHWFile, outp);
     cHybridTester.InitializeSettings(cHWFile, outp);
     cHybridTester.CreateResultDirectory(cDirectory);
