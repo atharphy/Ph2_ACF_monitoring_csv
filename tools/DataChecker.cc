@@ -341,14 +341,12 @@ void DataChecker::Initialise()
                 cHist = new TH2D(cName, Form("Stub latency, digi-inject test CIC%d; Hit Latency; MPA Id ", (int)cHybrid->getId()), 512 , 0 , 512 , 8 , 0 , 8);
                 bookHistogram(cHybrid, "PixelStubLatency", cHist);
 
-
                 cName = Form("h_HitLatency_FE%d_Strps", cHybrid->getId() );
                 cObj  = gROOT->FindObject(cName);
                 if(cHist) delete cObj;
                 cHist = new TH2D(cName, Form("Strip cluster counter, digi-inject test CIC%d; Hit Latency; SSA Id ", (int)cHybrid->getId()), 512 , 0 , 512 , 8 , 0 , 8);
                 bookHistogram(cHybrid, "StripHitLatency", cHist);
 
-                
                 //
                 cName = Form("h_StubCounter_FE%d", cHybrid->getId() );
                 cObj  = gROOT->FindObject(cName);
@@ -379,12 +377,18 @@ void DataChecker::Initialise()
                     cHist = new TH2D(cName, Form("Injected P-cluster, digi-inject test MPA%d CIC%d; Row; Column", (int)cChip->getId(), (int)cHybrid->getId()), 20 , 0 , 20 , 130 , 0 , 130);
                     bookHistogram(cChip, "InjectionMap", cHist);
 
-
                     cName = Form("h_MatchedInj_FE%d", cChip->getId() );
                     cObj  = gROOT->FindObject(cName);
                     if(cObj) delete cObj;
                     cHist = new TH2D(cName, Form("Matched P-cluster, digi-inject test MPA%d CIC%d; Row; Column", (int)cChip->getId(), (int)cHybrid->getId()), 20 , 0 , 20 , 130 , 0 , 130);
                     bookHistogram(cChip, "MatchedInjectionMap", cHist);
+
+                    cName = Form("h_MismatchedInj_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cHist = new TH2D(cName, Form("Mismatched Clusters, digi-inject test MPA%d CIC%d; Row; Column", (int)cChip->getId(), (int)cHybrid->getId()), 20 , 0 , 20 , 130 , 0 , 130);
+                    bookHistogram(cChip, "MismatchedInjectionMap", cHist);
+
 
                     if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
@@ -1639,13 +1643,8 @@ void DataChecker::PSTriggerTest()
                     for( auto cInjection : cInjections )
                     {
                         // // I've messed up rows and cols earlier 
-                        // // if I fix this definition before I don't need to worry about this 
-                        // Injection cInj; 
-                        // cInj.fColumn  = cInjection.fRow;
-                        // cInj.fRow  = cInjection.fColumn; 
-                        // cInj.fFeId = cChip->getId();
                         cInjection.fFeId = cChip->getId();
-                        LOG (INFO) << BOLDMAGENTA << "Adding injection in FE#" << +cChip->getId() 
+                        LOG (DEBUG) << BOLDMAGENTA << "Adding injection in FE#" << +cChip->getId() 
                             << " strip " << +cInjection.fRow
                             << " pixel column " << +cInjection.fColumn
                             << RESET ;
@@ -1838,7 +1837,7 @@ void DataChecker::PSTriggerTest()
                                         cInjection.fColumn = 0; 
                                         cInjection.fFeId = cChip->getId(); 
                                         cFeClusterSmry.push_back( cInjection );
-                                        LOG (INFO) << BOLDMAGENTA << "\t\t.. found S-cluster in SSA#" << +cChip->getId() 
+                                        LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found S-cluster in SSA#" << +cChip->getId() 
                                             << " strip " << +cInjection.fRow
                                             << " in readout."
                                             << RESET ;
@@ -1861,7 +1860,7 @@ void DataChecker::PSTriggerTest()
                                         cInjection.fRow =  cPCluster.fAddress;
                                         cInjection.fColumn = cPCluster.fZpos; 
                                         cInjection.fFeId = cChip->getId(); 
-                                        LOG (INFO) << BOLDMAGENTA << "\t\t.. found P-cluster in MPA#" << +cChip->getId() 
+                                        LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found P-cluster in MPA#" << +cChip->getId() 
                                             << " strip " << +cInjection.fRow
                                             << " pixel column is " << +cInjection.fColumn 
                                             << " in readout."
@@ -1962,6 +1961,7 @@ void DataChecker::PSTriggerTest()
                             }
                         #endif
                         
+
                         for( auto cChip : *cHybrid)
                         {
                             if( std::find( cIds.begin(), cIds.end(), cChip->getId() ) == cIds.end() ) 
@@ -1984,9 +1984,9 @@ void DataChecker::PSTriggerTest()
                             auto& cFeClusterSmry  = cFeClusterChip->getSummary<std::vector<Injection>>(); 
                             std::string cType = (cChip->getFrontEndType() == FrontEndType::SSA) ? "SSA" : "MPA";
                             std::string cClusterType =  (cChip->getFrontEndType() == FrontEndType::SSA) ? "S-cluster" : "P-cluster";
-                            // LOG (INFO) << BOLDMAGENTA << "Summary for " << cType << "#" << +cChip->getId() 
-                            //     << " has " << cFeClusterSmry.size() << " entries." << RESET;
-                            // check match 
+                            
+                            // expected hits 
+                            std::map<uint32_t, uint16_t> cMatchedMap; 
                             for( size_t cIndx= 0 ; cIndx < cClusterInjectionHybrid->size(); cIndx++)
                             {
                                 auto& cInjSmryChip = cClusterInjectionHybrid->at(cIndx);
@@ -1994,60 +1994,148 @@ void DataChecker::PSTriggerTest()
                                 for( auto cClusterInj : cInjSmry ) 
                                 {
                                     if( cClusterInj.fFeId != cChip->getId() ) continue; 
-
                                     int cBendOffset = (cChip->getFrontEndType() == FrontEndType::SSA ) ?  cBend  : 0 ; 
                                     int cExpectedCol = cClusterInj.fColumn ; 
                                     int cExpectedRow = cClusterInj.fRow + cBendOffset; 
                                     
-                                    LOG (INFO) << BOLDMAGENTA << "Comparing injection of cluster in pixel column " << +cExpectedCol
-                                        << " strip " << +cExpectedRow
-                                        << " FeId is " << +cClusterInj.fFeId 
-                                        << RESET;
-                                    
-                                    
-                                    // store injections for this chip 
-                                    #ifdef __USE_ROOT__
-                                        TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"InjectionMap"));
-                                        cInjMap->Fill( cExpectedCol, cExpectedRow, 1 );
-                                    #endif
-                                    
-                                    for( auto cFeCluster : cFeClusterSmry ) 
+                                    uint32_t cPixelId = (uint32_t)(cExpectedCol * 120) + (uint32_t)cExpectedRow; 
+                                    auto cIterator = cMatchedMap.find(cPixelId);
+                                    if( cIterator == cMatchedMap.end() ) 
                                     {
-                                        bool cExpected = (cExpectedRow == cFeCluster.fRow);
-                                        if( cChip->getFrontEndType() == FrontEndType::MPA ) 
-                                            cExpected = cExpected && (cClusterInj.fColumn == cFeCluster.fColumn); 
-
-                                        if( cExpected )
-                                        {
-                                            // store matches for this chip 
-                                            #ifdef __USE_ROOT__
-                                                TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"MatchedInjectionMap"));
-                                                cInjMap->Fill( cExpectedCol, cExpectedRow, 1 );
-                                            #endif
-                                            LOG (INFO) << BOLDGREEN << "\t\t.. Readout "
-                                                << cClusterType 
-                                                << " from " 
-                                                << cType << "#" << +cChip->getId() 
-                                                << " strip " << +cFeCluster.fRow
-                                                <<" pixel column " << +cFeCluster.fColumn 
-                                                << RESET ;
-                                        }
-                                        else
-                                            LOG (INFO) << BOLDRED << "\t\t.. Readout "
-                                                << cClusterType 
-                                                << " from " 
-                                                << cType << "#" << +cChip->getId() 
-                                                << " strip " << +cFeCluster.fRow
-                                                <<" pixel column " << +cFeCluster.fColumn 
-                                                << RESET ;
+                                        cMatchedMap.insert( std::make_pair( cPixelId , 0) ); 
                                     }
+                                    LOG (INFO) << BOLDMAGENTA << cType
+                                            << "#" << +cChip->getId() 
+                                            << " expect " << (cNtrials-1)
+                                            << " "
+                                            << cClusterType 
+                                            << " in strip " << +cExpectedRow
+                                            << " and pixel column " << +cExpectedCol
+                                            << RESET;
+                                    // store injections for this chip 
+                                    // #ifdef __USE_ROOT__
+                                    //     TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"InjectionMap"));
+                                    //     cInjMap->Fill( cExpectedCol, cExpectedRow, cNtrials-1 );//how many I expect
+                                    // #endif
                                 }
                             }
+
+                            // check match for all the clusters 
+                            // readout  
+                            for( auto cFeCluster : cFeClusterSmry ) 
+                            {
+                                int cStrip = cFeCluster.fRow; 
+                                int cPxl = cFeCluster.fColumn;
+                                bool cMatchFound=false;
+                                for( size_t cIndx= 0 ; cIndx < cClusterInjectionHybrid->size(); cIndx++)
+                                {
+                                    if(cMatchFound) break;
+
+                                    auto& cInjSmryChip = cClusterInjectionHybrid->at(cIndx);
+                                    auto& cInjSmry    = cInjSmryChip->getSummary<std::vector<Injection>>();
+                                    for( auto cClusterInj : cInjSmry ) 
+                                    {
+                                        if(cMatchFound) break;
+                                        if(cClusterInj.fFeId != cChip->getId() ) continue; 
+
+                                        int cBendOffset = (cChip->getFrontEndType() == FrontEndType::SSA ) ?  cBend  : 0 ; 
+                                        int cExpectedPxl = cClusterInj.fColumn ; 
+                                        int cExpectedStrip = cClusterInj.fRow + cBendOffset; 
+                                        // check strip 
+                                        bool cStripMatch = (cExpectedStrip == cStrip);
+                                        bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA ) ? true : (cExpectedPxl == cPxl);
+                                        cMatchFound = cStripMatch && cPixelMatch;
+                                        //
+                                        uint32_t cPixelId = (uint32_t)(cExpectedPxl * 120) + (uint32_t)cExpectedStrip; 
+                                        auto cIterator = cMatchedMap.find(cPixelId);
+                                        if( cIterator != cMatchedMap.end() ) 
+                                        {
+                                            cIterator->second += (cMatchFound) ? 1 : 0; 
+                                        }
+                                    }
+                                }
+                                // // store injections for this chip 
+                                // #ifdef __USE_ROOT__
+                                //     int cFill = cMatchFound ? 1 : 0 ; 
+                                //     TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"MatchedInjectionMap"));
+                                //     cInjMap->Fill( cPxl, cStrip, cFill );
+                                // #endif
+                                if( cMatchFound )
+                                    LOG (DEBUG) << BOLDGREEN << "\t\t.. Match found for "
+                                            << cClusterType 
+                                            << " readout from " 
+                                            << cType << "#" << +cChip->getId() 
+                                            << " strip " << cStrip
+                                            <<" pixel column " << cPxl
+                                            << RESET ;
+                                else
+                                    LOG (DEBUG) << BOLDRED << "\t\t.. No match found for "
+                                            << cClusterType 
+                                            << " readout from " 
+                                            << cType << "#" << +cChip->getId() 
+                                            << " strip " << cStrip
+                                            <<" pixel column " << cPxl
+                                            << RESET ;
+                            }
+                            
+                            // print matches for clusters 
+                            size_t cMatchedHits=0; 
+                            bool cAllMatch=true;
+                            for( auto cMapItem : cMatchedMap )
+                            {
+                                int cExpectedRow = (cChip->getFrontEndType() == FrontEndType::SSA) ? 0 : (cMapItem.first)/120 ;  
+                                int cExpectedStrp = (cMapItem.first)%120; 
+                                bool cMatch = (cMapItem.second == (cNtrials-1 ));
+                                int  cNmismatches = std::fabs( cMapItem.second - (cNtrials-1));
+                                cAllMatch = cAllMatch && cMatch;
+                                cMatchedHits += (cMatch) ? 1 : 0 ; 
+                                if( cMatch)
+                                    LOG (INFO) << BOLDGREEN << "Pixel# " << +cMapItem.first
+                                        << " so row " << +cExpectedRow
+                                        << " and strip " << +cExpectedStrp 
+                                        << " found " << +cMapItem.second
+                                        << " matched events out of a total "
+                                        << cNtrials-1 
+                                        << " expected. "
+                                        << RESET;
+                                else
+                                    LOG (INFO) << BOLDRED << "Pixel# " << +cMapItem.first
+                                        << " so row " << +cExpectedRow
+                                        << " and strip " << +cExpectedStrp 
+                                        << " found " << +cMapItem.second
+                                        << " matched events out of a total "
+                                        << cNtrials-1 
+                                        << " expected. "
+                                        << RESET;
+                                    
+                                // histograms  
+                                #ifdef __USE_ROOT__
+                                    // hit maps
+                                    TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"InjectionMap"));
+                                    cInjMap->Fill( cExpectedRow, cExpectedStrp, cNtrials-1 );//how many I expect
+                                    TH2D* cMatchedInjMap = static_cast<TH2D*>(getHist(cChip,"MatchedInjectionMap"));
+                                    cMatchedInjMap->Fill( cExpectedRow, cExpectedStrp, cMapItem.second );
+                                    TH2D* cMismatchedInjMap = static_cast<TH2D*>(getHist(cChip,"MismatchedInjectionMap"));
+                                    cMismatchedInjMap->Fill( cExpectedRow, cExpectedStrp, cNmismatches );
+                                    // hit latencies 
+                                    std::string cHistName = ( cChip->getFrontEndType() == FrontEndType::SSA)  ? "StripHitLatency" : "PixelHitLatency";
+                                    TH2D* cHitLatency = static_cast<TProfile2D*>(getHist(cHybrid, cHistName)); 
+                                    cHitLatency->Fill( cFeLatencySmry , cChip->getId() , cMapItem.second); 
+                                #endif
+                            }
+                            bool cAllReadoutMatch = (cMatchedHits == cTotalNHits );
+                            if( cAllReadoutMatch )
+                                LOG (DEBUG) << "All readout "
+                                    << cClusterType 
+                                    << " match those injected for "
+                                    << cType 
+                                    << "#"
+                                    << +cChip->getId()
+                                    << RESET;
+
+                            // stubs 
                             // latency hists 
                             #ifdef __USE_ROOT__
-                                std::string cHistName = ( cChip->getFrontEndType() == FrontEndType::SSA)  ? "StripHitLatency" : "PixelHitLatency";
-                                TH2D* cHitLatency = static_cast<TProfile2D*>(getHist(cHybrid, cHistName)); 
-                                cHitLatency->Fill( cFeLatencySmry , cChip->getId() , cTotalNHits);
                                 TH2D* cStubLatencyHist = static_cast<TH2D*>(getHist(cHybrid, "StubLatency"));
                                 cStubLatencyHist->Fill( cStubLatency, cChip->getId() , cTotalNstubs);
                             #endif

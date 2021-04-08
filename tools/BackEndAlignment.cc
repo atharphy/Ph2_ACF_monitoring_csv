@@ -188,69 +188,69 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
     }         // module
     LOG(INFO) << BOLDBLUE << "Bx0Alignment for : " << ((cIsPS) ? "PS" : "2S") << RESET;
 
-    // quick and dirt hit latency scan
-    for( int cLatencyOffset = -10; cLatencyOffset <= 0 ; cLatencyOffset++)
-    {
-        cLatency = cDelay + cLatencyOffset ;
-        LOG (INFO) << BOLDBLUE << "Setting L1 latency in MPA to " << +cLatency << RESET;
-        for(auto cOpticalReadout: *pBoard)
-        {
-            for(auto cHybrid: *cOpticalReadout)
-            {
-                for(auto cChip: *cHybrid) // for each chip (makes sense)
-                {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                    }
-                } // chip
-            } // hybrid
-        }// module
+    // // quick and dirt hit latency scan
+    // for( int cLatencyOffset = -10; cLatencyOffset <= 0 ; cLatencyOffset++)
+    // {
+    //     cLatency = cDelay + cLatencyOffset ;
+    //     LOG (INFO) << BOLDBLUE << "Setting L1 latency in MPA to " << +cLatency << RESET;
+    //     for(auto cOpticalReadout: *pBoard)
+    //     {
+    //         for(auto cHybrid: *cOpticalReadout)
+    //         {
+    //             for(auto cChip: *cHybrid) // for each chip (makes sense)
+    //             {
+    //                 if(cChip->getFrontEndType() == FrontEndType::MPA)
+    //                 {
+    //                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+    //                 }
+    //             } // chip
+    //         } // hybrid
+    //     }// module
 
-        LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
-        ReadNEvents(pBoard, cNevents);
-        const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
-        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
-        for(auto cEvent: cEventsWithStubs)
-        {
-            for(auto cOpticalGroup: *pBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    // only for the first hybrid
-                    if(cHybrid->getIndex() > 0) continue;
+    //     LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+    //     ReadNEvents(pBoard, cNevents);
+    //     const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
+    //     LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+    //     for(auto cEvent: cEventsWithStubs)
+    //     {
+    //         for(auto cOpticalGroup: *pBoard)
+    //         {
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 // only for the first hybrid
+    //                 if(cHybrid->getIndex() > 0) continue;
 
-                    auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+    //                 auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
+    //                 for(auto cChip: *cHybrid)
+    //                 {
+    //                     if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                        auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                        auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                        auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                        if( cPClusters.size() == cPixelIds.size() )
-                        {
-                            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
-                                << "\t..MPA#" << +cChip->getId()
-                                <<" found " 
-                                << +cStubs.size() 
-                                << " stubs,  "
-                                << +cPClusters.size()
-                                << " p clusters, and "
-                                << +cSClusters.size() 
-                                << " s clusters "
-                                << " L1 status is "
-                                << std::bitset<16>(cL1Status)
-                                << RESET;
-                            for(auto cPCluster: cPClusters)
-                                LOG(INFO) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) << ", width " << unsigned(cPCluster.fWidth) << ", row "
-                                          << unsigned(cPCluster.fZpos) << RESET;
-                        }
-                    } // ROCs
-                } // hybrids or CICs
-            } // optical group loop
-        }// event loop
-    }
+    //                     auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+    //                     auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+    //                     auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+    //                     if( cPClusters.size() == cPixelIds.size() )
+    //                     {
+    //                         LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
+    //                             << "\t..MPA#" << +cChip->getId()
+    //                             <<" found " 
+    //                             << +cStubs.size() 
+    //                             << " stubs,  "
+    //                             << +cPClusters.size()
+    //                             << " p clusters, and "
+    //                             << +cSClusters.size() 
+    //                             << " s clusters "
+    //                             << " L1 status is "
+    //                             << std::bitset<16>(cL1Status)
+    //                             << RESET;
+    //                         for(auto cPCluster: cPClusters)
+    //                             LOG(INFO) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) << ", width " << unsigned(cPCluster.fWidth) << ", row "
+    //                                       << unsigned(cPCluster.fZpos) << RESET;
+    //                     }
+    //                 } // ROCs
+    //             } // hybrids or CICs
+    //         } // optical group loop
+    //     }// event loop
+    // }
     
     // expect latency offset to be 1 for the MPA 
     // this could be replaced by  an L1 latency scan     
@@ -415,7 +415,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
             if(cStubLatency < 0) continue;
 
             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
-            LOG(INFO) << BOLDBLUE << "Stub latency set to " << +cStubLatency << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Stub latency set to " << +cStubLatency << RESET;
 
             LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
             ReadNEvents(pBoard, cNevents);
@@ -452,7 +452,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                                 if(cEventsMatch && cPClusters.size() == cInjections.size() )
                                 {
                                     cCorrectLatency = cOffset;
-                                    LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
+                                    LOG (DEBUG) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
                                         << "\t\tMPA#" << +cChip->getId()
                                         << "\t... found the " << +cStubs.size() 
                                         << " EXPECTED stubs in this event." 
@@ -464,7 +464,7 @@ bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
                                 if( cEventsMatch )
                                 {
                                     for(auto cPCluster: cPClusters)
-                                        LOG(INFO) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) << ", width " << unsigned(cPCluster.fWidth) << ", row "
+                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t PCluster : address : " << unsigned(cPCluster.fAddress) << ", width " << unsigned(cPCluster.fWidth) << ", row "
                                                   << unsigned(cPCluster.fZpos) << RESET;
                                 }
                             }
