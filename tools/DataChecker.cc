@@ -361,11 +361,17 @@ void DataChecker::Initialise()
                 bookHistogram(cHybrid, "StubCounterIds", cProfile2D);
                 
 
-                cName = Form("h_BxCounter_FE%d", cHybrid->getId() );
+                cName = Form("h_BxMatching_FE%d", cHybrid->getId() );
                 cObj  = gROOT->FindObject(cName);
                 if(cObj) delete cObj;
                 cHist = new TH2D(cName, Form("Bx counter, digi-inject test CIC%d; #Delta Bx_{Injection}; #Delta Bx_{Readout}", (int)cHybrid->getId()), 500, 0, 500, 500, 0 ,500 );
-                bookHistogram(cHybrid, "BxCounter", cHist);
+                bookHistogram(cHybrid, "BxMatching", cHist);
+
+                cName = Form("h_BxCounter_FE%d", cHybrid->getId() );
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cHist1D = new TH1D(cName, Form("Bx counter, digi-inject test CIC%d; #Delta Bx_{Readout}; Count", (int)cHybrid->getId()), 500, 0, 500 );
+                bookHistogram(cHybrid, "BxCounter", cHist1D);
 
 
                 for(auto cChip: *cHybrid)
@@ -1948,7 +1954,8 @@ void DataChecker::PSTriggerTest()
                             {
                                 cStubCounter->Fill( cCicInjSummary, cStubCount ) ; 
                             }
-                            TH2D* cBxCounter     = static_cast<TH2D*>(getHist(cHybrid, "BxCounter"));
+                            TH2D* cBxMatching     = static_cast<TH2D*>(getHist(cHybrid, "BxMatching"));
+                            TH1D* cBxCounter      = static_cast<TH1D*>(getHist(cHybrid, "BxCounter"));
                             for( size_t cIndx=0; cIndx < cBxDifferences.size() ; cIndx++)
                             {
                                 LOG (DEBUG) << BOLDMAGENTA << "\t\t.." << cIndx
@@ -1957,7 +1964,8 @@ void DataChecker::PSTriggerTest()
                                     << " from event readout is "
                                     << +cBxDifferences[cIndx]
                                     << RESET;
-                                cBxCounter->Fill( cDifferences[cIndx] , cBxDifferences[cIndx] ) ; 
+                                cBxMatching->Fill( cDifferences[cIndx] , cBxDifferences[cIndx] ) ; 
+                                cBxCounter->Fill(cBxDifferences[cIndx]) ;
                             }
                         #endif
                         
@@ -2004,7 +2012,7 @@ void DataChecker::PSTriggerTest()
                                     {
                                         cMatchedMap.insert( std::make_pair( cPixelId , 0) ); 
                                     }
-                                    LOG (INFO) << BOLDMAGENTA << cType
+                                    LOG (DEBUG) << BOLDMAGENTA << cType
                                             << "#" << +cChip->getId() 
                                             << " expect " << (cNtrials-1)
                                             << " "
@@ -2012,11 +2020,6 @@ void DataChecker::PSTriggerTest()
                                             << " in strip " << +cExpectedRow
                                             << " and pixel column " << +cExpectedCol
                                             << RESET;
-                                    // store injections for this chip 
-                                    // #ifdef __USE_ROOT__
-                                    //     TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"InjectionMap"));
-                                    //     cInjMap->Fill( cExpectedCol, cExpectedRow, cNtrials-1 );//how many I expect
-                                    // #endif
                                 }
                             }
 
@@ -2054,12 +2057,6 @@ void DataChecker::PSTriggerTest()
                                         }
                                     }
                                 }
-                                // // store injections for this chip 
-                                // #ifdef __USE_ROOT__
-                                //     int cFill = cMatchFound ? 1 : 0 ; 
-                                //     TH2D* cInjMap = static_cast<TH2D*>(getHist(cChip,"MatchedInjectionMap"));
-                                //     cInjMap->Fill( cPxl, cStrip, cFill );
-                                // #endif
                                 if( cMatchFound )
                                     LOG (DEBUG) << BOLDGREEN << "\t\t.. Match found for "
                                             << cClusterType 
@@ -2086,11 +2083,11 @@ void DataChecker::PSTriggerTest()
                                 int cExpectedRow = (cChip->getFrontEndType() == FrontEndType::SSA) ? 0 : (cMapItem.first)/120 ;  
                                 int cExpectedStrp = (cMapItem.first)%120; 
                                 bool cMatch = (cMapItem.second == (cNtrials-1 ));
-                                int  cNmismatches = std::fabs( cMapItem.second - (cNtrials-1));
+                                int  cNmismatches = (cNtrials-1) -  (int)cMapItem.second ;
                                 cAllMatch = cAllMatch && cMatch;
                                 cMatchedHits += (cMatch) ? 1 : 0 ; 
                                 if( cMatch)
-                                    LOG (INFO) << BOLDGREEN << "Pixel# " << +cMapItem.first
+                                    LOG (DEBUG) << BOLDGREEN << "Pixel# " << +cMapItem.first
                                         << " so row " << +cExpectedRow
                                         << " and strip " << +cExpectedStrp 
                                         << " found " << +cMapItem.second
@@ -2099,7 +2096,10 @@ void DataChecker::PSTriggerTest()
                                         << " expected. "
                                         << RESET;
                                 else
-                                    LOG (INFO) << BOLDRED << "Pixel# " << +cMapItem.first
+                                    LOG (INFO) << BOLDRED << cType
+                                        << "#"
+                                        << +cChip->getId() << " : "
+                                        << "Pixel# " << +cMapItem.first
                                         << " so row " << +cExpectedRow
                                         << " and strip " << +cExpectedStrp 
                                         << " found " << +cMapItem.second
