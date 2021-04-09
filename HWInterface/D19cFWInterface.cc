@@ -2465,27 +2465,42 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     }         // opticalGroup
     uint32_t cNEvents = 0;
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    // if(fIsDDR3Readout && !cAsync)
+    // {
+    //     if(cNWords == 0)
+    //     {
+    //         LOG(INFO) << BOLDRED << "No words in the readout.. " << RESET;
+    //         throw Exception("No words in the readout when reading data...stopping.");
+    //     }
+    //     LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
+    //     pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
+    //     // figure out how many events I've got
+    //     cNEvents = this->CountFwEvents(pBoard, pData);
+    //     LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
+    //                << " data size is " << +pData.size() << " 32 bit words." << RESET;
+    //     // how many events did you ask for
+    //     auto cNeventsReq = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
+    //     if(cNeventsReq != cNEvents)
+    //     {
+    //         LOG(INFO) << BOLDRED << "Mismatch in number of events "
+    //                   << " received from FC7!!"
+    //                   << " User has asked for " << +cNeventsReq << " and we have only read-back " << +cNEvents << " from the FC7..." << RESET;
+    //     }
+    // }
     if(fIsDDR3Readout && !cAsync)
     {
-        if(cNWords == 0)
-        {
-            LOG(INFO) << BOLDRED << "No words in the readout.. " << RESET;
-            throw Exception("No words in the readout when reading data...stopping.");
-        }
         LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // figure out how many events I've got
         cNEvents = this->CountFwEvents(pBoard, pData);
+        uint32_t cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        if( cNEvents != cNtriggers )
+            LOG (INFO) << BOLDRED << "[D19cFWInterface::GetData] Trigger in counter is " << +cNtriggers 
+                    << " number of events in readout is " << +cNEvents << RESET;          
         LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
-        // how many events did you ask for
-        auto cNeventsReq = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-        if(cNeventsReq != cNEvents)
-        {
-            LOG(INFO) << BOLDRED << "Mismatch in number of events "
-                      << " received from FC7!!"
-                      << " User has asked for " << +cNeventsReq << " and we have only read-back " << +cNEvents << " from the FC7..." << RESET;
-        }
+        // in the handshake mode offset is cleared after each handshake
+        fDDR3Offset = 0;
     }
     else if(cAsync)
     {
@@ -2637,21 +2652,42 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 
         // first ... wait to see 'some' triggers 
         size_t cCounter   = 0;
-        while( cNWords == 0 )
+        while( cNtriggers == 0 )
         {
             if( (1+cCounter)%100 == 0 )
                 LOG (INFO) << BOLDYELLOW << "\t.. after " << +cCounter 
-                    << " waits have counted " << +cNWords << " words in the readout "
+                    << " waits have counted " << +cNtriggers << " received by the FC7."
                     << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(10));
-            cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+            cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cCounter++;   
         }
+        
         // now .. see how many words are in the readout 
         cCounter=0;
         cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
         
+        // size_t cMaxAttempts=0; 
+        // // if slow async there won't be any words in the readout 
+        // while(cNWords == 0 && cCounter < cMaxAttempts && !cAsync)
+        // {
+        //     cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        //     cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+
+        //     if(cNWords == 0 && (1+cCounter)%100 == 0) 
+        //         LOG(INFO) << BOLDRED << "Zero events in FIFO, waiting for the triggers" << RESET;
+        //     else if(cNWords > 0)
+        //         LOG(INFO) << BOLDYELLOW << "Iter#" << +cCounter << " " << +cNWords << " events in FIFO.. " 
+        //             << " after receiving "
+        //             << " going to readout data" << RESET;
+            
+        //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        //     cCounter++;
+        // }
+        // if(!cAsync) 
+        //     LOG(INFO) << BOLDYELLOW << "Iter#" << +cCounter << " " << +cNWords << " words in FIFO.. going to readout data" << RESET;
+
         // failed to read any data 
         pFailed = (!cAsync) ? (cNWords == 0 ) : false;
         LOG (DEBUG) << BOLDYELLOW << "ReadData has found " << +cNtriggers << " triggers received by FC7 and "

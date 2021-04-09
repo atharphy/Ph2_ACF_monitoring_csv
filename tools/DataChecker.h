@@ -58,7 +58,7 @@ class DataChecker : public Tool
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
     void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
     void Eye_CIC();
-    void GenericFastCommands();
+    bool GenericFastCommands();
 
     void PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme);
     void FastCommandInjections(int pNTrials=1);
@@ -116,7 +116,7 @@ class DataChecker : public Tool
     int fAttempt      = 0;
     int fMissedEvent  = 0;
     int fEventCounter = 0;
-
+    int fTriggerTestCounter =0;
 
     //
     TPconfig fTPconfig;

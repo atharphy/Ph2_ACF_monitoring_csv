@@ -165,7 +165,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">30</Setting>
+    <Setting name="Nevents">50</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -204,17 +204,20 @@
     <Setting name="AsyncCalDac">30</Setting>
 
     <!-- Sync Test --> 
-    <Setting name="Attempts">100</Setting>
-    <Setting name="Bend">1</Setting>
-    <Setting name="TriggerSeparation">100</Setting>
-    <Setting name="DelayAfterInjection">100</Setting>
-    <Setting name="InjectionDuration">8</Setting>
-    <Setting name="MaxPClusters">4</Setting>
+    <Setting name="Attempts">200</Setting>
+    <!-- injection configuration, number of MPAs -->
+    <Setting name="ActiveMPAs">8</Setting>
+    <!-- injection configuration, fast commands -->
+    <Setting name="DistributeInjections">0</Setting>
+    <Setting name="TriggerSeparation">2</Setting>
+    <Setting name="DelayAfterInjection">85</Setting>
+    <!-- injection  configuration clusters/stubs -->
+    <Setting name="Bend">0</Setting>
+    <Setting name="MaxPClusters">2</Setting>
+    <!-- L1 eye, SLVS drive strength --> 
     <Setting name="SLVSDrive">3</Setting>
     <Setting name="MaxOffset">0</Setting>
-    <Setting name="ActiveMPAs">8</Setting>
-    <Setting name="DistributeInjections">0</Setting>
-
+    
     <Setting name="StartTHDAC">0x40</Setting>
     <Setting name="StopTHDAC">0x90</Setting>
     <Setting name="NMsec">0</Setting>
