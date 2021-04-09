@@ -2334,7 +2334,6 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
     if(fIsDDR3Readout && !cAsync)
     {
-    	LOG(INFO) << BOLDRED << "NOTASYNC" << RESET;
         if(cNWords == 0)
         {
             LOG(INFO) << BOLDRED << "No words in the readout.. " << RESET;
@@ -2357,7 +2356,6 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     }
     else if(cAsync)
     {
-    LOG(INFO) << BOLDRED << "ISASYNC" << RESET;
         if(cWithMPA or cWithSSA)
             this->ReadPSCounters(pBoard, pData, false);
         else
@@ -2775,11 +2773,13 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->ReconfigureTriggerFSM(cVecReg);
 
         bool stagger=true;
+        bool manual=true;
         this->PS_Clear_counters(fFastCommandDuration);
         this->PS_Clear_counters(fFastCommandDuration);
 		std::this_thread::sleep_for(std::chrono::microseconds(1));
         if (stagger)
         {
+        LOG(INFO) << BOLDBLUE << "stagger" << RESET;
         	std::vector<uint8_t> curvals;
 			for(auto cOpticalGroup: *pBoard)
 			{
@@ -2789,11 +2789,13 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 					{ 
 						if (cChip->getFrontEndType() == FrontEndType::MPA)
 						{
+       						//LOG(INFO) << BOLDBLUE << "MPA" << RESET;
 							//Asuming pixel 1 is characteristic for chip!
 							curvals.push_back(ReadFERegister(cChip,  0x801));
 							WriteFERegister(cChip, 0x0, 0, 0);
 
 						}
+						else LOG(INFO) << BOLDBLUE << "NOT MPA" << RESET;
 					}
 				}
 			}
@@ -2809,28 +2811,31 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 						{
         					for(uint32_t iRow = 1; iRow < 17; iRow++)
 							{
-								//WriteFERegister(cChip, 0x0, 0, 0);
-								//LOG(INFO) << "ROW "<<iRow << RESET;
+
 								uint32_t pEnRowRegAddr=(iRow<<11);
-								//LOG(INFO) << "ROWRERG "<<pEnRowRegAddr << RESET;
 								WriteFERegister(cChip, pEnRowRegAddr, curvals[icurval], 0);
 
+								this->PS_Open_shutter(fFastCommandDuration);
+								Send_pulses(cNevents, manual);
+								this->PS_Close_shutter(fFastCommandDuration);
 								
-
+								/*
 								this->PS_Open_shutter(fFastCommandDuration);
 								this->Start();
+								uint32_t cTotIterations = 100;
 								uint32_t cIterations = 0;
 								do
 								{
 									LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+
 									std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 									cIterations++;
-								} while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);
-								cFailed = cFailed||(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10);
+								} while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < cTotIterations);
+								cFailed = cFailed||(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == cTotIterations);
 								this->PS_Close_shutter(fFastCommandDuration);
-								this->Stop();
+								this->Stop();*/
 								WriteFERegister(cChip, pEnRowRegAddr, 0x0, 0);
-
+								//WriteFERegister(cChip, 0x0, 0, 0);
 
 				
 							}
@@ -3983,33 +3988,42 @@ void D19cFWInterface::PS_Close_shutter(uint32_t pDuration)
 }
 
 // some overlap for now...
-void D19cFWInterface::Send_pulses(uint32_t pNtriggers)
+void D19cFWInterface::Send_pulses(uint32_t pNtriggers, bool manual)
 {
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNtriggers);
-    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+	if (manual)
+	{
+		//LOG(INFO) << "Send_pulses";
+		for(uint16_t numit = 0; numit < pNtriggers; numit++)  this->ChipTestPulse();
+	}
+	else
+	{
+		this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNtriggers);
+		this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 
-    usleep(10);
+		usleep(10);
 
-    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    uint32_t nsleeps   = 0;
-    uint32_t maxsleeps = 1000;
-    while(ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") and (nsleeps < maxsleeps))
-    {
-        nsleeps += 1;
-        usleep(10);
-    }
-    if(nsleeps == maxsleeps)
-    {
-        LOG(INFO) << "Cal pulses timeout";
-        PS_Clear_counters();
-        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
-        usleep(10);
-        this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-        usleep(10);
-        Send_pulses(pNtriggers);
-    }
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+		this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+		uint32_t nsleeps   = 0;
+		uint32_t maxsleeps = 1000;
+		while(ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") and (nsleeps < maxsleeps))
+		{
+		    nsleeps += 1;
+		    usleep(10);
+		}
+		if(nsleeps == maxsleeps)
+		{
+		    LOG(INFO) << "Cal pulses timeout";
+		    PS_Clear_counters();
+		    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
+		    usleep(10);
+		    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+		    usleep(10);
+		    Send_pulses(pNtriggers, manual);
+		}
+		WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+	}
 }
+
 
 void D19cFWInterface::PS_Clear_counters(uint32_t pDuration)
 {

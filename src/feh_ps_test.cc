@@ -72,6 +72,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("pattern", "p");
 
     cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("runBias", "Run bias scan",ArgvParser::NoOptionAttribute);
     cmd.defineOption("eyeScanCic", "Perform CIC eye scan", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
     cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
@@ -82,6 +83,8 @@ int main(int argc, char* argv[])
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
+
+
 
     int result = cmd.parse(argc, argv);
 
@@ -143,12 +146,21 @@ int main(int argc, char* argv[])
     // cHybridTester.SelectCIC(true);
     cHybridTester.ConfigureHw();
 
+    bool cMonitorLPGBT=true;
+    
 
-    PSBiasCal cPSBiasCal;
-    cPSBiasCal.Inherit(&cHybridTester);
-    cPSBiasCal.Initialise();
-    BeBoard* pBoard = static_cast<BeBoard*>(cHybridTester.fDetectorContainer->at(0));
-    cPSBiasCal.CalibrateBias(pBoard);
+    if(cmd.foundOption("runBias"))
+    {
+
+		PSBiasCal cPSBiasCal;
+		cPSBiasCal.Inherit(&cHybridTester);
+		cPSBiasCal.Initialise();
+		if (cMonitorLPGBT) cPSBiasCal.CalibrateADC();
+		cPSBiasCal.CalibrateBias();
+	}
+    //return 0;
+
+    //return 0;
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
 
@@ -298,6 +310,12 @@ int main(int argc, char* argv[])
     {
         t.start();
         // now create a PedestalEqualization object
+
+        //FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
+        //auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
+        FrontEndType cFrontEndType   = FrontEndType::MPA;
+        auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
+        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         PedestalEqualization cPedestalEqualization;
         cPedestalEqualization.Inherit(&cHybridTester);
         // second parameter disables stub logic on CBC3
@@ -307,6 +325,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
+        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
         t.show("Time to tune the front-ends on the system: ");
     }
     // measure noise on FE chips
@@ -318,10 +337,9 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         // hard coded for now
 
-    	ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cHybridTester.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-
-
-        FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
+    	//ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cHybridTester.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+        //FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
+        FrontEndType cFrontEndType   = FrontEndType::MPA;
         auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cPedeNoise.Inherit(&cHybridTester);

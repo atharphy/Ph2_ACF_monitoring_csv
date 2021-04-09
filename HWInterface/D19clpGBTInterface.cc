@@ -667,7 +667,14 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
     // Enable ADC Input without starting conversion
     ConfigureADC(pChip, pGain, true, false);
     // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+
+    //this->ConfigureVref(pChip, 1, 0);
+    //WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+    uint8_t cCurrVREFCNTR = ReadChipReg(pChip, "VREFCNTR");
+	//LOG(INFO) << BOLDBLUE << "cCurrVREFCNTR " <<+cCurrVREFCNTR<< RESET;
+	//LOG(INFO) << BOLDBLUE << "Writing " <<+cCurrVREFCNTR<< RESET;
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7|cCurrVREFCNTR);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     // Start ADC conversion
     ConfigureADC(pChip, pGain, true, true);
@@ -764,6 +771,15 @@ void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const
 }
 
 
+bool D19clpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
+{
+    uint8_t cVal = pEnable << 7 | (pCorrection&0x3F);
+    bool cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
+    LOG (DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex 
+        << +cVal << std::dec << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    return cSuccess;
+}
 
 /*---------------------------------*/
 /* Bit Error Rate Tester functions */

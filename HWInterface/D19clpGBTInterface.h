@@ -132,6 +132,8 @@ class D19clpGBTInterface : public lpGBTInterface
     uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes);
     // Get lpGBT I2C Master status
     uint8_t GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
+
 
     // ###########################
     // # LpGBT ADC-DAC functions #

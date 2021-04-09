@@ -992,11 +992,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         else
                             currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
-                        // LOG (INFO) << BOLDBLUE << minDAC<<"
-                        // "<<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
-                        // << RESET; LOG (INFO) << BOLDBLUE <<
-                        // std::max(minDAC,previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
-                        // & (0xFFFF - (1<<iBit))) << RESET;
+
+                        //LOG (INFO) << BOLDBLUE <<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET; 
                     }
                 }
             }

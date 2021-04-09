@@ -33,7 +33,6 @@ void SSAInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
 
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDBLUE << "SSACONFIG" << RESET;
     setBoard(pSSA->getBeBoardId());
     std::vector<uint32_t> cVec;
     ChipRegMap            cSSARegMap = pSSA->getRegMap();
@@ -129,13 +128,13 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         uint8_t pStripEnable    = 1;
         uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
         cRegValue               = cRegValue | (pStripEnable << 0);
-        LOG(INFO) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(DEBUG) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
         bool cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
         bool cEnableFECal    = WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
         cRegValue            = ReadChipReg(pSSA, "ReadoutMode");
         cRegValue            = (cRegValue & 0x4) | ((1 - pValue));
         bool cReadoutMode    = WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
-        LOG(INFO) << BOLDRED << "Readout mode is 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(DEBUG) << BOLDRED << "Readout mode is 0x" << std::hex << +cRegValue << std::dec << RESET;
         return cEnableAnalogue && cEnableFECal && cReadoutMode;
     }
     else if(pRegName.find("DigitalSync") != std::string::npos)
@@ -157,7 +156,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         uint8_t pStripEnable    = (pValue != 0x00); // 1 == enable , 0 == disable
         uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
         cRegValue               = cRegValue | (pStripEnable << 0);
-        LOG(INFO) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(DEBUG) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
         bool cEnableReg = WriteChipSingleReg(pSSA, cRegName, 1, pVerifLoop);
         return cEnableReg && cReadoutMode;
     }
@@ -305,7 +304,6 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
 
 bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
-    LOG(INFO) << BOLDBLUE << "WRSSA" << RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     if(flpGBTInterface == nullptr)
@@ -334,7 +332,7 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         int cRegCount = 0;
         for(const auto& cReg: pRegs)
         {
-            if(cRegCount % 50 == 0) LOG(INFO) << BOLDBLUE << "Writing SSA register with address " << std::hex << +cReg.first << std::dec << RESET;
+            if(cRegCount % 50 == 0) LOG(DEBUG) << BOLDBLUE << "Writing SSA register with address " << std::hex << +cReg.first << std::dec << RESET;
             //cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
             cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second);
             if(!cSuccess) continue;

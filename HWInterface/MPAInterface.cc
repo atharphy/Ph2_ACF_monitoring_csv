@@ -257,6 +257,19 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
     return cRegAddress;
 }
 
+void MPAInterface::readAllBias(Chip* pChip)
+{
+	std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
+	for(int ipoint = 0; ipoint < 5; ipoint++)
+	{
+		for(int iblock = 0; iblock < 7; iblock++)
+		{
+			std::string DAC=nameDAC[ipoint] + std::to_string(iblock);
+   			LOG(INFO) << BOLDBLUE <<DAC<< ": bias:" << +ReadChipReg(pChip,DAC) << " on MPA" << +pChip->getId() << RESET;
+		}
+	}
+}
+
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pMPA->getBeBoardId());
@@ -600,7 +613,6 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDBLUE << "MPACONFIG" << RESET;
     setBoard(pMPA->getBeBoardId());
     std::vector<uint32_t> cVec;
     ChipRegMap            cMPARegMap = pMPA->getRegMap();
@@ -631,7 +643,6 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 
 bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
-    LOG(INFO) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     if(flpGBTInterface == nullptr)
@@ -990,7 +1001,7 @@ void MPAInterface::ReadASEvent(ReadoutChip* pMPA, std::vector<uint32_t>& pData, 
         uint8_t cRP2 = this->ReadChipReg(pMPA, "ReadCounter_MSB_P" + std::to_string(i));
 
         pData.push_back((cRP2 * 256) + cRP1);
-        // std::cout<<i<<" "<<(cRP2*256) + cRP1<<std::endl;
+        //std::cout<<i<<" "<<(cRP2*256) + cRP1<<std::endl;
     }
 }
 

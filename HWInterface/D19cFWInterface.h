@@ -268,7 +268,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t getStubOffset() { return fStubOffset; };
 
   private:
-    uint8_t  fFastCommandDuration = 0;
+    uint8_t  fFastCommandDuration = 1;
     uint32_t fReadoutAttempts     = 0;
     uint16_t fWait_us             = 10000; // 10 ms
     uint8_t  fResetMinPeriod_ms   = 100;   // was 100
@@ -392,7 +392,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void ChipTrigger();
     void Trigger(uint8_t pDuration = 1);
     // Readout chip specific stuff
-    void Send_pulses(uint32_t pNtriggers);
+    void Send_pulses(uint32_t pNtriggers, bool manual=false);
 
     void ReadoutChipReset();
     // CIC BE stuff

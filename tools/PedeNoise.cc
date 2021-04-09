@@ -377,6 +377,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int cCounter = 0;
     for(auto cSign: cSigns)
     {
+		bool firstlim=false;
         bool cLimitFound   = false;
         int  cLimitCounter = 0;
         do
@@ -409,8 +410,9 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. "
                       << "Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;
-            if(cDistanceFromTarget <= cLimit)
+            if(cDistanceFromTarget <= cLimit || firstlim)// || globalOccupancy>1.0)
             {
+				firstlim=true;
                 LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
                            << " -- current value is " << +cLimitCounter << RESET;
                 cLimitCounter++;

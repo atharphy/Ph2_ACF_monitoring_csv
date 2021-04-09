@@ -79,6 +79,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
                     if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
+                        static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
+
                         fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
@@ -235,10 +237,8 @@ void PedestalEqualization::FindOffsets()
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    LOG(INFO) << BOLDBLUE << "BWS" << RESET;
     if(cWithCBC) this->bitWiseScan("ChannelOffset", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(cWithSSA or cWithMPA) this->bitWiseScan("ThresholdTrim", fEventsPerPoint, 0.56, fNEventsPerBurst);
-    LOG(INFO) << BOLDBLUE << "BWSDONE" << RESET;    LOG(INFO) << BOLDBLUE << "BWS" << RESET;
     dumpConfigFiles();
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer, theOffsetsCointainer);
@@ -285,18 +285,15 @@ void PedestalEqualization::FindOffsets()
             }     // for on hybrid - end
         }         // for on opticalGroup - end
     }             // for on board - end
-    LOG(INFO) << BOLDRED << "FILL1" << RESET;
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
     fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);
 #else
-    LOG(INFO) << BOLDRED << "FILL2" << RESET;
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
     for(auto board: theOccupancyContainer)
     {
         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
-    LOG(INFO) << BOLDRED << "FILL3" << RESET;
 
     auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
     for(auto board: theOffsetsCointainer)
