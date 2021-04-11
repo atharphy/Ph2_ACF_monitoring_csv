@@ -165,7 +165,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">50</Setting>
+    <Setting name="Nevents">75</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -204,13 +204,15 @@
     <Setting name="AsyncCalDac">30</Setting>
 
     <!-- Sync Test --> 
-    <Setting name="Attempts">200</Setting>
+    <Setting name="Attempts">500</Setting>
     <!-- injection configuration, number of MPAs -->
     <Setting name="ActiveMPAs">8</Setting>
+    <!-- check for stubs -->
+    <Setting name="CheckForStubs">0</Setting>
     <!-- injection configuration, fast commands -->
     <Setting name="DistributeInjections">0</Setting>
-    <Setting name="TriggerSeparation">2</Setting>
-    <Setting name="DelayAfterInjection">85</Setting>
+    <Setting name="TriggerSeparation">40</Setting>
+    <Setting name="DelayAfterInjection">10</Setting>
     <!-- injection  configuration clusters/stubs -->
     <Setting name="Bend">0</Setting>
     <Setting name="MaxPClusters">2</Setting>
