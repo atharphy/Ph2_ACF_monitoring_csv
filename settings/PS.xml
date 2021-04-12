@@ -204,18 +204,20 @@
     <Setting name="AsyncCalDac">30</Setting>
 
     <!-- Sync Test --> 
-    <Setting name="Attempts">500</Setting>
+    <Setting name="Attempts">750</Setting>
     <!-- injection configuration, number of MPAs -->
     <Setting name="ActiveMPAs">8</Setting>
+    <!-- FIFO depth -->
+    <Setting name="FifoDepth">8</Setting>
     <!-- check for stubs -->
-    <Setting name="CheckForStubs">0</Setting>
+    <Setting name="CheckForStubs">1</Setting>
     <!-- injection configuration, fast commands -->
     <Setting name="DistributeInjections">0</Setting>
-    <Setting name="TriggerSeparation">40</Setting>
-    <Setting name="DelayAfterInjection">10</Setting>
+    <Setting name="TriggerSeparation">10</Setting>
+    <Setting name="DelayAfterInjection">170</Setting>
     <!-- injection  configuration clusters/stubs -->
     <Setting name="Bend">0</Setting>
-    <Setting name="MaxPClusters">2</Setting>
+    <Setting name="MaxPClusters">15</Setting>
     <!-- L1 eye, SLVS drive strength --> 
     <Setting name="SLVSDrive">3</Setting>
     <Setting name="MaxOffset">0</Setting>

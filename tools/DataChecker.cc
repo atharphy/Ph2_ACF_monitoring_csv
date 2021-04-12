@@ -415,6 +415,20 @@ void DataChecker::Initialise()
                 bookHistogram(cHybrid, "L1StatusMonitorClusterSize", cProfile2D);
                 
 
+                cName = Form("h_L1MonitorProfile_FE%d", cHybrid->getId() );
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cProfile2D = new TProfile2D(cName, Form("L1 Monitor, digi-inject test CIC%d; L1 Id; Total number of clusters", (int)cHybrid->getId()), 100, 0, 100, 100, 0 , 100 , "S");
+                bookHistogram(cHybrid, "L1MonitorProfile", cProfile2D);
+
+
+                cName = Form("h_EvntMonitorProfile_FE%d", cHybrid->getId() );
+                cObj  = gROOT->FindObject(cName);
+                if(cObj) delete cObj;
+                cProfile2D = new TProfile2D(cName, Form("Event Monitor, digi-inject test CIC%d; Event Id; Total number of clusters", (int)cHybrid->getId()), 5000, 0, 5000, 100, 0 , 100, "S");
+                bookHistogram(cHybrid, "EvntMonitorProfile", cProfile2D);
+
+                
                 for(auto cChip: *cHybrid)
                 {
                     
@@ -458,8 +472,21 @@ void DataChecker::Initialise()
                     cName = Form("h_L1MonitorProfile_FE%d", cHybrid->getId() );
                     cObj  = gROOT->FindObject(cName);
                     if(cObj) delete cObj;
-                    cProfile2D = new TProfile2D(cName, Form("L1 Monitor, digi-inject test CIC%d; L1 Id; Total number of clusters", (int)cChip->getId()), 100, 0, 100, 100, 0 , 100 );
+                    cProfile2D = new TProfile2D(cName, Form("L1 Monitor, digi-inject test CIC%d; L1 Id; Total number of clusters", (int)cChip->getId()), 100, 0, 100, 100, 0 , 100, "S");
                     bookHistogram(cChip, "L1MonitorProfile", cProfile2D);
+
+                    cName = Form("h_EvntMonitorProfile_FE%d", cHybrid->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    cProfile2D = new TProfile2D(cName, Form("Event Monitor, digi-inject test CIC%d; Event Id; Total number of clusters", (int)cChip->getId()), 5000, 0, 5000, 100, 0 , 100, "S");
+                    bookHistogram(cChip, "EvntMonitorProfile", cProfile2D);
+
+                    cName = Form("h_MismatchProfile_FE%d", cChip->getId() );
+                    cObj  = gROOT->FindObject(cName);
+                    if(cObj) delete cObj;
+                    TProfile* cProfile = new TProfile(cName, Form("Event Monitor, digi-inject test CIC%d; Total number of clusters; First L1Id with a mismatch", (int)cChip->getId()), 100, 0 , 100, "S");
+                    bookHistogram(cChip, "MismatchProfile", cProfile);
+
 
                     if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
@@ -520,7 +547,6 @@ void DataChecker::Initialise()
                     cHist->GetYaxis()->SetBinLabel(3, "Soft Overflow");
                     cHist->GetYaxis()->SetBinLabel(4, "Global Overflow");
                     bookHistogram(cChip, "L1StatusMonitorLcl", cHist);
-                    
 
                 }
 
@@ -1700,7 +1726,7 @@ void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
                     (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
                     if( cSummaryInj.size() == 0 ) continue;
 
-                    LOG (DEBUG) << BOLDMAGENTA << "Injecting " << +cSummaryInj.size() << " in MPA#" << +cChip->getId() << RESET;
+                    //LOG (INFO) << BOLDMAGENTA << "Injecting " << +cSummaryInj.size() << " in SSA-MPA pair#" << +cChip->getId() << RESET;
                     uint8_t cPattern = cDistributeInj ? (1 << (7-cChip->getId())) : (0x1 << 0 ) ;
                     (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cSummaryInj,cPattern);
                     auto cIterator = cInjectionsPerChip.find(cChip->getId());
@@ -1783,7 +1809,27 @@ void DataChecker::PSTriggerTest()
     cSetting = fSettingsMap.find ( "CheckForStubs" );
     int cCheckForStubs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
     bool cWStubs = (cCheckForStubs == 1 );
-    
+    cSetting = fSettingsMap.find ( "FifoDepth" );
+    int cFifoDepth = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8;
+        
+    // configure FIFO depth in SSAs 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalReadout: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                for(auto cChip: *cHybrid) // for each chip (makes sense)
+                {
+                    // for the moment - only written for CBC3
+                    if(cChip->getFrontEndType() != FrontEndType::SSA)
+                        continue;
+                    
+                    fReadoutChipInterface->WriteChipReg(cChip, "OutPattern7/FIFOconfig", cFifoDepth);
+                }
+            }
+        }
+    }
     // prepare injection scheme 
     DetectorDataContainer cInjectionScheme;
     ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, cInjectionScheme);
@@ -1843,8 +1889,7 @@ void DataChecker::PSTriggerTest()
                 }// chip
                 // if injection lasts more than one Bx 
                 // need to mulitple here 
-                cCicInjSummary = cCicInjSummary; 
-                // LOG (DEBUG) << BOLDMAGENTA << "Injected " << +cCicInjSummary 
+                // LOG (INFO) << BOLDMAGENTA << "Injected " << +cCicInjSummary 
                 //     << " stubs in CIC#" << +cHybrid->getId()
                 //     << RESET;
             }// hybrid
@@ -1918,10 +1963,10 @@ void DataChecker::PSTriggerTest()
                             if( cDistributeInj ) cFeLatencySmry = cFeLatencySmry + cChip->getId();
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cFeLatencySmry);
                             std::string cType = (cChip->getFrontEndType() != FrontEndType::SSA) ? "MPA" : "SSA";
-                            LOG (DEBUG) << BOLDBLUE << "Setting L1 latency in " << cType << "#" 
-                                << +cChip->getId()
-                                << " to " << +cFeLatencySmry 
-                                << RESET;
+                            // LOG (DEBUG) << BOLDBLUE << "Setting L1 latency in " << cType << "#" 
+                            //     << +cChip->getId()
+                            //     << " to " << +cFeLatencySmry 
+                            //     << RESET;
                         } // chip
                     } // hybrid
                 }// module
@@ -1983,66 +2028,66 @@ void DataChecker::PSTriggerTest()
                     }
                 }
                 // // look at events 
-                for(auto cEvent: cEvents)
-                {
-                    for( auto cBoard : *fDetectorContainer )
-                    {
-                        for(auto cOpticalGroup: *cBoard)
-                        {
-                            for(auto cHybrid: *cOpticalGroup)
-                            {
-                                auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
-                                uint32_t cL1Id = cEvent->L1Id( cHybrid->getId(), 0 );
-                                LOG (INFO) << BOLDRED << "Event#" << +cEvent->GetEventCount()
-                                    << " CIC L1 Status is " << std::bitset<9>(cL1Status)
-                                    << " L1Id from CIC is " << +cL1Id 
-                                    << " expect "
-                                    << RESET;
-                                for(auto cChip: *cHybrid)
-                                {
-                                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                // for(auto cEvent: cEvents)
+                // {
+                //     for( auto cBoard : *fDetectorContainer )
+                //     {
+                //         for(auto cOpticalGroup: *cBoard)
+                //         {
+                //             for(auto cHybrid: *cOpticalGroup)
+                //             {
+                //                 auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
+                //                 uint32_t cL1Id = cEvent->L1Id( cHybrid->getId(), 0 );
+                //                 // LOG (INFO) << BOLDRED << "Event#" << +cEvent->GetEventCount()
+                //                 //     << " CIC L1 Status is " << std::bitset<9>(cL1Status)
+                //                 //     << " L1Id from CIC is " << +cL1Id 
+                //                 //     << " expect "
+                //                 //     << RESET;
+                //                 // for(auto cChip: *cHybrid)
+                //                 // {
+                //                 //     if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
                                 
-                                    auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                                    auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                                    auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                //                 //     auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                //                 //     auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                //                 //     auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     
-                                    LOG (INFO) << BOLDRED << "\t..MPA#" << +cChip->getId() 
-                                        << " found " << +cSClusters.size() 
-                                        << " S-clusters, "
-                                        << +cPClusters.size() 
-                                        << " P-clusters "
-                                        << " and "
-                                        << +cStubs.size() 
-                                        << " stubs."
-                                        << RESET;
-                                    // for( auto cSCluster : cSClusters )
-                                    // {
-                                    //     Injection cInjection;
-                                    //     cInjection.fRow =  cSCluster.fAddress;// - cBend ;
-                                    //     cInjection.fColumn = 0; 
-                                    //     cInjection.fFeId = cChip->getId(); 
-                                    //     LOG (INFO) << BOLDRED << "\t\t.. found S-cluster in SSA#" << +cChip->getId() 
-                                    //         << " strip " << +cInjection.fRow
-                                    //         << " in readout."
-                                    //         << RESET ;
-                                    // }
-                                    // for( auto cPCluster : cPClusters )
-                                    // {
-                                    //     Injection cInjection;
-                                    //     cInjection.fRow =  cPCluster.fAddress;
-                                    //     cInjection.fColumn = cPCluster.fZpos; 
-                                    //     cInjection.fFeId = cChip->getId(); 
-                                    //     LOG (DEBUG) << BOLDRED << "\t\t.. found P-cluster in MPA#" << +cChip->getId() 
-                                    //         << " strip " << +cInjection.fRow
-                                    //         << " pixel column is " << +cInjection.fColumn 
-                                    //         << " in readout."
-                                    //         << RESET ;
-                                    // }
-                                }
-                            }
-                        }
-                    }
-                }
+                //                 //     LOG (INFO) << BOLDRED << "\t..MPA#" << +cChip->getId() 
+                //                 //         << " found " << +cSClusters.size() 
+                //                 //         << " S-clusters, "
+                //                 //         << +cPClusters.size() 
+                //                 //         << " P-clusters "
+                //                 //         << " and "
+                //                 //         << +cStubs.size() 
+                //                 //         << " stubs."
+                //                 //         << RESET;
+                //                 //     // for( auto cSCluster : cSClusters )
+                //                 //     // {
+                //                 //     //     Injection cInjection;
+                //                 //     //     cInjection.fRow =  cSCluster.fAddress;// - cBend ;
+                //                 //     //     cInjection.fColumn = 0; 
+                //                 //     //     cInjection.fFeId = cChip->getId(); 
+                //                 //     //     LOG (INFO) << BOLDRED << "\t\t.. found S-cluster in SSA#" << +cChip->getId() 
+                //                 //     //         << " strip " << +cInjection.fRow
+                //                 //     //         << " in readout."
+                //                 //     //         << RESET ;
+                //                 //     // }
+                //                 //     // for( auto cPCluster : cPClusters )
+                //                 //     // {
+                //                 //     //     Injection cInjection;
+                //                 //     //     cInjection.fRow =  cPCluster.fAddress;
+                //                 //     //     cInjection.fColumn = cPCluster.fZpos; 
+                //                 //     //     cInjection.fFeId = cChip->getId(); 
+                //                 //     //     LOG (DEBUG) << BOLDRED << "\t\t.. found P-cluster in MPA#" << +cChip->getId() 
+                //                 //     //         << " strip " << +cInjection.fRow
+                //                 //     //         << " pixel column is " << +cInjection.fColumn 
+                //                 //     //         << " in readout."
+                //                 //     //         << RESET ;
+                //                 //     // }
+                //                 // }
+                //             }
+                //         }
+                //     }
+                // }
 
                 // don't attempt to match things 
                 // for this run 
@@ -2195,10 +2240,10 @@ void DataChecker::PSTriggerTest()
                                         cInjection.fFeId = cChip->getId(); 
                                         cFeL1CntrSmry.push_back( cL1Id ); 
                                         cFeClusterSmry.push_back( cInjection );
-                                        LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found S-cluster in SSA#" << +cChip->getId() 
-                                            << " strip " << +cInjection.fRow
-                                            << " in readout."
-                                            << RESET ;
+                                        // LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found S-cluster in SSA#" << +cChip->getId() 
+                                        //     << " strip " << +cInjection.fRow
+                                        //     << " in readout."
+                                        //     << RESET ;
                                     }
                                     cFeHitsSmry.push_back( cSClusters.size() );
                                 }
@@ -2219,11 +2264,11 @@ void DataChecker::PSTriggerTest()
                                         cInjection.fRow =  cPCluster.fAddress;
                                         cInjection.fColumn = cPCluster.fZpos; 
                                         cInjection.fFeId = cChip->getId(); 
-                                        LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found P-cluster in MPA#" << +cChip->getId() 
-                                            << " strip " << +cInjection.fRow
-                                            << " pixel column is " << +cInjection.fColumn 
-                                            << " in readout."
-                                            << RESET ;
+                                        // LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found P-cluster in MPA#" << +cChip->getId() 
+                                        //     << " strip " << +cInjection.fRow
+                                        //     << " pixel column is " << +cInjection.fColumn 
+                                        //     << " in readout."
+                                        //     << RESET ;
                                         cFeClusterSmry.push_back( cInjection );
                                         cFeL1CntrSmry.push_back( cL1Id ); 
                                     }
@@ -2233,14 +2278,14 @@ void DataChecker::PSTriggerTest()
                                 
                                 if(cChip->getFrontEndType() == FrontEndType::SSA)  continue;
 
-                                LOG (DEBUG) << BOLDMAGENTA << "\t\t.." 
-                                    << cChipType << "#" << +cChip->getId()
-                                    << "\t\t L1Id is " << +cL1Id
-                                    << "\t... found " << +cStubsThisFE
-                                    << " stubs in this event, and "
-                                    << +cFeHitsSmry[ cFeHitsSmry.size() - 1 ]
-                                    << " " << cClstrType 
-                                    << RESET;
+                                // LOG (DEBUG) << BOLDMAGENTA << "\t\t.." 
+                                //     << cChipType << "#" << +cChip->getId()
+                                //     << "\t\t L1Id is " << +cL1Id
+                                //     << "\t... found " << +cStubsThisFE
+                                //     << " stubs in this event, and "
+                                //     << +cFeHitsSmry[ cFeHitsSmry.size() - 1 ]
+                                //     << " " << cClstrType 
+                                //     << RESET;
                             } // ROCs
                             // log of number of stubs 
                             // in the readout 
@@ -2309,29 +2354,53 @@ void DataChecker::PSTriggerTest()
                         auto& cCicL1Status        = cL1StatusOG->at(cHybrid->getIndex());
                         auto& cCicL1Stat = cCicL1Status->getSummary<std::vector<uint16_t>>();
                         // counter clusters 
-                        size_t cNClusters=0; 
+                        size_t cNClusters=0;
+
                         for( int cIndx=0; cIndx < cHybrid->size(); cIndx++)
                         {
                             auto& cInjSmryChip = cClusterInjectionHybrid->at(cIndx);
                             auto& cSmry    = cInjSmryChip->getSummary<std::vector<Injection>>();
                             cNClusters+= cSmry.size();  
                         }
+                        std::map<uint16_t,uint8_t> cMatchedMapCic; 
+                        for( uint16_t cL1=1; cL1 <= cNtrials ; cL1++)
+                        {
+                            auto cL1MpIter = cMatchedMapCic.find(cL1);
+                            if( cL1MpIter == cMatchedMapCic.end() ) 
+                            {
+                                cMatchedMapCic.insert( std::make_pair( cL1 , 0) ); 
+                            }
+                        }
                         size_t cEventCount=0;  
                         // check L1 status
                         for( auto cCicL1 : cCicL1Stat )
                         {
                             auto cL1Id = cL1IdsSmry[ cEventCount ]; 
-                            if( cCicL1 != 0  && fTriggerTestCounter%10 == 0 )
-                                LOG (INFO) << BOLDRED << "Attempt#" 
-                                    << +fTriggerTestCounter
-                                    << " Event#" << +cEventCount
-                                    << " L1 Status from CIC is "
-                                    << std::bitset<9>(cCicL1)
-                                    << RESET;
+                            // if( cCicL1 != 0  && fTriggerTestCounter%10 == 0 )
+                            //     LOG (INFO) << BOLDRED << "Attempt#" 
+                            //         << +fTriggerTestCounter
+                            //         << " Event#" << +cEventCount
+                            //         << " L1 Status from CIC is "
+                            //         << std::bitset<9>(cCicL1)
+                            //         << RESET;
                             
                             if( cL1Id == 511 )
                                 LOG (INFO) << BOLDRED << "HARD OVERFLOW IN CIC" << RESET;
                             uint8_t cCicStat =  (cCicL1 & (0x1 << 0)) >> 0; 
+                            uint32_t cNFEsInEror=0;
+                            for( auto cChip : *cHybrid)
+                            {
+                                if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                                int cErrorBit = (cCicL1 & (0x1 << (1+ cChip->getIndex()))) >> (1+ cChip->getIndex()); 
+                                cNFEsInEror += ( cErrorBit == 1 ) ? 1 : 0;
+                            }
+                            // if( cCicL1 != 0  )
+                            //     LOG (INFO) << BOLDRED << BOLDRED << "Attempt#" 
+                            //         << +fTriggerTestCounter
+                            //         << " Event#" << +cEventCount
+                            //         << " L1 Status from CIC is "
+                            //         << std::bitset<9>(cCicL1)
+                            //         << RESET;
                             for( auto cChip : *cHybrid)
                             {
                                 if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
@@ -2343,13 +2412,28 @@ void DataChecker::PSTriggerTest()
                                 if( cCicStat == 0 && cErrorBit == 0 ) cErrorCode = 0 ; // no error 
                                 else if( cCicStat == 0 &&  cErrorBit == 1 ) cErrorCode = 1; // FE err or. G.Overflow
                                 else if( cCicStat == 1 &&  cErrorBit == 1 ) cErrorCode = 2; // S.Overflow
-                                else if( cCicStat == 1 &&  cErrorBit == 0) cErrorCode = 3;  // G.Overflow 
+                                else if( cCicStat == 1 &&  cNFEsInEror == 0) cErrorCode = 3;  // G.Overflow 
 
+                                // if( cCicL1 != 0  )
+                                // {
+                                //     if( cErrorBit != 0 )
+                                //     {
+                                //         LOG (INFO) << BOLDMAGENTA << "\t...FE#" 
+                                //             << +cChip->getId() 
+                                //             << " L1 Id " << +cL1Id
+                                //             << " event counter [glbl] " << (fTriggerTestCounter*cNtrials) + cL1Id
+                                //             << " CIC status bit is " << +cCicStat 
+                                //             << " FE status bit is " << +cErrorBit
+                                //             << " number of FEs in error is " << +cNFEsInEror 
+                                //             << " error code is " << +cErrorCode
+                                //             << RESET;
+                                //     }
+                                // }
                                 //
                                 TH2D* cMon = static_cast<TH2D*>(getHist(cChip, "L1StatusMonitorGlbl"));
                                 cMon->Fill( cNClusters, cErrorCode , 1 ); 
                                 cMon = static_cast<TH2D*>(getHist(cChip, "L1StatusMonitorLcl"));
-                                cMon->Fill( cSmry.size(), cErrorCode , 1 ); 
+                                if( cSmry.size() != 0 ) cMon->Fill( cSmry.size(), cErrorCode , 1 ); 
                                 //
                                 TProfile2D* cStatusMonitor = static_cast<TProfile2D*>(getHist(cHybrid, "L1StatusMonitor"));
                                 TProfile2D* cStatusMonitorClsSize = static_cast<TProfile2D*>(getHist(cHybrid, "L1StatusMonitorClusterSize"));
@@ -2398,16 +2482,17 @@ void DataChecker::PSTriggerTest()
                             TH1D* cBxCounter      = static_cast<TH1D*>(getHist(cHybrid, "BxCounter"));
                             for( size_t cIndx=0; cIndx < cBxDifferences.size() ; cIndx++)
                             {
-                                LOG (DEBUG) << BOLDMAGENTA << "\t\t.." << cIndx
-                                    << " BxDifference from injection is "
-                                    << +cDifferences[cIndx]
-                                    << " from event readout is "
-                                    << +cBxDifferences[cIndx]
-                                    << RESET;
+                                // LOG (DEBUG) << BOLDMAGENTA << "\t\t.." << cIndx
+                                //     << " BxDifference from injection is "
+                                //     << +cDifferences[cIndx]
+                                //     << " from event readout is "
+                                //     << +cBxDifferences[cIndx]
+                                //     << RESET;
                                 cBxMatching->Fill( cDifferences[cIndx] , cBxDifferences[cIndx] ) ; 
                                 cBxCounter->Fill(cBxDifferences[cIndx]) ;
                             }
                         #endif
+                        
                         
                         for( auto cChip : *cHybrid)
                         {
@@ -2431,7 +2516,7 @@ void DataChecker::PSTriggerTest()
                             // N clusters per FE chip 
                             auto& cFeHitsChip  = cFeHitsHybrid->at(cChip->getIndex()); 
                             auto& cFeHitsSmry  = cFeHitsChip->getSummary<std::vector<float>>(); 
-                            float cTotalNHits = std::accumulate( cFeHitsSmry.begin(), cFeHitsSmry.end() , 0.);
+                            //float cTotalNHits = std::accumulate( cFeHitsSmry.begin(), cFeHitsSmry.end() , 0.);
                             auto  cNHitsStats = getStats( cFeHitsSmry ); 
                             // Clusters per FE chip 
                             auto& cFeClusterChip   = cFeClustersHybrid->at(cChip->getIndex());
@@ -2499,10 +2584,12 @@ void DataChecker::PSTriggerTest()
                             {
                                 auto& cInjSmryChip = cClusterInjectionHybrid->at(cIndx);
                                 auto& cInjSmry    = cInjSmryChip->getSummary<std::vector<Injection>>();
+                                size_t cInjCounter=0; 
                                 for( auto cClusterInj : cInjSmry ) 
                                 {
-                                    if(cClusterInj.fFeId != cChip->getId() ) continue; 
+                                    if(cClusterInj.fFeId != cChip->getId() ) continue;
 
+                                    
                                     int cBendOffset = (cChip->getFrontEndType() == FrontEndType::SSA ) ?  cBend  : 0 ; 
                                     int cExpectedPxl = cClusterInj.fColumn ; 
                                     int cExpectedStrip = cClusterInj.fRow + cBendOffset; 
@@ -2517,6 +2604,7 @@ void DataChecker::PSTriggerTest()
                                         bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA ) ? true : (cExpectedPxl == cFeCluster.fColumn);
                                         bool cMatchFound = cStripMatch && cPixelMatch; 
                                         if( cMatchFound ) cMatchedL1Ids.push_back( cL1s[cCntr] );
+                                        cMatchedMapCic.find( cL1s[cCntr] )->second += (cMatchFound) ? 1 : 0;
                                         // if( !cMatchFound )
                                         //     LOG (INFO) << BOLDRED << "\t\t\t... Readout cluster "
                                         //         << "L1 Id is " << cL1s[cCntr]
@@ -2532,6 +2620,8 @@ void DataChecker::PSTriggerTest()
                                     
                                     }// loop over readout clusters 
                                     cMatchedMap.find(cPixelId)->second= cMatchedL1Ids.size();
+                                    
+                                    cInjCounter++;
                                     // LOG (INFO) << BOLDMAGENTA 
                                     //     << " \t\t\t... pixelId " << cPixelId
                                     //     << " strip " << cExpectedStrip
@@ -2567,22 +2657,22 @@ void DataChecker::PSTriggerTest()
                                 //         << cNtrials-1 
                                 //         << " expected. "
                                 //         << RESET;
-                                if(!cMatch)
-                                    LOG (INFO) << BOLDRED << "Attempt#" 
-                                        << +fTriggerTestCounter
-                                        << " "
-                                        << cType
-                                        << "#"
-                                        << +cChip->getId() << " : "
-                                        << " Pixel# " << +cMapItem.first
-                                        << " so row " << +cExpectedRow
-                                        << " and strip " << +cExpectedStrp 
-                                        << " found " << +(int)cNmatches
-                                        << " matched and " << cNmismatches 
-                                        << " mismatched events out of a total "
-                                        << cNtrials-1 
-                                        << " expected. "
-                                        << RESET;
+                                // if(!cMatch)
+                                //     LOG (INFO) << BOLDRED << "Attempt#" 
+                                //         << +fTriggerTestCounter
+                                //         << " "
+                                //         << cType
+                                //         << "#"
+                                //         << +cChip->getId() << " : "
+                                //         << " Pixel# " << +cMapItem.first
+                                //         << " so row " << +cExpectedRow
+                                //         << " and strip " << +cExpectedStrp 
+                                //         << " found " << +(int)cNmatches
+                                //         << " matched and " << cNmismatches 
+                                //         << " mismatched events out of a total "
+                                //         << cNtrials-1 
+                                //         << " expected. "
+                                //         << RESET;
                                     
                                 // histograms  
                                 #ifdef __USE_ROOT__
@@ -2604,40 +2694,42 @@ void DataChecker::PSTriggerTest()
                                     TH2D* cL1Hist = static_cast<TH2D*>(getHist(cChip,"L1Monitor"));
                                     TH2D* cL1MatchedHist = static_cast<TH2D*>(getHist(cChip,"L1MonitorMatched"));
                                     TProfile2D* cL1MatchedProf = static_cast<TProfile2D*>(getHist(cChip,"L1MonitorProfile"));
+                                    TProfile2D* cEvMatchedProf = static_cast<TProfile2D*>(getHist(cChip,"EvntMonitorProfile"));
+                                    TProfile* cMismatchProf = static_cast<TProfile*>(getHist(cChip,"MismatchProfile"));
                                     // this will show that 
                                     // the last event is always 'empty'
+                                    cNmismatches = 0 ;
                                     for( uint16_t cL1=1; cL1 <= cNtrials ; cL1++)
                                     {
                                         cL1Hist->Fill(  cL1, cNClusters, 1 );
                                         if( cMapItem.second.find( cL1 ) != cMapItem.second.end() )
                                         {
+                                            if( cMapItem.second.find( cL1 )->second == 0 && cNmismatches == 0 )
+                                            {
+                                                cMismatchProf->Fill( cNClusters, cL1); 
+                                                // first mismatch 
+                                            }
+                                            cNmismatches += (cMapItem.second.find( cL1 )->second == 0 );
                                             cMatch = (cMapItem.second.find( cL1 )->second == 1 );
                                             cL1MatchedHist->Fill(  cL1 , cNClusters, cMapItem.second.find( cL1 )->second );
                                             cL1MatchedProf->Fill(  cL1 , cNClusters, cMapItem.second.find( cL1 )->second );
-                                            if(!cMatch && cL1 != cNtrials) 
-                                                 LOG (INFO) << BOLDRED << "\t\t\t... Mismatch in Readout cluster "
-                                                    << cType 
-                                                    << "#" << +cChip->getId()
-                                                    << ", "
-                                                    << +cNClusters
-                                                    << " clusters injected, L1Id "
-                                                    << +cL1 
-                                                    <<  " pixelId " << +cExpectedRow
-                                                    << " strip " << +cExpectedStrp
-                                                    << RESET;
+                                            if( fTriggerTestCounter*cNtrials + cL1 < 5000 )
+                                            {
+                                                cEvMatchedProf->Fill(  fTriggerTestCounter*cNtrials + cL1 , cNClusters, cMapItem.second.find( cL1 )->second );
+                                            }
                                         }
                                     }
                                 #endif
                             }
-                            bool cAllReadoutMatch = (cMatchedHits == cTotalNHits );
-                            if( cAllReadoutMatch )
-                                LOG (DEBUG) << "All readout "
-                                    << cClusterType 
-                                    << " match those injected for "
-                                    << cType 
-                                    << "#"
-                                    << +cChip->getId()
-                                    << RESET;
+                            // bool cAllReadoutMatch = (cMatchedHits == cTotalNHits );
+                            // if( cAllReadoutMatch )
+                            //     LOG (DEBUG) << "All readout "
+                            //         << cClusterType 
+                            //         << " match those injected for "
+                            //         << cType 
+                            //         << "#"
+                            //         << +cChip->getId()
+                            //         << RESET;
 
                             // stubs 
                             // latency hists 
@@ -2663,6 +2755,31 @@ void DataChecker::PSTriggerTest()
                                 }
                             #endif                       
                         }
+
+                        #ifdef __USE_ROOT__ 
+                            TProfile2D* cL1MatchedProf = static_cast<TProfile2D*>(getHist(cHybrid,"L1MonitorProfile"));
+                            TProfile2D* cEvMatchedProf = static_cast<TProfile2D*>(getHist(cHybrid,"EvntMonitorProfile"));
+                            if( cNClusters == 0 ) continue;
+                            for( auto cMapItem : cMatchedMapCic )
+                            {
+                                // // because one in each SSA-MPA pair
+                                // if( cMapItem.second != 2*cNClusters && cMapItem.first != cNtrials) 
+                                //     LOG (INFO) << BOLDRED << "Attempt#" 
+                                //         << +fTriggerTestCounter
+                                //         << " "
+                                //         << " L1 " << +cMapItem.first
+                                //         << "  found  "
+                                //         << +cMapItem.second
+                                //         << " matched readout clusters when "
+                                //         << 2*cNClusters 
+                                //         << " were expected "
+                                //         << RESET;
+                                if( fTriggerTestCounter*cNtrials + cMapItem.first < 5000 )
+                                    cEvMatchedProf->Fill( fTriggerTestCounter*cNtrials + cMapItem.first , cNClusters, cMapItem.second/(float)(2*cNClusters) );
+                                cL1MatchedProf->Fill(  cMapItem.first , cNClusters, cMapItem.second/(float)(2*cNClusters) );
+                            }
+                        #endif
+
                     }
                 }
             }//board 
