@@ -5082,7 +5082,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
     {
     	ResetCPB();
-	LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+	    LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);

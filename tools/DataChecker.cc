@@ -1974,9 +1974,9 @@ void DataChecker::PSTriggerTest()
                     cStubLatency = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue) + cStubSel;
                 else
                 {
-                    if( int(cDelay) + (int)cLatencyOffset - (int)(cStubOffset + cReTimeValue) + (int)cStubSel < 0 )
-                        cStubLatency = 510 + (cDelay + cLatencyOffset - (cStubOffset + cReTimeValue) + cStubSel );
-                    //cStubLatency = 10; 
+                    // if( int(cDelay) + (int)cLatencyOffset - (int)(cStubOffset + cReTimeValue) + (int)cStubSel < 0 )
+                    //     cStubLatency = 510 + (cDelay + cLatencyOffset - (cStubOffset + cReTimeValue) + cStubSel );
+                    cStubLatency = 10; 
                 }
                 auto cPackageDelay  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
                 fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
@@ -2605,13 +2605,8 @@ void DataChecker::PSTriggerTest()
                                         bool cMatchFound = cStripMatch && cPixelMatch; 
                                         if( cMatchFound ) cMatchedL1Ids.push_back( cL1s[cCntr] );
                                         cMatchedMapCic.find( cL1s[cCntr] )->second += (cMatchFound) ? 1 : 0;
-                                        // if( !cMatchFound )
-                                        //     LOG (INFO) << BOLDRED << "\t\t\t... Readout cluster "
-                                        //         << "L1 Id is " << cL1s[cCntr]
-                                        //         <<  " pixelId " << +cFeCluster.fColumn
-                                        //         << " strip " << +cFeCluster.fRow
-                                        //         << RESET;
-                                        
+                                        //if( !cMatchFound )
+
                                         if( cMatchFound ) 
                                         {
                                             (cMatchL1MapIter->second).find(cL1s[cCntr])->second = 1;
@@ -2620,7 +2615,24 @@ void DataChecker::PSTriggerTest()
                                     
                                     }// loop over readout clusters 
                                     cMatchedMap.find(cPixelId)->second= cMatchedL1Ids.size();
-                                    
+                                    if( cMatchedMap.find(cPixelId)->second != cNtrials-1 )
+                                        LOG (INFO) << BOLDMAGENTA 
+                                            << "Injection in "
+                                            << cType << "#" << +cChip->getId() 
+                                            << " .. attempt# " << (fTriggerTestCounter)
+                                            << " \t\t\t... pixelId " << cPixelId
+                                            << " "
+                                            << " strip " << cExpectedStrip
+                                            << " pixel " << cExpectedPxl 
+                                            << ". Expect " << (cNtrials-1) 
+                                            << " matches."
+                                            << " and found "
+                                            << +cMatchedMap.find(cPixelId)->second
+                                            << " [ found "
+                                            << +cMatchedL1Ids.size() 
+                                            << " matched L1 Ids]"
+                                            << RESET;
+                                            
                                     cInjCounter++;
                                     // LOG (INFO) << BOLDMAGENTA 
                                     //     << " \t\t\t... pixelId " << cPixelId
@@ -2706,7 +2718,8 @@ void DataChecker::PSTriggerTest()
                                         {
                                             if( cMapItem.second.find( cL1 )->second == 0 && cNmismatches == 0 )
                                             {
-                                                cMismatchProf->Fill( cNClusters, cL1); 
+                                                //if( cL1 != cNtrials )
+                                                    cMismatchProf->Fill( cNClusters, cL1); 
                                                 // first mismatch 
                                             }
                                             cNmismatches += (cMapItem.second.find( cL1 )->second == 0 );

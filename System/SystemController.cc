@@ -325,13 +325,15 @@ void SystemController::PSModuleStartUp()
             auto& clpGBT =  cOpticalGroup->flpGBT ;
             if(clpGBT == nullptr) continue;
 
+            uint8_t cChipRate = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT);
+            cReadoutRate = 320*(cChipRate/5);
+            LOG (INFO) << BOLDMAGENTA << "Readout rate on PS-module is " << +cReadoutRate << " Mbps" << RESET;
             uint8_t cLinkId = cOpticalGroup->getId();
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
             for(auto cHybrid: *cOpticalGroup)
             {
                 // first .. send clock to the SSAs on this hybrid  
                 uint8_t cSide=cHybrid->getId()%2;
-                
                 lpGBTClockConfig cClkCnfg; 
                 cClkCnfg.fClkFreq = 4;  
                 cClkCnfg.fClkDriveStr = cSsaClockDrive; 
@@ -376,9 +378,8 @@ void SystemController::PSModuleStartUp()
                     }
                 }//MPAs config
 
-                
-                OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-                auto& cCic = cOuterTrackerHybrid->fCic;
+                OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                auto& cCic = theOuterTrackerHybrid->fCic;
                 
                 if(cCic == NULL) continue;
 
@@ -400,6 +401,9 @@ void SystemController::PSModuleStartUp()
         {
             uint8_t cLinkId = cOpticalGroup->getId();
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+            auto& clpGBT =  cOpticalGroup->flpGBT ;
+            uint8_t cChipRate = 5; 
+            if(clpGBT != nullptr) cChipRate = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT);
             for(auto cHybrid: *cOpticalGroup)
             {
                 OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
@@ -432,12 +436,22 @@ void SystemController::PSModuleStartUp()
                 }
                 fCicInterface->EnableFEs(cCic, cFeIds, true);
 
+                // make sure daa rate is correctly configured  
+                uint8_t cFeConfigReg = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
+                uint8_t cNewValue = ( cFeConfigReg & 0xFD ) | ( (uint8_t)(cChipRate==10) << 1 );
+                cSuccess = fCicInterface->WriteChipReg(cCic,"FE_CONFIG", cNewValue);
                 // CIC start-up sequence
                 uint8_t cDriveStrength = cCicDriveStrength;
-                cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
+                if( cSuccess) cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
+                
                 fBeBoardInterface->ChipReSync(cBoard);
-                LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
+                
+                if( cSuccess )
+                    LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
                           << +theOuterTrackerHybrid->getLinkId() << RESET;
+                // paranoid here
+                if( cSuccess )
+                    cSuccess = fCicInterface->WriteChipReg(cCic,"FE_CONFIG", cNewValue);
                 LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
             }
         }//OG
