@@ -15,14 +15,14 @@
           />
         </lpGBT>
 
-        <Hybrid Id="0" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" />
-<!--           <SSA Id="3" configfile="SSA.txt" />
+   <!--        <SSA Id="3" configfile="SSA.txt" />
             <SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
             <SSA Id="5" configfile="SSA.txt" />
