@@ -749,4 +749,3 @@ FAState                   0x1cb         0x00              0x00                  
 FACounter                 0x1cc         0x00              0x00                          8
 ConfigErrorCounterH       0x1cd         0x00              0x00                          8
 ConfigErrorCounterL       0x1ce         0x00              0x00                          8
-

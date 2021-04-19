@@ -19,7 +19,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NSTDEV 1. // Number of standard deviations for gain tolerance
+#define NSTDEV 1.5 // Number of standard deviations for gain tolerance
 
 // ################################
 // # Gain optimization test suite #

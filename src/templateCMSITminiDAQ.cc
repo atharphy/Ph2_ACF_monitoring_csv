@@ -25,6 +25,9 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 
+#include <chrono>
+#include <thread>
+
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #endif
@@ -36,7 +39,7 @@
 // ##################
 // # Default values #
 // ##################
-#define ARBITRARYDELAY 2e6 // [us]
+#define ARBITRARYDELAY 2 // [seconds]
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -44,7 +47,7 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53FWInterface::Event>& decodedEvents)
+void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     const unsigned int    wordDataSize = 32;
     unsigned int          errors       = 0;
@@ -55,15 +58,16 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
 
-    RD53FWInterface::DecodeEventsMultiThreads(data, decodedEvents);
+    uint16_t status;
+    RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
     LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
-        if(RD53FWInterface::EvtErrorHandler(decodedEvents[i].evtStatus) == false)
+        if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
             errors++;
-            RD53FWInterface::PrintEvents({decodedEvents[i]});
+            RD53Event::PrintEvents({decodedEvents[i]});
         }
 
     LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
@@ -92,7 +96,10 @@ int main(int argc, char** argv)
     // ##################
     if(doReset == true)
     {
-        static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence();
+        if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+        else
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
         return EXIT_SUCCESS;
     }
 
@@ -101,8 +108,8 @@ int main(int argc, char** argv)
         // ######################################
         // # Read binary file and decode events #
         // ######################################
-        readBinaryData(binaryFile, mySysCntr, RD53FWInterface::decodedEvents);
-        RD53FWInterface::PrintEvents(RD53FWInterface::decodedEvents);
+        readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
+        RD53Event::PrintEvents(RD53Event::decodedEvents);
     }
     else
     {
@@ -131,7 +138,7 @@ int main(int argc, char** argv)
     {
         ph.localConfigure(fileName, -1);
         ph.Start(runNumber);
-        usleep(ARBITRARYDELAY);
+        std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
         ph.Stop();
     }
     else

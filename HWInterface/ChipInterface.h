@@ -50,10 +50,12 @@ class ChipInterface
      * \param pBoardMap
      */
     ChipInterface(const BeBoardFWMap& pBoardMap);
+
     /*!
      * \brief Destructor of the ChipInterface Class
      */
     virtual ~ChipInterface();
+
     /*!
      * \brief Configure the Chip with the Chip Config File
      * \param pChip: pointer to Chip object

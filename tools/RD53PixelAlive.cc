@@ -22,7 +22,7 @@ void PixelAlive::ConfigureCalibration()
     colStart       = this->findValueInSettings("COLstart");
     colStop        = this->findValueInSettings("COLstop");
     nEvents        = this->findValueInSettings("nEvents");
-    nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
+    nEvtsBurst     = this->findValueInSettings("nEvtsBurst") < nEvents ? this->findValueInSettings("nEvtsBurst") : nEvents;
     injType        = this->findValueInSettings("INJtype");
     nHITxCol       = this->findValueInSettings("nHITxCol");
     doFast         = this->findValueInSettings("DoFast");

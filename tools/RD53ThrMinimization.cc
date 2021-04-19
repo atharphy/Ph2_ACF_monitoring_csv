@@ -209,7 +209,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer);
 
     // #########################
     // # Initialize containers #
@@ -219,8 +219,8 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()               = 0;
-                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy = 0;
+                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
+                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()       = 0;
                 }
 
     for(auto i = 0u; i <= numberOfBits; i++)
@@ -258,11 +258,11 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                                   << " <<<" << RESET;
                     }
 
-                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(chipCommandList, hybridId);
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(chipCommandList, hybridId, hybridCommandList);
+                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(hybridCommandList);
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
             }
 
         // ################
@@ -293,11 +293,11 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                         // ########################
                         // # Save best DAC values #
                         // ########################
-                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy;
+                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>();
 
                         if(fabs(newValue - target) < fabs(oldValue - target))
                         {
-                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy = newValue;
+                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = newValue;
 
                             bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
@@ -347,11 +347,11 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
 
-                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(chipCommandList, hybridId);
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(chipCommandList, hybridId, hybridCommandList);
+                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 
-            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(hybridCommandList);
+            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
         }
 
     // ################

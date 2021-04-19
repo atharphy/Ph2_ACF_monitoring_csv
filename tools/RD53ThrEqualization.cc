@@ -30,7 +30,7 @@ void ThrEqualization::ConfigureCalibration()
     colStart       = this->findValueInSettings("COLstart");
     colStop        = this->findValueInSettings("COLstop");
     nEvents        = this->findValueInSettings("nEvents");
-    nEvtsBurst     = this->findValueInSettings("nEvtsBurst");
+    nEvtsBurst     = this->findValueInSettings("nEvtsBurst") < nEvents ? this->findValueInSettings("nEvtsBurst") : nEvents;
     startValue     = this->findValueInSettings("VCalHstart");
     stopValue      = this->findValueInSettings("VCalHstop");
     nHITxCol       = this->findValueInSettings("nHITxCol");
@@ -284,16 +284,12 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
     DetectorDataContainer bestDACcontainer;
     DetectorDataContainer bestContainer;
 
-    DetectorDataContainer theTDACcontainer;
-
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer, init = startValue);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChip<OccupancyAndPh>(*fDetectorContainer, bestContainer);
-
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer);
 
     // #########################
     // # Initialize containers #
@@ -303,8 +299,8 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()               = 0;
-                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy = 0;
+                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
+                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()       = 0;
                 }
 
     for(auto i = 0u; i <= numberOfBits; i++)
@@ -342,11 +338,11 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                                   << " <<<" << RESET;
                     }
 
-                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(chipCommandList, hybridId);
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(chipCommandList, hybridId, hybridCommandList);
+                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(hybridCommandList);
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
             }
 
         // ################
@@ -377,11 +373,11 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                         // ########################
                         // # Save best DAC values #
                         // ########################
-                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy;
+                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>();
 
                         if(fabs(newValue - target) < fabs(oldValue - target))
                         {
-                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy = newValue;
+                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = newValue;
 
                             bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
@@ -431,11 +427,11 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
 
-                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(chipCommandList, hybridId);
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(chipCommandList, hybridId, hybridCommandList);
+                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 
-            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(hybridCommandList);
+            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
         }
 
     // ################
@@ -462,7 +458,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, maxDACcontainer, init = frontEnd->nTDACvalues);
 
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChannel<OccupancyAndPh>(*fDetectorContainer, bestContainer);
+    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, bestContainer);
 
     // #########################
     // # Initialize containers #
@@ -472,7 +468,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
+                        for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<float>(row, col) = 0;
 
     // ############################
     // # Read DAC starting values #
@@ -519,21 +515,11 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                 // ########################
                                 // # Save best DAC values #
                                 // ########################
-                                float oldValue = bestContainer.at(cBoard->getIndex())
-                                                     ->at(cOpticalGroup->getIndex())
-                                                     ->at(cHybrid->getIndex())
-                                                     ->at(cChip->getIndex())
-                                                     ->getChannel<OccupancyAndPh>(row, col)
-                                                     .fOccupancy;
+                                float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col);
 
-                                if(fabs(newValue - target) < fabs(oldValue - target) || (newValue == oldValue))
+                                if(fabs(newValue - target) <= fabs(oldValue - target))
                                 {
-                                    bestContainer.at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<OccupancyAndPh>(row, col)
-                                        .fOccupancy = newValue;
+                                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) = newValue;
                                     bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
                                         midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
                                 }

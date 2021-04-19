@@ -5,7 +5,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    #includes
+    # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
@@ -15,14 +15,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
 
-    #library dirs
+    # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
 
-    #find source files
+    # Find source files
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
-    #check for ZMQ installed
+    # Check for ZMQ installed
     if(ZMQ_FOUND)
         #here, now check for UsbInstLib
         if(PH2_USBINSTLIB_FOUND)
@@ -38,7 +38,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif()
     endif()
 
-    #check for AMC13 libraries
+    # Check for AMC13 libraries
     if(${CACTUS_AMC13_FOUND})
         include_directories(${PROJECT_SOURCE_DIR}/AMC13)
         include_directories(${UHAL_AMC13_INCLUDE_PREFIX})
@@ -47,7 +47,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{Amc13Flag}")
     endif()
 
-    #check for AntennaDriver
+    # Check for AntennaDriver
     if(${PH2_ANTENNA_FOUND})
         include_directories(${PH2_ANTENNA_INCLUDE_DIRS})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
@@ -55,7 +55,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
-    #check for TestCard USBDriver
+    # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
         include_directories(${PH2_TCUSB_INCLUDE_DIRS})
         link_directories(${PH2_TCUSB_LIBRARY_DIRS})
@@ -107,7 +107,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
-    #add the library
+    # Add the library
     add_library(Ph2_Tools STATIC ${SOURCES} ${HEADERS})
 
     foreach(sourcefile ${BINARIES})
@@ -135,9 +135,7 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
-#    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
- 
 
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined

@@ -113,6 +113,10 @@
             HITOR_3_MASK_DIFF_0     = "65535"
             HITOR_3_MASK_DIFF_1     =     "1"
 
+            CML_TAP0_BIAS           =   "500"
+            CML_TAP1_BIAS           =     "0"
+            CML_TAP2_BIAS           =     "0"
+
             LOCKLOSS_CNT            =     "0"
             BITFLIP_WNG_CNT         =     "0"
             BITFLIP_ERR_CNT         =     "0"
@@ -133,7 +137,16 @@
           <!-- Enable HitOr port: set trigger_source to proper value then this register, 0b0001 enable HitOr from left-most connector, 0b1000 enable HitOr from right-most connector -->
         </Register>
 
+        <Register name="ext_tlu_reg1">
+          <Register name="dio5_ch1_thr"> 128 </Register>
+          <Register name="dio5_ch2_thr"> 128 </Register>
+        </Register>
+
         <Register name="ext_tlu_reg2">
+          <Register name="dio5_ch3_thr"> 128 </Register>
+          <Register name="dio5_ch4_thr"> 128 </Register>
+          <Register name="dio5_ch5_thr"> 128 </Register>
+
           <Register name="ext_clk_en"> 0 </Register>
         </Register>
 
@@ -210,5 +223,15 @@
     <Setting name="InjLatency">        32 </Setting>
     <Setting name="nClkDelays">       280 </Setting>
   </Settings>
+
+  <!-- === Monitoring parameters ===
+       MonitoringSleepTime: sleep for monitoring thread in milliseconds
+  -->
+  <MonitoringSettings>
+    <Monitoring type="RD53" enable="0">
+      <MonitoringSleepTime>        1000 </MonitoringSleepTime>
+      <Enable name="AllVariables">    1 </Enable>
+    </Monitoring>
+  </MonitoringSettings>
 
 </HwDescription>

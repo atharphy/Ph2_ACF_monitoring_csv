@@ -95,11 +95,12 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     else
     {
         // FIXME the FeId is hard coded for now, need to get the FeId info here
-        cRegItem.fValue = flpGBTInterface->mpaRead(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress);
+        //cRegItem.fValue = flpGBTInterface->mpaRead(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress);
+        cRegItem.fValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
     }
     return cRegItem.fValue & 0xFF;
 }
-void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections)
+void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
     // std::vector<uint32_t> cPixelIds(0);
     // for( auto pInjection : pInjections )
@@ -115,7 +116,7 @@ void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInj
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
         LOG(DEBUG) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET;
-        this->WriteChipReg(pChip, cRegName.str(), 0xFF);
+        this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
 }
 std::vector<int> MPAInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode)
@@ -262,6 +263,18 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
+    else if(pRegName.find("SLVSDrive") != std::string::npos) 
+    {
+        uint8_t cBitShift    = 0;
+        uint8_t cRegMask     = (0x7 << cBitShift); //
+        cRegMask             = ~(cRegMask);
+        auto    cRegValue      = this->ReadChipReg(pMPA, "ConfSLVS");
+        uint8_t cValue =  (cRegValue & cRegMask) | (pValue << cBitShift);
+        LOG (DEBUG) << BOLDMAGENTA << "Setting SLVS register to 0x" 
+            << std::hex << +cValue << std::dec 
+            << RESET;
+        return this->WriteChipReg(pMPA, "ConfSLVS", cValue);
+    }   
     else if(pRegName.find("BendCode") != std::string::npos) // configure bend LUT
     {
         std::string cSubStr = pRegName.substr(pRegName.find("BendCode") + std::string("BendCode").length(), pRegName.length());
@@ -298,24 +311,6 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "StubInputPhase")
     {
-        uint8_t cBitShift = 1;
-        uint8_t cRegMask  = (0x7 << cBitShift); //
-        cRegMask          = ~(cRegMask);
-        auto    cReg      = this->readPeri(pMPA, "LatencyRx320");
-        uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        return this->configPeri(pMPA, "LatencyRx320", cValue);
-    }
-    else if(pRegName == "L1InputPhase")
-    {
-        uint8_t cBitShift = 0;
-        uint8_t cRegMask  = (0x1 << cBitShift); //
-        cRegMask          = ~(cRegMask);
-        auto    cReg      = this->readPeri(pMPA, "LatencyRx320");
-        uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        return this->configPeri(pMPA, "LatencyRx320", cValue);
-    }
-    else if(pRegName == "StubInputPhase")
-    {
         uint8_t cBitShift = 3;
         uint8_t cRegMask  = (0x7 << cBitShift); //
         cRegMask          = ~(cRegMask);
@@ -331,7 +326,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         cRegMask          = ~(cRegMask);
         auto    cReg      = this->ReadChipReg(pMPA, "LatencyRx320");
         uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        // LOG (INFO) << BOLDBLUE << "Writing " << std::hex <<  +cValue <<" "<<+( cReg  & cRegMask )<<" "<<(pValue <<  cBitShift )<< std::dec << RESET;
+        LOG (INFO) << BOLDBLUE << "Writing " << std::bitset<8>(+cValue) << " mask is "<< std::bitset<8>( cReg  & cRegMask ) << RESET;//"  "<<(pValue <<  cBitShift )<< std::dec << RESET;
         return this->WriteChipReg(pMPA, "LatencyRx320", cValue);
     }
     else if(pRegName == "StubMode")
@@ -354,7 +349,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "DigitalPattern")
     {
-        bool cReadoutMode   = configPeri(pMPA, "ReadoutMode", 0x03);
+        bool cReadoutMode   = configPeri(pMPA, "ReadoutMode", 0x02);
         bool cConfigPattern = WriteChipSingleReg(pMPA, "LFSR_data", pValue);
         return cReadoutMode && cConfigPattern;
     }
@@ -499,7 +494,8 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     else
     {
         flpGBT->setBeBoardId(pChip->getBeBoardId());
-        cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
+        //cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
+        cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue);
     }
     if(cSuccess && flpGBTInterface == nullptr) // check is done in lpGBTInterface for opto
     {
@@ -611,35 +607,60 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDBLUE << "MPACONFIG" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "MPACONFIG" << RESET;
     setBoard(pMPA->getBeBoardId());
     std::vector<uint32_t> cVec;
     ChipRegMap            cMPARegMap = pMPA->getRegMap();
     // for some reason this makes block write work
     // otherwise need to configure one by one which
     // takes forever
-    std::map<uint16_t, ChipRegItem> cMap;
-    cMap.clear();
+    for(auto& cRegItem: cMPARegMap) 
+    { 
+        fMap[cRegItem.second.fAddress] = cRegItem.first; 
+        // update map to indicate that there are not registers that 
+        // can be read back from 
+        if(cRegItem.first.find("_ALL") != std::string::npos)
+        {
+            LOG (DEBUG) << BOLDMAGENTA << "\t.. found a status register : " << cRegItem.first << RESET;
+            pMPA->setReg(cRegItem.first, cRegItem.second.fValue, cRegItem.second.fPrmptCfg , 1);
+        }
+    }
+    // update map 
+    cMPARegMap = pMPA->getRegMap();
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
-    for(auto& cRegItem: cMap)
+    cRegs.clear();
+    for(auto& cMapItem: fMap)
     {
-        // LOG(INFO) << BOLDBLUE << "Register map for MPA contains a register "
-        //  <<
-        //  << " with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
-        LOG(DEBUG) << BOLDBLUE << "Register map for MPA contains a register with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
+        // for now .. don't configure each pixel 
+        if(cMapItem.second.find("_P") != std::string::npos)
+             continue;
+    
+        ChipRegItem& cItem = cMPARegMap[cMapItem.second]; 
+        // create a register 
         std::pair<uint16_t, uint16_t> cReg;
-        cReg.first  = cRegItem.second.fAddress;
-        cReg.second = cRegItem.second.fValue;
+        cReg.first  = cMapItem.first; 
+        cReg.second = cItem.fValue; 
         cRegs.push_back(cReg);
-    } // loop over map
+        LOG(DEBUG) << BOLDBLUE << "Register map for MPA#" << +pMPA->getId()
+            << " contains a register with address " << std::hex << +cReg.first << std::dec 
+            << " register value " << std::hex << +cReg.second << std::dec 
+            << " status bit is " << +cItem.fStatusReg 
+            << RESET;
+    }
+    LOG (INFO) << BOLDBLUE << "Configuring MPA#" << +pMPA->getId() << " - write "
+        << +cRegs.size() 
+        << " registers "
+        << RESET;
     return this->WriteRegs(pMPA, cRegs, pVerifLoop);
 }
 
 bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
-    LOG(INFO) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
+    LOG(DEBUG) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
+    bool cRetry=false;
+    bool cVerify=false;
     if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
@@ -667,8 +688,9 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         flpGBT->setBeBoardId(pChip->getBeBoardId());
         for(const auto& cReg: pRegs)
         {
-            if(cCount % 100 == 0) LOG(DEBUG) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
-            cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
+            if(cCount % 1000 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
+            //cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
+            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry, cVerify);
             if(!cSuccess) continue;
 #ifdef COUNT_FLAG
             fRegisterCount++;
@@ -700,7 +722,10 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
         flpGBT->setBeBoardId(pChip->getBeBoardId());
         LOG(DEBUG) << BOLDBLUE << "Writing MPA register 0x" << std::hex << +pRegisterAddress << std::dec << " on back-end board " << +flpGBT->getBeBoardId() << " MPA#" << +pChip->getId() << " on FE#"
                    << +pChip->getHybridId() << " register value is " << +pRegisterValue << RESET;
-        cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, pRegisterValue, pVerifLoop);
+        //cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, pRegisterValue, pVerifLoop);
+        bool cRetry=false;
+        bool cVerify=false;
+        cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cRetry , cVerify);
     }
     return cSuccess;
 }

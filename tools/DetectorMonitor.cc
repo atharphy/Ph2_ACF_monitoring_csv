@@ -1,15 +1,27 @@
 #include "DetectorMonitor.h"
-#include "chrono"
-#include "thread"
 
-DetectorMonitor::DetectorMonitor(DetectorMonitorConfig theDetectorMonitorConfig) : fDetectorMonitorConfig(theDetectorMonitorConfig) {}
+DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig)
+    : theSystCntr(theSystCntr), fDetectorMonitorConfig(theDetectorMonitorConfig)
+{
+    fKeepRunning = true;
+    startMonitor = false;
+}
+
+DetectorMonitor::~DetectorMonitor()
+{
+    LOG(INFO) << BOLDRED << "\t--> Destroying monitoring" << RESET;
+    DetectorMonitor::stopRunning();
+    while(fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready)
+    { LOG(INFO) << GREEN << "\t-->Waiting for monitoring to be completed..." << RESET; }
+}
 
 void DetectorMonitor::operator()()
 {
-    while(fKeepRunning)
+    while(fKeepRunning == true)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
-        runMonitor();
+        if(startMonitor == true) runMonitor();
         std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
     }
 }
+
+void DetectorMonitor::forkMonitor() { fMonitorFuture = std::async(std::launch::async, std::ref(*this)); }

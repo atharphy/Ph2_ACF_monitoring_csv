@@ -22,36 +22,37 @@ void PSAlignment::Reset()
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
-                LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
-                for(auto cChip: *cHybrid)
-                {
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
-                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
-                    cVecRegisters.clear();
-                    for(auto cReg: cRegMapThisChip)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            if(cReg.first.find("OutSetting") != std::string::npos || cReg.first.find("LatencyRx320") != std::string::npos || cReg.first.find("LatencyRx40") != std::string::npos ||
-                               cReg.first.find("RetimePix") != std::string::npos)
-                            { LOG(INFO) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
-                        }
-                        else
-                        {
-                            cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-                        }
-                    }
-                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
-                }
-            }
-        }
+        // comment out for now
+        // auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        // for(auto cOpticalGroup: *cBoard)
+        // {
+        //     auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+        //     for(auto cHybrid: *cOpticalGroup)
+        //     {
+        //         auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+        //         LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
+        //         for(auto cChip: *cHybrid)
+        //         {
+        //             auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+        //             std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+        //             cVecRegisters.clear();
+        //             for(auto cReg: cRegMapThisChip)
+        //             {
+        //                 if(cChip->getFrontEndType() == FrontEndType::MPA)
+        //                 {
+        //                     if(cReg.first.find("OutSetting") != std::string::npos || cReg.first.find("LatencyRx320") != std::string::npos || cReg.first.find("LatencyRx40") != std::string::npos ||
+        //                        cReg.first.find("RetimePix") != std::string::npos)
+        //                     { LOG(DEBUG) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
+        //                 }
+        //                 else
+        //                 {
+        //                     cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+        //                 }
+        //             }
+        //             fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
+        //         }
+        //     }
+        // }
     }
     resetPointers();
 }
@@ -255,6 +256,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
 
     return cPhaseFound;
 }
+
 bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
 {
     bool cPhaseFound = true;
@@ -405,15 +407,15 @@ bool PSAlignment::Align()
         fBeBoardInterface->ChipReSync(cBoard);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
 
-        cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
+        //cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
 
         cStubAligned = cStubAligned && this->AlignStubInputs(cBoard);
 
         LOG(INFO) << BOLDBLUE << "L1 alignemnt " << RESET;
         cl1Aligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
 
-        LOG(INFO) << BOLDBLUE << "Stub alignemnt " << RESET;
-        cStubAligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
+        // LOG(INFO) << BOLDBLUE << "Stub alignemnt " << RESET;
+        // cStubAligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
     }
     return cStubAligned && cl1Aligned;
 }

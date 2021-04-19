@@ -107,7 +107,7 @@ void SSAPhysics::run()
             totalDataSize += dataSize;
         }
 
-        std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53FWconstants::READOUTSLEEP));
     }
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;

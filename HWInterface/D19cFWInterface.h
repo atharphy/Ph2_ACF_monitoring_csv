@@ -221,6 +221,7 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     void Resume() override;
 
+    void ResetTriggerFSM();
     /*!
      * \brief Reset Readout
      */
@@ -266,8 +267,10 @@ class D19cFWInterface : public BeBoardFWInterface
     // set stub offset
     void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
     uint32_t getStubOffset() { return fStubOffset; };
-
-  private:
+    uint8_t  getI2Cstatus() { return fI2Cstatus; }
+private:
+    bool     fReTryCPB            = true; 
+    uint8_t  fI2Cstatus           = 0x00;
     uint8_t  fFastCommandDuration = 0;
     uint32_t fReadoutAttempts     = 0;
     uint16_t fWait_us             = 10000; // 10 ms
@@ -746,17 +749,22 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     void ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
 
+    // ##############################
+    // # Pseudo Random Bit Sequence #
+    // ##############################
+    bool     RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return true; };
+
     // ############################
     // # Read/Write Optical Group #
     // ############################
     const uint8_t                   flpGBTAddress = 0x70;
-    const uint8_t                   fI2CFrequency = 3; // 1 MHz
-    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x20}};
+    uint8_t                         fI2CFrequency = 3; // 1 MHz
+    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60},{FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
     // Functions for standard uDTC
-    void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty) override {}
-    void     ResetOptoLink(Ph2_HwDescription::Chip* pChip) override;
-    bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pValue, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress) override;
+    void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
+    void     ResetOptoLink() override;
+    bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################
@@ -767,12 +775,17 @@ class D19cFWInterface : public BeBoardFWInterface
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;
+    // configure I2C speed 
+    void    SetI2CFrequency(uint8_t pFrequency){fI2CFrequency=pFrequency;};
     // function for I2C transactions using lpGBT I2C Masters
     bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
     uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
     // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true) override;
-    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
+    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify = false) override;
+    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false) override;
+    // fast command generic block 
+    void ResetFCMDBram();
+    void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
 };
 } // namespace Ph2_HwInterface
 

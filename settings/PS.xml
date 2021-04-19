@@ -12,7 +12,7 @@
     
     <OpticalGroup Id="0" FMCId="0">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
-        <lpGBT_Files path="./settings/lpGBTFiles/" />
+	<lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
           <Settings
           />
@@ -32,15 +32,15 @@
             <SSA Id="7" configfile="SSAPreCalibSYNC.txt" />
 
             <MPA_Files path="./settings/MPAFiles/" />
+            <MPA Id="0" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="1" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="2" partid="0" configfile="MPATSTSYNC.txt" />
+            <!-- <MPA Id="3" partid="0" configfile="MPATSTSYNC.txt" /> -->
             <MPA Id="4" partid="0" configfile="MPATSTSYNC.txt" />
-            <!-- <MPA Id="1" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="2" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="3" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="4" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="5" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="6" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="7" partid="0" configfile="MPA_minConfig.txt" />
- -->
+            <MPA Id="5" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="6" partid="0" configfile="MPATSTSYNC.txt" />
+            <MPA Id="7" partid="0" configfile="MPATSTSYNC.txt" />
+            
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
@@ -60,15 +60,15 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 6 </Register>
+            <Register name="trigger_source"> 5 </Register>
             <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
-                    <!--this is the delay for the stub trigger-->
+            <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
-                    <Register name="stub_trigger_veto_length"> 0 </Register>
+            <Register name="stub_trigger_veto_length"> 0 </Register>
             <Register name="test_pulse">
-                <Register name="delay_after_fast_reset"> 80 </Register>
-                <Register name="delay_after_test_pulse"> 100 </Register>
+                <Register name="delay_after_fast_reset"> 200 </Register>
+                <Register name="delay_after_test_pulse"> 200 </Register>
                 <Register name="delay_before_next_pulse"> 200 </Register>
                 <Register name="en_fast_reset"> 0 </Register>
                 <Register name="en_test_pulse"> 1 </Register>
@@ -165,13 +165,13 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">10</Setting>
+    <Setting name="Nevents">75</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">120</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">30</Setting>
     <Setting name="PedeNoisePulseAmplitude">30</Setting>
     <Setting name="TriggerRate">10</Setting>
 
@@ -203,6 +203,25 @@
     <Setting name="AsyncThreshold">10</Setting>
     <Setting name="AsyncCalDac">30</Setting>
 
+    <!-- Sync Test --> 
+    <Setting name="Attempts">100</Setting>
+    <!-- injection configuration, number of MPAs -->
+    <Setting name="ActiveMPAs">8</Setting>
+    <!-- FIFO depth -->
+    <Setting name="FifoDepth">8</Setting>
+    <!-- check for stubs -->
+    <Setting name="CheckForStubs">0</Setting>
+    <!-- injection configuration, fast commands -->
+    <Setting name="DistributeInjections">0</Setting>
+    <Setting name="TriggerSeparation">40</Setting>
+    <Setting name="DelayAfterInjection">20</Setting>
+    <!-- injection  configuration clusters/stubs -->
+    <Setting name="Bend">0</Setting>
+    <Setting name="MaxPClusters">8</Setting>
+    <!-- L1 eye, SLVS drive strength --> 
+    <Setting name="SLVSDrive">3</Setting>
+    <Setting name="MaxOffset">0</Setting>
+    
     <Setting name="StartTHDAC">0x40</Setting>
     <Setting name="StopTHDAC">0x90</Setting>
     <Setting name="NMsec">0</Setting>

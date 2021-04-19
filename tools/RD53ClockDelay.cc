@@ -48,13 +48,11 @@ void ClockDelay::ConfigureCalibration()
     la.Inherit(this);
     la.localConfigure("", -1);
 
-    // ##########################
-    // # Clock register masking #
-    // ##########################
-    shiftData = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_DATA_DELAY");
-    saveData  = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY")) -
-               (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) << shiftData);
-    maxDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
+    // ##################
+    // # Register masks #
+    // ##################
+    maxClkDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
+    maxCmdDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CMD_DELAY"));
 
     // #######################
     // # Initialize progress #
@@ -157,8 +155,11 @@ void ClockDelay::run()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY");
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", val & saveData, true);
+                    uint8_t phase, clock_delay, cmd_delay;
+                    std::tie(phase, clock_delay, cmd_delay) = bits::unpack<1, 4, 4>(this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY"));
+                    cmd_delay                               = cmd_delay - clock_delay;
+                    uint16_t clk_data_delay                 = (uint16_t)bits::pack<1, 4, 4>(phase, 0, cmd_delay);
+                    ClockDelay::writeSequence(cBoard, cChip, clk_data_delay);
                 }
     la.run();
     la.analyze();
@@ -174,7 +175,10 @@ void ClockDelay::run()
                 for(const auto cChip: *cHybrid)
                 {
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency - 1, true);
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency - 1, true);
+
+                    for(auto i = 0u; i < ClkDelaySize; i++)
+                        theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] = 0;
                 }
 
     // ###############################
@@ -254,17 +258,21 @@ void ClockDelay::analyze()
                     LOG(INFO) << BOLDMAGENTA << ">>> Best clock delay for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (1.5625 ns) computed over two bx <<<" << RESET;
                     LOG(INFO) << BOLDMAGENTA << ">>> New clock delay dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << (regVal & maxDelay) << BOLDMAGENTA << " <<<" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << (regVal & maxClkDelay) << BOLDMAGENTA << " <<<" << RESET;
 
                     // ####################################################
                     // # Fill delay container and download new DAC values #
                     // ####################################################
                     theClockDelayContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY");
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY", (val & saveData) | ((regVal & maxDelay) << shiftData), true);
+                    uint8_t phase, clock_delay, cmd_delay;
+                    std::tie(phase, clock_delay, cmd_delay) = bits::unpack<1, 4, 4>(this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY"));
+                    cmd_delay                               = (regVal + cmd_delay - clock_delay) & maxCmdDelay;
+                    clock_delay                             = regVal & maxClkDelay;
+                    uint16_t clk_data_delay                 = (uint16_t)bits::pack<1, 4, 4>(phase, clock_delay, cmd_delay);
+                    ClockDelay::writeSequence(cBoard, cChip, clk_data_delay);
 
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG");
-                    if(regVal / (maxDelay + 1) == 0) latency--;
+                    if(regVal / (maxClkDelay + 1) == 0) latency--;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency, true);
                     LOG(INFO) << BOLDMAGENTA << ">>> New latency dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << latency << BOLDMAGENTA << " <<<" << RESET;
@@ -294,8 +302,12 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), regName);
-                        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, (val & saveData) | ((dacList[i] & maxDelay) << shiftData), true);
+                        uint8_t phase, clock_delay, cmd_delay;
+                        std::tie(phase, clock_delay, cmd_delay) = bits::unpack<1, 4, 4>(this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), regName));
+                        cmd_delay                               = (dacList[i] + cmd_delay - clock_delay) & maxCmdDelay;
+                        clock_delay                             = dacList[i] & maxClkDelay;
+                        uint16_t clk_data_delay                 = (uint16_t)bits::pack<1, 4, 4>(phase, clock_delay, cmd_delay);
+                        ClockDelay::writeSequence(cBoard, cChip, clk_data_delay);
                     }
 
         // ################
@@ -369,4 +381,11 @@ void ClockDelay::saveChipRegisters(int currentRun)
                     LOG(INFO) << BOLDBLUE << "\t--> ClockDelay saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
                               << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
+}
+
+void ClockDelay::writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay)
+{
+    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(pChip), "CLK_DATA_DELAY", clk_data_delay, false);
+    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
+    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(pChip), "CLK_DATA_DELAY", clk_data_delay, true);
 }

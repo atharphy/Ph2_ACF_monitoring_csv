@@ -76,7 +76,6 @@ void Physics::Running()
     SystemController::Start(theCurrentRun);
 
     numberOfEventsPerRun = 0;
-    thrMonitor           = std::thread(&Physics::monitor, this);
     Physics::run();
 }
 
@@ -102,7 +101,6 @@ void Physics::Stop()
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
 
     Tool::Stop();
-    if(thrMonitor.joinable() == true) thrMonitor.join();
 
     // ################
     // # Error report #
@@ -152,13 +150,13 @@ void Physics::run()
     std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
     while(this->fKeepRunning == true)
     {
-        RD53FWInterface::decodedEvents.clear();
+        RD53Event::decodedEvents.clear();
         Physics::analyze();
         theGuard.lock();
-        genericEvtConverter(RD53FWInterface::decodedEvents);
+        genericEvtConverter(RD53Event::decodedEvents);
         theGuard.unlock();
-        std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
-        numberOfEventsPerRun += RD53FWInterface::decodedEvents.size();
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53FWconstants::READOUTSLEEP));
+        numberOfEventsPerRun += RD53Event::decodedEvents.size();
     }
 }
 
@@ -358,13 +356,4 @@ void Physics::clearContainers(BeBoard* theBoard)
                 for(auto i = 0u; i < TrgIDsize; i++)
                     theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
             }
-}
-
-void Physics::monitor()
-{
-    while(this->fKeepRunning == true)
-    {
-        for(const auto cBoard: *fDetectorContainer) SystemController::ReadSystemMonitor(cBoard, "VOUT_ana_ShuLDO", "VOUT_dig_ShuLDO", "ADCbandgap", "Iref", "TEMPSENS_1", "TEMPSENS_4");
-        std::this_thread::sleep_for(std::chrono::seconds(MONITORSLEEP));
-    }
 }

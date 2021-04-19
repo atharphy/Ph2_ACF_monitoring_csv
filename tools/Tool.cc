@@ -405,8 +405,14 @@ void Tool::SaveResults()
 
     for(const auto& cChip: fChipHistMap)
     {
+        std::string cDescr="";
+        auto cType = static_cast<ReadoutChip*>(cChip.first)->getFrontEndType(); 
+        if( cType == FrontEndType::CBC3 ) cDescr = "CBC"; 
+        if( cType == FrontEndType::SSA ) cDescr = "SSA"; 
+        if( cType == FrontEndType::MPA ) cDescr = "MPA"; 
+
         // Fabio: CBC specific -> to be moved out from Tool
-        TString  cDirName = Form("FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cChip.first->getId());
+        TString  cDirName = Form("Hybrid%d%s%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cDescr.c_str(), cChip.first->getId());
         TObject* cObj     = gROOT->FindObject(cDirName);
 
         // if ( cObj ) delete cObj;
@@ -717,8 +723,9 @@ void Tool::setFWTestPulse()
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                //#FIXME WHAT SHOULD I DO ??? 6 or 10 ? 
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
