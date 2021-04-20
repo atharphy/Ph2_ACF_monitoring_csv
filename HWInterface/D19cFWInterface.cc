@@ -1148,31 +1148,46 @@ void D19cFWInterface::TriggerConfiguration()
 }
 void D19cFWInterface::Start()
 {
-    // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
-    // clear the register manually)
-    LOG(INFO) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
-    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
-    LOG(INFO) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
-    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
-    LOG(INFO) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // I don't like this .. try
+    // without it
+    // send a resync jic
+    // this->ChipReSync();
+
+    // reset the readout before I start ..
+    this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    LOG(INFO) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // reset the trigger and reload
+    // reset trigger
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    // reload trigger configuration
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
+    LOG(DEBUG) << BOLDMAGENTA << "Starting triggers ..." << RESET;
     // print out config
     this->TriggerConfiguration();
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;  
+    // If the state machine did not start -> retry
+    if (ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") == 0) {
+        LOG(INFO) << BOLDRED << "State machine didn't start. Retrying..." << RESET;
+        this->Start();
+        return;
+    }
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;  
 }
 
 void D19cFWInterface::Stop()
 {
     // here close the shutter for the stub counter block
-    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x1);
-    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x0);
-    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
     WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
@@ -1720,7 +1735,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 if(pTuner.fDone != 1)
                 {
                     LOG(ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId - 1) << " in the back-end." << RESET;
-                    exit(0);
+                    // exit(0);
                 }
             }
         }
@@ -1931,9 +1946,9 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
                         cIndx += 2;
                         uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
-                        if(cChnl < 4)
+                        if(cChnl < 3)
                         {
-                            LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                            LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
                                        << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
 
                             if(cFailed) LOG(INFO) << BOLDRED << "Read of READCNT_LSB  failed" << RESET;
@@ -2314,7 +2329,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     else  // Trigger source is 10
     {
         fFastCommandDuration = 0;
-        LOG(INFO) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
         this->ReconfigureTriggerFSM(cVecReg);
         // resync + clear counters
         this->PS_Clear_counters(fFastCommandDuration);
@@ -2334,7 +2349,6 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cIterations++;
-            LOG (INFO) << this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
         } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);
         pFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10);
         this->PS_Close_shutter(fFastCommandDuration);
