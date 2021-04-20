@@ -142,6 +142,18 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         return this->ConfigureAmux(pSSA, "GND");
     }
+    else if(pRegName == "MonitorVTHigh")
+    {
+        return this->ConfigureAmux(pSSA, "HipThreshold");
+    }
+    else if(pRegName == "MonitorDAC")
+    {
+        return this->ConfigureAmux(pSSA, "DAC");
+    }
+    else if( fAmuxMap.find(pRegName) != fAmuxMap.end() )
+    {
+        return this->ConfigureAmux(pSSA, pRegName);
+    }
     else if(pRegName == "AnalogueAsync")
     {
         uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
