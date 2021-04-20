@@ -2,6 +2,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="Async">
     <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+    <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     
     <CDCE configure="0" clockRate="120"/>
     <OpticalGroup Id="0" FMCId="0" >
@@ -14,7 +15,8 @@
             <SSA Id="0" configfile="SSA.txt" />
             <SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
-           <!--  <SSA Id="4" configfile="SSA.txt" /> -->
+            <!-- <SSA Id="3" configfile="SSA.txt" /> -->
+            <SSA Id="4" configfile="SSA.txt" />
              <SSA Id="5" configfile="SSA.txt" />
              <SSA Id="6" configfile="SSA.txt" />
             <SSA Id="7" configfile="SSA.txt" /> 
@@ -150,6 +152,7 @@
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">60</Setting>
+    <!-- Try with 100 -->
     <Setting name="PedeNoisePulseAmplitude">8</Setting>
     <Setting name="TriggerRate">10</Setting>
 
@@ -163,9 +166,9 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometerLowEnd">500</Setting>
-    <Setting name="AntennaPotentiometerHighEnd">950</Setting>
-    <Setting name="ThresholdForOpens">15</Setting>
+    <Setting name="AntennaPotentiometerLowEnd">512</Setting>
+    <Setting name="AntennaPotentiometerHighEnd">1023</Setting>
+    <Setting name="ThresholdForOpens">18</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 
     <!-- Shorts -->
