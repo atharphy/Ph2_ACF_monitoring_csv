@@ -16,7 +16,8 @@
 // #endif
 
 #include "DPInterface.h"
-#define PSHYBRIDMAXV 1.32 
+#include "../Utils/SSAChannelGroupHandler.h"
+#define PSHYBRIDMAXV 1.32
 
 #include <map>
 class PSHybridTester : public Tool
@@ -35,6 +36,9 @@ class PSHybridTester : public Tool
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t> &pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t> &pCounters);
     void ReadSSABias( const std::string & pBiasName );
+    void CalibrateSSABias();
+    void CalibrateGainTrim();
+    void SetTrim(std::string pTrimRegister, uint16_t pTrimValue);
     void SSATestStubOutput(const std::string& cSSAPairSel );
     void SSATestL1Output( const std::string& cSSAPairSel );
     void SetHybridVoltage();
@@ -55,6 +59,10 @@ class PSHybridTester : public Tool
     void CheckI2C(Ph2_HwDescription::BeBoard* pBoard);
     void CheckCounters(Ph2_HwDescription::BeBoard* pBoard);
     void ReadSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
+    void TrimSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
+    void CalibrateSSABias(Ph2_HwDescription::BeBoard* pBoard);
+    void CalibrateGainTrim(Ph2_HwDescription::BeBoard* pBoard);
+    void SetTrim(Ph2_HwDescription::BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue);
     void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& pFastCommand, uint8_t pDuartion = 1);
@@ -116,7 +124,22 @@ class PSHybridTester : public Tool
     std::map<std::string, TC_PSFE::measurement> fHybridOtherMap =  {{"Temperature", TC_PSFE::measurement::THERM_SENSE},
                                                                   {"PGLineContinuity", TC_PSFE::measurement::C_TEST_PG},
                                                                   {"12VLineContinuity", TC_PSFE::measurement::C_TEST_P12},
-                                                                  {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST},};
+                                                                  {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST}};
+
+    // Maps for the calibration of the SSA bias DACs accesible through the AMUX
+    // On version 1 of the SSA they need to be read via the ADC on the test card
+    // fDACsCalibrationMap = {<DAC to be calibrated>, <Adjustment register> }
+    std::map<std::string, std::string> fDACsCalibrationMap      =  {{"BoosterFeedback", "Bias_D5BFEED"},
+                                                                    {"PreampBias", "Bias_D5PREAMP"},
+                                                                    {"VoltageBias", "Bias_D5ALLV"},
+                                                                    {"CurrentBias", "Bias_D5ALLI"},
+                                                                    {"DAC", "Bias_D5DAC8"}};
+    // fDACsCalibrationTargetMap = {<DAC to be calibrated>, <Target ADC value>}                                 
+    std::map<std::string, float> fDACsCalibrationTargetMap      =  {{"BoosterFeedback", 82.0},
+                                                                    {"PreampBias", 82.0},
+                                                                    {"VoltageBias", 82.0},
+                                                                    {"CurrentBias", 82.0},
+                                                                    {"DAC", 86.0}};
     // #endif
 
     int                     fVoltageMeasurementWait_ms = 100;

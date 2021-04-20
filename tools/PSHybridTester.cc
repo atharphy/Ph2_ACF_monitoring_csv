@@ -600,9 +600,11 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
 void PSHybridTester::SetHybridVoltage()
 {
 #ifdef __TCUSB__
+    LOG(INFO) << "Setting hybrid voltage..." << RESET;
     TC_PSFE cTC_PSFE;
     // cTC_PSFE.set_voltage(cTC_PSFE._1100mV,cTC_PSFE._1250mV);
-    cTC_PSFE.set_voltage(cTC_PSFE._1050mV, cTC_PSFE._1250mV);
+    cTC_PSFE.set_voltage(cTC_PSFE._1150mV, cTC_PSFE._1250mV);
+    LOG(INFO) <<BOLDGREEN << "Set" << RESET;
 #endif
 }
 
@@ -615,7 +617,7 @@ void PSHybridTester::CheckI2C(BeBoard* pBoard)
     int total = 0;               
     int value = 0;
     int bad = 0;
-    while(true) {
+    do{
         for (int i = 0; i < 256; i++)
         {
             for(auto cOpticalReadout: *pBoard)
@@ -647,7 +649,7 @@ void PSHybridTester::CheckI2C(BeBoard* pBoard)
             }     // board  
         }     // value
         LOG (INFO) << "Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET; 
-    }
+    }while(false);
     LOG (INFO) << "FINAL. Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET; 
 }
 void PSHybridTester::CheckCounters(BeBoard* pBoard)
@@ -784,18 +786,6 @@ void PSHybridTester::RunHybridETest()
     TC_PSFE cTC_PSFE;
     float result;
 
-    // std::map<std::string, TC_PSFE::measurement>::iterator cMapIterator = fHybridVoltageMap.begin();
-
-    // while ( cMapIterator != fHybridVoltageMap.end() ) 
-    // {
-    //     TC_PSFE::measurement cMeasurement = cMapIterator->second;
-    //     cTC_PSFE.adc_get(cMeasurement, result);
-    //     std::string cMeasurementName = cMapIterator->first;
-    //     LOG(INFO) << cMeasurementName << " : " << result << RESET;
-    //     fillSummaryTree(cMeasurementName, result);  
-    //     cMapIterator++;     
-    // }
-
     for (auto cMapIterator : fHybridVoltageMap)
     {
         auto& cMeasurement = cMapIterator.second;
@@ -931,6 +921,84 @@ void PSHybridTester::CheckHybridVoltages()
         throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH"));
     }
 }
+void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
+{
+    TC_PSFE cTC_PSFE;
+    // now cycle through chips one at a time ..
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            // First set the AMUX on every chip to HiZ to avoid shorts
+            for(auto cReadoutChip: *cHybrid)
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1);
+            std::this_thread::sleep_for(std::chrono::microseconds(50));
+
+            for(auto cReadoutChip: *cHybrid)
+            {
+                LOG(INFO) << BOLDMAGENTA << "----------------------------------------------------- Calibrating bias DACs on SSA #" << +cReadoutChip->getId() << "-----------------------------------------------------" << RESET;
+                
+                // Measure GND on the chip
+                fReadoutChipInterface->WriteChipReg(cReadoutChip, "GND", 1);
+                float ground;
+                cTC_PSFE.adc_get(TC_PSFE::measurement::AMUX, ground);
+
+                float result;
+
+                // Iterate over the bias DACs that need to be calibrated.
+                for (auto cDAC : fDACsCalibrationMap)
+                {
+                    std::string cAdjustmentRegister = cDAC.second;
+                    auto cTargetIterator = fDACsCalibrationTargetMap.find(cDAC.first);
+                    float cAdjustmentTarget = cTargetIterator->second;
+
+                    LOG(INFO) << BOLDMAGENTA     << "Setting " << cDAC.first << "." << RESET;
+
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cDAC.first, 1);
+                    std::this_thread::sleep_for(std::chrono::microseconds(50));
+                    cTC_PSFE.adc_get(TC_PSFE::measurement::AMUX, result);
+                    LOG(INFO) << BOLDBLUE << "Value before calibrating " << result-ground << "mV. Target value: " << cAdjustmentTarget << "mV." << RESET;
+                    bool cCalibrated = false;
+                    int iterations = 0;
+                    while (!cCalibrated && iterations < 25)
+                    {
+                        if( result-ground > cAdjustmentTarget+1 )
+                        {
+                            fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) - 1);
+                        }
+                        else if( result-ground < cAdjustmentTarget-1 )
+                        {
+                            fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister ,fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) + 1);
+                        }
+                        else if ( result - ground >= cAdjustmentTarget-1.1 && result - ground <= cAdjustmentTarget+1.1)
+                        {
+                            cCalibrated = true;
+                        }
+                        std::this_thread::sleep_for(std::chrono::microseconds(50));
+                        cTC_PSFE.adc_get(TC_PSFE::measurement::AMUX, result);
+                        iterations++;
+                    }
+                    if (!cCalibrated)
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, 15);
+                    // for(int cValue = 0; cValue < 32; cValue++)
+                    // {
+                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, cValue);
+                    //     std::this_thread::sleep_for(std::chrono::microseconds(50));
+                    //     cTC_PSFE.adc_get(TC_PSFE::measurement::AMUX, result);
+                    //     if( cAdjustmentTarget - 1 < (result-ground) && (result-ground) < cAdjustmentTarget + 1 )
+                    //         break;
+                    // }
+                    LOG(INFO) << BOLDGREEN << "Value after calibrating " << result-ground << "mV. Target value: " << cAdjustmentTarget << "mV." << RESET;
+                    
+                }
+                
+                fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1); // Set the AMUX to Hiz again.
+
+                // fReadoutChipInterface->WriteChipReg(cReadoutChip, "GAINTRIMMING_S15", 2);
+            }
+        }
+    }
+}
 void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
 {
     // now cycle through chips one at a time ..
@@ -945,6 +1013,8 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
                 if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1);
+
+                break;
             }
 
             ReadHybridVoltage("ADC");
@@ -956,19 +1026,228 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
                 // add check for SSA
                 if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
-                LOG(INFO) << BOLDBLUE << "Selecting TestBias on SSA" << +cReadoutChip->getId() << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Selecting TestBias on SSA " << +cReadoutChip->getId() << RESET;
                 // select bias
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, pBiasName, 1);
+
+                std::this_thread::sleep_for(std::chrono::microseconds(50));
                 ReadHybridVoltage("ADC");
                 LOG(INFO) << BOLDBLUE << "[ " << pBiasName << " ] ADC reading : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
                 // back to high Z
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1);
+                std::this_thread::sleep_for(std::chrono::microseconds(50));
                 ReadHybridVoltage("ADC");
-                LOG(INFO) << BOLDBLUE << "[AmuxHigh] ADC reading : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
+                LOG(DEBUG) << BOLDBLUE << "[AmuxHigh] ADC reading : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
             }
         } // hybrid
     }     // board
+}
+void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
+{
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            // for( int i = 0; i < 16; i++)
+            // {
+            //     LOG(INFO) << BOLDMAGENTA << "Value: " << +i << RESET; 
+            //     for(auto cReadoutChip: *cHybrid)
+            //     {
+            //         for(uint32_t channel=0; channel < cReadoutChip->size(); channel++)
+            //         {
+            //             std::string cRegName = Form("GAINTRIMMING_S%d", channel+1);
+            //             int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+            //             if (cRegValue+i < 16)
+            //                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+i);
+            //         }
+            //     }
+            //     this->ReadNEvents(pBoard, 1000);
+            //     const std::vector<Event *> &cEvents = this->GetEvents(pBoard);
+            //     for (auto cEvent : cEvents)
+            //     {
+            //         for(auto cReadoutChip: *cHybrid)
+            //         {
+            //             auto cNhits = cEvent->GetNHits(cHybrid->getId(), cReadoutChip->getId());
+            //             auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
+            //             uint32_t max_value = 0;
+            //             uint32_t min_value = 0;
+            //             double avg_value = 0;
+            //             for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
+            //             {
+            //                 avg_value += cHitVector[iChannel];
+            //                 if( max_value < cHitVector[iChannel] )
+            //                     max_value = cHitVector[iChannel];
+            //                 if( min_value > cHitVector[iChannel] )
+            //                     min_value = cHitVector[iChannel];
+            //             } //chnl
+            //             LOG(INFO) << "Max value is: " << max_value << " , min value is " << min_value << " and avg is " << (avg_value/cReadoutChip->size()) << RESET;
+            //         }
+            //     }
+            // }
+            
+            
+            for(auto cReadoutChip: *cHybrid)
+            {
+                for(auto cReadoutChip: *cHybrid)
+                {
+                    for(uint32_t channel=0; channel < cReadoutChip->size(); channel++)
+                    {
+                        std::string cRegName = Form("GAINTRIMMING_S%d", channel+1);
+                        int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 7);
+                    }
+                }
+                
+                // fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", 1);
+                // fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 7);
+                fReadoutChipInterface->WriteChipReg(cReadoutChip, "InjectedCharge", 100);    
+                fChannelGroupHandler = new SSAChannelGroupHandler();
+                fChannelGroupHandler->setChannelGroupParameters(16, 2);
+                this->bitWiseScan("Bias_THDAC", 1000, 0.56, -1);
+                int cThresholdValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "Bias_THDAC");
+                ReadSSABias("CalLevel");
+
+                // int currentThreshold = 0;
+                // int previousThreshold = 0;
+                for(uint32_t channel=0; channel < cReadoutChip->size(); channel++)
+                {
+                    bool cGainCalibrated = false;
+                    while(!cGainCalibrated)
+                    {
+                        // for (int i = 0; i < 256; i++)
+                        // {
+                            // fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", i); 
+                        this->ReadNEvents(pBoard, 1000);
+                        const std::vector<Event *> &cEvents = this->GetEvents(pBoard);
+                        for (auto cEvent : cEvents)
+                        {
+                            auto cNhits = cEvent->GetNHits(cHybrid->getId(), cReadoutChip->getId());
+                            auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
+                            // uint32_t max_value = 0;
+                            // uint32_t min_value = 1000;
+                            // double avg_value = 0;
+                            // double stdev_aux = 0;
+
+                            LOG(INFO) << "Threshold: " << cThresholdValue << " Occupancy: " << cHitVector[channel] ;
+
+                            std::string cRegName = Form("GAINTRIMMING_S%d", channel+1);
+                            int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+
+                            if ( cHitVector[channel]/1000 < 0.55 )
+                            {
+                                if (cRegValue-1 >= 0)
+                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue-1);
+                                    else {
+                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 0);
+                                        cGainCalibrated = true;
+                                    }
+                            }
+                            else if ( cHitVector[channel]/1000 > 0.57 )
+                            {
+                                if (cRegValue+1 < 16)
+                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                                    else {
+                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                                        cGainCalibrated = true;
+                                    }
+                            }
+                            else
+                                cGainCalibrated = true;
+                        }
+                        // }    
+
+                        // if(channel !=0 )
+                        // {
+                        //     if ( currentThreshold < previousThreshold )
+                        //     {
+                        //         std::string cRegName = Form("GAINTRIMMING_S%d", channel+1);
+                        //         int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                        //         if (cRegValue-1 >= 0)
+                        //                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue-1);
+                        //             else
+                        //                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 0);
+                        //     }
+                        //     else if ( currentThreshold > previousThreshold )
+                        //     {
+                        //         std::string cRegName = Form("GAINTRIMMING_S%d", channel+1);
+                        //         int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                        //         if (cRegValue+1 < 16)
+                        //                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                        //             else
+                        //                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                        //     }
+                        // }
+                        // previousThreshold = currentThreshold;
+                                // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
+                                // {
+                                //     avg_value += cHitVector[iChannel];
+                                //     if( max_value < cHitVector[iChannel] )
+                                //         max_value = cHitVector[iChannel];
+                                //     if( min_value > cHitVector[iChannel] )
+                                //         min_value = cHitVector[iChannel];
+                                // } //chnl
+                                // LOG(INFO) << "InjectedCharge: " << i*10+5 << ". Max value is: " << max_value << " , min value is " << min_value << " and avg is " << (avg_value/cReadoutChip->size()) << RESET;
+                                // // avg_value = avg_value/cReadoutChip->size();
+                                // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
+                                // {
+                                //     stdev_aux += (cHitVector[iChannel] - (avg_value/cReadoutChip->size()))*(cHitVector[iChannel] - (avg_value/cReadoutChip->size()));
+                                // } //chnl
+
+                                // Double_t stdev = sqrt((double)stdev_aux);
+
+                                // LOG(INFO) << BOLDMAGENTA << "stdev: " << +stdev << RESET;
+
+                                // cGainCalibrated = true;
+
+                                // int badch = 0;
+                                // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
+                                // {
+                                //     // LOG(INFO) << "Channel " << +iChannel << ": " << cHitVector[iChannel] << RESET;
+                                //     std::string cRegName = Form("GAINTRIMMING_S%d", iChannel+1);
+                                //     int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                                //     // LOG(INFO) << "GainTrim " << +iChannel << ": " << cRegValue << RESET;
+
+                                //     // if( cHitVector[iChannel] < (avg_value/cReadoutChip->size())-50) {
+                                //     //     if (cRegValue-1 >= 0)
+                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue-1);
+                                //     //     else
+                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 0);
+                                //     //     cGainCalibrated = false;
+                                //     //     badch++;
+                                //     // }
+                                //     // else if( cHitVector[iChannel] > (avg_value/cReadoutChip->size())+50) {
+                                //     //     if (cRegValue+1 < 16)
+                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                                //     //     else
+                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                                //     //     cGainCalibrated = false;
+                                //     //     badch++;
+                                //     // }
+                                //     if( cHitVector[iChannel] < max_value ) {
+                                //     //     if (cRegValue+1 < 16)
+                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                                //     //     else
+                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                                //     //     cGainCalibrated = false;
+                                //     //     badch++;
+                                //         if (cRegValue+1 < 16)
+                                //             fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                                //         else
+                                //             fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                                //         cGainCalibrated = false;
+                                //         badch++;
+                                //     }
+                                // } //chnl
+
+                                // LOG(INFO) << +badch << RESET;
+
+                                // LOG(INFO) << "Max value is: " << max_value << " , min value is " << min_value << " and avg is " << (avg_value/cReadoutChip->size()) << RESET;
+                    }
+                }
+            }
+        }
+    }
 }
 void PSHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string& pFastCommand, uint8_t pDuration)
 {
@@ -1018,10 +1297,10 @@ void PSHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string>
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.debug_blk_input", cRegisterValue);
     // start
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     // stop
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.stop_input", 1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     // check counters
     pCounters.clear();
     pCounters.resize(cIndices.size());
@@ -1054,6 +1333,24 @@ void PSHybridTester::SelectAntennaPosition(const std::string& pPosition, uint16_
         cTC_PSFE.antenna_fc7(pPotentiometer, cChannel);
     }
 #endif
+}
+
+void PSHybridTester::SetTrim(BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue) 
+{
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {   
+            for(auto cReadoutChip: *cHybrid)
+            {
+                for(uint cChannel = 0; cChannel < cReadoutChip->size() ; cChannel++ )
+                {
+                    std::string cRegName = Form("%s_S%d", pTrimRegister.c_str(), cChannel+1);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, pTrimValue);
+                }
+            }
+        }
+    }
 }
 
 void PSHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters)
@@ -1094,11 +1391,31 @@ void PSHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string
 void PSHybridTester::ReadSSABias(const std::string& pBiasName)
 {
 #ifdef __TCUSB__
-    LOG(INFO) << BOLDBLUE << "TC USB built." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "TC USB built." << RESET;
     for(auto cBoard: *fDetectorContainer) { this->ReadSSABias(cBoard, pBiasName); }
 #else
     LOG(INFO) << BOLDRED << "TC USB not built .. check that you have the lib installed!" << RESET;
 #endif
+}
+
+void PSHybridTester::CalibrateSSABias()
+{
+#ifdef __TCUSB__
+    LOG(DEBUG) << BOLDBLUE << "TC USB built." << RESET;
+    for(auto cBoard: *fDetectorContainer) { this->CalibrateSSABias(cBoard); }
+#else
+    LOG(INFO) << BOLDRED << "TC USB not built .. check that you have the lib installed!" << RESET;
+#endif
+}
+
+void PSHybridTester::CalibrateGainTrim()
+{
+    for(auto cBoard: *fDetectorContainer) { this->CalibrateGainTrim(cBoard); }
+}
+
+void PSHybridTester::SetTrim(std::string pTrimRegister, uint16_t pTrimValue)
+{
+    for(auto cBoard: *fDetectorContainer) { this->SetTrim(cBoard, pTrimRegister, pTrimValue); }
 }
 
 void PSHybridTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)

@@ -18,6 +18,10 @@
 #include "TROOT.h"
 #endif
 
+#ifdef __TCUSB__
+#include "USB_a.h"
+#endif
+
 #define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
@@ -84,6 +88,9 @@ int main(int argc, char* argv[])
     cmd.defineOption ( "useGui", "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false", ArgvParser::NoOptionAttribute );
 
     cmd.defineOption ( "output", "Output directory. Default: Results/", ArgvParser::OptionRequiresValue );
+
+
+    cmd.defineOption ( "antennaValue", "Antenna value for test.", ArgvParser::OptionRequiresValue );
 
     int result = cmd.parse ( argc, argv );
 
@@ -175,6 +182,13 @@ int main(int argc, char* argv[])
     if( cmd.foundOption( "checkI2C" ) )
         cHybridTester.CheckI2C();
 
+    // cHybridTester.ReadSSABias("MonitorGround");
+    // cHybridTester.ReadSSABias("MonitorVoltageBias");
+    // cHybridTester.ReadSSABias("MonitorCurrentBias");
+
+    cHybridTester.CalibrateSSABias();
+
+
     if ( cGui ){
         gui::message("Hardware configured");
         gui::status("");
@@ -227,6 +241,7 @@ int main(int argc, char* argv[])
             // to send phase alignment pattern 
             cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
             cDPInterfacer.Start(cInterface);
+            // cDPInterfacer.StartSyncPlaying(cInterface);
             if( cDPInterfacer.IsRunning(cInterface) )
             {
                 LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
@@ -272,7 +287,51 @@ int main(int argc, char* argv[])
         cDataChecker.AsyncTest();
         // cDataChecker.resetPointers();
     }
+    
+    OpenFinder cOpenFinder;
+    cOpenFinder.Inherit(&cHybridTester);
+    std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
+    cOpenFinder.SelectAntennaPosition("Disable", 512 );        
+    // cOpenFinder.SelectAntennaPosition("Enable", 550 );
+    if (cmd.foundOption("antennaValue")) 
+    {
+        cOpenFinder.SelectAntennaPosition("Enable", std::stoi(antennaValue) );
+        LOG(INFO) << "Setting antenna" <<RESET;
+    }
 
+    // measure noise on FE chips before calibration
+    if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue") )
+    {
+        if ( cGui ){
+            gui::status("Measuring noise on front-end chips before calibration"); 
+            gui::message(""); 
+            gui::progress(3.5 / 10.0);     
+        }
+        t.start();
+        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        // tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoise cPedeNoise;
+        cPedeNoise.Inherit(&cHybridTester);
+
+        // OpenFinder cOpenFinder;
+        // cOpenFinder.Inherit(&cHybridTester);
+        // cOpenFinder.SelectAntennaPosition("Enable", 550);
+
+        // second parameter disables stub logic on CBC3
+        cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        t.stop();
+        t.show("Time to Scan Pedestals and Noise");
+        if ( cGui ){
+            gui::message("Noise measured");
+        }
+        
+        // cOpenFinder.SelectAntennaPosition("Disable", 512);
+
+    }
+    // cHybridTester.SetTrim("GAINTRIMMING",7);
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))
     {
@@ -289,7 +348,11 @@ int main(int argc, char* argv[])
         // second parameter disables stub logic on CBC3
         cPedestalEqualization.Initialise(true, true);
         cPedestalEqualization.FindVplus();
+        
+        cHybridTester.ReadSSABias("CalLevel");
+
         cPedestalEqualization.FindOffsets();
+        // cPedestalEqualization.FindGains();
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
@@ -299,6 +362,9 @@ int main(int argc, char* argv[])
             gui::progress(3 / 10.0);        
         }
     }
+
+    // cHybridTester.CalibrateGainTrim();
+
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise"))
     {
@@ -324,6 +390,9 @@ int main(int argc, char* argv[])
         }
 
     }
+
+    cOpenFinder.SelectAntennaPosition("Disable", 512);
+
     if(cmd.foundOption("checkCountersRead"))
     {
         cHybridTester.CheckCounters();
