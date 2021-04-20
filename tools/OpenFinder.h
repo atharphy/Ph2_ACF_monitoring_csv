@@ -73,9 +73,9 @@ class OpenFinder : public PSHybridTester
 #endif
     void Reset();
 
-  private:
-    void SelectAntennaPosition(const std::string& cPosition);
 
+    void SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer = 0);
+  private:
     // type aliases
     using channelVector      = std::vector<int>;
     using cbcChannelsMap     = std::map<int, channelVector>;
@@ -100,7 +100,7 @@ class OpenFinder : public PSHybridTester
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
 
-    #ifdef __TCUSB__
+    // #ifdef __TCUSB__
         std::map<std::string, TC_PSFE::ant_channel> fAntennaControl =
         {
             { "EvenChannels", TC_PSFE::ant_channel::_2 },
@@ -108,7 +108,7 @@ class OpenFinder : public PSHybridTester
             { "Enable", TC_PSFE::ant_channel::ALL },
             { "Disable" , TC_PSFE::ant_channel::NONE}
         };
-    #endif
+    // #endif
 };
 
 #endif
