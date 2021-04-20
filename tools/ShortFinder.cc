@@ -396,10 +396,13 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                                 {
                                     cChipCountInjectedChnls += cHitVector[cChnl];
                                     cTotalCountInjectedChnls += cHitVector[cChnl];
+                                    LOG(INFO) << BOLDBLUE << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
                                     if(cHitVector[cChnl] == 0) LOG(INFO) << BOLDBLUE << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
                                 }
                                 else if(cHitVector[cChnl] != 0)
                                     LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
+                                else
+                                    LOG(DEBUG) << BOLDGREEN << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
                             } // chnl
                             auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
                             // first time .. set to 0
@@ -407,10 +410,6 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                             cShortsData->getSummary<uint16_t>() += (uint16_t)cShorts.size();
                             LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << " found " << +cShorts.size() << " potential shorts..."
                                        << " total shorts found are " << +cShortsData->getSummary<uint16_t>() << RESET;
-                            if(cChipCountInjectedChnls == 0) {
-                                LOG(INFO) << BOLDRED << "All injected channels on chip " << +cReadoutChip->getId() << " have 0 hits." << RESET;
-                                retry = true;
-                            }
                         } // chip
 
                         if(cTotalCountInjectedChnls == 0) {
