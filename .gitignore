@@ -27,3 +27,5 @@ rundir*
 ReadRootFile.py
 core.*
 FEH_PS*/
+*.cc
+*.bin
