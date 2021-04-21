@@ -79,7 +79,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
                     if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
+                        //static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
 
                         fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);

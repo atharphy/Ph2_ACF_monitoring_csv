@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     auto thePSInterface = static_cast<PSInterface*>(cTool.fReadoutChipInterface);
 
     bool     do_ss   = false;
-    bool     do_pp   = false;
+    bool     do_pp   = true;
     uint32_t truelat = cTool.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
 
     // uint32_t dvallat   = cTool.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");

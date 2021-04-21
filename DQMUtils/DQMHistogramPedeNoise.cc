@@ -426,14 +426,14 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>())
                     {        
-						//LOG(INFO) << "channel.fNoise " << channel.fNoise<< RESET;
-						//LOG(INFO) << "channel.fNoiseError " << channel.fNoiseError<< RESET;
+						LOG(INFO) << "channel.fNoise " << channel.fNoise<< RESET;
+						LOG(INFO) << "channel.fNoiseError " << channel.fNoiseError<< RESET;
 
 
 						bool badChannel=(std::isnan(channel.fNoise) || std::isnan(channel.fNoiseError));
 						if (!badChannel) 
 						{
-							//LOG(INFO) << "PLOT!"<< RESET;
+							LOG(INFO) << "PLOTNOISE!"<< RESET;
 		                    chipPedestalHistogram->Fill(channel.fThreshold);
 		                    chipNoiseHistogram->Fill(channel.fNoise);
 		                    hybridNoiseHistogram->Fill(channel.fNoise);

@@ -92,9 +92,9 @@
                 <node id="clear_counters"               mask="0x00000008" description="enable clear counters in async sequence"/>
                 <node id="cal_pulse"                    mask="0x00000010" description="choose cal pulse injection in async sequence"/>
             </node>
-	    <node id="stub_trigger_delay_value"		address="0x007" mask="0x000001FF" description="stub trigger delay before sending to CBCs"/>
-	    <node id="ext_trigger_delay_value"		address="0x007" mask="0x0003FE00" description="sets the delay of the external trigger (dio5 ch 5)"/>
-	    <node id="antenna_trigger_delay_value"	address="0x007" mask="0x07FC0000" description="sets the delay after antenna trigger"/>
+    	    <node id="stub_trigger_delay_value"		address="0x007" mask="0x000001FF" description="stub trigger delay before sending to CBCs"/>
+    	    <node id="ext_trigger_delay_value"		address="0x007" mask="0x0003FE00" description="sets the delay of the external trigger (dio5 ch 5)"/>
+    	    <node id="antenna_trigger_delay_value"	address="0x007" mask="0x07FC0000" description="sets the delay after antenna trigger"/>
             <node id="delay_between_two_consecutive"    address="0x008" mask="0x0000FFFF" description="sets the delay between two consecutive triggers"/>
             <node id="misc"                             address="0x009">
                 <node id="backpressure_enable"              mask="0x00000001" description="enables treatment of the backpressure bit"/>
@@ -103,6 +103,12 @@
                 <node id="trigger_timeout_enable"           mask="0x00000008" description="enables the triggering state machine timeout mode, instead of acquiring triggers_to_accept triggers"/>
                 <node id="trigger_multiplicity"             mask="0x00003f00" description="sets the multpilicity of the trigger, for instance, if set to 1 - the trigger signal will be high for 2 clock cycles"/>
             </node>
+             <node id="generic_fcmd"                             address="0x00B">
+                <node id="number_of_cmds_to_play"        mask="0x00003FFF" />
+                <node id="number_of_repetitions"         mask="0xFFFF0000" />
+            </node>
+            <node id="generic_fcmd_data"         address="0x00C" mask="0x0000000F" />
+            <node id="generic_fcmd_addr"         address="0x00D" mask="0x00003FFF" />
         </node>
 
         <node id="physical_interface_block"     address="0x3000">
@@ -293,6 +299,9 @@
                 <node id="stop_trigger"                    mask="0x00000004"/>
                 <node id="load_config"                 	   mask="0x00000008"/>
                 <node id="reset_test_pulse"		           mask="0x00000010"/>
+                <node id="start_generic"                   mask="0x00000020"/>
+                <node id="stop_generic"                    mask="0x00000040"/>
+                <node id="write_generic"                   mask="0x00000080"/>
                 <node id="fast_reset"		               mask="0x00010000"/>
                 <node id="fast_test_pulse"		           mask="0x00020000"/>
                 <node id="fast_trigger"		               mask="0x00040000"/>

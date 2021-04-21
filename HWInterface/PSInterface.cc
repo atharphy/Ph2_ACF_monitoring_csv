@@ -198,9 +198,21 @@ void PSInterface::readAllBias(ReadoutChip* pPS)
 //
 std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode) { return theMPAInterface->decodeBendCode(pChip, pBendCode); }
 //
-void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections)
+void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections); }
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections,pPattern); }
+    // add SSA here 
+    // if( pChip->getFrontEndType() == FrontEndType::SSA )
+    // {
+    //     theSSAInterface->WriteChipReg(pChip, "ENFLAGS_ALL", 0x0);
+    //     theSSAInterface->WriteChipReg(pChip, "DigCalibPattern_L_ALL", pPattern);
+    //     theSSAInterface->WriteChipReg(pChip, "CalPulse_duration", 0x01);
+    //     for( auto cInj : pInjections )
+    //     {
+    //         theSSAInterface->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(cInj.fRow), 0x9);
+    //     }
+                        
+    // }
 }
 
 uint32_t PSInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)

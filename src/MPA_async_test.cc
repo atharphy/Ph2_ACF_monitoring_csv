@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
-    cmd.defineOption("file", "Hw Description File . Default value: settings/PS_HalfModule.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOption("file", "Hw Description File . Default value: settings/PS_HalfModulePSAS.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
     int result = cmd.parse(argc, argv);
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     }
 
 
-    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/PS_HalfModule.xml";
+    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/PS_HalfModulePSAS.xml";
 
     //std::string       cHWFile = "settings/PS_HalfModulePSAS.xml";
     std::cout <<cHWFile<< std::endl;
@@ -142,6 +142,7 @@ int main(int argc, char* argv[])
 	std::vector<int> totalev;
 	std::vector<int> totalevPRE;
     int impa=0;
+
     for(auto cMPA: *ChipVec)
     {
 		totalev.push_back(0);
@@ -199,8 +200,8 @@ int main(int argc, char* argv[])
             // sleep            // close shutter
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(8);
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
+            //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
+            //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
 
 
             std::this_thread::sleep_for(ShortWait);

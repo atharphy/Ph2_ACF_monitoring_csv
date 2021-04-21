@@ -334,10 +334,10 @@ void PSBiasCal::CalibrateBias()
 		            {
 						float gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
 						DisableTest(cChip);
-						//std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xFF, 0xFF};
-						//std::vector<float> exp_val{0.082, 0.082, 0.108, 0.082, 0.082,1.0,1.0};
-						std::vector<uint32_t> DAC_val{0xF, 0xF, 29, 0xF, 0xF, 0xFF, 0xFF};
-						std::vector<float> exp_val{0.082, 0.082, 0.164, 0.082, 0.082,1.0,1.0};
+						std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xFF, 0xFF};
+						std::vector<float> exp_val{0.082, 0.082, 0.108, 0.082, 0.082,1.0,1.0};
+						//std::vector<uint32_t> DAC_val{0xF, 0xF, 29, 0xF, 0xF, 0xFF, 0xFF};
+						//std::vector<float> exp_val{0.082, 0.082, 0.164, 0.082, 0.082,1.0,1.0};
 						for(int ipoint = 0; ipoint < 5; ipoint++)
 						{
 							for(int iblock = 0; iblock < 7; iblock++)

@@ -58,6 +58,12 @@ class DataChecker : public Tool
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
     void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
     void Eye_CIC();
+    bool GenericFastCommands();
+
+    void PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme);
+    void FastCommandInjections(int pNTrials=1);
+    void PSTriggerTests();
+    void PSNominal();
 
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
@@ -90,6 +96,10 @@ class DataChecker : public Tool
     };
 
   protected:
+    std::vector<uint8_t> fFastCommands;
+    std::vector<int>  fTriggeredBxs; 
+    int fNInjectedTriggers=0;
+    
   private:
     // masks
     ChannelGroup<254, 1> fCBCMask;
@@ -106,9 +116,20 @@ class DataChecker : public Tool
     int fAttempt      = 0;
     int fMissedEvent  = 0;
     int fEventCounter = 0;
+    int fTriggerTestCounter =0;
 
     //
     TPconfig fTPconfig;
+
+    //
+
+    std::vector<float> GetBxIds(std::vector<float> pRawBxIds );
+    std::vector<int> GenerateIds();
+    void PreparePSInjection(DetectorDataContainer& pInjectionScheme);
+    std::vector<Ph2_HwInterface::Injection> GeneratePSInjections(int pMaxNstubs);
+    std::vector<Ph2_HwInterface::Injection> GenerateInjections(int pMaxClusters=1, int pMaxNstubs=17);
+    void PSTriggerTest();
+    uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions=1);
 
 // booking histograms
 #ifdef __USE_ROOT__

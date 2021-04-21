@@ -62,6 +62,14 @@ int main(int argc, char** argv)
     cmd.defineOption("gui", "Named pipe for GUI communication", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("gui", "g");
 
+    cmd.defineOption("measure", "Measure current ");
+    cmd.defineOptionAlternative("measure", "m");
+
+
+    cmd.defineOption("report", "Report Status");
+    cmd.defineOptionAlternative("report", "r");
+
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -127,6 +135,16 @@ int main(int argc, char** argv)
             }
         }
     }
+    if(cmd.foundOption("measure"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring current consumption on all channels.." << RESET;
+        for(auto channelName: channelNames) {
+            std::string current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); 
+            std::string voltage = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
+            LOG(INFO) << "\tV(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << voltage 
+                << "\tI(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << current << RESET;
+        }
+    }
 
     if(cmd.foundOption("channel"))
     {
@@ -175,38 +193,41 @@ int main(int argc, char** argv)
             LOG(INFO) << "Turn off all channels" << cPowerSupply;
             for(auto channelName: channelNames) { theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOff(); }
         }
-	if(cTurnOn) // No channel given but turn off called -> Turn off power supply master output
+	    if(cTurnOn) // No channel given but turn off called -> Turn off power supply master output
         {
             LOG(INFO) << "Turn on all channels" << cPowerSupply;
             for(auto channelName: channelNames) { theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn(); }
         }
-        // Give complete status reoort for all channels in the power supply
-        for(auto channelName: channelNames)
+        if( cmd.foundOption("report") )
         {
-            if(channelName.second)
+            // Give complete status reoort for all channels in the power supply
+            for(auto channelName: channelNames)
             {
-                LOG(INFO) << BOLDWHITE << cPowerSupply << " status of channel " << channelName.first << ":" RESET;
-                bool        isOn       = theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->isOn();
-                std::string isOnResult = isOn ? "1" : "0";
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string voltageCompliance = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string voltage = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string currentCompliance = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                std::string current = "-";
-                if(isOn) { current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); }
-                LOG(INFO) << "\tIsOn:\t\t" << BOLDWHITE << isOnResult << RESET;
-                LOG(INFO) << "\tV_max(set):\t\t" << BOLDWHITE << voltageCompliance << RESET;
-                LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << voltage << RESET;
-                LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << currentCompliance << RESET;
-                LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << current << RESET;
-                gui::data((channelName.first + ">IsOn").c_str(), isOnResult.c_str());
-                gui::data((channelName.first + ">v_max_set").c_str(), voltageCompliance.c_str());
-                gui::data((channelName.first + ">v_meas").c_str(), voltage.c_str());
-                gui::data((channelName.first + ">i_max_set").c_str(), currentCompliance.c_str());
-                gui::data((channelName.first + ">i_meas").c_str(), current.c_str());
+                if(channelName.second)
+                {
+                    LOG(INFO) << BOLDWHITE << cPowerSupply << " status of channel " << channelName.first << ":" RESET;
+                    bool        isOn       = theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->isOn();
+                    std::string isOnResult = isOn ? "1" : "0";
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::string voltageCompliance = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::string voltage = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::string currentCompliance = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::string current = "-";
+                    if(isOn) { current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); }
+                    LOG(INFO) << "\tIsOn:\t\t" << BOLDWHITE << isOnResult << RESET;
+                    LOG(INFO) << "\tV_max(set):\t\t" << BOLDWHITE << voltageCompliance << RESET;
+                    LOG(INFO) << "\tV(meas):\t" << BOLDWHITE << voltage << RESET;
+                    LOG(INFO) << "\tI_max(set):\t" << BOLDWHITE << currentCompliance << RESET;
+                    LOG(INFO) << "\tI(meas):\t" << BOLDWHITE << current << RESET;
+                    gui::data((channelName.first + ">IsOn").c_str(), isOnResult.c_str());
+                    gui::data((channelName.first + ">v_max_set").c_str(), voltageCompliance.c_str());
+                    gui::data((channelName.first + ">v_meas").c_str(), voltage.c_str());
+                    gui::data((channelName.first + ">i_max_set").c_str(), currentCompliance.c_str());
+                    gui::data((channelName.first + ">i_meas").c_str(), current.c_str());
+                }
             }
         }
     }
