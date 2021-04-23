@@ -171,13 +171,13 @@ int main(int argc, char* argv[])
 #endif
 
     // align back-end
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
-    cBackEndAligner.waitForRunToBeCompleted();
-    // reset all chip and board registers
-    // to what they were before this tool was called
-    cBackEndAligner.Reset();
+    // BackEndAlignment cBackEndAligner;
+    // cBackEndAligner.Inherit(&cTool);
+    // cBackEndAligner.Start(0);
+    // cBackEndAligner.waitForRunToBeCompleted();
+    // // reset all chip and board registers
+    // // to what they were before this tool was called
+    // cBackEndAligner.Reset();
 
     // if CIC is enabled then align CIC first
     if(cWithCIC)

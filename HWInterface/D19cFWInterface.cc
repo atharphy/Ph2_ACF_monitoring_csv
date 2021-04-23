@@ -5003,7 +5003,7 @@ void D19cFWInterface::ResetCPB()
     // reset shoudl be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 
@@ -5157,21 +5157,40 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
 }
 
 bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry, bool pVerify)
-{
+{   
     LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint8_t  cChipId           = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2 ) ? 0 : pChip->getId();
     uint8_t  cChipAddress      = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
-    uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+    // +1 for CBC address 
+    cChipAddress += ( pChip->getFrontEndType() == FrontEndType::CBC3 ) ? 1 : 0 ; 
+    // CBC addresses are only 8 bits 
+    uint32_t cSlaveData = 0x00; 
+    uint8_t cNbytes = 3; 
+    if( pChip->getFrontEndType() != FrontEndType::CBC3 ) 
+    {
+        uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+        cSlaveData = (pRegisterValue << 16) | cInvertedRegister; 
+    }
+    else
+    {   
+        cNbytes = 2; 
+        cSlaveData = (pRegisterValue << 8) | (pRegisterAddress & 0xFF); 
+    }
     fReTryCPB = pRetry;
-    bool cSuccess = I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
+    bool cSuccess = I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cSlaveData , cNbytes);
     if(pVerify && cSuccess)
     {
         uint8_t cReadBack = ReadFERegister(pChip, pRegisterAddress);
         uint8_t cIter = 0, cMaxIter = 10;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
-            LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
-            cSuccess = I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
+            LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() 
+                << " Chip " << +cChipId 
+                << " register 0x" << std::hex << +pRegisterAddress << std::dec 
+                << " asked to write 0x"  << std::hex << +pRegisterValue << std::dec 
+                << " and read back 0x"  << std::hex << +cReadBack << std::dec 
+                << RESET;
+            cSuccess = I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cSlaveData, cNbytes);
             if( cSuccess )
             {
                 cReadBack = ReadFERegister(pChip, pRegisterAddress);;
@@ -5180,6 +5199,7 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
         }
         if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }
     }
+    else if( !cSuccess ) LOG (INFO) << BOLDRED << "I2C Write FAILED" << RESET;
     return cSuccess;
 }
 
@@ -5187,12 +5207,19 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
 {
     uint8_t  cChipId           = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2 ) ? 0 : pChip->getId();
     uint8_t  cChipAddress      = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
-    uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+    // +1 for CBC address 
+    cChipAddress += ( pChip->getFrontEndType() == FrontEndType::CBC3 ) ? 1 : 0 ; 
+    uint8_t cNbytes = 2;
+    uint32_t cSlaveData = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8); 
+    if( pChip->getFrontEndType() != FrontEndType::CBC3 )  cSlaveData = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
+    else {  cNbytes = 1 ; cSlaveData = (pRegisterAddress & 0xFF); }
+
     fReTryCPB = pRetry;
-    I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cInvertedRegister, 2);
+    I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cSlaveData, cNbytes);
     uint32_t cReadBack = I2CRead(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, 1);
     return cReadBack;
 }
+
 
 void D19cFWInterface::ResetFCMDBram()
 {

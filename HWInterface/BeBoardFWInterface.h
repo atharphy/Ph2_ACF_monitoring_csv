@@ -46,6 +46,9 @@ class BeBoardFWInterface : public RegManager
     FpgaConfig*  fFpgaConfig;
     uint32_t     fNthAcq{0}, fNpackets{0};
 
+    // for slow control 
+    uint8_t fCurrentPage=0; 
+
     static const uint32_t cMask1 = 0xff;
     static const uint32_t cMask2 = 0xff00;
     static const uint32_t cMask3 = 0xff0000;
@@ -285,6 +288,8 @@ class BeBoardFWInterface : public RegManager
     virtual bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) = 0;
     virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)                       = 0;
     // function for front-end slow control
+    // virtual uint8_t GetFEPage() = 0; 
+    // virtual void    SetFEPage(uint8_t pPage) = 0; 
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify=false) = 0;
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false)                          = 0;
 

@@ -859,7 +859,7 @@ uint32_t GbtInterface::cicRead(BeBoardFWInterface* pInterface, uint8_t pFeId, ui
 }
 bool GbtInterface::cicWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
-    uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 16) | (pRegisterValue << 8), 3);
+    uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 8*2) | (pRegisterValue << 8*1), 3);
     if(pReadBack && cWrite == 0)
     {
         uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
