@@ -981,7 +981,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     {
         for(const auto cChannel: cRxChannels)
         {
-            if(cGroup == 4 && cChannel == 0) cRxInvert = 0;
+            if(cGroup == 6 && cChannel == 0) cRxInvert = 0;
             if(cGroup == 5 && cChannel == 0)
                 cRxInvert = 0;
             else
