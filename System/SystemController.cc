@@ -439,9 +439,13 @@ void SystemController::ModuleStartUpPS()
                 fCicInterface->EnableFEs(cCic, cFeIds, true);
 
                 // make sure daa rate is correctly configured  
-                uint8_t cFeConfigReg = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
-                uint8_t cNewValue = ( cFeConfigReg & 0xFD ) | ( (uint8_t)(cChipRate==10) << 1 );
-                cSuccess = fCicInterface->WriteChipReg(cCic,"FE_CONFIG", cNewValue);
+                // only works for CIC  
+                if(cCic->getFrontEndType() == FrontEndType::CIC2) 
+                {   
+                    uint8_t cFeConfigReg = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
+                    uint8_t cNewValue = ( cFeConfigReg & 0xFD ) | ( (uint8_t)(cChipRate==10) << 1 );
+                    cSuccess = fCicInterface->WriteChipReg(cCic,"FE_CONFIG", cNewValue);
+                }
                 // CIC start-up sequence
                 uint8_t cDriveStrength = cCicDriveStrength;
                 if( cSuccess) cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
@@ -451,9 +455,6 @@ void SystemController::ModuleStartUpPS()
                 if( cSuccess )
                     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
                           << +theOuterTrackerHybrid->getLinkId() << RESET;
-                // paranoid here
-                if( cSuccess )
-                    cSuccess = fCicInterface->WriteChipReg(cCic,"FE_CONFIG", cNewValue);
                 LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
             }
         }//OG
@@ -461,7 +462,7 @@ void SystemController::ModuleStartUpPS()
 }
 void SystemController::ModuleStartUp2S()
 {
-    uint8_t cHybridClockDrive = 7;//4; 
+    uint8_t cHybridClockDrive = 4; 
     uint16_t cReadoutRate = 320; 
     uint8_t  cCicDriveStrength = 4; 
     // configure PS-ROH + PS FEHs 
@@ -653,11 +654,12 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 {
                     for(auto cReadoutChip: *cHybrid)
                     {
-                        cWithPSmodule = cWithPSmodule || (cReadoutChip->getFrontEndType() == FrontEndType::MPA);
                         cWith2Smodule = cWith2Smodule || (cReadoutChip->getFrontEndType() == FrontEndType::CBC3);
                     }//ROC
                 }//hybrid
             }//OG
+
+            cWithPSmodule  = !cWith2Smodule;
 
             if( cWithPSmodule ) continue;
             if( cWith2Smodule ) continue; 

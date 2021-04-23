@@ -1148,7 +1148,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         cRegItem.fStatusReg                 = 0x01;
 
         std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-        LOG(DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
+        LOG(INFO) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
 
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
@@ -1161,13 +1161,26 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
             uint32_t cPhaseValue     = (cInputLineCounter == 0) ? cPhaseTap : (fPhaseValues[cFeCounter].to_ulong() | (cPhaseTap << cInputLineCounter * 4));
             
             // and save to register
-            if(cAligned == 0x1){ 
+            if(cAligned == 0x1)
+            { 
                 fPhaseValues[cFeCounter] = std::bitset<24>(cPhaseValue);
                 fPhaseTaps[cInputCounter][cPortCounter] = cPhaseTap;
                 this->SetOptimalTap(pChip, cPortCounter, cInputCounter);
-                LOG(DEBUG) << BOLDBLUE << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
-                    << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+                if( cPortCounter < 10 )
+                    LOG(DEBUG) << BOLDGREEN << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
+                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+                else
+                    LOG(DEBUG) << BOLDGREEN << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " L1 Line -- Alignment value is "
+                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
             }
+            else
+                if( cPortCounter < 10 )
+                    LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
+                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+                else
+                    LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " L1 Line -- Alignment value is "
+                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+                
             fPortStates[cPortCounter][cInputCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
             fFeStates[cFeCounter][cInputLineCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
 

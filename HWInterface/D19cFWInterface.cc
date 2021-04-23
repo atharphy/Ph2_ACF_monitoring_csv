@@ -1668,12 +1668,13 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard, bool pScope)
     return cSuccess;
 }
 // tuning of stub lines
-bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
+bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNlines)
 {
     PhaseTuner pTuner;
     bool       cSuccess = true;
 
     // back-end tuning on stub lines
+    uint8_t cNlines = pNlines;
     for(auto cOpticalGroup: *pBoard)
     {
         selectLink(cOpticalGroup->getId());
@@ -1686,7 +1687,6 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
             if(pScope) this->StubDebug();
 
             LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
-            uint8_t cNlines = 6;
             for(uint8_t cLineId = 1; cLineId < 1 + cNlines; cLineId += 1)
             {
                 if(fOptical)
@@ -1725,24 +1725,23 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
                 {
                     pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
                     uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    if(pTuner.fBitslip == 0)
-                    {
-                        uint32_t cAttempts = 0;
-                        do
-                        {
-                            if(cAttempts > 10)
-                            {
-                                LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                                exit(0);
-                            }
-                            // try again
-                            LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
-                            pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                            cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                            LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                            cAttempts++;
-                        } while(pTuner.fBitslip == 0);
-                    }
+                    // if(pTuner.fBitslip == 0)
+                    // {
+                    //     uint32_t cAttempts = 0;
+                    //     do
+                    //     {
+                    //         if(cAttempts > 10)
+                    //         {
+                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                    //         }
+                    //         // try again
+                    //         LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                    //         pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                    //         cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    //         LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                    //         cAttempts++;
+                    //     } while(pTuner.fBitslip == 0);
+                    // }
                     cSuccess = cSuccess && pTuner.fDone;
                 }
                 // if(pTuner.fDone != 1)
@@ -1753,7 +1752,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope)
             }
         }
     }
-    if(pScope) this->StubDebug();
+    if(pScope) this->StubDebug(true,cNlines);
     return cSuccess;
 }
 

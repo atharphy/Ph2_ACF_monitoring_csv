@@ -46,7 +46,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-    // ConfigurePSROH(pChip);
+    //ConfigurePSROH(pChip);
     Configure2SSEH(pChip);
     return true;
 }
@@ -976,7 +976,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 10;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)

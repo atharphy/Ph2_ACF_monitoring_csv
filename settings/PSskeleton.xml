@@ -16,7 +16,7 @@
           />
         </lpGBT>
 
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>

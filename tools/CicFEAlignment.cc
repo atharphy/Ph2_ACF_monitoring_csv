@@ -604,7 +604,6 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                 }
             }
         }
-
         // l1 lines
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.stub_debug.enable", 0x00);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(pNTriggers, 10, 3);
@@ -614,79 +613,124 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             auto cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-            LOG(INFO) << BOLDBLUE << "... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
+            LOG(DEBUG) << BOLDBLUE << "... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
             cAllTriggersSent = (cNTriggersSent == pNTriggers);
         } while(!cAllTriggersSent);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Stop();
 
+
+        // send a resync
+        fBeBoardInterface->ChipReSync(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
-            // auto& cThresholdsThisOpticalGroup     = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
-            // auto& cLogicThisOpticalGroup          = cLogicThisBoard->at(cOpticalGroup->getIndex());
-            // auto& cHIPsThisOpticalGroup           = cHIPsThisBoard->at(cOpticalGroup->getIndex());
-            // auto& cPtCutThisOpticalGroup          = cPtCutThisBoard->at(cOpticalGroup->getIndex());
-            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
-
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                bool  cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
-
-                // 4 channels per phyPort ... 12 phyPorts per CIC
-                std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
-                // 8 FEs per CIC .... 6 SLVS lines per FE
-                std::vector<std::vector<uint8_t>> cPhaseTapsFEs(8, std::vector<uint8_t>(6, 0));
-                // read back phase aligner values
+                // enable automatic phase aligner
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic; 
+                bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
+                // if locked .. switch to automatic phase aligner mode with best values
                 if(cLocked)
-                {
-                    auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                { 
+                    fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
-                    cPhaseTaps    = fCicInterface->GetOptimalTaps(cCic);
-                    cPhaseTapsFEs = this->SortOptimalTaps(cPhaseTaps);
+                    auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                    size_t cPhyPort=0; 
+                    size_t cPhyPortChnl=0; 
+                    size_t cCounter=0; 
                     for(auto cChip: *cHybrid)
                     {
+                        if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
                         std::string cOutput;
-                        for(uint8_t cInput = 0; cInput < 6; cInput += 1)
+                        char cBuffer[80];
+                        // first all the stub lines 
+                        for(uint8_t cInput = 0; cInput < 5; cInput += 1)
                         {
-                            char cBuffer[80];
-                            sprintf(cBuffer, "%.2d ", cPhaseTapsFEs[cChip->getId()][cInput]);
+                            sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnl][cPhyPort]);
                             cOutput += cBuffer;
-                            cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>()[cInput] = cPhaseTapsFEs[cChip->getId()][cInput];
+                            cPhyPort = ( (cCounter+1)%4 == 0 ) ? (cPhyPort+1) : cPhyPort; 
+                            cPhyPortChnl = cCounter%4; 
+                            cCounter++; 
                         }
-                        LOG(INFO) << BOLDBLUE << "Optimal tap found on FE[Hybrid Count]" << +cChip->getId() << " : " << cOutput << RESET;
+                        // then the L1 line 
+                        size_t cPhyPortL1 = (cChip->getId() >3 ) ? 11 : 10; 
+                        size_t cPhyPortChnlL1   = (cChip->getId()%4); 
+                        sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnlL1][cPhyPortL1]);
+                        cOutput += cBuffer;
+                        LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
                     }
-                    // put phase aligner in static mode
-                    // fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
                 }
-                else
-                {
-                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDRED << " FAILED to lock " << BOLDBLUE << " ... stopping procedure." << RESET;
-                    exit(1);
-                }
+                cAligned = cAligned && cLocked;
+            }//CICs
+        }//OG
 
-                // auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
-                // auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
-                // auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
-                // auto& cPtCutThisHybrid      = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
+        // for(auto cOpticalGroup: *cBoard)
+        // {
+        //     // auto& cThresholdsThisOpticalGroup     = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
+        //     // auto& cLogicThisOpticalGroup          = cLogicThisBoard->at(cOpticalGroup->getIndex());
+        //     // auto& cHIPsThisOpticalGroup           = cHIPsThisBoard->at(cOpticalGroup->getIndex());
+        //     // auto& cPtCutThisOpticalGroup          = cPtCutThisBoard->at(cOpticalGroup->getIndex());
+        //     auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
 
-                // // reset readout chip settings back to 'normal'
-                // for(auto cChip: *cHybrid)
-                // {
-                //     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
-                //     LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "Pipe&StubInpSel&Ptwidth", cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "HIP&TestMode", cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "PtCut", cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                //     // enable all output from CBCs
-                //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "EnableSLVS", 1);
-                // }
+        //     for(auto cHybrid: *cOpticalGroup)
+        //     {
+        //         auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        //         bool  cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
 
-                LOG(INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cHybrid->getId() << RESET;
-                // check if a resync is needed
-                fCicInterface->CheckReSync(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
-            }
-        }
+        //         // 4 channels per phyPort ... 12 phyPorts per CIC
+        //         std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
+        //         // 8 FEs per CIC .... 6 SLVS lines per FE
+        //         std::vector<std::vector<uint8_t>> cPhaseTapsFEs(8, std::vector<uint8_t>(6, 0));
+        //         // read back phase aligner values
+        //         if(cLocked)
+        //         {
+        //             auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+        //             LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
+        //             cPhaseTaps    = fCicInterface->GetOptimalTaps(cCic);
+        //             cPhaseTapsFEs = this->SortOptimalTaps(cPhaseTaps);
+        //             for(auto cChip: *cHybrid)
+        //             {
+        //                 std::string cOutput;
+        //                 for(uint8_t cInput = 0; cInput < 6; cInput += 1)
+        //                 {
+        //                     char cBuffer[80];
+        //                     sprintf(cBuffer, "%.2d ", cPhaseTapsFEs[cChip->getId()][cInput]);
+        //                     cOutput += cBuffer;
+        //                     cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>()[cInput] = cPhaseTapsFEs[cChip->getId()][cInput];
+        //                 }
+        //                 LOG(INFO) << BOLDBLUE << "Optimal tap found on FE[Hybrid Count]" << +cChip->getId() << " : " << cOutput << RESET;
+        //             }
+        //             // put phase aligner in static mode
+        //             // fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
+        //         }
+        //         else
+        //         {
+        //             LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDRED << " FAILED to lock " << BOLDBLUE << " ... stopping procedure." << RESET;
+        //             exit(1);
+        //         }
+
+        //         // auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
+        //         // auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
+        //         // auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
+        //         // auto& cPtCutThisHybrid      = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
+
+        //         // // reset readout chip settings back to 'normal'
+        //         // for(auto cChip: *cHybrid)
+        //         // {
+        //         //     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
+        //         //     LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+        //         //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
+        //         //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "Pipe&StubInpSel&Ptwidth", cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
+        //         //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "HIP&TestMode", cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
+        //         //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "PtCut", cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
+        //         //     // enable all output from CBCs
+        //         //     fReadoutChipInterface->WriteChipReg(theReadoutChip, "EnableSLVS", 1);
+        //         // }
+
+        //         LOG(INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cHybrid->getId() << RESET;
+        //         // check if a resync is needed
+        //         fCicInterface->CheckReSync(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+        //     }
+        // }
     }
     return cAligned;
 }
