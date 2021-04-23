@@ -808,6 +808,7 @@ bool BackEndAlignment::Align()
         // now send a fast reset
         //fBeBoardInterface->ChipReSync(theBoard);
     }
+    cAligned=true;
     return cAligned;
 }
 void BackEndAlignment::writeObjects() {}

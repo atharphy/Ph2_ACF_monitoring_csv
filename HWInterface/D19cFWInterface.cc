@@ -1549,7 +1549,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // configure trigger
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
     this->ReconfigureTriggerFSM(cVecReg);
@@ -1563,7 +1563,6 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
             auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             int   cChipId = cCic->getId();
             // if( cHybrid->getId() > 0 )
-            //   this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
             uint8_t cLineId = 0;
             this->ChipReSync();
             LOG(INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid->getId() << " Chip" << +cChipId << RESET;
@@ -1636,8 +1635,12 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
             {
                 LOG(INFO) << BOLDBLUE << "Word alignment in the back-end not implemented for this firmware type.." << RESET;
             }
+            
+            this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
+            this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select" , 0) ;
+            if(pScope) this->L1ADebug();
+    
         }
-        if(pScope) this->L1ADebug();
     }
 
     // reconfigure original trigger configu
@@ -1684,6 +1687,8 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
             if(cCic == NULL) continue;
 
             // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
+            this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , cHybrid->getId()) ;
+            this->WriteReg( "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select" , 0) ;
             if(pScope) this->StubDebug();
 
             LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
@@ -1725,23 +1730,23 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
                 {
                     pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
                     uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    // if(pTuner.fBitslip == 0)
-                    // {
-                    //     uint32_t cAttempts = 0;
-                    //     do
-                    //     {
-                    //         if(cAttempts > 10)
-                    //         {
-                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                    //         }
-                    //         // try again
-                    //         LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
-                    //         pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                    //         cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    //         LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                    //         cAttempts++;
-                    //     } while(pTuner.fBitslip == 0);
-                    // }
+                    if(pTuner.fBitslip == 0)
+                    {
+                        uint32_t cAttempts = 0;
+                        do
+                        {
+                            if(cAttempts > 10)
+                            {
+                                LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                            }
+                            // try again
+                            LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                            pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                            cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                            LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                            cAttempts++;
+                        } while(pTuner.fBitslip == 0 && cAttempts < 10);
+                    }
                     cSuccess = cSuccess && pTuner.fDone;
                 }
                 // if(pTuner.fDone != 1)
@@ -1750,9 +1755,11 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
                 //     exit(0);
                 // }
             }
+
+            if(pScope) this->StubDebug(true,cNlines);
+            
         }
     }
-    if(pScope) this->StubDebug(true,cNlines);
     return cSuccess;
 }
 
@@ -2918,7 +2925,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->Start();
         if(!cAsync)
         {
-            bool cWaitForFSM = true;
+            bool cWaitForFSM = false;
             // send triggers until the readout request flag is '1'
             uint32_t cReadoutReq   = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             uint32_t cNtriggers    = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -2961,6 +2968,8 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 uint32_t cPause           = cNevents * static_cast<uint32_t>(cTimeSingleTrigger_us);
                 uint32_t cNWords_previous = cNWords;
                 uint32_t cAttempt         = 0;
+                // also possible to keep counting until trigger_in_counter has stopped incrementing 
+                // try this 
                 do
                 {
                     std::this_thread::sleep_for(std::chrono::microseconds(cPause));

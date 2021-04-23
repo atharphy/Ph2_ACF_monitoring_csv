@@ -976,16 +976,16 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 10;
+    uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 12;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
         {
             if(cGroup == 6 && cChannel == 0) cRxInvert = 0;
-            if(cGroup == 5 && cChannel == 0)
-                cRxInvert = 0;
+            else if(cGroup == 5 && cChannel == 0) cRxInvert = 0;
             else
                 cRxInvert = 1;
+            
             if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }

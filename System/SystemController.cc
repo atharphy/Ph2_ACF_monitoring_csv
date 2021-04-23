@@ -531,6 +531,7 @@ void SystemController::ModuleStartUp2S()
     // start-up CIC 
     for(const auto cBoard: *fDetectorContainer)
     {
+        bool cSparsified = cBoard->getSparsification();
         for(auto cOpticalGroup: *cBoard)
         {
             uint8_t cLinkId = cOpticalGroup->getId();
@@ -577,6 +578,7 @@ void SystemController::ModuleStartUp2S()
                 // CIC start-up sequence
                 uint8_t cDriveStrength = cCicDriveStrength;
                 if( cSuccess) cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
+                if( cSuccess) cSuccess               = fCicInterface->SetSparsification(cCic, cSparsified);
                 
                 fBeBoardInterface->ChipReSync(cBoard);
                 
