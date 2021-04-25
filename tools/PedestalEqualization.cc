@@ -166,6 +166,7 @@ void PedestalEqualization::FindVplus()
     if(cWithCBC) setSameLocalDac("ChannelOffset", fTargetOffset);
     if(cWithSSA) setSameLocalDac("ThresholdTrim", fTargetOffset);
     if(cWithMPA) setSameLocalDac("ThresholdTrim", fTargetOffset);
+
     if(cWithCBC) this->bitWiseScan("VCth", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(cWithSSA) this->bitWiseScan("Bias_THDAC", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(cWithMPA) this->bitWiseScan("ThDAC_ALL", fEventsPerPoint, 0.56, fNEventsPerBurst);

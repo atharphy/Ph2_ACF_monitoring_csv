@@ -4222,6 +4222,8 @@ void DataChecker::ReadNeventsTest()
     {
         auto cEventType = cBoard->getEventType();
         cBoard->setEventType(EventType::VR);
+        bool cSparsified = cBoard->getSparsification();
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -4233,9 +4235,10 @@ void DataChecker::ReadNeventsTest()
                 {
                     if( cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
-                        uint16_t cTh = 1000;//(cChip->getId() % 2 == 0) ? cTh1 : cTh2;
+                        uint16_t cTh = (cChip->getId() % 2 == 0) ? cTh1 : cTh2;
                         LOG(INFO) << BOLDBLUE << "Threshold on RoC#" << +cChip->getId() << " set to " << +cTh << RESET;
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", cTh);
+                        //static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels(cChip, false);
                     }
                     else if( cChip->getFrontEndType() == FrontEndType::MPA )
                     {

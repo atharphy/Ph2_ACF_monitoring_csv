@@ -29,25 +29,24 @@ void BackEndAlignment::Reset()
         }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
-        // comment out for now
-        // auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
-        // for(auto cOpticalGroup: *cBoard)
-        // {
-        //     auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
-        //     for(auto cHybrid: *cOpticalGroup)
-        //     {
-        //         auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
-        //         LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
-        //         for(auto cChip: *cHybrid)
-        //         {
-        //             auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
-        //             std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
-        //             cVecRegisters.clear();
-        //             for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-        //             fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
-        //         }
-        //     }
-        // }
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
+                for(auto cChip: *cHybrid)
+                {
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+                    cVecRegisters.clear();
+                    for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
+                }
+            }
+        }
     }
     resetPointers();
 }
