@@ -28,33 +28,22 @@
             <SSA Id="0" configfile="SSAPreCalibSYNC.txt" />
             <SSA Id="1" configfile="SSAPreCalibSYNC.txt" />
             <SSA Id="2" configfile="SSAPreCalibSYNC.txt" />
-            <!-- <SSA Id="4" configfile="SSAPreCalibSYNC.txt" />
+            <SSA Id="4" configfile="SSAPreCalibSYNC.txt" />
             <SSA Id="5" configfile="SSAPreCalibSYNC.txt" />
             <SSA Id="6" configfile="SSAPreCalibSYNC.txt" />
             <SSA Id="7" configfile="SSAPreCalibSYNC.txt" />
 
             <MPA_Files path="./settings/MPAFiles/" />
-<<<<<<< HEAD
+
             <MPA Id="0" partid="0" configfile="MPATSTSYNC.txt" />
             <MPA Id="1" partid="1" configfile="MPATSTSYNC.txt" />
             <MPA Id="2" partid="2" configfile="MPATSTSYNC.txt" />
-            <!-- <MPA Id="4" partid="4" configfile="MPATSTSYNC.txt" />
+            <MPA Id="4" partid="4" configfile="MPATSTSYNC.txt" />
             <MPA Id="5" partid="5" configfile="MPATSTSYNC.txt" />
             <MPA Id="6" partid="6" configfile="MPATSTSYNC.txt" />
             <MPA Id="7" partid="7" configfile="MPATSTSYNC.txt" />
 
 
-=======
-            <MPA Id="4" partid="0" configfile="MPATSTSYNC.txt" />
-            <!-- <MPA Id="1" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="2" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="3" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="4" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="5" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="6" partid="0" configfile="MPA_minConfig.txt" />
-            <MPA Id="7" partid="0" configfile="MPA_minConfig.txt" />
- -->
->>>>>>> sarah/CPB_dev2
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>

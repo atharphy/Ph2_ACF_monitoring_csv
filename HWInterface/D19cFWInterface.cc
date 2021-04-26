@@ -1824,15 +1824,17 @@ void D19cFWInterface::FastAsyncRead(BeBoard* pBoard, std::vector<uint32_t>& pDat
 	LOG(ERROR) << BOLDRED << "Fast ASYNC" << RESET;
 
 	uint32_t ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
+
 	PS_Start_counters_read();
 	uint32_t timeout = 0;
 	do
 	{
+	LOG(INFO) << BOLDRED << "ps_counters_ready " <<ps_counters_ready<< RESET;
 		std::this_thread::sleep_for(std::chrono::microseconds(200));
 		ps_counters_ready = ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
 		timeout += 1;
 	} while((ps_counters_ready == 0) & (timeout < 10000));
-
+	LOG(INFO) << BOLDRED << "ps_counters_ready " <<ps_counters_ready<< RESET;
 	if(timeout >= 10000)
 	{
 		LOG(ERROR) << BOLDRED << "Fast MPA counter readout failed..." << RESET;
@@ -1848,6 +1850,10 @@ void D19cFWInterface::FastAsyncRead(BeBoard* pBoard, std::vector<uint32_t>& pDat
 			uint32_t fifo1_word = ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
 			uint32_t fifo2_word = ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
 
+			LOG(INFO) << BOLDBLUE << "RAW fifo1_word "<< i <<": "<<std::bitset<32>(fifo1_word)  << RESET;
+			LOG(INFO) << BOLDBLUE << "RAW fifo2_word "<< i <<": "<<std::bitset<32>(fifo2_word)  << RESET;
+			
+			
 
 			uint32_t line1 = (fifo1_word & 0x0000FF) >> 0;  // to_number(fifo1_word,8,0)
 			uint32_t line2 = (fifo1_word & 0x00FF00) >> 8;  // to_number(fifo1_word,16,8)
@@ -1863,6 +1869,8 @@ void D19cFWInterface::FastAsyncRead(BeBoard* pBoard, std::vector<uint32_t>& pDat
 				uint32_t temp = ((line2 & 0x20) << 9) | ((line3 & 0x20) << 8) | ((line4 & 0x20) << 7) | ((line5 & 0x20) << 6) | ((line1 & 0x10) << 6) | ((line2 & 0x10) << 5) |
 				((line3 & 0x10) << 4) | ((line4 & 0x10) << 3) | ((line5 & 0x80) >> 1) | ((line1 & 0x40) >> 1) | ((line2 & 0x40) >> 2) | ((line3 & 0x40) >> 3) |
 				((line4 & 0x40) >> 4) | ((line5 & 0x40) >> 5) | ((line1 & 0x20) >> 5);
+				LOG(INFO) << BOLDBLUE << "RAW " <<(temp - 1) << RESET;
+				
 				if(temp != 0) pData.push_back(temp - 1);
 				
           	}
@@ -1893,7 +1901,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
 
         if(pFast)
         {
-            this->FastAsyncRead(pBoard, pData, 0);
+            this->FastAsyncRead(pBoard, pData, 1);
             return;
         }
         for(auto cOpticalGroup: *pBoard)
@@ -1965,7 +1973,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                         // uint8_t cFreq         = 3;
                         // uint8_t cSCLDriveMode = 0;
                         //
-						LOG(DEBUG) << BOLDMAGENTA << "Slow counts"<<RESET;
+						LOG(INFO) << BOLDMAGENTA << "Slow counts"<<RESET;
                         uint32_t cDataWord       = 0x0000;
                         uint32_t cWordCounter    = 0;
                         // uint8_t  cBaseSlaveAddrs = cWithMPA ? 0x40 : 0x20;
@@ -2112,8 +2120,10 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                                 //     }
                                 // } // read
 
-                                cValues.push_back(ReadFERegister(cChip, cReg));
+                                cValues.push_back(ReadFERegister(cChip, cReg, 0));
+
                             }
+
                             uint16_t cCounterValue = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF);
                             if(cChnl % cPrintDebug == 0)
                             {
@@ -2135,6 +2145,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                             }
                             cWordCounter++;
                         }
+						LOG(INFO) << BOLDMAGENTA << "Slow counts DONE"<<RESET;
                         // if (cChip->getFrontEndType() == FrontEndType::MPA)
                         // {
 
@@ -2390,7 +2401,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     else if(cAsync)
     {
         if(cWithMPA or cWithSSA)
-            this->ReadPSCounters(pBoard, pData, false);
+            this->ReadPSCounters(pBoard, pData, true);
         else
         {
             LOG(INFO) << BOLDRED << "Trying to read AsyncCounter wihtout an MPA/SSA.." << RESET;
@@ -3133,7 +3144,6 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
 std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue(const std::string& pRegNode, const uint32_t& pBlocksize)
 {
     return ReadBlockReg(pRegNode, pBlocksize);
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 }
 
 std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset)
@@ -5002,7 +5012,7 @@ void D19cFWInterface::ResetCPB()
     // reset shoudl be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 

@@ -81,7 +81,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
                     {
                         //static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
 
-                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
+                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
                 }
@@ -129,6 +129,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedestalEqualization::FindVplus()
 {
+
     if(fTestPulse)
     {
         this->enableTestPulse(true);
@@ -148,6 +149,33 @@ void PedestalEqualization::FindVplus()
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    for(auto board: *fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(chip);
+                    // if it is a CBC3, disable the stub logic for this procedure
+                    if(theChip->getFrontEndType() == FrontEndType::SSA)
+                    {
+                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
+                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
+                    }
+
+                    if(theChip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        //static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
+
+                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
+                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
+                    }
+                }
+            }
+        }
+    }
 
     LOG(INFO) << BOLDBLUE << "Identifying optimal Vplus for ROC..." << RESET;
     if(cWithCBC) setSameDac("VCth", fTargetVcth);
@@ -172,6 +200,9 @@ void PedestalEqualization::FindVplus()
 
     float    cMeanValue = 0.;
     uint32_t nCbc       = 0;
+
+
+
 
     for(auto board: theVcthContainer) // for on boards - begin
     {
