@@ -20,7 +20,7 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT#" << +pChip->getId() << RESET;
     setBoard(pChip->getBeBoardId());
     // Load register map from configuration file
     if(!fUseOpticalLink)
@@ -46,8 +46,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-    //ConfigurePSROH(pChip);
-    Configure2SSEH(pChip);
     return true;
 }
 

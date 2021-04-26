@@ -84,7 +84,8 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
-        ChipRegItem           cRegItem;
+        // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x" 
+        //     << std::hex << +cRegItem.fAddress << std::dec << RESET;
         fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
@@ -412,14 +413,19 @@ bool     CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair
 uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());
+    // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register "
+    //     << pRegNode << RESET;
+        
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-    return this->ReadChipReg(pChip, cRegItem).second;
+    return this->ReadChipRegItem(pChip, cRegItem).second;
 }
-std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRegItem)
+std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem pRegItem)
 {
     setBoard(pChip->getBeBoardId());
     if(flpGBTInterface == nullptr)
     {
+        // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x" 
+        //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
         std::vector<uint32_t> cVecReq;
         fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
@@ -432,7 +438,8 @@ std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRe
     }
     else
     {
-        LOG (DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg" << RESET;
+        LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) via lpGBT Register 0x" 
+            << std::hex << +pRegItem.fAddress << std::dec << RESET;
            
         //auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
         uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
@@ -450,7 +457,8 @@ bool CicInterface::CheckReSync(Chip* pChip)
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;
     cRegItem.fStatusReg                   = 0x01;
-    std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+    std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
+
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     if(!cReadBack.first) return false;
 
@@ -466,7 +474,7 @@ bool CicInterface::CheckReSync(Chip* pChip)
     // a resync
     fBoardFW->ChipReSync();
     // check if CIC still needs one
-    cReadBack = this->ReadChipReg(pChip, cRegItem);
+    cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     LOG(DEBUG) << BOLDBLUE << "After ReSync... read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
     if(!cReadBack.first || cResyncNeeded)
@@ -489,7 +497,7 @@ bool CicInterface::CheckFastCommandLock(Chip* pChip)
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;
     cRegItem.fStatusReg                   = 0x01;
-    std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+    std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     if(!cReadBack.first) return false;
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     bool cLocked = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x10) >> 4);
@@ -587,7 +595,7 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x84 : 0xA6;
     cRegItem.fStatusReg                 = 0x01;
-    std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+    std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     if(!cReadBack.first)
     {
         LOG(ERROR) << BOLDRED << "Read-back failed!" << RESET;
@@ -600,7 +608,7 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
     cRegItem.fPage    = 0x00;
     cRegItem.fAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAF : 0xA7;
     cRegItem.fStatusReg                 = 0x01;
-    cReadBack         = this->ReadChipReg(pChip, cRegItem);
+    cReadBack         = this->ReadChipRegItem(pChip, cRegItem);
     if(cReadBack.first)
         cDelay = cReadBack.second;
     else
@@ -656,7 +664,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         cRegItem.fPage                      = 0x00;
         cRegItem.fAddress                   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x83 : 0xA6;
         cRegItem.fStatusReg                 = 0x01;
-        std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+        std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
         if(!cReadBack.first)
         {
             LOG(INFO) << BOLDBLUE << "Readback failed.." << RESET;
@@ -731,7 +739,7 @@ bool CicInterface::CheckDLL(Chip* pChip)
         cRegItem.fPage                      = 0x00;
         cRegItem.fAddress                   = cRegAddress + cIndex;
         cRegItem.fStatusReg                 = 0x01;
-        std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+        std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
         if(cReadBack.first) cValues[cIndex] = cReadBack.second & 0xFF;
         LOG(DEBUG) << BOLDBLUE << "Lock" << cIndex << " -- " << cValues[cIndex] << RESET;
     }
@@ -975,7 +983,7 @@ std::vector<std::vector<uint8_t>> CicInterface::ReadWordAlignmentValues(Chip* pC
         cRegItem.fPage                      = 0x00;
         cRegItem.fAddress                   = cBaseAddress + cIndex;
         cRegItem.fStatusReg                 = 0x01;
-        std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+        std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
         cSuccess                            = cSuccess && cReadBack.first;
         if(cSuccess)
         {
@@ -1015,7 +1023,7 @@ bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPort
 
     uint8_t cRegMask   = (0xF << cBitShift); //
     cRegMask           = ~(cRegMask);
-    uint16_t cRegValue = this->ReadChipReg(pChip, cRegItem).second;
+    uint16_t cRegValue = this->ReadChipRegItem(pChip, cRegItem).second;
     int      cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]) + pOffset;
     if(cPhaseTap < 0 || cPhaseTap > 0xF){ 
         LOG(DEBUG) << BOLDRED << "FAILED TO modify optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " .. wanted to set a phase tap of " 
@@ -1063,7 +1071,7 @@ uint8_t CicInterface::GetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyP
     cRegItem.fAddress                   = cBaseReg + cRegOffset;
     cRegItem.fStatusReg                 = 0x01;
 
-    std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+    std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     LOG(DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register 0x" << std::hex << +(cBaseReg + cRegOffset) << std::dec
                << " BitOffset " << +cBitOffset << RESET;
     if(cReadBack.first)
@@ -1118,7 +1126,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     setBoard(pChip->getBeBoardId());
     std::string cRegName    = "FE_ENABLE";
     uint8_t     cEnabledFEs = this->ReadChipReg(pChip, cRegName);
-    LOG(DEBUG) << BOLDMAGENTA << "FE_Enable Register set to " << +cEnabledFEs << RESET;
+    LOG(INFO) << BOLDMAGENTA << "FE_Enable Register set to " << +cEnabledFEs << RESET;
 
     uint16_t cRegBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5C : 0xA0;
     LOG(DEBUG) << BOLDBLUE << "Checking Auto phase aligner lock in CIC." << RESET;
@@ -1147,7 +1155,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         cRegItem.fAddress                   = cRegBaseAddress + cIndex;
         cRegItem.fStatusReg                 = 0x01;
 
-        std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+        std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
         LOG(INFO) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
 
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
@@ -1277,6 +1285,7 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     // read enable register
     cRegName        = "FE_ENABLE";
     uint16_t cValue = this->ReadChipReg(pChip, cRegName);
+    //LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register set to 0x" << std::hex  << +cValue << std::dec << RESET;
     for(auto pFeId: pFeIds)
     {
         uint8_t cChipId_forCic = cFeMapping[pFeId]; // std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pFeId));
@@ -1293,7 +1302,7 @@ bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
 {
     setBoard(pChip->getBeBoardId());
 
-    LOG(INFO) << BOLDBLUE << "Want to confiure CIC mode : " << +pMode << RESET;
+    LOG(INFO) << BOLDBLUE << "Want to configure CIC mode : " << +pMode << RESET;
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pMode : (cRegValue & 0x3E) | pMode;
@@ -1323,7 +1332,7 @@ bool CicInterface::CheckSoftReset(Chip* pChip)
     cRegItem.fPage                      = 0x00;
     cRegItem.fStatusReg                 = 0x01; 
     cRegItem.fAddress                   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAC : 0xA6;
-    std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+    std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     if(!cReadBack.first)
     {
         LOG(ERROR) << BOLDRED << "Read back failed!" << RESET;
@@ -1338,7 +1347,7 @@ bool CicInterface::CheckSoftReset(Chip* pChip)
         SoftReset(pChip);
     }
     // check if CIC still needs one
-    cReadBack        = this->ReadChipReg(pChip, cRegItem);
+    cReadBack        = this->ReadChipRegItem(pChip, cRegItem);
     cSoftResetNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : (((cReadBack.second & 0x04) >> 2) == 1);
     if(!cReadBack.first || cSoftResetNeeded)
         return false;
@@ -1453,7 +1462,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
 
 
     // select fast command edge
-    bool cNegEdge = false;//true;
+    bool cNegEdge = true;// was false for PS - need to check 
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else

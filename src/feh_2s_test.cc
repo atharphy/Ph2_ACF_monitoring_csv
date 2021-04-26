@@ -28,6 +28,11 @@
 #include "Antenna.h"
 #endif
 
+// reference volage for lpgBT 
+float VREF_LPGBT = 1.0; 
+float cConversionFactor = VREF_LPGBT/ 1024.;
+
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -35,6 +40,20 @@ using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
+
+std::vector<uint8_t> getArgs(std::string pArgsStr )
+{
+    std::vector<uint8_t> cSides;
+    std::stringstream    cArgsSS(pArgsStr);
+    int                  i;
+    while(cArgsSS >> i)
+    {
+        cSides.push_back(i);
+        if(cArgsSS.peek() == ',') cArgsSS.ignore();
+    };
+    return cSides;
+}
+ 
 
 int main(int argc, char* argv[])
 {
@@ -92,6 +111,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkAsync", "Check Async readout methods [PS objects only]... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("noiseInjection", "Check noise injection...", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("calibrateADC","Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("monitorAMUX","Calibrate ADC on lpGBT....", ArgvParser::OptionRequiresValue);
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -170,7 +192,161 @@ int main(int argc, char* argv[])
     cAntenna.close();
 #endif
 
-    
+    if( cmd.foundOption("calibrateADC"))
+    {
+        LOG (INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT =  cOpticalGroup->flpGBT ;
+                if(clpGBT == nullptr) continue;
+
+                // enable voltage 
+                std::vector<std::string> cADCs_VoltageMonitors{"VDD"};
+                std::vector<float>       cADCs_Refs{1.25*0.42};
+                // use Vddd as reference 
+                // use P1V25 as reference
+                size_t cIndx=0;
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
+                // find correction 
+                std::vector<float> cVals(10,0);
+                uint8_t cEnableVref=1;
+                std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+                std::vector<uint8_t> cRefPoints{0, 0x05, 0x10, 0x20, 0x3F };
+                std::vector<float> cMeasurements(0);
+                std::vector<float> cSlopes(0);
+                for( auto cRef : cRefPoints) 
+                {
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
+                    for(size_t cM=0; cM < cVals.size(); cM++)
+                    {
+                        cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                    }
+                    float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                    float cDifference_V = (cADCs_Refs[cIndx] - cMean );
+                    LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                            << " correction applied is " << +cRef 
+                            << " reading [mean] is "
+                            << +cMean*1e3 
+                            << " milli-volts."
+                            << "\t...Difference between expected and measured "
+                            << " values is "
+                            << cDifference_V*1e3 
+                            << " milli-volts." << RESET;
+
+                    cMeasurements.push_back(cDifference_V);
+                    if( cMeasurements.size() > 1 ) 
+                    {
+                        for(int cI=cMeasurements.size()-2; cI>=0; cI--)
+                        {
+                            float cSlope = (cMeasurements[cMeasurements.size()-1] - cMeasurements[cI])/(cRefPoints[cMeasurements.size()-1 ]-cRefPoints[cI]);
+                            LOG (DEBUG) << BOLDBLUE << "Index " << +(cMeasurements.size()-1 )
+                                << " -- index " << cI
+                                << " slope is " << cSlope 
+                                << RESET;
+                            cSlopes.push_back(cSlope);
+                        }
+                    }
+                }
+                float cMeanSlope = std::accumulate(cSlopes.begin(),cSlopes.end(),0.)/cSlopes.size();
+                float cIntcpt = cMeasurements[0]; 
+                int cCorr = std::min( std::floor(-1.0*cIntcpt/cMeanSlope), 63. );
+                LOG (INFO) << BOLDMAGENTA << "Mean slope is " << cMeanSlope 
+                    << " , intercept is " << cIntcpt 
+                    << " correction is " << cCorr
+                    << RESET;
+                // apply correction and check
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
+                for(size_t cM=0; cM < cVals.size(); cM++)
+                {
+                    cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                }
+                // turn off ADC mon
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
+                
+                // float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                // float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean );
+                // LOG (INFO) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                //             << +cMean*1e3 
+                //             << " milli-volts."
+                //             << "\t...Difference between expected and measured "
+                //             << " values is "
+                //             << cDifference_V*1e3 
+                //             << " milli-volts." << RESET;
+
+                // for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
+                // {
+                //     std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+                //     if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
+                    
+                //     for(size_t cM=0; cM < cVals.size(); cM++)
+                //     {
+                //         cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
+                //     }
+                //     float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                //     //float cStartUpMontior = cMean;
+                //     LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
+                //         << +cMean*1e3 
+                //         << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
+                //         << " side of the module" << RESET;
+                // }//read all monitors 
+            }// configure lpGBT 
+        }
+    }
+    if( cmd.foundOption("monitorAMUX"))
+    {
+        auto cMuxSels = getArgs(cmd.optionValue("monitorAMUX"));
+        for( auto cMuxSel : cMuxSels )
+        {
+            for(const auto cBoard: *cTool.fDetectorContainer)
+            {
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    auto& clpGBT =  cOpticalGroup->flpGBT ;
+                    if(clpGBT == nullptr) continue;
+
+                    // enable voltage
+                    for(auto cHybrid: *cOpticalGroup)
+                    { 
+                        uint8_t cADCsel = (cHybrid->getId()%2 == 0 ) ? 3 : 0 ; 
+                        char cADC[4]; sprintf( cADC, "ADC%.1d", cADCsel);
+                        std::vector<uint8_t> cChipIds(0);
+                        for( auto cChip : *cHybrid )
+                        {
+                            cChipIds.push_back(cChip->getId());
+                        }
+                        for( auto cChipId : cChipIds )
+                        {
+                            for( auto cChip : *cHybrid )
+                            {
+                                if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue; 
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip,"AmuxOutput", 0); 
+                                if( cChip->getId() != cChipId ) continue;
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip,"AmuxOutput", cMuxSel);
+                            }// all FEs set to floating, except 0 
+                            std::vector<float> cVals(10);
+                            for(size_t cM=0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC)*cConversionFactor;
+                            float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                            LOG (INFO) << BOLDMAGENTA << "\t...CBC#" << +cChipId
+                                << " " << cADC << " reading from lpGBT "
+                                << " while monitoring AMUX#"
+                                << +cMuxSel
+                                << " is "
+                                << +cMean*1e3 
+                                << " milli-volts. " << RESET;
+                        }
+                        for( auto cChip : *cHybrid )
+                        {
+                            if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue; 
+                            cTool.fReadoutChipInterface->WriteChipReg(cChip,"AmuxOutput", 1); 
+                        }// all FEs set to floating, except 0 
+                    }// hybrid 
+                }//OG 
+            }//board 
+       }// mux sel 
+    }// monitor AMUX   
+
     // if CIC is enabled then align CIC first
     if(cWithCIC)
     {

@@ -35,7 +35,7 @@
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <!-- <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
@@ -52,7 +52,7 @@
 
             <CIC_Files path="./settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
+        </Hybrid> -->
     </OpticalGroup>
     
     <!--CONFIG-->
