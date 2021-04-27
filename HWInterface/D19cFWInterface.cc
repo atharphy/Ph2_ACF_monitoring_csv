@@ -421,6 +421,7 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
 
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
     // reset lpGBT core
     this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -487,6 +488,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 
 bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
     // get link Ids
     std::vector<uint8_t> cLinkIds;
     for(auto cOpticalReadout: *pBoard)
@@ -506,7 +508,7 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module3");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -535,7 +537,7 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module3");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -2651,6 +2653,7 @@ bool D19cFWInterface::ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pReplie
 
 bool D19cFWInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
     bool cFailed(false);
     if(fOptical)
     {
@@ -2813,6 +2816,8 @@ bool D19cFWInterface::WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t&
 
 bool D19cFWInterface::BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
+
     std::vector<uint32_t> cReplies;
     bool                  cSuccess = !WriteI2C(pVecReg, cReplies, false, true);
 
@@ -4404,6 +4409,7 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbo
 
 bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
     // Use new Command Processor Block
     uint8_t               cWorkerId = 16, cFunctionId = 3;
     std::vector<uint32_t> cCommandVector;
@@ -4435,6 +4441,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
 
 uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
     uint8_t               cWorkerId = 16, cFunctionId = 2;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -4463,6 +4470,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
 // function for I2C transactions using lpGBT I2C Masters
 bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
     uint8_t               cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -4488,6 +4496,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
 
 uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
+    std::lock_guard<std::mutex> theGuard(fMutex);
     uint8_t               cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();

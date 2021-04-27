@@ -13,7 +13,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
-    include_directories(${PROJECT_SOURCE_DIR}/DQMUtils)
+    if(NoDataShipping)
+        include_directories(${PROJECT_SOURCE_DIR}/DQMUtils)
+    endif()
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
 
@@ -91,7 +93,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
     if(NoDataShipping)
-        set(LIBS ${LIBS} Ph2_DQMUtils Ph2_MonitorDQM)
+        set(LIBS ${LIBS} Ph2_MonitorDQM)
     endif()
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/tools *.cc)
@@ -112,14 +114,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
     # Add the library
-    add_library(Ph2_Tools STATIC ${SOURCES} ${HEADERS})
+    add_library(Ph2_MonitorUtils STATIC ${SOURCES} ${HEADERS})
 
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
     endforeach(sourcefile ${BINARIES})
 
-    TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
+    TARGET_LINK_LIBRARIES(Ph2_MonitorUtils ${LIBS})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 

@@ -18,7 +18,7 @@
 #include "../HWInterface/RD53FWInterface.h"
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
-#include "../Utils/DetectorMonitorConfig.h"
+#include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../Utils/Exception.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"

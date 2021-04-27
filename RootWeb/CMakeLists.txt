@@ -6,7 +6,7 @@ file(GLOB HEADERS include/*.h include/*.hh)
 file(GLOB SOURCES src/*.cpp)
 
 #add the library
-add_library(RootWeb SHARED ${SOURCES} ${HEADERS})
+add_library(RootWeb STATIC ${SOURCES} ${HEADERS})
 
 if(${ROOT_FOUND})
     include_directories(${ROOT_INCLUDE_DIRS})

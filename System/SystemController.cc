@@ -8,9 +8,9 @@
 */
 
 #include "SystemController.h"
-#include "../tools/CBCMonitor.h"
-#include "../tools/DetectorMonitor.h"
-#include "../tools/RD53Monitor.h"
+#include "../MonitorUtils/CBCMonitor.h"
+#include "../MonitorUtils/DetectorMonitor.h"
+#include "../MonitorUtils/RD53Monitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -130,7 +130,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
-    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    fPowerSupplyClient = new TCPClient("131.225.179.123", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
         std::cerr << "Cannot connect to the Power Supply Server" << '\n';
@@ -204,9 +204,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(monitoringType != "None")
     {
         if(monitoringType == "2S")
-            fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new CBCMonitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "RD53")
-            fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;

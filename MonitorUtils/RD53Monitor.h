@@ -15,7 +15,7 @@
 class RD53Monitor : public DetectorMonitor
 {
   public:
-    RD53Monitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
+    RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
 
   protected:
     void runMonitor() override;

@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <mutex>
 //#include "../Utils/OccupancyAndPh.h"
 //#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
@@ -95,6 +96,7 @@ class D19cSSAEvent;
 class D19cFWInterface : public BeBoardFWInterface
 {
   private:
+    std::mutex fMutex;
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
