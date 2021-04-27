@@ -67,18 +67,18 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     }
     else
     {
-        // remember to sort by page . that would be helpful for speeding things up later
-        std::vector<std::pair< std::string,ChipRegItem>> cItems; 
-        struct { bool operator()(std::pair< std::string,ChipRegItem> a, std::pair< std::string,ChipRegItem> b) const { return a.second.fPage < b.second.fPage ; } } customLessForPage;
-        for( auto& cRegItem: cCbcRegMap )
-        {
-            cItems.push_back( std::make_pair( cRegItem.first, cRegItem.second ) ); 
-        }
-        std::sort(cItems.begin(), cItems.end(), customLessForPage); 
+        // // remember to sort by page . that would be helpful for speeding things up later
+        // std::vector<std::pair< std::string,ChipRegItem>> cItems; 
+        // struct { bool operator()(std::pair< std::string,ChipRegItem> a, std::pair< std::string,ChipRegItem> b) const { return a.second.fPage < b.second.fPage ; } } customLessForPage;
+        // for( auto& cRegItem: cCbcRegMap )
+        // {
+        //     cItems.push_back( std::make_pair( cRegItem.first, cRegItem.second ) ); 
+        // }
+        // std::sort(cItems.begin(), cItems.end(), customLessForPage); 
         // now configure 
         LOG (INFO) << BOLDGREEN << "Configuring CBC#" << +pCbc->getId() << " via the lpGBT" << RESET;
         std::vector<std::pair<std::string, uint16_t>> cRegsToWrite; cRegsToWrite.clear(); 
-        for(auto& cRegItem: cItems)
+        for(auto& cRegItem: cCbcRegMap)
         {
             // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
             // be e-fused in the CBC3
@@ -358,7 +358,7 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
-    if(dacName == "VCth")
+    if(dacName == "VCth" || dacName == "Threshold" )
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
         {
@@ -435,7 +435,7 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         LOG(DEBUG) << BOLDBLUE << "Setting AmuxOutput on Chip" << +pCbc->getId() << " to " << +dacValue << " - register set to : 0x" << std::hex << +cRegValue << std::dec << RESET;
         return WriteChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux", cRegValue, pVerifLoop);
     }
-    else if(dacName == "TestPulse")
+    else if(dacName == "TestPulse" || dacName == "InjectedCharge")
     {
         uint8_t cValue    = pCbc->getReg("MiscTestPulseCtrl&AnalogMux");
         uint8_t cRegValue = (cValue & 0xBF) | (dacValue << 6);
@@ -527,7 +527,6 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     setBoard(pCbc->getBeBoardId());
     bool cSuccess = false;
     if(pRegNode.find("BandgapFuse") != std::string::npos ){ LOG(ERROR) << "Cbc register  " << pRegNode << " is READ ONLY." << RESET;return cSuccess;}
-    if(pRegNode.find("ChipIDFuse") != std::string::npos){ LOG(ERROR) << "Cbc register  " << pRegNode << " is READ ONLY." << RESET;return cSuccess;}
     if(pValue > 0xFF){ LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << pValue << " on registed " << pRegNode; return cSuccess;}
 
     // next, get the reg item
@@ -550,7 +549,8 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     {
         cSuccess = ConfigurePage( pCbc, cRegItem.fPage , pVerifLoop ); 
         if( !cSuccess ) return cSuccess; 
-        // write register 
+        // read only  register 
+        if(pRegNode.find("ChipIDFuse") != std::string::npos){ pVerifLoop=false;}
         cSuccess = fBoardFW->WriteFERegister(pCbc, cRegItem.fAddress, pValue , fRetry , pVerifLoop ); 
     }
     // update the HWDescription object
@@ -569,6 +569,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
     // remember to sort by page . that is helpful for speeding things up later
     std::vector<std::pair< std::string,ChipRegItem>> cRegItems; 
     struct { bool operator()(std::pair< std::string,ChipRegItem> a, std::pair< std::string,ChipRegItem> b) const { return a.second.fPage < b.second.fPage ; } } customLessForPage;
+    struct { bool operator()(std::pair< std::string,ChipRegItem> a, std::pair< std::string,ChipRegItem> b) const { return a.second.fPage > b.second.fPage ; } } customGreaterForPage;
     for( auto& cReg: pVecReq )
     {
         if(cReg.first.find("BandgapFuse") != std::string::npos ) continue;
@@ -578,8 +579,18 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         cRegister.fValue = cReg.second; 
         cRegItems.push_back( std::make_pair( cReg.first, cRegister ) ); 
     }
-    std::sort(cRegItems.begin(), cRegItems.end(), customLessForPage); 
-    
+    // address in map depends on board id, hybrid id, chip id 
+    uint32_t  cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId() ; 
+    auto cIter = fPageMap.find(cAddress); 
+    if( cIter == fPageMap.end() )  
+    {
+        uint8_t cDefaultPage=0; 
+        fPageMap.insert( std::make_pair( cAddress , cDefaultPage) ); 
+    }
+    cIter = fPageMap.find(cAddress); 
+    uint8_t cPage = cIter->second; 
+    if( cPage == 1 ) std::sort(cRegItems.begin(), cRegItems.end(), customGreaterForPage); // all to page1 then page 0 
+    if( cPage == 0 ) std::sort(cRegItems.begin(), cRegItems.end(), customLessForPage); // all to page0 then page 1 
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
     bool    cSuccess = false;
@@ -792,6 +803,10 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         // if(!cFailed) pCbc->setReg("Pipe&StubInpSel&Ptwidth", cRegItem.fValue);
         return (cRegValue & 0x0F);
     }
+    else if( pRegNode == "ChipId" ) 
+    {
+        return ReadCbcIDeFuse(pCbc);
+    }
     else
     {
         // cRegItem = pCbc->getRegItem(pRegNode);
@@ -874,12 +889,12 @@ void CbcInterface::WriteBroadcastCbcMultiReg(const Hybrid* pHybrid, const std::v
 
 uint32_t CbcInterface::ReadCbcIDeFuse(Chip* pCbc)
 {
+    // make fuse read-able
     WriteChipReg(pCbc, "ChipIDFuse3", 8);
     uint8_t  IDa     = ReadChipReg(pCbc, "ChipIDFuse1");
     uint8_t  IDb     = ReadChipReg(pCbc, "ChipIDFuse2");
     uint8_t  IDc     = ReadChipReg(pCbc, "ChipIDFuse3");
     uint32_t IDeFuse = ((IDa)&0x000000FF) + (((IDb) << 8) & 0x0000FF00) + (((IDc) << 16) & 0x000F0000);
-    LOG(INFO) << BOLDBLUE << " CHIP ID FUSE " << +IDeFuse << RESET;
     return IDeFuse;
 }
 

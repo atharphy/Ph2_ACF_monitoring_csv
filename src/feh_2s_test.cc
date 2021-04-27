@@ -113,6 +113,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("noiseInjection", "Check noise injection...", ArgvParser::NoOptionAttribute);
     cmd.defineOption("calibrateADC","Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("monitorAMUX","Calibrate ADC on lpGBT....", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("testTune","Test tuning ....", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
 
@@ -183,6 +184,26 @@ int main(int argc, char* argv[])
     // cTool.StartHttpServer();
     cTool.ConfigureHw();
 
+
+    // read chip ids 
+    for(const auto cBoard: *cTool.fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            { 
+                for( auto cChip : *cHybrid )
+                {
+                    auto cFusedId = cTool.fReadoutChipInterface->ReadChipReg(cChip,"ChipId"); 
+                    LOG (INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() 
+                        << " CBC#" << +cChip->getId() 
+                        <<" Fused Id is " << +cFusedId 
+                        << RESET;
+                }
+            }
+        }
+    }
+    
 // measure hybrid current and temperature
 #ifdef __ANTENNA__
     cTemp    = cAntenna.GetHybridTemperature(CHIPSLAVE);
@@ -264,33 +285,6 @@ int main(int argc, char* argv[])
                 }
                 // turn off ADC mon
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
-                
-                // float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-                // float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean );
-                // LOG (INFO) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
-                //             << +cMean*1e3 
-                //             << " milli-volts."
-                //             << "\t...Difference between expected and measured "
-                //             << " values is "
-                //             << cDifference_V*1e3 
-                //             << " milli-volts." << RESET;
-
-                // for( size_t cIndx=0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
-                // {
-                //     std::string cADCsel = cADCs_VoltageMonitors[cIndx];
-                //     if( cModuleSide[cIndx].find( cMonitor ) == std::string::npos ) continue;
-                    
-                //     for(size_t cM=0; cM < cVals.size(); cM++)
-                //     {
-                //         cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel)*cConversionFactor;
-                //     }
-                //     float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
-                //     //float cStartUpMontior = cMean;
-                //     LOG (INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT "
-                //         << +cMean*1e3 
-                //         << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
-                //         << " side of the module" << RESET;
-                // }//read all monitors 
             }// configure lpGBT 
         }
     }
@@ -347,6 +341,23 @@ int main(int argc, char* argv[])
        }// mux sel 
     }// monitor AMUX   
 
+    if( cmd.foundOption("testTune") )
+    {
+        // first set threshold on all CBCs to 0 
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                { 
+                    for( auto cChip : *cHybrid )
+                    {
+                        cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",100);
+                    }
+                }
+            }
+        }
+    }
     // if CIC is enabled then align CIC first
     if(cWithCIC)
     {
@@ -381,6 +392,10 @@ int main(int argc, char* argv[])
     // equalize thresholds on readout chips
     if(cTune)
     {
+        // uint8_t cFeId=0;
+        // auto cSelectFunction = [cFeId](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getId() == cFeId); };
+        // cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+        
         t.start();
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
@@ -393,6 +408,9 @@ int main(int argc, char* argv[])
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
         t.show("Time to tune the front-ends on the system: ");
+        // // reset
+        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        
     }
 
 #ifdef __ANTENNA__

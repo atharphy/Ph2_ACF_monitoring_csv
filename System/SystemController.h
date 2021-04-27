@@ -152,6 +152,8 @@ class SystemController
     void ModuleStartUpPS();
     // start-up 2S modiule 
     void ModuleStartUp2S();
+    // start-up CIC 
+    void CicStartUp(uint8_t pDriveStrength=1);
     
     
     /*!

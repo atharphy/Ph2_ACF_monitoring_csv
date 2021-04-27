@@ -70,62 +70,7 @@ bool CicInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValu
             << RESET;
     return cSuccess;
 } 
-bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
-{
-    bool cSuccess = false;
-    setBoard(pChip->getBeBoardId());
-    auto cRegItem = pChip->getRegItem( fMap[pRegisterAddress] );
-    cRegItem.fPage    = 0x00;
-    cRegItem.fAddress = pRegisterAddress;
-    cRegItem.fValue   = pRegisterValue & 0xFF;
-    // update register map
-    pChip->setReg( fMap[pRegisterAddress] , cRegItem.fValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg);
-    // write
-    if(flpGBTInterface == nullptr)
-    {
-        std::vector<uint32_t> cVec;
-        // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x" 
-        //     << std::hex << +cRegItem.fAddress << std::dec << RESET;
-        fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
-        uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-    }
-    else
-    {
-        // write register 
-        bool cRetry=false;
-        LOG (DEBUG) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg" << RESET;
-        //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
-        cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cRetry);
-            
-        fRegisterWrites++;
-        // check write 
-        if( !cSuccess )
-        {
-            auto cIter = fWriteErrorMap.find(pRegisterAddress);
-            if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[pRegisterAddress]=1;
-            else fWriteErrorMap[pRegisterAddress]=fWriteErrorMap[pRegisterAddress]+1;
-        }
-        
-        // check readback
-        if ( pVerifLoop && cSuccess )
-        {
-            LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteReg" << RESET;
-            //uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegisterAddress);
-            uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
-        
-            cSuccess = this->runVerification(pChip, cValue, fMap[pRegisterAddress]);
-            if( !cSuccess )
-            {
-                auto cIter = fReadBackErrorMap.find(pRegisterAddress);
-                if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[pRegisterAddress]=1;
-                else fReadBackErrorMap[pRegisterAddress]=fReadBackErrorMap[pRegisterAddress]+1;
-            }
-        }
-         
-    }
-    return cSuccess;
-}
+
 std::pair<int,float>   CicInterface::getWRattempts()
 {
     float cReWR=0; 
@@ -392,17 +337,80 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
         //cReg.second = cCicRegMap[cMapItem.second].fValue;
         //cReg.second  = cRegItem.second.fValue;
         cRegs.push_back(cReg);
-        LOG(DEBUG) << BOLDBLUE << "Register map for CIC contains a register with address " << std::hex << +cReg.first << std::dec 
-            << " register value " << std::hex << +cReg.second << std::dec 
-            << RESET;
+        // LOG(INFO) << BOLDBLUE << "Register map for CIC contains a register with address " << std::hex << +cReg.first << std::dec 
+        //     << " register value " << std::hex << +cReg.second << std::dec 
+        //     << RESET;
     }
     LOG (INFO) << BOLDMAGENTA << "Configuring CIC" << RESET;
     return this->WriteRegs(pCic, cRegs, pVerifLoop);
 }
 
+bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
+{
+    // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg trying to write to register 0x" 
+    //     << std::hex << +pRegisterAddress << std::dec 
+    //     << RESET;
+
+    bool cSuccess = false;
+    setBoard(pChip->getBeBoardId());
+    auto cRegItem = pChip->getRegItem( fMap[pRegisterAddress] );
+    cRegItem.fPage    = 0x00;
+    cRegItem.fAddress = pRegisterAddress;
+    cRegItem.fValue   = pRegisterValue & 0xFF;
+    // update register map
+    pChip->setReg( fMap[pRegisterAddress] , cRegItem.fValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg);
+    // write
+    if(flpGBTInterface == nullptr)
+    {
+        std::vector<uint32_t> cVec;
+        // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x" 
+        //     << std::hex << +cRegItem.fAddress << std::dec << RESET;
+        fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+        uint8_t cWriteAttempts = 0;
+        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+    }
+    else
+    {
+        // write register 
+        bool cRetry=false;
+        // LOG (INFO) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg via lpGBT" << RESET;
+        //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
+        cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cRetry);
+            
+        fRegisterWrites++;
+        // check write 
+        if( !cSuccess )
+        {
+            auto cIter = fWriteErrorMap.find(pRegisterAddress);
+            if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[pRegisterAddress]=1;
+            else fWriteErrorMap[pRegisterAddress]=fWriteErrorMap[pRegisterAddress]+1;
+        }
+        
+        // check readback
+        if ( pVerifLoop && cSuccess )
+        {
+            LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteReg" << RESET;
+            //uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegisterAddress);
+            uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
+        
+            cSuccess = this->runVerification(pChip, cValue, fMap[pRegisterAddress]);
+            if( !cSuccess )
+            {
+                auto cIter = fReadBackErrorMap.find(pRegisterAddress);
+                if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[pRegisterAddress]=1;
+                else fReadBackErrorMap[pRegisterAddress]=fReadBackErrorMap[pRegisterAddress]+1;
+            }
+        }
+         
+    }
+    return cSuccess;
+}
 bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
+    if( pRegNode.empty() ) { LOG (INFO) << BOLDRED << "CicInterface::WriteChipReg trying to write to empty register .." << RESET; return false; }
+    //LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register " << pRegNode << RESET;
+
     std::vector<uint32_t> cVec;
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
     cRegItem.fValue                = pValue;
@@ -416,7 +424,10 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
     setBoard(pChip->getBeBoardId());
     // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register "
     //     << pRegNode << RESET;
-        
+
+    ChipRegMap            cRegMap = pChip->getRegMap();
+    if( cRegMap.find(pRegNode) == cRegMap.end() ){ LOG (INFO) << BOLDRED << "Could not find CIC register " << pRegNode << RESET;}
+    
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
     return this->ReadChipRegItem(pChip, cRegItem).second;
 }
@@ -439,8 +450,8 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
     }
     else
     {
-        LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) via lpGBT Register 0x" 
-            << std::hex << +pRegItem.fAddress << std::dec << RESET;
+        // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) via lpGBT Register 0x" 
+        //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
            
         //auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
         uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
@@ -1306,7 +1317,7 @@ bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
     LOG(INFO) << BOLDBLUE << "Want to configure CIC mode : " << +pMode << RESET;
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pMode : (cRegValue & 0x3E) | pMode;
+    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pMode : ((cRegValue & 0x3E) | pMode);
     if(pMode == 0) // for CBC mode .. always320 MHz and without last line
         cValue = (cValue & 0x35) | (pMode << 1) | (pMode << 3);
 
@@ -1453,7 +1464,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     // LOG(INFO) << BOLDMAGENTA << "Enable chip register, after phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
 
     // set phase aligner to static mode 
-    bool cAutoAlign=true;
+    bool cAutoAlign=false;
     cSuccess = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
     if(!cSuccess)
     {

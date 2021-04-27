@@ -3054,41 +3054,52 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->Start();
         if(!cAsync)
         {
-            bool cWaitForFSM = false;
+            bool cCountTriggers = false;
             // send triggers until the readout request flag is '1'
             uint32_t cReadoutReq   = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             uint32_t cNtriggers    = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             uint32_t cNWords       = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
             uint32_t cTimeoutValue = 10;
-            if(cWaitForFSM) // send triggers unti FSM is idle
+            if( cCountTriggers ) // use trigger_in_counter to check state of trigger FSM 
             {
-                // FSM is finished sending triggers
-                uint32_t cIterations = 0;
+                // wait until all triggers received 
+                uint32_t cNtriggersPrev    = cNtriggers;
+                size_t   cFoundSame=0; 
                 do
-                {
-                    if((1 + cIterations) % 10 == 0)
-                        LOG(INFO) << "\t..Trigger State: " << BOLDGREEN << "Running"
-                                  << " iteration# " << +cIterations << RESET;
-                    std::this_thread::sleep_for(std::chrono::microseconds(cTimeSingleTrigger_us * cNevents));
-                    cIterations++;
-                } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < cTimeoutValue);
-                cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == cTimeoutValue);
-
-                // readout request if fulfilled
-                if(!cFailed)
-                {
-                    // wait until readout req is 1
-                    cIterations = 0;
-                    cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-                    do
-                    {
-                        if((1 + cIterations) % 25 == 0) LOG(INFO) << "\t..Readout request is " << +cReadoutReq << " iteration# " << +cIterations << RESET;
-                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                        cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-                        cIterations++;
-                    } while(cReadoutReq == 0 && cIterations < cTimeoutValue);
-                    cFailed = (cIterations >= cTimeoutValue);
+                {   
+                    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+                    cNtriggers    = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                    cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0 ; 
+                    cNtriggersPrev = cNtriggers;
+                }while( cNtriggers  < cNevents && cFoundSame < cTimeoutValue ); 
+                cFailed = !( cNtriggers == cNevents );
+                if( cFailed ){ 
+                    auto cState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+                    LOG (INFO) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " 
+                        << +cNevents << " and received " << +cNtriggers 
+                        << " FSM state is " << +cState 
+                        << " .. re-trying" 
+                        << RESET; 
                 }
+
+                if( !cFailed )
+                {
+                    // wait until words in the readout have stopped inreasing 
+                    cNWords       = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+                    uint32_t cNWordsPrev    = cNWords;
+                    bool cStopIncrement=false;
+                    do
+                    {   
+                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                        cNWords       = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+                        cStopIncrement = ( cNWords == cNWordsPrev); 
+                        cNWordsPrev = cNWords;
+                    }while( !cStopIncrement ); 
+                    cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+                    cFailed = (cReadoutReq != 1 ); 
+                    if( cFailed ) { LOG (INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... re-trying " << RESET; }
+                }// check readout req
+
             }
             else // send triggers until the readout request flag is '1'
             {
@@ -3436,7 +3447,7 @@ bool D19cFWInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint
     bool cFailed(false);
     if(fOptical)
     {
-        LOG (INFO) << BOLDBLUE << "D19cFWInterface::WriteI2C GBTx" << RESET;
+        //LOG (INFO) << BOLDBLUE << "D19cFWInterface::WriteI2C GBTx" << RESET;
         GbtInterface cGBTx;
         // assume that they are all the same just to test - multibyte write for CBC
         // uint8_t cFirstChip = (pVecSend[0] & (0x1F << 18) ) >> 18;

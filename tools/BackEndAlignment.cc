@@ -74,6 +74,194 @@ void BackEndAlignment::Initialise()
         }
     }
 }
+bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
+{
+    LOG(INFO) << GREEN << "Trying CIC un-packer alignment in the back-end" << RESET;
+    uint32_t cNevents = 10;
+    uint16_t cMaxBxCounter = 3564;
+
+    // check trigger source
+    // and reload
+    uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+
+    // now try and find correct package delay
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
+    bool    cCorrectDelay = false;
+    uint8_t cPackageDelay = 0;
+    uint8_t cFinalDelay   = cPackageDelay;
+    for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+    {
+        if(cCorrectDelay) continue;
+
+        LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
+
+        // check stubs
+        // 2 events should be enough
+        LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+        ReadNEvents(pBoard, cNevents);
+        const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
+        LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+
+        // now ... check for incrementing BxIds
+        int              cNRollOvers = 0;
+        std::vector<int> cBxIds(0);
+        std::vector<int> cBxDifferences(0); // I think by injecting this way this number should always be the same ..
+        for(auto& cEvent: cEventsWithStubs)
+        {
+            for(auto cOpticalGroup: *pBoard)
+            {
+                // only checked for first link
+                if(cOpticalGroup->getIndex() > 0) continue;
+
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    if(cHybrid->getIndex() > 0) continue;
+
+                    auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                    if(cBxIds.size() > 0)
+                    {
+                        int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
+                        cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
+                        cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
+                        cBxDifferences.push_back(cBxDifference);
+                        LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
+                    }
+                    cBxIds.push_back(cBx);
+                    LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+
+                } // hybrids or CICs
+            }     // modules or optical links
+        }         // events
+        // figure out the differences between the bxIds
+        auto cFirstDifference = cBxDifferences[0];
+        std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
+        cBxDifferences.erase(cBxDifferences.begin()); // erase the first element
+        for(auto cDifference: cBxDifferences) LOG(DEBUG) << BOLDBLUE << "\t..." << +cDifference << RESET;
+        // all elements are equal
+        if(cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()))
+        {
+            LOG(INFO) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
+            LOG(INFO) << BOLDGREEN << "Going to fix the manual package delay to " << +cPackageDelay << RESET;
+            cFinalDelay = cPackageDelay;
+            cCorrectDelay = true;
+        }
+        else
+            LOG(INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
+
+    } // pkg delay
+    LOG (INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    return cCorrectDelay;
+}
+bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
+{
+
+    LOG(INFO) << GREEN << "Trying stub latency finding in the back-end" << RESET;
+    uint32_t cNevents = 10;
+
+    // check trigger source
+    // and reload
+    uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 10});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 100});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 10});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+
+
+    // expected spacing between TP and L1A 
+    auto cDelay = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    this->enableTestPulse(true);
+    setFWTestPulse();
+    for(int cOffset= -10 ; cOffset <= 10 ; cOffset++) 
+    {
+        uint16_t cLatency = cDelay + cOffset;
+        for(auto cOpticalReadout: *pBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                // for 2S - do with ananlogue injection into CBC  
+                for(auto cChip: *cHybrid) // for each chip (makes sense)
+                {
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue; 
+                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 560);
+                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                    fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0xFF - 30);
+                    fReadoutChipInterface->WriteChipReg(cChip, "TestPulseGroup", 0);
+                }//chips 
+
+                // for PS - do with digital injection in MPA p-p mode 
+                for(auto cChip: *cHybrid) // for each chip (makes sense)
+                {
+                    if( cChip->getFrontEndType() != FrontEndType::MPA ) continue; 
+
+                    uint8_t cStubWindow = 1; // stub window in half pixels (1)
+                    uint8_t cMode       = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+                    std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
+                    std::vector<uint8_t>   cRows{10};       
+                    std::vector<Injection> cInjections(0);
+                    for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
+                    {
+                        Injection cInjection;
+                        cInjection.fColumn = 2*(int)cChip->getId()+1;
+                        cInjection.fRow    = cRows[cIndx];
+                        cInjections.push_back(cInjection);
+                        uint32_t           cPixelId = (uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow;
+                        cPixelIds.push_back( cPixelId );
+                    } // create injection patterns
+
+
+                    // activate stub mode
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
+                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
+                    
+                }//chips 
+            }//Hybrid
+        }//OG
+        
+        fBeBoardInterface->ChipReSync(pBoard);
+        LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+        ReadNEvents(pBoard, cNevents);
+        const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
+        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+        for(auto cEvent: cEventsWithStubs)
+        {
+            for(auto cOpticalGroup: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    // only for the first hybrid
+                    if(cHybrid->getIndex() > 0) continue;
+
+                    auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                        auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
+
+                        LOG (INFO) << BOLDMAGENTA << "Found " << +cHits.size() << " hits in CBC#" << +cChip->getId() 
+                            << " for a latency of " << +cLatency << RESET;
+                    } // ROCs
+                } // hybrids or CICs
+            } // optical group loop
+        }// event loop
+    }
+    return true;
+
+}
 bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 {
     bool cAligned = true;
@@ -787,7 +975,9 @@ bool BackEndAlignment::Align()
         if(cWithCIC)
         {
             cAligned = this->CICAlignment(theBoard);
-	        if(cWithMPA) { cAligned = cAligned && this->Bx0Alignment(theBoard); }
+            cAligned = cAligned && this->FindPackageDelay(theBoard);
+            cAligned = cAligned && this->FindStubLatency(theBoard);
+	        //if(cWithMPA) { cAligned = cAligned && this->Bx0Alignment(theBoard); }
         }
         else
         {
