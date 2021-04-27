@@ -127,7 +127,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedestalEqualization::FindVplus()
 {
-    float cOccupancyAtPedestal=0.10;
+    float cOccupancyAtPedestal=0.56;
     if(fTestPulse)
     {
         this->enableTestPulse(true);
@@ -242,9 +242,6 @@ void PedestalEqualization::FindOffsets()
     if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
     if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
 
-    // set offsets again 
-    if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
     
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;

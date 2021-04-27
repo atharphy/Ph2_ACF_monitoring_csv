@@ -230,7 +230,9 @@ class D19cCic2Event : public Event
     }
 
   private:
-    std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
+    // figure out how to switch between various hybrid types here 
+    std::vector<uint8_t> fFeMapping2S{0,1,2,3,7,6,5,4};  // Index CIC FE Id , Value Hybrid FE Id
+    //std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
 

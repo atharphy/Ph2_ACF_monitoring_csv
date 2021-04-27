@@ -165,6 +165,26 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
 
     LOG(INFO) << GREEN << "Trying stub latency finding in the back-end" << RESET;
+
+    // read back original masks 
+    DetectorDataContainer cChipMasks; 
+    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
+    auto& cMasksThisBrd = cChipMasks.at(pBoard->getIndex());
+    for(auto cOpticalGroup: *pBoard)
+    {
+        auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+            for(auto cChip: *cHybrid)
+            {
+                auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
+                auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+            }
+        }// hybrids
+    }//OG
+    
     uint32_t cNevents = 10;
 
     // check trigger source
@@ -372,6 +392,23 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // adding this here in preparation for stub decoding
     // I think this should belong to the board.. need to fix 
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime);
+
+    // re-configure original mask 
+    this->enableTestPulse(false);
+    for(auto cOpticalGroup: *pBoard)
+    {
+        auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+            for(auto cChip: *cHybrid)
+            {
+                auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
+                auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
+            }
+        }// hybrids
+    }//OG
     return cFoundCorrectStubLatency;
 }
 bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
