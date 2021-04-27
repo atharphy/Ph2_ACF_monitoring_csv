@@ -102,23 +102,6 @@ bool CbcInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAm
 
 bool CbcInterface::setInjectionSchema(ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop)
 {
-    // std::bitset<NCHANNELS> baseInjectionChannel (std::string(CBC_CHANNEL_GROUP_BITSET));
-    // uint8_t channelGroup = 0;
-    // for(; channelGroup<=8; ++channelGroup)
-    // {
-    //     if(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset() == baseInjectionChannel)
-    //     {
-    //         break;
-    //     }
-    //     baseInjectionChannel = baseInjectionChannel<<2;
-    // }
-    // if(channelGroup == 8)
-    //     throw Exception( "bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group,
-    //     bool pVerifLoop): CBC is not able to inject the channel pattern" );
-
-    // uint8_t groupLookupTable[8] = {0x0, 0x4, 0x2, 0x6, 0x1, 0x5, 0x3, 0x7};
-    // return this->WriteChipReg ( pCbc, "TestPulseGroup", groupLookupTable[channelGroup], pVerifLoop );
-
     std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
@@ -203,24 +186,30 @@ std::vector<uint8_t> CbcInterface::stubInjectionPattern(ReadoutChip* pChip, uint
     bool cLayerSwap = (this->ReadChipReg(pChip, "LayerSwap") == 1);
     return stubInjectionPattern(pStubAddress, pStubBend, cLayerSwap);
 }
-bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends, bool pUseNoise)
+bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
 {
     setBoard(pCbc->getBeBoardId());
-    if(pUseNoise)
-    {
-        uint16_t cVcth = 1023;
-        // LOG (DEBUG) << BOLDBLUE << "Injecting stubs in CBC" << +pCbc->getId() << RESET;
-        // LOG (DEBUG) << BOLDBLUE << "Starting by lowering threshold on this CBC and masking all channels." << RESET;
-        this->WriteChipReg(pCbc, "VCth", cVcth);
-    }
+   
     ChannelGroup<NCHANNELS, 1> cChannelMask;
     cChannelMask.disableAllChannels();
+    std::vector<uint8_t> cActiveChannels(0);
+    std::vector<uint8_t> cDisabledChannels(0);
     for(size_t cIndex = 0; cIndex < pStubAddresses.size(); cIndex += 1)
     {
         std::vector<uint8_t> cPattern = this->stubInjectionPattern(pCbc, pStubAddresses[cIndex], pStubBends[cIndex]);
-        for(auto cChannel: cPattern) cChannelMask.enableChannel(cChannel);
+        //for(auto cChannel: cPattern) cChannelMask.enableChannel(cChannel);
+        for(size_t cChnl=0; cChnl < pCbc->size(); cChnl++) 
+        {
+            if( std::find(cPattern.begin(), cPattern.end(), cChnl) != cPattern.end() ) 
+            {
+                cActiveChannels.push_back( cChnl );
+                cChannelMask.enableChannel(cChnl);
+            }
+            else
+                cDisabledChannels.push_back( cChnl );
+        }
     }
-    if(!pUseNoise)
+    if(!pUseNoise)// with TP 
     {
         uint16_t               cFirstHit = 0;
         std::bitset<NCHANNELS> cBitset   = std::bitset<NCHANNELS>(cChannelMask.getBitset());
@@ -230,15 +219,53 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
             if(cBitset[cFirstHit] != 0) break;
         }
         uint8_t cGroupId = std::floor((cFirstHit % 16) / 2);
-        LOG(INFO) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
+        LOG(DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
         if(cGroupId > 7)
             throw Exception("bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, "
                             "bool pVerifLoop): CBC is not able to inject the channel pattern");
         // write register which selects group
         this->WriteChipReg(pCbc, "TestPulseGroup", cGroupId);
+        // write registers which enable injection 
+        this->enableInjection( pCbc, true ); //enable injection 
+        // write register which sets TP amplitude
+        this->setInjectionAmplitude( pCbc, 0xFF - 50 ); // fix injection amplitude 
+        return this->maskChannelsGroup(pCbc, &cChannelMask);
     }
-    return this->maskChannelsGroup(pCbc, &cChannelMask);
+    else // with noise 
+    {
+        // assuming global chip threshold 
+        // is already at the pedestal 
+        if( pUseOffsets )
+        {
+            uint8_t cAllOff = pAllOff;
+            uint8_t cAllOn  = 0x00; 
+            // use offsets on individual disc. to shift output to all 1 or all 0
+            // always off for disabled channels 
+            std::vector<std::pair<std::string, uint16_t>> cVecReq;
+            for( auto cDisabledChannel : cDisabledChannels  )
+            {
+                char cDacName[20];
+                sprintf(cDacName, "Channel%03d", cDisabledChannel + 1);
+                cVecReq.push_back( {cDacName, cAllOff} );
+            }
+            // always on for active channels 
+            for( auto cActiveChannel : cActiveChannels  )
+            {
+                char cDacName[20];
+                sprintf(cDacName, "Channel%03d", cActiveChannel + 1);
+                cVecReq.push_back( {cDacName, cAllOn} );
+            }
+            return this->WriteChipMultReg(pCbc, cVecReq, true);
+        }
+        else 
+        {
+            uint16_t cVcth = 1023;
+            this->WriteChipReg(pCbc, "VCth", cVcth);
+            return this->maskChannelsGroup(pCbc, &cChannelMask);
+        }
+    }
 }
+
 std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc)
 {
     setBoard(pCbc->getBeBoardId());

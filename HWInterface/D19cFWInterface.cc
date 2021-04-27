@@ -3054,7 +3054,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->Start();
         if(!cAsync)
         {
-            bool cCountTriggers = false;
+            bool cCountTriggers = true;
             // send triggers until the readout request flag is '1'
             uint32_t cReadoutReq   = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             uint32_t cNtriggers    = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");

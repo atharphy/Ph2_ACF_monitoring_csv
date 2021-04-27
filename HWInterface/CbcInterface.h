@@ -131,7 +131,7 @@ class CbcInterface : public ReadoutChipInterface
     bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerifLoop = true);
     bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerifLoop = true);
     bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends,
-                                     bool pUseNoise = true); // address + bend in units of half strips
+                                     bool pUseNoise = true, bool pUseOffsets=false, uint8_t pAllOff=0xFF); // address + bend in units of half strips
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
 
