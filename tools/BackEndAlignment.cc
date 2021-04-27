@@ -333,7 +333,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     LOG (INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
     bool cFoundCorrectStubLatency=false; 
     int  cCorrectOffset=0;
-    for(int cOffset= 0 ; cOffset <= (int)cHitLatency ; cOffset++) 
+    for(int cOffset= 50 ; cOffset <= 80 ; cOffset++) 
     {
         if( cFoundCorrectStubLatency ) continue;
         int cStubLatency = cHitLatency - cOffset;
@@ -367,12 +367,6 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 << " expected."
                 << RESET;
         }
-        // else
-        //     LOG (INFO) << BOLDRED << "For a stub latency of " << +cStubLatency 
-        //         << " found " << +cNStubsFound
-        //         << " stubs out of " << +cNinjectedStubs*cEvents.size() 
-        //         << " expected."
-        //         << RESET;
     }//offset scan 
     if( !cFoundCorrectStubLatency ) return cFoundCorrectStubLatency; 
     // adding this here in preparation for stub decoding

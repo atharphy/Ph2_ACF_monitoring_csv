@@ -4229,16 +4229,25 @@ void DataChecker::ReadNeventsTest()
             for(auto cHybrid: *cOpticalGroup)
             {
                 // matching
-                uint16_t cTh1 = (cHybrid->getId() % 2 == 0) ? 900 : 1;
-                uint16_t cTh2 = (cHybrid->getId() % 2 == 0) ? 1 : 900;
+                // uint16_t cTh1 = (cHybrid->getId() % 2 == 0) ? 900 : 1;
+                // uint16_t cTh2 = (cHybrid->getId() % 2 == 0) ? 1 : 900;
                 for(auto cChip: *cHybrid)
                 {
                     if( cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
-                        uint16_t cTh = (cChip->getId() % 2 == 0) ? cTh1 : cTh2;
-                        LOG(INFO) << BOLDBLUE << "Threshold on RoC#" << +cChip->getId() << " set to " << +cTh << RESET;
-                        fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", cTh);
-                        //static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels(cChip, false);
+                        //uint16_t cTh = (cChip->getId() % 2 == 0) ? cTh1 : cTh2;
+                        //fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", cTh);
+                        //fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 560);
+                        bool cWithNoise=true;
+                        std::vector<uint8_t> cSeeds{10}; cSeeds[0] = 2*( cChip->getId() + 1 ) + 5; 
+                        std::vector<int>     cBends{0};
+                        for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                        {
+                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                            LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
+                            for( auto cHit : cHitList ) LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                        }
+                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise);
                     }
                     else if( cChip->getFrontEndType() == FrontEndType::MPA )
                     {
@@ -4250,6 +4259,7 @@ void DataChecker::ReadNeventsTest()
             }
         }
 
+        cNevents=1;
         LOG (INFO) << BOLDBLUE << "Checking ReadNEvents by reading "
             << +cNevents
             << " from BeBoard#"
