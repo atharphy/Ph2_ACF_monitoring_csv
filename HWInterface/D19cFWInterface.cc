@@ -941,6 +941,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                     std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, 1};
                     fI2CSlaveMap[cCic->getId()]               = cI2CSlaveDescription;
                     fSlaveMap.push_back(cOldI2CSlaveDescription);
+                    LOG(INFO) << BOLDBLUE << "Adding chip with address " << +cCic->getId() << " to I2C slave map.." << RESET;
                 }
                 else
                 {
@@ -3359,55 +3360,6 @@ void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, uint8_t pFeId, uint
         LOG(INFO) << BOLDRED << "Could not find address in I2C map.. " << RESET;
     }
 }
-// void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
-// {
-//     auto cMapIterator = fI2CSlaveMap.find(pCbcId);
-//     bool cFound       = (cMapIterator != fI2CSlaveMap.end());
-//     if(cFound)
-//     {
-//         // remember .. encoded command the chip id is .. the index and not the id!!
-//         uint8_t pIndex = std::distance(fI2CSlaveMap.begin(), cMapIterator);
-//         // LOG(INFO) << BOLDGREEN << "D19cFWInterface::EncodeReg Encoding register from chip " << +pCbcId << " which is index " << +pIndex << " in I2C map " 
-//         //         << ". Register address is 0x" << std::hex << +pRegItem.fAddress << std::dec 
-//         //         << RESET;
-//         pCbcId = pIndex;
-
-//         // use fBroadcastCBCId for broadcast commands
-//         bool pUseMask = false;
-//         if(fOptical)
-//         {
-//             uint8_t pLinkId = 0; // placeholder .. eventually should have the link here
-//             // new command consists of one word if its read command, and of two words if its write. first word is always
-//             // the same
-//             uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
-//             pVecReq.push_back(cWord);
-//             // only for write commands
-//             if(pWrite)
-//             {
-//                 cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pRegItem.fValue << 0);
-//                 cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pRegItem.fValue << 0);
-//                 pVecReq.push_back(cWord);
-//             }
-//         }
-//         else if(fI2CVersion >= 1)
-//         {
-//             // new command consists of one word if its read command, and of two words if its write. first word is always
-//             // the same
-//             pVecReq.push_back((0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0));
-//             // only for write commands
-//             if(pWrite) pVecReq.push_back((0 << 28) | (pWrite << 27) | (pRegItem.fValue << 0));
-//         }
-//         else
-//         {
-//             pVecReq.push_back((0 << 28) | (pFeId << 24) | (pCbcId << 20) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) |
-//                               pRegItem.fValue);
-//         }
-//     }
-//     else
-//     {
-//         LOG(INFO) << BOLDRED << "Could not find address in I2C map.. " << RESET;
-//     }
-// }
 
 void D19cFWInterface::BCEncodeReg(const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
@@ -3484,6 +3436,7 @@ bool D19cFWInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint
     bool cFailed(false);
     if(fOptical)
     {
+        LOG (INFO) << BOLDBLUE << "D19cFWInterface::WriteI2C GBTx" << RESET;
         GbtInterface cGBTx;
         // assume that they are all the same just to test - multibyte write for CBC
         // uint8_t cFirstChip = (pVecSend[0] & (0x1F << 18) ) >> 18;
@@ -3554,6 +3507,7 @@ bool D19cFWInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint
             // if read or readback for write == 1, then count
             if(fI2CVersion >= 1)
             {
+                //uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
                 if((((word & 0x08000000) >> 27) == 0) && ((((word & 0x00010000) >> 16) == 1) or (((word & 0x00020000) >> 17) == 1)))
                 {
                     if(pBroadcast)
