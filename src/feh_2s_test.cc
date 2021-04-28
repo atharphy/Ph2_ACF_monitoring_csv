@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("calibrateADC","Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("monitorAMUX","Calibrate ADC on lpGBT....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("testTune","Test tuning ....", ArgvParser::OptionRequiresValue);
-
+    cmd.defineOption("burstCheck","Check bursts of triggers....", ArgvParser::NoOptionAttribute);
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -341,23 +341,6 @@ int main(int argc, char* argv[])
        }// mux sel 
     }// monitor AMUX   
 
-    if( cmd.foundOption("testTune") )
-    {
-        // first set threshold on all CBCs to 0 
-        for(const auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                { 
-                    for( auto cChip : *cHybrid )
-                    {
-                        cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",100);
-                    }
-                }
-            }
-        }
-    }
     // if CIC is enabled then align CIC first
     if(cWithCIC)
     {
@@ -456,6 +439,16 @@ int main(int argc, char* argv[])
         cExtra.resetPointers();
     }
     // inject hits and stubs using mask and compare input against output
+    if( cmd.foundOption("burstCheck"))
+    {
+        DataChecker cDataChecker;
+        cDataChecker.Inherit(&cTool);
+        cDataChecker.Initialise();
+        cDataChecker.TriggerBurstCheck();
+
+        cDataChecker.writeObjects();
+        cDataChecker.resetPointers();
+    }
     if(cCheckData)
     {
         std::string          cArgsStr = cmd.optionValue("checkData");

@@ -4210,7 +4210,128 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
         // this->print({cChipId});
     }
 }
+void DataChecker::TriggerBurstCheck()
+{
+    auto cSetting = fSettingsMap.find ( "LengthOfBurst" );
+    size_t cLengthOfBurst = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    size_t cNevents = 1; 
+    bool cWithNoise=false;
+    uint16_t cDelayAfterTP=200; 
+    // configure TP injection 
+    if( !cWithNoise )
+    {
+        // check trigger source
+        // and reload
+        for(auto cBoard: *fDetectorContainer)
+        {
+            uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+            cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+            LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+            std::vector<std::pair<std::string, uint32_t>> cRegVec;
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 100});
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cDelayAfterTP});
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 400});
+            cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+            fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        }
+    }
 
+    // injection 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // only 2S for now 
+                // configure injection 
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        uint8_t cSeed = 10 + 2*(cChip->getId() + 1 );
+                        std::vector<uint8_t> cSeeds{10};cSeeds[0]=cSeed;
+                        std::vector<int>     cBends{0};
+                        for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                        {
+                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                            LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
+                            for( auto cHit : cHitList ) LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                        }
+                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise);
+                    }
+                }//Chip
+            }//Hybrid
+        }//OG
+    }
+
+    // 
+    LOG (INFO) << BOLDBLUE << "Data test with multiple triggers " << +cNevents << RESET;
+    int cOffset = 0; 
+    int cLatency = cDelayAfterTP + cOffset; 
+    LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // only 2S for now 
+                // configure injection 
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        if( !cWithNoise )
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
+                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 580);
+                        }
+                    }
+                }//Chip
+            }//Hybrid
+        }//OG
+        fBeBoardInterface->ChipReSync(cBoard);
+    }
+
+    // now just send triggers 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto cTriggerMultiplicity = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cLengthOfBurst-1);
+        //
+        ReadNEvents(cBoard, cNevents);
+        const std::vector<Event*>& cEvents = this->GetEvents();
+        LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
+        for(auto& cEvent: cEvents)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    // only 2S for now 
+                    // configure injection 
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+
+                        auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
+                        LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
+                            << " CBC#" << +cChip->getId()
+                            << " : found " << +cHits.size() << " hits." << RESET;
+                        for( auto cHit : cHits ) LOG (INFO) << BOLDMAGENTA << "\t\t... hit in channel " << +cHit << RESET;
+                    }//chip 
+                }//hybrid
+            }//OG
+        }
+        
+        //
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
+        // 
+    }
+    
+}
 void DataChecker::ReadNeventsTest()
 {
     //this->DigitalInjectionTest(true, false);

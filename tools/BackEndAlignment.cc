@@ -443,6 +443,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     
     return cFoundCorrectStubLatency;
 }
+// legacy.. keep for now 
 bool BackEndAlignment::Bx0Alignment(BeBoard* pBoard)
 {
     bool cAligned = true;

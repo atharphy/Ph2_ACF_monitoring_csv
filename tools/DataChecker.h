@@ -55,6 +55,7 @@ class DataChecker : public Tool
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
 
+    void TriggerBurstCheck();
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
     void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
     void Eye_CIC();
@@ -65,6 +66,7 @@ class DataChecker : public Tool
     void PSTriggerTests();
     void PSNominal();
 
+    void TriggerBurstCheck(Ph2_HwDescription::BeBoard* pBoard);
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void AsyncTest();

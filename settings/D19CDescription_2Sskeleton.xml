@@ -233,6 +233,9 @@
     <Setting name="TestPulsePotentiometer">0x50</Setting>
     <Setting name="SyncDebug">0</Setting>
 
+    <!-- Burst Test -->
+    <Setting name="LengthOfBurst">10</Setting>
+
 </Settings>
 </HwDescription>
 
