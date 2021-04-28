@@ -8,6 +8,8 @@
 */
 
 #include "RD53lpGBTInterface.h"
+#include "../HWInterface/BeBoardInterface.h"
+#include "../HWInterface/RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -68,8 +70,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     RD53lpGBTInterface::ConfigureClocks(pChip, {28}, 6, 7, 0, 0, 0, 0);
 
     RD53lpGBTInterface::ConfigureRxGroups(pChip, {6}, {0}, 3, 0);
-    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 0, 1, 1, 0, 0);
-    RD53lpGBTInterface::PhaseAlignRx(pChip, {6}, {0});
+    RD53lpGBTInterface::ConfigureRxChannels(pChip, {6}, {0}, 1, 1, 1, 0, 12);
+    RD53lpGBTInterface::InternalPhaseAlignRx(pChip, {6}, {0});
 
     RD53lpGBTInterface::ConfigureTxGroups(pChip, {3}, {0}, 2);
     RD53lpGBTInterface::ConfigureTxChannels(pChip, {3}, {0}, 3, 3, 0, 0, 1);
@@ -104,7 +106,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
     bool status;
     do
     {
-        status = fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
+        status = fBoardFW->WriteOptoLinkRegister(pChip->getId(), pAddress, pValue, pVerifLoop);
         nAttempts++;
     } while((pVerifLoop == true) && (status == false) && (nAttempts < RD53lpGBTconstants::MAXATTEMPTS));
 
@@ -116,7 +118,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)
 {
     this->setBoard(pChip->getBeBoardId());
-    return fBoardFW->ReadOptoLinkRegister(pAddress);
+    return fBoardFW->ReadOptoLinkRegister(pChip->getId(), pAddress);
 }
 
 bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
@@ -135,7 +137,7 @@ void RD53lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_
     {
         // Enable Rx Groups Channels and set Data Rate and Phase Tracking mode
         uint8_t cValueEnableRx = 0;
-        for(const auto cChannel: pChannels) cValueEnableRx += (1 << cChannel);
+        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
         std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
         RD53lpGBTInterface::WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
@@ -177,7 +179,7 @@ void RD53lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_
             cEnableTxReg = "EPTX32Enable";
 
         uint8_t cValueEnableTx = RD53lpGBTInterface::ReadChipReg(pChip, cEnableTxReg);
-        for(const auto cChannel: pChannels) cValueEnableTx += (1 << (cChannel + 4 * (cGroup % 2)));
+        for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
         RD53lpGBTInterface::WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
     }
 }
@@ -274,11 +276,11 @@ void RD53lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "NORMAL " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "PRBS7 " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
 
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
@@ -357,7 +359,7 @@ void RD53lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& p
     }
 }
 
-void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     const uint8_t cChipRate = RD53lpGBTInterface::GetChipRate(pChip);
 
@@ -367,7 +369,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     RD53lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
 
     // Configure Rx Phase Shifter
-    uint16_t cDelay = 0x00;
+    uint16_t cDelay = 0x0;
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
     RD53lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
 
@@ -375,18 +377,18 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     for(const auto& cGroup: pGroups)
     {
         // Wait until channels lock
-        LOG(INFO) << GREEN << "Phase Aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
+        LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(RD53lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
-        LOG(INFO) << GREEN << "Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " LOCKED" << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
 
         // Set new phase to channels 0,2
         for(const auto& cChannel: pChannels)
         {
             uint8_t cCurrPhase = RD53lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << GREEN << "For channel " << BOLDYELLOW << +cChannel << RESET << GREEN << " phase is " << BOLDYELLOW << +cCurrPhase << RESET;
+            LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
             RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
@@ -400,6 +402,74 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     RD53lpGBTInterface::ConfigureRxSource(pChip, pGroups, RD53lpGBTconstants::PATTERN_NORMAL);
 }
 
+void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
+                                              const BeBoard*        pBoard,
+                                              const OpticalGroup*   pOpticalGroup,
+                                              BeBoardFWInterface*   pBeBoardFWInterface,
+                                              ReadoutChipInterface* pReadoutChipInterface)
+{
+    const double frames_or_time = 1; // @CONST@
+    const bool   given_time     = true;
+    uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+
+    LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
+
+    for(const auto cHybrid: *pOpticalGroup)
+        for(const auto cChip: *cHybrid)
+        // @TMP@
+        // for(const auto& cGroup: cChip.pGroups)
+        //     for(const auto& cChannel: cChip.pChannels)
+        {
+            uint8_t cGroup   = 6;
+            uint8_t cChannel = 0;
+
+            uint8_t bestPhase      = 0;
+            uint8_t bestPhaseStart = 0;
+            uint8_t bestPhaseEnd   = 0;
+            uint8_t phaseGap       = 0;
+            double  bestBERtest    = -1;
+
+            for(uint8_t phase = 0; phase < 16; phase++)
+            {
+                LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
+                RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
+
+                // @TMP@ : set TAP0
+                static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
+
+                double result = RD53lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
+
+                if(bestBERtest == -1)
+                {
+                    bestPhaseStart = phase;
+                    bestBERtest    = result;
+                }
+                else if(result < bestBERtest)
+                {
+                    bestPhaseStart = phase;
+                    bestBERtest    = result;
+                }
+                else if(result == bestBERtest)
+                    bestPhaseEnd = phase;
+                else if((result > bestBERtest) && (bestPhaseEnd >= bestPhaseStart))
+                    bestBERtest = result;
+
+                if((bestPhaseEnd >= bestPhaseStart) && (bestPhaseEnd - bestPhaseStart > phaseGap))
+                {
+                    bestPhase = (bestPhaseStart + bestPhaseEnd) / 2;
+                    phaseGap  = bestPhaseEnd - bestPhaseStart;
+                }
+
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
+            }
+
+            LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase << RESET;
+
+            RD53lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
+        }
+}
+
 // ################################
 // # LpGBT Block Status functions #
 // ################################
@@ -408,67 +478,67 @@ void RD53lpGBTInterface::PrintChipMode(Chip* pChip)
     switch((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4)
     {
     case 0:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 1:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 2:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO; Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info; Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 3:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     case 4:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 5:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 6:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 7:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "5Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     case 8:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 9:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 10:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 11:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     case 12:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Off" << RESET;
         break;
     case 13:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex TX" << RESET;
         break;
     case 14:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Simplex RX" << RESET;
         break;
     case 15:
-        LOG(INFO) << GREEN << "LpGBT CHIP INFO: Tx Data Rate = " << BOLDYELLOW << "10Gbps" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
+        LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "10 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC12" << RESET << GREEN
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     }
@@ -499,8 +569,8 @@ uint8_t RD53lpGBTInterface::GetRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pCha
 bool RD53lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels)
 {
     std::string cRXLockedReg = "EPRX" + std::to_string(pGroup) + "Locked";
-    uint8_t     cChannelMask = 0x00;
-    for(auto cChannel: pChannels) cChannelMask += (1 << cChannel);
+    uint8_t     cChannelMask = 0;
+    for(auto cChannel: pChannels) cChannelMask |= (1 << cChannel);
     return (((RD53lpGBTInterface::ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
 }
 
@@ -513,6 +583,7 @@ uint8_t RD53lpGBTInterface::GetRxDllStatus(Chip* pChip, uint8_t pGroup)
 // ########################
 // # LpGBT GPIO functions #
 // ########################
+
 void RD53lpGBTInterface::ConfigureGPIO(Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir, uint8_t pOut, uint8_t pDriveStr, uint8_t pPullEn, uint8_t pUpDown)
 {
     uint8_t cDirH      = RD53lpGBTInterface::ReadChipReg(pChip, "PIODirH");
@@ -561,6 +632,7 @@ void RD53lpGBTInterface::ConfigureGPIO(Chip* pChip, const std::vector<uint8_t>& 
 // ###########################
 // # LpGBT ADC-DAC functions #
 // ###########################
+
 void RD53lpGBTInterface::ConfigureADC(Chip* pChip, uint8_t pGainSelect, uint8_t pADCEnable) { RD53lpGBTInterface::WriteChipReg(pChip, "ADCConfig", pADCEnable << 2 | pGainSelect); }
 
 uint16_t RD53lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInput)
@@ -643,6 +715,7 @@ uint16_t RD53lpGBTInterface::ReadADCDiff(Chip* pChip, const std::string& pADCInp
 // #######################
 // # Bit Error Rate test #
 // #######################
+
 uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
 {
     uint64_t cResult0 = RD53lpGBTInterface::ReadChipReg(pChip, "BERTResult0");
@@ -653,8 +726,9 @@ uint64_t RD53lpGBTInterface::GetBERTErrors(Chip* pChip)
     return ((cResult4 << 32) | (cResult3 << 24) | (cResult2 << 16) | (cResult1 << 8) | cResult0);
 }
 
-bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
+double RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
 // ####################
+// # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
 // # 640 Mbit/s   = 1 #
 // # 320 Mbit/s   = 2 #
@@ -662,7 +736,7 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
 {
     const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps
+    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double         frames2run;
     double         time2run;
 
@@ -725,7 +799,7 @@ bool RD53lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChanne
     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return (nErrors == 0);
+    return nErrors;
 }
 
 void RD53lpGBTInterface::StartPRBSpattern(Ph2_HwDescription::Chip* pChip)

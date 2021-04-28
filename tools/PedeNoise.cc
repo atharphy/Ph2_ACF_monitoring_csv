@@ -37,30 +37,22 @@ void PedeNoise::clearDataMembers()
 
 void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
-    LOG(INFO) << BOLDRED << "I1" << RESET;
-
     fDisableStubLogic = pDisableStubLogic;
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    LOG(INFO) << BOLDRED << "I2" << RESET;
     cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
-    LOG(INFO) << BOLDRED << "I3" << RESET;
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
     if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
-    LOG(INFO) << BOLDRED << "I4" << RESET;
 
     initializeRecycleBin();
-    LOG(INFO) << BOLDRED << "I5" << RESET;
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    LOG(INFO) << BOLDRED << "I6" << RESET;
     // For async only -- to fix
-    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
+    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(120, 16);
     fAllChan = pAllChan;
-    LOG(INFO) << BOLDRED << "I7" << RESET;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
     fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
@@ -419,7 +411,8 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
 
             cValue += cSign;
-            cLimitFound = (cValue == 0 || cValue == cMaxValue) || (cLimitCounter >= cMinBreakCount);
+            cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
+            if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
             if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
 
         } while(!cLimitFound);

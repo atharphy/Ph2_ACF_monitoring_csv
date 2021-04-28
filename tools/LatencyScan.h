@@ -12,28 +12,21 @@
 #ifndef LATENCYSCAN_H__
 #define LATENCYSCAN_H__
 
+#include "../Utils/CommonVisitors.h"
+#include "../Utils/ContainerRecycleBin.h"
+#include "../Utils/Visitor.h"
 #include "Tool.h"
 #ifdef __USE_ROOT__
-
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
-
-#ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramLatencyScan.h"
-#endif
-
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TGaxis.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TString.h"
+#endif
 
 using namespace Ph2_System;
-
-typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>>   CbcHistogramMap;
-typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
 
 /*!
  * \class LatencyScan
@@ -45,12 +38,16 @@ class LatencyScan : public Tool
   public:
     LatencyScan();
     ~LatencyScan();
-    void                                Initialize(uint32_t pStartLatency, uint32_t pLatencyRange);
-    std::map<HybridContainer*, uint8_t> ScanLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
+    void Initialize();
+    // this is used by commission, and supervisor
+    void ScanLatency();
+    // this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
     std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
+    // this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
+    std::map<HybridContainer*, uint8_t> ScanLatency_root(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
-    void                                ScanLatency2D(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
-    void                                StubLatencyScan(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
+    void                                ScanLatency2D();
+    void                                StubLatencyScan();
     void                                writeObjects();
 
     void Running() override;
@@ -60,19 +57,21 @@ class LatencyScan : public Tool
     void Resume() override;
 
   private:
-    int countHitsLat(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
-    // int countHits ( Hybrid* pFe,  const Event* pEvent, std::string pHistName, uint8_t pParameter );
     int  countStubs(Ph2_HwDescription::Hybrid* pFe, const Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
+    int  countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
     void updateHists(std::string pHistName, bool pFinal);
     void parseSettings();
 
     //  Members
     uint32_t fNevents;
     // uint32_t fInitialThreshold;
-    uint32_t       fHoleMode;
-    uint32_t       fNCbc;
-    uint8_t        fTestPulseAmplitude;
-    uint32_t       trigSource;
+    uint32_t fHoleMode;
+    uint32_t fStartLatency;
+    uint32_t fLatencyRange;
+    uint32_t fNCbc;
+    uint8_t  fTestPulseAmplitude;
+    uint32_t trigSource;
+
     const uint32_t fTDCBins = 8;
 
     int convertLatencyPhase(uint32_t pStartLatency, uint32_t cLatency, uint32_t cPhase)
@@ -104,5 +103,4 @@ class LatencyScan : public Tool
 #endif
 };
 
-#endif
 #endif

@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 
     //std::pair<uint32_t, uint32_t> rows = {1, 17};
     //std::pair<uint32_t, uint32_t> cols = {1, 121};
-    std::pair<uint32_t, uint32_t> th   = {0, 200};
+    std::pair<uint32_t, uint32_t> th   = {70, 200};
 
 
     std::vector<TH2F*> scurves2D;

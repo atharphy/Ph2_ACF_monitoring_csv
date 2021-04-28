@@ -25,6 +25,7 @@ Tool::Tool()
     fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
+    , fSummaryTree(nullptr)
     ,
 #endif
     fType()
@@ -115,6 +116,7 @@ void Tool::Inherit(const Tool* pTool)
     fType          = pTool->fType;
     fDirectoryName = pTool->fDirectoryName;
 #ifdef __USE_ROOT__
+    fSummaryTree    = pTool->fSummaryTree;
     fCanvasMap      = pTool->fCanvasMap;
     fChipHistMap    = pTool->fChipHistMap;
     fHybridHistMap  = pTool->fHybridHistMap;
@@ -214,6 +216,37 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
+TString  Tool::fSummaryTreeParameter = ""; // Is this ok here?
+Double_t Tool::fSummaryTreeValue     = 0.0;
+
+/*!
+ * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+ */
+void Tool::bookSummaryTree() // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter = "";
+    fSummaryTreeValue     = 0;
+    fSummaryTree          = new TTree("summaryTree", "Most relevant results");
+    fSummaryTree->Branch("Parameter", &fSummaryTreeParameter);
+    fSummaryTree->Branch("Value", &fSummaryTreeValue);
+}
+
+/*!
+ * \brief Insert data into the summary tree
+ * \param cParameter : Name of the measurement to be stored
+ * \param cValue: Value of the measurement to be stored
+ */
+void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter.Clear();
+    fSummaryTreeParameter = cParameter;
+    fSummaryTreeValue     = cValue;
+    if(fSummaryTree) fSummaryTree->Fill();
+}
+
+TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
 
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
@@ -433,6 +466,9 @@ void Tool::SaveResults()
         std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
+    // Save summary TTree
+    // fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+
 #endif
 
     // fResultFile->Write();
@@ -749,6 +785,7 @@ void Tool::CreateReport()
     report.open(fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
     report.close();
 }
+
 void Tool::AmmendReport(std::string pString)
 {
     std::ofstream report;
@@ -765,6 +802,7 @@ std::pair<float, float> Tool::getStats(std::vector<float> pData)
     float cStandardDeviation = std::sqrt(std::accumulate(cTmp.begin(), cTmp.end(), 0.) / (cTmp.size() - 1.));
     return std::make_pair(cMean, cStandardDeviation);
 }
+
 std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vector<float> pData, std::vector<float> pValues, bool pIgnoreNegative)
 {
     std::vector<float> cWeights(pData.size());
@@ -775,6 +813,7 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
 }
+
 std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<float> pValues, bool pIgnoreNegative)
 {
     std::vector<float> cWeights(pData.size());
@@ -1024,9 +1063,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     {
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
-                            // LOG (INFO) << BOLDBLUE << "localocc "<<
-                            // currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<
-                            // RESET;
+                             //LOG (INFO) << BOLDBLUE << "localocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<RESET;
 
                             if(currentStepOccupancyContainer->at(boardIndex)
                                    ->at(cOpticalGroup->getIndex())
@@ -1053,9 +1090,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     }
                     else
                     {
-                        // LOG (INFO) << BOLDBLUE << "globalocc
-                        // "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<
-                        // RESET;
+                        //LOG (INFO) << BOLDBLUE << "globalocc"<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<RESET;
 
                         if(currentStepOccupancyContainer->at(boardIndex)
                                ->at(cOpticalGroup->getIndex())

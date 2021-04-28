@@ -37,7 +37,8 @@ class PixelAliveHistograms : public DQMHistogramBase
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer ErrorReadOut2D;
-    DetectorDataContainer ToT;
+    DetectorDataContainer ToT1D;
+    DetectorDataContainer ToT2D;
     DetectorDataContainer BCID;
     DetectorDataContainer TriggerID;
 

@@ -12,8 +12,8 @@
 #define __SSAINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
-#include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
+#include "D19clpGBTInterface.h"
 #include <vector>
 
 namespace Ph2_HwInterface
@@ -24,8 +24,7 @@ class SSAInterface : public ReadoutChipInterface
   public:
     SSAInterface(const BeBoardFWMap& pBoardMap);
     ~SSAInterface();
-    // FIXME temporary fix to use 1/2 PS skeleton
-    void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
+    void LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;
@@ -91,6 +90,7 @@ class SSAInterface : public ReadoutChipInterface
     uint16_t                       ReadReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, bool pVerifLoop = true);
     bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
     bool                           ConfigureAmux(Ph2_HwDescription::Chip* pSSA, const std::string& pRegister);
+
     std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},
                                                {"PreampBias", 1},
                                                {"Trim", 2},

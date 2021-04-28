@@ -189,7 +189,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
         for(uint8_t cPhase = 0; cPhase < 8; cPhase++)
         {
             if(cCurPhaseFound == true) break; // break loops if chip phase already found
-            for(uint8_t cRetime = 0; cRetime < 8; cRetime++)
+            for(uint8_t cRetime = 6; cRetime < 8; cRetime++)
             {
                 if(cCurPhaseFound == true) break;
                 for(auto cOpticalReadout: *pBoard)

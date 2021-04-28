@@ -25,6 +25,7 @@
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
+#include "../NetworkUtils/TCPClient.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
@@ -82,6 +83,7 @@ class SystemController
     bool               fStreamerEnabled;
     TCPPublishServer*  fNetworkStreamer;
     DetectorMonitor*   fDetectorMonitor;
+    TCPClient*         fPowerSupplyClient{nullptr};
 
     /*!
      * \brief Constructor of the SystemController class
@@ -157,15 +159,6 @@ class SystemController
     void ConfigureHw(bool bIgnoreI2c = false);
 
     /*!
-     * \brief Run Bit Error Rate test
-     * \param chain2test     : which part of the chain to be tested
-     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
-     * \param frames_or_time : time [s] or number of frames
-     * \return: none
-     */
-    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
-
-    /*!
      * \brief Read Monitor Data from pBoard
      * \param pBeBoard
      * \param args
@@ -232,6 +225,8 @@ class SystemController
     void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMsec, uint32_t pulses = 0, bool fast = false, bool fsm = false);
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const { return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr); }
+
+    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     const std::vector<Ph2_HwInterface::Event*>& GetEvents()
     {

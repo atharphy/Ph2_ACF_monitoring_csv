@@ -62,12 +62,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("signalFit", "Scan the threshold and fit for signal Vcth", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("signalFit", "F");
 
-    cmd.defineOption("minimum", "minimum value for latency scan", ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative("minimum", "m");
-
-    cmd.defineOption("range", "range in clock cycles for latency scan", ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative("range", "r");
-
     cmd.defineOption("output", "Output Directory . Default value: Results/", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("output", "o");
 
@@ -114,11 +108,9 @@ int main(int argc, char* argv[])
     bool batchMode = (cmd.foundOption("batch")) ? true : false;
     bool cAllChan  = (cmd.foundOption("allChan")) ? true : false;
 
-    uint16_t cStartLatency     = (cmd.foundOption("minimum")) ? convertAnyInt(cmd.optionValue("minimum").c_str()) : 0;
-    uint16_t cLatencyRange     = (cmd.foundOption("range")) ? convertAnyInt(cmd.optionValue("range").c_str()) : 10;
-    int      cSignalRange      = (cmd.foundOption("signal")) ? convertAnyInt(cmd.optionValue("signal").c_str()) : 30;
-    int      cSignalFitRange   = (cmd.foundOption("signalFit")) ? convertAnyInt(cmd.optionValue("signalFit").c_str()) : 10;
-    uint8_t  cAntennaPotential = (cmd.foundOption("antenna")) ? convertAnyInt(cmd.optionValue("antenna").c_str()) : 0;
+    int     cSignalRange      = (cmd.foundOption("signal")) ? convertAnyInt(cmd.optionValue("signal").c_str()) : 30;
+    int     cSignalFitRange   = (cmd.foundOption("signalFit")) ? convertAnyInt(cmd.optionValue("signalFit").c_str()) : 10;
+    uint8_t cAntennaPotential = (cmd.foundOption("antenna")) ? convertAnyInt(cmd.optionValue("antenna").c_str()) : 0;
 
     TApplication cApp("Root Application", &argc, argv);
 
@@ -137,7 +129,6 @@ int main(int argc, char* argv[])
         cResultfile = "SignalScanFit";
     else
         cResultfile = "Commissioning";
-    LOG(INFO) << BOLDBLUE << "Scanning L1 latency between " << +cStartLatency << " and " << +(cStartLatency + cLatencyRange) << RESET;
 
     std::stringstream outp;
     Tool              cTool;
@@ -181,10 +172,9 @@ int main(int argc, char* argv[])
 
     if(cLatency || cStubLatency)
     {
-#ifdef __USE_ROOT__
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
-        cLatencyScan.Initialize(cStartLatency, cLatencyRange);
+        cLatencyScan.Initialize();
 
         // Here comes our Part:
         if(cAntenna) LOG(INFO) << BOLDBLUE << "Enabling antenna with " << +cAntennaPotential << " written to the potentiometer" << RESET;
@@ -195,10 +185,10 @@ int main(int argc, char* argv[])
             if(cAntenna) cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
 #endif
 
-            cLatencyScan.StubLatencyScan(cStartLatency, cLatencyRange);
+            cLatencyScan.ScanLatency();
         }
 
-        if(cStubLatency) cLatencyScan.StubLatencyScan(cStartLatency, cLatencyRange);
+        if(cStubLatency) cLatencyScan.StubLatencyScan();
 
 // if antenna was being used ... then disable it again at the end
 #ifdef __ANTENNA__
@@ -211,18 +201,15 @@ int main(int argc, char* argv[])
 #endif
 
         cLatencyScan.writeObjects();
-#endif
     }
 
     else if(cTriggerTDC)
     {
-#ifdef __USE_ROOT__
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
-        cLatencyScan.Initialize(cStartLatency, cLatencyRange);
+        cLatencyScan.Initialize();
         cLatencyScan.MeasureTriggerTDC();
         cLatencyScan.writeObjects();
-#endif
     }
 
     else if(cSignal)

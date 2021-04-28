@@ -33,13 +33,16 @@ void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& t
     auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
-    auto hToT = CanvasContainer<TH1F>("ToT", "ToT Distribution", ToTsize, 0, ToTsize);
-    bookImplementer(theOutputFile, theDetectorStructure, ToT, hToT, "ToT", "Entries");
+    auto hToT1D = CanvasContainer<TH1F>("ToT1D", "ToT Distribution", ToTsize, 0, ToTsize);
+    bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 0, BCIDsize);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "ToT Distribution", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
+
+    auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
     bookImplementer(theOutputFile, theDetectorStructure, BCID, hBCID, "#DeltaBCID", "Entries");
 
-    auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 0, TrgIDsize);
+    auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 1, TrgIDsize + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
 }
 
@@ -92,16 +95,18 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                         Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
                     auto* ErrorReadOut2DHist =
                         ErrorReadOut2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-                    auto* ToTHist = ToT.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* ToT1DHist = ToT1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* ToT2DHist = ToT2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                         {
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy > 0)
                             {
                                 Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + Occupancy1DHist->GetBinWidth(0) / 2);
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
-                                ToTHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
+                                ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
+                                ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                             }
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
@@ -121,7 +126,7 @@ void PixelAliveHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 
                     auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent((i == 0 ? BCIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
                 }
 }
 
@@ -139,7 +144,7 @@ void PixelAliveHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
                     auto* TriggerIDHist =
                         TriggerID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent((i == 0 ? TriggerIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
                 }
 }
 
@@ -148,7 +153,8 @@ void PixelAliveHistograms::process()
     draw<TH1F>(Occupancy1D);
     draw<TH2F>(Occupancy2D, "gcolz");
     draw<TH2F>(ErrorReadOut2D, "gcolz");
-    draw<TH1F>(ToT);
+    draw<TH1F>(ToT1D);
+    draw<TH2F>(ToT2D, "gcolz");
     draw<TH1F>(BCID);
     draw<TH1F>(TriggerID);
 }

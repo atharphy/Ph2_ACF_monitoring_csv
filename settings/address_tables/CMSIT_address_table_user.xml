@@ -130,23 +130,24 @@
       <node id="error_cntr_chip_addr"   mask="0x00000070"     permission="rw"      description="" />
     </node>
 
-    <node id="i2c_block"            address="0x00000014"      permission="rw"      description="">
+    <node id="i2c_block"            address="0x00000011"      permission="rw"      description="">
       <node id="dp_addr"               mask="0x0000000F"      permission="rw"      description="" />
     </node>
 
-    <node id="PRBS_checker"         address="0x00000011"      permission="rw"      description="">
-      <node id="reset_cntr"            mask="0x00000400"      permission="rw"      description="" />
-      <node id="error_cntr_sel"        mask="0x00000800"      permission="rw"      description="" />
-      <node id="chip_address"          mask="0x0000F000"      permission="rw"      description="" />
-      <node id="emulator_en"           mask="0x00010000"      permission="rw"      description="" />
-      <node id="start_checker"         mask="0x00040000"      permission="rw"      description="" />
-      <node id="stop_checker"          mask="0x00080000"      permission="rw"      description="" />
-      <node id="load_config"           mask="0x00100000"      permission="rw"      description="" />
-      <node id="module_addr"           mask="0xF0000000"      permission="rw"      description="" />
+    <node id="PRBS_checker"         address="0x00000012"      permission="rw"      description="">
+      <node id="reset_cntr"            mask="0x00000001"      permission="rw"      description="Reset the PRBS counter" />
+      <node id="start_checker"         mask="0x00000002"      permission="rw"      description="Start the PRBS counter to monitor BER" />
+      <node id="stop_checker"          mask="0x00000004"      permission="rw"      description="Stop the PRBS counter" />
+      <node id="load_config"           mask="0x00000008"      permission="rw"      description="Load the configuration for PRBS tests (nb of frames to run etc)" />
+      <node id="error_cntr_sel"        mask="0x00000010"      permission="rw"      description="Select between Error Counter per Frame ('0') or per bit ('1')" />
+      <node id="upgroup_addr"          mask="0x000001E0"      permission="rw"      description="Address of the uplink group" />
+      <node id="emulator_en"           mask="0x00000200"      permission="rw"      description="Enable PRBS emulation (for fw debugging only)" />
+      <node id="chip_address"          mask="0x00001C00"      permission="rw"      description="Address of the chip for which PRBS output regs will be read. (IPBus status registers are MUXed)" />
+      <node id="module_addr"           mask="0x0001E000"      permission="rw"      description="Address of the module for which PRBS output regs will be read. (IPBus status registers are MUXed)" />
     </node>
 
-    <node id="prbs_frames_to_run_low"  address="0x00000012"   permission="rw"      description=""> </node>
-    <node id="prbs_frames_to_run_high" address="0x00000013"   permission="rw"      description=""> </node>
+    <node id="prbs_frames_to_run_low"  address="0x00000013"   permission="rw"      description=""> </node>
+    <node id="prbs_frames_to_run_high" address="0x00000014"   permission="rw"      description=""> </node>
 
     <!-- Optical Implementation -->
     <node id="lpgbt_1"              address="0x00000015"      permission="rw"      description="Signals for Slow Control of lpgbt">
@@ -209,6 +210,11 @@
       <node id="i2c_init"              mask="0x00000002"      permission="r"       description="I2C initialization status. 1 = initialized." />
       <node id="i2c_init_err"          mask="0x00000004"      permission="r"       description="I2C initialization incomplete status. 1 = error." />
       <node id="i2c_acq_err"           mask="0x00000008"      permission="r"       description="I2C ack error during analog readout. For KSU FMC only. 1 = error." />
+      <node id="link_type"             mask="0x00000010"      permission="r"       description="'0'=Electrical link, '1'=Optical link" />
+      <node id="optical_speed"         mask="0x00000020"      permission="r"       description="'0'=10G24, '1'=5G link speed. (NOT IMPLEMENTED YET)" />
+      <node id="front_end_type"        mask="0x000000C0"      permission="r"       description="Front-End type.1=RD53A, 2=RD53B, 0=unspecified" />
+      <node id="fmc_l12_type"          mask="0x00000700"      permission="r"       description="Type of FMC board plugged at L12 slot. 1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=unspecified" />
+      <node id="fmc_l8_type"           mask="0x00003800"      permission="r"       description="Type of FMC board plugged at L8 slot. 1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=unspecified" />
     </node>
 
     <node id="slow_cmd"             address="0x00000003"      permission="r"       description="Clk_rate_tool output, for debugging purpose only">
@@ -294,9 +300,9 @@
       <node id="gnd_sense"             mask="0x00FFF000"      permission="r"       description="" />
     </node>
 
-    <node id="prbs_ber_cntr"        address="0x00000018"      permission="r"> </node>
-    <node id="prbs_frame_cntr_low"  address="0x00000019"      permission="r"> </node>
-    <node id="prbs_frame_cntr_high" address="0x0000001A"      permission="r"> </node>
+    <node id="prbs_ber_cntr"        address="0x0000001A"      permission="r"> </node>
+    <node id="prbs_frame_cntr_low"  address="0x0000001B"      permission="r"> </node>
+    <node id="prbs_frame_cntr_high" address="0x0000001C"      permission="r"> </node>
 
     <!-- Optical Link -->
     <node id="lpgbt_fpga"           address="0x00000019"      permission="r"       description="Status Signals from the lpgbt-fpga core">

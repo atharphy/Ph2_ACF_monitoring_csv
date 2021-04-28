@@ -31,7 +31,7 @@ class RD53Interface : public ReadoutChipInterface
     // #############################
     // # Override member functions #
     // #############################
-    int      CheckChipID(Ph2_HwDescription::Chip* pChip, int chipIDfromDB);
+    int      CheckChipID(Ph2_HwDescription::Chip* pChip, const int chipIDfromDB) override;
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, bool pVerifLoop = true) override;
     void     WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data) override;
@@ -47,6 +47,9 @@ class RD53Interface : public ReadoutChipInterface
     void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     // #############################
+
+    void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType);
+    void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
 
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);
     void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);

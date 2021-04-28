@@ -53,10 +53,22 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     void reset(void) override;
     // virtual void summarizeHistos();
 
+    // Histogram Fillers
+    void fillLatencyPlots(DetectorDataContainer& theLatency);
+    void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
+    void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
+    void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
+
   private:
+    void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
+
     DetectorDataContainer fDetectorData;
-    DetectorDataContainer fDetectorLatencyHistograms;
-    DetectorDataContainer fDetectorStubHistograms;
-    DetectorDataContainer fDetectorLatencyScan2DHistograms;
+    DetectorDataContainer fLatencyHistograms;
+    DetectorDataContainer fStubHistograms;
+    DetectorDataContainer fLatencyScan2DHistograms;
+    DetectorDataContainer fTriggerTDCHistograms;
+
+    uint32_t fStartLatency;
+    uint32_t fLatencyRange;
 };
 #endif

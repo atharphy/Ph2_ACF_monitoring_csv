@@ -6,6 +6,7 @@
 
 #include "CBCHistogramPulseShape.h"
 #include "DQMHistogramCalibrationExample.h"
+#include "DQMHistogramLatencyScan.h"
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMInterface.h"
@@ -94,6 +95,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
         fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
     }
+    else if(calibrationName == "OTLatency")
+        fDQMHistogrammerVector.push_back(new DQMHistogramLatencyScan());
     else if(calibrationName == "calibrationexample")
         fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
     else if(calibrationName == "cbcPulseShape")

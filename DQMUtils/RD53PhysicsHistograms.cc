@@ -31,10 +31,10 @@ void PhysicsHistograms::book(TFile* theOutputFile, const DetectorContainer& theD
     auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
-    auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 0, BCIDsize);
+    auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
     bookImplementer(theOutputFile, theDetectorStructure, BCID, hBCID, "#DeltaBCID", "Entries");
 
-    auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 0, TrgIDsize);
+    auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 1, TrgIDsize + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
 }
 
@@ -116,7 +116,7 @@ void PhysicsHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 
                     auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent(i + 1, BCIDHist->GetBinContent(i + 1) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent((i == 0 ? BCIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
                 }
 }
 
@@ -134,7 +134,7 @@ void PhysicsHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
                     auto* TriggerIDHist =
                         TriggerID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent(i + 1, TriggerIDHist->GetBinContent(i + 1) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent((i == 0 ? TriggerIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
                 }
 }
 

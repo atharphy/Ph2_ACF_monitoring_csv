@@ -8,6 +8,7 @@
 
 #ifndef __CICINTERFACE_H__
 #define __CICINTERFACE_H__
+
 #include "ChipInterface.h"
 #include "D19clpGBTInterface.h"
 
@@ -34,6 +35,7 @@ class CicInterface : public ChipInterface
      */
     ~CicInterface();
     void LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
+
 
     /*!
      * \brief Configure the Cic with the Cic Config File

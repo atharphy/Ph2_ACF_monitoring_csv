@@ -53,6 +53,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     unsigned int          errors       = 0;
     std::vector<uint32_t> data;
 
+    RD53Event::ForkDecodingThreads();
+
     LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
     mySysCntr.addFileHandler(binaryFile, 'r');
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
@@ -70,10 +72,14 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
             RD53Event::PrintEvents({decodedEvents[i]});
         }
 
-    LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
-    int avgEventSize = data.size() / decodedEvents.size();
-    LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN << " events"
-              << RESET;
+    if(decodedEvents.size() != 0)
+    {
+        LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
+        int avgEventSize = data.size() / decodedEvents.size();
+        LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN
+                  << " events" << RESET;
+    }
+
     mySysCntr.closeFileHandler();
 }
 
@@ -109,7 +115,7 @@ int main(int argc, char** argv)
         // # Read binary file and decode events #
         // ######################################
         readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
-        RD53Event::PrintEvents(RD53Event::decodedEvents);
+        // RD53Event::PrintEvents(RD53Event::decodedEvents);
     }
     else
     {
@@ -147,6 +153,11 @@ int main(int argc, char** argv)
         ph.analyze(true);
         ph.draw();
     }
+
+    // #############################
+    // # Destroy System Controller #
+    // #############################
+    mySysCntr.Destroy();
 
     return EXIT_SUCCESS;
 }

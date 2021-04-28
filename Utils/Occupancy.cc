@@ -25,3 +25,4 @@ void Occupancy::normalize(const uint32_t numberOfEvents)
     fOccupancy /= float(numberOfEvents);
     fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
 }
+

@@ -23,29 +23,8 @@
             </Global>
 
 
-
-            <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="0" partid="0" configfile="MPATST.txt" />
-            <MPA Id="1" partid="1" configfile="MPATST.txt" />
-            <MPA Id="2" partid="2" configfile="MPATST.txt" />
-            <MPA Id="3" partid="3" configfile="MPATST.txt" />
-            <MPA Id="4" partid="4" configfile="MPATST.txt" />
-            <MPA Id="5" partid="5" configfile="MPATST.txt" />
-            <MPA Id="6" partid="6" configfile="MPATST.txt" />
-            <MPA Id="7" partid="7" configfile="MPATST.txt" />
-
-
-            
-
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSAPreCalib.txt" />
-            <SSA Id="1" configfile="SSAPreCalib.txt" />
-            <SSA Id="2" configfile="SSAPreCalib.txt" />
-            <SSA Id="4" configfile="SSAPreCalib.txt" />
-            <SSA Id="5" configfile="SSAPreCalib.txt" />
-            <SSA Id="6" configfile="SSAPreCalib.txt" />
-            <SSA Id="7" configfile="SSAPreCalib.txt" />
-
+            <SSA Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
 
             
 
@@ -179,8 +158,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">45</Setting>
-    <Setting name="PedeNoisePulseAmplitude">45</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">20</Setting>
+    <Setting name="PedeNoisePulseAmplitude">20</Setting>
     <Setting name="TriggerRate">10</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>
@@ -193,7 +172,7 @@
 
     <!--Antenna for Opens -->
     <Setting name="AntennaPotentiometer">647</Setting>
-    <Setting name="ThresholdForOpens">10</Setting>
+    <Setting name="ThresholdForOpens">100</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 
     <!-- Shorts -->

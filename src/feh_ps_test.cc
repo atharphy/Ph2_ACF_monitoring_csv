@@ -138,13 +138,11 @@ int main(int argc, char* argv[])
         cHybridTester.addFileHandler(cRawFile, 'w');
         LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
     }
-    LOG(INFO) << BOLDBLUE << "1" << RESET;
     cHybridTester.InitializeHw(cHWFile, outp);
     cHybridTester.InitializeSettings(cHWFile, outp);
     cHybridTester.CreateResultDirectory(cDirectory);
     cHybridTester.InitResultFile(cResultfile);
 
-    LOG(INFO) << BOLDBLUE << "2" << RESET;
 
     // set voltage  on PS FEH
     // cHybridTester.SetHybridVoltage();
@@ -171,7 +169,6 @@ int main(int argc, char* argv[])
 	}
     //return 0;
 
-    LOG(INFO) << BOLDBLUE << "3" << RESET;
 
     std::string cMonitor = "right";
 
@@ -283,14 +280,12 @@ int main(int argc, char* argv[])
         }
     }
 
-    LOG(INFO) << BOLDBLUE << "4" << RESET;
 
 
     // interface to data player
     DPInterface         cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(cHybridTester.fBeBoardFWMap.find(0)->second);
 
-    LOG(INFO) << BOLDBLUE << "5" << RESET;
 
 
     // need to do this if
@@ -326,6 +321,11 @@ int main(int argc, char* argv[])
         // reset all chip and board registers
         // to what they were before this tool was called
         cBackEndAligner.Reset();
+    cPSAlignment.Align();
+    cPSAlignment.Reset();
+
+ 	cHybridTester.dumpConfigFiles();
+
 
         // Check if data player is running
         // if(cDPInterfacer.IsRunning(cInterface))
@@ -373,8 +373,8 @@ int main(int argc, char* argv[])
     // now go back to PS alignment and align inputs
     // need to do this if you're going to do any kind
     // of data tests
-    //cPSAlignment.Align();
-    //cPSAlignment.Reset();
+
+
     LOG(INFO) << BOLDBLUE << "6" << RESET;
     if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync"))
     {
@@ -409,7 +409,6 @@ int main(int argc, char* argv[])
         cDataChecker.writeObjects();
         // cDataChecker.resetPointers();
     }
-    LOG(INFO) << BOLDBLUE << "7" << RESET;
     // eye scan for CIC inputs
     if(cmd.foundOption("eyeScanCic"))
     {
@@ -433,7 +432,6 @@ int main(int argc, char* argv[])
         cDataChecker.writeObjects();
     }
 
-    LOG(INFO) << BOLDBLUE << "8" << RESET;
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))
     {
@@ -442,7 +440,7 @@ int main(int argc, char* argv[])
 
         //FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
         //auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
-        FrontEndType cFrontEndType   = FrontEndType::MPA;
+        FrontEndType cFrontEndType   = FrontEndType::SSA;
         auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         PedestalEqualization cPedestalEqualization;
@@ -467,7 +465,7 @@ int main(int argc, char* argv[])
         // hard coded for now
     	//ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cHybridTester.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
         //FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
-        FrontEndType cFrontEndType   = FrontEndType::MPA;
+        FrontEndType cFrontEndType   = FrontEndType::SSA;
         auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cPedeNoise.Inherit(&cHybridTester);
@@ -578,3 +576,4 @@ int main(int argc, char* argv[])
     T.show("Total time = ");
     return 0;
 }
+

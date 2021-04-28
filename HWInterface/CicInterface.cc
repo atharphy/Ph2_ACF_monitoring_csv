@@ -10,7 +10,6 @@
 #include "CicInterface.h"
 #include "BeBoardFWInterface.h"
 #include "D19cFWInterface.h"
-#include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
 
 #define DEV_FLAG 0
@@ -44,12 +43,12 @@ CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoard
 
 CicInterface::~CicInterface() {}
 
-//#FIXME temporary fix to use 1/2 PS skeleton
 void CicInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
 {
     flpGBTInterface = pLpGBTInterface;
     flpGBT          = pLpGBT;
 }
+
 bool CicInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName)
 {
     auto cRegItem = pChip->getRegItem( pRegName );
@@ -85,6 +84,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     {
         std::vector<uint32_t> cVec;
         ChipRegItem           cRegItem;
+        LOG (INFO) << BOLDMAGENTA << "flpGBTInterface == nullptrs" << RESET;
         fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
@@ -193,6 +193,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
     bool cRetry=false;
     if(flpGBTInterface == nullptr)
     {
+        LOG (INFO) << BOLDMAGENTA << "flpGBTInterface == nullptrs" << RESET;
         std::vector<uint32_t> cVec;
         cVec.clear();
         for(const auto& cReg: pRegs)
@@ -365,6 +366,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
 }
 
 
+
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
 {
     setBoard(pCic->getBeBoardId());
@@ -397,7 +399,6 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
     LOG (INFO) << BOLDMAGENTA << "Configuring CIC" << RESET;
     return this->WriteRegs(pCic, cRegs, pVerifLoop);
 }
-
 bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
@@ -408,6 +409,7 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
     return cSuccess;
 }
 
+
 bool     CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop) { return true; }
 uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
@@ -415,11 +417,13 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
     return this->ReadChipReg(pChip, cRegItem).second;
 }
+
 std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRegItem)
 {
     setBoard(pChip->getBeBoardId());
     if(flpGBTInterface == nullptr)
     {
+        LOG (INFO) << BOLDMAGENTA << "flpGBTInterface == nullptrs" << RESET;
         std::vector<uint32_t> cVecReq;
         fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
