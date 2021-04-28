@@ -1,5 +1,5 @@
 #include "DataChecker.h"
-//#ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
 
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ChannelGroupHandler.h"
@@ -5888,4 +5888,4 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
         }
     }
 }
-//#endif
+#endif
