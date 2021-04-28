@@ -4210,13 +4210,17 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
         // this->print({cChipId});
     }
 }
+// assumes chips are sitting at the pedestal 
 void DataChecker::TriggerBurstCheck()
 {
     auto cSetting = fSettingsMap.find ( "LengthOfBurst" );
     size_t cLengthOfBurst = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
     size_t cNevents = 1; 
     bool cWithNoise=false;
+    bool cUseOffsets=true;
     uint16_t cDelayAfterTP=200; 
+    cSetting = fSettingsMap.find ( "ThresholdBursts" );
+    uint16_t cThresholdForTest = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 600;
     // configure TP injection 
     if( !cWithNoise )
     {
@@ -4259,7 +4263,7 @@ void DataChecker::TriggerBurstCheck()
                             LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
                             for( auto cHit : cHitList ) LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
                         }
-                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise);
+                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise, cUseOffsets);
                     }
                 }//Chip
             }//Hybrid
@@ -4286,7 +4290,7 @@ void DataChecker::TriggerBurstCheck()
                         if( !cWithNoise )
                         {
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 580);
+                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThresholdForTest);
                         }
                     }
                 }//Chip
