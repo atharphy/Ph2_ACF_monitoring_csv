@@ -192,48 +192,16 @@ void CicFEAlignment::Running()
     fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
 }
 
-std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValues)
-{
-    // 8 FEs per CIC .... 6 SLVS lines per FE
-    std::vector<std::vector<uint8_t>> cValuesFEs(8, std::vector<uint8_t>(5, 0));
-    for(uint8_t cFe = 0; cFe < 8; cFe += 1)
-    {
-        for(uint8_t cLine = 0; cLine < 5; cLine += 1) { cValuesFEs[fFEMapping[cFe]][cLine] = pWordAlignmentValues[cFe][cLine]; }
-    }
-    return cValuesFEs;
-}
-
-std::vector<std::vector<uint8_t>> CicFEAlignment::SortOptimalTaps(std::vector<std::vector<uint8_t>> pOptimalTaps)
-{
-    // 8 FEs per CIC .... 6 SLVS lines per FE
-    std::vector<std::vector<uint8_t>> cPhaseTapsFEs(8, std::vector<uint8_t>(6, 0));
-
-    // now print stuff out by FE
-    uint8_t cIndex   = 0;
-    uint8_t cFeIndex = 0;
-    // first stub lines -- connected to phyPorts 0--9
-    for(uint8_t cPhyPort = 0; cPhyPort < 10; cPhyPort += 1)
-    {
-        for(uint8_t cInput = 0; cInput < 4; cInput += 1)
-        {
-            cPhaseTapsFEs[fFEMapping[cFeIndex]][cIndex] = pOptimalTaps[cInput][cPhyPort];
-            cIndex                                      = (cIndex > 3) ? 0 : (cIndex + 1);
-            cFeIndex                                    = (cIndex == 0) ? (cFeIndex + 1) : cFeIndex;
-        }
-    }
-    cFeIndex = 0;
-    cIndex   = 5;
-    // then hit data lines -- connected to phyPorts 10--11
-    for(uint8_t cPhyPort = 10; cPhyPort < 12; cPhyPort += 1)
-    {
-        for(uint8_t cInput = 0; cInput < 4; cInput += 1)
-        {
-            cPhaseTapsFEs[fFEMapping[cFeIndex]][cIndex] = pOptimalTaps[cInput][cPhyPort];
-            cFeIndex += 1;
-        }
-    }
-    return cPhaseTapsFEs;
-}
+// std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValues)
+// {
+//     // 8 FEs per CIC .... 6 SLVS lines per FE
+//     std::vector<std::vector<uint8_t>> cValuesFEs(8, std::vector<uint8_t>(5, 0));
+//     for(uint8_t cFe = 0; cFe < 8; cFe += 1)
+//     {
+//         for(uint8_t cLine = 0; cLine < 5; cLine += 1) { cValuesFEs[fFEMapping[cFe]][cLine] = pWordAlignmentValues[cFe][cLine]; }
+//     }
+//     return cValuesFEs;
+// }
 
 void CicFEAlignment::SetStubWindowOffsets(uint8_t pBendCode, int pBend)
 {
@@ -836,20 +804,20 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 if(cAligned)
                 {
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
-                    std::vector<std::vector<uint8_t>> cValues = SortWordAlignmentValues(cWordAlignmentValues);
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                        std::string cOutput;
-                        for(uint8_t cLine = 0; cLine < 5; cLine += 1)
-                        {
-                            char cBuffer[80];
-                            sprintf(cBuffer, "%.2d ", cValues[cChip->getId()][cLine]);
-                            cOutput += cBuffer;
-                            cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>()[cLine] = cValues[cChip->getId()][cLine];
-                        }
-                        LOG(INFO) << BOLDBLUE << "Word alignment values for FE" << +cChip->getId() << " : " << cOutput << RESET;
-                    }
+                    // std::vector<std::vector<uint8_t>> cValues = SortWordAlignmentValues(cWordAlignmentValues);
+                    // for(auto cChip: *cHybrid)
+                    // {
+                    //     if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    //     std::string cOutput;
+                    //     for(uint8_t cLine = 0; cLine < 5; cLine += 1)
+                    //     {
+                    //         char cBuffer[80];
+                    //         sprintf(cBuffer, "%.2d ", cValues[cChip->getId()][cLine]);
+                    //         cOutput += cBuffer;
+                    //         cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>()[cLine] = cValues[cChip->getId()][cLine];
+                    //     }
+                    //     LOG(INFO) << BOLDBLUE << "Word alignment values for FE" << +cChip->getId() << " : " << cOutput << RESET;
+                    // }
                 }
                 else
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;

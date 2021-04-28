@@ -40,8 +40,6 @@ class CicFEAlignment : public Tool
     bool                              SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
     bool                              BackEndAlignment();
     bool                              PhaseAlignmentMPA(uint16_t pWait_ms = 100);
-    std::vector<std::vector<uint8_t>> SortOptimalTaps(std::vector<std::vector<uint8_t>> pOptimalTaps);
-    std::vector<std::vector<uint8_t>> SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValue);
     void                              Running() override;
     void                              Stop() override;
     void                              Pause() override;

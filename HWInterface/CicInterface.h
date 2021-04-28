@@ -120,7 +120,9 @@ class CicInterface : public ChipInterface
     std::vector<std::bitset<6>> getFeStates() { return fFeStates; }
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
     std::vector<uint8_t> getI2CStatus(){ return fI2CStatus; }
+    void setWith8CBC3(bool cIsWith8CBC3){ if(cIsWith8CBC3) LOG (INFO) << BOLDBLUE << "CICFEAlignment with 8CBC3" << RESET; fWith8CBC3 = cIsWith8CBC3;}
   private:
+    bool    fWith8CBC3=false;
     bool    fRetryI2C=true;
     uint8_t fMaxI2CAttempts=20;
     
@@ -146,7 +148,9 @@ class CicInterface : public ChipInterface
     uint16_t fReWR=0;
 
   protected:
-    std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping2S{0, 1 ,2, 3, 7, 6, 5, 4};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping8CBC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
 

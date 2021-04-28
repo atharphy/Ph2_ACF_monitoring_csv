@@ -1117,6 +1117,8 @@ std::vector<uint8_t> CicInterface::GetOptimalTaps(Chip* pChip, uint8_t pFeId)
     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
     if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+    else if(fWith8CBC3) cFeMapping = fFeMapping8BC3;
+
 
     // 6 outputs fer FE
     uint32_t cPhaseTapsThisFe = (uint32_t)(std::bitset<24>(fPhaseValues[cFeMapping[pFeId]]).to_ulong());
@@ -1159,6 +1161,8 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
     if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+    else if(fWith8CBC3) cFeMapping = fFeMapping8BC3;
+
 
     // read back phase alignment on stub lines
     for(int cIndex = 0; cIndex < 6; cIndex++)
@@ -1293,6 +1297,7 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
     if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+    else if(fWith8CBC3) cFeMapping = fFeMapping8BC3;
 
     // read enable register
     cRegName        = "FE_ENABLE";
