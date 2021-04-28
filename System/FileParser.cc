@@ -156,6 +156,8 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setEventType(EventType::SSA);
         else if(cEventTypeString == "PSAS")
             cBeBoard->setEventType(EventType::PSAS);
+        else if(cEventTypeString == "VR2S")
+            cBeBoard->setEventType(EventType::VR2S);
         else
             cBeBoard->setEventType(EventType::VR);
     }

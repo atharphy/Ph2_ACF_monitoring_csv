@@ -405,6 +405,12 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         else
             LOG(ERROR) << "Not a valid chip type!";
     }
+    else if(dacName == "ClusterCut" ) 
+    {
+        uint8_t cRegValue = ReadChipSingleReg(pCbc,"LayerSwap&CluWidth");
+        uint8_t cValue  = (cRegValue & 0xF8 ) | dacValue; 
+        return WriteChipSingleReg(pCbc, "LayerSwap&CluWidth", cValue, pVerifLoop);
+    }
     else if(dacName == "TriggerLatency")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)

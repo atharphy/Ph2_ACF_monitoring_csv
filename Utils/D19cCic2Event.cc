@@ -25,7 +25,7 @@ const unsigned N2SHYBRIDS = 12;
 namespace Ph2_HwInterface
 {
 // Event implementation
-D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>& list)
+D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3)
 {
     fIsSparsified = pBoard->getSparsification();
     fEventHitList.clear();
@@ -34,7 +34,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     fFeIds.clear();
     fROCIds.clear();
     fNCbc = 0;
-
+    fIs8CBC3 = pWith8CBC3;
     // assuming that FEIds aren't shared between links
     fIs2S = false;
     for(auto cOpticalGroup: *pBoard)
@@ -856,9 +856,9 @@ std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId, uint8_t pRea
 
             uint8_t cLayerId      = ((cClusterWord & (0xFF << 3)) >> 3) & 0x01;        // LSB is the layer
             uint8_t cStrip        = (((cClusterWord & (0xFF << 3)) >> 3) & 0xFE) >> 1; // strip id
-            uint8_t cWidth        = 1 + (cClusterWord & 0x3);
+            uint8_t cWidth        = 1 + (cClusterWord & 0x7);
             uint8_t cFirstChannel = 2 * cStrip + cLayerId;
-            ;
+            
             LOG(DEBUG) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
                        << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
 
@@ -1123,7 +1123,7 @@ std::vector<Cluster> D19cCic2Event::clusterize(uint8_t pFeId) const
         uint8_t cFirst         = ((cClusterWord & (0xFF << 3)) >> 3) & 0x7F;
         uint8_t cSensorId      = (((cClusterWord & (0xFF << 3)) >> 3) & (0x1 << 8)) >> 8;
         cCluster.fFirstStrip   = cChipIdMapped * 127 + std::floor(cFirst / 2.); // I think the MSB is the layer ...
-        cCluster.fClusterWidth = 1 + (cClusterWord & 0x3);
+        cCluster.fClusterWidth = 1 + (cClusterWord & 0x7);
         cCluster.fSensor       = cSensorId;
         cClusters.push_back(cCluster);
     }
@@ -1146,7 +1146,7 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pFeId, uint8_t pReadoutC
         uint8_t cFirst         = ((cClusterWord & (0xFF << 3)) >> 3) & 0x7F;
         uint8_t cSensorId      = (((cClusterWord & (0xFF << 3)) >> 3) & (0x1 << 8)) >> 8;
         cCluster.fFirstStrip   = pReadoutChipId * 127 + std::floor(cFirst / 2.); // I think the MSB is the layer ...
-        cCluster.fClusterWidth = 1 + (cClusterWord & 0x3);
+        cCluster.fClusterWidth = 1 + (cClusterWord & 0x7);
         cCluster.fSensor       = cSensorId;
         cClusters.push_back(cCluster);
     }

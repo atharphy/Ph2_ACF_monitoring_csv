@@ -607,10 +607,11 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
 {
     if(fOptical)
     {
+        LOG (INFO) << BOLDBLUE << "Selecting link mux " << +pLinkId << RESET;
         this->WriteReg("fc7_daq_cnfg.optical_block.mux", pLinkId);
-        std::this_thread::sleep_for(std::chrono::milliseconds(cWait_ms));
-        // this->WriteReg("fc7_daq_ctrl.optical_block.sca.reset",0x1);
-        // std::this_thread::sleep_for (std::chrono::milliseconds (100) );
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+        this->WriteReg("fc7_daq_ctrl.optical_block.sca.reset",0x1);
+        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us*10) );
     }
 }
 
@@ -3071,12 +3072,12 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNtriggers    = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0 ; 
                     cNtriggersPrev = cNtriggers;
-                }while( cNtriggers  < cNevents && cFoundSame < cTimeoutValue ); 
-                cFailed = !( cNtriggers == cNevents );
+                }while( cNtriggers  < cNevents*(1+cMultiplicity) && cFoundSame < cTimeoutValue ); 
+                cFailed = !( cNtriggers == cNevents*(1+cMultiplicity)  );
                 if( cFailed ){ 
                     auto cState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
                     LOG (INFO) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " 
-                        << +cNevents << " and received " << +cNtriggers 
+                        << +cNevents*(1+cMultiplicity) << " and received " << +cNtriggers 
                         << " FSM state is " << +cState 
                         << " .. re-trying" 
                         << RESET; 
@@ -3770,7 +3771,7 @@ bool D19cFWInterface::Bx0Alignment()
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
         {
-            LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDGREEN << "SUCCEEDED!" << BOLDBLUE << "\t... Stub package delay set to : " << +cStubPackageDelay << RESET;
+            //LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDGREEN << "SUCCEEDED!" << BOLDBLUE << "\t... Stub package delay set to : " << +cStubPackageDelay << RESET;
             cSuccess = true;
             // definitely works with
             // figure out which one of these is needed
@@ -3783,7 +3784,7 @@ bool D19cFWInterface::Bx0Alignment()
         }
         else
         {
-            LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDRED << "FAILED! State of alignment : " << +cValue << RESET;
+            //LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDRED << "FAILED! State of alignment : " << +cValue << RESET;
             this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
         }
         cAttempts++;

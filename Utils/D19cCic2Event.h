@@ -51,7 +51,7 @@ class D19cCic2Event : public Event
      * \param pNbCbc
      * \param pEventBuf : the pointer to the raw Event buffer of this Event
      */
-    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
+    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3 );
     /*!
      * \brief Copy Constructor of the Event Class
      */
@@ -229,10 +229,11 @@ class D19cCic2Event : public Event
             throw std::runtime_error(std::string("ROCId not found in D19cCIC2Event .. check xml!"));
     }
 
+    void set8CBC3( bool pIs8CBC3 ){ fIs8CBC3 = pIs8CBC3; }
   private:
     // figure out how to switch between various hybrid types here 
-    std::vector<uint8_t> fFeMapping2S{0,1,2,3,7,6,5,4};  // Index CIC FE Id , Value Hybrid FE Id
-    //std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping2S{0, 1 ,2, 3, 7, 6, 5, 4};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
 
@@ -243,6 +244,7 @@ class D19cCic2Event : public Event
     std::vector<uint8_t>              fNPxlClusters;
 
     bool         fIs2S         = true;
+    bool         fIs8CBC3      = false;
     bool         fIsSparsified = true;
     EventList    fEventHitList;
     RawEventList fEventRawList;
@@ -254,7 +256,10 @@ class D19cCic2Event : public Event
         std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
         if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
         if(fIs2S)
+        {
+            if( fIs8CBC3 ) cFeMapping = fFeMapping8BC3; 
             return (7 - std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId)));
+        }
         else
             return cFeMapping[pReadoutChipId]; // std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
     }

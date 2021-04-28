@@ -596,6 +596,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                     fReadoutChipInterface->WriteChipReg(theReadoutChip, "HitOr", 1);
                     // set PtCut to maximum
                     fReadoutChipInterface->WriteChipReg(theReadoutChip, "PtCut", 14);
+                    // if I set this it doesn't work..
+                    // no cluster cut
+                    fReadoutChipInterface->WriteChipReg(theReadoutChip, "ClusterCut", 4);
 
                     // read bend LUT
                     uint8_t              cBendCode_phAlign = 0xa;
@@ -723,6 +726,8 @@ void CicFEAlignment::WordAlignmentPattern(ReadoutChip* pChip, std::vector<uint8_
         fReadoutChipInterface->WriteChipReg(pChip, "HitOr", 0);
         // set PtCut to maxmim
         fReadoutChipInterface->WriteChipReg(pChip, "PtCut", 14);
+        // no cluster cut
+        fReadoutChipInterface->WriteChipReg(pChip, "ClusterCut", 4);
 
         std::vector<uint8_t> cStubs{pAlignmentPatterns[0], pAlignmentPatterns[1], pAlignmentPatterns[2]};
         std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(pChip);
