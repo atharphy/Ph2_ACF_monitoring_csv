@@ -25,13 +25,8 @@
 
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSAPreCalib.txt" />
             <SSA Id="1" configfile="SSAPreCalib.txt" />
-            <SSA Id="2" configfile="SSAPreCalib.txt" />
-            <SSA Id="4" configfile="SSAPreCalib.txt" />
-            <SSA Id="5" configfile="SSAPreCalib.txt" />
-            <SSA Id="6" configfile="SSAPreCalib.txt" />
-            <SSA Id="7" configfile="SSAPreCalib.txt" />
+
 
 
 
@@ -166,8 +161,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">50</Setting>
-    <Setting name="PedeNoisePulseAmplitude">50</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">0</Setting>
+    <Setting name="PedeNoisePulseAmplitude">0</Setting>
     <Setting name="TriggerRate">10</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>

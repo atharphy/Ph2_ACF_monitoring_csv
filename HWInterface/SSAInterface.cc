@@ -793,15 +793,16 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
 
 void SSAInterface::ReadASEvent(ReadoutChip* pSSA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange)
 {
-    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0}) pSRange = std::pair<uint32_t, uint32_t>{1, pSSA->getNumberOfChannels()};
+    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0}) pSRange = std::pair<uint32_t, uint32_t>{1, pSSA->getNumberOfChannels()-1};
     for(uint32_t i = pSRange.first; i <= pSRange.second; i++)
     {
         char cRegName[100];
         std::sprintf(cRegName, "CounterStrip%d", static_cast<int>(i));
         pData.push_back(this->ReadChipReg(pSSA, cRegName));
-        // uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
-        // uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));
-        // pData.push_back((cRP2*256) + cRP1);
+        //uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
+        //uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));
+        //LOG(INFO) << BOLDBLUE << "cRP1 "<<+cRP1 <<  " cRP2 " << +cRP2<< RESET;
+        //pData.push_back((cRP2*256) + cRP1);
     }
 }
 uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
@@ -811,8 +812,10 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
     ChipRegItem           cRegItem;
     if(pRegNode.find("CounterStrip") != std::string::npos)
     {
+
         int cChannel = 0;
         sscanf(pRegNode.c_str(), "CounterStrip%d", &cChannel);
+       // LOG(INFO) << BOLDBLUE << "CounterStrip " <<+cChannel<< RESET;
         cRegItem.fPage         = 0x00;
         cRegItem.fAddress      = 0x0901 + cChannel;
         cRegItem.fValue        = 0;

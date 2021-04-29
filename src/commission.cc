@@ -146,8 +146,9 @@ int main(int argc, char* argv[])
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
     cPSAlignment.Initialise();
+    // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
-    cPSAlignment.Reset();
+    
 
 
     CicFEAlignment cCicAligner;
@@ -156,21 +157,27 @@ int main(int argc, char* argv[])
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
-    }
 
-
-
-    // align back-end .. if this moves to firmware then we can get rid of this step
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Initialise();
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
+
+    cPSAlignment.Align();
+    cPSAlignment.Reset();
+
     if(!cAligned)
     {
         LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         exit(0);
     }
+    }
+
+
+
+    // align back-end .. if this moves to firmware then we can get rid of this step
+
 
 
 #ifdef __ANTENNA__
