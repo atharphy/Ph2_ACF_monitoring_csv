@@ -211,7 +211,6 @@ void CicFEAlignment::SetStubWindowOffsets(uint8_t pBendCode, int pBend)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     // read bend LUT
@@ -244,7 +243,6 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
             for(auto cHybrid: *cOpticalGroup)
             {
                 OuterTrackerHybrid* theHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(theHybrid->getLinkId());
                 if(theHybrid->fCic != NULL)
                 {
                     bool cConfigured = fCicInterface->ManualBx0Alignment(theHybrid->fCic, pDelay);

@@ -607,11 +607,11 @@ void D19cFWInterface::selectLink(uint8_t pLinkId, uint32_t cWait_ms)
 {
     if(fOptical)
     {
-        LOG (INFO) << BOLDBLUE << "Selecting link mux " << +pLinkId << RESET;
+        //LOG (INFO) << BOLDBLUE << "Selecting link mux " << +pLinkId << RESET;
         this->WriteReg("fc7_daq_cnfg.optical_block.mux", pLinkId);
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+        //std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
         this->WriteReg("fc7_daq_ctrl.optical_block.sca.reset",0x1);
-        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us*10) );
+        //std::this_thread::sleep_for (std::chrono::microseconds (fWait_us*10) );
     }
 }
 
@@ -2993,8 +2993,8 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
     // cTriggerSource = 42;
-    // in kHz .. if external trigger assume 1 kHz or TP assume lowest possible rate
-    auto     cTriggerRate          = (cTriggerSource == 5 || cTriggerSource == 6) ? 0.01 : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+    // in kHz .. if external trigger assume 1 Hz or TP assume lowest possible rate
+    auto     cTriggerRate          = (cTriggerSource == 5 || cTriggerSource == 6) ? (1e-6) : this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     uint32_t cTimeSingleTrigger_us = std::ceil(1.5 / (cTriggerRate));
     auto     cMultiplicity         = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
 
@@ -3336,6 +3336,7 @@ void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip , std::
         bool pUseMask = false;
         if(fOptical)
         {
+            this->selectLink(pChip->getOpticalGroupId());
             // new command consists of one word if its read command, and of two words if its write. first word is always
             uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
             pVecReq.push_back(cWord);

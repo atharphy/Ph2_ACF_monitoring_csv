@@ -375,7 +375,7 @@ void SystemController::CicStartUp(uint8_t pDriveStrength)
                 
                 if( cSuccess )
                     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
-                          << +theOuterTrackerHybrid->getLinkId() << RESET;
+                          << +theOuterTrackerHybrid->getOpticalGroupId() << RESET;
                 LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
             }
         }//OG
@@ -465,7 +465,7 @@ void SystemController::ModuleStartUpPS()
                 LOG (INFO) << BOLDBLUE << "Resetting CIC" << RESET;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCic(clpGBT, cSide);
                 LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) 
-                    << " on link " << +cHybrid->getLinkId() << " on hybrid "
+                    << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid "
                     << +cHybrid->getId() << RESET;
                 fCicInterface->ConfigureChip(cCic);
             }//Hybrid
@@ -602,7 +602,7 @@ void SystemController::ModuleStartUp2S()
                 LOG (INFO) << BOLDBLUE << "Resetting CIC" << RESET;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCic(clpGBT, cSide);
                 LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) 
-                    << " on link " << +cHybrid->getLinkId() << " on hybrid "
+                    << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid "
                     << +cHybrid->getId() << RESET;
                 fCicInterface->ConfigureChip(cCic);
             }//Hybrid

@@ -1040,7 +1040,6 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<Hybrid*>(cHybrid)->getLinkId());
             for(auto cReadoutChip: *cHybrid)
             {
                 ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
