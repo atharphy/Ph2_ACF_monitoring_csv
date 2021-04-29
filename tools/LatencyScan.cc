@@ -96,9 +96,25 @@ void LatencyScan::ScanLatency()
 
     DetectorDataContainer theLatencyContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
-
     for(auto board: theLatencyContainer)
     {
+
+            for(auto opticalGroup: *board)
+            {
+                for(auto hybrid: *opticalGroup)
+                {
+                    for(auto chip: *hybrid)
+                    {
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
+							if(theChip->getFrontEndType() == FrontEndType::SSA)
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 150);
+							if(theChip->getFrontEndType() == FrontEndType::MPA)
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 50);
+						
+					}
+				}
+			}
+
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
         for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
         {
@@ -113,25 +129,38 @@ void LatencyScan::ScanLatency()
                 for(auto hybrid: *opticalGroup)
                 {
                     uint32_t cHitSum = 0;
+                    uint32_t cHitSumMPA = 0;
+                    uint32_t cHitSumSSA = 0;
                     for(auto& cEvent: events)
                     {
                         // first, reset the hit counter - I need separate counters for each event
                         int cHitCounter = 0;
+                        int cHitCounterMPA = 0;
+                        int cHitCounterSSA = 0;
                         for(auto chip: *hybrid)
                         {
                             ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                             if(theChip->getFrontEndType() == FrontEndType::MPA)
-                                cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(hybrid->getId(), chip->getId());
+                            {
+                                cHitCounterMPA += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), chip->getId())).size();
+                            }
                             else if(theChip->getFrontEndType() == FrontEndType::SSA)
-                                cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(hybrid->getId(), static_cast<SSA*>(theChip)->getPartid());
+                            {
+                                cHitCounterSSA += (static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(hybrid->getId(), chip->getId())).size();
+                            }
                             else
                                 cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
-                        cHitSum += cHitCounter; // TODO: It would be nice to fill per event so you could have the errors correct, maybe do with occupancy?
+                        cHitSum += cHitCounter; 
+                        cHitSum += cHitCounterMPA; 
+                        cHitSum += cHitCounterSSA; 
+						cHitSumMPA+=cHitCounterMPA;
+						cHitSumSSA+=cHitCounterSSA;
 
                     } // end event loop
 
                     LOG(INFO) << "FE: " << +hybrid->getId() << "; Latency " << +cLat << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
+                    LOG(INFO) << "cHitSumMPA:" << cHitSumMPA<<" cHitSumSSA:" << cHitSumSSA;
                     hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cHitSum;
                 } // end hybrid
 
@@ -678,11 +707,13 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
                 {
                     // now loop the channels for this particular event and increment a counter
                     if(cCbc->getFrontEndType() == FrontEndType::MPA)
-                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cFe->getId(), cCbc->getId());
+                        cHitCounter += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(cFe->getId(), cCbc->getId())).size();
                     else if(cCbc->getFrontEndType() == FrontEndType::SSA)
-                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cFe->getId(), static_cast<SSA*>(cCbc)->getPartid());
+                        cHitCounter += (static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(cFe->getId(), cCbc->getId())).size();
                     else
                         cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
+
+
                 }
 
                 // now I have the number of hits in this particular event for all CBCs and the TDC value
