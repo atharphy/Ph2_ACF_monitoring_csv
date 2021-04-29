@@ -14,6 +14,7 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
 #include <bitset>
+#include <numeric>
 
 using namespace Ph2_HwDescription;
 

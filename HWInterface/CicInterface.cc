@@ -11,6 +11,7 @@
 #include "BeBoardFWInterface.h"
 #include "D19cFWInterface.h"
 #include "ReadoutChipInterface.h"
+#include <numeric>
 
 #define DEV_FLAG 0
 // #define COUNT_FLAG 0

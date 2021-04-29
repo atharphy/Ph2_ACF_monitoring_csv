@@ -140,6 +140,7 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
+    include_directories($ENV{PH2ACF_BASE_DIR}/HWInterface)
 
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
