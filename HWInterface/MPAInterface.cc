@@ -1045,7 +1045,7 @@ void MPAInterface::ReadASEvent(ReadoutChip* pMPA, std::vector<uint32_t>& pData, 
         uint8_t cRP2 = this->ReadChipReg(pMPA, "ReadCounter_MSB_P" + std::to_string(i));
 
         pData.push_back((cRP2 * 256) + cRP1);
-        //std::cout<<i<<" "<<(cRP2*256) + cRP1<<std::endl;
+        std::cout<<i<<" "<<(cRP2*256) + cRP1<<std::endl;
     }
 }
 
