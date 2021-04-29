@@ -363,9 +363,10 @@ private:
     }
 
     void ReadErrors();
-    void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
+
 
   public:
+    void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
     ///////////////////////////////////////////////////////
     //      CBC Methods                                 //
     /////////////////////////////////////////////////////

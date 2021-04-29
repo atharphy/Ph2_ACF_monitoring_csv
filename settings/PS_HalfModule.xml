@@ -23,14 +23,7 @@
             <Global>
                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
-            <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
-            <SSA Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
-            <SSA Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
-            <SSA Id="4" configfile="BE0_OG0_FE0_Chip4.txt" />
-            <SSA Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
-            <SSA Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
-            <SSA Id="7" configfile="BE0_OG0_FE0_Chip7.txt" />
+
 
             <MPA_Files path="./settings/MPAFiles/" />
             <MPA Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
@@ -41,6 +34,15 @@
             <MPA Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
             <MPA Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
             <MPA Id="7" configfile="BE0_OG0_FE0_Chip7.txt" />
+
+            <SSA_Files path="./settings/SSAFiles/" />
+            <SSA Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
+            <SSA Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
+            <SSA Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
+            <SSA Id="4" configfile="BE0_OG0_FE0_Chip4.txt" />
+            <SSA Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
+            <SSA Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
+            <SSA Id="7" configfile="BE0_OG0_FE0_Chip7.txt" />
 
 
             <CIC_Files path="./settings/CicFiles/" />
@@ -167,7 +169,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">500</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -203,7 +205,8 @@
     <Setting name="AsyncSweepTh">0</Setting>
     <Setting name="AsyncThreshold">10</Setting>
     <Setting name="AsyncCalDac">30</Setting>
-
+    <Setting name="StartLatency">65</Setting>
+    <Setting name="LatencyRange">20</Setting>
     <Setting name="StartTHDAC">0x40</Setting>
     <Setting name="StopTHDAC">0x90</Setting>
     <Setting name="NMsec">0</Setting>

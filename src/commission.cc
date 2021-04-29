@@ -11,7 +11,7 @@
 #include "../tools/SignalScanFit.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
-
+#include "tools/PSAlignment.h"
 #include "../Utils/argvparser.h"
 #include "TApplication.h"
 #include "TROOT.h"
@@ -140,6 +140,26 @@ int main(int argc, char* argv[])
     cTool.StartHttpServer();
     cTool.ConfigureHw();
 
+    // if CIC is enabled then align CIC first
+    if(cWithCIC)
+    {
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    cPSAlignment.MapMPAOutputs();
+    cPSAlignment.Reset();
+
+
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cTool);
+    cCicAligner.Start(0);
+    cCicAligner.waitForRunToBeCompleted();
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
+    }
+
+
+
     // align back-end .. if this moves to firmware then we can get rid of this step
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
@@ -152,17 +172,6 @@ int main(int argc, char* argv[])
         exit(0);
     }
 
-    // if CIC is enabled then align CIC first
-    if(cWithCIC)
-    {
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cCicAligner.Reset();
-        cCicAligner.dumpConfigFiles();
-    }
 
 #ifdef __ANTENNA__
     AntennaTester cAntennaTester;
@@ -170,8 +179,16 @@ int main(int argc, char* argv[])
     cAntennaTester.Initialize();
 #endif
 
+    
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 5});  
+    (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReconfigureTriggerFSM(cVecReg);
+
+
+
     if(cLatency || cStubLatency)
     {
+        LOG(INFO) << BOLDBLUE << "STARTLAT" << RESET;
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
@@ -184,8 +201,10 @@ int main(int argc, char* argv[])
 #ifdef __ANTENNA__
             if(cAntenna) cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
 #endif
+        LOG(INFO) << BOLDBLUE << "LATSCAN" << RESET;
 
             cLatencyScan.ScanLatency();
+        LOG(INFO) << BOLDBLUE << "LATSCANDONE" << RESET;
         }
 
         if(cStubLatency) cLatencyScan.StubLatencyScan();
