@@ -2644,40 +2644,37 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
                 LOG (INFO) << BOLDYELLOW << "\t.. after " << +cCounter 
                     << " waits have counted " << +cNtriggers << " received by the FC7."
                     << RESET;
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cCounter++;   
         }
-        
-        // now .. see how many words are in the readout 
+
+        // now wait until there are some words in the readout 
         cCounter=0;
+        cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        while( cNWords == 0 )
+        {
+            if( (1+cCounter)%100 == 0 )
+                LOG (INFO) << BOLDYELLOW << "\t.. after " << +cCounter 
+                    << " waits have counted " << +cNtriggers << " received by the FC7 "
+                    << " and "
+                    << +cNWords 
+                    << " in the readout "
+                    << RESET;
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+            cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+            cCounter++;   
+        }
         cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
         
-        // size_t cMaxAttempts=0; 
-        // // if slow async there won't be any words in the readout 
-        // while(cNWords == 0 && cCounter < cMaxAttempts && !cAsync)
-        // {
-        //     cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        //     cNtriggers      = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-
-        //     if(cNWords == 0 && (1+cCounter)%100 == 0) 
-        //         LOG(INFO) << BOLDRED << "Zero events in FIFO, waiting for the triggers" << RESET;
-        //     else if(cNWords > 0)
-        //         LOG(INFO) << BOLDYELLOW << "Iter#" << +cCounter << " " << +cNWords << " events in FIFO.. " 
-        //             << " after receiving "
-        //             << " going to readout data" << RESET;
-            
-        //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        //     cCounter++;
-        // }
-        // if(!cAsync) 
-        //     LOG(INFO) << BOLDYELLOW << "Iter#" << +cCounter << " " << +cNWords << " words in FIFO.. going to readout data" << RESET;
-
+        
         // failed to read any data 
         pFailed = (!cAsync) ? (cNWords == 0 ) : false;
-        LOG (DEBUG) << BOLDYELLOW << "ReadData has found " << +cNtriggers << " triggers received by FC7 and "
-            << +cNWords << " words in the readout." << RESET;
+        if( pFailed )
+            LOG (INFO) << BOLDYELLOW << "ReadData has found " << +cNtriggers << " triggers received by FC7 and "
+                << +cNWords << " words in the readout." << RESET;
     }
 
     uint32_t cNEvents        = 0;
@@ -2874,6 +2871,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     // not async antenna trigger
     else if(cTriggerSource != 10 && cTriggerSource != 42)
     {
+        auto cHandshakeMode = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         // configure trigger
         // data handshake has to be enabled in this mode
         cVecReg.push_back({"fc7_daq_cnfg.readout_block.packet_nbr", cNevents * (cMultiplicity + 1) - 1});
@@ -3006,7 +3004,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                            << " words in the readout... reading out data." << RESET;
             }
         }
-
+        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
     }
     else if(cTriggerSource == 42)
     {
