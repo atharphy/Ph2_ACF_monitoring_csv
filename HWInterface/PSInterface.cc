@@ -144,7 +144,10 @@ void PSInterface::Pix_Set_enable(ReadoutChip* pPS,
 
 void PSInterface::Set_calibration(Chip* pPS, uint32_t cal)
 {
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->Set_calibration(pPS, cal); }
+    if(pPS->getFrontEndType() == FrontEndType::MPA) 
+	{ 
+		return theMPAInterface->Set_calibration(pPS, cal); 
+	}
     else if(pPS->getFrontEndType() == FrontEndType::SSA)
     {
         return theSSAInterface->Set_calibration(pPS, cal);

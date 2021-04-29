@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 
     //std::pair<uint32_t, uint32_t> rows = {1, 17};
     //std::pair<uint32_t, uint32_t> cols = {1, 121};
-    std::pair<uint32_t, uint32_t> th   = {70, 200};
+    std::pair<uint32_t, uint32_t> th   = {50, 200};
 
 
     std::vector<TH2F*> scurves2D;
@@ -139,12 +139,14 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDRED << "BADEVENT" << RESET;
 
 		}
+	std::cout << "1" << std::endl;
 	std::vector<int> totalev;
 	std::vector<int> totalevPRE;
     int impa=0;
 
     for(auto cMPA: *ChipVec)
     {
+	std::cout << "2" << std::endl;
 		totalev.push_back(0);
 		totalevPRE.push_back(0);
 		uint16_t npix=1920;
@@ -153,7 +155,9 @@ int main(int argc, char* argv[])
 			{		
 			theMPAInterface->WriteChipReg(cMPA,"ReadoutMode",0x1);
 			theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0xd7);
-			//theMPAInterface->WriteChipReg(cMPA,"TrimDAC_ALL",0x31);
+			theMPAInterface->WriteChipReg(cMPA,"AnalogueAsync",0x1);
+			theMPAInterface->WriteChipReg(cMPA,"Threshold",0x20);
+			theMPAInterface->WriteChipReg(cMPA,"InjectedCharge",0x0);
 			}
 		else
 			{		
@@ -161,13 +165,10 @@ int main(int argc, char* argv[])
 			theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0x5);
 			theMPAInterface->WriteChipReg(cMPA,"AnalogueAsync",0x1);
 			}
-        
-        theMPAInterface->Activate_async(cMPA);
-        if(cMPA->getFrontEndType() == FrontEndType::MPA) theMPAInterface->Set_calibration(cMPA, 30);
-        if(cMPA->getFrontEndType() == FrontEndType::SSA) theMPAInterface->Set_calibration(cMPA, 100);
+
+
         title = "mpa"+std::to_string(impa);
         scurves2D.push_back(new TH2F(title.c_str(), title.c_str(), float(npix),-0.5,float(npix)-0.5,255, -0.5, 254.5));
-
         impa+=1;
     }
 
@@ -185,58 +186,58 @@ int main(int argc, char* argv[])
     	    for(auto cMPA: *ChipVec)
     	      {
 
-              MPA* theMPA = static_cast<MPA*>(cMPA);
-              theMPAInterface->Set_threshold(theMPA, ith);
+            // MPA* theMPA = static_cast<MPA*>(cMPA);
+              //theMPAInterface->Set_threshold(theMPA, ith);
+			  theMPAInterface->WriteChipReg(cMPA,"Threshold",ith);
               //if(cMPA->getFrontEndType() == FrontEndType::SSA)theMPAInterface->Set_threshold(theMPA, ith);
 	      	  }
 
 
-
+            //std::cout << "Shutter open " << std::endl;
         	std::this_thread::sleep_for(ShortWait);
         	static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
-        	// open shutter
        		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
-
-            // sleep            // close shutter
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
+            std::this_thread::sleep_for(ShortWait);
+            //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(8);
             //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
             //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
-
+            //std::cout << "Shutter close " << std::endl;
 
             std::this_thread::sleep_for(ShortWait);
 
             scurvecsv << ith << ",";
 
-        // FIFO readout
-        // TURNED OFF
+
 
             // I2C readout
+            //std::cout << "Get Data" << std::endl;
             std::vector<uint32_t> countersfifo;
-    	    /*for(auto cMPA: *ChipVec)
+    	    for(auto cMPA: *ChipVec)
 			    {
-		        theMPAInterface->ReadASEvent(cMPA,countersfifo);
-				}*/
+		        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->ReadASEvent(cMPA,countersfifo,std::pair<uint32_t, uint32_t> {5,5});
+				}
 
- 
+
             //std::vector<uint32_t> countersfifo;
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetData(pBoard,countersfifo);
-
+            //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetData(pBoard,countersfifo);
+             //std::cout << "Get Data Done" << std::endl;
 
             // countersfifo = [0];
             // Randomly the counters fail
             // this fixes the issue but this needs to be looked at further
 
 
-            totalevents = std::accumulate(countersfifo.begin() + 1, countersfifo.end(), 0);
+            //totalevents = std::accumulate(countersfifo.begin() + 1, countersfifo.end(), 0);
             //std::cout << "3 "<<countersfifo.size()<<" "<<totalevents<< std::endl;
-            std::cout << "totalevents "<<totalevents << std::endl;
+            //std::cout << "totalevents "<<totalevents << std::endl;
   
 	    	bool torepeat=false;
             int impa=0;
             uint32_t curindex=0;
     	    for(auto cMPA: *ChipVec)
     	    {
+				//int mpacount=0;
 
 				uint16_t npix=1920;
         		if(cMPA->getFrontEndType() == FrontEndType::SSA) 
@@ -251,7 +252,7 @@ int main(int argc, char* argv[])
 
 						int  curc = countersfifo[curindex];
 						totalev[impa]+=curc;
-						//std::cout <<icc<<","<<scurves2D[impa]->GetYaxis()->FindBin(ith)<<","<<curc<<std::endl;
+						//std::cout <<icc<<","<<impa<<curc<<std::endl;
 
 						scurves2D[impa]->SetBinContent(scurves2D[impa]->GetXaxis()->FindBin(icc),scurves2D[impa]->GetYaxis()->FindBin(ith),curc);
 						//std::pair<uint32_t, uint32_t>pnlocal = static_cast<MPA*>(cMPA)->PNlocal(icc+1);
@@ -268,6 +269,8 @@ int main(int argc, char* argv[])
 					std::cout << "Oh no! " << std::endl;
 					totalev[impa]=0;
 				}*/
+				std::cout <<"MPA "<<impa<<" "<<totalev[impa]<<std::endl;
+
 		        std::cout << "totalevPRE " << totalevPRE[impa]<< " totalev " <<totalev[impa] << std::endl;
 				if (totalev[impa]==0 and totalevPRE[impa]>50)
 		        {
