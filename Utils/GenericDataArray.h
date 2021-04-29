@@ -11,6 +11,7 @@
 #define GenericDataArray_H
 
 #include <iostream>
+#include "../Utils/ConsoleColor.h"
 
 template <size_t size, typename T = float>
 class GenericDataArray
@@ -25,20 +26,19 @@ class GenericDataArray
 };
 
 template <size_t size, typename T = float>
-inline std::vector<GenericDataArray<size, T>>&& fromVectorToGenericDataArray(const std::vector<T>& theInputVector)
+inline GenericDataArray<size, T>&& fromVectorToGenericDataArray(const std::vector<T>& theInputVector)
 {
-    std::vector<GenericDataArray<size, T>> theOutputVector(theInputVector.size() / size + theInputVector.size() % size > 0 ? 1 : 0);
-
-    for(size_t it = 0; it < theOutputVector.size() * size; ++it)
+    if(theInputVector.size() > size)
     {
-        size_t outputVectorPosition = it / size;
-        size_t outputArrayPosition  = it % size;
-        if(it >= theInputVector.size())
-            theOutputVector[outputVectorPosition][outputArrayPosition] = T();
-        else
-            theOutputVector[outputVectorPosition][outputArrayPosition] = theInputVector[it];
+        LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << " input vector size (" << theInputVector.size() << ") is greater than the array size (" << size << ")\nSome data may be lost in the conversion"; 
     }
+    GenericDataArray<size, T> theOutputVector;
 
+    for(size_t it = 0; it < theInputVector.size(); ++it)
+    {
+            theOutputVector[it] = theInputVector[it];
+    }
+    
     return std::move(theOutputVector);
 }
 

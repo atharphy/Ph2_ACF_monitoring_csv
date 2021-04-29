@@ -52,6 +52,7 @@ class PSCluster
 class PCluster
 {
   public:
+    PCluster() : fAddress(255u), fWidth(255u), fZpos(255u) {};
     uint8_t fAddress;
     uint8_t fWidth;
     uint8_t fZpos;
@@ -61,6 +62,7 @@ class PCluster
 class SCluster
 {
   public:
+    SCluster() : fAddress(255u), fMip(255u), fWidth(255u) {};
     uint8_t fAddress;
     uint8_t fMip;
     uint8_t fWidth;
@@ -75,6 +77,7 @@ class Stub
         // with Strips starting at 0
         fCenter = static_cast<float>((pPosition / 2.) - 1);
     }
+    Stub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.) {};
     uint8_t getPosition() { return fPosition; }
     uint8_t getBend() { return fBend; }
     uint8_t getRow() { return fRow; }

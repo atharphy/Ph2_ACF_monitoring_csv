@@ -16,16 +16,17 @@
 #include <iostream>
 #include <math.h>
 #include "../Utils/Event.h"
+#include "../Utils/GenericDataArray.h"
 
 
-
+template <size_t StripSize, size_t PixelSize, size_t StubSize>
 class PSSync //: public streammable
 {
   public:
 
-    std::vector<Ph2_HwInterface::SCluster> fSClusters;
-    std::vector<Ph2_HwInterface::PCluster> fPClusters;
-    std::vector<Ph2_HwInterface::Stub> fStubs;
+    GenericDataArray<StripSize, Ph2_HwInterface::SCluster> fSClusters;
+    GenericDataArray<PixelSize, Ph2_HwInterface::PCluster> fPClusters;
+    GenericDataArray<StubSize, Ph2_HwInterface::Stub> fStubs;
 };
 
 

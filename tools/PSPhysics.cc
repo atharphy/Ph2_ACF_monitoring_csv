@@ -10,6 +10,7 @@
 #include "PSPhysics.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/PSSync.h"
+#include "../Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -26,7 +27,7 @@ void PSPhysics::ConfigureCalibration()
     // # Initialize directory and data container #
     // ###########################################
     this->CreateResultDirectory(RESULTDIR, false, false);
-    ContainerFactory::copyAndInitStructure<PSSync>(*fDetectorContainer, fPSSyncContainer);
+    ContainerFactory::copyAndInitStructure<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS>>(*fDetectorContainer, fPSSyncContainer);
 
     fChannelGroupHandler = new MPAChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(120, 16);
@@ -52,7 +53,7 @@ void PSPhysics::Running()
 
 void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
-    auto thePSSyncStream = prepareChannelContainerStreamer<PSSync>("PSSync");
+    auto thePSSyncStream = prepareChipContainerStreamer<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS>,EmptyContainer>();
 
     if(fStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fNetworkStreamer); }
 }
@@ -169,13 +170,10 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard)
     				auto curchip = cBoard->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());;
                     if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
 
-                    std::vector<PCluster> PClusters = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                    std::vector<SCluster> SClusters = static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                    std::vector<Stub> Stubs = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
-					PSSync curPSSync = cChip->getSummary<PSSync>();
-            		curPSSync.fPClusters = PClusters;
-            		curPSSync.fSClusters = SClusters;
-            		curPSSync.fStubs = Stubs;
+					auto curPSSync = cChip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS>>();
+                    curPSSync.fPClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_PIXEL_CLUSTERS, PCluster>(static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId()));
+                    curPSSync.fSClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_STRIP_CLUSTERS, SCluster>(static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId()));
+                    curPSSync.fStubs     = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS , Stub    >(static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(), cChip->getId()));
 				}
 			}
 		}

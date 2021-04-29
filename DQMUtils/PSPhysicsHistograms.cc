@@ -58,26 +58,39 @@ void PSPhysicsHistograms::fillSync(const DetectorDataContainer& DataContainer)
                                                         ->at(chip->getIndex())
                                                         ->getSummary<HistContainer<TH2F>>()
                                                         .fTheHistogram;
-					PSSync curPSSync = chip->getSummary<PSSync>();
+					auto curPSSync = chip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS>>();
 
-                    for(auto& st: curPSSync.fStubs)
-		            {
-						StubHistograms->Fill(st.getPosition(),st.getRow());
+                    for(int pos=0; pos<MAX_NUMBER_OF_STUB_CLUSTERS; ++pos)
+                    {
+						StubHistograms->Fill(curPSSync.fStubs[pos].getPosition(),curPSSync.fStubs[pos].getRow());
 		            }
-                    for(auto& pc: curPSSync.fPClusters)
+                    for(int pos=0; pos<MAX_NUMBER_OF_PIXEL_CLUSTERS; ++pos)
 		            {
-						PClusterHistograms->Fill(pc.fAddress ,pc.fZpos);
+						PClusterHistograms->Fill(curPSSync.fPClusters[pos].fAddress ,curPSSync.fPClusters[pos].fZpos);
 		            }
-
-                    for(auto& sc: curPSSync.fSClusters)
-		            {
-						SClusterHistograms->Fill(sc.fAddress);
+                    for(int pos=0; pos<MAX_NUMBER_OF_STRIP_CLUSTERS; ++pos)
+                    {
+						SClusterHistograms->Fill(curPSSync.fSClusters[pos].fAddress);
 		            }
                     
                 }
             }
         }
     }
+}
+
+bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
+{
+    ChipContainerStream<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS>, EmptyContainer> thePSEventStreamer("PSPhysics");
+
+    if(thePSEventStreamer.attachBuffer(&dataBuffer))
+    {
+        thePSEventStreamer.decodeChipData(fDetectorData);
+        fillSync(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+    return false;
 }
 
 void PSPhysicsHistograms::process()

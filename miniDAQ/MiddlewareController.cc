@@ -22,6 +22,7 @@
 #include "../tools/Tool.h"
 #include "MiddlewareController.h"
 //#include "../tools/SSAPhysics.h"
+#include "../tools/PSPhysics.h"
 #include "../tools/BackEndAlignment.h"
 
 //========================================================================================================================
@@ -118,6 +119,8 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<ClockDelay>;
         else if(getVariableValue("Calibration", buffer) == "physics")
             theSystemController_ = new Physics;
+        else if(getVariableValue("Calibration", buffer) == "psphysics")
+            theSystemController_ = new PSPhysics;
 
         else
         {

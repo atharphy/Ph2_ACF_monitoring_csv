@@ -136,6 +136,11 @@
 #define VECSIZE 1000
 //------------------------------------------------------------------------------
 
+// SSAPhysicsMaxSizes
+#define MAX_NUMBER_OF_STRIP_CLUSTERS 150
+#define MAX_NUMBER_OF_PIXEL_CLUSTERS 150
+#define MAX_NUMBER_OF_STUB_CLUSTERS  5
+
 enum class BoardType
 {
     D19C,
