@@ -234,7 +234,9 @@
     <Setting name="SyncDebug">0</Setting>
 
     <!-- Burst Test -->
+    <Setting name="NeventsBurst">1</Setting>
     <Setting name="LengthOfBurst">10</Setting>
+    <Setting name="ThresholdOffset">-30</Setting>
 
 </Settings>
 </HwDescription>

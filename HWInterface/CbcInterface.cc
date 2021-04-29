@@ -50,7 +50,8 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
                 // LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " <<
                 // cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec << " on
                 // page " << +cRegItem.second.fPage <<  RESET;
-                fBoardFW->EncodeReg(cRegItem.second, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
+                //fBoardFW->EncodeReg(cRegItem.second, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
+                fBoardFW->EncodeReg(cRegItem.second, pCbc , cVec, pVerifLoop, true);
                 #ifdef COUNT_FLAG
                     fRegisterCount++;
                 #endif
@@ -295,7 +296,8 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     {
         setBoard(pCbc->getBeBoardId());
         std::vector<uint32_t> cVecReq;
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
+        //fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(cRegItem, pCbc, cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
         // bools to find the values of failed and read
         bool    cFailed = false;
@@ -572,7 +574,8 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
         std::vector<uint32_t> cVec;
 
         // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pCbc, cVec, pVerifLoop, true);
+        //fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0;
@@ -638,7 +641,8 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
                 LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << cRegItem.second.fValue << " on register " << cRegItem.first;
                 continue;
             }
-            fBoardFW->EncodeReg(cRegItem.second, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
+            fBoardFW->EncodeReg(cRegItem.second, pCbc, cVec, pVerifLoop, true);
+            //fBoardFW->EncodeReg(cRegItem.second, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
             #ifdef COUNT_FLAG
                     fRegisterCount++;
             #endif
@@ -733,7 +737,8 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     if( !lpGBTFound() ) 
     {
         std::vector<uint32_t> cVecReq;
-        fBoardFW->EncodeReg( cRegItem,  pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg( cRegItem,  pCbc, cVecReq, true, false);
+        //fBoardFW->EncodeReg( cRegItem,  pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
         bool        cRead;
         uint8_t     cCbcId;

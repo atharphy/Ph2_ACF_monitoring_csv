@@ -121,6 +121,16 @@ class BeBoardFWInterface : public RegManager
     /*!
      * \brief Encode a/several word(s) readable for a Chip
      * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
+     * \param pChip : Chip object 
+     */
+    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    } 
+    
+    /*!
+     * \brief Encode a/several word(s) readable for a Chip
+     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
      * \param pChipId : Id of the Chip to work with
      * \param pVecReq : Vector to stack the encoded words
      */

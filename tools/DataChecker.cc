@@ -4215,12 +4215,15 @@ void DataChecker::TriggerBurstCheck()
 {
     auto cSetting = fSettingsMap.find ( "LengthOfBurst" );
     size_t cLengthOfBurst = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    size_t cNevents = 1; 
-    bool cWithNoise=false;
+    cSetting = fSettingsMap.find ( "NeventsBurst" );
+    size_t cNevents =  ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
+    bool cWithNoise=true;
     bool cUseOffsets=true;
     uint16_t cDelayAfterTP=200; 
-    cSetting = fSettingsMap.find ( "ThresholdBursts" );
-    uint16_t cThresholdForTest = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 600;
+    cSetting = fSettingsMap.find ( "ThresholdOffset" );
+    int cThresholdOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 30;
+    LOG (INFO) << BOLDMAGENTA << "Sending a burst of " << +cLengthOfBurst << " triggers .. threshold offset set to "
+        << +cThresholdOffset << RESET;
     // configure TP injection 
     if( !cWithNoise )
     {
@@ -4289,8 +4292,12 @@ void DataChecker::TriggerBurstCheck()
                     {
                         if( !cWithNoise )
                         {
+                            auto cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold" );
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThresholdForTest);
+                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold + cThresholdOffset );
+                            LOG (INFO) << BOLDMAGENTA << "Setting threshold on CBC#" << +cChip->getId() 
+                                << " to " << +(cThreshold + cThresholdOffset)
+                                << RESET;
                         }
                     }
                 }//Chip

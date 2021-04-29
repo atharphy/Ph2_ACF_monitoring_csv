@@ -3320,6 +3320,52 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 // TODO: check what to do with fFMCid and if I need it!
 // this is clearly for addressing individual CBCs, have to see how to deal with broadcast commands
 
+void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip , std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
+{
+    uint8_t pCbcId = pChip->getId();
+    uint8_t pLinkId = pChip->getOpticalGroupId();
+    uint8_t pFeId = pChip->getHybridId();
+    auto cMapIterator = fI2CSlaveMap.find(pCbcId);
+    bool cFound       = (cMapIterator != fI2CSlaveMap.end());
+    if(cFound)
+    {
+        // remember .. encoded command the chip id is .. the index and not the id!!
+        uint8_t pIndex = std::distance(fI2CSlaveMap.begin(), cMapIterator);
+        //LOG(INFO) << BOLDGREEN << "Encoding register from chip " << +pCbcId << " which is index " << +pIndex << " in I2C map " << RESET;
+        // use fBroadcastCBCId for broadcast commands
+        bool pUseMask = false;
+        if(fOptical)
+        {
+            // new command consists of one word if its read command, and of two words if its write. first word is always
+            uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
+            pVecReq.push_back(cWord);
+            // only for write commands
+            if(pWrite)
+            {
+                cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pRegItem.fValue << 0);
+                pVecReq.push_back(cWord);
+            }
+        }
+        else if(fI2CVersion >= 1)
+        {
+            // new command consists of one word if its read command, and of two words if its write. first word is always
+            // the same
+            pVecReq.push_back((0 << 28) | (0 << 27) | (pFeId << 23) | (pIndex << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0));
+            // only for write commands
+            if(pWrite) pVecReq.push_back((0 << 28) | (pWrite << 27) | (pRegItem.fValue << 0));
+        }
+        else
+        {
+            pVecReq.push_back((0 << 28) | (pFeId << 24) | (pCbcId << 20) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) |
+                              pRegItem.fValue);
+        }
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "Could not find address in I2C map.. " << RESET;
+    }
+}
+
 void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
     // use fBroadcastCBCId for broadcast commands

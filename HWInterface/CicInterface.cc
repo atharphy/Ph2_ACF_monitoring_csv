@@ -148,7 +148,8 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             cRegItem.fAddress = cReg.first;
             cRegItem.fValue   = cReg.second & 0xFF;
             //fBoardFW->EncodeReg(cRegItem, pCic->getFeId(), pCic->getChipId(), cVec, pVerifLoop, true);
-            fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+            //fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+            fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
             #ifdef COUNT_FLAG
                         fRegisterCount++;
             #endif
@@ -365,7 +366,8 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
         std::vector<uint32_t> cVec;
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x" 
         //     << std::hex << +cRegItem.fAddress << std::dec << RESET;
-        fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+        //fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     }
@@ -439,7 +441,8 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x" 
         //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
         std::vector<uint32_t> cVecReq;
-        fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(pRegItem, pChip, cVecReq, true, false);
+        //fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
         // bools to find the values of failed and read
         bool    cFailed = false;
