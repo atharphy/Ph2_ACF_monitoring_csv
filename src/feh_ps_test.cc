@@ -80,6 +80,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
     cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
 
+    cmd.defineOption("MPA", "Check sync readout", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("SSA", "Check sync readout", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("perType", "perform pedeNoise per chip flavour [MPA/SSA]");
     cmd.defineOptionAlternative("perType", "a");
 
@@ -107,6 +110,8 @@ int main(int argc, char* argv[])
     std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
     std::string cChipType  = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
     if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
+    if((cmd.foundOption("MPA"))) cChipType = "MPA";
+    if((cmd.foundOption("SSA"))) cChipType = "SSA";
 
     uint8_t           cPattern = (cmd.foundOption("mpaTest")) ? convertAnyInt(cmd.optionValue("mpaTest").c_str()) : 0;
     const std::string cSSAPair = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
@@ -374,12 +379,6 @@ int main(int argc, char* argv[])
     // need to do this if you're going to do any kind
     // of data tests
 
-
-    LOG(INFO) << BOLDBLUE << "6" << RESET;
-    if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync"))
-    {
-        DataChecker cDataChecker;
-        // front end type to tool
         FrontEndType cFrontEndType;
         if(cChipType == "MPA")
         {
@@ -396,6 +395,13 @@ int main(int argc, char* argv[])
             LOG(INFO) << "Checking data for SSAs only.." << RESET;
             cFrontEndType = FrontEndType::SSA;
         }
+
+    LOG(INFO) << BOLDBLUE << "6" << RESET;
+    if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync"))
+    {
+        DataChecker cDataChecker;
+        // front end type to tool
+
         auto cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cDataChecker.Inherit(&cHybridTester);
@@ -440,7 +446,7 @@ int main(int argc, char* argv[])
 
         //FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
         //auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
-        FrontEndType cFrontEndType   = FrontEndType::SSA;
+        //FrontEndType cFrontEndType   = cFrontEndType;
         auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         PedestalEqualization cPedestalEqualization;
@@ -465,7 +471,7 @@ int main(int argc, char* argv[])
         // hard coded for now
     	//ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cHybridTester.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
         //FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
-        FrontEndType cFrontEndType   = FrontEndType::SSA;
+        //FrontEndType cFrontEndType   = cFrontEndType;
         auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
         cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cPedeNoise.Inherit(&cHybridTester);

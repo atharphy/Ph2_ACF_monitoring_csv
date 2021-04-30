@@ -2221,7 +2221,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                                               << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0]) << " MSB address 0x" << std::hex << +cRegs[0] << std::dec << " LSB address 0x" << std::hex
                                               << +cRegs[1] << std::dec << " channel number " << +cChnl << " row number " << +cRowNumber << " pixel number " << +cPixelNumber << RESET;
                                 else
-                                    LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                                    LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
                                               << " LSB " << +(cValues[1]) << " MSB " << +(cValues[0]) << " MSB address 0x" << std::hex << +cRegs[0] << std::dec << " LSB address 0x" << std::hex
                                               << +cRegs[1] << std::dec << RESET;
                             }
@@ -2909,6 +2909,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             uint32_t cReadoutReq   = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             uint32_t cNtriggers    = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             uint32_t cNWords       = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+
             uint32_t cTimeoutValue = 10;
             if( cCountTriggers ) // use trigger_in_counter to check state of trigger FSM 
             {
@@ -2963,6 +2964,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 do
                 {
                     std::this_thread::sleep_for(std::chrono::microseconds(cPause));
+
                     cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
                     cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
@@ -2982,6 +2984,11 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+
+            //LOG(INFO) << MAGENTA << "cReadoutReq " << +cReadoutReq << RESET;
+            //LOG(INFO) << MAGENTA << "cNtriggers " << +cNtriggers << RESET;
+            //LOG(INFO) << MAGENTA << "cNWords " << +cNWords << RESET;
+
             if((cReadoutReq == 0 && cNtriggers < cNevents * (cMultiplicity + 1)) && cNWords != 0)
             {
                 LOG(INFO) << BOLDRED << "\t...Readout request not cleared... Trigger in counter is " << cNtriggers << " asked for " << cNevents * (cMultiplicity + 1) << " events and have " << cNWords
@@ -3045,7 +3052,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         LOG(DEBUG) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
         this->ReconfigureTriggerFSM(cVecReg);
 
-        bool stagger=true;
+        bool stagger=false;
         bool manual=true;
         this->PS_Clear_counters(fFastCommandDuration);
         this->PS_Clear_counters(fFastCommandDuration);

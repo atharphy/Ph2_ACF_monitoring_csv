@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 
     //std::pair<uint32_t, uint32_t> rows = {1, 17};
     //std::pair<uint32_t, uint32_t> cols = {1, 121};
-    std::pair<uint32_t, uint32_t> th   = {50, 200};
+    std::pair<uint32_t, uint32_t> th   = {190, 191};
 
 
     std::vector<TH2F*> scurves2D;
@@ -164,6 +164,8 @@ int main(int argc, char* argv[])
 			theMPAInterface->WriteChipReg(cMPA,"ReadoutMode",0x1);
 			theMPAInterface->WriteChipReg(cMPA,"ENFLAGS_ALL",0x5);
 			theMPAInterface->WriteChipReg(cMPA,"AnalogueAsync",0x1);
+			theMPAInterface->WriteChipReg(cMPA,"Threshold",0x20);
+			theMPAInterface->WriteChipReg(cMPA,"InjectedCharge",0x0);
 			}
 
 
@@ -174,7 +176,7 @@ int main(int argc, char* argv[])
 
     std::vector<uint16_t> countersfifo;
     //uint32_t curpnum = 0;
-    uint32_t totalevents     = 0;
+    //uint32_t totalevents     = 0;
     uint32_t nrep            = 0;
     for(uint16_t ith = th.first; ith < th.second; ith++)
     {
@@ -192,19 +194,22 @@ int main(int argc, char* argv[])
               //if(cMPA->getFrontEndType() == FrontEndType::SSA)theMPAInterface->Set_threshold(theMPA, ith);
 	      	  }
 
+			while(true)
+			{
 
-            //std::cout << "Shutter open " << std::endl;
-        	std::this_thread::sleep_for(ShortWait);
+            std::cout << "" << std::endl;
+			std::cout <<"Shutter Open"<<std::endl;
         	static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
        		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
-            std::this_thread::sleep_for(ShortWait);
+            //std::this_thread::sleep_for(LongPOWait*2*60);
+            std::this_thread::sleep_for(LongPOWait*2*10);
             //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(8);
             //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
             //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
             //std::cout << "Shutter close " << std::endl;
+			std::cout <<"Shutter Close"<<std::endl;
 
-            std::this_thread::sleep_for(ShortWait);
 
             scurvecsv << ith << ",";
 
@@ -212,15 +217,27 @@ int main(int argc, char* argv[])
 
             // I2C readout
             //std::cout << "Get Data" << std::endl;
-            std::vector<uint32_t> countersfifo;
+          	std::vector<uint32_t> countersfifo;
+			impa=0;
+            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetData(pBoard,countersfifo);
+			auto asev=D19cPSEventAS(pBoard,countersfifo);
+
     	    for(auto cMPA: *ChipVec)
 			    {
-		        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->ReadASEvent(cMPA,countersfifo,std::pair<uint32_t, uint32_t> {5,5});
+			    std::cout <<"MPA "<<impa<<" "<<asev.GetNHits(0,cMPA->getId())<<std::endl;
+				
+            	//std::vector<uint32_t> countersfifo;
+		        //static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->ReadASEvent(cMPA,countersfifo,std::pair<uint32_t, uint32_t> {1,1920});
+		        //static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->ReadASEvent(cMPA,countersfifo);
+				//totalevents = std::accumulate(countersfifo.begin() + 1, countersfifo.end(), 0);
+			    //std::cout <<"MPA "<<impa<<" "<<totalevents<<std::endl;
+            	impa+=1;
 				}
+			}
 
-
+			continue;
             //std::vector<uint32_t> countersfifo;
-            //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetData(pBoard,countersfifo);
+
              //std::cout << "Get Data Done" << std::endl;
 
             // countersfifo = [0];
@@ -228,7 +245,7 @@ int main(int argc, char* argv[])
             // this fixes the issue but this needs to be looked at further
 
 
-            //totalevents = std::accumulate(countersfifo.begin() + 1, countersfifo.end(), 0);
+            //
             //std::cout << "3 "<<countersfifo.size()<<" "<<totalevents<< std::endl;
             //std::cout << "totalevents "<<totalevents << std::endl;
   
@@ -269,7 +286,7 @@ int main(int argc, char* argv[])
 					std::cout << "Oh no! " << std::endl;
 					totalev[impa]=0;
 				}*/
-				std::cout <<"MPA "<<impa<<" "<<totalev[impa]<<std::endl;
+
 
 		        std::cout << "totalevPRE " << totalevPRE[impa]<< " totalev " <<totalev[impa] << std::endl;
 				if (totalev[impa]==0 and totalevPRE[impa]>50)

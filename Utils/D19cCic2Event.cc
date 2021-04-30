@@ -176,14 +176,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     //P + S clusters 
                                     cNStripClusters = (*(cIterator + 2) & (0x7F << 7)) >> 7;
                                     uint8_t cNPxlClusters= (*(cIterator + 2) & 0x7F);
-
+								
                                     fNPxlClusters[cFe->getIndex()] = cNPxlClusters; 
                                     fNStripClusters[cFe->getIndex()] = cNStripClusters;
 
                                     // split stream into s and p clusters 
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
 
-                                    LOG (DEBUG) << BOLDCYAN << "\t..Found:" <<+cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
+                                    LOG (INFO) << BOLDCYAN << "\t..Found:" <<+cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
                                     
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
                                     for(auto cL1Word: cL1SWords)
@@ -588,7 +588,7 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
             aPCluster.fWidth   = cWdth;//((*cIterator) & ((0x7) << (0 + 4))) >> (0 + 4);
             aPCluster.fZpos    = cZInfo;//((*cIterator) & ((0xF) << 0)) >> 0;
             cPClusters.push_back(aPCluster);
-            LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
+            LOG(INFO) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
         }
         cIterator++;
 

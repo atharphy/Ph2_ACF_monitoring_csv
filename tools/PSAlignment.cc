@@ -235,9 +235,9 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                                 for(auto& st: stubs)
                                 {
                                     if((2 * cCol) == st.getPosition() and (cRow - 1) == st.getRow()) MatchNStubtot += 1; // Match row and column
-                                    // std::cout << "getPosition "<<+st.getPosition()<< std::endl;
-                                    // std::cout << "getBend "<<+st.getBend()<< std::endl;
-                                    // std::cout << "getRow " <<+st.getRow()<<std::endl;
+                                     std::cout << "getPosition "<<+st.getPosition()<< std::endl;
+                                     std::cout << "getBend "<<+st.getBend()<< std::endl;
+                                     std::cout << "getRow " <<+st.getRow()<<std::endl;
                                 }
                             }
                         }
