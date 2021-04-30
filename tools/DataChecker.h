@@ -55,6 +55,8 @@ class DataChecker : public Tool
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
 
+    void MemoryCheck2SRaw();
+    void MemoryCheck2SSparse();
     void MemoryCheck2S();
     //void TriggerBurstCheck();
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
@@ -62,8 +64,10 @@ class DataChecker : public Tool
     void Eye_CIC();
     bool GenericFastCommands();
 
+    bool SendGenericTestPulses(int pReSync=0);
+    bool ReadAfterGenericBlock(int pNExpected);
     void PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme);
-    void GenericTestPulse(int pNTrials=1);
+    void GenericTestPulse(int pReSync=0);
     void FastCommandMemChecks2S(int pNTrials=1);
     void FastCommandInjections(int pNTrials=1);
     void PSTriggerTests();
@@ -115,7 +119,8 @@ class DataChecker : public Tool
     std::vector<uint8_t> fFastCommands;
     std::vector<int>  fTriggeredBxs; 
     int fNInjectedTriggers=0;
-    
+    int fTotalEventsExpected = 0; 
+
   private:
     // masks
     ChannelGroup<254, 1> fCBCMask;
@@ -133,7 +138,7 @@ class DataChecker : public Tool
     int fMissedEvent  = 0;
     int fEventCounter = 0;
     int fTriggerTestCounter =0;
-
+    
     //
     TPconfig fTPconfig;
 
