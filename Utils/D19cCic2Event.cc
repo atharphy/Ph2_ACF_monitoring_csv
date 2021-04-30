@@ -102,27 +102,23 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            auto cIterator = cEventIterator + LENGTH_EVENT_HEADER;
-            uint32_t cEvntCntTag = (*(cEventIterator+LENGTH_EVENT_HEADER-2)); 
-            uint16_t cFc7EvtId = (cEvntCntTag & (0xFFFFFF)); 
-            cEvntCntTag = (*(cEventIterator+LENGTH_EVENT_HEADER-1)); 
+            // counters from event header
+            uint32_t cEvntCntTag = (*(cEventIterator+2)); 
+            uint32_t cFc7EvtId = (cEvntCntTag & (0x00FFFFFF)); 
+            fTDC               = (cEvntCntTag & ( 0xFF << 24) ) >> 24 ;
+            // from tLU 
+            cEvntCntTag = (*(cEventIterator+1)); 
+            fExternalTriggerID = ( cEvntCntTag &  ( 0x7FFF << 16) ) >> 16 ;
+            // internal counters 
+            cEvntCntTag = (*(cEventIterator+3)); 
             uint16_t cFc7BxId = (cEvntCntTag & (0xFFFF)); 
             uint16_t cFc7TrigId = (cEvntCntTag & (0xFFFF<<16)) >> 16;
+            
             fExternalTriggerID = cFc7TrigId;//(*(cEventIterator + 1) >> 16) & 0x7FFF;
-            fTDC               = (*(cEventIterator + 2) >> 24) & 0xFF;
             fEventCount        = cFc7EvtId;//0x00FFFFFF & *(cEventIterator + 2);
             fBunch             = cFc7BxId;//0xFFFFFFFF & *(cEventIterator + 3);
 
-
-            // quick look at data 
-             for( size_t cIndx=0 ; cIndx < cEventSize; cIndx++)
-             {
-                 if( cIndx < (cEventSize-cDummyCount) ) 
-                     LOG (DEBUG) << BOLDBLUE << "\t VALID ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
-            //     else
-            //         LOG (INFO) << BOLDMAGENTA << "\t DUMMY ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
-             }
-            
+            auto cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
             for(auto cOpticalGroup: *pBoard)
