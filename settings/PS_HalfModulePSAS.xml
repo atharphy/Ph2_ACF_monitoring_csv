@@ -22,11 +22,8 @@
                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
-            <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="0" configfile="MPATST.txt" />
-
-
             <SSA_Files path="./settings/SSAFiles/" />
+            <SSA Id="0" configfile="SSAPreCalib.txt" />
             <SSA Id="1" configfile="SSAPreCalib.txt" />
 
             <CIC_Files path="./settings/CicFiles/" />

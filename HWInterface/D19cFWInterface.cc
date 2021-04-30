@@ -2926,7 +2926,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 cFailed = !( cNtriggers == cNevents*(1+cMultiplicity)  );
                 if( cFailed ){ 
                     auto cState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
-                    LOG (INFO) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " 
+                    LOG (DEBUG) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " 
                         << +cNevents*(1+cMultiplicity) << " and received " << +cNtriggers 
                         << " FSM state is " << +cState 
                         << " .. re-trying" 
@@ -2996,7 +2996,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             }
             else if(cNWords == 0)
             {
-                LOG(INFO) << BOLDRED << "\t...No data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << cNevents * (cMultiplicity + 1) << " events and have " << cNWords
+                LOG(DEBUG) << BOLDRED << "\t...No data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << cNevents * (cMultiplicity + 1) << " events and have " << cNWords
                           << " words in the readout... Re-trying point" << RESET;
             }
             else
