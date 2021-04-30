@@ -58,9 +58,9 @@ void PSPhysicsHistograms::fillSync(const DetectorDataContainer& DataContainer)
                                                         ->at(chip->getIndex())
                                                         ->getSummary<HistContainer<TH2F>>()
                                                         .fTheHistogram;
-					auto curPSSync = chip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS>>();
+					auto curPSSync = chip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
 
-                    for(int pos=0; pos<MAX_NUMBER_OF_STUB_CLUSTERS; ++pos)
+                    for(int pos=0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos)
                     {
 						StubHistograms->Fill(curPSSync.fStubs[pos].getPosition(),curPSSync.fStubs[pos].getRow());
 		            }
@@ -81,7 +81,7 @@ void PSPhysicsHistograms::fillSync(const DetectorDataContainer& DataContainer)
 
 bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
 {
-    ChipContainerStream<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS>, EmptyContainer> thePSEventStreamer("PSPhysics");
+    ChipContainerStream<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>, EmptyContainer> thePSEventStreamer("PSPhysics");
 
     if(thePSEventStreamer.attachBuffer(&dataBuffer))
     {

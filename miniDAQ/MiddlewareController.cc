@@ -23,6 +23,7 @@
 #include "MiddlewareController.h"
 //#include "../tools/SSAPhysics.h"
 #include "../tools/PSPhysics.h"
+#include "../tools/Physics2S.h"
 #include "../tools/BackEndAlignment.h"
 
 //========================================================================================================================
@@ -121,7 +122,8 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new Physics;
         else if(getVariableValue("Calibration", buffer) == "psphysics")
             theSystemController_ = new PSPhysics;
-
+        else if(getVariableValue("Calibration", buffer) == "2sphysics")
+            theSystemController_ = new Physics2S;
         else
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Calibration type " << getVariableValue("Calibration", buffer) << " not found, Aborting" << RESET;

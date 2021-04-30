@@ -22,6 +22,7 @@
 #include "RD53ThresholdHistograms.h"
 #include "SSAPhysicsHistograms.h"
 #include "PSPhysicsHistograms.h"
+#include "Physics2SHistograms.h"
 
 #include "TFile.h"
 
@@ -130,6 +131,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
     else if(calibrationName == "psphysics")
         fDQMHistogrammerVector.push_back(new PSPhysicsHistograms());
+    else if(calibrationName == "2sphysics")
+        fDQMHistogrammerVector.push_back(new Physics2SHistograms());
 
     fOutputFile = new TFile("tmp.root", "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);

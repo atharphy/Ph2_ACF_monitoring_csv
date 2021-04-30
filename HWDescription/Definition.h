@@ -136,10 +136,11 @@
 #define VECSIZE 1000
 //------------------------------------------------------------------------------
 
-// SSAPhysicsMaxSizes
+// OT Physics parameters
 #define MAX_NUMBER_OF_STRIP_CLUSTERS 150
 #define MAX_NUMBER_OF_PIXEL_CLUSTERS 150
-#define MAX_NUMBER_OF_STUB_CLUSTERS  5
+#define MAX_NUMBER_OF_STUB_CLUSTERS_PS 5
+#define MAX_NUMBER_OF_STUB_CLUSTERS_2S 3
 
 enum class BoardType
 {
