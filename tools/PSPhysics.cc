@@ -192,8 +192,17 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard)
 
 					auto curPSSync = cChip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
                     curPSSync.fPClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_PIXEL_CLUSTERS, PCluster>(static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId()));
+                    // std::cout<<"Pixel cluster centers = ";
+                    // for(size_t pos = 0; pos<MAX_NUMBER_OF_PIXEL_CLUSTERS; ++pos) std::cout << +curPSSync.fPClusters[pos].fAddress << " ";
+                    // std::cout<<std::endl;
                     curPSSync.fSClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_STRIP_CLUSTERS, SCluster>(static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId()));
+                    // std::cout<<"Strip cluster centers = ";
+                    // for(size_t pos = 0; pos<MAX_NUMBER_OF_STRIP_CLUSTERS; ++pos) std::cout << +curPSSync.fSClusters[pos].fAddress << " ";
+                    // std::cout<<std::endl;
                     curPSSync.fStubs     = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_PS , Stub    >(static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(), cChip->getId()));
+                    // std::cout<<"Stub cluster centers = ";
+                    // for(size_t pos = 0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos) std::cout << +curPSSync.fStubs[pos].getPosition() << " ";
+                    // std::cout<<std::endl;
 				}
 			}
 		}
