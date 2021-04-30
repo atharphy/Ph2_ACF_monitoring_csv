@@ -979,7 +979,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
 
-        if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
+        if(pNevents == 0) 
+        { 
+            //LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; 
+        }
         else
         {
             EventType fEventType = pBoard->getEventType();

@@ -58,6 +58,8 @@ void PSPhysicsHistograms::fillSync(const DetectorDataContainer& DataContainer)
                                                         ->at(chip->getIndex())
                                                         ->getSummary<HistContainer<TH2F>>()
                                                         .fTheHistogram;
+                    if(!chip->hasSummary()) continue;
+                    else LOG(INFO) << BOLDBLUE << "Something received from chip " << chip->getId() << RESET;
 					auto curPSSync = chip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
 
                     for(int pos=0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos)
@@ -81,11 +83,13 @@ void PSPhysicsHistograms::fillSync(const DetectorDataContainer& DataContainer)
 
 bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
 {
-    ChipContainerStream<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>, EmptyContainer> thePSEventStreamer("PSPhysics");
+    std::cout<<__PRETTY_FUNCTION__ << "Begin of function"<<std::endl;
+    ChipContainerStream<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>> thePSEventStreamer("PSPhysics");
 
     if(thePSEventStreamer.attachBuffer(&dataBuffer))
     {
-        thePSEventStreamer.decodeChipData(fDetectorData);
+        std::cout<<__PRETTY_FUNCTION__ << "attached!!"<<std::endl;
+        thePSEventStreamer.decodeChipData(fDetectorData); 
         fillSync(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;

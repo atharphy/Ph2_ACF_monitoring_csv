@@ -8,6 +8,8 @@
 */
 
 #include "PSPhysics.h"
+#include "BackEndAlignment.h"
+#include "CicFEAlignment.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/PSSync.h"
 #include "../Utils/GenericDataArray.h"
@@ -17,6 +19,21 @@ using namespace Ph2_HwInterface;
 
 void PSPhysics::ConfigureCalibration()
 {
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(this);
+    cCicAligner.Start(0);
+    cCicAligner.waitForRunToBeCompleted();
+    // reset all chip and board registers
+    // to what they were before this tool was called
+    cCicAligner.Reset();
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(this);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    // reset all chip and board registers
+    // to what they were before this tool was called
+    cBackEndAligner.Reset();
+
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -40,12 +57,13 @@ void PSPhysics::Running()
     if(saveRawData == true)
     {
         char runString[7];
-        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); // max value can be 999999, to avoid GCC 8 warning
+        sprintf(runString, "%06d", (fRunNumber));
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
+    
     SystemController::Start(fRunNumber);
 
     PSPhysics::run();
@@ -53,7 +71,7 @@ void PSPhysics::Running()
 
 void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
-    auto thePSSyncStream = prepareChipContainerStreamer<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>,EmptyContainer>();
+    auto thePSSyncStream = prepareChipContainerStreamer<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
 
     if(fStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fNetworkStreamer); }
 }
@@ -100,6 +118,8 @@ void PSPhysics::run()
     {
         for(const auto cBoard: *fDetectorContainer)
         {
+            // unsigned int dataSize = 10;
+            // SystemController::ReadNEvents(static_cast<BeBoard*>(cBoard), dataSize);
             unsigned int dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
             if(dataSize != 0)
             {
@@ -109,7 +129,7 @@ void PSPhysics::run()
             totalDataSize += dataSize;
         }
 
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53FWconstants::READOUTSLEEP));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;

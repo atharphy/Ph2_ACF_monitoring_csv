@@ -305,27 +305,27 @@ int main(int argc, char* argv[])
     // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
     
-        // TO-DO
-        // add condirion to check if USB is being used
-        cHybridTester.SelectCIC(true);
-            LOG(INFO) << "CicFEAlignment" << RESET;
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cHybridTester);
-        cCicAligner.Start(0);
-        cCicAligner.waitForRunToBeCompleted();
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cCicAligner.Reset();
-        cCicAligner.dumpConfigFiles();
-            LOG(INFO) << "BackEndAlignment" << RESET;
-        // align back-end
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cHybridTester);
-        cBackEndAligner.Start(0);
-        cBackEndAligner.waitForRunToBeCompleted();
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cBackEndAligner.Reset();
+    // TO-DO
+    // add condirion to check if USB is being used
+    cHybridTester.SelectCIC(true);
+        LOG(INFO) << "CicFEAlignment" << RESET;
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cHybridTester);
+    cCicAligner.Start(0);
+    cCicAligner.waitForRunToBeCompleted();
+    // reset all chip and board registers
+    // to what they were before this tool was called
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
+        LOG(INFO) << "BackEndAlignment" << RESET;
+    // align back-end
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cHybridTester);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    // reset all chip and board registers
+    // to what they were before this tool was called
+    cBackEndAligner.Reset();
     cPSAlignment.Align();
     cPSAlignment.Reset();
 

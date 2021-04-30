@@ -1301,12 +1301,14 @@ void D19cFWInterface::TriggerConfiguration()
     auto cSource       = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
     auto cRate         = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    LOG(DEBUG) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
-    if(cSource != 6 && cSource != 10) LOG(DEBUG) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
-    LOG(DEBUG) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
+    if(cSource != 6 && cSource != 10) LOG(INFO) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
 }
 void D19cFWInterface::Start()
 {
+    // reset trigger config
+    this->ResetTriggerFSM();
     // reset the readout
     this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
@@ -2475,7 +2477,6 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     // }
     if(fIsDDR3Readout && !cAsync)
     {
-        LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // figure out how many events I've got
         cNEvents = this->CountFwEvents(pBoard, pData);
@@ -2705,6 +2706,10 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
             LOG(ERROR) << "ZS Event only with handshake!!! Exiting...";
             throw std::runtime_error("ZS Event can only be used with handshake");
         }
+        uint32_t cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        uint32_t cNtriggers    = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        LOG(INFO) <<  BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
+        if(cNWords == 0) return 0;
         cNEvents = this->GetData(pBoard, pData);
         // read all the words
         if(fIsDDR3Readout)
