@@ -4615,7 +4615,7 @@ void DataChecker::MemoryCheck2SSparse()
     size_t cBurstLength= ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1; 
     
     size_t cDepthPipeline = 512; 
-    int    cNOffsts = 1;//std::ceil(cDepthPipeline/(float)cBurstLength); 
+    int    cNOffsts = std::ceil(cDepthPipeline/(float)cBurstLength); 
     
     // here have to be careful 
     // because I can only look at a maximum of 32 clusters at a time per CBC 
@@ -4626,7 +4626,7 @@ void DataChecker::MemoryCheck2SSparse()
         // first figure out seeds 
         std::vector<uint8_t> cSeeds{10}; cSeeds.clear(); 
         std::vector<int> cBends{0}; cBends.clear();
-        for( size_t cIndx=0; cIndx < 3; cIndx++)
+        for( size_t cIndx=0; cIndx < 2; cIndx++)
         {
             int cChannel = cGroup*2 + 1 + 16*cIndx; 
             int cStrip = 2*(1 + cChannel/2); 
