@@ -55,13 +55,16 @@ class DataChecker : public Tool
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
 
-    void TriggerBurstCheck();
+    void MemoryCheck2S();
+    //void TriggerBurstCheck();
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
     void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
     void Eye_CIC();
     bool GenericFastCommands();
 
     void PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme);
+    void GenericTestPulse(int pNTrials=1);
+    void FastCommandMemChecks2S(int pNTrials=1);
     void FastCommandInjections(int pNTrials=1);
     void PSTriggerTests();
     void PSNominal();
@@ -96,8 +99,19 @@ class DataChecker : public Tool
         uint16_t tpFastReset     = 0;
         uint8_t  tpAmplitude     = 100;
     };
+    class FCMDs
+    {
+        public : 
+            uint8_t fTrigger   = 0xC9; // trigger
+            uint8_t fTestPulse = 0xC5; // trigger
+            uint8_t fBC0       = 0xC3; // BC0
+            uint8_t fResync    = 0xD1; // Resync
+            uint8_t fClear     = 0xD3; // ReSync+BC0
+            uint8_t fEmpty     = 0xC1; // empty 
+    };
 
   protected:
+    std::vector<uint16_t> fExpectedPipelineAddress;
     std::vector<uint8_t> fFastCommands;
     std::vector<int>  fTriggeredBxs; 
     int fNInjectedTriggers=0;

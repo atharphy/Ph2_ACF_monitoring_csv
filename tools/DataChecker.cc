@@ -1313,6 +1313,156 @@ void DataChecker::PrepareDigitalInjection(DetectorDataContainer& pInjectionSchem
         }// module
     }//boards
 }
+void DataChecker::GenericTestPulse(int pNtrials)
+{
+    LOG (INFO) << BOLDMAGENTA << "Injecting TP with generic FCMDs " << RESET;
+    
+    auto cSetting = fSettingsMap.find ( "TriggerSeparation" );
+    size_t cSeparation = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1000 ;
+    // separation between TP and first trigger 
+    cSetting = fSettingsMap.find( "TestPulseSeparation" );
+    size_t cTPdelay = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 2; 
+    // length of the trigger burst 
+    cSetting = fSettingsMap.find( "LengthOfBurst" );
+    size_t cBurstLength= ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1; 
+    
+    FCMDs cFCMDs;
+    size_t fSizeGap=20;
+    //std::vector<uint8_t> cFastCommands(0);
+    fExpectedPipelineAddress.clear();
+    fFastCommands.clear();
+    for( size_t cIndx=0; cIndx < 2*fSizeGap; cIndx++)
+    {
+        fFastCommands.push_back( cFCMDs.fEmpty );
+    }
+    // send a resync + BC0 
+    // need this to clear the L1 counters 
+    fFastCommands.push_back( cFCMDs.fClear); 
+    fFastCommands.push_back( cFCMDs.fEmpty); 
+    for( size_t cIndx=0; cIndx < (size_t)pNtrials; cIndx++)
+    {
+        fFastCommands.push_back( cFCMDs.fTestPulse );
+        for( size_t cBx=0; cBx < cTPdelay; cBx++)
+        {
+            fFastCommands.push_back( cFCMDs.fEmpty );
+        }
+        for( size_t cBx=0; cBx < cBurstLength; cBx++)
+        {
+            fFastCommands.push_back( cFCMDs.fTrigger );
+            fExpectedPipelineAddress.push_back(cBx%512); 
+            fNInjectedTriggers++;
+        }
+        for( size_t cBx=0; cBx < 100; cBx++)
+        {
+            fFastCommands.push_back( cFCMDs.fEmpty );
+        }
+    }
+    // fFastCommands.clear();
+    // fFastCommands.insert(fFastCommands.end(), cFastCommands.begin(), cFastCommands.begin() + 0x3FFF );
+}
+void DataChecker::FastCommandMemChecks2S(int cNtrials)
+{
+    LOG (DEBUG) << BOLDMAGENTA << "2S Memory Check with GFCMDs " << RESET;
+    // mean NBx between triggers 
+    auto cSetting = fSettingsMap.find ( "TriggerSeparation" );
+    size_t cSeparation = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1000 ;
+    // length of the trigger burst 
+    cSetting = fSettingsMap.find( "LengthOfBurst" );
+    size_t cBurstLength= ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1; 
+    // separation between TP and first trigger 
+    cSetting = fSettingsMap.find( "TestPulseSeparation" );
+    size_t cTPdelay = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 2; 
+    
+
+    // random c++
+    std::srand (std::time(NULL));
+    std::random_device cRndm{};
+    std::mt19937 cGen{cRndm()};
+    std::poisson_distribution<> cDistTrigSep(cSeparation);
+    
+    std::vector<uint16_t> fTriggerSeparation; 
+    fTriggerSeparation.clear();
+    // clear vector to keep track of expected addresses
+    fExpectedPipelineAddress.clear();
+    // clear NinjectedTriggers 
+    fNInjectedTriggers=0;
+    
+    // start with fSizeGap empty fast commands 
+    // then 1 BC0
+    // then fSizeGap empty fast commands
+    size_t fSizeGap=20;
+    std::vector<uint8_t> cFastCommands(0);
+    cFastCommands.clear();
+    for( size_t cIndx=0; cIndx < 2*fSizeGap; cIndx++)
+    {
+        cFastCommands.push_back( 0xC1 );
+    }
+    // count triggers 
+
+    size_t cTriggerCounter=0;
+    //size_t cGap = cTriggerSpacing - (cCalPulseDuration+cCalPulseDelay);
+    size_t cBxId=0;
+    fTriggeredBxs.clear();
+    size_t cInjectedPipeline=0; 
+    
+    FCMDs cFCMDs;
+    for( size_t cIndx=0; cIndx < (size_t)cNtrials; cIndx++)
+    {
+        // TP lasts N clock cycles
+        // first - need to send a clear counter command 
+        // to make sure that CIC does not see 511 as an L1 Id 
+        cFastCommands.push_back( cFCMDs.fClear); // 0xD3 ); // counter reset + resync 
+        cBxId++;
+        cFastCommands.push_back( cFCMDs.fEmpty); //0xC1 ); // 1 empty clock cycle  
+        cBxId++;
+        cFastCommands.push_back( cFCMDs.fTestPulse); //0xC1 ); // 1 empty clock cycle  
+        fExpectedPipelineAddress.push_back( cBxId%512 );
+        LOG (INFO) << BOLDMAGENTA << "Trigger sent in Bx " 
+            << +cBxId 
+            << " expected pipeline address would be "
+            << +(cBxId%512)
+            << RESET;
+        cBxId++;
+        for(size_t cBx=0; cBx < cTPdelay; cBx++)
+        {
+            cFastCommands.push_back( cFCMDs.fEmpty); //0xC1 ); // 1 empty clock cycle  
+            cBxId++;
+        }
+        for(size_t cBx=0; cBx < cInjectedPipeline+cBurstLength; cBx++)
+        {
+            cFastCommands.push_back(cFCMDs.fTrigger);//0xC9);
+            cBxId++;
+            cTriggerCounter++; 
+            fNInjectedTriggers++;
+            if( fNInjectedTriggers == 510 )  // cannot let the L1A counter from the CIC reach 511 
+            {
+                //make sure you send a clear counter here 
+                cFastCommands.push_back( cFCMDs.fClear ); // counter reset + resync 
+                cFastCommands.push_back( cFCMDs.fEmpty ); // 1 empty clock cycle  
+            }
+        }
+        
+        // gap then next train 
+        // if I want to make this a random distribution of triggers then 
+        // rather than always using the same gap I need to change this 
+        // only thing is I am limited by the fact that I need 
+        // approximately 80 Bx in the back-end 
+        size_t cTriggerGap = std::round(cDistTrigSep(cGen)); 
+        for( size_t cBx = 0 ; cBx < cTriggerGap ; cBx++ )
+        {
+            cFastCommands.push_back( cFCMDs.fEmpty );
+            cBxId++;
+        }
+    }
+    // and then make sure you end with fSizeGap empty fast command
+    for( size_t cIndx=0; cIndx < fSizeGap; cIndx++)
+    {
+        cFastCommands.push_back( cFCMDs.fEmpty );
+    }
+    // clear fast command vector 
+    fFastCommands.clear();
+    fFastCommands.insert(fFastCommands.end(), cFastCommands.begin(), cFastCommands.begin() + 0x3FFF );
+}
 void DataChecker::FastCommandInjections(int cNtrials)
 {
     LOG (DEBUG) << BOLDMAGENTA << "Cal Pulse Injections with GFCMDs " << RESET;
@@ -4211,24 +4361,91 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
     }
 }
 // assumes chips are sitting at the pedestal 
-void DataChecker::TriggerBurstCheck()
+void DataChecker::MemoryCheck2S()
 {
-    auto cSetting = fSettingsMap.find ( "LengthOfBurst" );
-    size_t cLengthOfBurst = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    cSetting = fSettingsMap.find ( "NeventsBurst" );
-    size_t cNevents =  ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1;
-    bool cWithNoise=true;
-    bool cUseOffsets=true;
-    uint16_t cDelayAfterTP=200; 
-    cSetting = fSettingsMap.find ( "ThresholdOffset" );
+    bool cWithNoise=false;
+    bool cUseOffsets=false;
+    bool cInjection=true;
+    bool cAllOnes=true;
+    auto cSetting = fSettingsMap.find ( "Threshold" );
     int cThresholdOffset = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 30;
-    LOG (INFO) << BOLDMAGENTA << "Sending a burst of " << +cLengthOfBurst << " triggers .. threshold offset set to "
-        << +cThresholdOffset << RESET;
-    // configure TP injection 
-    if( !cWithNoise )
+    cSetting = fSettingsMap.find ( "Ntrials" );
+    int cNtrials = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
+    cSetting = fSettingsMap.find( "TestPulseSeparation" );
+    size_t cTPdelay = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 2; 
+    cSetting = fSettingsMap.find( "GenericFastCommands" );
+    bool cUseGeneric=( cSetting != std::end ( fSettingsMap ) ) ? (cSetting->second == 1 ) : false;
+    
+    // injection 
+    DetectorDataContainer cExpectedOccupancy;
+    fDetectorDataContainer = &cExpectedOccupancy;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    for(auto cBoard: *fDetectorContainer)
     {
-        // check trigger source
-        // and reload
+        bool cSparsified = cBoard->getSparsification();
+        if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
+        else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
+        
+        auto& cExpectedOccThisBoard = cExpectedOccupancy.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+
+            auto& cExpectedOccThisOG = cExpectedOccThisBoard->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getIndex());
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cSparsified);
+                // only 2S for now 
+                // configure injection 
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getIndex());
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        std::vector<uint8_t> cExpectedHits(0);
+                        if( !cInjection )
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip,"Threshold",1000);
+                            for( size_t cIndx=0; cIndx < cChip->size(); cIndx++)
+                            {
+                                cExpectedOccThisChip->getChannel<Occupancy>(cIndx).fOccupancy = 1; 
+                            }
+                            continue;
+                        }
+
+                        uint8_t cSeed = 10 + 2*(cChip->getId() + 1 );
+                        std::vector<uint8_t> cSeeds{10};cSeeds[0]=cSeed;
+                        std::vector<int>     cBends{0};
+                        
+                        for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                        {
+                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                            LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
+                            for( auto cHit : cHitList )
+                            { 
+                                LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                                cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = 1; 
+                            }
+                        }
+                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise, cUseOffsets);
+                        // if using TP injection make sure the latency is set correctly 
+                    }
+                }//Chip
+            }//Hybrid
+        }//OG
+    }
+
+    // check trigger source
+    // and reload
+    if( cUseGeneric ) 
+    {
+        // generate fast commands
+        //this->FastCommandMemChecks2S(cNtrials);
+        this->GenericTestPulse(cNtrials);
+    }
+    else
+    {
         for(auto cBoard: *fDetectorContainer)
         {
             uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
@@ -4237,109 +4454,77 @@ void DataChecker::TriggerBurstCheck()
             std::vector<std::pair<std::string, uint32_t>> cRegVec;
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 100});
-            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cDelayAfterTP});
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cTPdelay});
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 400});
             cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
         }
     }
-
-    // injection 
-    for(auto cBoard: *fDetectorContainer)
+    int cMinLatencyOffset = -1;//-10;
+    int cMaxLatencyOffset = 0;//(cWithNoise) ? cMinLatencyOffset + 1 : cMinLatencyOffset + std::fabs(cMinLatencyOffset)*2; 
+    for( int cLatencyOffset = cMinLatencyOffset ; cLatencyOffset < cMaxLatencyOffset ; cLatencyOffset++)
     {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                // only 2S for now 
-                // configure injection 
-                for(auto cChip: *cHybrid)
-                {
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3)
-                    {
-                        uint8_t cSeed = 10 + 2*(cChip->getId() + 1 );
-                        std::vector<uint8_t> cSeeds{10};cSeeds[0]=cSeed;
-                        std::vector<int>     cBends{0};
-                        for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
-                        {
-                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                            LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
-                            for( auto cHit : cHitList ) LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
-                        }
-                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise, cUseOffsets);
-                    }
-                }//Chip
-            }//Hybrid
-        }//OG
-    }
+        uint16_t cLatency = cTPdelay + cLatencyOffset;
+        if( cLatency >= cTPdelay ) continue;
 
-    // 
-    LOG (INFO) << BOLDBLUE << "Data test with multiple triggers " << +cNevents << RESET;
-    int cOffset = 0; 
-    int cLatency = cDelayAfterTP + cOffset; 
-    LOG (INFO) << BOLDBLUE << "Latency set to " << +cLatency << RESET;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                // only 2S for now 
-                // configure injection 
-                for(auto cChip: *cHybrid)
-                {
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3)
-                    {
-                        if( !cWithNoise )
-                        {
-                            auto cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold" );
-                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold + cThresholdOffset );
-                            LOG (INFO) << BOLDMAGENTA << "Setting threshold on CBC#" << +cChip->getId() 
-                                << " to " << +(cThreshold + cThresholdOffset)
-                                << RESET;
-                        }
-                    }
-                }//Chip
-            }//Hybrid
-        }//OG
-        fBeBoardInterface->ChipReSync(cBoard);
-    }
-
-    // now just send triggers 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        auto cTriggerMultiplicity = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cLengthOfBurst-1);
-        //
-        ReadNEvents(cBoard, cNevents);
-        const std::vector<Event*>& cEvents = this->GetEvents();
-        LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
-        for(auto& cEvent: cEvents)
+        LOG (INFO) << BOLDMAGENTA << "Latency of " << +cLatency << RESET;
+        for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    // only 2S for now 
-                    // configure injection 
                     for(auto cChip: *cHybrid)
                     {
-                        if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-
-                        auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
-                        LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() 
-                            << " CBC#" << +cChip->getId()
-                            << " : found " << +cHits.size() << " hits." << RESET;
-                        for( auto cHit : cHits ) LOG (INFO) << BOLDMAGENTA << "\t\t... hit in channel " << +cHit << RESET;
-                    }//chip 
-                }//hybrid
+                        fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 1000);
+                        fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cLatency);
+                    }//Chip
+                }//Hybrid
             }//OG
+            fBeBoardInterface->ChipReSync(cBoard);
+        }//Board      
+
+        if( cUseGeneric ) 
+        {
+            this->GenericFastCommands();
         }
-        
-        //
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
-        // 
+        // now just send triggers 
+        for(auto cBoard: *fDetectorContainer)
+        {
+            if( !cUseGeneric ) ReadNEvents(cBoard, cNtrials);
+            const std::vector<Event*>& cEvents = this->GetEvents();
+            LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
+            size_t cEvntCnt=0;
+            for(auto& cEvent: cEvents)
+            {
+                auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
+                LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << RESET;
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        // only 2S for now 
+                        // configure injection 
+                        for(auto cChip: *cHybrid)
+                        {
+                            if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+
+                            auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
+                            auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
+                            auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
+                            LOG (INFO) << BOLDMAGENTA 
+                                << "\t.. CBC#" << +cChip->getId()
+                                << " pipeline address is " << +cPipelineAddress
+                                << " expected pipeline address is " << +cExpectedPipelineAddress
+                                << " L1Id is " << +cL1Id
+                                << " : found " << +cHits.size() << " hits." << RESET;
+                            //for( auto cHit : cHits ) LOG (INFO) << BOLDMAGENTA << "\t\t... hit in channel " << +cHit << RESET;
+                        }//chip 
+                    }//hybrid
+                }//OG
+                cEvntCnt++;
+            }// event 
+        }
     }
     
 }

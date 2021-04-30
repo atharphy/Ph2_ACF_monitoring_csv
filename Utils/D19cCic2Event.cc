@@ -87,41 +87,35 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     const uint8_t  VALID_STUB_HEADER   = 0x05;
     uint32_t       cNEvents            = 0;
     auto           cEventIterator      = pData.begin();
-    // counters from event header
-    fExternalTriggerID = (*(cEventIterator + 1) >> 16) & 0x7FFF;
-    fTDC               = (*(cEventIterator + 2) >> 24) & 0xFF;
-    fEventCount        = 0x00FFFFFF & *(cEventIterator + 2);
-    fBunch             = 0xFFFFFFFF & *(cEventIterator + 3);
     do
     {
         uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
         uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
 
-        // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
-        //            << " dummy 32 bit words .. " << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
+                   << " dummy 32 bit words .. " << RESET;
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            auto cIterator = cEventIterator + LENGTH_EVENT_HEADER;
-            uint32_t cEvntCntTag = (*(cEventIterator+LENGTH_EVENT_HEADER-2)); 
-            uint16_t cFc7EvtId = (cEvntCntTag & (0xFFFFFF)); 
-            cEvntCntTag = (*(cEventIterator+LENGTH_EVENT_HEADER-1)); 
+            // counters from event header
+            uint32_t cEvntCntTag = (*(cEventIterator+1));
+            // from tLU 
+            fExternalTriggerID = ( cEvntCntTag &  ( 0x7FFF << 16) ) >> 16 ;
+            // TDC + L1A counter  
+            cEvntCntTag = (*(cEventIterator+2)); 
+            uint32_t cFc7EvtId = (cEvntCntTag & (0x00FFFFFF)); 
+            fTDC               = (cEvntCntTag & ( 0xFF << 24) ) >> 24 ;
+            // internal counters 
+            cEvntCntTag = (*(cEventIterator+3)); 
             uint16_t cFc7BxId = (cEvntCntTag & (0xFFFF)); 
             uint16_t cFc7TrigId = (cEvntCntTag & (0xFFFF<<16)) >> 16;
+            
             fExternalTriggerID = cFc7TrigId;//(*(cEventIterator + 1) >> 16) & 0x7FFF;
-            fTDC               = (*(cEventIterator + 2) >> 24) & 0xFF;
             fEventCount        = cFc7EvtId;//0x00FFFFFF & *(cEventIterator + 2);
             fBunch             = cFc7BxId;//0xFFFFFFFF & *(cEventIterator + 3);
 
-            // quick look at data
-            for(size_t cIndx = 0; cIndx < cEventSize; cIndx++)
-            {
-                if(cIndx < (cEventSize - cDummyCount)) LOG(DEBUG) << BOLDBLUE << "\t VALID ...  " << std::bitset<32>(*(cIterator + cIndx)) << RESET;
-                //     else
-                //         LOG (INFO) << BOLDMAGENTA << "\t DUMMY ...  " << std::bitset<32>(*(cIterator+cIndx)) << RESET;
-            }
-
+            auto cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
             for(auto cOpticalGroup: *pBoard)
@@ -159,9 +153,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 fEventHitList[cFe->getIndex()].first = cL1Information;
                                 fEventHitList[cFe->getIndex()].second.clear();
                                 uint8_t cNStripClusters = 0;
-
                                 if(cIs2S)
                                 {
+                                    cNStripClusters = (*(cIterator + 2) & 0x7F); 
                                     fNStripClusters[cFe->getIndex()] = cNStripClusters;
                                     // clusters/hit data first
                                     std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);
@@ -261,7 +255,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                                     cPosition++;
                                                 }
                                             }
-                                            //LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                                            LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
                                             fEventRawList[cFe->getIndex()].second.push_back(cBitset);
                                         }
                                     }

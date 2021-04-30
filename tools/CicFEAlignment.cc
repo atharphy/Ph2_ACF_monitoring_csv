@@ -606,17 +606,49 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         }
         // l1 lines
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.stub_debug.enable", 0x00);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(pNTriggers, 10, 3);
+        //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(pNTriggers, 100, 3);
+        uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        uint16_t cSrc = 3;
+        if( cTriggerSrc != cSrc ) 
+        {    
+            LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source is set to " << +cSrc << RESET;
+            std::vector<std::pair<std::string, uint32_t>> cRegVec;
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSrc});
+            cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+            fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        }
+        
+        // count triggers sent to the CIC
         bool cAllTriggersSent = false;
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Start();
+        size_t cAttempt=0;
+        size_t cMaxAttempts=10;
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+        auto cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         do
         {
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
-            auto cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-            LOG(DEBUG) << BOLDBLUE << "... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
-            cAllTriggersSent = (cNTriggersSent == pNTriggers);
-        } while(!cAllTriggersSent);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Stop();
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Start();
+            do
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+                LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
+                cAllTriggersSent = (cNTriggersSent >= pNTriggers);
+            } while(!cAllTriggersSent);
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Stop();
+            if( cNTriggersSent == 0 ) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+            cAttempt++;
+        }while( cNTriggersSent == 0 && cAttempt < cMaxAttempts);
+
+        // set trigger source back 
+        if( cTriggerSrc != cSrc ) 
+        {    
+            LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source back to " << +cTriggerSrc << RESET;
+            std::vector<std::pair<std::string, uint32_t>> cRegVec;
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+            cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+            fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        }    
+        
         // re-configure original mask 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -647,7 +679,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                 if(cLocked)
                 { 
                     fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
-                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
+                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                     auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                     size_t cPhyPort=0; 
                     size_t cPhyPortChnl=0; 

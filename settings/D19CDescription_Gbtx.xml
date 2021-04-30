@@ -225,5 +225,13 @@
     <Setting name="StubThreshold">580</Setting>
     <Setting name="StubAttempts">1</Setting>
 
+    <!-- Burst Test -->
+    <Setting name="Ntrials">100</Setting>
+    <Setting name="LengthOfBurst">1</Setting>
+    <Setting name="ThresholdOffset">-30</Setting>
+    <Setting name="TriggerSeparation">1000</Setting>
+    <Setting name="TestPulseSeparation">20</Setting>
+    <Setting name="GenericFastCommands">1</Setting>
+
 </Settings>
 </HwDescription>
