@@ -567,6 +567,7 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
     auto cEnd      = cClusterWords.end();
     while( cIterator != cEnd )
     {
+        LOG(INFO) << BOLDGREEN << "I am in while!!!" << RESET;
 
         uint32_t cVal = static_cast<uint32_t>((*cIterator));
         uint32_t cId = (uint32_t)( (cVal & (0x7 << 14) )  >> 14 );

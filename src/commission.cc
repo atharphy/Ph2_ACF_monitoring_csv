@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 
     
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 5});  
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});  
     (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReconfigureTriggerFSM(cVecReg);
 
 

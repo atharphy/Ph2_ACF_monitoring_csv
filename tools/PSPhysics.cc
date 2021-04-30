@@ -9,6 +9,7 @@
 
 #include "PSPhysics.h"
 #include "BackEndAlignment.h"
+#include "PSAlignment.h"
 #include "CicFEAlignment.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/PSSync.h"
@@ -19,6 +20,12 @@ using namespace Ph2_HwInterface;
 
 void PSPhysics::ConfigureCalibration()
 {
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(this);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
+    
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
     cCicAligner.Start(0);
@@ -33,6 +40,12 @@ void PSPhysics::ConfigureCalibration()
     // reset all chip and board registers
     // to what they were before this tool was called
     cBackEndAligner.Reset();
+
+    cPSAlignment.Align();
+    cPSAlignment.Reset();
+
+    // SystemController::Configure("settings/PS_HalfModule.xml");
+
 
     // #######################
     // # Retrieve parameters #
@@ -123,8 +136,12 @@ void PSPhysics::run()
             unsigned int dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
             if(dataSize != 0)
             {
-                PSPhysics::fillDataContainer(cBoard);
-                PSPhysics::sendBoardData(cBoard);
+                const std::vector<Event*>& events = SystemController::GetEvents();
+                for(const auto& event: events) 
+                { 
+                    PSPhysics::fillDataContainer(cBoard, event);
+                    PSPhysics::sendBoardData(cBoard);
+                }
             }
             totalDataSize += dataSize;
         }
@@ -170,43 +187,40 @@ void PSPhysics::display()
 #endif
 }
 
-void PSPhysics::fillDataContainer(BoardContainer* const& cBoard)
+void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, Event* event)
 {
 
 
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) 
-	{ 
-		for(const auto cOpticalGroup: *fPSSyncContainer.at(cBoard->getIndex()))
-		{
-		    for(const auto cHybrid: *cOpticalGroup)
-			{
-		        for(const auto cChip: *cHybrid)
-				{
+    for(const auto cOpticalGroup: *fPSSyncContainer.at(cBoard->getIndex()))
+    {
+        for(const auto cHybrid: *cOpticalGroup)
+        {
+            for(const auto cChip: *cHybrid)
+            {
 
-    				auto curchip = cBoard->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());;
-                    if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
+                auto curchip = cBoard->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());;
+                if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
 
-					auto curPSSync = cChip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
-                    curPSSync.fPClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_PIXEL_CLUSTERS, PCluster>(static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId()));
-                    // std::cout<<"Pixel cluster centers = ";
-                    // for(size_t pos = 0; pos<MAX_NUMBER_OF_PIXEL_CLUSTERS; ++pos) std::cout << +curPSSync.fPClusters[pos].fAddress << " ";
-                    // std::cout<<std::endl;
-                    curPSSync.fSClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_STRIP_CLUSTERS, SCluster>(static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId()));
-                    // std::cout<<"Strip cluster centers = ";
-                    // for(size_t pos = 0; pos<MAX_NUMBER_OF_STRIP_CLUSTERS; ++pos) std::cout << +curPSSync.fSClusters[pos].fAddress << " ";
-                    // std::cout<<std::endl;
-                    curPSSync.fStubs     = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_PS , Stub    >(static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(), cChip->getId()));
-                    // std::cout<<"Stub cluster centers = ";
-                    // for(size_t pos = 0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos) std::cout << +curPSSync.fStubs[pos].getPosition() << " ";
-                    // std::cout<<std::endl;
-				}
-			}
-		}
-	}
+                auto curPSSync = cChip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
+                curPSSync.fPClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_PIXEL_CLUSTERS, PCluster>(static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId()));
+                // std::cout<<"Pixel cluster centers = ";
+                // for(size_t pos = 0; pos<MAX_NUMBER_OF_PIXEL_CLUSTERS; ++pos) std::cout << +curPSSync.fPClusters[pos].fAddress << " ";
+                // std::cout<<std::endl;
+                curPSSync.fSClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_STRIP_CLUSTERS, SCluster>(static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId()));
+                // std::cout<<"Strip cluster centers = ";
+                // for(size_t pos = 0; pos<MAX_NUMBER_OF_STRIP_CLUSTERS; ++pos) std::cout << +curPSSync.fSClusters[pos].fAddress << " ";
+                // std::cout<<std::endl;
+                curPSSync.fStubs     = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_PS , Stub    >(static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(), cChip->getId()));
+                // std::cout<<"Stub cluster centers = ";
+                // for(size_t pos = 0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos) std::cout << +curPSSync.fStubs[pos].getPosition() << " ";
+                // std::cout<<std::endl;
+            }
+        }
+    }
+
 }
 
 void PSPhysics::chipErrorReport() {}

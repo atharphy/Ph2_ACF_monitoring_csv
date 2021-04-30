@@ -13,6 +13,7 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/MPAChannelGroupHandler.h"
+#include "../Utils/Event.h"
 #include "Tool.h"
 // #include "../Utils/PSSharedConstants.h"
 // #include "../HWInterface/PSFWInterface.h"
@@ -41,7 +42,7 @@ class PSPhysics : public Tool
     void initialize(const std::string fileRes_, const std::string fileReg_);
     void run();
     void draw();
-    void fillDataContainer(BoardContainer* const& cBoard);
+    void fillDataContainer(BoardContainer* const& cBoard, Ph2_HwInterface::Event* event);
 
   private:
     DetectorDataContainer fPSSyncContainer;

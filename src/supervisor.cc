@@ -273,7 +273,7 @@ int main(int argc, char* argv[])
             case RUNNING:
             {
                 if(cmd.optionValue("calibration")!= "psphysics") while(theMiddlewareInterface.status() != "Done") usleep(5e5);
-                else usleep(120e6);
+                else usleep(30e6);
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
                 usleep(2e6);
                 theMiddlewareInterface.stop();

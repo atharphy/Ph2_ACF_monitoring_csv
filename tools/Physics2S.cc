@@ -140,7 +140,7 @@ void Physics2S::initHisto()
 void Physics2S::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos.fillSync(f2SDataContainer);
+    histos.fillData(f2SDataContainer);
 #endif
 }
 
