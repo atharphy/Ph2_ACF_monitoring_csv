@@ -65,7 +65,7 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 5 </Register>
-            <Register name="user_trigger_frequency"> 100 </Register>
+            <Register name="user_trigger_frequency"> 5 </Register>
             <Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -205,8 +205,8 @@
     <Setting name="AsyncSweepTh">0</Setting>
     <Setting name="AsyncThreshold">10</Setting>
     <Setting name="AsyncCalDac">30</Setting>
-    <Setting name="StartLatency">76</Setting>
-    <Setting name="LatencyRange">3</Setting>
+    <Setting name="StartLatency">70</Setting>
+    <Setting name="LatencyRange">20</Setting>
     <Setting name="StartTHDAC">0x40</Setting>
     <Setting name="StopTHDAC">0x90</Setting>
     <Setting name="NMsec">0</Setting>
