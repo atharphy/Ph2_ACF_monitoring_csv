@@ -444,6 +444,7 @@ int main(int argc, char* argv[])
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cTool);
         cDataChecker.Initialise();
+        //cDataChecker.MemoryCheck2SRaw();
         cDataChecker.MemoryCheck2SSparse();
 
         cDataChecker.writeObjects();

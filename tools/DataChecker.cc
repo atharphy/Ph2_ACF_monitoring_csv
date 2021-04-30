@@ -4607,7 +4607,6 @@ void DataChecker::MemoryCheck2SSparse()
 {
     bool cWithNoise=false;
     bool cUseOffsets=false;
-    bool cInjection=false;
     auto cSetting = fSettingsMap.find ( "Ntrials" );
     size_t cNtrials = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
     cSetting = fSettingsMap.find( "TestPulseSeparation" );
@@ -4616,21 +4615,23 @@ void DataChecker::MemoryCheck2SSparse()
     size_t cBurstLength= ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1; 
     
     size_t cDepthPipeline = 512; 
-    int    cNOffsts = std::ceil(cDepthPipeline/(float)cBurstLength); 
+    int    cNOffsts = 1;//std::ceil(cDepthPipeline/(float)cBurstLength); 
     
     // here have to be careful 
     // because I can only look at a maximum of 32 clusters at a time per CBC 
     // but .. you can do it in groups of TPs 
-    for( size_t cGroup=0; cGroup < 8; cGroup++)
+    for( size_t cGroup=0; cGroup < 1; cGroup++)
     {
         // prepare injections 
         // first figure out seeds 
-        std::vector<uint8_t> cSeeds(0); 
-        std::vector<int> cBends(0);
-        for( size_t cIndx=0; cIndx < 32; cIndx++)
+        std::vector<uint8_t> cSeeds{10}; cSeeds.clear(); 
+        std::vector<int> cBends{0}; cBends.clear();
+        for( size_t cIndx=0; cIndx < 3; cIndx++)
         {
-            int cChannel = cGroup*cIndx*2; 
-            int cStrip = cChannel/2; 
+            int cChannel = cGroup*2 + 1 + 16*cIndx; 
+            int cStrip = 2*(1 + cChannel/2); 
+            LOG(INFO) << BOLDBLUE << "\t.. Injecting in strip#" << cStrip << RESET;
+                                
             cSeeds.push_back(cStrip);
             cBends.push_back(0);
         }// will have 16 stubs per CBC .. which is 
@@ -4665,16 +4666,6 @@ void DataChecker::MemoryCheck2SSparse()
                         if( cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
                             std::vector<uint8_t> cExpectedHits(0);
-                            if( !cInjection )
-                            {
-                                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",1000);
-                                for( size_t cIndx=0; cIndx < cChip->size(); cIndx++)
-                                {
-                                    cExpectedOccThisChip->getChannel<Occupancy>(cIndx).fOccupancy = 1; 
-                                }
-                                continue;
-                            }
-
                             for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
                             {
                                 auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
@@ -4694,7 +4685,7 @@ void DataChecker::MemoryCheck2SSparse()
         }//inj over boards
 
         int cMinLatencyOffset = -1;//-10;
-        int cMaxLatencyOffset = 0;//(cWithNoise) ? cMinLatencyOffset + 1 : cMinLatencyOffset + std::fabs(cMinLatencyOffset)*2; 
+        int cMaxLatencyOffset =  0;//(cWithNoise) ? cMinLatencyOffset + 1 : cMinLatencyOffset + std::fabs(cMinLatencyOffset)*2; 
         for( int cLatencyOffset = cMinLatencyOffset ; cLatencyOffset < cMaxLatencyOffset ; cLatencyOffset++)
         {
             uint16_t cLatency = cTPdelay + cLatencyOffset;
@@ -4709,7 +4700,7 @@ void DataChecker::MemoryCheck2SSparse()
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 560);
+                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 1000);
                             fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cLatency);
                         }//Chip
                     }//Hybrid
