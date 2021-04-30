@@ -188,7 +188,7 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometer">647</Setting>
+    <Setting name="AntennaPotentiometer">0</Setting>
     <Setting name="ThresholdForOpens">10</Setting>
     <Setting name="AntennaTriggerRate">50</Setting>
 
@@ -205,8 +205,8 @@
     <Setting name="AsyncSweepTh">0</Setting>
     <Setting name="AsyncThreshold">10</Setting>
     <Setting name="AsyncCalDac">30</Setting>
-    <Setting name="StartLatency">60</Setting>
-    <Setting name="LatencyRange">30</Setting>
+    <Setting name="StartLatency">76</Setting>
+    <Setting name="LatencyRange">3</Setting>
     <Setting name="StartTHDAC">0x40</Setting>
     <Setting name="StopTHDAC">0x90</Setting>
     <Setting name="NMsec">0</Setting>

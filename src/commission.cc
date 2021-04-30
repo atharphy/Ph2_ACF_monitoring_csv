@@ -75,6 +75,8 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
 
+
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)

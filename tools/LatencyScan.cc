@@ -109,7 +109,7 @@ void LatencyScan::ScanLatency()
 							if(theChip->getFrontEndType() == FrontEndType::SSA)
                     			LOG(INFO) << "SSA";
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x1);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 190);
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
 							if(theChip->getFrontEndType() == FrontEndType::MPA)
 								{
                     			LOG(INFO) << "MPA";
@@ -161,7 +161,7 @@ void LatencyScan::ScanLatency()
                                 cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
                         cHitSum += cHitCounter; 
-                        //cHitSum += cHitCounterMPA; 
+                        cHitSum += cHitCounterMPA; 
                         cHitSum += cHitCounterSSA; 
 						cHitSumMPA+=cHitCounterMPA;
 						cHitSumSSA+=cHitCounterSSA;
