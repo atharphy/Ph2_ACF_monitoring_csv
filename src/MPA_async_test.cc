@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 
     //std::pair<uint32_t, uint32_t> rows = {1, 17};
     //std::pair<uint32_t, uint32_t> cols = {1, 121};
-    std::pair<uint32_t, uint32_t> th   = {40, 41};
+    std::pair<uint32_t, uint32_t> th   = {190, 191};
 
 
     std::vector<TH2F*> scurves2D;
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
         	static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
        		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
             //std::this_thread::sleep_for(LongPOWait*2*60);
-            std::this_thread::sleep_for(LongPOWait*2*5);
+            std::this_thread::sleep_for(LongPOWait*2*10);
             //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
             static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(8);
             //static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
