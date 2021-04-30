@@ -629,8 +629,10 @@ void Tool::dumpConfigFiles()
                     for(auto chip: *hybrid)
                     {
                         std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId()) +
-                                                "_Chip" + std::to_string(chip->getId()) + ".txt";
+                                                "_Chip" + std::to_string(chip->getId()) ;
                         LOG(DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
+                      	if(chip->getFrontEndType() == FrontEndType::SSA) cFilename+="SSA";
+			cFilename+= ".txt";
                         chip->saveRegMap(cFilename.data());
                     }
                     auto& cCic = static_cast<OuterTrackerHybrid*>(hybrid)->fCic;
