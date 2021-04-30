@@ -107,14 +107,16 @@ void LatencyScan::ScanLatency()
                     {
                             ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
 							if(theChip->getFrontEndType() == FrontEndType::SSA)
+								{
                     			LOG(INFO) << "SSA";
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x1);
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
+								}
 							if(theChip->getFrontEndType() == FrontEndType::MPA)
 								{
                     			LOG(INFO) << "MPA";
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x7);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 190);
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 50);
 								}
 						
 					}
