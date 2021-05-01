@@ -7,6 +7,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/MemoryCheck2S.h"
 #include "tools/LatencyScan.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
@@ -441,14 +442,14 @@ int main(int argc, char* argv[])
     // inject hits and stubs using mask and compare input against output
     if( cmd.foundOption("memCheck"))
     {
-        DataChecker cDataChecker;
-        cDataChecker.Inherit(&cTool);
-        cDataChecker.Initialise();
-        //cDataChecker.MemoryCheck2SRaw();
-        cDataChecker.MemoryCheck2SSparse();
+        MemoryCheck2S cMemoryChecker;
+        cMemoryChecker.Inherit(&cTool);
+        cMemoryChecker.Initialise();
+        cMemoryChecker.MemoryCheck2SRaw();
+        //cMemoryChecker.MemoryCheck2SSparse();
 
-        cDataChecker.writeObjects();
-        cDataChecker.resetPointers();
+        cMemoryChecker.writeObjects();
+        cMemoryChecker.resetPointers();
     }
     if(cCheckData)
     {

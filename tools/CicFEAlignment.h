@@ -17,6 +17,13 @@
 #include <map>
 // #ifdef __USE_ROOT__
 
+#ifndef PortAlignment
+typedef std::vector<uint8_t> PortAlignment;
+#endif
+#ifndef PortAlignmentVals
+typedef std::vector<PortAlignment> PortAlignmentVals;
+#endif
+
 // add break codes here
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
 const uint8_t FAILED_WORD_ALIGNMENT  = 2;
@@ -33,7 +40,7 @@ class CicFEAlignment : public Tool
 
     void                              Initialise();
     void                              SetStaticPhaseAlignment();
-    bool                              PhaseAlignment(uint16_t pWait_ms = 100, uint32_t pNTriggers = 1000);
+    bool                              PhaseAlignment(uint16_t pWait_ms = 10, uint32_t pNTriggers = 500);
     bool                              ManualPhaseAlignment(uint16_t pPhase = 10);
     bool                              WordAlignment(uint16_t pWait_ms = 100);
     bool                              Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);

@@ -62,14 +62,20 @@ void BackEndAlignment::Initialise()
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
-        for(auto cOpticalReadout: *cBoard)
+        // 
+        auto& cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>(); 
+        const BeBoardRegMap& cOrigRegMap = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
+        cBoardRegNap.insert( cOrigRegMap.begin(), cOrigRegMap.end() );
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cHybrid: *cOpticalReadout)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisBoard->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex());
-                for(auto cChip: *cHybrid) { cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap(); }
+                for(auto cChip: *cHybrid)
+                {
+                    ChipRegMap& theChipMap = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
+                    theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end()); 
+                }
             }
         }
     }
@@ -165,13 +171,15 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
     uint32_t cNevents = 10;
     // sparsification of 
-    bool cRawHits = false;
+    bool cSparsified = pBoard->getSparsification();
+    if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Sparsification on " << RESET;
+    else LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Sparsification off " << RESET;
+
     // trigger multiplicity 
     uint8_t cMult = 1;
 
-    LOG(INFO) << GREEN << "Trying stub latency finding in the back-end" << RESET;
-    bool cSparsified = pBoard->getSparsification();
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cRawHits);
+    LOG(INFO) << GREEN << "Trying to find stub latency finding in the back-end" << RESET;
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
         
     // read back original masks 
     DetectorDataContainer cChipMasks; 
@@ -183,8 +191,6 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cRawHits);
             for(auto cChip: *cHybrid)
             {
                 auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );

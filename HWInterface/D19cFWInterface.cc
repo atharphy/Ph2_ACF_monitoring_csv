@@ -1350,11 +1350,12 @@ void D19cFWInterface::TriggerConfiguration()
 }
 void D19cFWInterface::Start()
 {
-    // re-load configuration 
-    // this->ResetTriggerFSM();
+    ResetTriggerFSM();
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // reset the readout
     this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    this->TriggerConfiguration();
 
     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
     // clear the register manually)
@@ -1388,6 +1389,7 @@ void D19cFWInterface::ResetTriggerFSM()
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*1));
+    
     // load new trigger configuration
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*1));
@@ -3798,7 +3800,6 @@ void D19cFWInterface::Trigger(uint8_t pDuration)
 }
 bool D19cFWInterface::Bx0Alignment()
 {
-    auto     cStubPackageDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
     bool     cSuccess          = false;
     uint32_t cStubDebug        = this->ReadReg("fc7_daq_cnfg.stub_debug.enable");
     if(cStubDebug)

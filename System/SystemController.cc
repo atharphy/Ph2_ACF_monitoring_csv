@@ -318,6 +318,10 @@ void SystemController::CicStartUp(uint8_t pDriveStrength)
     LOG (INFO) << BOLDBLUE << "SystemController::CicStartUp" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
+        // read CIC sparsification setting
+        bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+        cBoard->setSparsification(cSparsified);
+
         for(auto cOpticalGroup: *cBoard)
         {
             uint8_t cLinkId = cOpticalGroup->getId();
@@ -348,9 +352,6 @@ void SystemController::CicStartUp(uint8_t pDriveStrength)
                     }
                     LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
                 }
-                // // make sure mode is set for PS 
-                // fCicInterface->SelectMode( cCic, cMode );
-                
                 // select CIC FE enable register
                 std::vector<uint8_t> cFeIds(0);
                 //uint8_t cMode=0;
@@ -372,7 +373,7 @@ void SystemController::CicStartUp(uint8_t pDriveStrength)
                 }
                 // CIC start-up sequence
                 if( cSuccess) cSuccess               = fCicInterface->StartUp(cCic, pDriveStrength);
-                
+                if( cSuccess) cSuccess               = fCicInterface->SetSparsification( cCic, cSparsified); 
                 if( cSuccess )
                     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
                           << +theOuterTrackerHybrid->getOpticalGroupId() << RESET;

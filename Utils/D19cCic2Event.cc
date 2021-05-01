@@ -47,7 +47,8 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             FeData cFeData;
             fEventStubList.push_back(cFeData);
             fFeIds.push_back(cFe->getId());
-
+            fFeIdsCic.push_back(cFe->getId());
+                                            
             std::vector<uint8_t> cROCIds(0);
             cROCIds.clear();
             for(auto cChip: *cFe)
@@ -248,14 +249,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                             {
                                                 auto  cIndex   = cChipIndex + cFe->fullSize() * cBlockIndex;
                                                 auto& cL1block = cL1Words[cIndex];
-                                                LOG(DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
+                                                //LOG(INFO) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
                                                 for(size_t cNbit = 0; cNbit < cL1block.size(); cNbit++)
                                                 {
                                                     cBitset[cBitset.size() - 1 - cPosition] = cL1block[cL1block.size() - 1 - cNbit];
                                                     cPosition++;
                                                 }
                                             }
-                                            LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                                            //LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
                                             fEventRawList[cFe->getIndex()].second.push_back(cBitset);
                                         }
                                     }
@@ -349,9 +350,12 @@ void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
     {
         for(auto hybrid: *opticalGroup)
         {
-            LOG(DEBUG) << BOLDBLUE << "Filling data container for hybrid " << hybrid->getId() << RESET;
+            //LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
             for(auto chip: *hybrid)
             {
+                // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId() 
+                //     << " at index " << +chip->getIndex()
+                //     << RESET;
                 std::vector<uint32_t> cHits = this->GetHits(hybrid->getId(), chip->getId());
                 // LOG (DEBUG) << "\t.... " << +cHits.size() << " hits in chip." << RESET;
                 for(auto cHit: cHits)
@@ -674,9 +678,26 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
 
 std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
-    auto cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
-    // auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
-    auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cChipIdMapped];
+    size_t cIndx = 0;
+    // if there are some FEs diabled.. what happens? 
+    std::vector<uint8_t> cIds(0);
+    for( auto cRocId : fROCIds[pFeId]) 
+    {
+        cIds.push_back( getChipIdMapped( pFeId, cRocId ) );
+    }
+    auto cIter = std::find( cIds.begin(), cIds.end(), pReadoutChipId); 
+    if( cIter == cIds.end() ) LOG (INFO) << BOLDRED << "Wrong Id .. .not in list.. check" << RESET;
+    else
+    {
+        cIndx = std::distance( cIds.begin(), cIter); 
+        if( cIds.size() != 0 ) cIndx = cIds.size() - 1 - cIndx; 
+    }
+    // auto cChipIndex   =  getFeIndex(pFeId);
+    // LOG (INFO) << BOLDMAGENTA << "D19cCic2Event::getRawL1Word Hybrid ChipId# " << +pReadoutChipId
+    //         << " Index in local vector is " << +cChipIndex 
+    //         << " Index in data vector from CIC is " << +cIndx << RESET; 
+    
+    auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cIndx];
     return cDataBitset;
 }
 
@@ -855,6 +876,8 @@ std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId, uint8_t pRea
         {
             uint8_t cChipId       = ((cClusterWord & (0x7 << 11)) >> 11);
             auto    cChipIdMapped = this->getChipIdMapped(pFeId, cChipId);
+            // I think I need to adjust this 
+
             // auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
             if(cChipIdMapped != pReadoutChipId) continue;
 

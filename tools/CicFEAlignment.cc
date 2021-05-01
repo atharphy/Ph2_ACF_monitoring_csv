@@ -66,8 +66,8 @@ void CicFEAlignment::Initialise()
     // ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fLogic);
     // ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fHIPs);
     // ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fPtCuts);
-    ContainerFactory::copyAndInitStructure<std::vector<uint8_t>>(*fDetectorContainer, fPhaseAlignmentValues);
-    ContainerFactory::copyAndInitStructure<std::vector<uint8_t>>(*fDetectorContainer, fWordAlignmentValues);
+    ContainerFactory::copyAndInitHybrid<PortAlignmentVals>(*fDetectorContainer, fPhaseAlignmentValues);
+    ContainerFactory::copyAndInitHybrid<PortAlignmentVals>(*fDetectorContainer, fWordAlignmentValues);
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -94,33 +94,27 @@ void CicFEAlignment::Initialise()
                 // auto& cHIPsThisHybrid           = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
                 // auto& cPtCutThisHybrid          = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPhaseAlVals = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>();
+                cPhaseAlVals.clear();
+                for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1)//4 inputs per phy port
+                {
+                    std::vector<uint8_t> cVals(12,0); // 12 phy ports 
+                    cPhaseAlVals.push_back( cVals );
+                }
                 auto& cWordAlignmentThisHybrid  = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
-
+                auto& cWordAlignmentVals = cWordAlignmentThisHybrid->getSummary<PortAlignmentVals>();
+                cWordAlignmentVals.clear();
+                for(uint8_t cFeId = 0; cFeId < 8; cFeId += 1)
+                {
+                    std::vector<uint8_t> cVals(5,0);// 6 stub lines per FE
+                    cWordAlignmentVals.push_back( cVals );
+                }
+                
                 // configure CBCs
                 for(auto cChip: *cHybrid)
                 {
                     // check chip type
                     fWithMPA = fWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA);
-
-                    // ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
-                    // CbcInterface* theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                    // if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                    // {
-                    //     cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() = fReadoutChipInterface->ReadChipReg(theChip, "VCth");
-                    //     cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()      = fReadoutChipInterface->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth");
-                    //     cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()       = fReadoutChipInterface->ReadChipReg(theChip, "HIP&TestMode");
-                    //     cPtCutThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>()      = fReadoutChipInterface->ReadChipReg(theChip, "PtCut");
-                    // }
-
-                    // prepare alignment value result
-                    cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().clear();
-                    cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().clear();
-                    // 5 stub lines + 1 L1 line
-                    for(int cLine = 0; cLine < 6; cLine++)
-                    {
-                        cPhaseAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().push_back(0);
-                        if(cLine < 5) cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>().push_back(0);
-                    }
                 }
             }
         }
@@ -131,15 +125,19 @@ void CicFEAlignment::Initialise()
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
+        // 
+        auto& cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>(); 
+        const BeBoardRegMap& cOrigRegMap = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
+        cBoardRegNap.insert( cOrigRegMap.begin(), cOrigRegMap.end() );
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>() =
-                        static_cast<ReadoutChip*>(cChip)->getRegMap();
+                    ChipRegMap& theChipMap = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
+                    theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end()); 
                 }
             }
         }
@@ -191,18 +189,6 @@ void CicFEAlignment::Running()
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
     fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
 }
-
-// std::vector<std::vector<uint8_t>> CicFEAlignment::SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValues)
-// {
-//     // 8 FEs per CIC .... 6 SLVS lines per FE
-//     std::vector<std::vector<uint8_t>> cValuesFEs(8, std::vector<uint8_t>(5, 0));
-//     for(uint8_t cFe = 0; cFe < 8; cFe += 1)
-//     {
-//         for(uint8_t cLine = 0; cLine < 5; cLine += 1) { cValuesFEs[fFEMapping[cFe]][cLine] = pWordAlignmentValues[cFe][cLine]; }
-//     }
-//     return cValuesFEs;
-// }
-
 void CicFEAlignment::SetStubWindowOffsets(uint8_t pBendCode, int pBend)
 {
     for(auto cBoard: *fDetectorContainer)
@@ -527,7 +513,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         // auto& cHIPsThisBoard           = fHIPs.at(cBoard->getIndex());
         // auto& cPtCutThisBoard          = fPtCuts.at(cBoard->getIndex());
         auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(cBoard->getIndex());
-
+    
         ChannelGroup<NCHANNELS, 1> cChannelMask;
         cChannelMask.disableAllChannels();
         for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask.enableChannel(cChannel); // generate a hit in every Nth channel
@@ -631,7 +617,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
+                //LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
                 cAllTriggersSent = (cNTriggersSent >= pNTriggers);
             } while(!cAllTriggersSent);
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Stop();
@@ -670,8 +656,12 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         fBeBoardInterface->ChipReSync(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
+            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
+                auto& cPhaseAlignmentThisHybrid       = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPhaseAlignment = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>();//[pLine];
+                
                 // enable automatic phase aligner
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic; 
                 bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
@@ -686,6 +676,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                     size_t cCounter=0; 
                     for(auto cChip: *cHybrid)
                     {
+                        
                         if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
                         std::string cOutput;
                         char cBuffer[80];
@@ -693,6 +684,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                         for(uint8_t cInput = 0; cInput < 5; cInput += 1)
                         {
                             sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnl][cPhyPort]);
+                            cPhaseAlignment[cPhyPortChnl][cPhyPort]=cOptimalTaps[cPhyPortChnl][cPhyPort];
+
                             cOutput += cBuffer;
                             cPhyPort = ( (cCounter+1)%4 == 0 ) ? (cPhyPort+1) : cPhyPort; 
                             cPhyPortChnl = cCounter%4; 
@@ -702,6 +695,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                         size_t cPhyPortL1 = (cChip->getId() >3 ) ? 11 : 10; 
                         size_t cPhyPortChnlL1   = (cChip->getId()%4); 
                         sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnlL1][cPhyPortL1]);
+                        cPhaseAlignment[cPhyPortChnlL1][cPhyPortL1]=cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                         cOutput += cBuffer;
                         LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
                     }
@@ -799,6 +793,8 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cWordAlignmentVals = cWordAlignmentThisHybrid->getSummary<PortAlignmentVals>(); 
+
                 auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
@@ -834,20 +830,20 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 if(cAligned)
                 {
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
-                    // std::vector<std::vector<uint8_t>> cValues = SortWordAlignmentValues(cWordAlignmentValues);
-                    // for(auto cChip: *cHybrid)
-                    // {
-                    //     if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                    //     std::string cOutput;
-                    //     for(uint8_t cLine = 0; cLine < 5; cLine += 1)
-                    //     {
-                    //         char cBuffer[80];
-                    //         sprintf(cBuffer, "%.2d ", cValues[cChip->getId()][cLine]);
-                    //         cOutput += cBuffer;
-                    //         cWordAlignmentThisHybrid->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>()[cLine] = cValues[cChip->getId()][cLine];
-                    //     }
-                    //     LOG(INFO) << BOLDBLUE << "Word alignment values for FE" << +cChip->getId() << " : " << cOutput << RESET;
-                    // }
+                    for( auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+
+                        std::string cOutput;
+                        for(size_t cLine=0; cLine<5; cLine++)
+                        {
+                            cWordAlignmentVals[cChip->getId()][cLine] = cWordAlignmentValues[cChip->getId()][cLine];
+                            char cBuffer[80];
+                            sprintf(cBuffer, "%.2d ", cWordAlignmentVals[cChip->getId()][cLine]);
+                            cOutput += cBuffer;
+                        }
+                        LOG(INFO) << BOLDBLUE << "Word alignment values for FE#" << +cChip->getId() << " : " << cOutput << RESET;
+                    }
                 }
                 else
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
@@ -857,10 +853,9 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA) 
-                        {
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegs[cIndx], cOriginalValues[cIndx]);
-                        }
+                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+
+                        fReadoutChipInterface->WriteChipReg(cChip, cRegs[cIndx], cOriginalValues[cIndx]);
                     }
                 }
             }
@@ -889,20 +884,6 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
     
 
     return cAligned;
-}
-uint8_t CicFEAlignment::getPhaseAlignmentValue(BeBoard* pBoard, OpticalGroup* pOpticalGroup, Hybrid* pFe, ReadoutChip* pChip, uint8_t pLine)
-{
-    auto& cPhaseAlignmentThisBoard        = fPhaseAlignmentValues.at(pBoard->getIndex());
-    auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(pOpticalGroup->getIndex());
-    auto& cPhaseAlignmentThisHybrid       = cPhaseAlignmentThisOpticalGroup->at(pFe->getIndex());
-    return cPhaseAlignmentThisHybrid->at(pChip->getIndex())->getSummary<std::vector<uint8_t>>()[pLine];
-}
-uint8_t CicFEAlignment::getWordAlignmentValue(BeBoard* pBoard, OpticalGroup* pOpticalGroup, Hybrid* pFe, ReadoutChip* pChip, uint8_t pLine)
-{
-    auto& cWordAlignmentThisBoard        = fWordAlignmentValues.at(pBoard->getIndex());
-    auto& cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(pOpticalGroup->getIndex());
-    auto& cWordAlignmentThisHybrid       = cWordAlignmentThisOpticalGroup->at(pFe->getIndex());
-    return cWordAlignmentThisHybrid->at(pChip->getIndex())->getSummary<std::vector<uint8_t>>()[pLine];
 }
 void CicFEAlignment::Stop()
 {
