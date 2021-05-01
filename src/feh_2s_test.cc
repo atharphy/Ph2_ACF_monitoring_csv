@@ -445,9 +445,10 @@ int main(int argc, char* argv[])
         MemoryCheck2S cMemoryChecker;
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
+        cMemoryChecker.EvaluatePedeNoise(100);
+        cMemoryChecker.DataCheck();
         cMemoryChecker.MemoryCheck2SRaw();
-        //cMemoryChecker.MemoryCheck2SSparse();
-
+        
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();
     }

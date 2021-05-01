@@ -94,7 +94,7 @@ class CicInterface : public ChipInterface
     bool                              CheckSoftReset(Ph2_HwDescription::Chip* pChip);
     bool                              StartUp(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 7);
     bool                              ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
-    std::vector<std::vector<uint8_t>> ReadWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    std::vector<std::vector<uint8_t>> GetWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                              SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);
     bool                              SelectOutput(Ph2_HwDescription::Chip* pChip, bool pFixedPattern = true);
     bool                              EnableFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFEs = {0, 1, 2, 3, 4, 5, 6, 7}, bool pEnable = true);
@@ -154,6 +154,8 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
 
+    void UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    bool ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
     bool                         ReadOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps);
     std::map<uint8_t, uint8_t>   fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                      fMaxDriveStrength = 5;
@@ -162,6 +164,8 @@ class CicInterface : public ChipInterface
     std::vector<std::vector<uint8_t>> fPhaseTaps;
     std::vector<std::bitset<6>>       fFeStates;
     std::vector<std::bitset<4>>       fPortStates;
+    std::vector<std::vector<uint8_t>> fWordAlignmentVals;
+
     // register map 
 
 };

@@ -43,6 +43,9 @@ void BackEndAlignment::Reset()
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+
+                    // for now only reconfigure CBCs 
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }
@@ -408,7 +411,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 }//hybrids
             }//OGs
         }//events 
-        cFoundCorrectStubLatency = ( cNStubsFound > 0.7*cNinjectedStubs*cEvents.size()  ) ;
+        cFoundCorrectStubLatency = ( cNStubsFound > 0.9*cNinjectedStubs*cEvents.size()  ) ;
         if( cFoundCorrectStubLatency )
         {
             cCorrectOffset = cOffset;

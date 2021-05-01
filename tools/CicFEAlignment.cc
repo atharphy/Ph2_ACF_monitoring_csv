@@ -826,9 +826,10 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 
                 // run automated word alignment
                 cAligned                                               = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_ms);
-                std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->ReadWordAlignmentValues(cCic);
                 if(cAligned)
                 {
+                    fCicInterface->SetStaticWordAlignment(cCic, 1); 
+                    std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
                     for( auto cChip: *cHybrid)
                     {
