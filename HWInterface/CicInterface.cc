@@ -1305,7 +1305,7 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     // read enable register
     cRegName        = "FE_ENABLE";
     uint16_t cValue = this->ReadChipReg(pChip, cRegName);
-    //LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register set to 0x" << std::hex  << +cValue << std::dec << RESET;
+    LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register set to 0x" << std::hex  << +cValue << std::dec << RESET;
     for(auto pFeId: pFeIds)
     {
         uint8_t cChipId_forCic = cFeMapping[pFeId]; // std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pFeId));

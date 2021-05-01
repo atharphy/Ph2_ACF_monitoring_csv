@@ -1351,7 +1351,7 @@ void D19cFWInterface::TriggerConfiguration()
 void D19cFWInterface::Start()
 {
     // re-load configuration 
-    this->ResetTriggerFSM();
+    // this->ResetTriggerFSM();
     // reset the readout
     this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
