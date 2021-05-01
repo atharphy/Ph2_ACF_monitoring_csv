@@ -335,7 +335,7 @@ void MemoryCheck2S::MemoryCheck2SRaw()
         if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
         else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
         
-        auto& cExpectedOccThisBoard = cExpectedOccupancy.at(cBoard->getIndex());
+        auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cExpectedOccThisOG = cExpectedOccThisBoard->at(cOpticalGroup->getIndex());
@@ -430,42 +430,42 @@ void MemoryCheck2S::MemoryCheck2SRaw()
         //
         Check();
     }//latency scan
-            // // now just send triggers 
-            // for(auto cBoard: *fDetectorContainer)
-            // {
-            //     const std::vector<Event*>& cEvents = this->GetEvents();
-            //     LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
-            //     size_t cEvntCnt=0;
-            //     for(auto& cEvent: cEvents)
-            //     {
-            //         auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
-            //         LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << RESET;
-            //         for(auto cOpticalGroup: *cBoard)
-            //         {
-            //             for(auto cHybrid: *cOpticalGroup)
-            //             {
-            //                 // only 2S for now 
-            //                 // configure injection 
-            //                 for(auto cChip: *cHybrid)
-            //                 {
-            //                     if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+    // // now just send triggers 
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     const std::vector<Event*>& cEvents = this->GetEvents();
+    //     LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
+    //     size_t cEvntCnt=0;
+    //     for(auto& cEvent: cEvents)
+    //     {
+    //         auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
+    //         LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << RESET;
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 // only 2S for now 
+    //                 // configure injection 
+    //                 for(auto cChip: *cHybrid)
+    //                 {
+    //                     if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
 
-            //                     auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
-            //                     auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
-            //                     auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
-            //                     LOG (INFO) << BOLDMAGENTA 
-            //                         << "\t.. CBC#" << +cChip->getId()
-            //                         << " pipeline address is " << +cPipelineAddress
-            //                         << " expected pipeline address is " << +cExpectedPipelineAddress
-            //                         << " L1Id is " << +cL1Id
-            //                         << " : found " << +cHits.size() << " hits." << RESET;
-            //                     //for( auto cHit : cHits ) LOG (INFO) << BOLDMAGENTA << "\t\t... hit in channel " << +cHit << RESET;
-            //                 }//chip 
-            //             }//hybrid
-            //         }//OG
-            //         cEvntCnt++;
-            //     }// event 
-            // }
+    //                     auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
+    //                     auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
+    //                     auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
+    //                     LOG (INFO) << BOLDMAGENTA 
+    //                         << "\t.. CBC#" << +cChip->getId()
+    //                         << " pipeline address is " << +cPipelineAddress
+    //                         << " expected pipeline address is " << +cExpectedPipelineAddress
+    //                         << " L1Id is " << +cL1Id
+    //                         << " : found " << +cHits.size() << " hits." << RESET;
+    //                     //for( auto cHit : cHits ) LOG (INFO) << BOLDMAGENTA << "\t\t... hit in channel " << +cHit << RESET;
+    //                 }//chip 
+    //             }//hybrid
+    //         }//OG
+    //         cEvntCnt++;
+    //     }// event 
+    // }
         
 }
 // compare read back 
@@ -566,8 +566,7 @@ void MemoryCheck2S::MemoryCheck2SSparse()
 
         // now actually prepare channel 
         // masks
-        DetectorDataContainer cExpectedOccupancy;
-        fDetectorDataContainer = &cExpectedOccupancy;
+        fDetectorDataContainer = &fExpectedOccupancy;
         ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
         for(auto cBoard: *fDetectorContainer)
         {
@@ -575,7 +574,7 @@ void MemoryCheck2S::MemoryCheck2SSparse()
             if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
             else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
             
-            auto& cExpectedOccThisBoard = cExpectedOccupancy.at(cBoard->getIndex());
+            auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
 
