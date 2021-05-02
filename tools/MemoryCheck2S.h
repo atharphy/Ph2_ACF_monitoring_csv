@@ -40,6 +40,7 @@ typedef std::vector<EventTag> EventsList;
 #include "TProfile2D.h"
 #include "TString.h"
 #include "TText.h"
+#include "TTree.h"
 #endif
 
 class DetectorContainer;
@@ -48,6 +49,9 @@ class Occupancy;
 #ifndef MemEvents
 struct MemEvent
 {
+    // type of test 
+    uint8_t  fType=0;
+    // event information
     uint8_t  fEventId = 0;
     uint16_t fL1Id    = 0;
     uint16_t fMemoryRow = 0; 
@@ -55,7 +59,16 @@ struct MemEvent
     uint16_t fMemoryColumnRep = 0; 
     uint16_t fCorrectValue    = 0; 
     uint16_t fTriggeredBx     = 0;
+    uint8_t  fTriggerNumberInBurst = 0; 
     uint16_t fChipId          = 0; 
+    // information about the test 
+    int fStartTime=0;
+    int fStopTime=0;
+    // threshold and noise for this chip 
+    float fThreshold       = 0;
+    float fNoise           = 0; 
+    // pedestal set during this run 
+    uint16_t fPedestal        = 0;
 };
 typedef std::vector<MemEvent> MemEvents;
 #endif
@@ -70,10 +83,11 @@ class  MemoryCheck2S : public Tool
     
     void SetThreshold( float pSigma  = 3 );
     void EvaluatePedeNoise(int pNevents=100, int pScanRange=15);  
-    void DataCheck(int pMeanTriggerSeparation=500, bool pAllOnes=true); 
+    void DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTriggerSeparation=500, bool pAllOnes=true); 
     void MemoryCheck2SRaw();
     void MemoryCheck2SSparse();
-    
+    void RegisterCheck();
+
     void print(std::vector<uint8_t> pChipIds);
     void Running() override;
     void Stop() override;
@@ -119,6 +133,7 @@ class  MemoryCheck2S : public Tool
     std::vector<uint16_t> fExpectedPipelineAddress;
     std::vector<uint8_t> fFastCommands;
     std::vector<int>  fTriggeredBxs; 
+    std::vector<int>  fTriggerNumberInBurst; 
     int fNInjectedTriggers=0;
     int fTotalEventsExpected = 0; 
 
@@ -126,6 +141,9 @@ class  MemoryCheck2S : public Tool
     ContainerRecycleBin<Occupancy>             fRecycleBin;
     
   private:
+    // MemEvent 
+    MemEvent fMemEvent;
+
     // timing 
     std::chrono::seconds::rep fStartTime; 
     std::chrono::seconds::rep fStopTime; 
@@ -141,8 +159,10 @@ class  MemoryCheck2S : public Tool
     DetectorDataContainer fInjections;
     DetectorDataContainer fDataMismatches, fGoodEvents, fBadEvents;
     DetectorDataContainer fExpectedOccupancy;
+    DetectorDataContainer fExpectedStubs; 
     DetectorDataContainer fThresholds; 
-
+    // 
+    int fTypeOfTest = 0;
     int fAttempt      = 0;
     int fMissedEvent  = 0;
     int fEventCounter = 0;
@@ -160,7 +180,65 @@ class  MemoryCheck2S : public Tool
     void GenericTestPulse(int pReSync=0);
     //
     void Check();
-
+    void CopyEvent(MemEvent& pMemEvent, MemEvent pEvent)
+    {
+        pMemEvent.fType = pEvent.fType;
+        // timing information 
+        pMemEvent.fStartTime = pEvent.fStartTime; 
+        pMemEvent.fStopTime = pEvent.fStopTime ; 
+        // event 
+        pMemEvent.fEventId = pEvent.fEventId;
+        pMemEvent.fL1Id    = pEvent.fL1Id;
+        //
+        pMemEvent.fMemoryRow = pEvent.fMemoryRow;
+        pMemEvent.fMemoryColumnExp = pEvent.fMemoryColumnExp;
+        pMemEvent.fMemoryColumnRep =pEvent.fMemoryColumnRep;
+        //
+        pMemEvent.fTriggeredBx = pEvent.fTriggeredBx ;
+        pMemEvent.fTriggerNumberInBurst = pEvent.fTriggerNumberInBurst;
+        //
+        pMemEvent.fChipId = pEvent.fChipId;
+        //
+        pMemEvent.fType = pEvent.fType;
+        pMemEvent.fThreshold = pEvent.fThreshold;
+        pMemEvent.fNoise = pEvent.fNoise;
+        pMemEvent.fPedestal = pEvent.fPedestal;
+        // 
+        pMemEvent.fCorrectValue = pEvent.fCorrectValue; 
+    }
+    void PrintMemEvent(MemEvent pEvent)
+    {
+        if(pEvent.fCorrectValue==1)
+        {
+            LOG (INFO) << BOLDGREEN << "Chip#" << +pEvent.fChipId 
+                << " : memory report from testType#" << +pEvent.fType 
+                << "\t.. channel [memory row]" << +pEvent.fMemoryRow 
+                << "\t.. pipeline address is [memory column] " << +pEvent.fMemoryColumnRep
+                << "\t.. expected pipeline address is [memory column] " << +pEvent.fMemoryColumnExp
+                << "\t.. L1Id is " << +pEvent.fL1Id
+                << "\t.. match in cell is " << +pEvent.fCorrectValue 
+                << "\t.. test started at " << +pEvent.fStartTime 
+                << "\t.. test completed at " << +pEvent.fStopTime
+                << "\t.. noise on this channel is " << pEvent.fNoise 
+                << "\t.. pedestal on this channel is " << pEvent.fPedestal
+                << "\t.. threshold during test is  " << pEvent.fThreshold  
+                << RESET;
+        }
+        else
+            LOG (INFO) << BOLDRED << "Chip#" << +pEvent.fChipId 
+                << " : memory report from testType#" << +pEvent.fType 
+                << "\t.. channel [memory row]" << +pEvent.fMemoryRow 
+                << "\t.. pipeline address is [memory column] " << +pEvent.fMemoryColumnRep
+                << "\t.. expected pipeline address is [memory column] " << +pEvent.fMemoryColumnExp
+                << "\t.. L1Id is " << +pEvent.fL1Id
+                << "\t.. match in cell is " << +pEvent.fCorrectValue 
+                << "\t.. test started at " << +pEvent.fStartTime 
+                << "\t.. test completed at " << +pEvent.fStopTime
+                << "\t.. noise on this channel is " << pEvent.fNoise 
+                << "\t.. pedestal on this channel is " << pEvent.fPedestal
+                << "\t.. threshold during test is  " << pEvent.fThreshold  
+                << RESET;
+    }
     // summarize stats 
     // while removing NANs 
     template<typename T>

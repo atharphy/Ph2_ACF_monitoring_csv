@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("calibrateADC","Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("monitorAMUX","Calibrate ADC on lpGBT....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("testTune","Test tuning ....", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("memCheck","Check memories....", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("memCheck","Check memories of the following CBCs", ArgvParser::OptionRequiresValue);
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -442,10 +442,14 @@ int main(int argc, char* argv[])
     // inject hits and stubs using mask and compare input against output
     if( cmd.foundOption("memCheck"))
     {
+        std::string          cArgsStr = cmd.optionValue("memCheck");
+        std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+
         MemoryCheck2S cMemoryChecker;
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
-        // find pedestal and set threshold
+        
+        //find pedestal and set threshold
         // cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise 
         // cMemoryChecker.SetThreshold(-3.0); // set threshold to 3 sigma away from pedestal 
         // find correct stub latency with TP
@@ -453,9 +457,10 @@ int main(int argc, char* argv[])
         {
             cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
         }
+        
         auto cSetting = cTool.fSettingsMap.find ( "TriggerSeparation" );
         int cTriggerGap = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : 500; 
-        cMemoryChecker.DataCheck(cTriggerGap);
+        cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         //cMemoryChecker.MemoryCheck2SRaw();
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();

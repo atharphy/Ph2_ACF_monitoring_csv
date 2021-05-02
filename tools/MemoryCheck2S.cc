@@ -215,6 +215,51 @@ void MemoryCheck2S::Initialise()
         }
     }
 
+    // to be replaced with a plotting tool 
+    #ifdef __USE_ROOT__
+        // prepare Tree 
+        for(auto cBoard: *fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+
+                        TString cName = Form("MemTest_Cic%d_Cbc%d", cHybrid->getId(), cChip->getId());
+                        TObject* cObj  = gROOT->FindObject(cName); 
+                        if(cObj) delete cObj;
+
+                        TTree* cTree = new TTree(cName, "MemTest");
+                        cTree->Branch("Type", &fMemEvent.fType);
+                        cTree->Branch("ChipId", &fMemEvent.fChipId);
+                        //
+                        cTree->Branch("StartTime", &fMemEvent.fStartTime);
+                        cTree->Branch("StopTime", &fMemEvent.fStopTime);
+                        //
+                        cTree->Branch("EventId", &fMemEvent.fEventId);
+                        cTree->Branch("L1Id", &fMemEvent.fL1Id);
+                        //
+                        cTree->Branch("MemoryRow", &fMemEvent.fMemoryRow);
+                        cTree->Branch("MemoryColumn", &fMemEvent.fMemoryColumnExp);
+                        cTree->Branch("MemoryColumnReported", &fMemEvent.fMemoryColumnRep);
+                        //
+                        cTree->Branch("TriggeredBx", &fMemEvent.fTriggeredBx);
+                        cTree->Branch("TriggerNumberInBurst", &fMemEvent.fTriggerNumberInBurst);
+                        //
+                        cTree->Branch("Threshold", &fMemEvent.fThreshold);
+                        cTree->Branch("Noise", &fMemEvent.fNoise);
+                        cTree->Branch("Pedestal", &fMemEvent.fPedestal);
+                        //
+                        cTree->Branch("Pass", &fMemEvent.fCorrectValue);
+                        this->bookHistogram(cChip, "MemoryCheck2STree", cTree);
+                    }
+                }
+            }
+        }
+    #endif
     fThresholdAndNoiseContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
     
@@ -398,6 +443,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation, int pMaxBurstLength 
         size_t cBurstLength= cBurstDist(cGen); // 
         for( size_t cBx=0; cBx < cBurstLength; cBx++)
         {
+            fTriggerNumberInBurst.push_back(cBx);
             fTriggeredBxs.push_back( cBxId );
             fFastCommands.push_back( cFCMDs.fTrigger );
             fExpectedPipelineAddress.push_back( (cBxWithTP+cBx)%512); 
@@ -468,10 +514,10 @@ void MemoryCheck2S::GenericTestPulse(int pReSync)
     cSetting = fSettingsMap.find( "LengthOfBurst" );
     size_t cBurstLength= ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 1; 
     
-    LOG (INFO) << BOLDMAGENTA << "Injecting TP with generic FCMDs .." 
-        << " time between ReSync + TP is  " << +pReSync
-        << " burst length is " << +cBurstLength
-        <<  RESET;
+    // LOG (INFO) << BOLDMAGENTA << "Injecting TP with generic FCMDs .." 
+    //     << " time between ReSync + TP is  " << +pReSync
+    //     << " burst length is " << +cBurstLength
+    //     <<  RESET;
     
     FCMDs cFCMDs;
     size_t fSizeGap=20;
@@ -505,6 +551,7 @@ void MemoryCheck2S::GenericTestPulse(int pReSync)
     }
     for( size_t cBx=0; cBx < cBurstLength; cBx++)
     {
+        fTriggerNumberInBurst.push_back(cBx);
         fFastCommands.push_back( cFCMDs.fTrigger );
         fTriggeredBxs.push_back( cBxId );
         fExpectedPipelineAddress.push_back( (cBxWithTP+cBx)%512); 
@@ -579,9 +626,9 @@ bool MemoryCheck2S::ReadAfterGenericBlock(int pNExpected)
                 << +cNWordsPrev
                 << RESET;
             cCounter++;
-        }while( cCounter < 100 && (cNWordsPrev != cNWords) );
+        }while( cCounter < 1000 && (cNWordsPrev != cNWords) );
 
-        LOG(DEBUG) << BOLDGREEN << "After " << +cCounter << " iterations: " 
+        LOG(INFO) << BOLDGREEN << "After " << +cCounter << " iterations: " 
                 << +cNWords << " words in the readout"
                 << " and "
                 << +cNtriggers 
@@ -647,19 +694,14 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
     std::vector<float> cPedestals(0);
     for(auto cBoard: *fDetectorContainer)
     {
-        //auto& cThThisBoard = fThresholds.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            //auto& cThThisOG = cThThisBoard->at(cOpticalGroup->getIndex());
             for(auto cFe: *cOpticalGroup)
             {
-                //auto& cThThisHybrd = cThThisOG->at(cFe->getIndex());
                 for(auto cROC: *cFe)
                 {
                     if( cROC->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    //auto& cThThisROC = cThThisHybrd->at(cROC->getIndex());
-                    //auto& cThreshold = cThThisROC->getSummary<uint16_t>();
                     auto cThreshold = fReadoutChipInterface->ReadChipReg(cROC,"Threshold");
                     LOG (INFO) << BOLDMAGENTA << "CBC#" << +cROC->getId() 
                         << " threshold after bit-wise scan is "
@@ -783,12 +825,15 @@ void MemoryCheck2S::SetThreshold( float pSigma )
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        auto& cThThisBoard = fThresholds.at(cBoard->getIndex());
         auto &cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
+            auto& cThThisOG = cThThisBoard->at(cOpticalGroup->getIndex());
             auto &cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
             for(auto cFe: *cOpticalGroup)
             {
+                auto& cThThisHybrd = cThThisOG->at(cFe->getIndex());
                 auto &cThNoiseThisFE = cThNoiseThisOG->at(cFe->getIndex());
                 LOG (INFO) << BOLDMAGENTA << "FE#" << +cFe->getId() << RESET;
                     
@@ -822,7 +867,9 @@ void MemoryCheck2S::SetThreshold( float pSigma )
                         << " - maximum value is " << cNoiseStats.fMax 
                         << RESET;
                     float cNoise = std::sqrt( cNoiseStats.fMean*cNoiseStats.fMean + cNoiseStats.fStdDev*cNoiseStats.fStdDev ); 
-                    uint16_t cThresholdToSet = (uint16_t)(cPedStats.fMean +  pSigma*cNoise);
+                    auto& cThThisROC = cThThisHybrd->at(cROC->getIndex());
+                    auto& cThresholdToSet = cThThisROC->getSummary<uint16_t>();
+                    cThresholdToSet = (uint16_t)(cPedStats.fMean +  pSigma*cNoise);
                     LOG (INFO) << BOLDMAGENTA << "\t\t.. Setting threshold on this chip to "
                         << cThresholdToSet
                         << " DAC units - i.e. "
@@ -870,10 +917,12 @@ void MemoryCheck2S::SetThreshold( float pSigma )
         //fBeBoardInterface->ChipReSync(pBoard);
     }//make sure offsets are set correctly
 }
-void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes ) 
+void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTriggerSeparation, bool pAllOnes ) 
 {
+    fTypeOfTest=3; 
     bool cInjection=true;
     bool cAllOnes=pAllOnes; 
+    fTypeOfTest += (cAllOnes) ? 0 : 1 ;
     bool cSparisfication = true;
     bool cWithNoise=!cInjection;
     bool cUseOffsets=true;
@@ -910,22 +959,31 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
         }
     }
 
-    // injection 
+    // injection - hits 
     fDetectorDataContainer = &fExpectedOccupancy;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    // stubs 
+    fDetectorDataContainer = &fExpectedStubs;
+    ContainerFactory::copyAndInitChip<std::vector<Stub>>(*fDetectorContainer, *fDetectorDataContainer);
     for(auto cBoard: *fDetectorContainer)
     {
+        auto& cExpectdStubsThisBoard = fExpectedStubs.at(cBoard->getIndex());
         auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
+            auto& cExpectedStubsThisOG = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
             auto& cExpectedOccThisOG = cExpectedOccThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
+                auto& cExpectedStubsThisHybrid = cExpectedStubsThisOG->at(cHybrid->getIndex());
                 auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getIndex());
                 // only 2S for now 
                 // configure injection 
                 for(auto cChip: *cHybrid)
                 {
+                    auto& cExpectedStubsThisChip = cExpectedStubsThisHybrid->at(cChip->getIndex());
+                    auto& cExpectedStubs = cExpectedStubsThisChip->getSummary<std::vector<Stub>>();
+
                     auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getIndex());
                     if( cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
@@ -943,16 +1001,50 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
                     std::vector<uint8_t> cSeeds{cSeed};
                     std::vector<int>     cBends{0};
 
-                    //if( cChip->getId()%2 == 0 ) { cSeeds.clear(); cBends.clear(); }
+                    //if( cChip->getId()%2 == 0 ) 
+                    if( std::find( pActiveCbcs.begin(), pActiveCbcs.end(), cChip->getId() ) == pActiveCbcs.end() ) 
+                    { cSeeds.clear(); cBends.clear(); }
+
+                    // retrieve hit list from stubs 
+                    std::vector<uint8_t> cCompleteHitList; cCompleteHitList.clear();
                     for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
                     {
+                        std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT( cChip );
+                        // each bend code is stored in this vector - bend encoding start at -7 strips,
+                        // increments by 0.5 strips 
+                        uint8_t              cBendCode     = cBendLUT[(cBends[cIndx] / 2. - (-7.0)) / 0.5];
+                        //uint8_t cBendCode = cBendLUT[ cBends[cIndx]/2. ];
+                        // bend code 
+                        Stub cStub(cSeeds[cIndx], cBendCode);
+                        cExpectedStubs.push_back( cStub );
                         auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                        //LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
-                        for( auto cHit : cHitList )
-                        { 
-                            //LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                        cCompleteHitList.insert(cCompleteHitList.end(), cHitList.begin(), cHitList.end());
+                        LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see "
+                            << +cHitList.size()
+                            << " hits in channels and a stub with address " 
+                            << +cStub.getPosition()
+                            << " with bend code "
+                            << +cStub.getBend()
+                            << RESET;
+                    }
+                    LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " in total should see "
+                        << +cCompleteHitList.size() << " hits and "
+                        << +cExpectedStubs.size() << " stubs."
+                        << RESET;
+
+                    // configure occupancy
+                    for( size_t cHit=0; cHit < cChip->size(); cHit++)
+                    {
+                        bool cHitFound = std::find(cCompleteHitList.begin(), cCompleteHitList.end(), cHit) != cCompleteHitList.end(); 
+                        if( cHitFound )
                             cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cAllOnes ) ? 1 : 0 ; 
-                        }
+                        else
+                            cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = 0;
+                        // for( auto cHit : cHitList )
+                        // { 
+                        //     //LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                        //     cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cAllOnes ) ? 1 : 0 ; 
+                        // }
                     }
                     (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise, cUseOffsets);
                 }//Chip
@@ -993,6 +1085,7 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
         fExpectedPipelineAddress.clear();
         fTriggeredBxs.clear();
+        fTriggerNumberInBurst.clear();
         fTotalEventsExpected=0;
 
         for( size_t cAttempt = 0 ; cAttempt < cNtrials; cAttempt++)
@@ -1010,48 +1103,6 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
         this->ReadAfterGenericBlock(fTotalEventsExpected);
         
         Check();
-        // for(auto cBoard: *fDetectorContainer)
-        // {
-        //     const std::vector<Event*>& cEvents = this->GetEvents();
-        //     LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
-        //     size_t cEvntCnt=0;
-        //     for(auto& cEvent: cEvents)
-        //     {
-        //         auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
-        //         auto cTriggeredBx = fTriggeredBxs[cEvntCnt];
-
-        //         if( cEvntCnt < 10 )
-        //             LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvntCnt 
-        //                  << " expected pipeline address is " << +cExpectedPipelineAddress 
-        //                  << " triggered Bx is " << +cTriggeredBx 
-        //                  << RESET;
-        //         for(auto cOpticalGroup: *cBoard)
-        //         {
-        //             for(auto cHybrid: *cOpticalGroup)
-        //             {
-        //                 // only 2S for now 
-        //                 for(auto cChip: *cHybrid)
-        //                 {
-        //                     if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-        //                     auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-        //                     auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
-        //                     auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
-        //                     auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
-        //                     if( cEvntCnt < 10 )
-        //                         LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
-        //                                 << " L1Id is " << +cL1Id 
-        //                                 << " found " << +cHits.size() 
-        //                                 << " hits at pipeline address " << +cPipelineAddress 
-        //                                 << " , also found "
-        //                                 << +cStubs.size()
-        //                                 << " stubs in the event"
-        //                                 << RESET;
-        //                 }//chip 
-        //             }//hybrid
-        //         }//OG
-        //         cEvntCnt++;
-        //     }
-        // }
     }//latency scan
 
     // reset sparse 
@@ -1074,9 +1125,12 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
 }
 void MemoryCheck2S::MemoryCheck2SRaw()
 {
+    fTypeOfTest=0; 
     bool cInjection=false;
     bool cSparisfication = false;
-    uint16_t cThreshold = cInjection ? 590 : 1000; 
+    bool cAllOnes = true;
+    fTypeOfTest += (cAllOnes) ? 0 : 1; 
+    uint16_t cThreshold = cAllOnes ? 1000 : 100; 
     bool cWithNoise=!cInjection;
     bool cUseOffsets=false;
     
@@ -1139,7 +1193,7 @@ void MemoryCheck2S::MemoryCheck2SRaw()
                         {
                             for( size_t cHit=0; cHit < cChip->size(); cHit++)
                             {
-                                cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cThreshold > 500 ) ? 1 : 0 ; 
+                                cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = cAllOnes ? 1 : 0 ; 
                             }
                             continue;
                         }
@@ -1154,8 +1208,7 @@ void MemoryCheck2S::MemoryCheck2SRaw()
                             //LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
                             for( auto cHit : cHitList )
                             { 
-                                LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
-                                cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cThreshold > 500 ) ? 1 : 0 ; 
+                                cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = cAllOnes ? 1 : 0 ; 
                             }
                         }
                         (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise, cUseOffsets);
@@ -1165,6 +1218,7 @@ void MemoryCheck2S::MemoryCheck2SRaw()
             }//Hybrid
         }//OG
     }
+
 
     int cMinLatencyOffset = -1;//-10;
     int cMaxLatencyOffset = 0;//(cWithNoise) ? cMinLatencyOffset + 1 : cMinLatencyOffset + std::fabs(cMinLatencyOffset)*2; 
@@ -1196,22 +1250,30 @@ void MemoryCheck2S::MemoryCheck2SRaw()
         fExpectedPipelineAddress.clear();
         fTotalEventsExpected=0;
         fTriggeredBxs.clear();
+        fTriggerNumberInBurst.clear();
+        const auto cTimeStart = std::chrono::system_clock::now();
+        fStartTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStart.time_since_epoch()).count();
         // repeat full scan of memort 
         // cNtrials times 
         for( size_t cAttempt = 0 ; cAttempt < cNtrials; cAttempt++)
         {
+            LOG (INFO) << BOLDMAGENTA << "MemoryCheck2SRaw - Attempt#" << +cAttempt << RESET;
             // generate enough fast command sequences 
             //  to cover complete pipeline  
             for( size_t cIndx=0; cIndx < (size_t)cNOffsts ; cIndx++)
             {
                 int cResync = cIndx*cBurstLength;
+                if( cIndx%16 == 0 )
+                    LOG (INFO) << BOLDMAGENTA << "\t.. Sending triggers to scan addresses from : " << +cResync
+                        << " to " << cResync+cBurstLength << RESET;
                 this->SendGenericTestPulses(cResync);
             }
         }
         LOG (INFO) << BOLDMAGENTA << "Try to readout data from " << +fTotalEventsExpected << " triggers." << RESET;
         // read 
         this->ReadAfterGenericBlock(fTotalEventsExpected);
-    
+        const auto cTimeStop = std::chrono::system_clock::now();
+        fStopTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStop.time_since_epoch()).count();
         Check();
     }//latency scan
 
@@ -1234,8 +1296,10 @@ void MemoryCheck2S::MemoryCheck2SRaw()
     }
     Reconfigure();
 }
+// not used 
 void MemoryCheck2S::MemoryCheck2SSparse()
 {
+    fTypeOfTest=2; 
     bool cSparisfication = false;
     uint16_t cThreshold = 1000; 
     bool cWithNoise=false;
@@ -1400,11 +1464,21 @@ void MemoryCheck2S::MemoryCheck2SSparse()
 // against injected data 
 void MemoryCheck2S::Check()
 {
+    int cDuration = fStopTime-fStartTime;
+    LOG (INFO) << BOLDMAGENTA << "Running memory check .. " 
+        << " test started at " << fStartTime << " s from epoch." 
+        << " and finished at " << fStopTime << " s from epoch "
+        << " .... so it took " << cDuration << " s."
+        << RESET;
+    
     DetectorDataContainer cMemEvents;
     fDetectorDataContainer = &cMemEvents;
     ContainerFactory::copyAndInitStructure<MemEvents>(*fDetectorContainer, *fDetectorDataContainer);
+    size_t cNCorruptedCells=0; 
     for(auto cBoard: *fDetectorContainer)
     {
+        auto& cThThisBoard = fThresholds.at(cBoard->getIndex());
+        auto& cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getIndex());
         auto& cMemEventsThisBrd = cMemEvents.at(cBoard->getIndex());
         auto& cExpectedOcThisBrd = fExpectedOccupancy.at(cBoard->getIndex());
         const std::vector<Event*>& cEvents = this->GetEvents();
@@ -1412,16 +1486,20 @@ void MemoryCheck2S::Check()
         size_t cEvntCnt=0;
         for(auto& cEvent: cEvents)
         {
-
-            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvntCnt << RESET;
+            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvntCnt << RESET;
             auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
             auto cTriggeredBx = fTriggeredBxs[cEvntCnt];
+            auto cfTriggerNumberInBurst = fTriggerNumberInBurst[cEvntCnt]; 
             for(auto cOpticalGroup: *cBoard)
             {
+                auto& cThThisOG = cThThisBoard->at(cOpticalGroup->getIndex());
+                auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
                 auto& cMemEventsThisOG = cMemEventsThisBrd->at(cOpticalGroup->getIndex());
                 auto& cExpectedOcThisOG = cExpectedOcThisBrd->at(cOpticalGroup->getIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
+                    auto& cThThisHybrd = cThThisOG->at(cHybrid->getIndex());
+                    auto& cThNoiseThisHybrd = cThNoiseThisOG->at(cHybrid->getIndex());
                     auto& cMemEventsThisHybrd = cMemEventsThisOG->at(cHybrid->getIndex());
                     auto& cExpectedOcThisHybrd = cExpectedOcThisOG->at(cHybrid->getIndex());
                     // only 2S for now 
@@ -1429,36 +1507,102 @@ void MemoryCheck2S::Check()
                     {
                         if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
 
+                        auto& cThThisChip = cThThisHybrd->at(cChip->getIndex());
+                        auto& cThresholdSet = cThThisChip->getSummary<uint16_t>();
+                    
+                        auto& cThNoiseThisChip = cThNoiseThisHybrd->at(cChip->getIndex());
                         auto& cMemEventsThisChip = cMemEventsThisHybrd->at(cChip->getIndex());
                         auto& cMemEventsSummary  = cMemEventsThisChip->getSummary<MemEvents>();
                         if( cEvntCnt == 0 ) cMemEventsSummary.clear(); 
 
                         auto& cExpectedOcThisChip = cExpectedOcThisHybrd->at(cChip->getIndex());
                         // 
+                        auto cStubs = cEvent->StubVector( cHybrid->getId(), cChip->getId()); 
                         auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
                         auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
                         auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
-                        // 
                         LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
                                 << " L1Id is " << +cL1Id 
                                 << " found " << +cHits.size() 
                                 << " hits at pipeline address " << +cPipelineAddress 
                                 << " ... expected pipeline address is " << +cExpectedPipelineAddress 
+                                << " ... also found "
+                                << +cStubs.size()
+                                << " stubs."
                                 << RESET;
+                        //
                         // now compare all channels for this address
-                        MemEvent cMemEvent; 
-                        cMemEvent.fEventId = cEvntCnt;
-                        cMemEvent.fL1Id    = cL1Id;
-                        cMemEvent.fMemoryColumnExp = cExpectedPipelineAddress;
-                        cMemEvent.fMemoryColumnRep = cPipelineAddress; 
-                        cMemEvent.fTriggeredBx = cTriggeredBx;
+                        // type of test 
+                        fMemEvent.fType = fTypeOfTest; 
+                        uint16_t cThresholdDuringTest =  cThresholdSet; 
+                        if( fMemEvent.fType == 0 ) cThresholdDuringTest= 1000; 
+                        if( fMemEvent.fType == 1 ) cThresholdDuringTest=  100; 
+                        
+                        // timing information 
+                        fMemEvent.fStartTime = (int)fStartTime; 
+                        fMemEvent.fStopTime = (int)fStopTime; 
+                        // event 
+                        fMemEvent.fEventId = cEvntCnt;
+                        fMemEvent.fL1Id    = cL1Id;
+                        fMemEvent.fMemoryColumnExp = cExpectedPipelineAddress;
+                        fMemEvent.fMemoryColumnRep = cPipelineAddress; 
+                        fMemEvent.fTriggeredBx = cTriggeredBx;
+                        fMemEvent.fTriggerNumberInBurst = cfTriggerNumberInBurst; 
+                        
+                        // check stubs 
+                        if( fMemEvent.fType == 3 )
+                        {
+                            auto& cExpectdStubsThisBoard = fExpectedStubs.at(cBoard->getIndex());
+                            auto& cExpectdStubsThisOG = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
+                            auto& cExpectdStubsThisHybrd = cExpectdStubsThisOG->at(cHybrid->getIndex());
+                            auto& cExpectdStubsThisROC = cExpectdStubsThisHybrd->at(cChip->getIndex());
+                            auto& cExpectedStubs = cExpectdStubsThisROC->getSummary<std::vector<Stub>>();
+                            for(auto cStub : cExpectedStubs)
+                            {
+                                bool cMatchFound=false;
+                                for(auto cReadoutStub : cStubs) 
+                                {
+                                    if( cMatchFound ) continue; 
+
+                                    LOG (INFO) << BOLDMAGENTA << "\t... readout a stub with address"
+                                        << +cReadoutStub.getPosition()
+                                        << " and  bend code "
+                                        << +cReadoutStub.getBend()
+                                        << RESET;
+                                    cMatchFound = (cReadoutStub.getPosition() == cStub.getPosition());
+                                    cMatchFound = cMatchFound && (cReadoutStub.getBend() == cStub.getBend());
+                                }
+                                if( cMatchFound )
+                                    LOG (INFO) << BOLDMAGENTA << "\t...Expected a stub with address \t"
+                                        << +cStub.getPosition()
+                                        << " and  bend code "
+                                        << +cStub.getBend()
+                                        << RESET;
+                            }
+                        }
+
                         for( size_t cChnl=0; cChnl < cChip->size(); cChnl++)
                         {
-                            cMemEvent.fMemoryRow = cChnl; 
+                            // information about threshold + noise 
+                            fMemEvent.fPedestal =cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold; 
+                            fMemEvent.fNoise =cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise; 
+                            fMemEvent.fThreshold = cThresholdDuringTest; 
+                            // memory row 
+                            fMemEvent.fMemoryRow = cChnl; 
                             float cExpectedOcc = cExpectedOcThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
-                            bool cHitFound = std::find( cHits.begin(), cHits.end() , cChnl) != cHits.end() ; 
-                            cMemEvent.fCorrectValue = (cExpectedOcc == (int)cHitFound) ? 1 : 0; 
-                            cMemEventsSummary.push_back( cMemEvent );
+                            int   cOcc = (int)(std::find( cHits.begin(), cHits.end() , cChnl) != cHits.end());
+                            fMemEvent.fCorrectValue = (uint8_t)(cExpectedOcc == cOcc);
+                            if(fMemEvent.fCorrectValue==0)
+                                PrintMemEvent(fMemEvent);
+                            cNCorruptedCells += (fMemEvent.fCorrectValue==0) ? 1 : 0; 
+                            // if( cChip->getId() == 0 && cChnl >= 250 ) 
+                            //     PrintMemEvent(fMemEvent);
+                            // if ROOT is enabled fill tree here
+                            #ifdef __USE_ROOT__
+                                TTree*      cTree  = static_cast<TTree*>(getHist(cChip, "MemoryCheck2STree"));
+                                cTree->Fill();
+                            #endif
+                            cMemEventsSummary.push_back( fMemEvent );
                         }
                     }//chip 
                 }//hybrid
@@ -1467,67 +1611,68 @@ void MemoryCheck2S::Check()
         }// event 
     }
 
-    // print-out or make histogram 
-    DetectorDataContainer cCorruptedMemCells;
-    fDetectorDataContainer = &cCorruptedMemCells;
-    ContainerFactory::copyAndInitStructure<MemEvents>(*fDetectorContainer, *fDetectorDataContainer);
-    size_t cNCorruptedCells=0; 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        auto& cCorruptedMemCellsThisBrd = cCorruptedMemCells.at(cBoard->getIndex());
-        auto& cMemEventsThisBrd = cMemEvents.at(cBoard->getIndex());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cMemEventsThisOG = cMemEventsThisBrd->at(cOpticalGroup->getIndex());
-            auto& cCorruptedMemCellsThisOG = cCorruptedMemCellsThisBrd->at(cOpticalGroup->getIndex());
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cMemEventsThisHybrd = cMemEventsThisOG->at(cHybrid->getIndex());
-                auto& cCorruptedMemCellsThisHybrd = cCorruptedMemCellsThisOG->at(cOpticalGroup->getIndex());
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cCorruptedMemCellsThisChip = cCorruptedMemCellsThisHybrd->at(cChip->getIndex());
-                    auto& cCorruptedMemCellsSmry  = cCorruptedMemCellsThisChip->getSummary<MemEvents>();
+    // // print-out or make histogram 
+    // DetectorDataContainer cCorruptedMemCells;
+    // fDetectorDataContainer = &cCorruptedMemCells;
+    // ContainerFactory::copyAndInitStructure<MemEvents>(*fDetectorContainer, *fDetectorDataContainer);
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     auto& cCorruptedMemCellsThisBrd = cCorruptedMemCells.at(cBoard->getIndex());
+    //     auto& cMemEventsThisBrd = cMemEvents.at(cBoard->getIndex());
+    //     for(auto cOpticalGroup: *cBoard)
+    //     {
+    //         auto& cMemEventsThisOG = cMemEventsThisBrd->at(cOpticalGroup->getIndex());
+    //         auto& cCorruptedMemCellsThisOG = cCorruptedMemCellsThisBrd->at(cOpticalGroup->getIndex());
+    //         for(auto cHybrid: *cOpticalGroup)
+    //         {
+    //             auto& cMemEventsThisHybrd = cMemEventsThisOG->at(cHybrid->getIndex());
+    //             auto& cCorruptedMemCellsThisHybrd = cCorruptedMemCellsThisOG->at(cOpticalGroup->getIndex());
+    //             for(auto cChip: *cHybrid)
+    //             {
+    //                 auto& cCorruptedMemCellsThisChip = cCorruptedMemCellsThisHybrd->at(cChip->getIndex());
+    //                 auto& cCorruptedMemCellsSmry  = cCorruptedMemCellsThisChip->getSummary<MemEvents>();
                     
-                    auto& cMemEventsThisChip = cMemEventsThisHybrd->at(cChip->getIndex());
-                    auto& cMemEventsSummary  = cMemEventsThisChip->getSummary<MemEvents>();
-                    for( auto cMemEvent : cMemEventsSummary )
-                    {
-                        if( cMemEvent.fCorrectValue == 0 ) 
-                        {
-                            cNCorruptedCells++;
-                            MemEvent cCorrEvnt; 
-                            cCorrEvnt.fEventId = cMemEvent.fEventId;
-                            cCorrEvnt.fL1Id    = cMemEvent.fL1Id;
-                            cCorrEvnt.fMemoryColumnExp = cMemEvent.fMemoryColumnExp;
-                            cCorrEvnt.fMemoryColumnRep = cMemEvent.fMemoryColumnRep;
-                            cCorrEvnt.fTriggeredBx    = cMemEvent.fTriggeredBx;
-                            cCorrEvnt.fMemoryRow = cMemEvent.fMemoryRow;
-                            cCorrEvnt.fChipId    = cChip->getId();
-                            cCorruptedMemCellsSmry.push_back( cCorrEvnt ); 
-                            // LOG (INFO) << BOLDRED << "Chip#" << +cCorrEvnt.fChipId 
-                            //     << " : memory report : " 
-                            //     << "\t.. channel [memory row]" << +cMemEvent.fMemoryRow 
-                            //     << "\t.. pipeline address is [memory column] " << +cMemEvent.fMemoryColumnRep
-                            //     << "\t.. expected pipeline address is [memory column] " << +cMemEvent.fMemoryColumnExp
-                            //     << "\t.. L1Id is " << +cMemEvent.fL1Id
-                            //     << "\t.. match in cell is " << +cMemEvent.fCorrectValue 
-                            //     << RESET;
-                        }
-                        // if( cChip->getId() == 0 )
-                        //     LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId()
-                        //         << " : memory report : " 
-                        //         << "\t.. channel [memory row]" << +cMemEvent.fMemoryRow 
-                        //         << "\t.. pipeline address is [memory column] " << +cMemEvent.fMemoryColumnRep
-                        //         << "\t.. expected pipeline address is [memory column] " << +cMemEvent.fMemoryColumnExp
-                        //         << "\t.. L1Id is " << +cMemEvent.fL1Id
-                        //         << "\t.. match in cell is " << +cMemEvent.fCorrectValue 
-                        //         << RESET;
-                    }    
-                }   
-            }
-        }
-    }
+    //                 auto& cMemEventsThisChip = cMemEventsThisHybrd->at(cChip->getIndex());
+    //                 auto& cMemEventsSummary  = cMemEventsThisChip->getSummary<MemEvents>();
+    //                 for( auto cMemEvent : cMemEventsSummary )
+    //                 {
+    //                     if( cMemEvent.fCorrectValue == 0 ) 
+    //                     {
+    //                         MemEvent cCorrEvnt; 
+    //                         CopyEvent(cCorrEvnt, cMemEvent);
+    //                         cCorruptedMemCellsSmry.push_back( cCorrEvnt ); 
+    //                         cNCorruptedCells++;
+    //                         if( cChip->getId() == 0 ) 
+    //                             LOG (INFO) << BOLDRED << "Chip#" << +cCorrEvnt.fChipId 
+    //                                 << " : memory report : " 
+    //                                 << "\t.. channel [memory row]" << +cMemEvent.fMemoryRow 
+    //                                 << "\t.. pipeline address is [memory column] " << +cMemEvent.fMemoryColumnRep
+    //                                 << "\t.. expected pipeline address is [memory column] " << +cMemEvent.fMemoryColumnExp
+    //                                 << "\t.. L1Id is " << +cMemEvent.fL1Id
+    //                                 << "\t.. match in cell is " << +cMemEvent.fCorrectValue 
+    //                                 << RESET;
+    //                     }
+    //                     else
+    //                     {
+    //                         MemEvent cGoodEvnt; 
+    //                         CopyEvent(cGoodEvnt, cMemEvent);
+    //                         if( cChip->getId() == 0 && cGoodEvnt.fMemoryRow%100 == 0 ) 
+    //                             PrintMemEvent(cGoodEvnt);
+    //                     }
+    //                     // if( cChip->getId() == 0 )
+    //                     //     LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId()
+    //                     //         << " : memory report : " 
+    //                     //         << "\t.. channel [memory row]" << +cMemEvent.fMemoryRow 
+    //                     //         << "\t.. pipeline address is [memory column] " << +cMemEvent.fMemoryColumnRep
+    //                     //         << "\t.. expected pipeline address is [memory column] " << +cMemEvent.fMemoryColumnExp
+    //                     //         << "\t.. L1Id is " << +cMemEvent.fL1Id
+    //                     //         << "\t.. match in cell is " << +cMemEvent.fCorrectValue 
+    //                     //         << RESET;
+    //                 }    
+    //             }   
+    //         }
+    //     }
+    // }
     if( cNCorruptedCells == 0 )
         LOG (INFO) << BOLDGREEN << "Perfect match between injected and readout data" << RESET;
     else
