@@ -362,7 +362,7 @@ int main(int argc, char* argv[])
     cBackEndAligner.waitForRunToBeCompleted();
     // reset all chip and board registers
     // to what they were before this tool was called
-    cBackEndAligner.Reset();
+    //cBackEndAligner.Reset();
 
     // measure some of the AMUX output voltages using ADC on UIB
     // MonitorAmux & hybridTester does not exist in this branch, nor it should...
@@ -445,10 +445,14 @@ int main(int argc, char* argv[])
         MemoryCheck2S cMemoryChecker;
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
-        cMemoryChecker.EvaluatePedeNoise(100);
+        // cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise 
+        // cMemoryChecker.SetThreshold(-3.0); // set threshold to 3 sigma away from pedestal 
+        for( auto cBoard: *cMemoryChecker.fDetectorContainer )
+        {
+            cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
+        }
         cMemoryChecker.DataCheck();
-        cMemoryChecker.MemoryCheck2SRaw();
-        
+        //cMemoryChecker.MemoryCheck2SRaw();
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();
     }

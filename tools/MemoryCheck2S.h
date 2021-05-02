@@ -68,8 +68,9 @@ class  MemoryCheck2S : public Tool
 
     void Initialise();
     
+    void SetThreshold( float pSigma  = 3 );
     void EvaluatePedeNoise(int pNevents=100, int pScanRange=15);  
-    void DataCheck(int pMeanTriggerSeparation=500); 
+    void DataCheck(int pMeanTriggerSeparation=500, bool pAllOnes=true); 
     void MemoryCheck2SRaw();
     void MemoryCheck2SSparse();
     
@@ -113,7 +114,7 @@ class  MemoryCheck2S : public Tool
             float fMax;
     };
     
-
+    void Reconfigure();
   protected:
     std::vector<uint16_t> fExpectedPipelineAddress;
     std::vector<uint8_t> fFastCommands;

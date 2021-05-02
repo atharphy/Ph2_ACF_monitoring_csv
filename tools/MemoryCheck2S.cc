@@ -56,7 +56,124 @@ void MemoryCheck2S::Reset()
         }
     }
 }
+void MemoryCheck2S::Reconfigure()
+{
+    for( auto cBoard : *fDetectorContainer )
+    {
+        // read back original masks 
+        DetectorDataContainer cChipMasks; 
+        ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
+        auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
+                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                }
+            }// hybrids
+        }//OG
 
+        // reconfigure ROC registers
+        // only those that I've touched 
+        LOG (INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting ROC regs back to their original values" << RESET;
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    const ChipRegMap& cCurrentMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+                    cVecRegisters.clear();
+                    //LOG (INFO) << BOLDMAGENTA << "\t.. CBC#" << +cChip->getId() << RESET;
+                    for(auto cReg: cRegMapThisChip)
+                    {
+                        auto cIter =  cCurrentMap.find(cReg.first);
+                        if( cIter->second.fValue != cReg.second.fValue ) 
+                        {
+                            // mask registers I'll do separately later
+                            if( cIter->first.find("MaskChannel") == std::string::npos )
+                            {
+                                // LOG (INFO) << BOLDMAGENTA << "\t\t\t.. Register " << cReg.first 
+                                //     << " was changed .. from 0x" 
+                                //     << std::hex << +cIter->second.fValue << std::dec 
+                                //     << " to " 
+                                //     << std::hex << +cReg.second.fValue << std::dec 
+                                //     << " re-writing" 
+                                //     << RESET;
+                                cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                            }
+                        }
+                    }
+                    // for now only reconfigure CBCs 
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
+                }
+            }
+        }
+        //fBeBoardInterface->ChipReSync(pBoard);
+        
+
+        // reconfigure masks 
+        LOG (INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting ROC masks back to their original values" << RESET;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
+                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
+                }
+            }// hybrids
+        }//OG
+
+        // last thing to do 
+        // is to reconfigure registers on page 1 
+        // of the CBCs 
+        LOG (INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting all registers on Page1 of CBCs" << RESET;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                    
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+                    cVecRegisters.clear();
+                    for(auto cReg: cRegMapThisChip)
+                    {
+                        // mask registers I'll do separately later
+                        if( cReg.second.fPage == 1 ) 
+                        {
+                            cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                        }
+                    }
+                    // for now only reconfigure CBCs 
+                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
+                }
+            }
+        }
+        //fBeBoardInterface->ChipReSync(pBoard);
+    }
+}
 void MemoryCheck2S::Initialise()
 {
     // this is needed if you're going to use groups anywhere
@@ -225,7 +342,6 @@ uint32_t MemoryCheck2S::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 void MemoryCheck2S::GenericTriggers(int pTriggerSeparation)
 {
     // length of the trigger burst 
-    size_t cBurstLength= 5; // 
     // time between the resync and 
     // the first injection 
     size_t cReSyncSep=1;
@@ -237,7 +353,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation)
     std::random_device cRndm{};
     std::mt19937 cGen{cRndm()};
     std::poisson_distribution<> cDistTrigSep(pTriggerSeparation);
-
+    std::uniform_int_distribution<int> cBurstDist(1, 5);
 
     // LOG (INFO) << BOLDMAGENTA << "Injecting with generic FCMDs .." 
     //     << " time between ReSync + TP is  " << +cReSyncSep
@@ -279,6 +395,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation)
             fFastCommands.push_back( cFCMDs.fEmpty );
             cBxId++;
         }
+        size_t cBurstLength= cBurstDist(cGen); // 
         for( size_t cBx=0; cBx < cBurstLength; cBx++)
         {
             fTriggeredBxs.push_back( cBxId );
@@ -478,7 +595,7 @@ bool MemoryCheck2S::ReadAfterGenericBlock(int pNExpected)
             // wait another 10 ms 
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             cReadBackEvents = this->ReadData(cBoard, true);
-            cSuccess = cSuccess && ( cReadBackEvents == (size_t)pNExpected ); 
+            cSuccess = ( cReadBackEvents == (size_t)pNExpected ); 
         }
 
         if(!cSuccess)
@@ -618,33 +735,10 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
         }
     }
 }
-void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation)
+// set threshold to something sensible away from the pedestal 
+// distance from pedestal is pSigma*square sum ( NOISE , RMS NOISE )
+void MemoryCheck2S::SetThreshold( float pSigma )
 {
-    // read back original masks 
-    DetectorDataContainer cChipMasks; 
-    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
-    for( auto cBoard: *fDetectorContainer )
-    {
-        auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-                }
-            }// hybrids
-        }//OG
-    } 
-
-    bool cInjection=true;
-    bool cAllOnes=true; 
-    // set threshold to something sensible away from the pedestal 
     for(auto cBoard: *fDetectorContainer)
     {
         auto &cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getIndex());
@@ -685,19 +779,28 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation)
                         << " - minimum value is " << cNoiseStats.fMin 
                         << " - maximum value is " << cNoiseStats.fMax 
                         << RESET;
-                    uint16_t cThresholdToSet = (uint16_t)(cPedStats.fMean + (cAllOnes ? -3*cNoiseStats.fMean : -20*cNoiseStats.fMean) );
+                    float cNoise = std::sqrt( cNoiseStats.fMean*cNoiseStats.fMean + cNoiseStats.fStdDev*cNoiseStats.fStdDev ); 
+                    uint16_t cThresholdToSet = (uint16_t)(cPedStats.fMean +  pSigma*cNoise);
                     LOG (INFO) << BOLDMAGENTA << "\t\t.. Setting threshold on this chip to "
                         << cThresholdToSet
-                        << " DAC units."
+                        << " DAC units - i.e. "
+                        << std::setprecision(2) << std::fixed 
+                        << cNoise
+                        << " DAC units away from the pedestal"
                         << RESET;
                     fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cThresholdToSet ); 
                 }//ROC
             }//hybrid
         }//OG
     }//board
-
-    bool cWithNoise=!cInjection;
+}
+void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes ) 
+{
+   
+    bool cInjection=true;
+    bool cAllOnes=pAllOnes; 
     bool cSparisfication = false;
+    bool cWithNoise=!cInjection;
     bool cUseOffsets=true;
     auto cSetting = fSettingsMap.find ( "Ntrials" );
     size_t cNtrials = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
@@ -755,7 +858,7 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation)
                         //LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
                         for( auto cHit : cHitList )
                         { 
-                            LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                            //LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
                             cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cAllOnes ) ? 1 : 0 ; 
                         }
                     }
@@ -858,30 +961,7 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation)
         }
     }//latency scan
 
-    // reconfig original masks 
-    // re-configure original mask 
-    for( auto cBoard: *fDetectorContainer )
-    {
-        // original masks for channels 
-        auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
-                }
-            }// hybrids
-        }//OG
-    }
-
-    // reset 
-    this->Reset();
+    Reconfigure();
 }
 void MemoryCheck2S::MemoryCheck2SRaw()
 {
@@ -1260,11 +1340,12 @@ void MemoryCheck2S::Check()
                         auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
                         auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
                         // 
-                        // LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
-                        //         << " found " << +cHits.size() 
-                        //         << " at pipeline address " << +cPipelineAddress 
-                        //         << " expected pipeline address is " << +cExpectedPipelineAddress 
-                        //         << RESET;
+                        LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
+                                << " L1Id is " << +cL1Id 
+                                << " found " << +cHits.size() 
+                                << " hits at pipeline address " << +cPipelineAddress 
+                                << " ... expected pipeline address is " << +cExpectedPipelineAddress 
+                                << RESET;
                         // now compare all channels for this address
                         MemEvent cMemEvent; 
                         cMemEvent.fEventId = cEvntCnt;

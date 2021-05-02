@@ -64,6 +64,8 @@ class BackEndAlignment : public Tool
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
 
+    void Reconfigure(Ph2_HwDescription::BeBoard* pBoard);
+
 // booking histograms
 #ifdef __USE_ROOT__
 //  DQMHistogramCic fDQMHistogram;

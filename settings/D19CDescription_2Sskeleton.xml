@@ -16,7 +16,7 @@
         </lpGBT>
 	    <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="550" latency="199"/>
+                <Settings threshold="589" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>

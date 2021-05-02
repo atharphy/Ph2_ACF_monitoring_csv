@@ -899,8 +899,10 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
 bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
 {
     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
+    if(!cSuccess) return cSuccess; 
+
+    cSuccess =this->SetOptimalTaps(pChip);
     return cSuccess; 
-    // && this->SetOptimalTaps(pChip);
     // setBoard(pChip->getBeBoardId());
     // if(cSuccess)
     // {
@@ -1061,10 +1063,12 @@ bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPort
     }// revert to optimal if offset makes no sense
     uint8_t cValue = (cRegValue & cRegMask) | (cPhaseTap << cBitShift);
 
-    LOG(DEBUG) << BOLDGREEN << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
-               << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of "
-               << +cPhaseTap 
-               << " original tap value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort]) << RESET;
+    // LOG(INFO) << BOLDGREEN << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
+    //            << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of "
+    //            << +cPhaseTap 
+    //            << " original register value is 0x" << std::hex << +cRegValue << std::dec 
+    //            << " - modified register so that phase value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort]) 
+    //            << RESET;
     return WriteReg(pChip, cRegItem.fAddress, cValue, cVerifloop);
 }
 bool CicInterface::SetOptimalTaps(Chip* pChip, int pOffset)

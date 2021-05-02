@@ -542,7 +542,10 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
     if( cSuccess ) return true;
 
     // switch page 
-    LOG (INFO) << BOLDMAGENTA << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << RESET;
+    LOG (INFO) << BOLDMAGENTA << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() 
+        << " from page " <<+cPage 
+        << " to page " << +pPage
+        << RESET;
     ChipRegItem cPageReg = pCbc->getRegItem("FeCtrl&TrgLat2");
     uint8_t cRegValue = (cPageReg.fValue & 0x7F) | ( pPage << 7 ); 
     //LOG (INFO) << BOLDBLUE << "\t...Current page is " << cPage << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;
