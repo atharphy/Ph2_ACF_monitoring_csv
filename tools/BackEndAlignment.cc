@@ -391,10 +391,12 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 // max 16 
                 if( cChip->getId()%2 == 0 ) { cSeeds.clear(); cBends.clear(); }
 
+                size_t cNhits=0;
                 for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
                 {
                     auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
                     cNinjectedHits += cHitList.size();
+                    cNhits += cHitList.size();
                 }
 
                 cNinjectedStubs += cSeeds.size();
@@ -407,7 +409,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 // no cluster cut
                 fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut", 4);
 
-                LOG (INFO) << BOLDMAGENTA << "Injecting " << +cNinjectedHits 
+                LOG (INFO) << BOLDMAGENTA << "Injecting " << +cNhits 
                     << " hits and " << +cSeeds.size() 
                     << " stubs in CBC#" 
                     << +cChip->getId() << RESET;

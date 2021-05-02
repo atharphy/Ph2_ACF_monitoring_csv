@@ -445,8 +445,10 @@ int main(int argc, char* argv[])
         MemoryCheck2S cMemoryChecker;
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
+        // find pedestal and set threshold
         // cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise 
         // cMemoryChecker.SetThreshold(-3.0); // set threshold to 3 sigma away from pedestal 
+        // find correct stub latency with TP
         for( auto cBoard: *cMemoryChecker.fDetectorContainer )
         {
             cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
