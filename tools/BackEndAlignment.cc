@@ -142,6 +142,7 @@ void BackEndAlignment::Reconfigure(BeBoard* pBoard)
                 }
                 // for now only reconfigure CBCs 
                 if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                if( cVecRegisters.size() == 0 ) continue; 
                 fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
             }
         }

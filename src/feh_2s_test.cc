@@ -453,7 +453,9 @@ int main(int argc, char* argv[])
         {
             cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
         }
-        cMemoryChecker.DataCheck();
+        auto cSetting = cTool.fSettingsMap.find ( "TriggerSeparation" );
+        int cTriggerGap = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : 500; 
+        cMemoryChecker.DataCheck(cTriggerGap);
         //cMemoryChecker.MemoryCheck2SRaw();
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();

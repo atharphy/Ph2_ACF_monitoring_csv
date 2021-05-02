@@ -339,7 +339,7 @@ uint32_t MemoryCheck2S::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 }
 // generic analogue injections - mean trigger rate set by
 // pTriggerSeparation
-void MemoryCheck2S::GenericTriggers(int pTriggerSeparation)
+void MemoryCheck2S::GenericTriggers(int pTriggerSeparation, int pMaxBurstLength )
 {
     // length of the trigger burst 
     // time between the resync and 
@@ -353,7 +353,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation)
     std::random_device cRndm{};
     std::mt19937 cGen{cRndm()};
     std::poisson_distribution<> cDistTrigSep(pTriggerSeparation);
-    std::uniform_int_distribution<int> cBurstDist(1, 5);
+    std::uniform_int_distribution<int> cBurstDist(1, pMaxBurstLength);//maximum length of TP
 
     // LOG (INFO) << BOLDMAGENTA << "Injecting with generic FCMDs .." 
     //     << " time between ReSync + TP is  " << +cReSyncSep
@@ -612,6 +612,31 @@ bool MemoryCheck2S::ReadAfterGenericBlock(int pNExpected)
 // evaluate pedestal and noise 
 void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
 {
+    bool cSparisfication=false;
+    DetectorDataContainer cSparsBoards; 
+    ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, cSparsBoards);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cBeBoardSpars   = cSparsBoards.at(cBoard->getIndex());
+        auto& cSparsified = cBeBoardSpars->getSummary<uint8_t>();
+        cSparsified = (uint8_t)( cBoard->getSparsification() );
+        if( cBeBoardSpars ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
+        else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
+        
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparisfication);
+        cBoard->setSparsification( (cSparisfication != 0 ) ); 
+        if( cSparisfication ) LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now on " << RESET;
+        else LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now off " << RESET;
+        
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cSparisfication);
+            }
+        }
+    }
     float cOccupancyAtPedestal = 0.56; 
     LOG (INFO) << BOLDMAGENTA << "MemoryCheck2S - Measure pedestal and noise" << RESET;
     DetectorDataContainer cOccupancyContainer;
@@ -734,6 +759,23 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
             }
         }
     }
+
+    // reset sparse 
+    LOG (INFO) << BOLDMAGENTA << "Re-setting sparisfication after evaluating pedestal and noise ." << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex())->getSummary<uint8_t>();
+        cBoard->setSparsification((cBeBoardSpars!=0));
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cBeBoardSpars);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cBeBoardSpars);
+            }
+        }
+    }
 }
 // set threshold to something sensible away from the pedestal 
 // distance from pedestal is pSigma*square sum ( NOISE , RMS NOISE )
@@ -793,13 +835,46 @@ void MemoryCheck2S::SetThreshold( float pSigma )
             }//hybrid
         }//OG
     }//board
+
+    for( auto cBoard : *fDetectorContainer )
+    {
+        // only those that I've touched 
+        LOG (INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting CBCs regs on page1 back to their original values" << RESET;
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                    
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+                    cVecRegisters.clear();
+                    for(auto cReg: cRegMapThisChip)
+                    {
+                        // mask registers I'll do separately later
+                        if( cReg.second.fPage == 1 ) 
+                        {
+                            cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                        }
+                    }
+                    // for now only reconfigure CBCs 
+                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
+                }
+            }
+        }
+        //fBeBoardInterface->ChipReSync(pBoard);
+    }//make sure offsets are set correctly
 }
 void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes ) 
 {
-   
     bool cInjection=true;
     bool cAllOnes=pAllOnes; 
-    bool cSparisfication = false;
+    bool cSparisfication = true;
     bool cWithNoise=!cInjection;
     bool cUseOffsets=true;
     auto cSetting = fSettingsMap.find ( "Ntrials" );
@@ -809,18 +884,37 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
     cSetting = fSettingsMap.find( "TriggerSeparation" );
     size_t cTriggerGap = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 500; 
     
+    // sparisfication
+    DetectorDataContainer cSparsBoards; 
+    ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, cSparsBoards);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cBeBoardSpars   = cSparsBoards.at(cBoard->getIndex());
+        auto& cSparsified = cBeBoardSpars->getSummary<uint8_t>();
+        cSparsified = (uint8_t)( cBoard->getSparsification() );
+        if( cBeBoardSpars ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
+        else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
+        
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparisfication);
+        cBoard->setSparsification( (cSparisfication != 0 ) ); 
+        if( cSparisfication ) LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now on " << RESET;
+        else LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now off " << RESET;
+        
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cSparisfication);
+            }
+        }
+    }
+
     // injection 
     fDetectorDataContainer = &fExpectedOccupancy;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        bool cSparsified = cBoard->getSparsification();
-        if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
-        else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparisfication);
-        if( cSparisfication ) LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now on " << RESET;
-        else LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now off " << RESET;
-        
         auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
@@ -828,8 +922,6 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getIndex());
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                fCicInterface->SetSparsification(cCic, cSparisfication);
                 // only 2S for now 
                 // configure injection 
                 for(auto cChip: *cHybrid)
@@ -917,81 +1009,102 @@ void MemoryCheck2S::DataCheck(int pMeanTriggerSeparation, bool pAllOnes )
         // read 
         this->ReadAfterGenericBlock(fTotalEventsExpected);
         
-        for(auto cBoard: *fDetectorContainer)
-        {
-            const std::vector<Event*>& cEvents = this->GetEvents();
-            LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
-            size_t cEvntCnt=0;
-            for(auto& cEvent: cEvents)
-            {
-                auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
-                auto cTriggeredBx = fTriggeredBxs[cEvntCnt];
+        Check();
+        // for(auto cBoard: *fDetectorContainer)
+        // {
+        //     const std::vector<Event*>& cEvents = this->GetEvents();
+        //     LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
+        //     size_t cEvntCnt=0;
+        //     for(auto& cEvent: cEvents)
+        //     {
+        //         auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
+        //         auto cTriggeredBx = fTriggeredBxs[cEvntCnt];
 
-                if( cEvntCnt < 10 )
-                    LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvntCnt 
-                         << " expected pipeline address is " << +cExpectedPipelineAddress 
-                         << " triggered Bx is " << +cTriggeredBx 
-                         << RESET;
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        // only 2S for now 
-                        for(auto cChip: *cHybrid)
-                        {
-                            if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-                            auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
-                            auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
-                            auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
-                            if( cEvntCnt < 10 )
-                                LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
-                                        << " L1Id is " << +cL1Id 
-                                        << " found " << +cHits.size() 
-                                        << " hits at pipeline address " << +cPipelineAddress 
-                                        << " , also found "
-                                        << +cStubs.size()
-                                        << " stubs in the event"
-                                        << RESET;
-                        }//chip 
-                    }//hybrid
-                }//OG
-                cEvntCnt++;
-            }
-        }
+        //         if( cEvntCnt < 10 )
+        //             LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvntCnt 
+        //                  << " expected pipeline address is " << +cExpectedPipelineAddress 
+        //                  << " triggered Bx is " << +cTriggeredBx 
+        //                  << RESET;
+        //         for(auto cOpticalGroup: *cBoard)
+        //         {
+        //             for(auto cHybrid: *cOpticalGroup)
+        //             {
+        //                 // only 2S for now 
+        //                 for(auto cChip: *cHybrid)
+        //                 {
+        //                     if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+        //                     auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+        //                     auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
+        //                     auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
+        //                     auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
+        //                     if( cEvntCnt < 10 )
+        //                         LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
+        //                                 << " L1Id is " << +cL1Id 
+        //                                 << " found " << +cHits.size() 
+        //                                 << " hits at pipeline address " << +cPipelineAddress 
+        //                                 << " , also found "
+        //                                 << +cStubs.size()
+        //                                 << " stubs in the event"
+        //                                 << RESET;
+        //                 }//chip 
+        //             }//hybrid
+        //         }//OG
+        //         cEvntCnt++;
+        //     }
+        // }
     }//latency scan
 
+    // reset sparse 
+    LOG (INFO) << BOLDMAGENTA << "Re-setting sparisfication after data checker ." << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex())->getSummary<uint8_t>();
+        cBoard->setSparsification((cBeBoardSpars==0)? false : true );
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cBeBoardSpars);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cBeBoardSpars);
+            }
+        }
+    }
     Reconfigure();
 }
 void MemoryCheck2S::MemoryCheck2SRaw()
 {
-    // read back original masks 
-    DetectorDataContainer cChipMasks; 
-    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
-    for( auto cBoard: *fDetectorContainer )
-    {
-        auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-                }
-            }// hybrids
-        }//OG
-    } 
-
     bool cInjection=false;
     bool cSparisfication = false;
     uint16_t cThreshold = cInjection ? 590 : 1000; 
     bool cWithNoise=!cInjection;
     bool cUseOffsets=false;
+    
+    DetectorDataContainer cSparsBoards; 
+    ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, cSparsBoards);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cBeBoardSpars   = cSparsBoards.at(cBoard->getIndex());
+        auto& cSparsified = cBeBoardSpars->getSummary<uint8_t>();
+        cSparsified = (uint8_t)( cBoard->getSparsification() );
+        if( cBeBoardSpars ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
+        else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
+        
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparisfication);
+        cBoard->setSparsification( (cSparisfication != 0 ) ); 
+        if( cSparisfication ) LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now on " << RESET;
+        else LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now off " << RESET;
+        
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cSparisfication);
+            }
+        }
+    }
+
     auto cSetting = fSettingsMap.find ( "Ntrials" );
     size_t cNtrials = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 10;
     cSetting = fSettingsMap.find( "TestPulseSeparation" );
@@ -1007,13 +1120,6 @@ void MemoryCheck2S::MemoryCheck2SRaw()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        bool cSparsified = cBoard->getSparsification();
-        if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "Sparsification on " << RESET;
-        else LOG (INFO) << BOLDMAGENTA << "Sparsification off " << RESET;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparisfication);
-        if( cSparisfication ) LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now on " << RESET;
-        else LOG (INFO) << BOLDMAGENTA << "\t... Sparsification now off " << RESET;
-        
         auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
@@ -1021,8 +1127,6 @@ void MemoryCheck2S::MemoryCheck2SRaw()
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getIndex());
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                fCicInterface->SetSparsification(cCic, cSparisfication);
                 // only 2S for now 
                 // configure injection 
                 for(auto cChip: *cHybrid)
@@ -1111,29 +1215,24 @@ void MemoryCheck2S::MemoryCheck2SRaw()
         Check();
     }//latency scan
 
-    // reconfig original masks 
-    // re-configure original mask 
-    for( auto cBoard: *fDetectorContainer )
+   
+    // reset sparse 
+    LOG (INFO) << BOLDMAGENTA << "Re-setting sparisfication after data checker ." << RESET;
+    for(auto cBoard: *fDetectorContainer)
     {
-        // original masks for channels 
-        auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex())->getSummary<uint8_t>();
+        cBoard->setSparsification((cBeBoardSpars==0)? false : true );
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cBeBoardSpars);
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
-                }
-            }// hybrids
-        }//OG
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cBeBoardSpars);
+            }
+        }
     }
-    // reset 
-    this->Reset();
+    Reconfigure();
 }
 void MemoryCheck2S::MemoryCheck2SSparse()
 {
@@ -1309,7 +1408,7 @@ void MemoryCheck2S::Check()
         auto& cMemEventsThisBrd = cMemEvents.at(cBoard->getIndex());
         auto& cExpectedOcThisBrd = fExpectedOccupancy.at(cBoard->getIndex());
         const std::vector<Event*>& cEvents = this->GetEvents();
-        //LOG (INFO) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
+        LOG (INFO) << BOLDMAGENTA << "Running check on " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
         size_t cEvntCnt=0;
         for(auto& cEvent: cEvents)
         {
@@ -1372,6 +1471,7 @@ void MemoryCheck2S::Check()
     DetectorDataContainer cCorruptedMemCells;
     fDetectorDataContainer = &cCorruptedMemCells;
     ContainerFactory::copyAndInitStructure<MemEvents>(*fDetectorContainer, *fDetectorDataContainer);
+    size_t cNCorruptedCells=0; 
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cCorruptedMemCellsThisBrd = cCorruptedMemCells.at(cBoard->getIndex());
@@ -1395,6 +1495,7 @@ void MemoryCheck2S::Check()
                     {
                         if( cMemEvent.fCorrectValue == 0 ) 
                         {
+                            cNCorruptedCells++;
                             MemEvent cCorrEvnt; 
                             cCorrEvnt.fEventId = cMemEvent.fEventId;
                             cCorrEvnt.fL1Id    = cMemEvent.fL1Id;
@@ -1427,6 +1528,11 @@ void MemoryCheck2S::Check()
             }
         }
     }
+    if( cNCorruptedCells == 0 )
+        LOG (INFO) << BOLDGREEN << "Perfect match between injected and readout data" << RESET;
+    else
+        LOG (INFO) << BOLDRED << "Mismatches found between injected and readout data" << RESET;
+        
 }
 //
 void MemoryCheck2S::writeObjects()

@@ -654,6 +654,8 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         // write the registers, the answer will be in the same cVec
         // the number of times the write operation has been attempted is given by cWriteAttempts
         uint8_t cWriteAttempts = 0;
+        if( cVec.size() == 0 ) return true; 
+        
         cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
         #ifdef COUNT_FLAG
             fTransactionCount++;

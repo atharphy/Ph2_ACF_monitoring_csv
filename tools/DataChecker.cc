@@ -4945,7 +4945,7 @@ void DataChecker::ReadNeventsTest()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cEventType = cBoard->getEventType();
-        cBoard->setEventType(EventType::VR);
+        //cBoard->setEventType(EventType::VR-2S);
         bool cSparsified = cBoard->getSparsification();
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
         for(auto cOpticalGroup: *cBoard)
@@ -4998,14 +4998,39 @@ void DataChecker::ReadNeventsTest()
         uint32_t cN = 0;
         for(auto& cEvent: cEvents)
         {
-            if(cN % 5 == 0)
+            for(auto cBoard: *fDetectorContainer)
             {
-                LOG(INFO) << ">>> Event #" << cN << RESET;
-                ;
-                outp.str("");
-                outp << *cEvent;
-                LOG(INFO) << outp.str();
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        for(auto cChip: *cHybrid)
+                        {
+
+                            auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
+                            auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
+                            auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
+                            LOG (INFO) << BOLDGREEN << "ROC#" << +cChip->getId()
+                                    << " L1Id is " << +cL1Id 
+                                    << " found " << +cHits.size() 
+                                    << " hits at pipeline address " << +cPipelineAddress 
+                                    << " , also found "
+                                    << +cStubs.size()
+                                    << " stubs in the event"
+                                    << RESET;
+                        }
+                    }
+                }
             }
+            // if(cN % 5 == 0)
+            // {
+            //     LOG(INFO) << ">>> Event #" << cN << RESET;
+            //     ;
+            //     outp.str("");
+            //     outp << *cEvent;
+            //     LOG(INFO) << outp.str();
+            // }
             cN++;
         }
         cBoard->setEventType(cEventType);

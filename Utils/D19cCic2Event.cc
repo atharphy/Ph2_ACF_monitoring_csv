@@ -869,35 +869,36 @@ std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId, uint8_t pRea
     auto&                  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     std::bitset<NCHANNELS> cBitSet(0);
     size_t                 cClusterId = 0;
-    // LOG (DEBUG) << BOLDBLUE << "Decoding clusters for FE" << +pFeId << " readout chip " << +pReadoutChipId << RESET;
+    //LOG (INFO) << BOLDBLUE << "Decoding clusters for FE" << +pFeId << " readout chip " << +pReadoutChipId << RESET;
     if(fIs2S)
     {
         for(auto cClusterWord: cClusterWords)
         {
             uint8_t cChipId       = ((cClusterWord & (0x7 << 11)) >> 11);
+            //auto    cChipIdMapped = cFeMapping[cChipId];
+            //std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), cChipId));
             auto    cChipIdMapped = this->getChipIdMapped(pFeId, cChipId);
-            // I think I need to adjust this 
-
-            // auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
             if(cChipIdMapped != pReadoutChipId) continue;
 
+            //LOG (INFO) << BOLDMAGENTA << "CIC reports a cluster in FE" << +cChipId << " which is " << +cChipIdMapped << " on hybrid " << RESET;
+            
             uint8_t cLayerId      = ((cClusterWord & (0xFF << 3)) >> 3) & 0x01;        // LSB is the layer
             uint8_t cStrip        = (((cClusterWord & (0xFF << 3)) >> 3) & 0xFE) >> 1; // strip id
             uint8_t cWidth        = 1 + (cClusterWord & 0x7);
             uint8_t cFirstChannel = 2 * cStrip + cLayerId;
             
-            LOG(DEBUG) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
-                       << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
+            //LOG(INFO) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
+            //           << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
 
             for(size_t cOffset = 0; cOffset < cWidth; cOffset++)
             {
-                LOG(DEBUG) << BOLDBLUE << "\t\t\t\t.. hit in channel " << +(cFirstChannel + 2 * cOffset) << RESET;
+                //LOG(INFO) << BOLDBLUE << "\t\t\t\t.. hit in channel " << +(cFirstChannel + 2 * cOffset) << RESET;
                 cBitSet[cFirstChannel + 2 * cOffset] = 1;
             }
             cClusterId++;
         }
     }
-    LOG(DEBUG) << BOLDBLUE << "Decoded clusters for FE" << +pFeId << " readout chip " << +pReadoutChipId << " : " << std::bitset<NCHANNELS>(cBitSet) << RESET;
+    //LOG(INFO) << BOLDBLUE << "Decoded clusters for FE" << +pFeId << " readout chip " << +pReadoutChipId << " : " << std::bitset<NCHANNELS>(cBitSet) << RESET;
     return cBitSet;
 }
 bool D19cCic2Event::DataBit(uint8_t pFeId, uint8_t pReadoutChipId, uint32_t i) const

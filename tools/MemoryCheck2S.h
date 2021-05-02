@@ -150,7 +150,7 @@ class  MemoryCheck2S : public Tool
     //
     TPconfig fTPconfig;
     // generic triggers 
-    void GenericTriggers(int pReSync=0);
+    void GenericTriggers(int pReSync=0, int pMaxBurstLength=3);
     bool SendGenericTriggers(int pTriggerSeparation=500);
     // generic TP 
     uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions=1);
