@@ -210,7 +210,7 @@
     <Setting name="SyncDebug">0</Setting>
 
     <!-- Burst Test -->
-    <Setting name="Ntrials">1</Setting>
+    <Setting name="Ntrials">10</Setting>
     <Setting name="LengthOfBurst">16</Setting>
     <Setting name="TriggerSeparation">500</Setting>
     <Setting name="TestPulseSeparation">70</Setting>

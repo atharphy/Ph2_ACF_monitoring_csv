@@ -142,6 +142,42 @@ void CicFEAlignment::Initialise()
             }
         }
     }
+
+    // read back original masks 
+    // read back original masks 
+    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, fChipMasks);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                for(auto cChip: *cHybrid)
+                {
+
+                    const ChannelGroup<NCHANNELS>* cMsk = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3 )
+                    {
+                        auto& cOriginalMask = cMasksThisChip->getSummary<ChannelGroup<NCHANNELS>*>();
+                        cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
+                        for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
+                        {
+                            bool cEnabled = cMsk->isChannelEnabled(cChnl);
+                            if( cEnabled ) cOriginalMask->enableChannel( cChnl );
+                            else cOriginalMask->disableChannel( cChnl );
+                        }
+                    }
+                    //if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, 1>;
+                    //if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
+                    // to -do .. same for MPA where have to look over cols 
+                }
+            }// hybrids
+        }//OG
+    }
 }
 
 void CicFEAlignment::writeObjects()

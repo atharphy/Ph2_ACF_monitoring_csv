@@ -449,9 +449,9 @@ int main(int argc, char* argv[])
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
         
-        //find pedestal and set threshold
-        // cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise 
-        // cMemoryChecker.SetThreshold(-3.0); // set threshold to 3 sigma away from pedestal 
+        // //find pedestal and set threshold
+        cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise 
+        cMemoryChecker.SetThreshold(-3.0); // set threshold to 3 sigma away from pedestal 
         // find correct stub latency with TP
         for( auto cBoard: *cMemoryChecker.fDetectorContainer )
         {
@@ -461,7 +461,7 @@ int main(int argc, char* argv[])
         auto cSetting = cTool.fSettingsMap.find ( "TriggerSeparation" );
         int cTriggerGap = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : 500; 
         cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
-        //cMemoryChecker.MemoryCheck2SRaw();
+        cMemoryChecker.MemoryCheck2SRaw();
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();
     }

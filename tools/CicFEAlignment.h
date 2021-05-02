@@ -72,6 +72,7 @@ class CicFEAlignment : public Tool
     DetectorDataContainer fWordAlignmentValues;
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+    DetectorDataContainer fChipMasks;
     // with MPA
     bool fWithMPA;
 

@@ -69,6 +69,12 @@ struct MemEvent
     float fNoise           = 0; 
     // pedestal set during this run 
     uint16_t fPedestal        = 0;
+    // stubs 
+    uint8_t fSeedExp = 0 ; 
+    uint8_t fBendExp = 0 ;
+    uint8_t fSeedRep = 0xFF ; 
+    uint8_t fBendRep = 0xFF ; 
+    uint8_t fMatchedStub = 0; 
 };
 typedef std::vector<MemEvent> MemEvents;
 #endif
@@ -143,6 +149,7 @@ class  MemoryCheck2S : public Tool
   private:
     // MemEvent 
     MemEvent fMemEvent;
+    MemEvent fStubEvent;
 
     // timing 
     std::chrono::seconds::rep fStartTime; 
@@ -152,6 +159,8 @@ class  MemoryCheck2S : public Tool
     ChannelGroup<254, 1> fCBCMask;
 
     // Containers
+    DetectorDataContainer fChipMasks; 
+    //
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
     // 

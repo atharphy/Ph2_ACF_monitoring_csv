@@ -82,28 +82,42 @@ void BackEndAlignment::Initialise()
             }
         }
     }
+
+    // read back original masks 
+    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, fChipMasks);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                for(auto cChip: *cHybrid)
+                {
+
+                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+                    {
+                        cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>() = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    }
+                    if( cChip->getFrontEndType() == FrontEndType::SSA ) 
+                    {
+                        cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS>*>() = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
+                    }
+                    if( cChip->getFrontEndType() == FrontEndType::MPA ) 
+                    {
+                        cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS,NMPACOLS>*>() = static_cast<const ChannelGroup<NSSACHANNELS,NMPACOLS>*>(cChip->getChipOriginalMask());
+                    }
+                }
+            }// hybrids
+        }//OG
+    }
 }
 void BackEndAlignment::Reconfigure(BeBoard* pBoard)
 {
-    // read back original masks 
-    DetectorDataContainer cChipMasks; 
-    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
-    auto& cMasksThisBrd = cChipMasks.at(pBoard->getIndex());
-    for(auto cOpticalGroup: *pBoard)
-    {
-        auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
-            for(auto cChip: *cHybrid)
-            {
-                auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-            }
-        }// hybrids
-    }//OG
-
+   
     // reconfigure ROC registers
     // only those that I've touched 
     LOG (INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting ROC regs back to their original values" << RESET;
@@ -148,7 +162,8 @@ void BackEndAlignment::Reconfigure(BeBoard* pBoard)
         }
     }
     
-    // reconfigure masks 
+    // // reconfigure masks 
+    auto& cMasksThisBrd = fChipMasks.at(pBoard->getIndex());
     LOG (INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting ROC masks back to their original values" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {

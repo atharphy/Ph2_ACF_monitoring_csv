@@ -24,6 +24,7 @@
 #define NCHANNELS 254
 #define NSSACHANNELS 120
 #define NMPACHANNELS 1920
+#define NMPACOLS     16         
 
 // Events
 

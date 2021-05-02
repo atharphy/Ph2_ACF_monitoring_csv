@@ -60,25 +60,6 @@ void MemoryCheck2S::Reconfigure()
 {
     for( auto cBoard : *fDetectorContainer )
     {
-        // read back original masks 
-        DetectorDataContainer cChipMasks; 
-        ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
-        auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-                }
-            }// hybrids
-        }//OG
-
         // reconfigure ROC registers
         // only those that I've touched 
         LOG (INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting ROC regs back to their original values" << RESET;
@@ -124,7 +105,8 @@ void MemoryCheck2S::Reconfigure()
         //fBeBoardInterface->ChipReSync(pBoard);
         
 
-        // reconfigure masks 
+        // // reconfigure masks 
+        auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
         LOG (INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting ROC masks back to their original values" << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
@@ -136,6 +118,18 @@ void MemoryCheck2S::Reconfigure()
                 {
                     auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
                     auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
+                    // {
+                    //     bool cEnabled = cOriginalMask->isChannelEnabled(cChnl);
+                    //     if( cEnabled )
+                    //     {  
+                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDBLUE << "Reconfig Chnl#" << +cChnl << " enabled." << RESET;
+                    //     }
+                    //     else
+                    //     { 
+                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDBLUE << "Reconfig Chnl#" << +cChnl << " disabled." << RESET;
+                    //     }
+                    // }
                     fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
                 }
             }// hybrids
@@ -191,10 +185,13 @@ void MemoryCheck2S::Initialise()
     ContainerFactory::copyAndInitChip<int>(*fDetectorContainer, fStubCheckContainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fThresholds);
     
+    // fDetectorDataContainer = &fExpectedOccupancy;
+    // ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    
+
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitChip<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
-   
     for(auto cBoard: *fDetectorContainer)
     {
         // 
@@ -215,6 +212,41 @@ void MemoryCheck2S::Initialise()
         }
     }
 
+    // read back original masks 
+    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, fChipMasks);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                for(auto cChip: *cHybrid)
+                {
+
+                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
+                    cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>() = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    // cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
+                    // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
+                    // {
+                    //     bool cEnabled = cMsk->isChannelEnabled(cChnl);
+                    //     if( cEnabled ){ cOriginalMask->enableChannel( cChnl );
+                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " enabled." << RESET;
+                    //     }
+                    //     else{ 
+                    //         cOriginalMask->disableChannel( cChnl );
+                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " disabled." << RESET;
+                    //     }
+                    // }
+                    //if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, 1>;
+                    //if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
+                    // to -do .. same for MPA where have to look over cols 
+                }
+            }// hybrids
+        }//OG
+    }
     // to be replaced with a plotting tool 
     #ifdef __USE_ROOT__
         // prepare Tree 
@@ -255,6 +287,40 @@ void MemoryCheck2S::Initialise()
                         //
                         cTree->Branch("Pass", &fMemEvent.fCorrectValue);
                         this->bookHistogram(cChip, "MemoryCheck2STree", cTree);
+
+                        cName = Form("StubTest_Cic%d_Cbc%d", cHybrid->getId(), cChip->getId());
+                        cObj  = gROOT->FindObject(cName); 
+                        if(cObj) delete cObj;
+
+                        cTree = new TTree(cName, "StubTest");
+                        cTree->Branch("Type", &fStubEvent.fType);
+                        cTree->Branch("ChipId", &fStubEvent.fChipId);
+                        //
+                        cTree->Branch("StartTime", &fStubEvent.fStartTime);
+                        cTree->Branch("StopTime", &fStubEvent.fStopTime);
+                        //
+                        cTree->Branch("EventId", &fStubEvent.fEventId);
+                        cTree->Branch("L1Id", &fStubEvent.fL1Id);
+                        //
+                        cTree->Branch("MemoryRow", &fStubEvent.fMemoryRow);
+                        cTree->Branch("MemoryColumn", &fStubEvent.fMemoryColumnExp);
+                        cTree->Branch("MemoryColumnReported", &fStubEvent.fMemoryColumnRep);
+                        //
+                        cTree->Branch("TriggeredBx", &fStubEvent.fTriggeredBx);
+                        cTree->Branch("TriggerNumberInBurst", &fStubEvent.fTriggerNumberInBurst);
+                        //
+                        cTree->Branch("Threshold", &fStubEvent.fThreshold);
+                        cTree->Branch("Noise", &fStubEvent.fNoise);
+                        cTree->Branch("Pedestal", &fStubEvent.fPedestal);
+                        //
+                        cTree->Branch("ExpSeed", &fStubEvent.fSeedExp);
+                        cTree->Branch("ExpBend", &fStubEvent.fBendExp);
+                        cTree->Branch("RepSeed", &fStubEvent.fSeedRep);
+                        cTree->Branch("RepBend", &fStubEvent.fBendRep);
+                        cTree->Branch("StubMatch", &fStubEvent.fMatchedStub);
+                        //
+                        cTree->Branch("Pass", &fStubEvent.fCorrectValue);
+                        this->bookHistogram(cChip, "StubCheck2STree", cTree);
                     }
                 }
             }
@@ -1087,13 +1153,14 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
         fTriggeredBxs.clear();
         fTriggerNumberInBurst.clear();
         fTotalEventsExpected=0;
-
+        const auto cTimeStart = std::chrono::system_clock::now();
+        fStartTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStart.time_since_epoch()).count();
         for( size_t cAttempt = 0 ; cAttempt < cNtrials; cAttempt++)
         {
-            if( cAttempt%10 == 0 )
-                LOG (INFO) << BOLDMAGENTA << "Sending Iter#" << +cAttempt 
-                    << " of generic triggers"
-                    << RESET;
+            LOG (INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt 
+                << " of sending Iter#" << +cAttempt 
+                << " of generic triggers"
+                << RESET;
             // generate enough fast command sequences 
             //  to cover complete pipeline  
             this->SendGenericTriggers(cTriggerGap);
@@ -1101,7 +1168,8 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
         LOG (INFO) << BOLDMAGENTA << "Try to readout data from " << +fTotalEventsExpected << " triggers." << RESET;
         // read 
         this->ReadAfterGenericBlock(fTotalEventsExpected);
-        
+        const auto cTimeStop = std::chrono::system_clock::now();
+        fStopTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStop.time_since_epoch()).count();
         Check();
     }//latency scan
 
@@ -1125,6 +1193,25 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
 }
 void MemoryCheck2S::MemoryCheck2SRaw()
 {
+    // I still don't understand what is happening with the masking 
+    // but ok .. 
+    // this forces it to work 
+    // make sure all channels are enabled 
+    // for this test 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels(cChip,false); 
+                }
+            }
+        }
+    }
+
     fTypeOfTest=0; 
     bool cInjection=false;
     bool cSparisfication = false;
@@ -1521,15 +1608,15 @@ void MemoryCheck2S::Check()
                         auto cHits = cEvent->GetHits( cHybrid->getId(), cChip->getId()); 
                         auto cPipelineAddress = cEvent->PipelineAddress( cHybrid->getId(), cChip->getId());
                         auto cL1Id = cEvent->L1Id( cHybrid->getId(), cChip->getId());
-                        LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
-                                << " L1Id is " << +cL1Id 
-                                << " found " << +cHits.size() 
-                                << " hits at pipeline address " << +cPipelineAddress 
-                                << " ... expected pipeline address is " << +cExpectedPipelineAddress 
-                                << " ... also found "
-                                << +cStubs.size()
-                                << " stubs."
-                                << RESET;
+                        // LOG (INFO) << BOLDGREEN << "CBC#" << +cChip->getId()
+                        //         << " L1Id is " << +cL1Id 
+                        //         << " found " << +cHits.size() 
+                        //         << " hits at pipeline address " << +cPipelineAddress 
+                        //         << " ... expected pipeline address is " << +cExpectedPipelineAddress 
+                        //         << " ... also found "
+                        //         << +cStubs.size()
+                        //         << " stubs."
+                        //         << RESET;
                         //
                         // now compare all channels for this address
                         // type of test 
@@ -1548,10 +1635,11 @@ void MemoryCheck2S::Check()
                         fMemEvent.fMemoryColumnRep = cPipelineAddress; 
                         fMemEvent.fTriggeredBx = cTriggeredBx;
                         fMemEvent.fTriggerNumberInBurst = cfTriggerNumberInBurst; 
-                        
+                        fMemEvent.fThreshold = cThresholdDuringTest; 
                         // check stubs 
                         if( fMemEvent.fType == 3 )
                         {
+                            CopyEvent(fStubEvent, fMemEvent);
                             auto& cExpectdStubsThisBoard = fExpectedStubs.at(cBoard->getIndex());
                             auto& cExpectdStubsThisOG = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
                             auto& cExpectdStubsThisHybrd = cExpectdStubsThisOG->at(cHybrid->getIndex());
@@ -1559,25 +1647,41 @@ void MemoryCheck2S::Check()
                             auto& cExpectedStubs = cExpectdStubsThisROC->getSummary<std::vector<Stub>>();
                             for(auto cStub : cExpectedStubs)
                             {
+                                fStubEvent.fSeedExp = cStub.getPosition();
+                                fStubEvent.fBendExp = cStub.getBend();
+
                                 bool cMatchFound=false;
+                                size_t cMatchIndx=0; 
+                                size_t cReadoutStubCounter=0;
                                 for(auto cReadoutStub : cStubs) 
                                 {
                                     if( cMatchFound ) continue; 
 
-                                    LOG (INFO) << BOLDMAGENTA << "\t... readout a stub with address"
-                                        << +cReadoutStub.getPosition()
-                                        << " and  bend code "
-                                        << +cReadoutStub.getBend()
-                                        << RESET;
+                                    // LOG (INFO) << BOLDMAGENTA << "\t... readout a stub with address"
+                                    //     << +cReadoutStub.getPosition()
+                                    //     << " and  bend code "
+                                    //     << +cReadoutStub.getBend()
+                                    //     << RESET;
                                     cMatchFound = (cReadoutStub.getPosition() == cStub.getPosition());
                                     cMatchFound = cMatchFound && (cReadoutStub.getBend() == cStub.getBend());
+                                    if( cMatchFound ) cMatchIndx = cReadoutStubCounter; 
+                                    cReadoutStubCounter++;
                                 }
+                                fStubEvent.fMatchedStub = ( cMatchFound ) ? 1 : 0 ; 
                                 if( cMatchFound )
-                                    LOG (INFO) << BOLDMAGENTA << "\t...Expected a stub with address \t"
-                                        << +cStub.getPosition()
-                                        << " and  bend code "
-                                        << +cStub.getBend()
-                                        << RESET;
+                                {
+                                    fStubEvent.fSeedRep = cStubs[cMatchIndx].getPosition();
+                                    fStubEvent.fBendRep = cStubs[cMatchIndx].getBend();
+                                    // LOG (INFO) << BOLDMAGENTA << "\t...Found the expected stub with address \t"
+                                    //     << +fStubEvent.fSeedExp
+                                    //     << " and  bend code "
+                                    //     << +fStubEvent.fBendExp
+                                    //     << RESET;
+                                }
+                                #ifdef __USE_ROOT__
+                                    TTree*      cStubTree  = static_cast<TTree*>(getHist(cChip, "StubCheck2STree"));
+                                    cStubTree->Fill();
+                                #endif
                             }
                         }
 
@@ -1586,7 +1690,6 @@ void MemoryCheck2S::Check()
                             // information about threshold + noise 
                             fMemEvent.fPedestal =cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold; 
                             fMemEvent.fNoise =cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise; 
-                            fMemEvent.fThreshold = cThresholdDuringTest; 
                             // memory row 
                             fMemEvent.fMemoryRow = cChnl; 
                             float cExpectedOcc = cExpectedOcThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
@@ -1595,8 +1698,6 @@ void MemoryCheck2S::Check()
                             if(fMemEvent.fCorrectValue==0)
                                 PrintMemEvent(fMemEvent);
                             cNCorruptedCells += (fMemEvent.fCorrectValue==0) ? 1 : 0; 
-                            // if( cChip->getId() == 0 && cChnl >= 250 ) 
-                            //     PrintMemEvent(fMemEvent);
                             // if ROOT is enabled fill tree here
                             #ifdef __USE_ROOT__
                                 TTree*      cTree  = static_cast<TTree*>(getHist(cChip, "MemoryCheck2STree"));
