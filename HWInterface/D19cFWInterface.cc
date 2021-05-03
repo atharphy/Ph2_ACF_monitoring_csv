@@ -2947,7 +2947,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                         cNWordsPrev = cNWords;
                     }while( !cStopIncrement ); 
                     cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-                    cFailed = (cReadoutReq != 1 ); 
+                    //cFailed = (cReadoutReq != 1 ); 
                     if( cFailed ) { LOG (INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... re-trying " << RESET; }
                 }// check readout req
 
