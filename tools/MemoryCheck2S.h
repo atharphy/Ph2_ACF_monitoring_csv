@@ -51,6 +51,8 @@ struct MemEvent
 {
     // type of test 
     uint8_t  fType=0;
+    // trial 
+    uint8_t  fTrial=0;
     // event information
     uint8_t  fEventId = 0;
     uint16_t fL1Id    = 0;
@@ -87,6 +89,7 @@ class  MemoryCheck2S : public Tool
 
     void Initialise();
     
+    void MonitorAnalogue();
     void SetThreshold( float pSigma  = 3 );
     void EvaluatePedeNoise(int pNevents=100, int pScanRange=15);  
     void DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTriggerSeparation=500, bool pAllOnes=true); 
@@ -138,6 +141,7 @@ class  MemoryCheck2S : public Tool
   protected:
     std::vector<uint16_t> fExpectedPipelineAddress;
     std::vector<uint8_t> fFastCommands;
+    std::vector<uint8_t> fTrialCount;
     std::vector<int>  fTriggeredBxs; 
     std::vector<int>  fTriggerNumberInBurst; 
     int fNInjectedTriggers=0;
@@ -171,6 +175,7 @@ class  MemoryCheck2S : public Tool
     DetectorDataContainer fExpectedStubs; 
     DetectorDataContainer fThresholds; 
     // 
+    int fTrial = 0;
     int fTypeOfTest = 0;
     int fAttempt      = 0;
     int fMissedEvent  = 0;
@@ -192,6 +197,7 @@ class  MemoryCheck2S : public Tool
     void CopyEvent(MemEvent& pMemEvent, MemEvent pEvent)
     {
         pMemEvent.fType = pEvent.fType;
+        pMemEvent.fTrial = pEvent.fTrial;
         // timing information 
         pMemEvent.fStartTime = pEvent.fStartTime; 
         pMemEvent.fStopTime = pEvent.fStopTime ; 
@@ -267,6 +273,9 @@ class  MemoryCheck2S : public Tool
         cStatsSum.fNentries = cData.size();
         return cStatsSum;
     }
+    // resets 
+    void ReconfigureOffsets();
+    
     void zeroContainers();
     
 // booking histograms

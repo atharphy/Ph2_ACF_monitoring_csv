@@ -56,6 +56,41 @@ void MemoryCheck2S::Reset()
         }
     }
 }
+void MemoryCheck2S::ReconfigureOffsets()
+{
+    LOG (INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting all registers on Page1 of CBCs" << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                    
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
+                    cVecRegisters.clear();
+                    for(auto cReg: cRegMapThisChip)
+                    {
+                        // mask registers I'll do separately later
+                        if( cReg.second.fPage == 1 ) 
+                        {
+                            cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                        }
+                    }
+                    // for now only reconfigure CBCs 
+                    fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
+                }
+            }
+        }
+    }
+}
+
 void MemoryCheck2S::Reconfigure()
 {
     for( auto cBoard : *fDetectorContainer )
@@ -509,6 +544,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation, int pMaxBurstLength 
         size_t cBurstLength= cBurstDist(cGen); // 
         for( size_t cBx=0; cBx < cBurstLength; cBx++)
         {
+            fTrialCount.push_back(fTrial);
             fTriggerNumberInBurst.push_back(cBx);
             fTriggeredBxs.push_back( cBxId );
             fFastCommands.push_back( cFCMDs.fTrigger );
@@ -617,6 +653,7 @@ void MemoryCheck2S::GenericTestPulse(int pReSync)
     }
     for( size_t cBx=0; cBx < cBurstLength; cBx++)
     {
+        fTrialCount.push_back(fTrial);
         fTriggerNumberInBurst.push_back(cBx);
         fFastCommands.push_back( cFCMDs.fTrigger );
         fTriggeredBxs.push_back( cBxId );
@@ -1145,6 +1182,12 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
             fBeBoardInterface->ChipReSync(cBoard);
         }//Board      
 
+        // make sure you reset offsets 
+        // last thing to do 
+        // is to reconfigure registers on page 1 
+        // of the CBCs 
+        ReconfigureOffsets();
+
         //const auto cStartTime = std::chrono::system_clock::now();
         // send enough triggers 
         // to cover full pipeline N times 
@@ -1152,11 +1195,13 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
         fExpectedPipelineAddress.clear();
         fTriggeredBxs.clear();
         fTriggerNumberInBurst.clear();
+        fTrialCount.clear();
         fTotalEventsExpected=0;
         const auto cTimeStart = std::chrono::system_clock::now();
         fStartTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStart.time_since_epoch()).count();
         for( size_t cAttempt = 0 ; cAttempt < cNtrials; cAttempt++)
         {
+            fTrial=cAttempt;
             LOG (INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt 
                 << " of sending Iter#" << +cAttempt 
                 << " of generic triggers"
@@ -1331,6 +1376,12 @@ void MemoryCheck2S::MemoryCheck2SRaw()
             fBeBoardInterface->ChipReSync(cBoard);
         }//Board      
 
+        // make sure you reset offsets 
+        // last thing to do 
+        // is to reconfigure registers on page 1 
+        // of the CBCs 
+        ReconfigureOffsets();
+
         // send enough triggers 
         // to cover full pipeline N times 
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
@@ -1338,12 +1389,14 @@ void MemoryCheck2S::MemoryCheck2SRaw()
         fTotalEventsExpected=0;
         fTriggeredBxs.clear();
         fTriggerNumberInBurst.clear();
+        fTrialCount.clear();
         const auto cTimeStart = std::chrono::system_clock::now();
         fStartTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStart.time_since_epoch()).count();
         // repeat full scan of memort 
         // cNtrials times 
         for( size_t cAttempt = 0 ; cAttempt < cNtrials; cAttempt++)
         {
+            fTrial=cAttempt;
             LOG (INFO) << BOLDMAGENTA << "MemoryCheck2SRaw - Attempt#" << +cAttempt << RESET;
             // generate enough fast command sequences 
             //  to cover complete pipeline  
@@ -1547,6 +1600,133 @@ void MemoryCheck2S::MemoryCheck2SSparse()
         Check();
     }    
 }
+// check bandgap and voltage 
+// for different distances from threshold 
+void MemoryCheck2S::MonitorAnalogue()
+{   
+    float cVref = 1.0; 
+    float cFactor = cVref/ 1024.;
+
+    // first make sure ADC is calibrated 
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& clpGBT =  cOpticalGroup->flpGBT ;
+            if(clpGBT == nullptr) continue;
+
+            auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+            // enable voltage 
+            std::vector<std::string> cADCs_VoltageMonitors{"VDD"};
+            std::vector<float>       cADCs_Refs{1.25*0.42};
+            // use Vddd as reference 
+            // use P1V25 as reference
+            size_t cIndx=0;
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
+            // find correction 
+            std::vector<float> cVals(10,0);
+            uint8_t cEnableVref=1;
+            std::string cADCsel = cADCs_VoltageMonitors[cIndx];
+            std::vector<uint8_t> cRefPoints{0, 0x05, 0x10, 0x20, 0x3F };
+            std::vector<float> cMeasurements(0);
+            std::vector<float> cSlopes(0);
+            for( auto cRef : cRefPoints) 
+            {
+                clpGBTInterface->ConfigureVref(clpGBT, cEnableVref, cRef);
+                for(size_t cM=0; cM < cVals.size(); cM++)
+                {
+                    cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADCsel)*cFactor;
+                }
+                float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
+                float cDifference_V = (cADCs_Refs[cIndx] - cMean );
+                LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                        << " correction applied is " << +cRef 
+                        << " reading [mean] is "
+                        << +cMean*1e3 
+                        << " milli-volts."
+                        << "\t...Difference between expected and measured "
+                        << " values is "
+                        << cDifference_V*1e3 
+                        << " milli-volts." << RESET;
+
+                cMeasurements.push_back(cDifference_V);
+                if( cMeasurements.size() > 1 ) 
+                {
+                    for(int cI=cMeasurements.size()-2; cI>=0; cI--)
+                    {
+                        float cSlope = (cMeasurements[cMeasurements.size()-1] - cMeasurements[cI])/(cRefPoints[cMeasurements.size()-1 ]-cRefPoints[cI]);
+                        LOG (DEBUG) << BOLDBLUE << "Index " << +(cMeasurements.size()-1 )
+                            << " -- index " << cI
+                            << " slope is " << cSlope 
+                            << RESET;
+                        cSlopes.push_back(cSlope);
+                    }
+                }
+            }
+            float cMeanSlope = std::accumulate(cSlopes.begin(),cSlopes.end(),0.)/cSlopes.size();
+            float cIntcpt = cMeasurements[0]; 
+            int cCorr = std::min( std::floor(-1.0*cIntcpt/cMeanSlope), 63. );
+            LOG (INFO) << BOLDMAGENTA << "Mean slope is " << cMeanSlope 
+                << " , intercept is " << cIntcpt 
+                << " correction is " << cCorr
+                << RESET;
+            // apply correction and check
+            clpGBTInterface->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
+            for(size_t cM=0; cM < cVals.size(); cM++)
+            {
+                cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADCsel)*cFactor;
+            }
+            // turn off ADC mon
+            clpGBTInterface->WriteChipReg(clpGBT,"ADCMon", 0x00 );
+        }// configure lpGBT 
+    }
+
+    // now .. for different distances from the pedestal 
+    // i.e. modifying mean occupancy on hybrid 
+    std::vector<float> cDistances{0};
+    for( auto cDistance : cDistances )
+    {
+        // set threshold N sigma 
+        // away from pedestal 
+        //SetThreshold(cDistance);
+
+        // make sure triggers are being sent 
+        // so start periodic triggers with some rate 
+
+        // now measure hybrid voltages 
+        for(const auto cBoard: *fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT =  cOpticalGroup->flpGBT ;
+                if(clpGBT == nullptr) continue;
+                auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+            
+                // 1.25V is only valid for the LHS 
+                for(auto cHybrid: *cOpticalGroup)
+                { 
+                    if( cHybrid->getId()%2 == 0 ) continue;
+
+                    uint8_t cADCsel = 1;
+                    char cADC[4]; sprintf( cADC, "ADC%.1d", cADCsel);
+                    std::vector<float> cVals(10);
+                    for(size_t cM=0; cM < cVals.size(); cM++) cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADC)*cFactor;
+                    auto cStats = SummarizeStats<float>(cVals);
+
+                    LOG (INFO) << BOLDMAGENTA << "\t...1.25V monitor on 2S-FEL-L#"
+                        << +cHybrid->getId()  
+                        << " using " << cADC << " reading from lpGBT. "
+                        << " Threshold set to "
+                        << cDistance 
+                        << " sigma away from the pedestal is "
+                        << +cStats.fMean*1e3 
+                        << " milli-volts. " 
+                        << RESET;
+                }// hybrid 
+            }
+        }              
+    }
+}
 // compare read back 
 // against injected data 
 void MemoryCheck2S::Check()
@@ -1576,7 +1756,8 @@ void MemoryCheck2S::Check()
             //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvntCnt << RESET;
             auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
             auto cTriggeredBx = fTriggeredBxs[cEvntCnt];
-            auto cfTriggerNumberInBurst = fTriggerNumberInBurst[cEvntCnt]; 
+            auto cTriggerNumberInBurst = fTriggerNumberInBurst[cEvntCnt]; 
+            auto cTrialNumber = fTrialCount[cEvntCnt];
             for(auto cOpticalGroup: *cBoard)
             {
                 auto& cThThisOG = cThThisBoard->at(cOpticalGroup->getIndex());
@@ -1631,10 +1812,13 @@ void MemoryCheck2S::Check()
                         // event 
                         fMemEvent.fEventId = cEvntCnt;
                         fMemEvent.fL1Id    = cL1Id;
+                        fMemEvent.fTrial     = cTrialNumber;
+                        // expected location in memory 
                         fMemEvent.fMemoryColumnExp = cExpectedPipelineAddress;
                         fMemEvent.fMemoryColumnRep = cPipelineAddress; 
+                        // triggered bx 
                         fMemEvent.fTriggeredBx = cTriggeredBx;
-                        fMemEvent.fTriggerNumberInBurst = cfTriggerNumberInBurst; 
+                        fMemEvent.fTriggerNumberInBurst = cTriggerNumberInBurst; 
                         fMemEvent.fThreshold = cThresholdDuringTest; 
                         // check stubs 
                         if( fMemEvent.fType == 3 )
