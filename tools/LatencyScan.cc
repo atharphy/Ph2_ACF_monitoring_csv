@@ -107,14 +107,16 @@ void LatencyScan::ScanLatency()
                     {
                             ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
 							if(theChip->getFrontEndType() == FrontEndType::SSA)
+								{
                     			LOG(INFO) << "SSA";
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x1);
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
+								}
 							if(theChip->getFrontEndType() == FrontEndType::MPA)
 								{
                     			LOG(INFO) << "MPA";
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x7);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 190);
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 50);
 								}
 						
 					}
@@ -148,13 +150,12 @@ void LatencyScan::ScanLatency()
                             ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                             if(theChip->getFrontEndType() == FrontEndType::MPA)
                             {
-                                cHitCounterMPA += static_cast<D19cCic2Event*>(cEvent)->GetNPixelClusters(0);
-
+                                cHitCounterMPA += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid>getId(),theChip->getId())).size();
 								//LOG(INFO) << "cHitCounterMPA " << cHitCounterMPA<<RESET;
                             }
                             else if(theChip->getFrontEndType() == FrontEndType::SSA)
                             {
-                                cHitCounterSSA += static_cast<D19cCic2Event*>(cEvent)->GetNStripClusters(0);
+                                cHitCounterSSA += (static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(hybrid>getId(),theChip->getId())).size();
 								//LOG(INFO) << "GetExternalTriggerId " << (static_cast<D19cCic2Event*>(cEvent)->GetExternalTriggerId())<<RESET;
                             }
                             else

@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
 
-    cPSAlignment.Align();
+    //cPSAlignment.Align();
     cPSAlignment.Reset();
 
     if(!cAligned)
