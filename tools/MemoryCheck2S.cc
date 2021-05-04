@@ -302,6 +302,8 @@ void MemoryCheck2S::Initialise()
                         TTree* cTree = new TTree(cName, "MemTest");
                         cTree->Branch("Type", &fMemEvent.fType);
                         cTree->Branch("ChipId", &fMemEvent.fChipId);
+                        cTree->Branch("HybridId", &fMemEvent.fHybridId);
+                        cTree->Branch("TrialId",&fMemEvent.fTrial);
                         //
                         cTree->Branch("StartTime", &fMemEvent.fStartTime);
                         cTree->Branch("StopTime", &fMemEvent.fStopTime);
@@ -328,8 +330,10 @@ void MemoryCheck2S::Initialise()
                         if(cObj) delete cObj;
 
                         cTree = new TTree(cName, "StubTest");
-                        cTree->Branch("Type", &fStubEvent.fType);
-                        cTree->Branch("ChipId", &fStubEvent.fChipId);
+                        cTree->Branch("Type", &fMemEvent.fType);
+                        cTree->Branch("ChipId", &fMemEvent.fChipId);
+                        cTree->Branch("HybridId", &fMemEvent.fHybridId);
+                        cTree->Branch("TrialId",&fMemEvent.fTrial);
                         //
                         cTree->Branch("StartTime", &fStubEvent.fStartTime);
                         cTree->Branch("StopTime", &fStubEvent.fStopTime);
@@ -1600,29 +1604,25 @@ void MemoryCheck2S::MemoryCheck2SSparse()
         Check();
     }    
 }
-// check bandgap and voltage 
-// for different distances from threshold 
-void MemoryCheck2S::MonitorAnalogue()
-{   
-    float cVref = 1.0; 
-    float cFactor = cVref/ 1024.;
-
-    // first make sure ADC is calibrated 
-    for(const auto cBoard: *fDetectorContainer)
+void MemoryCheck2S::ConfigureVref()
+{
+    LOG (INFO) << BOLDBLUE << "Setting up Vref of lpGBT-ADC.." << RESET;
+    std::vector<std::string> cADCs_VoltageMonitors{"ADC2"};
+    std::vector<float>       cADCs_Refs{10.4*0.49/10.0};
+    // reference volage for lpgBT 
+    float cVrefLPGBT = 1.0; 
+    float cFactor = cVrefLPGBT/ 1024.;
+    for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
             auto& clpGBT =  cOpticalGroup->flpGBT ;
             if(clpGBT == nullptr) continue;
-
             auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            // enable voltage 
-            std::vector<std::string> cADCs_VoltageMonitors{"VDD"};
-            std::vector<float>       cADCs_Refs{1.25*0.42};
-            // use Vddd as reference 
-            // use P1V25 as reference
-            size_t cIndx=0;
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
+            
+            // use Vin as the reference 
+            // this I know does not change with anything 
+            size_t cIndx=cADCs_VoltageMonitors.size()-1;
             // find correction 
             std::vector<float> cVals(10,0);
             uint8_t cEnableVref=1;
@@ -1633,22 +1633,23 @@ void MemoryCheck2S::MonitorAnalogue()
             for( auto cRef : cRefPoints) 
             {
                 clpGBTInterface->ConfigureVref(clpGBT, cEnableVref, cRef);
+                // wait until Vref is stable
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 for(size_t cM=0; cM < cVals.size(); cM++)
                 {
                     cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADCsel)*cFactor;
                 }
                 float cMean = std::accumulate(cVals.begin(),cVals.end(),0.)/cVals.size();
                 float cDifference_V = (cADCs_Refs[cIndx] - cMean );
-                LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
-                        << " correction applied is " << +cRef 
-                        << " reading [mean] is "
-                        << +cMean*1e3 
-                        << " milli-volts."
-                        << "\t...Difference between expected and measured "
-                        << " values is "
-                        << cDifference_V*1e3 
-                        << " milli-volts." << RESET;
-
+                // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                //         << " correction applied is " << +cRef 
+                //         << " reading [mean] is "
+                //         << +cMean*1e3 
+                //         << " milli-volts."
+                //         << "\t...Difference between expected and measured "
+                //         << " values is "
+                //         << cDifference_V*1e3 
+                //         << " milli-volts." << RESET;
                 cMeasurements.push_back(cDifference_V);
                 if( cMeasurements.size() > 1 ) 
                 {
@@ -1666,66 +1667,244 @@ void MemoryCheck2S::MonitorAnalogue()
             float cMeanSlope = std::accumulate(cSlopes.begin(),cSlopes.end(),0.)/cSlopes.size();
             float cIntcpt = cMeasurements[0]; 
             int cCorr = std::min( std::floor(-1.0*cIntcpt/cMeanSlope), 63. );
-            LOG (INFO) << BOLDMAGENTA << "Mean slope is " << cMeanSlope 
-                << " , intercept is " << cIntcpt 
-                << " correction is " << cCorr
-                << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "Mean slope is " << cMeanSlope 
+            //     << " , intercept is " << cIntcpt 
+            //     << " correction is " << cCorr
+            //     << RESET;
             // apply correction and check
             clpGBTInterface->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
+            // wait until Vref is stable
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             for(size_t cM=0; cM < cVals.size(); cM++)
             {
                 cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADCsel)*cFactor;
             }
+            auto cStats = SummarizeStats<float>(cVals);
+            LOG (INFO) << BOLDMAGENTA << "Measured V_min after correction is " 
+                << std::setprecision(2) << std::fixed 
+                << cStats.fMean*1e3
+                << " mV , expected value is "
+                << cADCs_Refs[cIndx]*1e3 
+                << " difference is "
+                << std::fabs(cStats.fMean-cADCs_Refs[cIndx])*1e3
+                << " mV, correction needed to acheive this was  "
+                << +cCorr
+                << RESET;
+            
             // turn off ADC mon
-            clpGBTInterface->WriteChipReg(clpGBT,"ADCMon", 0x00 );
+            //static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
         }// configure lpGBT 
     }
-
-    // now .. for different distances from the pedestal 
-    // i.e. modifying mean occupancy on hybrid 
-    std::vector<float> cDistances{0};
+}
+void MemoryCheck2S::MonitorInputVoltage()
+{
+    float cVref = 1.0; 
+    float cFactor = cVref/ 1024.;
+    float cVhybrid = 1.25; 
+    float cScalingHybrid = (0.806/cVhybrid);
+    uint16_t cTriggerRate = 100; 
+    
+    std::vector<float> cDistances{0,-3,-5};
     for( auto cDistance : cDistances )
     {
         // set threshold N sigma 
         // away from pedestal 
-        //SetThreshold(cDistance);
-
+        SetThreshold(cDistance);
         // make sure triggers are being sent 
         // so start periodic triggers with some rate 
-
-        // now measure hybrid voltages 
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0, cTriggerRate, 3);
+        
+        // now measure hybrid voltages
+        // this is monitored with one of the ADCs 
+        // in the lpGBT  
         for(const auto cBoard: *fDetectorContainer)
         {
+            fBeBoardInterface->Start(cBoard);
+            // this is for the hybrid voltage 
             for(auto cOpticalGroup: *cBoard)
             {
                 auto& clpGBT =  cOpticalGroup->flpGBT ;
                 if(clpGBT == nullptr) continue;
                 auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            
-                // 1.25V is only valid for the LHS 
-                for(auto cHybrid: *cOpticalGroup)
-                { 
-                    if( cHybrid->getId()%2 == 0 ) continue;
+                uint8_t cADCsel = 1;
+                char cADC[4]; sprintf( cADC, "ADC%.1d", cADCsel);
+                std::vector<float> cVals(10);
+                for(size_t cM=0; cM < cVals.size(); cM++){ 
+                    cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADC)*cFactor;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                auto cStats = SummarizeStats<float>(cVals);
+                float cMeasured = cStats.fMean/cScalingHybrid; 
+                LOG (INFO) << BOLDMAGENTA << "\t 1.25V monitor on 2S-FEL-L"
+                    << " using " << cADC << " reading from lpGBT. "
+                    << " Threshold set to "
+                    << cDistance 
+                    << " sigma away from the pedestal is "
+                    <<  cMeasured
+                    << " Volts."
+                    << RESET;
+                LOG (INFO) << BOLDMAGENTA << "\t\t.. std. deviation of measurement is "
+                    <<  cStats.fStdDev*1e3/cScalingHybrid
+                    << " mV. Mean measured value is "
+                    << std::fabs(cVhybrid - cMeasured)*1e3 
+                    << " mV away from nominal."
+                    << RESET;
+            }//OG
+            fBeBoardInterface->Stop(cBoard);
+        }//board
+    }//distance from pedestal
 
-                    uint8_t cADCsel = 1;
-                    char cADC[4]; sprintf( cADC, "ADC%.1d", cADCsel);
-                    std::vector<float> cVals(10);
-                    for(size_t cM=0; cM < cVals.size(); cM++) cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADC)*cFactor;
-                    auto cStats = SummarizeStats<float>(cVals);
+}
+// check bandgap and voltage 
+// for different distances from threshold 
+void MemoryCheck2S::MonitorAnalogue()
+{   
+    float cVref = 1.0; 
+    float cFactor = cVref/ 1024.;
+    // float cVhybrid = 1.25; 
+    // float cScalingHybrid = (0.806/cVhybrid);
+    // uint16_t cTriggerRate = 100; 
+    std::vector<uint8_t> cAmuxSels{6,7};
+    std::vector<std::string> cAmuxLbls{"VbgBias", "Vbg_LDO"};
+   
+    size_t cLengthLoop=100; 
+    size_t cDebugOut=100;
+    for( size_t cMuxIndx=0; cMuxIndx < cAmuxSels.size(); cMuxIndx++)
+    {
+        LOG (INFO) << BOLDBLUE << "Monitoring ADC values when AMUXs "
+                    << cAmuxLbls[cMuxIndx] 
+                    << " is selected" 
+                    << RESET;
+        
+        DetectorDataContainer cAdcMeasurements;
+        ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cAdcMeasurements);
+        DetectorDataContainer cFloatingMonitor;
+        ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, cFloatingMonitor);
+        for(const auto cBoard: *fDetectorContainer)
+        {
+            auto& cMeasThisBrd = cAdcMeasurements.at(cBoard->getIndex());
+            auto& cFloatingThisBrd = cFloatingMonitor.at(cBoard->getIndex());
+            // now for the analogue monitoring 
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& cMeasThisOG = cMeasThisBrd->at(cOpticalGroup->getIndex());
+                auto& cFloatingThisOG = cFloatingThisBrd->at(cOpticalGroup->getIndex());
+                auto& clpGBT =  cOpticalGroup->flpGBT ;
+                if(clpGBT == nullptr) continue;
+                auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+                // make sure all chips AMUX 
+                // is set to floating 
+                // on all hybrids 
+                for( size_t cChipIndx=0; cChipIndx < 8; cChipIndx++)
+                {
+                    LOG (INFO) << BOLDBLUE << "\t.. Selecting chip#"
+                        << +cChipIndx << RESET;
 
-                    LOG (INFO) << BOLDMAGENTA << "\t...1.25V monitor on 2S-FEL-L#"
-                        << +cHybrid->getId()  
-                        << " using " << cADC << " reading from lpGBT. "
-                        << " Threshold set to "
-                        << cDistance 
-                        << " sigma away from the pedestal is "
-                        << +cStats.fMean*1e3 
-                        << " milli-volts. " 
+                    LOG (INFO) << BOLDBLUE << "\t\t..."
+                        << " .. first make sure we are at a stable point.."
                         << RESET;
-                }// hybrid 
-            }
-        }              
-    }
+                    // make sure all chips are set to floating 
+                    for(auto cHybrid: *cOpticalGroup)
+                    {   
+                        for( auto cChip : *cHybrid )
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip,"AmuxOutput", 0); //set to floating 
+                        }
+                    }
+                    // allow to stabilize
+                    for( size_t cMeasIndx=0; cMeasIndx < cLengthLoop*3 ; cMeasIndx++)
+                    {
+                        // now measure 
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            auto& cFltThisHybrid = cFloatingThisOG->at(cHybrid->getIndex());
+                            auto& cMeas = cFltThisHybrid->getSummary<std::vector<float>>(); 
+                            if( cMeasIndx == 0 ) cMeas.clear();
+
+                            uint8_t cADCsel = (cHybrid->getId()%2 == 0 ) ? 3 : 0 ; 
+                            char cADC[4]; sprintf( cADC, "ADC%.1d", cADCsel);
+                            // now wait until the output is stable 
+                            float cVal  = clpGBTInterface->ReadADC(clpGBT, cADC)*cFactor;
+                            cMeas.push_back( cVal );
+                            if( cMeasIndx%(cDebugOut) == 0 )
+                                LOG (INFO) << BOLDYELLOW << "\t\t\t...[ all floating ] measurement#" << +cMeasIndx
+                                    << " on hybrid " << +cHybrid->getId() 
+                                    << " reading from lpGBT "
+                                    << " is "
+                                    << +cVal
+                                    << " Volts. "
+                                    << RESET;
+                        }//hybrids
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    }
+                    // print out loop 
+                    // for(auto cHybrid: *cOpticalGroup)
+                    // {
+                    //     auto& cMeasThisHybrid = cMeasThisOG->at(cHybrid->getIndex());
+                    //     auto& cMeas = cMeasThisHybrid->getSummary<std::vector<float>>(); 
+                    //     LOG (INFO) << BOLDBLUE << "\t\tHybrid " << +cHybrid->getId() 
+                    //         << " reading from lpGBT "
+                    //         << " at start it < "
+                    //         << cMeas[0]*1e3 
+                    //         << " ... at end " 
+                    //         << cMeas[ cMeas.size() - 1 ]*1e3 
+                    //         << " mVolts"
+                    //         << RESET;
+                    // }
+                    // select amux on Nth chip  
+                    LOG (INFO) << BOLDBLUE << "\t\t..."
+                        << " .. selecting " << cAmuxLbls[cMuxIndx] 
+                        << " on Chip#" << +cChipIndx
+                        << RESET;
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        if( cChipIndx >= cHybrid->size() ) continue;
+                        fReadoutChipInterface->WriteChipReg(cHybrid->at(cChipIndx),"AmuxOutput", cAmuxSels[cMuxIndx]); //set to floating 
+                    }
+                    // allow to stabilize
+                    for( size_t cMeasIndx=0; cMeasIndx < cLengthLoop/10 ; cMeasIndx++)
+                    {
+                        // now measure 
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            auto& cMeasThisHybrid = cMeasThisOG->at(cHybrid->getIndex());
+                            auto& cMeasThisChip   = cMeasThisHybrid->at(cChipIndx);
+                            auto& cMeas = cMeasThisChip->getSummary<std::vector<float>>(); 
+                            if( cMeasIndx == 0 ) cMeas.clear(); 
+
+                            uint8_t cADCsel = (cHybrid->getId()%2 == 0 ) ? 3 : 0 ; 
+                            char cADC[4]; sprintf( cADC, "ADC%.1d", cADCsel);
+                            // now wait until the output is stable 
+                            cMeas.push_back( clpGBTInterface->ReadADC(clpGBT, cADC)*cFactor ) ;
+                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        }//hybrids
+                    }//measurement loop 
+                    // print out loop 
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        auto& cMeasThisHybrid = cMeasThisOG->at(cHybrid->getIndex());
+                        auto& cMeasThisChip   = cMeasThisHybrid->at(cChipIndx);
+                        auto& cMeas = cMeasThisChip->getSummary<std::vector<float>>(); 
+                        auto cStats = SummarizeStats<float>( cMeas );
+                        LOG (INFO) << BOLDBLUE << "\t\t\t... Hybrid " << +cHybrid->getId() 
+                            << " reading from lpGBT "
+                            << " is < "
+                            << +cStats.fMean*1e3 
+                            << " > , [ "
+                            << +cStats.fStdDev*1e3 
+                            << " ] mVolts. "
+                            << RESET;
+                    }
+                    // return mux to floating on Nth chip   
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        if( cChipIndx >= cHybrid->size() ) continue;
+                        fReadoutChipInterface->WriteChipReg(cHybrid->at(cChipIndx),"AmuxOutput", 0); //set to floating 
+                    }
+                }//at most 8 chips per hybrid
+            }//OG 
+        }//board  
+    }//mux loop
 }
 // compare read back 
 // against injected data 
@@ -1879,8 +2058,8 @@ void MemoryCheck2S::Check()
                             float cExpectedOcc = cExpectedOcThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
                             int   cOcc = (int)(std::find( cHits.begin(), cHits.end() , cChnl) != cHits.end());
                             fMemEvent.fCorrectValue = (uint8_t)(cExpectedOcc == cOcc);
-                            if(fMemEvent.fCorrectValue==0)
-                                PrintMemEvent(fMemEvent);
+                            // if(fMemEvent.fCorrectValue==0)
+                            //     PrintMemEvent(fMemEvent);
                             cNCorruptedCells += (fMemEvent.fCorrectValue==0) ? 1 : 0; 
                             // if ROOT is enabled fill tree here
                             #ifdef __USE_ROOT__
@@ -1961,7 +2140,7 @@ void MemoryCheck2S::Check()
     if( cNCorruptedCells == 0 )
         LOG (INFO) << BOLDGREEN << "Perfect match between injected and readout data" << RESET;
     else
-        LOG (INFO) << BOLDRED << "Mismatches found between injected and readout data" << RESET;
+        LOG (INFO) << BOLDRED << +cNCorruptedCells << " mismatches found between injected and readout data" << RESET;
         
 }
 //

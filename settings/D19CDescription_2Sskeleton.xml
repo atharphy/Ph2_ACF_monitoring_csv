@@ -4,7 +4,8 @@
     <!-- B598 skeleton, direct powering -->
     <!--<connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <!-- B14 skeleton -->
-    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+    <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0">
@@ -16,7 +17,7 @@
         </lpGBT>
 	    <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="589" latency="199"/>
+                <Settings threshold="579" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
@@ -24,20 +25,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-            <!-- <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" configfile="CBC3_default.txt" />
-            <CBC Id="3" configfile="CBC3_default.txt" />
-            <CBC Id="4" configfile="CBC3_default.txt" />
-            <CBC Id="5" configfile="CBC3_default.txt" />
-            <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" />
-
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_03-05-21_11h12m46/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_04-05-21_18h19m14" />
             <CBC Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
             <CBC Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
             <CBC Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
@@ -47,15 +35,12 @@
             <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
             <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_03-05-21_11h12m46/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_04-05-21_18h19m14" />
             <CIC2 Id="8" configfile="BE0_OG0_FE0.txt" />
-            
-            <!-- <CIC_Files path="./settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
         </Hybrid>
         <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="589" latency="199"/>
+                <Settings threshold="579" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
@@ -63,7 +48,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-             <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_03-05-21_11h12m46/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_04-05-21_18h19m14" />
             <CBC Id="0" configfile="BE0_OG0_FE1_Chip0.txt" />
             <CBC Id="1" configfile="BE0_OG0_FE1_Chip1.txt" />
             <CBC Id="2" configfile="BE0_OG0_FE1_Chip2.txt" />
@@ -73,7 +58,7 @@
             <CBC Id="6" configfile="BE0_OG0_FE1_Chip6.txt" />
             <CBC Id="7" configfile="BE0_OG0_FE1_Chip7.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_03-05-21_11h12m46/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_xxxx_Electron_04-05-21_18h19m14" />
             <CIC2 Id="8" configfile="BE0_OG0_FE1.txt" />
         </Hybrid>
     </OpticalGroup>
@@ -246,11 +231,10 @@
     <Setting name="SyncDebug">0</Setting>
 
     <!-- Burst Test -->
-    <Setting name="Ntrials">20</Setting>
+    <Setting name="Ntrials">10</Setting>
     <Setting name="LengthOfBurst">16</Setting>
     <Setting name="TriggerSeparation">500</Setting>
     <Setting name="TestPulseSeparation">70</Setting>
-    <Setting name="GenericFastCommands">1</Setting>
 
 
 </Settings>

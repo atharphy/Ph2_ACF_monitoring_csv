@@ -62,6 +62,8 @@ struct MemEvent
     uint16_t fCorrectValue    = 0; 
     uint16_t fTriggeredBx     = 0;
     uint8_t  fTriggerNumberInBurst = 0; 
+    // 
+    uint16_t fHybridId        = 0; 
     uint16_t fChipId          = 0; 
     // information about the test 
     int fStartTime=0;
@@ -81,6 +83,23 @@ struct MemEvent
 typedef std::vector<MemEvent> MemEvents;
 #endif
 
+#ifndef AdcMeasurements
+struct AdcMeasurement
+{
+    // type of test 
+    uint8_t  fADC=0;
+    // 
+    int fTrial = 0; 
+    // information about the test 
+    int fStartTime=0;
+    int fStopTime=0;
+    // threshold and noise for this chip 
+    float fValue       = 0;
+    uint16_t fRaw      = 0; 
+};
+typedef std::vector<AdcMeasurement> AdcMeasurements;
+#endif
+
 class  MemoryCheck2S : public Tool
 {
   public:
@@ -89,6 +108,8 @@ class  MemoryCheck2S : public Tool
 
     void Initialise();
     
+    void ConfigureVref();
+    void MonitorInputVoltage();
     void MonitorAnalogue();
     void SetThreshold( float pSigma  = 3 );
     void EvaluatePedeNoise(int pNevents=100, int pScanRange=15);  
@@ -212,6 +233,7 @@ class  MemoryCheck2S : public Tool
         pMemEvent.fTriggeredBx = pEvent.fTriggeredBx ;
         pMemEvent.fTriggerNumberInBurst = pEvent.fTriggerNumberInBurst;
         //
+        pMemEvent.fHybridId = pEvent.fHybridId;
         pMemEvent.fChipId = pEvent.fChipId;
         //
         pMemEvent.fType = pEvent.fType;

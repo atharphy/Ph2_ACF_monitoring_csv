@@ -1002,7 +1002,7 @@ private:
     // # Read/Write Optical Group #
     // ############################
     const uint8_t                   flpGBTAddress = 0x70;
-    uint8_t                         fI2CFrequency = 3; // 1 MHz
+    uint8_t                         fI2CFrequency = 0; // 0, 100 kHz 3 - 1 MHz
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60},{FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}, {FrontEndType::CBC3, 0x40}};
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
@@ -1027,8 +1027,8 @@ private:
     // function for front-end slow control
     //uint8_t GetFEPage()  override { return fCurrentPage;} ;
     //void    SetFEPage(uint8_t pPage) override { fCurrentPage = pPage;} ; 
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify = false) override;
-    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false) override;
+    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true, bool pVerify = false) override;
+    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = true) override;
     // fast command generic block 
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);

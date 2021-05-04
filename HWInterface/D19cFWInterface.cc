@@ -806,6 +806,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
             exit(0);
         }
+        ResetCPB();
     }
 
     // if(fI2CVersion >= 1 || cWithGBTx )
@@ -5200,14 +5201,16 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(uint32_t pAddress)
 // #########################################
 void D19cFWInterface::ResetCPB()
 {
-    // Soft reset the GBT-SC worker
+    // reset 
+    
+    // // Soft reset the GBT-SC worker
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     uint8_t cWorkerId = 0, cFunctionId = 2;
     // reset shoudl be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::microseconds(500));
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 
@@ -5282,7 +5285,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    uint8_t               cIter = 0, cMaxIter = 20;
+    uint8_t               cIter = 0, cMaxIter = 50;
     while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
     {
     	ResetCPB();
@@ -5303,6 +5306,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
 bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
 {
     ResetCPB();
+    fI2CFrequency=3;
     uint8_t               cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -5311,14 +5315,15 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     fI2Cstatus = cReplyVector[7] & 0xFF;
-    uint8_t cIter = 0, cMaxIter = 50;
+    uint8_t cIter = 0, cMaxIter = 200;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fReTryCPB)
     {
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
+        if( cIter == cMaxIter - 1 )
+            LOG(DEBUG) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
         ResetCPB();
         cReplyVector.clear();
-        WriteCommandCPB(cCommandVector, true);
-    	cReplyVector = ReadReplyCPB(10, true);
+        WriteCommandCPB(cCommandVector, false);
+        cReplyVector = ReadReplyCPB(10, false);
     	fI2Cstatus = cReplyVector[7] & 0xFF;
         cIter++;
     }
@@ -5329,6 +5334,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
 uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
     ResetCPB();
+    fI2CFrequency=3;
     uint8_t               cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -5338,7 +5344,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    uint8_t               cIter = 0, cMaxIter = 50;
+    uint8_t               cIter = 0, cMaxIter = 200;
     uint16_t cI2CReadByteRegAddr = 0;
     //pick correct register address to check
     if(pMasterId == 2) cI2CReadByteRegAddr = 0x018d;
@@ -5346,14 +5352,16 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     //check reply
     while(cReadBackRegAddr != cI2CReadByteRegAddr && cIter < cMaxIter)
     {
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
+        if( cIter == cMaxIter - 1 )
+            LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector     = ReadReplyCPB(10);
         cReadBack        = cReplyVector[7] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
+        if( cIter == cMaxIter - 1 )
+            LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
         cIter++;
     };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
@@ -5385,15 +5393,18 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
     if(pVerify && cSuccess)
     {
         uint8_t cReadBack = ReadFERegister(pChip, pRegisterAddress);
-        uint8_t cIter = 0, cMaxIter = 10;
+        uint8_t cIter = 0, cMaxIter = 20;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
-            LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() 
-                << " Chip " << +cChipId 
-                << " register 0x" << std::hex << +pRegisterAddress << std::dec 
-                << " asked to write 0x"  << std::hex << +pRegisterValue << std::dec 
-                << " and read back 0x"  << std::hex << +cReadBack << std::dec 
-                << RESET;
+            if( cIter == cMaxIter - 1 )
+            {
+                LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() 
+                    << " Chip " << +cChipId 
+                    << " register 0x" << std::hex << +pRegisterAddress << std::dec 
+                    << " asked to write 0x"  << std::hex << +pRegisterValue << std::dec 
+                    << " and read back 0x"  << std::hex << +cReadBack << std::dec 
+                    << RESET;
+            }
             cSuccess = I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cSlaveData, cNbytes);
             if( cSuccess )
             {
@@ -5403,7 +5414,7 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
         }
         if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }
     }
-    else if( !cSuccess ) LOG (INFO) << BOLDRED << "I2C Write FAILED" << RESET;
+    else if( !cSuccess ) LOG (INFO) << BOLDRED << "I2C Write FAILED - I2C status is " << +fI2Cstatus << RESET;
     return cSuccess;
 }
 

@@ -136,7 +136,7 @@ class CbcInterface : public ReadoutChipInterface
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
 
   private:
-    bool                           fRetry          = false;
+    bool                           fRetry          = true;
     std::map<uint32_t,uint8_t>     fPageMap        ; 
     bool                           fWithlpGBT      = false;
     std::bitset<NCHANNELS> fActiveChannels;

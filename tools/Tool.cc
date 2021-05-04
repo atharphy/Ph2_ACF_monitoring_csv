@@ -443,32 +443,7 @@ void Tool::SaveResults()
 
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
-    // Fabio: CBC specific -> to be moved out from Tool - BEGIN
-    bool cCheck = false;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find("HoleMode");
-
-    if(cSetting != std::end(fSettingsMap))
-    {
-        cCheck    = true;
-        cHoleMode = (cSetting->second == 1) ? true : false;
-    }
-
-    std::string cMode;
-
-    if(cCheck)
-    {
-        if(cHoleMode)
-            cMode = "_Hole";
-        else
-            cMode = "_Electron";
-    }
-    // Fabio: CBC specific -> to be moved out from Tool - END
-
     std::string nDirname = pDirname;
-
-    if(cCheck && pMode) nDirname += cMode;
-
     if(pDate) nDirname += currentDateTime();
 
     LOG(INFO) << GREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;

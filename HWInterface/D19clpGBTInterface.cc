@@ -957,6 +957,11 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cClocks  = {1, 11}; // Reduced number of clocks and only 320 MHz
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
+    // disable all clocks 
+    //by setting frequency to 0 
+    cClkFreq = 0 ;
+    //and by setting drive strength to 0 
+    cClkDriveStr = 0 ;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups ={0, 2}, cTxChannels = {0};
@@ -994,6 +999,15 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // Setting GPIO levels for Skeleton test
     ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
     ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
+    // keep CBC resets enabled 
+    // on both sides 
+    this->cbcReset(pChip, true, 0 );
+    this->cbcReset(pChip, true, 1 );
+    // keep CIC resets enabled 
+    // on both sides 
+    this->cicReset(pChip, true, 0 );
+    this->cicReset(pChip, true, 1 );
+       
 }
 
 
