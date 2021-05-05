@@ -103,6 +103,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
 
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
 
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
@@ -133,7 +134,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("monitorAMUX","Calibrate ADC on lpGBT....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("monitorSEH","Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("testTune","Test tuning ....", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("memCheck","Check memories of the following CBCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("memCheck","Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("completeDataCheck","Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -204,7 +206,7 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
-    cTool.CreateResultDirectory(cDirectory);
+    cTool.CreateResultDirectory(cDirectory,false,false);
     cTool.InitResultFile(cResultfile);
 
     
@@ -428,9 +430,11 @@ int main(int argc, char* argv[])
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
-    cBackEndAligner.waitForRunToBeCompleted();
-    
+    if( !cmd.foundOption("skipAlignment") ) 
+    {
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
+    }    
     // reset all chip and board registers
     // to what they were before this tool was called
     //cBackEndAligner.Reset();
@@ -513,9 +517,6 @@ int main(int argc, char* argv[])
     // inject hits and stubs using mask and compare input against output
     if( cmd.foundOption("memCheck"))
     {
-        std::string          cArgsStr = cmd.optionValue("memCheck");
-        std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
-
         MemoryCheck2S cMemoryChecker;
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
@@ -525,19 +526,25 @@ int main(int argc, char* argv[])
         cMemoryChecker.MonitorTemperature();
         cMemoryChecker.MonitorInputVoltage();
         //find pedestal and set threshold
-        cMemoryChecker.EvaluatePedeNoise(30); // find pedestal + noise 
-        cMemoryChecker.SetThreshold(-2.0); // set threshold to 3 sigma away from pedestal 
-        //find correct stub latency with TP
-        for( auto cBoard: *cMemoryChecker.fDetectorContainer )
+        if( cmd.foundOption("completeDataCheck")) 
         {
-           cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
+            std::string          cArgsStr = cmd.optionValue("completeDataCheck");
+            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            cMemoryChecker.EvaluatePedeNoise(30); // find pedestal + noise 
+            cMemoryChecker.SetThreshold(-2.0); // set threshold to 3 sigma away from pedestal 
+            //find correct stub latency with TP
+            for( auto cBoard: *cMemoryChecker.fDetectorContainer )
+            {
+               cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
+            }
+            auto cSetting = cTool.fSettingsMap.find ( "TriggerSeparation" );
+            int cTriggerGap = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : 500; 
+            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
-        auto cSetting = cTool.fSettingsMap.find ( "TriggerSeparation" );
-        int cTriggerGap = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : 500; 
-        cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         cMemoryChecker.MemoryCheck2SRaw();
-        //
+        
         cMemoryChecker.MonitorAnalogue();
+        cMemoryChecker.SaveOptimalTaps();
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();
     }

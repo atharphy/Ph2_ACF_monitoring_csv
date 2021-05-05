@@ -311,10 +311,15 @@ void CicFEAlignment::SetStaticPhaseAlignment()
     LOG(INFO) << BOLDBLUE << "Setting CIC phase to static mode.." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
+        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
+            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
+                auto& cPhaseAlignmentThisHybrid       = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPhaseAlignment = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>();//[pLine];
+                
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                 size_t cPhyPort=0; 
@@ -328,6 +333,7 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                     // first all the stub lines 
                     for(uint8_t cInput = 0; cInput < 5; cInput += 1)
                     {
+                        cPhaseAlignment[cPhyPortChnl][cPhyPort]=cOptimalTaps[cPhyPortChnl][cPhyPort];
                         sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnl][cPhyPort]);
                         cOutput += cBuffer;
                         cPhyPort = ( (cCounter+1)%4 == 0 ) ? (cPhyPort+1) : cPhyPort; 
@@ -337,6 +343,7 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                     // then the L1 line 
                     size_t cPhyPortL1 = (cChip->getId() >3 ) ? 11 : 10; 
                     size_t cPhyPortChnlL1   = (cChip->getId()%4); 
+                    cPhaseAlignment[cPhyPortChnlL1][cPhyPortL1]=cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnlL1][cPhyPortL1]);
                     cOutput += cBuffer;
                     LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
@@ -555,8 +562,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         // auto& cLogicThisBoard          = fLogic.at(cBoard->getIndex());
         // auto& cHIPsThisBoard           = fHIPs.at(cBoard->getIndex());
         // auto& cPtCutThisBoard          = fPtCuts.at(cBoard->getIndex());
-        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(cBoard->getIndex());
-    
+        
         ChannelGroup<NCHANNELS, 1> cChannelMask;
         cChannelMask.disableAllChannels();
         for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask.enableChannel(cChannel); // generate a hit in every Nth channel
@@ -699,12 +705,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         fBeBoardInterface->ChipReSync(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cPhaseAlignmentThisHybrid       = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cPhaseAlignment = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>();//[pLine];
-                
                 // enable automatic phase aligner
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic; 
                 bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);

@@ -302,6 +302,7 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             LOG(INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
 
     } // pkg delay
+    if(!cCorrectDelay) return cCorrectDelay;
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers 
@@ -737,7 +738,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
     }
-    fL1Debug = true;
+    fL1Debug = false;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1WordAlignment(pBoard, fL1Debug);
     if(!cAligned)
     {
@@ -756,7 +757,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             fCicInterface->SelectOutput(cCic, true);
         }
     }
-    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, true);
+    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, false);
 
     // disable CIC output of pattern on stub + l1 lines
     for(auto cOpticalReadout: *pBoard)

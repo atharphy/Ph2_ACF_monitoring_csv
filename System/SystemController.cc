@@ -382,6 +382,46 @@ void SystemController::CicStartUp(uint8_t pDriveStrength)
         }//OG
         fBeBoardInterface->ChipReSync(cBoard);
     }//board
+
+    // // for 2S hard coded for now 
+    // // for the stub lines 
+    // uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 7;
+    // std::vector<uint8_t> cGroups_RHS{4,4,5,5,6};
+    // std::vector<uint8_t> cGroups_LHS{0,1,1,2,2};
+    // std::vector<uint8_t> cChnls_RHS{0,2,0,2,0};
+    // std::vector<uint8_t> cChnls_LHS{2,0,2,0,2};
+    // // if lpGBT check inputs 
+    // for(const auto cBoard: *fDetectorContainer)
+    // {
+    //     // read CIC sparsification setting
+    //     bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+    //     cBoard->setSparsification(cSparsified);
+
+    //     for(auto cOpticalGroup: *cBoard)
+    //     {
+    //         auto& clpGBT =  cOpticalGroup->flpGBT ;
+    //         if(clpGBT == nullptr) continue;
+    //         // enable output 0xEA pattern on all lines
+    //         for(auto cHybrid: *cOpticalGroup)
+    //         {
+    //             OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+    //             auto& cCic = theOuterTrackerHybrid->fCic;
+    //             fCicInterface->SelectOutput(cCic, true);
+    //         }
+    //         for( size_t cLine=0; cLine < cGroups_RHS.size() ; cLine++)
+    //         {
+    //             std::vector<uint8_t> cGroups{ cGroups_RHS[cLine], cGroups_LHS[cLine] };
+    //             std::vector<uint8_t> cChnls{ cChnls_RHS[cLine], cChnls_LHS[cLine] };
+    //             for(uint8_t cPhase=0; cPhase<15; cPhase+=2)
+    //             {
+    //                  static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigureRxChannels(clpGBT, cGroups, cChnls, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cPhase);
+    //                  // read back data from interface
+    //                  // auto  cLines = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true,cGroups_RHS.size());
+    //                  for(auto cHybrid: *cOpticalGroup)
+    //             }
+    //         }
+    //     }
+    // }
 }
 void SystemController::ModuleStartUpPS()
 {
@@ -544,7 +584,7 @@ void SystemController::ModuleStartUp2S()
     LOG (INFO) << BOLDMAGENTA << "SystemController::ModuleStartUp2S" << RESET;
     uint8_t cHybridClockDrive = 4; 
     uint16_t cReadoutRate = 320; 
-    uint8_t  cCicDriveStrength = 5; 
+    uint8_t  cCicDriveStrength = 4; 
     // configure PS-ROH + PS FEHs 
     for(const auto cBoard: *fDetectorContainer)
     {

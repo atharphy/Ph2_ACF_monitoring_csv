@@ -1525,7 +1525,7 @@ void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
 
     this->ResetReadout();
 }
-void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
+std::vector<std::string> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 {
     if(pWithTestPulse)
         this->ChipTestPulse();
@@ -1559,6 +1559,7 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
         cLine++;
     } while(cLine < pNlines);
     this->ResetReadout();
+    return cLines;
 }
 std::vector<std::string> D19cFWInterface::ScopeStubLines(bool pWithTestPulse)
 {
@@ -1863,26 +1864,35 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
                 }
                 else
                 {
-                    pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                    // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    if(pTuner.fBitslip == 0)
+                    bool cSuccessThisLine=false;
+                    size_t cAttempts=0;
+                    do
                     {
-                        uint32_t cAttempts = 0;
-                        do
-                        {
-                            if(cAttempts > 10)
-                            {
-                                LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                            }
-                            // try again
-                            //LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
-                            pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                            //cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                            //LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                            cAttempts++;
-                        } while(pTuner.fBitslip == 0 && cAttempts < 10);
-                    }
-                    cSuccess = cSuccess && pTuner.fDone;
+                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+                        pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                        cSuccessThisLine = pTuner.fDone && pTuner.fBitslip != 0;
+                        if( pTuner.fBitslip == 0) LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                        cAttempts++;
+                    }while(!cSuccessThisLine && cAttempts < 10 );
+                    // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    // if(pTuner.fBitslip == 0)
+                    // {
+                    //     uint32_t cAttempts = 0;
+                    //     do
+                    //     {
+                    //         if(cAttempts > 10)
+                    //         {
+                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                    //         }
+                    //         // try again
+                    //         //LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                    //         pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                    //         //cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    //         //LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                    //         cAttempts++;
+                    //     } while(pTuner.fBitslip == 0 && cAttempts < 10);
+                    // }
+                    cSuccess = cSuccess && cSuccessThisLine;
                 }
                 // if(pTuner.fDone != 1)
                 // {
@@ -2641,7 +2651,12 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
         // in the handshake mode offset is cleared after each handshake
-        fDDR3Offset = 0;
+        // readout_req high when buffer is almost full 
+        uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
+        if( cReadoutReq == 1 )
+        {
+            fDDR3Offset = 0;
+        }
     }
     else if(cAsync)
     {
@@ -5217,7 +5232,7 @@ void D19cFWInterface::ResetCPB()
     // reset shoudl be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    std::this_thread::sleep_for(std::chrono::microseconds(500));
+    std::this_thread::sleep_for(std::chrono::microseconds(750));
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 

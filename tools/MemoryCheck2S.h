@@ -112,6 +112,21 @@ struct AdcMeasurement
 typedef std::vector<AdcMeasurement> AdcMeasurements;
 #endif
 
+#ifndef PhyPortTap 
+struct PhyPortTap
+{
+    // 
+    uint8_t fHybridId=0;
+    // type of test 
+    uint8_t fPort=0;
+    uint8_t fChannel=0;
+    uint8_t fTap=0; 
+    //
+    int fStartTime = 0;
+    int fStopTime = 0; 
+};
+#endif
+
 class  MemoryCheck2S : public Tool
 {
   public:
@@ -121,6 +136,7 @@ class  MemoryCheck2S : public Tool
     void Initialise();
     
     void ConfigureVref();
+    void SaveOptimalTaps();
     void MonitorTemperature();
     void MonitorInputVoltage();
     void MonitorAnalogue();
@@ -191,6 +207,7 @@ class  MemoryCheck2S : public Tool
     AdcMeasurement fADCmeasurement;
     MemEvent fMemEvent;
     MemEvent fStubEvent;
+    PhyPortTap fPhyPort;
     uint8_t  fReadoutSuccess=0; 
 
     // timing 

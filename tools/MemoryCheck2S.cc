@@ -304,7 +304,17 @@ void MemoryCheck2S::Initialise()
             cTree->Branch("StdDev", &fADCmeasurement.fStdDev);
             cTree->Branch("Description", &fADCmeasurement.fDescription);
             this->bookHistogram(cBoard, "AnalogueTree", cTree);
-
+            
+            cName = Form("PhyPort_Monitoring_BeBoard%d", cBoard->getId() );
+            cTree = new TTree(cName, "PhyPortMonitoring");
+            cTree->Branch("StartTime", &fPhyPort.fStartTime);
+            cTree->Branch("StopTime", &fPhyPort.fStopTime);
+            cTree->Branch("HybridId", &fPhyPort.fHybridId);
+            cTree->Branch("InputPort", &fPhyPort.fPort);
+            cTree->Branch("InputChannel", &fPhyPort.fChannel);
+            cTree->Branch("TapValue", &fPhyPort.fTap);
+            this->bookHistogram(cBoard, "PhyPortTree", cTree);
+            
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -826,7 +836,7 @@ bool MemoryCheck2S::ReadAfterGenericBlock(int pNExpected)
 
         if(!cSuccess)
             LOG (INFO) << BOLDRED << "Trigger in counter " << +cNtriggers
-                << " and number of words in the readout is " 
+                << " and number of events in the readout is " 
                 << +cReadBackEvents 
                 << " .... expected both to be "
                 << +pNExpected 
@@ -1263,13 +1273,14 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
         fTotalEventsExpected=0;
         const auto cTimeStart = std::chrono::system_clock::now();
         fStartTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStart.time_since_epoch()).count();
-        for( size_t cAttempt = 0 ; cAttempt < cNtrials; cAttempt++)
+        for( size_t cAttempt = 0 ; cAttempt < 500*cNtrials; cAttempt++)
         {
             fTrial=cAttempt;
-            LOG (INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt 
-                << " of sending Iter#" << +cAttempt 
-                << " of generic triggers"
-                << RESET;
+            if( cAttempt%500 == 0 )
+                LOG (INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt 
+                    << " of sending Iter#" << +cAttempt 
+                    << " of generic triggers"
+                    << RESET;
             // generate enough fast command sequences 
             //  to cover complete pipeline  
             this->SendGenericTriggers(cTriggerGap);
@@ -1666,6 +1677,38 @@ void MemoryCheck2S::MemoryCheck2SSparse()
         Check();
     }    
 }
+void MemoryCheck2S::SaveOptimalTaps()
+{
+    const auto cTimeStart = std::chrono::system_clock::now();
+    fPhyPort.fStartTime = (int)std::chrono::duration_cast<std::chrono::seconds>( cTimeStart.time_since_epoch()).count();
+    fPhyPort.fStopTime  = fPhyPort.fStartTime;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        //auto& cVrefCorrThisBoard = fVrefCorrections.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                fPhyPort.fHybridId = cHybrid->getId();
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                for( size_t cPhyPortChnl = 0 ; cPhyPortChnl < 4 ; cPhyPortChnl++)
+                {
+                    for( size_t cPhyPort= 0 ; cPhyPort < 12 ; cPhyPort ++ )
+                    {
+                        fPhyPort.fPort = cPhyPort; 
+                        fPhyPort.fChannel=cPhyPortChnl; 
+                        fPhyPort.fTap = cOptimalTaps[cPhyPortChnl][cPhyPort];
+                        #ifdef __USE_ROOT__
+                            TTree*      cTree  = static_cast<TTree*>(getHist(cBoard, "PhyPortTree"));
+                            cTree->Fill();
+                        #endif
+                    }
+                }  
+            }
+        }
+    }
+}
 void MemoryCheck2S::ConfigureVref()
 {
     LOG (INFO) << BOLDBLUE << "Setting up Vref of lpGBT-ADC.." << RESET;
@@ -1744,23 +1787,23 @@ void MemoryCheck2S::ConfigureVref()
             //cVrefCorr = (uint8_t)cCorr;
             fVrefCorrections.push_back( (uint8_t)cCorr ) ;
             clpGBTInterface->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
-            // wait until Vref is stable
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            for(size_t cM=0; cM < cVals.size(); cM++)
-            {
-                cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADCsel)*cFactor;
-            }
-            auto cStats = SummarizeStats<float>(cVals);
-            LOG (INFO) << BOLDMAGENTA << "Measured V_min after correction is " 
-                << std::setprecision(2) << std::fixed 
-                << cStats.fMean*1e3
-                << " mV , expected value is "
-                << cADCs_Refs[cIndx]*1e3 
-                << " difference is "
-                << std::fabs(cStats.fMean-cADCs_Refs[cIndx])*1e3
-                << " mV, correction needed to acheive this was  "
-                << +cCorr
-                << RESET;
+            // // wait until Vref is stable
+            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            // for(size_t cM=0; cM < cVals.size(); cM++)
+            // {
+            //     cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADCsel)*cFactor;
+            // }
+            // auto cStats = SummarizeStats<float>(cVals);
+            // LOG (INFO) << BOLDMAGENTA << "Measured V_min after correction is " 
+            //     << std::setprecision(2) << std::fixed 
+            //     << cStats.fMean*1e3
+            //     << " mV , expected value is "
+            //     << cADCs_Refs[cIndx]*1e3 
+            //     << " difference is "
+            //     << std::fabs(cStats.fMean-cADCs_Refs[cIndx])*1e3
+            //     << " mV, correction needed to acheive this was  "
+            //     << +cCorr
+            //     << RESET;
             
             // turn off ADC mon
             //static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
@@ -1832,12 +1875,12 @@ void MemoryCheck2S::MonitorTemperature()
 {
     float cVref = 1.0; 
     float cFactor = cVref/ 1024.;
-    size_t cCounter=0;
-
+    
     std::vector<uint8_t> cADCsels{6,7,14};
     std::vector<std::string> cADCLbls{"TempBpol2v5","TempBpol12V","TempLpGBT"};
     for( size_t cIndx=0; cIndx < cADCsels.size(); cIndx++)
     {
+        size_t cCounter=0;
         for(const auto cBoard: *fDetectorContainer)
         {
             fBeBoardInterface->Start(cBoard);
@@ -2088,7 +2131,8 @@ void MemoryCheck2S::Check()
         size_t cEvntCnt=0;
         for(auto& cEvent: cEvents)
         {
-            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvntCnt << RESET;
+            if( cEvntCnt%2500 == 0 )
+                LOG (INFO) << BOLDMAGENTA << "Checking Event#" << +cEvntCnt << RESET;
             auto cExpectedPipelineAddress = fExpectedPipelineAddress[cEvntCnt];
             auto cTriggeredBx = fTriggeredBxs[cEvntCnt];
             auto cTriggerNumberInBurst = fTriggerNumberInBurst[cEvntCnt]; 
