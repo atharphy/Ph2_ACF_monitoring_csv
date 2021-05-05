@@ -77,7 +77,7 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
         // }
         // std::sort(cItems.begin(), cItems.end(), customLessForPage); 
         // now configure 
-        LOG (INFO) << BOLDGREEN << "Configuring CBC#" << +pCbc->getId() << " via the lpGBT" << RESET;
+        //LOG (INFO) << BOLDGREEN << "Configuring CBC#" << +pCbc->getId() << " via the lpGBT" << RESET;
         std::vector<std::pair<std::string, uint16_t>> cRegsToWrite; cRegsToWrite.clear(); 
         for(auto& cRegItem: cCbcRegMap)
         {
@@ -229,7 +229,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         // write registers which enable injection 
         this->enableInjection( pCbc, true ); //enable injection 
         // write register which sets TP amplitude
-        this->setInjectionAmplitude( pCbc, 0xFF - 150 ); // fix injection amplitude 
+        this->setInjectionAmplitude( pCbc, 0xFF - 100 ); // fix injection amplitude 
         return this->maskChannelsGroup(pCbc, &cChannelMask);
     }
     else // with noise 
@@ -544,10 +544,10 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
     if( cSuccess ) return true;
 
     // switch page 
-    LOG (INFO) << BOLDMAGENTA << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() 
-        << " from page " <<+cPage 
-        << " to page " << +pPage
-        << RESET;
+    // LOG (INFO) << BOLDMAGENTA << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() 
+    //     << " from page " <<+cPage 
+    //     << " to page " << +pPage
+    //     << RESET;
     ChipRegItem cPageReg = pCbc->getRegItem("FeCtrl&TrgLat2");
     uint8_t cRegValue = (cPageReg.fValue & 0x7F) | ( pPage << 7 ); 
     //LOG (INFO) << BOLDBLUE << "\t...Current page is " << cPage << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;

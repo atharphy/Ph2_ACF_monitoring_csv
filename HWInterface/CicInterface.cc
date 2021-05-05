@@ -393,11 +393,20 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
         {
             LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteReg" << RESET;
             //uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegisterAddress);
-            uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
-        
-            cSuccess = this->runVerification(pChip, cValue, fMap[pRegisterAddress]);
+            // try this N times 
+            size_t cReadAttempt=0; 
+            do
+            {
+                uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
+                cSuccess = this->runVerification(pChip, cValue, fMap[pRegisterAddress]);
+                cReadAttempt++;
+            }while(!cSuccess && cReadAttempt < 10 );
+
             if( !cSuccess )
             {
+                LOG (INFO) << BOLDRED << "Failed to read-back correct value from CIC register 0x"
+                    << std::hex << +pRegisterAddress << std::dec 
+                    << RESET;
                 auto cIter = fReadBackErrorMap.find(pRegisterAddress);
                 if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[pRegisterAddress]=1;
                 else fReadBackErrorMap[pRegisterAddress]=fReadBackErrorMap[pRegisterAddress]+1;

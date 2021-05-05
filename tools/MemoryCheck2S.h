@@ -53,6 +53,8 @@ struct MemEvent
     uint8_t  fType=0;
     // trial 
     uint8_t  fTrial=0;
+    // readout 
+    uint8_t  fReadoutSuccess=0;
     // event information
     uint8_t  fEventId = 0;
     uint16_t fL1Id    = 0;
@@ -62,6 +64,10 @@ struct MemEvent
     uint16_t fCorrectValue    = 0; 
     uint16_t fTriggeredBx     = 0;
     uint8_t  fTriggerNumberInBurst = 0; 
+    // latency information 
+    uint16_t fLatency = 0 ;
+    uint16_t fPkgDelay = 0 ;
+    uint16_t fStubLatency = 0 ;
     // 
     uint16_t fHybridId        = 0; 
     uint16_t fChipId          = 0; 
@@ -89,13 +95,19 @@ struct AdcMeasurement
     // type of test 
     uint8_t  fADC=0;
     // 
-    int fTrial = 0; 
-    // information about the test 
-    int fStartTime=0;
-    int fStopTime=0;
+    int fStartTime = 0;
+    int fStopTime = 0; 
+    // 
+    uint8_t fLinkId=0;
+    uint8_t fHybridId = 0 ; 
+    uint8_t fChipId = 0xFF; 
+    std::string fDescription; 
     // threshold and noise for this chip 
-    float fValue       = 0;
-    uint16_t fRaw      = 0; 
+    float fScaling = 1; 
+    float fMean       = 0;
+    float fStdDev       = 0;
+    // correction to Vref 
+    uint8_t fVrefCorr = 0; 
 };
 typedef std::vector<AdcMeasurement> AdcMeasurements;
 #endif
@@ -109,6 +121,7 @@ class  MemoryCheck2S : public Tool
     void Initialise();
     
     void ConfigureVref();
+    void MonitorTemperature();
     void MonitorInputVoltage();
     void MonitorAnalogue();
     void SetThreshold( float pSigma  = 3 );
@@ -117,7 +130,8 @@ class  MemoryCheck2S : public Tool
     void MemoryCheck2SRaw();
     void MemoryCheck2SSparse();
     void RegisterCheck();
-
+    void OptimizeTPdelay();
+    
     void print(std::vector<uint8_t> pChipIds);
     void Running() override;
     void Stop() override;
@@ -166,15 +180,18 @@ class  MemoryCheck2S : public Tool
     std::vector<int>  fTriggeredBxs; 
     std::vector<int>  fTriggerNumberInBurst; 
     int fNInjectedTriggers=0;
-    int fTotalEventsExpected = 0; 
+    size_t fTotalEventsExpected = 0; 
 
+    DetectorDataContainer* fPackageDelays;
     DetectorDataContainer* fThresholdAndNoiseContainer;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
     
   private:
     // MemEvent 
+    AdcMeasurement fADCmeasurement;
     MemEvent fMemEvent;
     MemEvent fStubEvent;
+    uint8_t  fReadoutSuccess=0; 
 
     // timing 
     std::chrono::seconds::rep fStartTime; 
@@ -195,6 +212,7 @@ class  MemoryCheck2S : public Tool
     DetectorDataContainer fExpectedOccupancy;
     DetectorDataContainer fExpectedStubs; 
     DetectorDataContainer fThresholds; 
+    std::vector<uint8_t> fVrefCorrections;
     // 
     int fTrial = 0;
     int fTypeOfTest = 0;
@@ -204,6 +222,7 @@ class  MemoryCheck2S : public Tool
     int fTriggerTestCounter =0;
     //
     TPconfig fTPconfig;
+
     // generic triggers 
     void GenericTriggers(int pReSync=0, int pMaxBurstLength=3);
     bool SendGenericTriggers(int pTriggerSeparation=500);
@@ -219,6 +238,8 @@ class  MemoryCheck2S : public Tool
     {
         pMemEvent.fType = pEvent.fType;
         pMemEvent.fTrial = pEvent.fTrial;
+        //
+        pMemEvent.fReadoutSuccess = pEvent.fReadoutSuccess;
         // timing information 
         pMemEvent.fStartTime = pEvent.fStartTime; 
         pMemEvent.fStopTime = pEvent.fStopTime ; 
@@ -240,8 +261,24 @@ class  MemoryCheck2S : public Tool
         pMemEvent.fThreshold = pEvent.fThreshold;
         pMemEvent.fNoise = pEvent.fNoise;
         pMemEvent.fPedestal = pEvent.fPedestal;
+        //
+        pMemEvent.fLatency = pEvent.fLatency ;
+        pMemEvent.fPkgDelay = pEvent.fPkgDelay ;
+        pMemEvent.fStubLatency = pEvent.fStubLatency ;
         // 
         pMemEvent.fCorrectValue = pEvent.fCorrectValue; 
+    }
+    void PrintADCMeasurement( AdcMeasurement pEvent)
+    {
+     LOG (INFO) << BOLDGREEN << "Hybrid#" << +pEvent.fHybridId 
+        << " Chip#" << +pEvent.fChipId
+        << "\t.. test started at " << +pEvent.fStartTime 
+        << "\t.. test completed at " << +pEvent.fStopTime
+        << "\t.. measuring " << pEvent.fDescription 
+        << "\t.. mean value is " << pEvent.fMean*1e3
+        << "mV\t.. std dev is   " << pEvent.fStdDev*1e3  
+        << "mV\t.. Vref correction is " << +pEvent.fVrefCorr
+        << RESET;
     }
     void PrintMemEvent(MemEvent pEvent)
     {

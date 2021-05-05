@@ -603,7 +603,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                     {
                         int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
                         double cBend_strips = -7. + 0.5 * cPosition;
-                        LOG(INFO) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCode_phAlign) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
+                        //LOG(INFO) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCode_phAlign) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
 
                         // first pattern - stubs lines 0, 1 , 3
                         // seeds on stub line 0 , stub line 1

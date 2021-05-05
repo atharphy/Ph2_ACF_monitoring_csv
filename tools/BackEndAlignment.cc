@@ -414,8 +414,8 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 cNinjectedStubs += cSeeds.size();
                 (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise);
                 // enable stub logic
-                // make sure sampled mode is used 
-                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "Sampled", true, true); 
+                // make sure OR mode is used 
+                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true); 
                 // set PtCut to maximum
                 fReadoutChipInterface->WriteChipReg(cChip, "PtCut", 14);
                 // no cluster cut
@@ -554,7 +554,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         // // now scan stub latency 
         auto cOriginalStubDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
         LOG (INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
-        for(int cOffset= 80 ; cOffset >= 50 ; cOffset--) 
+        for(int cOffset= 70 ; cOffset >= 50 ; cOffset--) 
         {
             if( cFoundCorrectStubLatency ) continue;
             int cStubLatency = cHitLatency - cOffset;

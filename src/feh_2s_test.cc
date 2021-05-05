@@ -58,6 +58,7 @@ uint16_t returnRunNumber(std::string cFileName)
     }
     return (uint16_t)(cRunNumber+1);
 }
+
 std::vector<uint8_t> getArgs(std::string pArgsStr )
 {
     std::vector<uint8_t> cSides;
@@ -101,7 +102,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("findOpens", "perform latency scan with antenna on UIB", ArgvParser::NoOptionAttribute);
     cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
 
-    cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
 
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
@@ -194,7 +195,9 @@ int main(int argc, char* argv[])
     Tool              cTool;
     if(cSaveToFile)
     {
-        std::string cRawFile = cmd.optionValue("save");
+        char cRawFileName[80];
+        std::snprintf(cRawFileName, sizeof(cRawFileName), "Run%.05d.raw", cRunNumber);
+        std::string cRawFile = cRawFileName;
         cTool.addFileHandler(cRawFile, 'w');
         LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
     }
@@ -519,22 +522,22 @@ int main(int argc, char* argv[])
         
         // configure reference voltage 
         cMemoryChecker.ConfigureVref();
-        
-        // //find pedestal and set threshold
-        cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise 
-        // //cMemoryChecker.MonitorAnalogue();
-        // //cMemoryChecker.MonitorInputVoltage();
-        
-        cMemoryChecker.SetThreshold(-3.0); // set threshold to 3 sigma away from pedestal 
-        // find correct stub latency with TP
+        cMemoryChecker.MonitorTemperature();
+        cMemoryChecker.MonitorInputVoltage();
+        //find pedestal and set threshold
+        cMemoryChecker.EvaluatePedeNoise(30); // find pedestal + noise 
+        cMemoryChecker.SetThreshold(-2.0); // set threshold to 3 sigma away from pedestal 
+        //find correct stub latency with TP
         for( auto cBoard: *cMemoryChecker.fDetectorContainer )
         {
-            cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
+           cBackEndAligner.FindStubLatency(cBoard); // find stub latency 
         }
         auto cSetting = cTool.fSettingsMap.find ( "TriggerSeparation" );
         int cTriggerGap = ( cSetting != std::end ( cTool.fSettingsMap ) ) ? cSetting->second : 500; 
         cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         cMemoryChecker.MemoryCheck2SRaw();
+        //
+        cMemoryChecker.MonitorAnalogue();
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();
     }
@@ -640,6 +643,11 @@ int main(int argc, char* argv[])
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");
+
+    std::ofstream cGoodRuns;
+    cGoodRuns.open ("GoodRunNumbers.dat",std::fstream::app);
+    cGoodRuns << cRunNumber << "\n";
+    cGoodRuns.close();
 
     return 0;
 }

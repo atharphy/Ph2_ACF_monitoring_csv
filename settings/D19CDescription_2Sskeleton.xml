@@ -17,8 +17,8 @@
         </lpGBT>
 	    <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="579" latency="199"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
+                <Settings threshold="580" latency="199"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="5" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
@@ -40,8 +40,8 @@
         </Hybrid>
         <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="579" latency="199"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
+                <Settings threshold="580" latency="199"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="5" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
@@ -78,7 +78,7 @@
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
     		<Register name="trigger_source"> 3 </Register>
-    		<Register name="user_trigger_frequency"> 1 </Register>
+    		<Register name="user_trigger_frequency"> 10 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -231,7 +231,7 @@
     <Setting name="SyncDebug">0</Setting>
 
     <!-- Burst Test -->
-    <Setting name="Ntrials">10</Setting>
+    <Setting name="Ntrials">5</Setting>
     <Setting name="LengthOfBurst">16</Setting>
     <Setting name="TriggerSeparation">500</Setting>
     <Setting name="TestPulseSeparation">70</Setting>

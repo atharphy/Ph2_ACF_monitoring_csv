@@ -1840,31 +1840,31 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
                     // pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
                     // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
                     // LOG(DEBUG) << BOLDBLUE << "Line status " << +cLineStatus << RESET;
-                    uint8_t cAttempts = 0;
-                    if(pTuner.fBitslip == 0)
-                    {
-                        do
-                        {
-                            if(cAttempts > 10)
-                            {
-                                LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                                exit(0);
-                            }
-                            // try again
-                            LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
-                            GbtInterface cGBTx;
-                            cGBTx.gbtxSetPhase(this, fGBTphase);
-                            pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
-                            auto cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                            LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                            cAttempts++;
-                        } while(pTuner.fBitslip == 0);
-                    }
+                    // uint8_t cAttempts = 0;
+                    // if(pTuner.fBitslip == 0)
+                    // {
+                    //     do
+                    //     {
+                    //         if(cAttempts > 10)
+                    //         {
+                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                    //             exit(0);
+                    //         }
+                    //         // try again
+                    //         LOG(INFO) << BOLDBLUE << "Trying to reset phase on GBTx... bit slip of 0!" << RESET;
+                    //         GbtInterface cGBTx;
+                    //         cGBTx.gbtxSetPhase(this, fGBTphase);
+                    //         pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
+                    //         auto cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    //         LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                    //         cAttempts++;
+                    //     } while(pTuner.fBitslip == 0);
+                    // }
                 }
                 else
                 {
                     pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                    uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                    // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
                     if(pTuner.fBitslip == 0)
                     {
                         uint32_t cAttempts = 0;
@@ -1875,10 +1875,10 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
                                 LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
                             }
                             // try again
-                            LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                            //LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
                             pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                            cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                            LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                            //cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                            //LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
                             cAttempts++;
                         } while(pTuner.fBitslip == 0 && cAttempts < 10);
                     }
@@ -3253,6 +3253,10 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         pData.clear();
         this->Stop();
         fReadoutAttempts++;
+        // send a ReSync 
+        // if this helps then the problem is a system level one 
+        // and now simply a FW/back-end one 
+        this->ChipReSync();
         // try again
         this->ReadNEvents(pBoard, pNEvents, pData);
     }
@@ -3813,14 +3817,16 @@ bool D19cFWInterface::Bx0Alignment()
     uint8_t cAttempts = 0;
     cSuccess          = false;
     // reset decoder
+    size_t cMaxAttempts = 20; 
+    size_t cWaitTime = fWait_us * 2; // was 100 
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
     do
-    {
-        // pause after reset
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
+    {   
+    // pause after reset
+        std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // send a resync then wait
         this->ChipReSync();
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
+        std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // check state of bx0 alignment block
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
@@ -3831,10 +3837,10 @@ bool D19cFWInterface::Bx0Alignment()
             // figure out which one of these is needed
             // resync after bx0 alignment worked
             this->ChipReSync();
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
+            std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
             // reset the readout as well
             this->ResetReadout();
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
+            std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         }
         else
         {
@@ -3842,7 +3848,8 @@ bool D19cFWInterface::Bx0Alignment()
             this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
         }
         cAttempts++;
-    } while(cAttempts < 10 && !cSuccess);
+    } while(cAttempts < cMaxAttempts && !cSuccess);
+    if( !cSuccess ) LOG (INFO) << BOLDRED << "Could not re-set decoder ..." << RESET;
     return cSuccess;
 }
 // reconfigure trigger
@@ -5258,11 +5265,12 @@ bool D19cFWInterface::WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pReg
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
     if(!pVerifLoop) return (cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress);
-    uint8_t cIter = 0, cMaxIter = 50;
+    size_t               cIter = 0, cMaxIter = 500;
     while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
     {
         ResetCPB();
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+        if( cIter == cMaxIter - 1 )
+            LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector     = ReadReplyCPB(10);
@@ -5285,11 +5293,12 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint16_t pRegisterAddress)
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    uint8_t               cIter = 0, cMaxIter = 50;
+    size_t               cIter = 0, cMaxIter = 500;
     while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
     {
     	ResetCPB();
-	    LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+        if( cIter == cMaxIter - 1 )
+            LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector     = ReadReplyCPB(10);
@@ -5315,11 +5324,11 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     fI2Cstatus = cReplyVector[7] & 0xFF;
-    uint8_t cIter = 0, cMaxIter = 200;
+    size_t               cIter = 0, cMaxIter = 500;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fReTryCPB)
     {
         if( cIter == cMaxIter - 1 )
-            LOG(DEBUG) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
+            LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector, false);
@@ -5344,7 +5353,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    uint8_t               cIter = 0, cMaxIter = 200;
+    size_t               cIter = 0, cMaxIter = 500;
     uint16_t cI2CReadByteRegAddr = 0;
     //pick correct register address to check
     if(pMasterId == 2) cI2CReadByteRegAddr = 0x018d;

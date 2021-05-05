@@ -544,7 +544,7 @@ void SystemController::ModuleStartUp2S()
     LOG (INFO) << BOLDMAGENTA << "SystemController::ModuleStartUp2S" << RESET;
     uint8_t cHybridClockDrive = 4; 
     uint16_t cReadoutRate = 320; 
-    uint8_t  cCicDriveStrength = 3; 
+    uint8_t  cCicDriveStrength = 5; 
     // configure PS-ROH + PS FEHs 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -573,8 +573,8 @@ void SystemController::ModuleStartUp2S()
                 cClkCnfg.fClkDriveStr = cHybridClockDrive; 
                 cClkCnfg.fClkInvert = (cSide == 0 ) ? 1 : 0 ;
                 cClkCnfg.fClkPreEmphWidth = 0; 
-                cClkCnfg.fClkPreEmphMode = 0;//3; 
-                cClkCnfg.fClkPreEmphStr = 0;//7;
+                cClkCnfg.fClkPreEmphMode = 3;//3; 
+                cClkCnfg.fClkPreEmphStr = 5;//7;
                 LOG(INFO) << BOLDBLUE << "Enabling Hybrid clock [Side == " << +cSide  << "]" << RESET;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
                 
@@ -598,12 +598,6 @@ void SystemController::ModuleStartUp2S()
 
                 // Configure CICs on this hybrid 
                 // release CIC reset 
-                // enable clock to CIC 
-                cClkCnfg.fClkFreq = (cReadoutRate == 320) ? 4 : 5; 
-                cClkCnfg.fClkInvert = 0;
-                cClkCnfg.fClkDriveStr = cHybridClockDrive; 
-                LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide  << "]" << RESET;
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, false,cSide);
                 LOG (INFO) << BOLDBLUE << "Resetting CIC" << RESET;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCic(clpGBT, cSide);
                 LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) 
