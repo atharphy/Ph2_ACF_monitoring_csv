@@ -1273,7 +1273,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
         fTotalEventsExpected=0;
         const auto cTimeStart = std::chrono::system_clock::now();
         fStartTime = std::chrono::duration_cast<std::chrono::seconds>( cTimeStart.time_since_epoch()).count();
-        for( size_t cAttempt = 0 ; cAttempt < 500*cNtrials; cAttempt++)
+        for( size_t cAttempt = 0 ; cAttempt < 100*cNtrials; cAttempt++)
         {
             fTrial=cAttempt;
             if( cAttempt%500 == 0 )

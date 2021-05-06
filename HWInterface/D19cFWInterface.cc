@@ -436,7 +436,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     // check links are up
     std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
     bool                     cLinksLocked = true;
-    uint8_t                  cMaxAttempts = 10;
+    uint8_t                  cMaxAttempts = 3;
     uint8_t                  cAttempCount = 0;
     do
     {
@@ -2616,28 +2616,6 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     }         // opticalGroup
     uint32_t cNEvents = 0;
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    // if(fIsDDR3Readout && !cAsync)
-    // {
-    //     if(cNWords == 0)
-    //     {
-    //         LOG(INFO) << BOLDRED << "No words in the readout.. " << RESET;
-    //         throw Exception("No words in the readout when reading data...stopping.");
-    //     }
-    //     LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
-    //     pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
-    //     // figure out how many events I've got
-    //     cNEvents = this->CountFwEvents(pBoard, pData);
-    //     LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
-    //                << " data size is " << +pData.size() << " 32 bit words." << RESET;
-    //     // how many events did you ask for
-    //     auto cNeventsReq = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-    //     if(cNeventsReq != cNEvents)
-    //     {
-    //         LOG(INFO) << BOLDRED << "Mismatch in number of events "
-    //                   << " received from FC7!!"
-    //                   << " User has asked for " << +cNeventsReq << " and we have only read-back " << +cNEvents << " from the FC7..." << RESET;
-    //     }
-    // }
     if(fIsDDR3Readout && !cAsync)
     {
         LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
@@ -2650,13 +2628,6 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         //             << " number of events in readout is " << +cNEvents << RESET;          
         LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
-        // in the handshake mode offset is cleared after each handshake
-        // readout_req high when buffer is almost full 
-        uint32_t cReadoutReq = ReadReg ("fc7_daq_stat.readout_block.general.readout_req");
-        if( cReadoutReq == 1 )
-        {
-            fDDR3Offset = 0;
-        }
     }
     else if(cAsync)
     {
