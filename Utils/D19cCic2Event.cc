@@ -690,25 +690,31 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
 
 std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
-    size_t cIndx = 0;
-    // if there are some FEs diabled.. what happens?
-    std::vector<uint8_t> cIds(0);
-    for(auto cRocId: fROCIds[pFeId]) { cIds.push_back(getChipIdMapped(pFeId, cRocId)); }
-    auto cIter = std::find(cIds.begin(), cIds.end(), pReadoutChipId);
-    if(cIter == cIds.end())
-        LOG(INFO) << BOLDRED << "Wrong Id .. .not in list.. check" << RESET;
-    else
-    {
-        cIndx = std::distance(cIds.begin(), cIter);
-        if(cIds.size() != 0) cIndx = cIds.size() - 1 - cIndx;
-    }
-    // auto cChipIndex   =  getFeIndex(pFeId);
-    // LOG (INFO) << BOLDMAGENTA << "D19cCic2Event::getRawL1Word Hybrid ChipId# " << +pReadoutChipId
-    //         << " Index in local vector is " << +cChipIndex
-    //         << " Index in data vector from CIC is " << +cIndx << RESET;
+    // size_t cIndx = 0;
+    // // if there are some FEs diabled.. what happens?
+    // std::vector<uint8_t> cIds(0);
+    // for(auto cRocId: fROCIds[pFeId]) { cIds.push_back(getChipIdMapped(pFeId, cRocId)); }
+    // auto cIter = std::find(cIds.begin(), cIds.end(), pReadoutChipId);
+    // if(cIter == cIds.end())
+    //     LOG(INFO) << BOLDRED << "Wrong Id .. .not in list.. check" << RESET;
+    // else
+    // {
+    //     cIndx = std::distance(cIds.begin(), cIter);
+    //     if(cIds.size() != 0) cIndx = cIds.size() - 1 - cIndx;
+    // }
+    // // auto cChipIndex   =  getFeIndex(pFeId);
+    // // LOG (INFO) << BOLDMAGENTA << "D19cCic2Event::getRawL1Word Hybrid ChipId# " << +pReadoutChipId
+    // //         << " Index in local vector is " << +cChipIndex
+    // //         << " Index in data vector from CIC is " << +cIndx << RESET;
 
-    auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cIndx];
+    // auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cIndx];
+    // return cDataBitset;
+
+    auto cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+    // auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+    auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cChipIdMapped];
     return cDataBitset;
+
 }
 
 std::string D19cCic2Event::HexString() const

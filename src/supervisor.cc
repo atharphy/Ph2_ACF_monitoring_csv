@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
             }
             case RUNNING:
             {
-                if(cmd.optionValue("calibration") != "psphysics")
+                if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
                     while(theMiddlewareInterface.status() != "Done") usleep(5e5);
                 else
                     usleep(20e6);

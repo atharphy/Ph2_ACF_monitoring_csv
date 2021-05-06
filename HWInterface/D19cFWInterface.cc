@@ -1356,9 +1356,9 @@ void D19cFWInterface::TriggerConfiguration()
     auto cSource       = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
     auto cRate         = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    LOG(INFO) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
-    if(cSource != 6 && cSource != 10) LOG(INFO) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
-    LOG(INFO) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
+    if(cSource != 6 && cSource != 10) LOG(DEBUG) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
 }
 void D19cFWInterface::Start()
 {
