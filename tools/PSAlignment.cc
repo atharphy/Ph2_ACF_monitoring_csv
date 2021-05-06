@@ -407,7 +407,7 @@ bool PSAlignment::Align()
         fBeBoardInterface->ChipReSync(cBoard);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
 
-        //cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
+        // cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
 
         cStubAligned = cStubAligned && this->AlignStubInputs(cBoard);
 

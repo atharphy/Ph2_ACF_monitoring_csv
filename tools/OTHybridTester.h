@@ -18,11 +18,11 @@
 #ifdef __USE_ROOT__
 #include "TAxis.h"
 #include "TGraph.h"
+#include "TH2I.h"
 #include "TMultiGraph.h"
 #include "TObject.h"
 #include "TString.h"
 #include "TTree.h"
-#include "TH2I.h"
 #endif
 
 #ifdef __TCUSB__
@@ -42,11 +42,11 @@ class OTHybridTester : public Tool
 
     void FindUSBHandler();
 #ifdef __TCUSB__
-    #ifdef __ROH_USB__
-        TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-    #elif __SEH_USB__
-        TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
-    #endif
+#ifdef __ROH_USB__
+    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+#elif __SEH_USB__
+    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
+#endif
 #endif
 
     // ###################################
@@ -69,16 +69,16 @@ class OTHybridTester : public Tool
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
     // Run Bit Error Rate Test
-    void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern=0x00000000);
+    void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
 
   private:
   protected:
 #ifdef __TCUSB__
-    #ifdef __ROH_USB__
-        TC_PSROH* fTC_USB;
-    #elif __SEH_USB__
-        TC_2SSEH* fTC_USB;
-    #endif
+#ifdef __ROH_USB__
+    TC_PSROH* fTC_USB;
+#elif __SEH_USB__
+    TC_2SSEH* fTC_USB;
+#endif
 #endif
 };
 

@@ -268,8 +268,9 @@ class D19cFWInterface : public BeBoardFWInterface
     void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
     uint32_t getStubOffset() { return fStubOffset; };
     uint8_t  getI2Cstatus() { return fI2Cstatus; }
-private:
-    bool     fReTryCPB            = true; 
+
+  private:
+    bool     fReTryCPB            = true;
     uint8_t  fI2Cstatus           = 0x00;
     uint8_t  fFastCommandDuration = 0;
     uint32_t fReadoutAttempts     = 0;
@@ -372,9 +373,11 @@ private:
      */
     // for testing, move back
     uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; 
-    void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
-    void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)      override; /*!< Encode a/several word(s) readable for a Chip*/
+    void     EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
+    void
+         EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
+    void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
+        override; /*!< Encode a/several word(s) readable for a Chip*/
 
     void BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
     void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) override;
@@ -421,7 +424,7 @@ private:
     bool                     L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool                     L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool                     L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool                     StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false, uint8_t pNlines = 5 );
+    bool                     StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false, uint8_t pNlines = 5);
     // bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
 
     // Optical readout specific functions - d19c [temporary]
@@ -721,7 +724,6 @@ private:
     //             fFSMstate = (pReply & 0x000000FF) >> 0;
     //         }
 
-
     //     };
     //     uint8_t ParseStatus(BeBoardFWInterface* pInterface)
     //     {
@@ -996,14 +998,14 @@ private:
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    bool     RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return true; };
+    bool RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return true; };
 
     // ############################
     // # Read/Write Optical Group #
     // ############################
     const uint8_t                   flpGBTAddress = 0x70;
     uint8_t                         fI2CFrequency = 0; // 0, 100 kHz 3 - 1 MHz
-    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60},{FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}, {FrontEndType::CBC3, 0x40}};
+    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}, {FrontEndType::CBC3, 0x40}};
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override;
@@ -1019,17 +1021,17 @@ private:
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;
-    // configure I2C speed 
-    void    SetI2CFrequency(uint8_t pFrequency){fI2CFrequency=pFrequency;};
+    // configure I2C speed
+    void SetI2CFrequency(uint8_t pFrequency) { fI2CFrequency = pFrequency; };
     // function for I2C transactions using lpGBT I2C Masters
     bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
     uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
     // function for front-end slow control
-    //uint8_t GetFEPage()  override { return fCurrentPage;} ;
-    //void    SetFEPage(uint8_t pPage) override { fCurrentPage = pPage;} ; 
+    // uint8_t GetFEPage()  override { return fCurrentPage;} ;
+    // void    SetFEPage(uint8_t pPage) override { fCurrentPage = pPage;} ;
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true, bool pVerify = false) override;
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = true) override;
-    // fast command generic block 
+    // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
 };

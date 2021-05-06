@@ -113,21 +113,21 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    std::string       cHWFile               = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
-    bool              batchMode             = (cmd.foundOption("batch")) ? true : false;
-    const std::string cSSAPair              = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
-    std::string       cDirectory            = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    std::string       cHybridId             = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
-    bool              cDebug                = (cmd.foundOption("debug"));
-    //Test to perform
-    bool              cFCMDTest             = (cmd.foundOption("fcmd-test")) ? true : false;
-    std::string       cFCMDTestStartPattern = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";
-    std::string       cFCMDTestUserFileName = (cmd.foundOption("fcmd-test-userfile")) ? cmd.optionValue("fcmd-test-userfile") : "fcmd_file.txt";
-    std::string       cBRAMFCMDLine         = (cmd.foundOption("bramfcmd-check")) ? cmd.optionValue("bramfcmd-check") : "fe_for_ps_roh_fcmd_SSA_l_check";
-    std::string       cBRAMFCMDFileName     = (cmd.foundOption("bramreffcmd-write")) ? cmd.optionValue("bramreffcmd-write") : "fcmd_file.txt";
-    std::string       cConvertUserFileName  = (cmd.foundOption("convert-userfile")) ? cmd.optionValue("convert-userfile") : "fcmd_file.txt";
-    std::string       cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
-    std::string       cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
+    std::string       cHWFile    = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
+    bool              batchMode  = (cmd.foundOption("batch")) ? true : false;
+    const std::string cSSAPair   = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
+    std::string       cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::string       cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
+    bool              cDebug     = (cmd.foundOption("debug"));
+    // Test to perform
+    bool        cFCMDTest             = (cmd.foundOption("fcmd-test")) ? true : false;
+    std::string cFCMDTestStartPattern = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";
+    std::string cFCMDTestUserFileName = (cmd.foundOption("fcmd-test-userfile")) ? cmd.optionValue("fcmd-test-userfile") : "fcmd_file.txt";
+    std::string cBRAMFCMDLine         = (cmd.foundOption("bramfcmd-check")) ? cmd.optionValue("bramfcmd-check") : "fe_for_ps_roh_fcmd_SSA_l_check";
+    std::string cBRAMFCMDFileName     = (cmd.foundOption("bramreffcmd-write")) ? cmd.optionValue("bramreffcmd-write") : "fcmd_file.txt";
+    std::string cConvertUserFileName  = (cmd.foundOption("convert-userfile")) ? cmd.optionValue("convert-userfile") : "fcmd_file.txt";
+    std::string cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
+    std::string cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -159,7 +159,6 @@ int main(int argc, char* argv[])
     cPSROHTester.Inherit(&cTool);
     cPSROHTester.FindUSBHandler();
 
-
     /***************/
     /* TEST UPLINK */
     /***************/
@@ -168,15 +167,15 @@ int main(int argc, char* argv[])
         /* INTERNALLY GENERATED PATTERN */
         if(cmd.foundOption("internal-pattern"))
         {
-            uint8_t           cInternalPattern8     = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
-            uint32_t          cInternalPattern32    = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
+            uint8_t  cInternalPattern8  = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
+            uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
             cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
             cPSROHTester.LpGBTCheckULPattern(false);
         }
         /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
-            uint8_t           cExternalPattern      = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
+            uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
             cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
             cPSROHTester.LpGBTCheckULPattern(true);
             cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
@@ -225,10 +224,7 @@ int main(int argc, char* argv[])
     /********************/
     /* TEST EYE OPENING */
     /********************/
-    if(cmd.foundOption("eye-monitor"))
-    {
-        cPSROHTester.LpGBTRunEyeOpeningMonitor(7);
-    }
+    if(cmd.foundOption("eye-monitor")) { cPSROHTester.LpGBTRunEyeOpeningMonitor(7); }
 
     /***********************/
     /* TEST BIT ERROR RATE */
@@ -236,7 +232,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("bit-error-rate"))
     {
         uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
-        uint8_t cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
+        uint8_t  cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
         cPSROHTester.LpGBTRunBitErrorRateTest(cCoarseSource, cFineSource, cMeasTime, cBERTPattern32);
     }
 
@@ -254,9 +250,9 @@ int main(int argc, char* argv[])
     /*********************/
     if(cmd.foundOption("scope-fcmd"))
     {
-        if(cmd.foundOption("fcmd-pattern")) 
+        if(cmd.foundOption("fcmd-pattern"))
         {
-            uint8_t           cFCMDPattern          = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+            uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
         }
         cPSROHTester.FastCommandScope();

@@ -37,7 +37,7 @@ class BackEndAlignment : public Tool
     void SetL1Debug(bool pDebug) { fL1Debug = pDebug; };
     void SetStubDebug(bool pDebug) { fStubDebug = pDebug; };
 
-    bool FindStubLatency(Ph2_HwDescription::BeBoard* pBoard); 
+    bool FindStubLatency(Ph2_HwDescription::BeBoard* pBoard);
     bool FindPackageDelay(Ph2_HwDescription::BeBoard* pBoard);
     bool Bx0Alignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
@@ -63,8 +63,8 @@ class BackEndAlignment : public Tool
     // Containers
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
-    DetectorDataContainer fChipMasks; 
-    void Reconfigure(Ph2_HwDescription::BeBoard* pBoard);
+    DetectorDataContainer fChipMasks;
+    void                  Reconfigure(Ph2_HwDescription::BeBoard* pBoard);
 
 // booking histograms
 #ifdef __USE_ROOT__

@@ -46,8 +46,8 @@ class BeBoardFWInterface : public RegManager
     FpgaConfig*  fFpgaConfig;
     uint32_t     fNthAcq{0}, fNpackets{0};
 
-    // for slow control 
-    uint8_t fCurrentPage=0; 
+    // for slow control
+    uint8_t fCurrentPage = 0;
 
     static const uint32_t cMask1 = 0xff;
     static const uint32_t cMask2 = 0xff00;
@@ -121,13 +121,13 @@ class BeBoardFWInterface : public RegManager
     /*!
      * \brief Encode a/several word(s) readable for a Chip
      * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pChip : Chip object 
+     * \param pChip : Chip object
      */
     virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    } 
-    
+    }
+
     /*!
      * \brief Encode a/several word(s) readable for a Chip
      * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
@@ -288,7 +288,7 @@ class BeBoardFWInterface : public RegManager
     // # Read/Write new Command Processor Block #
     // ##########################################
     // functions for new Command Processor Block
-    virtual void                  ResetCPB()                                                   = 0;
+    virtual void                  ResetCPB()                                                                          = 0;
     virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) = 0;
     virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false)                                = 0;
     // function to read/write lpGBT registers
@@ -298,10 +298,10 @@ class BeBoardFWInterface : public RegManager
     virtual bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) = 0;
     virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)                       = 0;
     // function for front-end slow control
-    // virtual uint8_t GetFEPage() = 0; 
-    // virtual void    SetFEPage(uint8_t pPage) = 0; 
-    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify=false) = 0;
-    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false)                          = 0;
+    // virtual uint8_t GetFEPage() = 0;
+    // virtual void    SetFEPage(uint8_t pPage) = 0;
+    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify = false) = 0;
+    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false)                                                = 0;
 
   protected:
     uint32_t fBlockSize{0};

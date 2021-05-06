@@ -860,14 +860,14 @@ uint32_t GbtInterface::cicRead(BeBoardFWInterface* pInterface, uint8_t pFeId, ui
 }
 bool GbtInterface::cicWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
-    bool cRetry=true;
-    size_t cMaxAttempts = ( cRetry ) ? 10 : 0 ; 
-    size_t cAttempts=0;
-    bool cSuccess = false;
+    bool   cRetry       = true;
+    size_t cMaxAttempts = (cRetry) ? 10 : 0;
+    size_t cAttempts    = 0;
+    bool   cSuccess     = false;
     do
     {
-        uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 8*2) | (pRegisterValue << 8*1), 3);
-        cSuccess = (cWrite == 0 );
+        uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 8 * 2) | (pRegisterValue << 8 * 1), 3);
+        cSuccess       = (cWrite == 0);
         if(!pReadBack) continue;
 
         if(cSuccess)
@@ -888,20 +888,16 @@ bool GbtInterface::cicWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8
             cSuccess = (cReadBack == pRegisterValue);
             if(!cSuccess)
             {
-                LOG(INFO) << BOLDRED << "\t\t.. Attempt#" << +cAttempts 
-                        <<" I2C readback from CIC failed.. "
-                        << " on hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
+                LOG(INFO) << BOLDRED << "\t\t.. Attempt#" << +cAttempts << " I2C readback from CIC failed.. "
+                          << " on hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
             }
         }
         cAttempts++;
-    }while( !cSuccess && cAttempts < cMaxAttempts);
-    if( !cSuccess ) 
+    } while(!cSuccess && cAttempts < cMaxAttempts);
+    if(!cSuccess)
     {
-            LOG(INFO) << BOLDRED << "I2C fail via GBtx for CIC on hybrid " 
-                << +pFeId << " register 0x" << std::hex << +pRegisterAddress 
-                << std::dec 
-                << " [CIC]." << RESET;
-            throw std::runtime_error(std::string("SCA status reporting error..."));
+        LOG(INFO) << BOLDRED << "I2C fail via GBtx for CIC on hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
+        throw std::runtime_error(std::string("SCA status reporting error..."));
     }
     return cSuccess;
 }

@@ -148,14 +148,13 @@ class SystemController
      */
     void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
 
-    // start-up PS modiule 
+    // start-up PS modiule
     void ModuleStartUpPS();
-    // start-up 2S modiule 
+    // start-up 2S modiule
     void ModuleStartUp2S();
-    // start-up CIC 
-    void CicStartUp(uint8_t pDriveStrength=1);
-    
-    
+    // start-up CIC
+    void CicStartUp(uint8_t pDriveStrength = 1);
+
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */

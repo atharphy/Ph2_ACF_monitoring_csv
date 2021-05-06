@@ -72,9 +72,9 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
         LOG(ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg;
     else
     {
-        i->second.fValue    = psetValue & fMaxRegValue;
+        i->second.fValue     = psetValue & fMaxRegValue;
         i->second.fStatusReg = pStatusReg;
-        i->second.fPrmptCfg = pPrmptCfg;
+        i->second.fPrmptCfg  = pPrmptCfg;
     }
 }
 

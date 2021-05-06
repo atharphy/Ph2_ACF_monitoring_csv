@@ -44,8 +44,8 @@ void BackEndAlignment::Reset()
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
 
-                    // for now only reconfigure CBCs 
-                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                    // for now only reconfigure CBCs
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }
@@ -65,62 +65,54 @@ void BackEndAlignment::Initialise()
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        // 
-        auto& cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>(); 
-        const BeBoardRegMap& cOrigRegMap = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
-        cBoardRegNap.insert( cOrigRegMap.begin(), cOrigRegMap.end() );
+        //
+        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
+        cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ChipRegMap& theChipMap = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    ChipRegMap&       theChipMap     = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
                     const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                    theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end()); 
+                    theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end());
                 }
             }
         }
     }
 
-    // read back original masks 
+    // read back original masks
     ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, fChipMasks);
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
-                    {
-                        cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>() = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-                    }
-                    if( cChip->getFrontEndType() == FrontEndType::SSA ) 
-                    {
-                        cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS>*>() = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
-                    }
-                    if( cChip->getFrontEndType() == FrontEndType::MPA ) 
-                    {
-                        cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS,NMPACOLS>*>() = static_cast<const ChannelGroup<NSSACHANNELS,NMPACOLS>*>(cChip->getChipOriginalMask());
-                    }
+                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                    { cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>() = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask()); }
+                    if(cChip->getFrontEndType() == FrontEndType::SSA)
+                    { cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS>*>() = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask()); }
+                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    { cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS, NMPACOLS>*>() = static_cast<const ChannelGroup<NSSACHANNELS, NMPACOLS>*>(cChip->getChipOriginalMask()); }
                 }
-            }// hybrids
-        }//OG
+            } // hybrids
+        }     // OG
     }
 }
 void BackEndAlignment::Reconfigure(BeBoard* pBoard)
 {
-   
     // reconfigure ROC registers
-    // only those that I've touched 
-    LOG (INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting ROC regs back to their original values" << RESET;
+    // only those that I've touched
+    LOG(INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting ROC regs back to their original values" << RESET;
     auto& cRegMapThisBoard = fRegMapContainer.at(pBoard->getIndex());
     for(auto cOpticalGroup: *pBoard)
     {
@@ -130,60 +122,60 @@ void BackEndAlignment::Reconfigure(BeBoard* pBoard)
             auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
-                const ChipRegMap& cCurrentMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
+                const ChipRegMap&                             cCurrentMap     = static_cast<ReadoutChip*>(cChip)->getRegMap();
                 auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
                 std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                 cVecRegisters.clear();
-                //LOG (INFO) << BOLDMAGENTA << "\t.. CBC#" << +cChip->getId() << RESET;
+                // LOG (INFO) << BOLDMAGENTA << "\t.. CBC#" << +cChip->getId() << RESET;
                 for(auto cReg: cRegMapThisChip)
                 {
-                    auto cIter =  cCurrentMap.find(cReg.first);
-                    if( cIter->second.fValue != cReg.second.fValue ) 
+                    auto cIter = cCurrentMap.find(cReg.first);
+                    if(cIter->second.fValue != cReg.second.fValue)
                     {
                         // mask registers I'll do separately later
-                        if( cIter->first.find("MaskChannel") == std::string::npos )
+                        if(cIter->first.find("MaskChannel") == std::string::npos)
                         {
-                            // LOG (INFO) << BOLDMAGENTA << "\t\t\t.. Register " << cReg.first 
-                            //     << " was changed .. from 0x" 
-                            //     << std::hex << +cIter->second.fValue << std::dec 
-                            //     << " to " 
-                            //     << std::hex << +cReg.second.fValue << std::dec 
-                            //     << " re-writing" 
+                            // LOG (INFO) << BOLDMAGENTA << "\t\t\t.. Register " << cReg.first
+                            //     << " was changed .. from 0x"
+                            //     << std::hex << +cIter->second.fValue << std::dec
+                            //     << " to "
+                            //     << std::hex << +cReg.second.fValue << std::dec
+                            //     << " re-writing"
                             //     << RESET;
                             cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
                         }
                     }
                 }
-                // for now only reconfigure CBCs 
-                if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-                if( cVecRegisters.size() == 0 ) continue; 
+                // for now only reconfigure CBCs
+                if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                if(cVecRegisters.size() == 0) continue;
                 fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
             }
         }
     }
-    
-    // // reconfigure masks 
+
+    // // reconfigure masks
     auto& cMasksThisBrd = fChipMasks.at(pBoard->getIndex());
-    LOG (INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting ROC masks back to their original values" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting ROC masks back to their original values" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+        auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+            auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
-                auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
                 fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
             }
-        }// hybrids
-    }//OG
+        } // hybrids
+    }     // OG
 
-    // last thing to do 
-    // is to reconfigure registers on page 1 
-    // of the CBCs 
-    LOG (INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting all registers on Page1 of CBCs" << RESET;
+    // last thing to do
+    // is to reconfigure registers on page 1
+    // of the CBCs
+    LOG(INFO) << BOLDMAGENTA << "\t... [BackEndAlignment] Resetting all registers on Page1 of CBCs" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
@@ -192,20 +184,17 @@ void BackEndAlignment::Reconfigure(BeBoard* pBoard)
             auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
-                if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-                
+                if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+
                 auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
                 std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                 cVecRegisters.clear();
                 for(auto cReg: cRegMapThisChip)
                 {
                     // mask registers I'll do separately later
-                    if( cReg.second.fPage == 1 ) 
-                    {
-                        cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-                    }
+                    if(cReg.second.fPage == 1) { cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue)); }
                 }
-                // for now only reconfigure CBCs 
+                // for now only reconfigure CBCs
                 fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
             }
         }
@@ -214,19 +203,21 @@ void BackEndAlignment::Reconfigure(BeBoard* pBoard)
 bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 {
     LOG(INFO) << GREEN << "Trying CIC un-packer alignment in the back-end" << RESET;
-    uint32_t cNevents = 10;
+    uint32_t cNevents      = 10;
     uint16_t cMaxBxCounter = 3564;
 
-    // sparsification of 
+    // sparsification of
     bool cSparsified = pBoard->getSparsification();
-    if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Sparsification on " << RESET;
-    else LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Sparsification off " << RESET;
+    if(cSparsified)
+        LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Sparsification on " << RESET;
+    else
+        LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Sparsification off " << RESET;
 
     // check trigger source
     // and reload
-    uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
     uint16_t cOriginalTriggerSrc = cTriggerSrc;
-    cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
@@ -239,7 +230,7 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     bool    cCorrectDelay = false;
     uint8_t cPackageDelay = 7;
     uint8_t cFinalDelay   = cPackageDelay;
-    
+
     for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
     {
         if(cCorrectDelay) continue;
@@ -277,7 +268,7 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
                         cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
                         cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
                         cBxDifferences.push_back(cBxDifference);
-                        //LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
+                        // LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
                     }
                     cBxIds.push_back(cBx);
                     // LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
@@ -295,7 +286,7 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
         {
             LOG(INFO) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
             LOG(INFO) << BOLDGREEN << "Going to fix the manual package delay to " << +cPackageDelay << RESET;
-            cFinalDelay = cPackageDelay;
+            cFinalDelay   = cPackageDelay;
             cCorrectDelay = true;
         }
         else
@@ -305,15 +296,15 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     if(!cCorrectDelay) return cCorrectDelay;
 
     // set everything back to original values .. like I wasn't here
-    // reset fast command registers 
-    LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
+    // reset fast command registers
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
     cRegVec.clear();
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
-    // reconfigure sparsification 
-    LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
+    // reconfigure sparsification
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
     for(auto cOpticalGroup: *pBoard)
     {
@@ -321,90 +312,94 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SetSparsification(cCic, cSparsified);
-        }// hybrids
-    }//OG
-    
-    LOG (INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
-    LOG (INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#"
-        << +pBoard->getId() << RESET;
+        } // hybrids
+    }     // OG
+
+    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
     Reconfigure(pBoard);
     return cCorrectDelay;
 }
 bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
     uint32_t cNevents = 100;
-    // sparsification of 
+    // sparsification of
     bool cSparsified = pBoard->getSparsification();
-    if( cSparsified ) LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Sparsification on " << RESET;
-    else LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Sparsification off " << RESET;
+    if(cSparsified)
+        LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Sparsification on " << RESET;
+    else
+        LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Sparsification off " << RESET;
 
-    
     LOG(INFO) << GREEN << "Trying to find stub latency finding in the back-end" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-        
-    // read back original masks 
-    DetectorDataContainer cChipMasks; 
+
+    // read back original masks
+    DetectorDataContainer cChipMasks;
     ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
     auto& cMasksThisBrd = cChipMasks.at(pBoard->getIndex());
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+        auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+            auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
-                auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                cOriginalMask        = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
             }
-        }// hybrids
-    }//OG
-    
-    // reconfigure fast commands 
-    // fast command config 
-    uint8_t cMult = 1;
-    uint8_t cTriggerSource=6;
-    uint16_t cDelayAfterReset=100;
-    uint16_t cDelayAfterTP=300;
-    uint16_t cDelayTillNext=400;
-    std::vector<std::string> cFcmdRegs{"trigger_source","test_pulse.delay_after_fast_reset","test_pulse.delay_after_test_pulse","test_pulse.delay_before_next_pulse","misc.trigger_multiplicity"};
-    std::vector<uint16_t> cFcmdRegVals{cTriggerSource,cDelayAfterReset,cDelayAfterTP,cDelayTillNext,cMult};
-    std::vector<uint16_t> cFcmdRegOrigVals(cFcmdRegs.size(),0);
+        } // hybrids
+    }     // OG
+
+    // reconfigure fast commands
+    // fast command config
+    uint8_t                  cMult            = 1;
+    uint8_t                  cTriggerSource   = 6;
+    uint16_t                 cDelayAfterReset = 100;
+    uint16_t                 cDelayAfterTP    = 300;
+    uint16_t                 cDelayTillNext   = 400;
+    std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "misc.trigger_multiplicity"};
+    std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayAfterTP, cDelayTillNext, cMult};
+    std::vector<uint16_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.clear();
-    for( size_t cIndx=0; cIndx < cFcmdRegs.size() ; cIndx++)
+    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
     {
-        std::string cRegName = "fc7_daq_cnfg.fast_command_block."+cFcmdRegs[cIndx];
-        cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard,cRegName);
-        cRegVec.push_back( {cRegName, cFcmdRegVals[cIndx]} );
+        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+        cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
+        cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
     }
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-   
-    // expected spacing between TP and L1A 
-    auto cDelay = fBeBoardInterface->ReadBoardReg(pBoard,"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    size_t cNinjectedHits=0; 
-    size_t cNinjectedStubs=0;
-    int cReTime = 0;
+
+    // expected spacing between TP and L1A
+    auto   cDelay          = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    size_t cNinjectedHits  = 0;
+    size_t cNinjectedStubs = 0;
+    int    cReTime         = 0;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
-            // for 2S - do with ananlogue injection into CBC  
+            // for 2S - do with ananlogue injection into CBC
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue; 
-                
-                bool cWithNoise=false;
-                // inject stubs with TP 
+                if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+
+                bool cWithNoise = false;
+                // inject stubs with TP
                 std::vector<uint8_t> cSeeds{10};
                 std::vector<int>     cBends{0};
-                // make sure we are within the limits of the CIC 
-                // max 16 
-                if( cChip->getId()%2 == 0 ) { cSeeds.clear(); cBends.clear(); }
+                // make sure we are within the limits of the CIC
+                // max 16
+                if(cChip->getId() % 2 == 0)
+                {
+                    cSeeds.clear();
+                    cBends.clear();
+                }
 
-                size_t cNhits=0;
+                size_t cNhits = 0;
                 for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
                 {
                     auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
@@ -413,66 +408,60 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 }
 
                 cNinjectedStubs += cSeeds.size();
-                (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends,  cWithNoise);
+                (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
                 // enable stub logic
-                // make sure OR mode is used 
-                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true); 
+                // make sure OR mode is used
+                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true);
                 // set PtCut to maximum
                 fReadoutChipInterface->WriteChipReg(cChip, "PtCut", 14);
                 // no cluster cut
                 fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut", 4);
 
-                LOG (INFO) << BOLDMAGENTA << "Injecting " << +cNhits 
-                    << " hits and " << +cSeeds.size() 
-                    << " stubs in CBC#" 
-                    << +cChip->getId() 
-                    << " on hybrid#"
-                    << +cHybrid->getId()
-                    << RESET;
-            }//2S chips  - CBCs 
+                LOG(INFO) << BOLDMAGENTA << "Injecting " << +cNhits << " hits and " << +cSeeds.size() << " stubs in CBC#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
+            } // 2S chips  - CBCs
 
-            // for PS - do with digital injection in MPA p-p mode 
+            // for PS - do with digital injection in MPA p-p mode
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if( cChip->getFrontEndType() != FrontEndType::MPA ) continue; 
+                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-                uint8_t cStubWindow = 1; // stub window in half pixels (1)
-                uint8_t cMode       = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
-                std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
-                std::vector<uint8_t>   cRows{10};       
+                uint8_t                cStubWindow = 1; // stub window in half pixels (1)
+                uint8_t                cMode       = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+                std::vector<uint32_t>  cPixelIds(0);    // these will be used to generate stubs
+                std::vector<uint8_t>   cRows{10};
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
                 {
                     Injection cInjection;
-                    cInjection.fColumn = 2*(int)cChip->getId()+1;
+                    cInjection.fColumn = 2 * (int)cChip->getId() + 1;
                     cInjection.fRow    = cRows[cIndx];
                     cInjections.push_back(cInjection);
-                    uint32_t           cPixelId = (uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow;
-                    cPixelIds.push_back( cPixelId );
+                    uint32_t cPixelId = (uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow;
+                    cPixelIds.push_back(cPixelId);
                 } // create injection patterns
                 cNinjectedHits += cRows.size();
-                cNinjectedStubs += cInjections.size(); 
+                cNinjectedStubs += cInjections.size();
                 // activate stub mode
                 fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                 cReTime = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix");
                 (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
-            }//PS chips  - MPAs
-        }//Hybrid
-    }//OG
-    
-    // find correct hit latency 
-    bool cFoundCorrectHitLatency=false; 
-    uint16_t cHitLatency=0; 
-    int cExpectedOffset = -1; 
-    for(int cOffset = cExpectedOffset; cOffset < cExpectedOffset+1; cOffset++)
+            } // PS chips  - MPAs
+        }     // Hybrid
+    }         // OG
+
+    // find correct hit latency
+    bool     cFoundCorrectHitLatency = false;
+    uint16_t cHitLatency             = 0;
+    int      cExpectedOffset         = -1;
+    for(int cOffset = cExpectedOffset; cOffset < cExpectedOffset + 1; cOffset++)
     {
-        if( cFoundCorrectHitLatency ) continue; 
+        if(cFoundCorrectHitLatency) continue;
 
         int cLatency = cDelay + cOffset;
-        if( cLatency < 0 ) continue; 
+        if(cLatency < 0) continue;
 
-        LOG (INFO) << BOLDGREEN << "Hit Latency of " << +cLatency << RESET;
+        LOG(INFO) << BOLDGREEN << "Hit Latency of " << +cLatency << RESET;
 
         for(auto cOpticalReadout: *pBoard)
         {
@@ -480,91 +469,85 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
             {
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
-                }//ROC - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S 
-            }//hybrid
-        }//OG
+                } // ROC - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
+            }     // hybrid
+        }         // OG
         fBeBoardInterface->ChipReSync(pBoard);
-    
+
         ReadNEvents(pBoard, cNevents);
-        const std::vector<Event*>& cEvents = this->GetEvents();
-        size_t cNEventsMatched=0; 
+        const std::vector<Event*>& cEvents         = this->GetEvents();
+        size_t                     cNEventsMatched = 0;
         for(auto cEvent: cEvents)
         {
-            size_t cNHits=0; 
-            bool cCorrectLatency=true;
+            size_t cNHits          = 0;
+            bool   cCorrectLatency = true;
             for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     // only for the first hybrid
-                    //if(cHybrid->getIndex() > 0) continue;
+                    // if(cHybrid->getIndex() > 0) continue;
                     for(auto cChip: *cHybrid)
                     {
-                        if( cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
+                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                        size_t cNHitsThisFE=0;
-                        if( cChip->getFrontEndType() == FrontEndType::CBC3 ) cNHitsThisFE = cEvent->GetHits( cHybrid->getId(), cChip->getId()).size() ;
-                        else  cNHitsThisFE = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId()).size() ;
+                        size_t cNHitsThisFE = 0;
+                        if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                            cNHitsThisFE = cEvent->GetHits(cHybrid->getId(), cChip->getId()).size();
+                        else
+                            cNHitsThisFE = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
                         cNHits += cNHitsThisFE;
-                        // LOG (INFO) << BOLDMAGENTA << "\t..Number of hits in FE#" << +cChip->getId() 
+                        // LOG (INFO) << BOLDMAGENTA << "\t..Number of hits in FE#" << +cChip->getId()
                         //     << " on hybrid#" << +cHybrid->getId()
-                        //     << " is " 
-                        //     << +cNHitsThisFE 
+                        //     << " is "
+                        //     << +cNHitsThisFE
                         //     << " - total number of expected hits is "
                         //     << +cNinjectedHits
                         //     << " - total number of hits found so far is "
-                        //     << + cNHits 
+                        //     << + cNHits
                         //     << RESET;
                     } // ROCs
-                }//hybrids 
-            }//OGs
-            cCorrectLatency = cCorrectLatency && ( cNHits == cNinjectedHits ) ; 
-            cNEventsMatched += (cCorrectLatency) ? 1 : 0 ; 
-        }//event loop 
+                }     // hybrids
+            }         // OGs
+            cCorrectLatency = cCorrectLatency && (cNHits == cNinjectedHits);
+            cNEventsMatched += (cCorrectLatency) ? 1 : 0;
+        } // event loop
 
-        // check match 
+        // check match
         // won't ask for a 100 percent here as I'm not s
-        if( cNEventsMatched > 0.9*cEvents.size() ) 
+        if(cNEventsMatched > 0.9 * cEvents.size())
         {
-            cHitLatency = cLatency;
+            cHitLatency             = cLatency;
             cFoundCorrectHitLatency = true;
-            LOG (INFO) << BOLDGREEN << "For a latency of " << +cLatency 
-                << " found " << +cNEventsMatched << " out of "
-                << +cEvents.size()
-                << " events with the correct number of hits for all FEs."
-                << RESET;
+            LOG(INFO) << BOLDGREEN << "For a latency of " << +cLatency << " found " << +cNEventsMatched << " out of " << +cEvents.size() << " events with the correct number of hits for all FEs."
+                      << RESET;
         }
         else
-            LOG (INFO) << BOLDRED << "For a latency of " << +cLatency 
-                << " found " << +cNEventsMatched << " out of "
-                << +cEvents.size()
-                << " events with the correct number of hits for all FEs."
-                << RESET;
+            LOG(INFO) << BOLDRED << "For a latency of " << +cLatency << " found " << +cNEventsMatched << " out of " << +cEvents.size() << " events with the correct number of hits for all FEs."
+                      << RESET;
     }
 
-    bool cFoundCorrectStubLatency=cFoundCorrectHitLatency;
-    int  cCorrectOffset=0;
-    if( cFoundCorrectStubLatency )
+    bool cFoundCorrectStubLatency = cFoundCorrectHitLatency;
+    int  cCorrectOffset           = 0;
+    if(cFoundCorrectStubLatency)
     {
         cFoundCorrectStubLatency = false;
-        LOG (INFO) << BOLDGREEN << "Searching for correct stub  latency .. hit latency set to " 
-            << +cHitLatency 
-            << RESET;
-        // // now scan stub latency 
+        LOG(INFO) << BOLDGREEN << "Searching for correct stub  latency .. hit latency set to " << +cHitLatency << RESET;
+        // // now scan stub latency
         auto cOriginalStubDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
-        LOG (INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
-        for(int cOffset= 70 ; cOffset >= 50 ; cOffset--) 
+        LOG(INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
+        for(int cOffset = 70; cOffset >= 50; cOffset--)
         {
-            if( cFoundCorrectStubLatency ) continue;
+            if(cFoundCorrectStubLatency) continue;
             int cStubLatency = cHitLatency - cOffset;
-            LOG (INFO) << BOLDGREEN << "Stub Latency of " << +cStubLatency << RESET;
+            LOG(INFO) << BOLDGREEN << "Stub Latency of " << +cStubLatency << RESET;
 
-            fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency );
+            fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             ReadNEvents(pBoard, cNevents);
-            const std::vector<Event*>& cEvents = this->GetEvents();
-            size_t cNStubsFound=0; 
+            const std::vector<Event*>& cEvents      = this->GetEvents();
+            size_t                     cNStubsFound = 0;
             for(auto cEvent: cEvents)
             {
                 for(auto cOpticalGroup: *pBoard)
@@ -573,37 +556,30 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if( cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
+                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            cNStubsFound += cStubs.size(); 
-                        }//ROCs
-                    }//hybrids
-                }//OGs
-            }//events 
-            cFoundCorrectStubLatency = ( cNStubsFound > 0.9*cNinjectedStubs*cEvents.size()  ) ;
-            if( cFoundCorrectStubLatency )
+                            cNStubsFound += cStubs.size();
+                        } // ROCs
+                    }     // hybrids
+                }         // OGs
+            }             // events
+            cFoundCorrectStubLatency = (cNStubsFound > 0.9 * cNinjectedStubs * cEvents.size());
+            if(cFoundCorrectStubLatency)
             {
                 cCorrectOffset = cOffset;
-                LOG (INFO) << BOLDGREEN << "For a stub latency of " << +cStubLatency 
-                    << " found " << +cNStubsFound
-                    << " stubs out of " << +cNinjectedStubs*cEvents.size() 
-                    << " expected."
-                    << RESET;
+                LOG(INFO) << BOLDGREEN << "For a stub latency of " << +cStubLatency << " found " << +cNStubsFound << " stubs out of " << +cNinjectedStubs * cEvents.size() << " expected." << RESET;
             }
-        }//offset scan 
+        } // offset scan
     }
 
     // adding this here in preparation for stub decoding
-    // I think this should belong to the board.. need to fix 
-    if( cFoundCorrectStubLatency )
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime);
-    }
+    // I think this should belong to the board.. need to fix
+    if(cFoundCorrectStubLatency) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime); }
 
-    // reconfigure sparsification 
-    //this->enableTestPulse(false);
-    LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting Sparsification" << RESET;
+    // reconfigure sparsification
+    // this->enableTestPulse(false);
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting Sparsification" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
     for(auto cOpticalGroup: *pBoard)
     {
@@ -611,23 +587,22 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SetSparsification(cCic, cSparsified);
-        }// hybrids
-    }//OG
-    //fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
-    
+        } // hybrids
+    }     // OG
+    // fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
+
     // set everything back to original values .. like I wasn't here
-    // reset fast command registers 
-    LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting BeBoards regs back to their original values" << RESET;
-    for( size_t cIndx=0; cIndx < cFcmdRegs.size() ; cIndx++)
+    // reset fast command registers
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting BeBoards regs back to their original values" << RESET;
+    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
     {
-        std::string cRegName = "fc7_daq_cnfg.fast_command_block."+cFcmdRegs[cIndx];
-        cRegVec.push_back( {cRegName, cFcmdRegOrigVals[cIndx]} );
+        std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+        cRegVec.push_back({cRegName, cFcmdRegOrigVals[cIndx]});
     }
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-    
-    LOG (INFO) << BOLDMAGENTA << "[BackEndAlignment::FindStubLatency] Reconfigure ROCs on BeBoard#"
-        << +pBoard->getId() << RESET;
+
+    LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindStubLatency] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
     Reconfigure(pBoard);
     return cFoundCorrectStubLatency;
 }
@@ -821,7 +796,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
 
                 int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
                 double cBend_strips = -7. + 0.5 * cPosition;
-                //LOG(DEBUG) << BOLDBLUE << "Bend code of " << +cBendCode_phAlign << " found in register " << cPosition << " so a bend of " << cBend_strips << RESET;
+                // LOG(DEBUG) << BOLDBLUE << "Bend code of " << +cBendCode_phAlign << " found in register " << cPosition << " so a bend of " << cBend_strips << RESET;
 
                 uint8_t              cSuccess = 0x00;
                 std::vector<uint8_t> cSeeds{0x82, 0x8E, 0x9E};
@@ -887,36 +862,36 @@ bool BackEndAlignment::Align()
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         // read back register map before you've done anything
         auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
-        bool         cWithCIC            = false;
-        bool         cWithCBC            = false;
-        bool         cWithSSA            = false;
-        bool         cWithMPA            = false;
+        bool cWithCIC          = false;
+        bool cWithCBC          = false;
+        bool cWithSSA          = false;
+        bool cWithMPA          = false;
         for(auto cOpticalReadout: *cBoard)
         {
-            if( cOpticalReadout->getIndex() > 0 ) break;
+            if(cOpticalReadout->getIndex() > 0) break;
             for(auto cHybrid: *cOpticalReadout)
             {
-                if( cHybrid->getIndex() > 0 ) break;
+                if(cHybrid->getIndex() > 0) break;
                 cWithCIC = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
                 for(auto cReadoutChip: *cHybrid)
                 {
-                    cWithCBC = cWithCBC || cReadoutChip->getFrontEndType() ==  FrontEndType::CBC3;
-                    cWithSSA = cWithSSA || cReadoutChip->getFrontEndType() ==  FrontEndType::SSA;
-                    cWithMPA = cWithMPA || cReadoutChip->getFrontEndType() ==  FrontEndType::MPA;
-                }//ROcs
-            }//Hybrids
-        }//OGs
+                    cWithCBC = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;
+                    cWithSSA = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA;
+                    cWithMPA = cWithMPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA;
+                } // ROcs
+            }     // Hybrids
+        }         // OGs
         if(cWithCIC)
         {
             cAligned = this->CICAlignment(theBoard);
             if(!cAligned) return cAligned;
-            uint8_t cAttempt=0;
-            bool cPackageDelayFound=false;
+            uint8_t cAttempt           = 0;
+            bool    cPackageDelayFound = false;
             do
             {
                 cPackageDelayFound = this->FindPackageDelay(theBoard);
                 cAttempt++;
-            }while(!cPackageDelayFound && cAttempt < 1);
+            } while(!cPackageDelayFound && cAttempt < 1);
             cAligned = cPackageDelayFound;
         }
         else
@@ -935,7 +910,7 @@ bool BackEndAlignment::Align()
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(theBoard);
 
         // now send a fast reset
-        //fBeBoardInterface->ChipReSync(theBoard);
+        // fBeBoardInterface->ChipReSync(theBoard);
     }
     return cAligned;
 }
@@ -948,12 +923,12 @@ void BackEndAlignment::Running()
     if(!fSuccess)
     {
         LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        // gui::message("Backend alignment failed"); //How
-        #ifdef __USE_ROOT__
-                SaveResults();
-                WriteRootFile();
-                CloseResultFile();
-        #endif
+// gui::message("Backend alignment failed"); //How
+#ifdef __USE_ROOT__
+        SaveResults();
+        WriteRootFile();
+        CloseResultFile();
+#endif
         Destroy();
         exit(FAILED_BACKEND_ALIGNMENT);
     }

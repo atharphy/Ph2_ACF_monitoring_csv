@@ -94,22 +94,22 @@ void CicFEAlignment::Initialise()
                 // auto& cHIPsThisHybrid           = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
                 // auto& cPtCutThisHybrid          = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cPhaseAlVals = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>();
+                auto& cPhaseAlVals              = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>();
                 cPhaseAlVals.clear();
-                for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1)//4 inputs per phy port
+                for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1) // 4 inputs per phy port
                 {
-                    std::vector<uint8_t> cVals(12,0); // 12 phy ports 
-                    cPhaseAlVals.push_back( cVals );
+                    std::vector<uint8_t> cVals(12, 0); // 12 phy ports
+                    cPhaseAlVals.push_back(cVals);
                 }
-                auto& cWordAlignmentThisHybrid  = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cWordAlignmentVals = cWordAlignmentThisHybrid->getSummary<PortAlignmentVals>();
+                auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cWordAlignmentVals       = cWordAlignmentThisHybrid->getSummary<PortAlignmentVals>();
                 cWordAlignmentVals.clear();
                 for(uint8_t cFeId = 0; cFeId < 8; cFeId += 1)
                 {
-                    std::vector<uint8_t> cVals(5,0);// 6 stub lines per FE
-                    cWordAlignmentVals.push_back( cVals );
+                    std::vector<uint8_t> cVals(5, 0); // 6 stub lines per FE
+                    cWordAlignmentVals.push_back(cVals);
                 }
-                
+
                 // configure CBCs
                 for(auto cChip: *cHybrid)
                 {
@@ -125,58 +125,59 @@ void CicFEAlignment::Initialise()
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        // 
-        auto& cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>(); 
-        const BeBoardRegMap& cOrigRegMap = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
-        cBoardRegNap.insert( cOrigRegMap.begin(), cOrigRegMap.end() );
+        //
+        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
+        cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ChipRegMap& theChipMap = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    ChipRegMap&       theChipMap     = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
                     const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                    theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end()); 
+                    theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end());
                 }
             }
         }
     }
 
-    // read back original masks 
-    // read back original masks 
+    // read back original masks
+    // read back original masks
     ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, fChipMasks);
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-
-                    const ChannelGroup<NCHANNELS>* cMsk = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3 )
+                    const ChannelGroup<NCHANNELS>* cMsk           = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    auto&                          cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
                         auto& cOriginalMask = cMasksThisChip->getSummary<ChannelGroup<NCHANNELS>*>();
-                        cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
-                        for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
+                        cOriginalMask       = new ChannelGroup<NCHANNELS, 1>;
+                        for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
                             bool cEnabled = cMsk->isChannelEnabled(cChnl);
-                            if( cEnabled ) cOriginalMask->enableChannel( cChnl );
-                            else cOriginalMask->disableChannel( cChnl );
+                            if(cEnabled)
+                                cOriginalMask->enableChannel(cChnl);
+                            else
+                                cOriginalMask->disableChannel(cChnl);
                         }
                     }
-                    //if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, 1>;
-                    //if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
-                    // to -do .. same for MPA where have to look over cols 
+                    // if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, 1>;
+                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
+                    // to -do .. same for MPA where have to look over cols
                 }
-            }// hybrids
-        }//OG
+            } // hybrids
+        }     // OG
     }
 }
 
@@ -317,33 +318,33 @@ void CicFEAlignment::SetStaticPhaseAlignment()
             auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cPhaseAlignmentThisHybrid       = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cPhaseAlignment = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>();//[pLine];
-                
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
-                size_t cPhyPort=0; 
-                size_t cPhyPortChnl=0; 
-                size_t cCounter=0; 
+                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPhaseAlignment           = cPhaseAlignmentThisHybrid->getSummary<PortAlignmentVals>(); //[pLine];
+
+                auto&  cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto   cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                size_t cPhyPort     = 0;
+                size_t cPhyPortChnl = 0;
+                size_t cCounter     = 0;
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
                     std::string cOutput;
-                    char cBuffer[80];
-                    // first all the stub lines 
+                    char        cBuffer[80];
+                    // first all the stub lines
                     for(uint8_t cInput = 0; cInput < 5; cInput += 1)
                     {
-                        cPhaseAlignment[cPhyPortChnl][cPhyPort]=cOptimalTaps[cPhyPortChnl][cPhyPort];
+                        cPhaseAlignment[cPhyPortChnl][cPhyPort] = cOptimalTaps[cPhyPortChnl][cPhyPort];
                         sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnl][cPhyPort]);
                         cOutput += cBuffer;
-                        cPhyPort = ( (cCounter+1)%4 == 0 ) ? (cPhyPort+1) : cPhyPort; 
-                        cPhyPortChnl = cCounter%4; 
-                        cCounter++; 
+                        cPhyPort     = ((cCounter + 1) % 4 == 0) ? (cPhyPort + 1) : cPhyPort;
+                        cPhyPortChnl = cCounter % 4;
+                        cCounter++;
                     }
-                    // then the L1 line 
-                    size_t cPhyPortL1 = (cChip->getId() >3 ) ? 11 : 10; 
-                    size_t cPhyPortChnlL1   = (cChip->getId()%4); 
-                    cPhaseAlignment[cPhyPortChnlL1][cPhyPortL1]=cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
+                    // then the L1 line
+                    size_t cPhyPortL1                           = (cChip->getId() > 3) ? 11 : 10;
+                    size_t cPhyPortChnlL1                       = (cChip->getId() % 4);
+                    cPhaseAlignment[cPhyPortChnlL1][cPhyPortL1] = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnlL1][cPhyPortL1]);
                     cOutput += cBuffer;
                     LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
@@ -392,9 +393,9 @@ void CicFEAlignment::SetStaticPhaseAlignment()
 bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 {
     // MPA phase alignment
-    bool cAligned = true;
-    auto cSetting  = fSettingsMap.find("SLVSDrive"); 
-    uint8_t  cSLVSDrive = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 7;
+    bool    cAligned   = true;
+    auto    cSetting   = fSettingsMap.find("SLVSDrive");
+    uint8_t cSLVSDrive = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 7;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for MPAs .... " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -417,10 +418,10 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                         if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                         cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
-                        cRegs.push_back( cRegNames[cIndex] );
+                        cRegs.push_back(cRegNames[cIndex]);
                         fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
                     } // loop over MPAs
-                }// loop over registers
+                }     // loop over registers
 
                 // configure SLVS drive
                 for(auto cChip: *cHybrid)
@@ -436,13 +437,14 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic, true);
                 bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
                 // if locked .. switch to automatic phase aligner mode with best values
-                if(cLocked){ 
+                if(cLocked)
+                {
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                     this->SetStaticPhaseAlignment();
                 }
                 cAligned = cAligned && cLocked;
 
-                //reset original values 
+                // reset original values
                 for(size_t cIndex = 0; cIndex < cRegs.size(); cIndex++)
                 {
                     for(auto cChip: *cHybrid)
@@ -451,10 +453,10 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 
                         fReadoutChipInterface->WriteChipReg(cChip, cRegs[cIndex], cOriginalValues[cIndex]);
                     } // loop over MPAs
-                }   
+                }
             } // hybrid
-        }// optical group
-    }// board
+        }     // optical group
+    }         // board
     //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
     // check alignment and use static phase from now on
     return cAligned;
@@ -533,28 +535,28 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
     bool cAligned = true;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
 
-    // read back original masks 
-    DetectorDataContainer cChipMasks; 
+    // read back original masks
+    DetectorDataContainer cChipMasks;
     ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
-    for( auto cBoard: *fDetectorContainer )
+    for(auto cBoard: *fDetectorContainer)
     {
         auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    cOriginalMask        = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
                 }
-            }// hybrids
-        }//OG
-    } 
-    
+            } // hybrids
+        }     // OG
+    }
+
     for(auto cBoard: *fDetectorContainer)
     {
         // original threshold + logic values
@@ -562,21 +564,21 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         // auto& cLogicThisBoard          = fLogic.at(cBoard->getIndex());
         // auto& cHIPsThisBoard           = fHIPs.at(cBoard->getIndex());
         // auto& cPtCutThisBoard          = fPtCuts.at(cBoard->getIndex());
-        
+
         ChannelGroup<NCHANNELS, 1> cChannelMask;
         cChannelMask.disableAllChannels();
         for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask.enableChannel(cChannel); // generate a hit in every Nth channel
 
-        // original masks for channels 
+        // original masks for channels
         auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
-        
+
         // stub lines
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 // enable automatic phase aligner
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
@@ -585,12 +587,12 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                 LOG(INFO) << BOLDBLUE << "Generating STUB patterns needed for phase alignment on FE" << +cHybrid->getId() << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    
+                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+
                     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
                     // original mask
-                    //const ChannelGroup<NCHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    // const ChannelGroup<NCHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
                     // enable stub logic
                     static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(theReadoutChip, "Sampled", true, true);
                     // switch on HitOr
@@ -609,7 +611,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
                     {
                         int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
                         double cBend_strips = -7. + 0.5 * cPosition;
-                        //LOG(INFO) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCode_phAlign) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
+                        // LOG(INFO) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCode_phAlign) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." <<
+                        // RESET;
 
                         // first pattern - stubs lines 0, 1 , 3
                         // seeds on stub line 0 , stub line 1
@@ -641,22 +644,22 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         }
         // l1 lines
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.stub_debug.enable", 0x00);
-        //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(pNTriggers, 100, 3);
+        // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(pNTriggers, 100, 3);
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        uint16_t cSrc = 3;
-        if( cTriggerSrc != cSrc ) 
-        {    
+        uint16_t cSrc        = 3;
+        if(cTriggerSrc != cSrc)
+        {
             LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source is set to " << +cSrc << RESET;
             std::vector<std::pair<std::string, uint32_t>> cRegVec;
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSrc});
             cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
         }
-        
+
         // count triggers sent to the CIC
-        bool cAllTriggersSent = false;
-        size_t cAttempt=0;
-        size_t cMaxAttempts=10;
+        bool   cAllTriggersSent = false;
+        size_t cAttempt         = 0;
+        size_t cMaxAttempts     = 10;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
         auto cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         do
@@ -666,40 +669,39 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                //LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
+                // LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
                 cAllTriggersSent = (cNTriggersSent >= pNTriggers);
             } while(!cAllTriggersSent);
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Stop();
-            if( cNTriggersSent == 0 ) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+            if(cNTriggersSent == 0) static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
             cAttempt++;
-        }while( cNTriggersSent == 0 && cAttempt < cMaxAttempts);
+        } while(cNTriggersSent == 0 && cAttempt < cMaxAttempts);
 
-        // set trigger source back 
-        if( cTriggerSrc != cSrc ) 
-        {    
+        // set trigger source back
+        if(cTriggerSrc != cSrc)
+        {
             LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source back to " << +cTriggerSrc << RESET;
             std::vector<std::pair<std::string, uint32_t>> cRegVec;
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
             cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
-        }    
-        
-        // re-configure original mask 
+        }
+
+        // re-configure original mask
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
                     fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
                 }
-            }// hybrids
-        }//OG
-
+            } // hybrids
+        }     // OG
 
         // send a resync
         fBeBoardInterface->ChipReSync(cBoard);
@@ -708,17 +710,17 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
             for(auto cHybrid: *cOpticalGroup)
             {
                 // enable automatic phase aligner
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic; 
-                bool cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
+                auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                bool  cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
                 // if locked .. switch to automatic phase aligner mode with best values
                 if(cLocked)
-                { 
+                {
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                     this->SetStaticPhaseAlignment();
                 }
                 cAligned = cAligned && cLocked;
-            }//CICs
-        }//OG
+            } // CICs
+        }     // OG
     }
     return cAligned;
 }
@@ -775,28 +777,28 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
     std::vector<uint8_t> cAlignmentPatterns_CBC{0x7A, 0xBC, 0xD4, 0x31, 0x81};
     std::vector<uint8_t> cAlignmentPatterns_MPA{0x81, 0x81, 0x81, 0x81, 0x81};
 
-     // read back original masks 
-    DetectorDataContainer cChipMasks; 
+    // read back original masks
+    DetectorDataContainer cChipMasks;
     ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
-    for( auto cBoard: *fDetectorContainer )
+    for(auto cBoard: *fDetectorContainer)
     {
         auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    cOriginalMask        = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
                 }
-            }// hybrids
-        }//OG
-    } 
-    
+            } // hybrids
+        }     // OG
+    }
+
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard                = static_cast<BeBoard*>(cBoard);
@@ -809,20 +811,20 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cWordAlignmentVals = cWordAlignmentThisHybrid->getSummary<PortAlignmentVals>(); 
+                auto& cWordAlignmentVals       = cWordAlignmentThisHybrid->getSummary<PortAlignmentVals>();
 
-                auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
                 // now inject stubs that can generate word alignment pattern
                 std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
                 std::vector<uint8_t>     cOriginalValues;
                 std::vector<std::string> cRegs;
-                for( auto cRegName : cRegNames )
+                for(auto cRegName: cRegNames)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA) 
+                        if(cChip->getFrontEndType() == FrontEndType::MPA)
                         {
                             cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cChip, cRegName));
                             cRegs.push_back(cRegName);
@@ -841,18 +843,18 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 // fBeBoardInterface->ChipReSync(theBoard);
 
                 // run automated word alignment
-                cAligned                                               = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_ms);
+                cAligned = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_ms);
                 if(cAligned)
                 {
-                    fCicInterface->SetStaticWordAlignment(cCic, 1); 
+                    fCicInterface->SetStaticWordAlignment(cCic, 1);
                     std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
-                    for( auto cChip: *cHybrid)
+                    for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                         std::string cOutput;
-                        for(size_t cLine=0; cLine<5; cLine++)
+                        for(size_t cLine = 0; cLine < 5; cLine++)
                         {
                             cWordAlignmentVals[cChip->getId()][cLine] = cWordAlignmentValues[cChip->getId()][cLine];
                             char cBuffer[80];
@@ -864,9 +866,9 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                 }
                 else
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
-            
+
                 // reset original register values
-                for( size_t cIndx=0; cIndx < cRegs.size(); cIndx++)
+                for(size_t cIndx = 0; cIndx < cRegs.size(); cIndx++)
                 {
                     for(auto cChip: *cHybrid)
                     {
@@ -880,25 +882,24 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 
         // original masks for channels of all ROCs
         auto& cMasksThisBrd = cChipMasks.at(cBoard->getIndex());
-        // re-configure original mask 
+        // re-configure original mask
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at( cOpticalGroup->getIndex() );
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at( cHybrid->getIndex() );
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip = cMasksThisHybrid->at( cChip->getIndex() );
-                    auto& cOriginalMask = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
                     fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
                 }
-            }// hybrids
-        }//OG
+            } // hybrids
+        }     // OG
         // now send a fast reset
         fBeBoardInterface->ChipReSync(theBoard);
     }
-    
 
     return cAligned;
 }

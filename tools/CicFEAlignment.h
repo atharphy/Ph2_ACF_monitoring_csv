@@ -38,22 +38,22 @@ class CicFEAlignment : public Tool
     CicFEAlignment();
     ~CicFEAlignment();
 
-    void                              Initialise();
-    void                              SetStaticPhaseAlignment();
-    bool                              PhaseAlignment(uint16_t pWait_ms = 10, uint32_t pNTriggers = 500);
-    bool                              ManualPhaseAlignment(uint16_t pPhase = 10);
-    bool                              WordAlignment(uint16_t pWait_ms = 100);
-    bool                              Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
-    bool                              SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
-    bool                              BackEndAlignment();
-    bool                              PhaseAlignmentMPA(uint16_t pWait_ms = 100);
-    void                              Running() override;
-    void                              Stop() override;
-    void                              Pause() override;
-    void                              Resume() override;
-    void                              Reset();
-    void                              InjectAlignmentPattern(uint8_t pChipId, uint8_t pPhyPort);
-    void                              writeObjects();
+    void Initialise();
+    void SetStaticPhaseAlignment();
+    bool PhaseAlignment(uint16_t pWait_ms = 10, uint32_t pNTriggers = 500);
+    bool ManualPhaseAlignment(uint16_t pPhase = 10);
+    bool WordAlignment(uint16_t pWait_ms = 100);
+    bool Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
+    bool SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
+    bool BackEndAlignment();
+    bool PhaseAlignmentMPA(uint16_t pWait_ms = 100);
+    void Running() override;
+    void Stop() override;
+    void Pause() override;
+    void Resume() override;
+    void Reset();
+    void InjectAlignmentPattern(uint8_t pChipId, uint8_t pPhyPort);
+    void writeObjects();
 
     // injection
     void WordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns);

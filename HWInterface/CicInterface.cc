@@ -27,9 +27,9 @@ CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoard
     for(size_t cIndex = 0; cIndex < 8; cIndex++) fFeStates.push_back(0);
     for(size_t cIndex = 0; cIndex < 8; cIndex++) fPhaseValues.push_back(0);
 
-    fRegisterWrites=0;
+    fRegisterWrites = 0;
     fPortStates.clear(); // 12 ports
-    fWriteErrorMap.clear(); 
+    fWriteErrorMap.clear();
     fReadBackErrorMap.clear();
     fMap.clear();
 
@@ -52,82 +52,78 @@ void CicInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
 }
 bool CicInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName)
 {
-    auto cRegItem = pChip->getRegItem( pRegName );
-    uint32_t cValue = pValue; 
-    // only check against map if this is 
+    auto     cRegItem = pChip->getRegItem(pRegName);
+    uint32_t cValue   = pValue;
+    // only check against map if this is
     // a register than *can* be read back
-    // from 
-    bool cSuccess = ( ( cRegItem.fStatusReg == 0x01 ) ? true : (cRegItem.fValue == cValue )) ;
-    if( cSuccess  )
-        LOG(DEBUG) << BOLDGREEN << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec 
-            << " CIC register with address 0x" << std::hex << +cRegItem.fAddress << std::dec 
-            << " value read back is 0x"  << std::hex << +cValue << std::dec 
-            << RESET;
-    else if( !cSuccess )
-        LOG(DEBUG) << BOLDRED << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec 
-            << " CIC register with address 0x" << std::hex << +cRegItem.fAddress << std::dec 
-            << " value read back is 0x"  << std::hex << +cValue << std::dec 
-            << RESET;
+    // from
+    bool cSuccess = ((cRegItem.fStatusReg == 0x01) ? true : (cRegItem.fValue == cValue));
+    if(cSuccess)
+        LOG(DEBUG) << BOLDGREEN << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec << " CIC register with address 0x" << std::hex << +cRegItem.fAddress << std::dec
+                   << " value read back is 0x" << std::hex << +cValue << std::dec << RESET;
+    else if(!cSuccess)
+        LOG(DEBUG) << BOLDRED << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec << " CIC register with address 0x" << std::hex << +cRegItem.fAddress << std::dec
+                   << " value read back is 0x" << std::hex << +cValue << std::dec << RESET;
     return cSuccess;
-} 
+}
 
-std::pair<int,float>   CicInterface::getWRattempts()
+std::pair<int, float> CicInterface::getWRattempts()
 {
-    float cReWR=0; 
-    float cN=0; 
-    for(auto cIter : fReWrMap)
-    {  
-        if(cIter.second !=0 ){ cN++; cReWR+= cIter.second;}
-    } 
-    float cMean =  (cN==0)? 0 : cReWR/cN;
+    float cReWR = 0;
+    float cN    = 0;
+    for(auto cIter: fReWrMap)
+    {
+        if(cIter.second != 0)
+        {
+            cN++;
+            cReWR += cIter.second;
+        }
+    }
+    float cMean = (cN == 0) ? 0 : cReWR / cN;
     return std::make_pair(cN, cMean);
 }
-std::pair<float,float> CicInterface::getMinMaxWRattempts()
+std::pair<float, float> CicInterface::getMinMaxWRattempts()
 {
-    float cReWRmin=0; 
-    float cReWRmax=0; 
-    for(auto cIter : fReWrMap)
-    { 
-        if(cIter.second !=0 && cReWRmin == 0 ) cReWRmin = cIter.second; 
-        else 
+    float cReWRmin = 0;
+    float cReWRmax = 0;
+    for(auto cIter: fReWrMap)
+    {
+        if(cIter.second != 0 && cReWRmin == 0)
+            cReWRmin = cIter.second;
+        else
         {
-            if( cIter.second < cReWRmin) cReWRmin = cIter.second;
+            if(cIter.second < cReWRmin) cReWRmin = cIter.second;
         }
-        if(cIter.second > cReWRmax ) cReWRmax = cIter.second; 
+        if(cIter.second > cReWRmax) cReWRmax = cIter.second;
     }
     return std::make_pair(cReWRmin, cReWRmax);
 }
 void CicInterface::printErrorSummary()
 {
-    LOG (INFO) << BOLDRED << "CIC total write error count : " << +fWriteErrors 
-        << " out of a total of " << +fRegisterWrites << " writes"
-        << RESET;
+    LOG(INFO) << BOLDRED << "CIC total write error count : " << +fWriteErrors << " out of a total of " << +fRegisterWrites << " writes" << RESET;
 
-    LOG (INFO) << BOLDRED << "CIC total read-back error count : " << +fReadBackErrors 
-        << " out of a total of " << +fRegisterWrites << " writes"
-        << RESET;
-        
+    LOG(INFO) << BOLDRED << "CIC total read-back error count : " << +fReadBackErrors << " out of a total of " << +fRegisterWrites << " writes" << RESET;
 }
-void CicInterface::CheckConfig( Chip* pChip )
+void CicInterface::CheckConfig(Chip* pChip)
 {
-    LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteRegs" << RESET;
-    fReadBackErrors=0;
+    LOG(DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteRegs" << RESET;
+    fReadBackErrors = 0;
     for(const auto& cMapItem: fMap)
     {
-        auto cRegItem = pChip->getRegItem( cMapItem.second );
-        bool cRetry = true;
-        uint32_t cValue = fBoardFW->ReadFERegister(pChip, cRegItem.fAddress, cRetry);
-        bool cSuccess = this->runVerification(pChip, cValue, cMapItem.second );
-        if( !cSuccess )
+        auto     cRegItem = pChip->getRegItem(cMapItem.second);
+        bool     cRetry   = true;
+        uint32_t cValue   = fBoardFW->ReadFERegister(pChip, cRegItem.fAddress, cRetry);
+        bool     cSuccess = this->runVerification(pChip, cValue, cMapItem.second);
+        if(!cSuccess)
         {
-            LOG (INFO) << BOLDRED << "Readback error for CIC register 0x"
-                << std::hex << +cRegItem.fAddress << std::dec 
-                << " have written " << +cRegItem.fValue
-                << " and have read back " << cValue << RESET;
-            
+            LOG(INFO) << BOLDRED << "Readback error for CIC register 0x" << std::hex << +cRegItem.fAddress << std::dec << " have written " << +cRegItem.fValue << " and have read back " << cValue
+                      << RESET;
+
             auto cIter = fReadBackErrorMap.find(cRegItem.fAddress);
-            if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[cRegItem.fAddress]=1;
-            else fReadBackErrorMap[cRegItem.fAddress]=fReadBackErrorMap[cRegItem.fAddress]+1;
+            if(cIter == fReadBackErrorMap.end())
+                fReadBackErrorMap[cRegItem.fAddress] = 1;
+            else
+                fReadBackErrorMap[cRegItem.fAddress] = fReadBackErrorMap[cRegItem.fAddress] + 1;
             fReadBackErrors++;
         }
     }
@@ -136,7 +132,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
 {
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
-    bool cRetry=true;
+    bool cRetry   = true;
     if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
@@ -147,12 +143,12 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             cRegItem.fPage    = 0x00;
             cRegItem.fAddress = cReg.first;
             cRegItem.fValue   = cReg.second & 0xFF;
-            //fBoardFW->EncodeReg(cRegItem, pCic->getFeId(), pCic->getChipId(), cVec, pVerifLoop, true);
-            //fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+            // fBoardFW->EncodeReg(cRegItem, pCic->getFeId(), pCic->getChipId(), cVec, pVerifLoop, true);
+            // fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
             fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
-            #ifdef COUNT_FLAG
-                        fRegisterCount++;
-            #endif
+#ifdef COUNT_FLAG
+            fRegisterCount++;
+#endif
         }
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
@@ -163,264 +159,261 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
     else
     {
         cSuccess = true;
-        LOG (DEBUG) << BOLDMAGENTA << "Writing registers CicInterface::WriteRegs" << RESET;
-        size_t cCount=0;
+        LOG(DEBUG) << BOLDMAGENTA << "Writing registers CicInterface::WriteRegs" << RESET;
+        size_t               cCount = 0;
         std::vector<uint8_t> pSuccesses(pRegs.size(), 1);
-        size_t cWritesCounter = fRegisterWrites; 
-        size_t cWriteErrCounter = fWriteErrors;  
-        size_t cReadBackCounter = fReadBackErrors; 
-        
+        size_t               cWritesCounter   = fRegisterWrites;
+        size_t               cWriteErrCounter = fWriteErrors;
+        size_t               cReadBackCounter = fReadBackErrors;
+
         for(const auto& cReg: pRegs)
         {
-        
-            auto cRegItem = pChip->getRegItem( fMap[cReg.first] );
+            auto cRegItem     = pChip->getRegItem(fMap[cReg.first]);
             cRegItem.fPage    = 0x00;
             cRegItem.fAddress = cReg.first;
             cRegItem.fValue   = cReg.second & 0xFF;
             // update register map
-            pChip->setReg( fMap[cReg.first] , cRegItem.fValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg);
-            //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
-            cRetry=true; 
-            bool cVerify=false;
-            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry, cVerify);
-            auto cStatus = (static_cast<D19cFWInterface*>(fBoardFW))->getI2Cstatus(); 
-            if( !cSuccess && fRetryI2C )
+            pChip->setReg(fMap[cReg.first], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
+            // cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
+            cRetry       = true;
+            bool cVerify = false;
+            cSuccess     = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry, cVerify);
+            auto cStatus = (static_cast<D19cFWInterface*>(fBoardFW))->getI2Cstatus();
+            if(!cSuccess && fRetryI2C)
             {
-                // keep trying 
-                uint8_t cWriteAttempt=0; 
-                LOG (DEBUG) << BOLDRED << "Write error for CIC register 0x" 
-                        << std::hex << +cReg.first << std::dec  
-                        << " I2C status is " << +cStatus
-                        << RESET;  
+                // keep trying
+                uint8_t cWriteAttempt = 0;
+                LOG(DEBUG) << BOLDRED << "Write error for CIC register 0x" << std::hex << +cReg.first << std::dec << " I2C status is " << +cStatus << RESET;
                 do
                 {
                     auto cIter = fReWMap.find(cReg.first);
-                    if( cIter == fReWMap.end() ) fReWMap[cReg.first]=1;
-                    else fReWMap[cReg.first]=fReWMap[cReg.first]+1;
+                    if(cIter == fReWMap.end())
+                        fReWMap[cReg.first] = 1;
+                    else
+                        fReWMap[cReg.first] = fReWMap[cReg.first] + 1;
                     fReW++;
 
-                    LOG (DEBUG) << BOLDRED << "\t.. attempt#" 
-                        << +cWriteAttempt
-                        << RESET;
-                    //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
+                    LOG(DEBUG) << BOLDRED << "\t.. attempt#" << +cWriteAttempt << RESET;
+                    // cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
                     cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry);
                     cWriteAttempt++;
-                }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
+                } while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
             }
-            if( !cSuccess )
+            if(!cSuccess)
             {
-                LOG (INFO) << BOLDRED << "Write error for CIC register 0x"
-                    << std::hex << +cReg.first << std::dec 
-                    << " I2C status is " << std::bitset<8>(cStatus)
-                    << RESET; 
+                LOG(INFO) << BOLDRED << "Write error for CIC register 0x" << std::hex << +cReg.first << std::dec << " I2C status is " << std::bitset<8>(cStatus) << RESET;
                 fI2CStatus.push_back(cStatus);
                 auto cIter = fWriteErrorMap.find(cReg.first);
-                if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[cReg.first]=1;
-                else fWriteErrorMap[cReg.first]=fWriteErrorMap[cReg.first]+1;
+                if(cIter == fWriteErrorMap.end())
+                    fWriteErrorMap[cReg.first] = 1;
+                else
+                    fWriteErrorMap[cReg.first] = fWriteErrorMap[cReg.first] + 1;
                 fWriteErrors++;
             }
             fRegisterWrites++;
-            pSuccesses[cCount] = (cSuccess) ? 1 : 0 ;     
+            pSuccesses[cCount] = (cSuccess) ? 1 : 0;
             cCount++;
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
         }
 
-        if ( pVerifLoop )
+        if(pVerifLoop)
         {
-            cCount=0;
-            LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteRegs" << RESET;
+            cCount = 0;
+            LOG(DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteRegs" << RESET;
             for(const auto& cReg: pRegs)
             {
-                //uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
+                // uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
                 uint32_t cValue = fBoardFW->ReadFERegister(pChip, cReg.first);
-                cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
-                if( !cSuccess && fRetryI2C )
+                cSuccess        = (pSuccesses[cCount] == 1) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
+                if(!cSuccess && fRetryI2C)
                 {
-                    // keep trying 
-                    uint8_t cWriteAttempt=0; 
-                    LOG (DEBUG) << BOLDRED << "Readback error for CIC register 0x" 
-                        << std::hex << +cReg.first << std::dec  
-                        << RESET;
+                    // keep trying
+                    uint8_t cWriteAttempt = 0;
+                    LOG(DEBUG) << BOLDRED << "Readback error for CIC register 0x" << std::hex << +cReg.first << std::dec << RESET;
                     do
                     {
-                        LOG (DEBUG) << BOLDRED << "\t.. attempt#" 
-                            << +cWriteAttempt
-                            << RESET;
-                        //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
+                        LOG(DEBUG) << BOLDRED << "\t.. attempt#" << +cWriteAttempt << RESET;
+                        // cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
                         cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry);
-                        if( cSuccess )
+                        if(cSuccess)
                         {
                             uint32_t cValue = fBoardFW->ReadFERegister(pChip, cReg.first);
-                            //uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
-                            cSuccess = ( pSuccesses[cCount]  == 1 ) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
-                            if( !cSuccess )
+                            // uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
+                            cSuccess = (pSuccesses[cCount] == 1) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
+                            if(!cSuccess)
                             {
                                 auto cIter = fReWrMap.find(cReg.first);
-                                if( cIter == fReWrMap.end() ) fReWrMap[cReg.first]=1;
-                                else fReWrMap[cReg.first]=fReWrMap[cReg.first]+1;
+                                if(cIter == fReWrMap.end())
+                                    fReWrMap[cReg.first] = 1;
+                                else
+                                    fReWrMap[cReg.first] = fReWrMap[cReg.first] + 1;
                                 fReWR++;
-                            }//update WR map 
+                            } // update WR map
                         }
                         else
                         {
                             auto cIter = fReWMap.find(cReg.first);
-                            if( cIter == fReWMap.end() ) fReWMap[cReg.first]=1;
-                            else fReWMap[cReg.first]=fReWMap[cReg.first]+1;
+                            if(cIter == fReWMap.end())
+                                fReWMap[cReg.first] = 1;
+                            else
+                                fReWMap[cReg.first] = fReWMap[cReg.first] + 1;
                             fReW++;
-                        }// update W map
+                        } // update W map
                         cWriteAttempt++;
-                    }while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
+                    } while(!cSuccess && cWriteAttempt < fMaxI2CAttempts);
                 }
-                // only log if the write failed 
-                if( !cSuccess )
+                // only log if the write failed
+                if(!cSuccess)
                 {
-                    auto cRegItem = pChip->getRegItem( fMap[cReg.first]  );
-                    LOG (INFO) << BOLDRED << "Readback error for CIC register 0x"
-                        << std::hex << +cReg.first << std::dec 
-                        << " have written " << +cRegItem.fValue
-                        << " and have read back " << cValue << RESET;
-                    
+                    auto cRegItem = pChip->getRegItem(fMap[cReg.first]);
+                    LOG(INFO) << BOLDRED << "Readback error for CIC register 0x" << std::hex << +cReg.first << std::dec << " have written " << +cRegItem.fValue << " and have read back " << cValue
+                              << RESET;
+
                     auto cIter = fReadBackErrorMap.find(cReg.first);
-                    if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[cReg.first]=1;
-                    else fReadBackErrorMap[cReg.first]=fReadBackErrorMap[cReg.first]+1;
+                    if(cIter == fReadBackErrorMap.end())
+                        fReadBackErrorMap[cReg.first] = 1;
+                    else
+                        fReadBackErrorMap[cReg.first] = fReadBackErrorMap[cReg.first] + 1;
                     fReadBackErrors++;
                 }
-                pSuccesses[cCount] = ( pSuccesses[cCount] == 1 && cSuccess ) ? 1 : 0 ;  
+                pSuccesses[cCount] = (pSuccesses[cCount] == 1 && cSuccess) ? 1 : 0;
                 cCount++;
             }
         }
 
-        // check sum 
+        // check sum
         auto cSum = std::accumulate(pSuccesses.begin(), pSuccesses.end(), 0.0);
-        cSuccess = (cSum == pRegs.size() );
-        if( cSuccess )
-            LOG (INFO) << BOLDGREEN << "Register write successfull for CIC#" << +pChip->getId() << RESET;
-        else 
-            LOG (INFO) << BOLDRED << "Register write faile for CIC#" << +pChip->getId() << RESET;
-        fAttemptedWrites = fRegisterWrites-cWritesCounter; 
-        fSuccRegisterWrites = fAttemptedWrites - (fWriteErrors - cWriteErrCounter); 
-        fSuccRegisterRbs  = fSuccRegisterWrites - (fReadBackErrors - cReadBackCounter);
-        LOG (DEBUG) << BOLDRED << "Register write failed for CIC#" << +pChip->getId() 
-            << +fSuccRegisterWrites << " in " << fAttemptedWrites << " attempted and "
-            << " of those " << +fSuccRegisterRbs << " were read back correctly"
-            //<< " found " << +(fWriteErrors-cWriteErrCounter) << " write errors in " << cAttemptedWrites << " attempts "
-            //<< " and " << +(fReadBackErrors-cReadBackCounter) << " read-back errors found in those " << (fRegisterWrites-cWritesCounter-fWriteErrors+cWriteErrCounter) << " successfull writes"
-            << RESET;
+        cSuccess  = (cSum == pRegs.size());
+        if(cSuccess)
+            LOG(INFO) << BOLDGREEN << "Register write successfull for CIC#" << +pChip->getId() << RESET;
+        else
+            LOG(INFO) << BOLDRED << "Register write faile for CIC#" << +pChip->getId() << RESET;
+        fAttemptedWrites    = fRegisterWrites - cWritesCounter;
+        fSuccRegisterWrites = fAttemptedWrites - (fWriteErrors - cWriteErrCounter);
+        fSuccRegisterRbs    = fSuccRegisterWrites - (fReadBackErrors - cReadBackCounter);
+        LOG(DEBUG) << BOLDRED << "Register write failed for CIC#" << +pChip->getId() << +fSuccRegisterWrites << " in " << fAttemptedWrites << " attempted and "
+                   << " of those " << +fSuccRegisterRbs
+                   << " were read back correctly"
+                   //<< " found " << +(fWriteErrors-cWriteErrCounter) << " write errors in " << cAttemptedWrites << " attempts "
+                   //<< " and " << +(fReadBackErrors-cReadBackCounter) << " read-back errors found in those " << (fRegisterWrites-cWritesCounter-fWriteErrors+cWriteErrCounter) << " successfull writes"
+                   << RESET;
     }
     return cSuccess;
 }
-
 
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
 {
     setBoard(pCic->getBeBoardId());
     std::vector<uint32_t> cVec;
-    
-    ChipRegMap            cCicRegMap = pCic->getRegMap();
+
+    ChipRegMap cCicRegMap = pCic->getRegMap();
     // get register map
-    LOG (INFO) << BOLDMAGENTA << "Setting up CIC maps.." << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Setting up CIC maps.." << RESET;
     fMap.clear();
-    for(auto& cRegItem: cCicRegMap) { 
-        fMap[cRegItem.second.fAddress] = cRegItem.first; 
-    }
+    for(auto& cRegItem: cCicRegMap) { fMap[cRegItem.second.fAddress] = cRegItem.first; }
     //
     std::vector<std::pair<uint8_t, uint8_t>> cRegs;
     cRegs.clear();
     for(auto& cMapItem: fMap)
     {
-        ChipRegItem& cItem = cCicRegMap[cMapItem.second]; 
-        // create a register 
+        ChipRegItem& cItem = cCicRegMap[cMapItem.second];
+        // create a register
         std::pair<uint8_t, uint8_t> cReg;
-        cReg.first  = cMapItem.first; 
-        cReg.second = cItem.fValue; 
-        //cReg.second = cCicRegMap[cMapItem.second].fValue;
-        //cReg.second  = cRegItem.second.fValue;
+        cReg.first  = cMapItem.first;
+        cReg.second = cItem.fValue;
+        // cReg.second = cCicRegMap[cMapItem.second].fValue;
+        // cReg.second  = cRegItem.second.fValue;
         cRegs.push_back(cReg);
-        // LOG(INFO) << BOLDBLUE << "Register map for CIC contains a register with address " << std::hex << +cReg.first << std::dec 
-        //     << " register value " << std::hex << +cReg.second << std::dec 
+        // LOG(INFO) << BOLDBLUE << "Register map for CIC contains a register with address " << std::hex << +cReg.first << std::dec
+        //     << " register value " << std::hex << +cReg.second << std::dec
         //     << RESET;
     }
-    LOG (INFO) << BOLDMAGENTA << "Configuring CIC" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << RESET;
     return this->WriteRegs(pCic, cRegs, pVerifLoop);
 }
 
 bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
 {
-    // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg trying to write to register 0x" 
-    //     << std::hex << +pRegisterAddress << std::dec 
+    // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg trying to write to register 0x"
+    //     << std::hex << +pRegisterAddress << std::dec
     //     << RESET;
 
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    auto cRegItem = pChip->getRegItem( fMap[pRegisterAddress] );
+    auto cRegItem     = pChip->getRegItem(fMap[pRegisterAddress]);
     cRegItem.fPage    = 0x00;
     cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue   = pRegisterValue & 0xFF;
     // update register map
-    pChip->setReg( fMap[pRegisterAddress] , cRegItem.fValue, cRegItem.fPrmptCfg , cRegItem.fStatusReg);
+    pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     // write
     if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
-        // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x" 
+        // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x"
         //     << std::hex << +cRegItem.fAddress << std::dec << RESET;
-        //fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+        // fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
         fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     }
     else
     {
-        // write register 
-        bool cRetry=true;
+        // write register
+        bool cRetry = true;
         // LOG (INFO) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg via lpGBT" << RESET;
-        //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
+        // cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
         cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cRetry);
-            
+
         fRegisterWrites++;
-        // check write 
-        if( !cSuccess )
+        // check write
+        if(!cSuccess)
         {
             auto cIter = fWriteErrorMap.find(pRegisterAddress);
-            if( cIter == fWriteErrorMap.end() ) fWriteErrorMap[pRegisterAddress]=1;
-            else fWriteErrorMap[pRegisterAddress]=fWriteErrorMap[pRegisterAddress]+1;
+            if(cIter == fWriteErrorMap.end())
+                fWriteErrorMap[pRegisterAddress] = 1;
+            else
+                fWriteErrorMap[pRegisterAddress] = fWriteErrorMap[pRegisterAddress] + 1;
         }
-        
+
         // check readback
-        if ( pVerifLoop && cSuccess )
+        if(pVerifLoop && cSuccess)
         {
-            LOG (DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteReg" << RESET;
-            //uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegisterAddress);
-            // try this N times 
-            size_t cReadAttempt=0; 
+            LOG(DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteReg" << RESET;
+            // uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegisterAddress);
+            // try this N times
+            size_t cReadAttempt = 0;
             do
             {
                 uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
-                cSuccess = this->runVerification(pChip, cValue, fMap[pRegisterAddress]);
+                cSuccess        = this->runVerification(pChip, cValue, fMap[pRegisterAddress]);
                 cReadAttempt++;
-            }while(!cSuccess && cReadAttempt < 10 );
+            } while(!cSuccess && cReadAttempt < 10);
 
-            if( !cSuccess )
+            if(!cSuccess)
             {
-                LOG (INFO) << BOLDRED << "Failed to read-back correct value from CIC register 0x"
-                    << std::hex << +pRegisterAddress << std::dec 
-                    << RESET;
+                LOG(INFO) << BOLDRED << "Failed to read-back correct value from CIC register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
                 auto cIter = fReadBackErrorMap.find(pRegisterAddress);
-                if( cIter == fReadBackErrorMap.end() ) fReadBackErrorMap[pRegisterAddress]=1;
-                else fReadBackErrorMap[pRegisterAddress]=fReadBackErrorMap[pRegisterAddress]+1;
+                if(cIter == fReadBackErrorMap.end())
+                    fReadBackErrorMap[pRegisterAddress] = 1;
+                else
+                    fReadBackErrorMap[pRegisterAddress] = fReadBackErrorMap[pRegisterAddress] + 1;
             }
         }
-         
     }
     return cSuccess;
 }
 bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
-    if( pRegNode.empty() ) { LOG (INFO) << BOLDRED << "CicInterface::WriteChipReg trying to write to empty register .." << RESET; return false; }
-    //LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register " << pRegNode << RESET;
+    if(pRegNode.empty())
+    {
+        LOG(INFO) << BOLDRED << "CicInterface::WriteChipReg trying to write to empty register .." << RESET;
+        return false;
+    }
+    // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register " << pRegNode << RESET;
 
     std::vector<uint32_t> cVec;
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
@@ -436,9 +429,9 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
     // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register "
     //     << pRegNode << RESET;
 
-    ChipRegMap            cRegMap = pChip->getRegMap();
-    if( cRegMap.find(pRegNode) == cRegMap.end() ){ LOG (INFO) << BOLDRED << "Could not find CIC register " << pRegNode << RESET;}
-    
+    ChipRegMap cRegMap = pChip->getRegMap();
+    if(cRegMap.find(pRegNode) == cRegMap.end()) { LOG(INFO) << BOLDRED << "Could not find CIC register " << pRegNode << RESET; }
+
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
     return this->ReadChipRegItem(pChip, cRegItem).second;
 }
@@ -447,11 +440,11 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
     setBoard(pChip->getBeBoardId());
     if(flpGBTInterface == nullptr)
     {
-        // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x" 
+        // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x"
         //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
         std::vector<uint32_t> cVecReq;
         fBoardFW->EncodeReg(pRegItem, pChip, cVecReq, true, false);
-        //fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
+        // fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
         // bools to find the values of failed and read
         bool    cFailed = false;
@@ -462,12 +455,12 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
     }
     else
     {
-        // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) via lpGBT Register 0x" 
+        // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) via lpGBT Register 0x"
         //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
-           
-        //auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
+
+        // auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
         uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
-                
+
         return std::make_pair(true, cValue);
     }
 }
@@ -480,7 +473,7 @@ bool CicInterface::CheckReSync(Chip* pChip)
     ChipRegItem cRegItem;
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;
-    cRegItem.fStatusReg                   = 0x01;
+    cRegItem.fStatusReg                 = 0x01;
     std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
 
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
@@ -520,7 +513,7 @@ bool CicInterface::CheckFastCommandLock(Chip* pChip)
     ChipRegItem cRegItem;
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;
-    cRegItem.fStatusReg                   = 0x01;
+    cRegItem.fStatusReg                 = 0x01;
     std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     if(!cReadBack.first) return false;
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
@@ -629,10 +622,10 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
     cSuccess                = (cReadBackValue == 1);
 
     // read back delay
-    cRegItem.fPage    = 0x00;
-    cRegItem.fAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAF : 0xA7;
-    cRegItem.fStatusReg                 = 0x01;
-    cReadBack         = this->ReadChipRegItem(pChip, cRegItem);
+    cRegItem.fPage      = 0x00;
+    cRegItem.fAddress   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAF : 0xA7;
+    cRegItem.fStatusReg = 0x01;
+    cReadBack           = this->ReadChipRegItem(pChip, cRegItem);
     if(cReadBack.first)
         cDelay = cReadBack.second;
     else
@@ -704,7 +697,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         cIteration += 1;
     } while(!cStop);
     if(!cDone) { return cDone; }
-    
+
     LOG(INFO) << BOLDBLUE << "Requesting CIC to stop automated word alignment..." << RESET;
     cSuccess = this->WriteChipReg(pChip, cRegName, cToggleOff);
     if(!cSuccess)
@@ -713,10 +706,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         exit(0);
     }
 
-    if( cSuccess )
-    {
-        ConfigureExternalWordAlignment(pChip);
-    }
+    if(cSuccess) { ConfigureExternalWordAlignment(pChip); }
 
     return cSuccess;
 }
@@ -794,10 +784,7 @@ bool CicInterface::SetAutomaticPhaseAlignment(Chip* pChip, bool pAuto)
         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
         exit(0);
     }
-    if( pAuto )
-    {
-        this->ResetPhaseAligner(pChip);
-    }
+    if(pAuto) { this->ResetPhaseAligner(pChip); }
     return cSuccess;
 }
 bool CicInterface::PhaseAlignerPorts(Chip* pChip, uint8_t pState)
@@ -908,10 +895,10 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
 bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
 {
     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
-    if(!cSuccess) return cSuccess; 
+    if(!cSuccess) return cSuccess;
 
-    cSuccess =this->SetOptimalTaps(pChip);
-    return cSuccess; 
+    cSuccess = this->SetOptimalTaps(pChip);
+    return cSuccess;
     // setBoard(pChip->getBeBoardId());
     // if(cSuccess)
     // {
@@ -943,27 +930,27 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
 bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
 {
     UpdateExternalWordAlignmentValues(pChip);
-    size_t cCounter=0; 
-    uint8_t cValue=0x00;
-    int cIndx = 0; 
-    bool cSuccess = true;
-    for( size_t cFeId = 0; cFeId < 8; cFeId++)
+    size_t  cCounter = 0;
+    uint8_t cValue   = 0x00;
+    int     cIndx    = 0;
+    bool    cSuccess = true;
+    for(size_t cFeId = 0; cFeId < 8; cFeId++)
     {
-        for(size_t cLine=0; cLine < 5 ; cLine++)
+        for(size_t cLine = 0; cLine < 5; cLine++)
         {
-            cValue = cValue | ( ( fWordAlignmentVals[cFeId][cLine] & 0xF ) << (cCounter%2)*4 );
-            if( (1+cCounter)%2 == 0  ) 
-            {  
-                char cBuffer[14];  
+            cValue = cValue | ((fWordAlignmentVals[cFeId][cLine] & 0xF) << (cCounter % 2) * 4);
+            if((1 + cCounter) % 2 == 0)
+            {
+                char cBuffer[14];
                 sprintf(cBuffer, "EXT_WA_DELAY%.2d", cIndx);
                 std::string cRegName(cBuffer, sizeof(cBuffer));
-                // LOG(INFO) << BOLDBLUE << "\t..Setting static word alignment in register " 
+                // LOG(INFO) << BOLDBLUE << "\t..Setting static word alignment in register "
                 //     << cBuffer
-                //     << " to " 
-                //     << +cValue 
+                //     << " to "
+                //     << +cValue
                 //     << RESET;
                 cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
-                cValue = 0x00; 
+                cValue   = 0x00;
                 cIndx++;
             }
             cCounter++;
@@ -973,30 +960,26 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
 }
 bool CicInterface::SetStaticWordAlignment(Chip* pChip, uint8_t pValue)
 {
-    if( pValue == 0 )
-        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#"
-            << +pChip->getId()
-            << " to use external values" << RESET;
+    if(pValue == 0)
+        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getId() << " to use external values" << RESET;
     else
-        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#"
-            << +pChip->getId()
-            << " to use internal values" << RESET;
+        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getId() << " to use internal values" << RESET;
 
-    if( pValue == 1 ) 
-        if( !this->ConfigureExternalWordAlignment(pChip) ) return false;
+    if(pValue == 1)
+        if(!this->ConfigureExternalWordAlignment(pChip)) return false;
 
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
-    uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cToggleOn = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0x1D) | (0x1 << 1));
+    std::string cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
+    uint16_t    cRegValue  = this->ReadChipReg(pChip, cRegName);
+    uint16_t    cToggleOn  = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0x1D) | (0x1 << 1));
     uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x1D) | (0x0 << 1));
 
-    uint8_t cValue = ( pValue == 0 ) ? cToggleOff : cToggleOn; 
-    bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
+    uint8_t cValue   = (pValue == 0) ? cToggleOff : cToggleOn;
+    bool    cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
     return cSuccess;
 }
 std::vector<std::vector<uint8_t>> CicInterface::GetWordAlignmentValues(Chip* pChip)
 {
-    //UpdateExternalWordAlignmentValues(pChip);
+    // UpdateExternalWordAlignmentValues(pChip);
     return fWordAlignmentVals;
 }
 void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
@@ -1005,16 +988,16 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
     // 5 lines per FE ... 8 FEs per CIC
     fWordAlignmentVals.clear();
     std::vector<std::vector<uint8_t>> cWordAlignmentValues(8, std::vector<uint8_t>(5, 0));
-    for( size_t cIndx=0; cIndx<8; cIndx++)
+    for(size_t cIndx = 0; cIndx < 8; cIndx++)
     {
-        std::vector<uint8_t> cTmp(5,0);
-        fWordAlignmentVals.push_back( cTmp );
+        std::vector<uint8_t> cTmp(5, 0);
+        fWordAlignmentVals.push_back(cTmp);
     }
-    uint8_t                           cLineCounter = 0;
-    uint8_t                           cFECounter   = 0;
-    ChipRegItem                       cRegItem;
-    bool                              cSuccess     = true;
-    uint16_t                          cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x85 : 0xA8;
+    uint8_t     cLineCounter = 0;
+    uint8_t     cFECounter   = 0;
+    ChipRegItem cRegItem;
+    bool        cSuccess     = true;
+    uint16_t    cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x85 : 0xA8;
     for(uint8_t cIndex = 0; cIndex < 20; cIndex += 1)
     {
         cRegItem.fPage                      = 0x00;
@@ -1029,7 +1012,7 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
             {
                 uint8_t cWordAlignment                         = (cReadBack.second & (0xF << cNibble * 4)) >> 4 * cNibble;
                 cWordAlignmentValues[cFECounter][cLineCounter] = cWordAlignment;
-                fWordAlignmentVals[cFECounter][cLineCounter] = cWordAlignment;
+                fWordAlignmentVals[cFECounter][cLineCounter]   = cWordAlignment;
                 LOG(DEBUG) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
                 cLineCounter += 1;
                 if(cLineCounter > 4)
@@ -1054,29 +1037,28 @@ bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPort
     uint8_t cRegOffset = (pPhyPort * 4 / 8);
     uint8_t cBitShift  = (pPhyPort % 2) * 4;
 
-    cRegItem.fPage     = 0x00;
-    cRegItem.fAddress  = cBaseReg + cRegOffset;
-    cRegItem.fStatusReg                 = 0x01;
+    cRegItem.fPage      = 0x00;
+    cRegItem.fAddress   = cBaseReg + cRegOffset;
+    cRegItem.fStatusReg = 0x01;
 
     uint8_t cRegMask   = (0xF << cBitShift); //
     cRegMask           = ~(cRegMask);
     uint16_t cRegValue = this->ReadChipRegItem(pChip, cRegItem).second;
     int      cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]) + pOffset;
-    if(cPhaseTap < 0 || cPhaseTap > 0xF){ 
-        LOG(DEBUG) << BOLDRED << "FAILED TO modify optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " .. wanted to set a phase tap of " 
-            << +cPhaseTap
-            << " when original was "
-            << +fPhaseTaps[pPhyPortChannel][pPhyPort]
-            << RESET;
-        cPhaseTap =  int(fPhaseTaps[pPhyPortChannel][pPhyPort]);
-    }// revert to optimal if offset makes no sense
+    if(cPhaseTap < 0 || cPhaseTap > 0xF)
+    {
+        LOG(DEBUG) << BOLDRED << "FAILED TO modify optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " .. wanted to set a phase tap of " << +cPhaseTap
+                   << " when original was " << +fPhaseTaps[pPhyPortChannel][pPhyPort] << RESET;
+        cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]);
+    } // revert to optimal if offset makes no sense
     uint8_t cValue = (cRegValue & cRegMask) | (cPhaseTap << cBitShift);
 
-    // LOG(INFO) << BOLDGREEN << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
+    // LOG(INFO) << BOLDGREEN << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register
+    // 0x"
     //            << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of "
-    //            << +cPhaseTap 
-    //            << " original register value is 0x" << std::hex << +cRegValue << std::dec 
-    //            << " - modified register so that phase value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort]) 
+    //            << +cPhaseTap
+    //            << " original register value is 0x" << std::hex << +cRegValue << std::dec
+    //            << " - modified register so that phase value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort])
     //            << RESET;
     return WriteReg(pChip, cRegItem.fAddress, cValue, cVerifloop);
 }
@@ -1106,17 +1088,17 @@ uint8_t CicInterface::GetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyP
     uint8_t cRegOffset = (pPhyPort * 4 / 8);
     uint8_t cBitOffset = (pPhyPort % 2);
 
-    cRegItem.fPage                      = 0x00;
-    cRegItem.fAddress                   = cBaseReg + cRegOffset;
-    cRegItem.fStatusReg                 = 0x01;
+    cRegItem.fPage      = 0x00;
+    cRegItem.fAddress   = cBaseReg + cRegOffset;
+    cRegItem.fStatusReg = 0x01;
 
     std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     LOG(DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register 0x" << std::hex << +(cBaseReg + cRegOffset) << std::dec
                << " BitOffset " << +cBitOffset << RESET;
     if(cReadBack.first)
     {
-        cSuccess                              = cSuccess && cReadBack.first;
-        cPhaseTap                             = (cReadBack.second & (0xF << (cBitOffset * 4))) >> (cBitOffset * 4);
+        cSuccess  = cSuccess && cReadBack.first;
+        cPhaseTap = (cReadBack.second & (0xF << (cBitOffset * 4))) >> (cBitOffset * 4);
         LOG(DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Optimal tap " << +cPhaseTap << RESET;
     }
     return cPhaseTap;
@@ -1143,9 +1125,10 @@ std::vector<uint8_t> CicInterface::GetOptimalTaps(Chip* pChip, uint8_t pFeId)
     auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-    else if(fWith8CBC3) cFeMapping = fFeMapping8BC3;
-
+    if(!c2S)
+        cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+    else if(fWith8CBC3)
+        cFeMapping = fFeMapping8BC3;
 
     // 6 outputs fer FE
     uint32_t cPhaseTapsThisFe = (uint32_t)(std::bitset<24>(fPhaseValues[cFeMapping[pFeId]]).to_ulong());
@@ -1187,51 +1170,51 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-    else if(fWith8CBC3) cFeMapping = fFeMapping8BC3;
-
+    if(!c2S)
+        cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+    else if(fWith8CBC3)
+        cFeMapping = fFeMapping8BC3;
 
     // read back phase alignment on stub lines
     for(int cIndex = 0; cIndex < 6; cIndex++)
     {
-        cRegItem.fPage                      = 0x00;
-        cRegItem.fAddress                   = cRegBaseAddress + cIndex;
-        cRegItem.fStatusReg                 = 0x01;
+        cRegItem.fPage      = 0x00;
+        cRegItem.fAddress   = cRegBaseAddress + cIndex;
+        cRegItem.fStatusReg = 0x01;
 
         std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
         LOG(INFO) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
 
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
-            auto cAligned            = (cReadBack.second & (0x1 << cBitIndex)) >> cBitIndex;
-            cInputCounter            = (cBitIndex & 0x3);
-            cInputLineCounter        = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
-            cLastStubLineFound       = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
-            cFeCounter               = (cLastStubLineFound) ? cBitIndex : cFeCounter;
-            auto     cPhaseTap       = this->GetOptimalTap(pChip, cPortCounter, cInputCounter);
-            uint32_t cPhaseValue     = (cInputLineCounter == 0) ? cPhaseTap : (fPhaseValues[cFeCounter].to_ulong() | (cPhaseTap << cInputLineCounter * 4));
-            
+            auto cAligned        = (cReadBack.second & (0x1 << cBitIndex)) >> cBitIndex;
+            cInputCounter        = (cBitIndex & 0x3);
+            cInputLineCounter    = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
+            cLastStubLineFound   = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
+            cFeCounter           = (cLastStubLineFound) ? cBitIndex : cFeCounter;
+            auto     cPhaseTap   = this->GetOptimalTap(pChip, cPortCounter, cInputCounter);
+            uint32_t cPhaseValue = (cInputLineCounter == 0) ? cPhaseTap : (fPhaseValues[cFeCounter].to_ulong() | (cPhaseTap << cInputLineCounter * 4));
+
             // and save to register
             if(cAligned == 0x1)
-            { 
-                fPhaseValues[cFeCounter] = std::bitset<24>(cPhaseValue);
+            {
+                fPhaseValues[cFeCounter]                = std::bitset<24>(cPhaseValue);
                 fPhaseTaps[cInputCounter][cPortCounter] = cPhaseTap;
                 this->SetOptimalTap(pChip, cPortCounter, cInputCounter);
-                if( cPortCounter < 10 )
-                    LOG(DEBUG) << BOLDGREEN << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
-                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+                if(cPortCounter < 10)
+                    LOG(DEBUG) << BOLDGREEN << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter
+                               << " -- Alignment value is " << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
                 else
-                    LOG(DEBUG) << BOLDGREEN << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " L1 Line -- Alignment value is "
-                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+                    LOG(DEBUG) << BOLDGREEN << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " L1 Line -- Alignment value is " << +cAligned
+                               << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
             }
+            else if(cPortCounter < 10)
+                LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
+                           << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
             else
-                if( cPortCounter < 10 )
-                    LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
-                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
-                else
-                    LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " L1 Line -- Alignment value is "
-                        << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
-                
+                LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " L1 Line -- Alignment value is " << +cAligned
+                           << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+
             fPortStates[cPortCounter][cInputCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
             fFeStates[cFeCounter][cInputLineCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
 
@@ -1259,10 +1242,10 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         }
         if(cLocked)
             LOG(DEBUG) << BOLDGREEN << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
-                      << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDGREEN << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
+                       << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDGREEN << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
         else
             LOG(DEBUG) << BOLDRED << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
-                      << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDRED << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
+                       << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDRED << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
     }
     if(cLocked)
         LOG(INFO) << BOLDGREEN << "SUCCESSFULL " << BOLDBLUE << " lock on all phase aligner lines.." << RESET;
@@ -1323,23 +1306,25 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-    else if(fWith8CBC3) cFeMapping = fFeMapping8BC3;
+    if(!c2S)
+        cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+    else if(fWith8CBC3)
+        cFeMapping = fFeMapping8BC3;
 
     // read enable register
     cRegName        = "FE_ENABLE";
     uint16_t cValue = this->ReadChipReg(pChip, cRegName);
-    //LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register set to 0x" << std::hex  << +cValue << std::dec << RESET;
+    // LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register set to 0x" << std::hex  << +cValue << std::dec << RESET;
     for(auto pFeId: pFeIds)
     {
         uint8_t cChipId_forCic = cFeMapping[pFeId]; // std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pFeId));
         uint8_t cMask          = ~(0x1 << cChipId_forCic) & 0xFF;
-        //LOG(INFO) << BOLDMAGENTA << "For ROC [Hybrid Id " << +pFeId << "] CIC FE#" << +cChipId_forCic << " mask is " << std::bitset<8>(cMask) << RESET;
+        // LOG(INFO) << BOLDMAGENTA << "For ROC [Hybrid Id " << +pFeId << "] CIC FE#" << +cChipId_forCic << " mask is " << std::bitset<8>(cMask) << RESET;
         cValue = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << cChipId_forCic);
     }
     if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
-    //LOG(INFO) << BOLDBLUE << "Setting FE enable register [" << cRegName << "] to " << std::bitset<8>(cValue) << RESET;
+    // LOG(INFO) << BOLDBLUE << "Setting FE enable register [" << cRegName << "] to " << std::bitset<8>(cValue) << RESET;
     return true;
 }
 bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
@@ -1374,7 +1359,7 @@ bool CicInterface::CheckSoftReset(Chip* pChip)
     LOG(INFO) << BOLDBLUE << "Checking if CIC requires a Soft reset." << RESET;
     ChipRegItem cRegItem;
     cRegItem.fPage                      = 0x00;
-    cRegItem.fStatusReg                 = 0x01; 
+    cRegItem.fStatusReg                 = 0x01;
     cRegItem.fAddress                   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAC : 0xA6;
     std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     if(!cReadBack.first)
@@ -1495,18 +1480,17 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     // cEnableReg = this->ReadChipReg(pChip, cRegName);
     // LOG(INFO) << BOLDMAGENTA << "Enable chip register, after phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
 
-    // set phase aligner to static mode 
-    bool cAutoAlign=false;
-    cSuccess = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
+    // set phase aligner to static mode
+    bool cAutoAlign = false;
+    cSuccess        = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
         exit(0);
     }
 
-
     // select fast command edge
-    bool cNegEdge = true;// was false for PS - need to check 
+    bool cNegEdge = true; // was false for PS - need to check
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else

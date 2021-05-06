@@ -405,11 +405,11 @@ void Tool::SaveResults()
 
     for(const auto& cChip: fChipHistMap)
     {
-        std::string cDescr="";
-        auto cType = static_cast<ReadoutChip*>(cChip.first)->getFrontEndType(); 
-        if( cType == FrontEndType::CBC3 ) cDescr = "CBC"; 
-        if( cType == FrontEndType::SSA ) cDescr = "SSA"; 
-        if( cType == FrontEndType::MPA ) cDescr = "MPA"; 
+        std::string cDescr = "";
+        auto        cType  = static_cast<ReadoutChip*>(cChip.first)->getFrontEndType();
+        if(cType == FrontEndType::CBC3) cDescr = "CBC";
+        if(cType == FrontEndType::SSA) cDescr = "SSA";
+        if(cType == FrontEndType::MPA) cDescr = "MPA";
 
         // Fabio: CBC specific -> to be moved out from Tool
         TString  cDirName = Form("Hybrid%d%s%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cDescr.c_str(), cChip.first->getId());
@@ -698,9 +698,9 @@ void Tool::setFWTestPulse()
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                //#FIXME WHAT SHOULD I DO ??? 6 or 10 ? 
+                //#FIXME WHAT SHOULD I DO ??? 6 or 10 ?
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -1366,7 +1366,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
 // set same local dac for all BeBoard
 void Tool::setSameLocalDac(const std::string& dacName, const uint16_t dacValue)
 {
-    LOG (INFO) << BOLDMAGENTA << "Setting local dac [ " << dacName << " ] to " << dacValue << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Setting local dac [ " << dacName << " ] to " << dacValue << RESET;
     for(auto cBoard: *fDetectorContainer) { setSameLocalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 
     return;

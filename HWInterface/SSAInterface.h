@@ -49,42 +49,55 @@ class SSAInterface : public ReadoutChipInterface
     // std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
     // void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; };
     // void                              printErrorSummary();
-    // bool     runVerification(Ph2_HwDescription::Chip* pSSA, uint16_t pValue,  std::string pRegName); 
-    bool                              runVerification(Ph2_HwDescription::Chip* pChip, uint16_t pValue, std::string pRegName);
-    std::pair<uint16_t, uint16_t>     getRetrySummary(){ return std::make_pair(fReW, fReWR); }
-    std::pair<int,float>              getWRattempts();
-    std::pair<float, float>           getMinMaxWRattempts();
-    std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
-    std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
-    void                              resetRetrySummary(){ fReWMap.clear(); fReWrMap.clear(); fReW=0; fReWR=0; }
-    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; fReadBackErrors=0; fWriteErrors=0; resetRetrySummary(); };
-    void                              printErrorSummary();
-    void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; }
-    void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; }
-    
+    // bool     runVerification(Ph2_HwDescription::Chip* pSSA, uint16_t pValue,  std::string pRegName);
+    bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint16_t pValue, std::string pRegName);
+    std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }
+    std::pair<int, float>         getWRattempts();
+    std::pair<float, float>       getMinMaxWRattempts();
+    std::pair<uint16_t, uint16_t> getReadBackErrorSummary() { return std::make_pair(fReadBackErrors, fRegisterWrites); }
+    std::pair<uint16_t, uint16_t> getWriteErrorSummary() { return std::make_pair(fWriteErrors, fRegisterWrites); }
+    void                          resetRetrySummary()
+    {
+        fReWMap.clear();
+        fReWrMap.clear();
+        fReW  = 0;
+        fReWR = 0;
+    }
+    void resetErrorSummary()
+    {
+        fWriteErrorMap.clear();
+        fReadBackErrorMap.clear();
+        fRegisterWrites = 0;
+        fReadBackErrors = 0;
+        fWriteErrors    = 0;
+        resetRetrySummary();
+    };
+    void printErrorSummary();
+    void setRetryI2C(bool pRetry) { fRetryI2C = pRetry; }
+    void setMaxI2CAttempts(uint8_t pMaxAttempts) { fMaxI2CAttempts = pMaxAttempts; }
+
   private:
-    // I2C config 
-    bool    fRetryI2C=false;
-    uint8_t fMaxI2CAttempts=20;
-    
-    D19clpGBTInterface*            flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT*      flpGBT          = nullptr;
+    // I2C config
+    bool    fRetryI2C       = false;
+    uint8_t fMaxI2CAttempts = 20;
+
+    D19clpGBTInterface*             flpGBTInterface = nullptr;
+    Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
     std::map<uint16_t, std::string> fMap;
     // re-try counters
-    std::map<uint8_t, uint16_t> fReWMap; 
+    std::map<uint8_t, uint16_t> fReWMap;
     std::map<uint8_t, uint16_t> fReWrMap;
-    // error counters 
+    // error counters
     std::map<uint8_t, uint16_t> fWriteErrorMap;
     std::map<uint8_t, uint16_t> fReadBackErrorMap;
-    uint16_t fReadBackErrors=0;
-    uint16_t fWriteErrors=0;
+    uint16_t                    fReadBackErrors = 0;
+    uint16_t                    fWriteErrors    = 0;
     // register write counter
-    uint16_t fRegisterWrites=0;
+    uint16_t fRegisterWrites = 0;
     // re-tries
-    uint16_t fReW=0;
-    uint16_t fReWR=0;
+    uint16_t fReW  = 0;
+    uint16_t fReWR = 0;
 
-    
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pSSA);
     bool                           WriteReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);

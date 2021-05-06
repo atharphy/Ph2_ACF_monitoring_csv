@@ -51,7 +51,7 @@ class D19cCic2Event : public Event
      * \param pNbCbc
      * \param pEventBuf : the pointer to the raw Event buffer of this Event
      */
-    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3 );
+    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3);
     /*!
      * \brief Copy Constructor of the Event Class
      */
@@ -229,13 +229,14 @@ class D19cCic2Event : public Event
             throw std::runtime_error(std::string("ROCId not found in D19cCIC2Event .. check xml!"));
     }
 
-    void set8CBC3( bool pIs8CBC3 ){ fIs8CBC3 = pIs8CBC3; }
+    void set8CBC3(bool pIs8CBC3) { fIs8CBC3 = pIs8CBC3; }
+
   private:
-    // figure out how to switch between various hybrid types here 
-    std::vector<uint8_t> fFeMapping2S{0, 1 ,2, 3, 7, 6, 5, 4};  // Index Hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id - double check this!
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; //  Index Hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index Hybrid FE Id , Value CIC FE Id
+    // figure out how to switch between various hybrid types here
+    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};   // Index Hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id - double check this!
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5};  // Index Hybrid FE Id , Value CIC FE Id
 
     std::vector<uint8_t>              fFeMapping; //{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
     std::vector<uint8_t>              fFeIds;
@@ -251,14 +252,14 @@ class D19cCic2Event : public Event
     RawEventList fEventRawList;
     EventList    fEventStubList;
     // mapped id
-    // takes chip id on the hybrid 
-    // returns chip id in the CIC 
+    // takes chip id on the hybrid
+    // returns chip id in the CIC
     uint8_t getChipIdMapped(uint8_t pFeId, uint8_t pReadoutChipId) const
     {
         // assign front-end mapping
         std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
         if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-        if( fIs8CBC3 ) cFeMapping = fFeMapping8BC3;  
+        if(fIs8CBC3) cFeMapping = fFeMapping8BC3;
 
         // if( fIs2S && cHybridIds.size() == 0 ) return 0;
         // else if( fIs2S ) return (cHybridIds.size() - 1) - std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));

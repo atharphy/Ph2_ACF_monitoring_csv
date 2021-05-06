@@ -58,18 +58,18 @@ class DataChecker : public Tool
     void MemoryCheck2SRaw();
     void MemoryCheck2SSparse();
     void MemoryCheck2S();
-    //void TriggerBurstCheck();
+    // void TriggerBurstCheck();
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
     void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
     void Eye_CIC();
     bool GenericFastCommands();
 
-    bool SendGenericTestPulses(int pReSync=0);
+    bool SendGenericTestPulses(int pReSync = 0);
     bool ReadAfterGenericBlock(int pNExpected);
     void PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme);
-    void GenericTestPulse(int pReSync=0);
-    void FastCommandMemChecks2S(int pNTrials=1);
-    void FastCommandInjections(int pNTrials=1);
+    void GenericTestPulse(int pReSync = 0);
+    void FastCommandMemChecks2S(int pNTrials = 1);
+    void FastCommandInjections(int pNTrials = 1);
     void PSTriggerTests();
     void PSNominal();
 
@@ -105,21 +105,21 @@ class DataChecker : public Tool
     };
     class FCMDs
     {
-        public : 
-            uint8_t fTrigger   = 0xC9; // trigger
-            uint8_t fTestPulse = 0xC5; // trigger
-            uint8_t fBC0       = 0xC3; // BC0
-            uint8_t fResync    = 0xD1; // Resync
-            uint8_t fClear     = 0xD3; // ReSync+BC0
-            uint8_t fEmpty     = 0xC1; // empty 
+      public:
+        uint8_t fTrigger   = 0xC9; // trigger
+        uint8_t fTestPulse = 0xC5; // trigger
+        uint8_t fBC0       = 0xC3; // BC0
+        uint8_t fResync    = 0xD1; // Resync
+        uint8_t fClear     = 0xD3; // ReSync+BC0
+        uint8_t fEmpty     = 0xC1; // empty
     };
 
   protected:
     std::vector<uint16_t> fExpectedPipelineAddress;
-    std::vector<uint8_t> fFastCommands;
-    std::vector<int>  fTriggeredBxs; 
-    int fNInjectedTriggers=0;
-    int fTotalEventsExpected = 0; 
+    std::vector<uint8_t>  fFastCommands;
+    std::vector<int>      fTriggeredBxs;
+    int                   fNInjectedTriggers   = 0;
+    int                   fTotalEventsExpected = 0;
 
   private:
     // masks
@@ -133,24 +133,24 @@ class DataChecker : public Tool
     DetectorDataContainer fDataMismatches, fGoodEvents, fBadEvents;
     DetectorDataContainer fBxIdsMatches, fBxIdsMismatches;
 
-    int fPhaseTap     = 8;
-    int fAttempt      = 0;
-    int fMissedEvent  = 0;
-    int fEventCounter = 0;
-    int fTriggerTestCounter =0;
-    
+    int fPhaseTap           = 8;
+    int fAttempt            = 0;
+    int fMissedEvent        = 0;
+    int fEventCounter       = 0;
+    int fTriggerTestCounter = 0;
+
     //
     TPconfig fTPconfig;
 
     //
 
-    std::vector<float> GetBxIds(std::vector<float> pRawBxIds );
-    std::vector<int> GenerateIds();
-    void PreparePSInjection(DetectorDataContainer& pInjectionScheme);
+    std::vector<float>                      GetBxIds(std::vector<float> pRawBxIds);
+    std::vector<int>                        GenerateIds();
+    void                                    PreparePSInjection(DetectorDataContainer& pInjectionScheme);
     std::vector<Ph2_HwInterface::Injection> GeneratePSInjections(int pMaxNstubs);
-    std::vector<Ph2_HwInterface::Injection> GenerateInjections(int pMaxClusters=1, int pMaxNstubs=17);
-    void PSTriggerTest();
-    uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions=1);
+    std::vector<Ph2_HwInterface::Injection> GenerateInjections(int pMaxClusters = 1, int pMaxNstubs = 17);
+    void                                    PSTriggerTest();
+    uint32_t                                GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
 
 // booking histograms
 #ifdef __USE_ROOT__

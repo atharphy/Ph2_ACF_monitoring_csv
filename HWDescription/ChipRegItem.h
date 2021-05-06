@@ -22,8 +22,8 @@ struct ChipRegItem
     uint16_t fDefValue;
     uint16_t fValue;
     uint8_t  fStatusReg = 0;
-    bool     fPrmptCfg = false;
-    uint8_t  fBitSize  = 0;
+    bool     fPrmptCfg  = false;
+    uint8_t  fBitSize   = 0;
 };
 } // namespace Ph2_HwDescription
 

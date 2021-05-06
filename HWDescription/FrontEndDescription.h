@@ -101,8 +101,8 @@ class FrontEndDescription
     uint8_t fBeId;
     // Id of the FMC Slot on the BIO Board, all FEs need to know so the right FW registers can be written
     uint8_t fFMCId;
-    // Id of the optical link used 
-    uint8_t fOpticalGroupId; 
+    // Id of the optical link used
+    uint8_t fOpticalGroupId;
     // Id of the FE (hybrid/hybrid, etc...)
     uint8_t fFeId;
     // status (true=active, false=disabled)

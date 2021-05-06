@@ -136,14 +136,14 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     else
     {
         cEventTypeString = cEventTypeAttribute.value();
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
         if(cEventTypeString == "ZS")
             cBeBoard->setEventType(EventType::ZS);
         else if(cEventTypeString == "SSAAS")
@@ -567,8 +567,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
         }
         // link optical group id to hybrid (maybe this should be in the constructor?)
-        cHybrid->setOpticalGroupId( pOpticalGroup->getId() );
-            
+        cHybrid->setOpticalGroupId(pOpticalGroup->getId());
+
         std::string cConfigFileDirectory;
         for(pugi::xml_node cChild: pHybridNode.children())
         {
@@ -619,7 +619,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "----" << cName << "  "
                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
-                        cCic->setOpticalGroupId( pOpticalGroup->getId() );
+                        cCic->setOpticalGroupId(pOpticalGroup->getId());
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
 
@@ -706,7 +706,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
 
     uint32_t     cChipId = pCbcNode.attribute("Id").as_int();
     ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName));
-    cCbc->setOpticalGroupId( cHybrid->getOpticalGroupId() );
+    cCbc->setOpticalGroupId(cHybrid->getOpticalGroupId());
     cCbc->setNumberOfChannels(254);
     // parse the specific CBC settings so that Registers take precedence
     this->parseCbcSettings(pCbcNode, cCbc, os);

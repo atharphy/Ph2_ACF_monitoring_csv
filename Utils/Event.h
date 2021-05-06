@@ -43,11 +43,11 @@ class Cluster
 
 class PSCluster
 {
-    public : 
-        uint32_t fPixelId; 
-        uint8_t  fWidth;
-        uint8_t  fMip; 
-        uint8_t  fFeId; 
+  public:
+    uint32_t fPixelId;
+    uint8_t  fWidth;
+    uint8_t  fMip;
+    uint8_t  fFeId;
 };
 class PCluster
 {

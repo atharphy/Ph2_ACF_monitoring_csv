@@ -31,8 +31,8 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  */
 class ReadoutChipInterface : public ChipInterface
 {
-  private : 
-    bool fWithlpGBT=false;
+  private:
+    bool fWithlpGBT = false;
 
   public:
     /*!
@@ -46,21 +46,21 @@ class ReadoutChipInterface : public ChipInterface
      */
     ~ReadoutChipInterface();
 
-    // this does not need to be virtual as its the same for all types of readout chips 
+    // this does not need to be virtual as its the same for all types of readout chips
     bool lpGBTCheck(const Ph2_HwDescription::BeBoard* pBoard)
     {
         fWithlpGBT = false;
         for(auto cOpticalGroup: *pBoard)
         {
-            if( cOpticalGroup->getIndex() > 0 ) break;
+            if(cOpticalGroup->getIndex() > 0) break;
 
-            auto& clpGBT =  cOpticalGroup->flpGBT ;
-            fWithlpGBT = (clpGBT != nullptr);
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            fWithlpGBT   = (clpGBT != nullptr);
         }
         return fWithlpGBT;
     }
-    // 
-    bool lpGBTFound(){ return fWithlpGBT; }
+    //
+    bool lpGBTFound() { return fWithlpGBT; }
     /*!
      * \brief setChannels fo be injected
      * \param pChip: pointer to Chip object

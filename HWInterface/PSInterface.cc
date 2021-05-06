@@ -191,8 +191,8 @@ std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCo
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections,pPattern); }
-    // add SSA here 
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
+    // add SSA here
     // if( pChip->getFrontEndType() == FrontEndType::SSA )
     // {
     //     theSSAInterface->WriteChipReg(pChip, "ENFLAGS_ALL", 0x0);
@@ -202,7 +202,7 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     //     {
     //         theSSAInterface->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(cInj.fRow), 0x9);
     //     }
-                        
+
     // }
 }
 

@@ -168,8 +168,8 @@ class MPAInterface : public ReadoutChipInterface
 
   private:
     std::map<uint16_t, std::string> fMap;
-    D19clpGBTInterface*       flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
+    D19clpGBTInterface*             flpGBTInterface = nullptr;
+    Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
 
     bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);

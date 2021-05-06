@@ -17,17 +17,16 @@
 
 namespace Ph2_HwInterface
 {
-
 struct lpGBTClockConfig
 {
-    uint8_t              fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
-    uint8_t              fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
+    uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
+    uint8_t fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
 };
 
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB){}
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
     ~D19clpGBTInterface()
     {
 #ifdef __TCUSB__
@@ -47,9 +46,9 @@ class D19clpGBTInterface : public lpGBTInterface
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
-    bool     RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override {return true;};
-    void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
-    void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override {};
+    bool     RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override { return true; };
+    void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
+    void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -99,7 +98,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // Configure lpGBT Rx channels phase
     void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     // Configure lpGBT Phase Shifter
-    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint16_t pDelay, uint8_t pDriveStr=0, uint8_t pEnFTune=0);
+    void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint16_t pDelay, uint8_t pDriveStr = 0, uint8_t pEnFTune = 0);
 
     // ####################################
     // # LpGBT specific routine functions #
@@ -124,7 +123,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
     // Get lpGBT Power Up State Machine status
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
-    bool IsPUSMDone(Ph2_HwDescription::Chip* pChip);
+    bool    IsPUSMDone(Ph2_HwDescription::Chip* pChip);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
@@ -173,7 +172,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT Bit Error Rate Tester #
     // ###############################
     // configure BER tester
-    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable=false);
+    void ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
     // start BER tester
     void StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
     // configure BER pattern
@@ -193,9 +192,9 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT Eye Opening Monitor Tester  #
     // ####################################
     // Configure Eye Opening Monitor
-    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator=false, bool pEnableEOM=true);
+    void ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator = false, bool pEnableEOM = true);
     // Start Eye Opening Monitor
-    void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM=true);
+    void StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM = true);
     // Select Eye Opening Monitor sampling phase
     void SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase);
     // Select Eye Opening Monitor comparator voltage
@@ -209,14 +208,14 @@ class D19clpGBTInterface : public lpGBTInterface
     // # Outer Tracker specific funtions #
     // ###################################
 #ifdef __TCUSB__
-    void      InitialiseTCUSBHandler();
-    #ifdef __ROH_USB__
-        void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
-        TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-    #elif __SEH_USB__
-        void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
-        TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
-    #endif
+    void InitialiseTCUSBHandler();
+#ifdef __ROH_USB__
+    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
+    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+#elif __SEH_USB__
+    void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
+    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
+#endif
 
 #endif
     // Sets the flag used to select which lpGBT configuration interface to use
@@ -243,59 +242,107 @@ class D19clpGBTInterface : public lpGBTInterface
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
 
     // 0 [RHS], 1 [LHS]
-    // active reset functions 
-    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable)? 0 : 1 ); }
-    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_SSA}, (pEnable)? 0 : 1 ); }
-    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_MPA}, (pEnable)? 0 : 1 ); }
-    void cbcReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_CBC}, (pEnable)? 1 : 0 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_CBC}, (pEnable)? 1 : 0 ); }
-    // 0 [RHS], 1 [LHS]
-    // send reset functions 
-    void resetCic(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ cicReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); cicReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
-    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ ssaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); ssaReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
-    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ mpaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); mpaReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
-    void resetCBC(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ cbcReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); cbcReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
-    
-    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk , lpGBTClockConfig pClkCnfg)
+    // active reset functions
+    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
     {
-        fClkConfig.fClkFreq=pClkCnfg.fClkFreq;
-        fClkConfig.fClkInvert = pClkCnfg.fClkInvert;
-        fClkConfig.fClkDriveStr=pClkCnfg.fClkDriveStr;
-        fClkConfig.fClkInvert=pClkCnfg.fClkInvert;
-        fClkConfig.fClkPreEmphWidth=pClkCnfg.fClkPreEmphWidth;
-        fClkConfig.fClkPreEmphMode=pClkCnfg.fClkPreEmphMode;
-        fClkConfig.fClkPreEmphStr=pClkCnfg.fClkPreEmphStr;
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable) ? 0 : 1);
+    }
+    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_SSA}, (pEnable) ? 0 : 1);
+    }
+    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_MPA}, (pEnable) ? 0 : 1);
+    }
+    void cbcReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_CBC}, (pEnable) ? 1 : 0);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_CBC}, (pEnable) ? 1 : 0);
+    }
+    // 0 [RHS], 1 [LHS]
+    // send reset functions
+    void resetCic(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        cicReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        cicReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        ssaReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        ssaReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        mpaReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        mpaReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetCBC(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        cbcReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        cbcReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+
+    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
+    {
+        fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
+        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+        fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
+        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+        fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
+        fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
+        fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
 
         std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
         std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
         WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
         WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
     }
-    void cicClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg ); }
-    void hybridClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
+    void cicClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg); }
+    void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
 
   private:
-    // default clock configuration 
-    lpGBTClockConfig fClkConfig; 
+    // default clock configuration
+    lpGBTClockConfig fClkConfig;
 
-    // reset 
-    uint8_t  fResetMinPeriod   = 100;   // ms was 100
+    // reset
+    uint8_t fResetMinPeriod = 100; // ms was 100
 
     // clocks
-    uint8_t fClock_RHS_Hybrid = 1; 
+    uint8_t fClock_RHS_Hybrid = 1;
     uint8_t fClock_LHS_Hybrid = 11;
-    uint8_t fClock_LHS_CIC = 6 ; 
-    uint8_t fClock_RHS_CIC= 26; 
+    uint8_t fClock_LHS_CIC    = 6;
+    uint8_t fClock_RHS_CIC    = 26;
 
-    // reset GPIOs 
-    uint8_t fReset_LHS_CIC = 0 ; 
-    uint8_t fReset_LHS_MPA = 1; 
-    uint8_t fReset_LHS_SSA = 3 ; 
-    uint8_t fReset_LHS_CBC = 3 ; 
-    // rhs 
-    uint8_t fReset_RHS_CIC = 6 ; 
-    uint8_t fReset_RHS_MPA = 9; 
-    uint8_t fReset_RHS_SSA = 12 ; 
-    uint8_t fReset_RHS_CBC = 8 ; 
+    // reset GPIOs
+    uint8_t fReset_LHS_CIC = 0;
+    uint8_t fReset_LHS_MPA = 1;
+    uint8_t fReset_LHS_SSA = 3;
+    uint8_t fReset_LHS_CBC = 3;
+    // rhs
+    uint8_t fReset_RHS_CIC = 6;
+    uint8_t fReset_RHS_MPA = 9;
+    uint8_t fReset_RHS_SSA = 12;
+    uint8_t fReset_RHS_CBC = 8;
 
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},
@@ -343,17 +390,18 @@ class D19clpGBTInterface : public lpGBTInterface
     bool fUseOpticalLink = true;
     bool fUseCPB         = true;
 #ifdef __TCUSB__
-    #ifdef __ROH_USB__
-        TC_PSROH*                                    fTC_USB;
-        std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+#ifdef __ROH_USB__
+    TC_PSROH*                                    fTC_USB;
+    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
-                                                                {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-    #elif __SEH_USB__
-        TC_2SSEH*                                    fTC_USB;
-    #endif
+                                                                { "R_SSA",
+                                                                  TC_PSROH::measurement::R_SSA_RST }};
+#elif __SEH_USB__
+    TC_2SSEH* fTC_USB;
+#endif
 #endif
 };
 } // namespace Ph2_HwInterface

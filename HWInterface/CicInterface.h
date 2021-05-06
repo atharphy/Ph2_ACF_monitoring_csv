@@ -42,7 +42,7 @@ class CicInterface : public ChipInterface
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
     bool ConfigureChip(Ph2_HwDescription::Chip* pCic, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    void CheckConfig( Ph2_HwDescription::Chip* pChip ); 
+    void CheckConfig(Ph2_HwDescription::Chip* pChip);
 
     /*!
      * \brief Write the designated register in both Chip and Chip Config File
@@ -102,60 +102,75 @@ class CicInterface : public ChipInterface
     bool                              AutoBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
     bool                              SelectMux(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort);
     bool                              ControlMux(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
-    // 
-    bool                              runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
-    std::pair<uint16_t, uint16_t>     getRetrySummary(){ return std::make_pair(fReW, fReWR); }
-    std::pair<int,float>              getWRattempts();
-    std::pair<float, float>           getMinMaxWRattempts();
-    std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
-    std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
-    std::pair<uint16_t,uint16_t>      getConfigSumary(){ return std::make_pair(fSuccRegisterWrites, fSuccRegisterRbs); }
-    void                              resetStatusLog(){ fI2CStatus.clear();}
-    void                              resetRetrySummary(){ fReWMap.clear(); fReWrMap.clear(); fReW=0; fReWR=0; }
-    void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; fReadBackErrors=0; fWriteErrors=0; resetRetrySummary(); }
-    void                              printErrorSummary();
-    void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; }
-    void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; }
+    //
+    bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
+    std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }
+    std::pair<int, float>         getWRattempts();
+    std::pair<float, float>       getMinMaxWRattempts();
+    std::pair<uint16_t, uint16_t> getReadBackErrorSummary() { return std::make_pair(fReadBackErrors, fRegisterWrites); }
+    std::pair<uint16_t, uint16_t> getWriteErrorSummary() { return std::make_pair(fWriteErrors, fRegisterWrites); }
+    std::pair<uint16_t, uint16_t> getConfigSumary() { return std::make_pair(fSuccRegisterWrites, fSuccRegisterRbs); }
+    void                          resetStatusLog() { fI2CStatus.clear(); }
+    void                          resetRetrySummary()
+    {
+        fReWMap.clear();
+        fReWrMap.clear();
+        fReW  = 0;
+        fReWR = 0;
+    }
+    void resetErrorSummary()
+    {
+        fWriteErrorMap.clear();
+        fReadBackErrorMap.clear();
+        fRegisterWrites = 0;
+        fReadBackErrors = 0;
+        fWriteErrors    = 0;
+        resetRetrySummary();
+    }
+    void printErrorSummary();
+    void setRetryI2C(bool pRetry) { fRetryI2C = pRetry; }
+    void setMaxI2CAttempts(uint8_t pMaxAttempts) { fMaxI2CAttempts = pMaxAttempts; }
     // return information on phase aligners
     std::vector<std::bitset<6>> getFeStates() { return fFeStates; }
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
-    std::vector<uint8_t> getI2CStatus(){ return fI2CStatus; }
-    void setWith8CBC3(bool cIsWith8CBC3){ fWith8CBC3 = cIsWith8CBC3;}
+    std::vector<uint8_t>        getI2CStatus() { return fI2CStatus; }
+    void                        setWith8CBC3(bool cIsWith8CBC3) { fWith8CBC3 = cIsWith8CBC3; }
+
   private:
-    bool    fWith8CBC3=false;
-    bool    fRetryI2C=true;
-    uint8_t fMaxI2CAttempts=20;
-    
+    bool    fWith8CBC3      = false;
+    bool    fRetryI2C       = true;
+    uint8_t fMaxI2CAttempts = 20;
+
     D19clpGBTInterface*       flpGBTInterface = nullptr;
     Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
 
-    bool WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
-    bool WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
+    bool                           WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
+    bool                           WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
     std::map<uint8_t, std::string> fMap;
-    std::map<uint8_t, uint16_t> fReWMap; 
-    std::map<uint8_t, uint16_t> fReWrMap;
-    std::map<uint8_t, uint16_t> fWriteErrorMap;
-    std::map<uint8_t, uint16_t> fReadBackErrorMap;
-    std::vector<uint8_t> fI2CStatus; 
+    std::map<uint8_t, uint16_t>    fReWMap;
+    std::map<uint8_t, uint16_t>    fReWrMap;
+    std::map<uint8_t, uint16_t>    fWriteErrorMap;
+    std::map<uint8_t, uint16_t>    fReadBackErrorMap;
+    std::vector<uint8_t>           fI2CStatus;
 
-    uint16_t fAttemptedWrites=0;
-    uint16_t fSuccRegisterWrites=0;
-    uint16_t fSuccRegisterRbs=0;
-    uint16_t fRegisterWrites=0;
-    uint16_t fReadBackErrors=0;
-    uint16_t fWriteErrors=0;
-    uint16_t fReW=0;
-    uint16_t fReWR=0;
+    uint16_t fAttemptedWrites    = 0;
+    uint16_t fSuccRegisterWrites = 0;
+    uint16_t fSuccRegisterRbs    = 0;
+    uint16_t fRegisterWrites     = 0;
+    uint16_t fReadBackErrors     = 0;
+    uint16_t fWriteErrors        = 0;
+    uint16_t fReW                = 0;
+    uint16_t fReWR               = 0;
 
   protected:
-    std::vector<uint8_t> fFeMapping2S{0, 1 ,2, 3, 7, 6, 5, 4};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};    // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMapping8CBC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping8CBC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};   // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5};   // Index CIC FE Id , Value Hybrid FE Id
 
-    void UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
+    void                         UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    bool                         ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
     bool                         ReadOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps);
     std::map<uint8_t, uint8_t>   fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                      fMaxDriveStrength = 5;
@@ -166,8 +181,7 @@ class CicInterface : public ChipInterface
     std::vector<std::bitset<4>>       fPortStates;
     std::vector<std::vector<uint8_t>> fWordAlignmentVals;
 
-    // register map 
-
+    // register map
 };
 } // namespace Ph2_HwInterface
 

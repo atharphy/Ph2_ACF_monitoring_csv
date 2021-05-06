@@ -47,7 +47,7 @@ class CbcInterface : public ReadoutChipInterface
      * \param pVerifLoop: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
-    bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerifLoop = true ); 
+    bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerifLoop = true);
     bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
 
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
@@ -86,7 +86,6 @@ class CbcInterface : public ReadoutChipInterface
      */
     bool WriteChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
 
-   
     /*!
      * \brief Write several registers in both Chip and Chip Config File
      * \param pCbc
@@ -130,16 +129,20 @@ class CbcInterface : public ReadoutChipInterface
     std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend);
     bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerifLoop = true);
     bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerifLoop = true);
-    bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends,
-                                     bool pUseNoise = true, bool pUseOffsets=false, uint8_t pAllOff=0xFF); // address + bend in units of half strips
+    bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc,
+                                     std::vector<uint8_t>            pStubAddresses,
+                                     std::vector<int>                pStubBends,
+                                     bool                            pUseNoise   = true,
+                                     bool                            pUseOffsets = false,
+                                     uint8_t                         pAllOff     = 0xFF); // address + bend in units of half strips
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
 
   private:
-    bool                           fRetry          = true;
-    std::map<uint32_t,uint8_t>     fPageMap        ; 
-    bool                           fWithlpGBT      = false;
-    std::bitset<NCHANNELS> fActiveChannels;
+    bool                        fRetry = true;
+    std::map<uint32_t, uint8_t> fPageMap;
+    bool                        fWithlpGBT = false;
+    std::bitset<NCHANNELS>      fActiveChannels;
     /*!
      * \brief Read CBC ID eFuse
      * \param pChip: pointer to Chip object
@@ -149,13 +152,13 @@ class CbcInterface : public ReadoutChipInterface
     // void CbcCalibrationTrigger(const Cbc* pCbc );
     void output();
 
-     /*!
+    /*!
      * \brief Write the designated register in both Chip and Chip Config File
      * \param pCbc
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    bool WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
+    bool    WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
     uint8_t ReadChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode);
 
     std::map<uint8_t, std::string> fChannelMaskMapCBC3 = {
@@ -165,8 +168,6 @@ class CbcInterface : public ReadoutChipInterface
         {18, "MaskChannel-152-to-145"}, {19, "MaskChannel-160-to-153"}, {20, "MaskChannel-168-to-161"}, {21, "MaskChannel-176-to-169"}, {22, "MaskChannel-184-to-177"}, {23, "MaskChannel-192-to-185"},
         {24, "MaskChannel-200-to-193"}, {25, "MaskChannel-208-to-201"}, {26, "MaskChannel-216-to-209"}, {27, "MaskChannel-224-to-217"}, {28, "MaskChannel-232-to-225"}, {29, "MaskChannel-240-to-233"},
         {30, "MaskChannel-248-to-241"}, {31, "MaskChannel-254-to-249"}};
-
-
 };
 } // namespace Ph2_HwInterface
 
