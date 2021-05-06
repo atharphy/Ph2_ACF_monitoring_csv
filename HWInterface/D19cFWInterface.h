@@ -19,10 +19,10 @@
 #include "BeBoardFWInterface.h"
 #include <limits.h>
 #include <map>
+#include <mutex>
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <mutex>
 //#include "../Utils/OccupancyAndPh.h"
 //#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
@@ -96,7 +96,7 @@ class D19cSSAEvent;
 class D19cFWInterface : public BeBoardFWInterface
 {
   private:
-    std::mutex fMutex;
+    std::mutex                               fMutex;
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
@@ -1002,7 +1002,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // # Read/Write Optical Group #
     // ############################
     const uint8_t                   flpGBTAddress = 0x70;
-    const uint8_t                   fI2CFrequency = 3; // 1 MHz
+    uint8_t                         fI2CFrequency = 3; // 1 MHz
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
@@ -1013,9 +1013,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // # Read/Write new Command Processor Block #
     // ##########################################
     // functions for new Command Processor Block
-    void                  ResetCPB() override;
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) override;
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) override;
+    void                  ResetCPB();
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false);
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false);
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;

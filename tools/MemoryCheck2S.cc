@@ -2150,8 +2150,8 @@ void MemoryCheck2S::Check()
                                 fStubEvent.fBendExp = 0xFF;
                                 fStubEvent.fSeedRep = cReadoutStub.getPosition();
                                 fStubEvent.fBendRep = cReadoutStub.getBend();
+                                cRawStubTree->Fill();
                             }
-                            cRawStubTree->Fill();
 #endif
                             for(auto cStub: cExpectedStubs)
                             {
@@ -2176,9 +2176,10 @@ void MemoryCheck2S::Check()
                                     fStubEvent.fBendRep = cStubs[cMatchIndx].getBend();
                                 }
                                 else
+                                {
                                     fStubEvent.fSeedRep = 0xFF;
-                                fStubEvent.fBendRep = 0xFF;
-
+                                    fStubEvent.fBendRep = 0xFF;
+                                }
                                 if(!cMatchFound) { cBadEventsSummary.push_back(fStubEvent); }
 #ifdef __USE_ROOT__
                                 TTree* cStubTree = static_cast<TTree*>(getHist(cHybrid, "StubCheck2STree"));

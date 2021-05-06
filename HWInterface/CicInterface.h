@@ -133,14 +133,13 @@ class CicInterface : public ChipInterface
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
     std::vector<uint8_t>        getI2CStatus() { return fI2CStatus; }
     void                        setWith8CBC3(bool cIsWith8CBC3) { fWith8CBC3 = cIsWith8CBC3; }
+    void                        setWithlpGBT(uint8_t pIsWithLpGBT) {}
 
   private:
     bool    fWith8CBC3      = false;
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
-
-    D19clpGBTInterface*       flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
+    uint8_t fWithLpGBT      = 0;
 
     bool                           WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);

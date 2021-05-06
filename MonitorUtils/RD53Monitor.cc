@@ -9,8 +9,7 @@
 
 #include "RD53Monitor.h"
 
-RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) 
-: DetectorMonitor(theSystemController, theDetectorMonitorConfig) {}
+RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig) {}
 
 void RD53Monitor::runMonitor()
 {

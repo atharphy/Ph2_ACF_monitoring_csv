@@ -25,12 +25,12 @@ class DetectorMonitor
 
   protected:
     virtual void                        runMonitor() = 0;
-    const Ph2_System::SystemController* fTheSystemController {nullptr};
+    const Ph2_System::SystemController* fTheSystemController{nullptr};
     DetectorMonitorConfig               fDetectorMonitorConfig;
-    #ifdef __USE_ROOT__
-    TFile *fOutputFile;
-    #endif
-    time_t getTimeStamp();
+#ifdef __USE_ROOT__
+    TFile* fOutputFile;
+#endif
+    time_t      getTimeStamp();
     std::string getMonitorName();
 
     template <typename T, typename... H>
@@ -66,7 +66,6 @@ class DetectorMonitor
     std::atomic<bool> fKeepRunning;
     std::atomic<bool> startMonitor;
     std::future<void> fMonitorFuture;
-
 };
 
 #endif

@@ -15,10 +15,10 @@
 #include <string>
 #include <vector>
 
-#include "../RootUtils/GraphContainer.h"
-#include "../Utils/Container.h"
-#include "../System/SystemController.h"
 #include "../MonitorUtils/DetectorMonitorConfig.h"
+#include "../RootUtils/GraphContainer.h"
+#include "../System/SystemController.h"
+#include "../Utils/Container.h"
 
 #include <TDatime.h>
 #include <unistd.h>
@@ -83,7 +83,6 @@ class MonitorDQMPlotBase
         TDatime rootTime(timeStampString);
         return rootTime.Convert();
     }
-    
 };
 
 #endif

@@ -49,7 +49,6 @@ void MonitorDQMPlotCBC::book(TFile* theOutputFile, const DetectorContainer& theD
 //========================================================================================================================
 void MonitorDQMPlotCBC::fillDQMThresholdPlots(DetectorDataContainer& theThresholdContainer, time_t rawTime)
 {
-    
     uint32_t timeStampForRoot = getTimeStampForRoot(rawTime);
 
     for(auto board: theThresholdContainer) // for on boards - begin
@@ -66,23 +65,21 @@ void MonitorDQMPlotCBC::fillDQMThresholdPlots(DetectorDataContainer& theThreshol
                     size_t chipIndex = chip->getIndex();
                     // Retreive the corresponging chip histogram:
                     TGraph* chipDQMPlot = fDetectorMonitorPlots.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-                    
+
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(chip == nullptr) continue;
                     // // Get channel data and fill the histogram
                     // for(auto channel: *chip->getChannelContainer<uint32_t>())   // for on channel - begin
                     chipDQMPlot->SetPoint(chipDQMPlot->GetN(), timeStampForRoot, chip->getSummary<uint16_t>()); // for on channel - end
-                }                                                               // for on chip - end
-            }                                                                   // for on hybrid - end
-        }                                                                       // for on opticalGroup - end
-    }                                                                           // for on boards - end
+                }                                                                                               // for on chip - end
+            }                                                                                                   // for on hybrid - end
+        }                                                                                                       // for on opticalGroup - end
+    }                                                                                                           // for on boards - end
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::process()
-{
-}
+void MonitorDQMPlotCBC::process() {}
 
 //========================================================================================================================
 void MonitorDQMPlotCBC::reset(void)
@@ -98,7 +95,7 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // I'm expecting to receive a data stream from an uint16_t contained from DQM "DQMExample"
-    ChipContainerStream<uint16_t,EmptyContainer,time_t> theDQMStreamer("CBCMonitor");
+    ChipContainerStream<uint16_t, EmptyContainer, time_t> theDQMStreamer("CBCMonitor");
 
     // Try to see if the char buffer matched what I'm expection (container of uint16_t from DQMExample
     // procedure)

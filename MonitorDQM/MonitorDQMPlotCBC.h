@@ -64,9 +64,8 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
     void fillDQMThresholdPlots(DetectorDataContainer& theThresholdContainer, time_t timeStamp);
 
   private:
-    bool fDoMonitorThreshold{false};
+    bool                  fDoMonitorThreshold{false};
     DetectorDataContainer fDetectorMonitorPlots;
     DetectorDataContainer fDetectorData;
-
 };
 #endif

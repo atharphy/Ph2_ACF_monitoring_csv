@@ -3,15 +3,15 @@
 #include "../Utils/Container.h"
 #include "../Utils/ObjectStream.h"
 
-#include "MonitorDQMPlotCBC.h"
-#include "MonitorDQMInterface.h"
 #include "../MonitorUtils/DetectorMonitorConfig.h"
+#include "MonitorDQMInterface.h"
+#include "MonitorDQMPlotCBC.h"
 
 #include "TFile.h"
 
+#include <ctime>
 #include <iostream>
 #include <string>
-#include <ctime>
 
 //========================================================================================================================
 MonitorDQMInterface::MonitorDQMInterface() : fListener(nullptr), fRunning(false), fOutputFile(nullptr) {}
@@ -69,15 +69,14 @@ void MonitorDQMInterface::configure(std::string const& monitorName, std::string 
     std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
     std::stringstream                                        out;
     DetectorContainer                                        fDetectorStructure;
-    
+
     fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out, true);
 
     DetectorMonitorConfig theDetectorMonitorConfig;
     std::string           monitoringType = fParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out, true);
 
-    if(monitoringType == "2S")
-        fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
-    
+    if(monitoringType == "2S") fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
+
     fOutputFile = new TFile("Monitor_tmp.root", "RECREATE");
     for(auto monitorDQM: fMonitorDQMVector) monitorDQM->book(fOutputFile, fDetectorStructure, theDetectorMonitorConfig);
 }

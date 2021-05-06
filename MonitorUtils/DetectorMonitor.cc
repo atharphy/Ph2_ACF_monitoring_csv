@@ -4,14 +4,14 @@
 #endif
 
 DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig)
-: fDetectorMonitorConfig(theDetectorMonitorConfig)
+    : fDetectorMonitorConfig(theDetectorMonitorConfig)
 #ifdef __USE_ROOT__
-, fOutputFile(new TFile("TmpMonitor.root", "RECREATE"))
+    , fOutputFile(new TFile("TmpMonitor.root", "RECREATE"))
 #endif
 {
     fTheSystemController = theSystemController;
-    fKeepRunning = true;
-    startMonitor = false;
+    fKeepRunning         = true;
+    startMonitor         = false;
 }
 
 DetectorMonitor::~DetectorMonitor()
@@ -20,11 +20,11 @@ DetectorMonitor::~DetectorMonitor()
     DetectorMonitor::stopRunning();
     while(fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready)
     { LOG(INFO) << GREEN << "\t-->Waiting for monitoring to be completed..." << RESET; }
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     fOutputFile->Write();
     fOutputFile->Close();
     delete fOutputFile;
-    #endif
+#endif
 }
 
 void DetectorMonitor::operator()()
@@ -40,11 +40,10 @@ void DetectorMonitor::forkMonitor() { fMonitorFuture = std::async(std::launch::a
 
 time_t DetectorMonitor::DetectorMonitor::getTimeStamp()
 {
-    time_t     rawtime;
+    time_t rawtime;
     time(&rawtime);
     return rawtime;
 }
-
 
 std::string DetectorMonitor::getMonitorName()
 {

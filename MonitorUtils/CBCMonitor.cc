@@ -1,19 +1,17 @@
 #include "CBCMonitor.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerFactory.h"
 #ifdef __USE_ROOT__
 #include "TFile.h"
 #endif
 
-CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) 
-: DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
     fDoMonitorThreshold = fDetectorMonitorConfig.isElementToMonitor("CBCThreshold");
-    
-    #ifdef __USE_ROOT__
+
+#ifdef __USE_ROOT__
     fMonitorPlotDQM.book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
-    #endif
+#endif
 }
 
 void CBCMonitor::runMonitor()
@@ -23,10 +21,9 @@ void CBCMonitor::runMonitor()
 
 void CBCMonitor::runThresholdMonitor()
 {
-    
     DetectorDataContainer theThresholdContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fTheSystemController->fDetectorContainer, theThresholdContainer);
-    
+
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         for(const auto& opticalGroup: *board)
@@ -43,19 +40,14 @@ void CBCMonitor::runThresholdMonitor()
         }
     }
 
-
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     fMonitorPlotDQM.fillDQMThresholdPlots(theThresholdContainer, getTimeStamp());
-    #else
+#else
     auto theCBCThresholdStreamer = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer, time_t>("CBCThreshold");
     theCBCThresholdStreamer.setHeaderElement(getTimeStamp());
-    if(fStreamerEnabled) 
+    if(fStreamerEnabled)
     {
-        for(auto board: theThresholdContainer)
-        {
-            theCBCThresholdStreamer.streamAndSendBoard(board, fNetworkStreamer);
-        }
+        for(auto board: theThresholdContainer) { theCBCThresholdStreamer.streamAndSendBoard(board, fNetworkStreamer); }
     }
-    #endif
-
+#endif
 }

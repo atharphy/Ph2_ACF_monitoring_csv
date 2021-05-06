@@ -273,28 +273,28 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         cBackEndAligner.Reset();
 
-        // Check if data player is running
-        // if(cDPInterfacer.IsRunning(cInterface))
-        // {
-        //     LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-        //     cDPInterfacer.Stop(cInterface);
-        // }
+        // // Check if data player is running
+        // // if(cDPInterfacer.IsRunning(cInterface))
+        // // {
+        // //     LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+        // //     cDPInterfacer.Stop(cInterface);
+        // // }
 
-        // Configure and Start DataPlayer
-        // to send phase alignment pattern
-        uint8_t cPhaseAlignmentPattern = 0x55;
-        cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
-        cDPInterfacer.Start(cInterface);
-        if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
-        else
-            LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+        // // Configure and Start DataPlayer
+        // // to send phase alignment pattern
+        // uint8_t cPhaseAlignmentPattern = 0x55;
+        // cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+        // cDPInterfacer.Start(cInterface);
+        // if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
+        // else
+        //     LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-        // align CIC inputs
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cHybridTester);
-        cCicAligner.PhaseAlignmentMPA(100);
-        cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.CheckNPatterns(cInterface);
+        // // align CIC inputs
+        // CicFEAlignment cCicAligner;
+        // cCicAligner.Inherit(&cHybridTester);
+        // cCicAligner.PhaseAlignmentMPA(100);
+        // cDPInterfacer.Stop(cInterface);
+        // cDPInterfacer.CheckNPatterns(cInterface);
 
         // // still needs to be de-bugged!!
         // // does not work yet

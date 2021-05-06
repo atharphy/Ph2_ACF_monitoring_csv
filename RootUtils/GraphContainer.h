@@ -41,15 +41,15 @@ class GraphContainer : public PlotContainer
     GraphContainer(GraphContainer<Graph>&& container)
     {
         fHasToBeDeletedManually = container.fHasToBeDeletedManually;
-        fTheGraph           = container.fTheGraph;
-        container.fTheGraph = nullptr;
+        fTheGraph               = container.fTheGraph;
+        container.fTheGraph     = nullptr;
     }
 
     GraphContainer<Graph>& operator=(GraphContainer<Graph>&& container)
     {
         fHasToBeDeletedManually = container.fHasToBeDeletedManually;
-        fTheGraph           = container.fTheGraph;
-        container.fTheGraph = nullptr;
+        fTheGraph               = container.fTheGraph;
+        container.fTheGraph     = nullptr;
         return *this;
     }
 

@@ -27,7 +27,6 @@ class ChannelGroupBase;
 
 namespace ContainerFactory
 {
-
 inline void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 {
     for(const auto board: original)

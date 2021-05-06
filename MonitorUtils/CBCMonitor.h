@@ -18,10 +18,9 @@ class CBCMonitor : public DetectorMonitor
   private:
     void runThresholdMonitor();
     bool fDoMonitorThreshold{false};
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     MonitorDQMPlotCBC fMonitorPlotDQM;
-    #endif
-
+#endif
 };
 
 #endif

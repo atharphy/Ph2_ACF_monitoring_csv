@@ -221,13 +221,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     // check event type
                     bool cWithCBC3 = !(cFirstBoard->getEventType() == EventType::VR2S);
                     fCicInterface->setWith8CBC3(cWithCBC3);
-                    if(cFirstOpticalGroup->flpGBT != nullptr)
-                    {
-                        auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                        fCicInterface->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
-                        // link lpGBT
-                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLpGBT(clpGBTInterface);
-                    }
+                    bool cFoundLpgbt = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
+                    if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Interface aware of the lpGBT connected to this board ... " << RESET;
                 }
             }
         }
