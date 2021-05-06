@@ -82,7 +82,7 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
                             cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
                             if(cFrstStrp % 25 == 0)
                                 LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " [Strip#" << +cFrstStrp << " ,Strip#" << cNxtStrp << " ]"
-                                          << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
+                                           << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                             cDataIterator++;
                         }
                     } // every 2 channels are packed into one 32 bit word

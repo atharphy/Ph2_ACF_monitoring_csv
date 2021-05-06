@@ -18,28 +18,30 @@ using namespace Ph2_HwDescription;
 void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     fDetectorContainer = &theDetectorStructure;
-    for(auto board : *fDetectorContainer)
-        for(auto optical : *board)
-            for(auto hybrid : *optical)
-                for(auto chip : *hybrid)
+    for(auto board: *fDetectorContainer)
+        for(auto optical: *board)
+            for(auto hybrid: *optical)
+                for(auto chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == FrontEndType::MPA) std::cout<<"MPA"<<std::endl;
-                    if(chip->getFrontEndType() == FrontEndType::SSA) std::cout<<"SSA"<<std::endl;
+                    if(chip->getFrontEndType() == FrontEndType::MPA) std::cout << "MPA" << std::endl;
+                    if(chip->getFrontEndType() == FrontEndType::SSA) std::cout << "SSA" << std::endl;
                 }
-        
+
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     HistContainer<TH1F> theSClusterTemplateHistogram = HistContainer<TH1F>("S clusters", "S clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
-    HistContainer<TH2F> thePClusterTemplateHistogram = HistContainer<TH2F>("P clusters", "P clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPACHANNELS / NSSACHANNELS , -0.5, float(NMPACHANNELS / NSSACHANNELS) - 0.5);
-    HistContainer<TH2F> theStubTemplateHistogram     = HistContainer<TH2F>("Stubs", "Stubs", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPACHANNELS / NSSACHANNELS , -0.5, float(NMPACHANNELS / NSSACHANNELS) - 0.5);
+    HistContainer<TH2F> thePClusterTemplateHistogram =
+        HistContainer<TH2F>("P clusters", "P clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPACHANNELS / NSSACHANNELS, -0.5, float(NMPACHANNELS / NSSACHANNELS) - 0.5);
+    HistContainer<TH2F> theStubTemplateHistogram =
+        HistContainer<TH2F>("Stubs", "Stubs", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPACHANNELS / NSSACHANNELS, -0.5, float(NMPACHANNELS / NSSACHANNELS) - 0.5);
 
     // auto mpaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA); };
     // theDetectorStructure.setReadoutChipQueryFunction(mpaSelectFunction);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fStubHistogramContainer     , theStubTemplateHistogram    );
+    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fStubHistogramContainer, theStubTemplateHistogram);
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, thePClusterTemplateHistogram);
     // theDetectorStructure.resetReadoutChipQueryFunction();
 
     // auto ssaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA); };
-    // theDetectorStructure.setReadoutChipQueryFunction(ssaSelectFunction);    
+    // theDetectorStructure.setReadoutChipQueryFunction(ssaSelectFunction);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fStripOccupancyHistogramContainer, theSClusterTemplateHistogram);
     // theDetectorStructure.resetReadoutChipQueryFunction();
 }
@@ -90,7 +92,7 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 //                         if(curPSSync.fSClusters[pos].fAddress != 255u) std::cout<<"good pixel cluster"<<std::endl;
 // 						SClusterHistograms->Fill(curPSSync.fSClusters[pos].fAddress);
 // 		            }
-                    
+
 //                 }
 //             }
 //         }
@@ -100,13 +102,13 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContainer)
 {
     for(const auto board: DataContainer)
-	{
+    {
         // std::cout<<__LINE__<<std::endl;
         for(const auto opticalGroup: *board)
-		{
+        {
             // std::cout<<__LINE__<<std::endl;
             for(const auto hybrid: *opticalGroup)
-			{
+            {
                 // std::cout<<__LINE__<<std::endl;
                 for(const auto chip: *hybrid)
                 {
@@ -119,20 +121,20 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     {
                         // std::cout<<__LINE__<<std::endl;
                         TH2F* pixelClusterHistogram = fOccupancyHistogramContainer.at(board->getIndex())
-                                                        ->at(opticalGroup->getIndex())
-                                                        ->at(hybrid->getIndex())
-                                                        ->at(chip->getIndex())
-                                                        ->getSummary<HistContainer<TH2F>>()
-                                                        .fTheHistogram;
+                                                          ->at(opticalGroup->getIndex())
+                                                          ->at(hybrid->getIndex())
+                                                          ->at(chip->getIndex())
+                                                          ->getSummary<HistContainer<TH2F>>()
+                                                          .fTheHistogram;
 
                         // std::cout<<__LINE__<<std::endl;
-                        for(int row = 0; row<NMPACHANNELS/NSSACHANNELS; ++row)
+                        for(int row = 0; row < NMPACHANNELS / NSSACHANNELS; ++row)
                         {
-                        // std::cout<<__LINE__<<std::endl;
-                            for(int col = 0; col<NSSACHANNELS; ++col)
+                            // std::cout<<__LINE__<<std::endl;
+                            for(int col = 0; col < NSSACHANNELS; ++col)
                             {
                                 // std::cout<<col<<" "<<row<<std::endl;
-                                pixelClusterHistogram->Fill(col,row,chip->getChannel<float>(row, col));
+                                pixelClusterHistogram->Fill(col, row, chip->getChannel<float>(row, col));
                                 // std::cout<<__LINE__<<std::endl;
                             }
                         }
@@ -145,16 +147,13 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                         // std::cout<<hybrid->size()<<std::endl;
 
                         TH1F* stripClusterHistogram = fStripOccupancyHistogramContainer.at(board->getIndex())
-                                ->at(opticalGroup->getIndex())
-                                ->at(hybrid->getIndex())
-                                ->at(chip->getIndex())
-                                ->getSummary<HistContainer<TH1F>>()
-                                .fTheHistogram;
+                                                          ->at(opticalGroup->getIndex())
+                                                          ->at(hybrid->getIndex())
+                                                          ->at(chip->getIndex())
+                                                          ->getSummary<HistContainer<TH1F>>()
+                                                          .fTheHistogram;
                         // std::cout<<__LINE__<<std::endl;
-                        for(int channel = 0; channel<NSSACHANNELS; ++channel)
-                        {
-                            stripClusterHistogram->Fill(channel,chip->getChannel<float>(channel));
-                        }
+                        for(int channel = 0; channel < NSSACHANNELS; ++channel) { stripClusterHistogram->Fill(channel, chip->getChannel<float>(channel)); }
                         // std::cout<<__LINE__<<std::endl;
                     }
                 }
@@ -163,15 +162,14 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
     }
 }
 
-
 void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
 {
     for(const auto board: DataContainer)
-	{
+    {
         for(const auto opticalGroup: *board)
-		{
+        {
             for(const auto hybrid: *opticalGroup)
-			{
+            {
                 for(const auto chip: *hybrid)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
@@ -179,19 +177,12 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
                     FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
                     if(theFrontEndType != FrontEndType::MPA) continue;
 
-                    TH2F* stubHistogram = fStubHistogramContainer.at(board->getIndex())
-                                                    ->at(opticalGroup->getIndex())
-                                                    ->at(hybrid->getIndex())
-                                                    ->at(chip->getIndex())
-                                                    ->getSummary<HistContainer<TH2F>>()
-                                                    .fTheHistogram;
+                    TH2F* stubHistogram =
+                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
-                    for(int row = 0; row<NMPACHANNELS/NSSACHANNELS; ++row)
+                    for(int row = 0; row < NMPACHANNELS / NSSACHANNELS; ++row)
                     {
-                        for(int col = 0; col<NSSACHANNELS; ++col)
-                        {
-                            stubHistogram->Fill(col,row,chip->getChannel<float>(row, col));
-                        }
+                        for(int col = 0; col < NSSACHANNELS; ++col) { stubHistogram->Fill(col, row, chip->getChannel<float>(row, col)); }
                     }
                 }
             }
@@ -204,12 +195,12 @@ bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
     // std::cout<<__PRETTY_FUNCTION__ << "Begin of function"<<std::endl;
     // ChipContainerStream<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>> thePSEventStreamer("PSPhysics");
     ChannelContainerStream<float> theOccupancyStream("PSPhysicsOccupancy");
-    ChannelContainerStream<float> theStubStream     ("PSPhysicsStub"     );
+    ChannelContainerStream<float> theStubStream("PSPhysicsStub");
 
     if(theOccupancyStream.attachBuffer(&dataBuffer))
     {
-        std::cout<<__PRETTY_FUNCTION__ << "attached Occupancy!!!"<<std::endl;
-        theOccupancyStream.decodeChipData(fDetectorData); 
+        std::cout << __PRETTY_FUNCTION__ << "attached Occupancy!!!" << std::endl;
+        theOccupancyStream.decodeChipData(fDetectorData);
         fillOccupancy(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -217,8 +208,8 @@ bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
 
     if(theStubStream.attachBuffer(&dataBuffer))
     {
-        std::cout<<__PRETTY_FUNCTION__ << "attached Stub!!!"<<std::endl;
-        theStubStream.decodeChipData(fDetectorData); 
+        std::cout << __PRETTY_FUNCTION__ << "attached Stub!!!" << std::endl;
+        theStubStream.decodeChipData(fDetectorData);
         fillStub(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;

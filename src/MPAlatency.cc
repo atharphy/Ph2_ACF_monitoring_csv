@@ -11,14 +11,11 @@
 #include "TApplication.h"
 #include "TROOT.h"
 #include "tools/BackEndAlignment.h"
-#include <cstring>
 #include "tools/PSAlignment.h"
-
-
+#include <cstring>
 
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
-
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -82,7 +79,6 @@ int main(int argc, char* argv[])
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     pBoard->setFrontEndType(FrontEndType::MPA);
 
-
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
     cPSAlignment.Initialise();
@@ -101,8 +97,6 @@ int main(int argc, char* argv[])
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
-
-    
 
     LOG(INFO) << BOLDRED << "LatencyScan" << RESET;
     LatencyScan cLatencyScan;

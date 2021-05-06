@@ -47,19 +47,17 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
 
-
     cTool.ConfigureHw();
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     // align ASICs on PS module
 
-	//pBoard->setEventType(EventType::VR);
+    // pBoard->setEventType(EventType::VR);
 
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
     cPSAlignment.Initialise();
     cPSAlignment.MapMPAOutputs();
     cPSAlignment.Reset();
-
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
@@ -76,7 +74,7 @@ int main(int argc, char* argv[])
 
     cPSAlignment.Align();
 
-	//pBoard->setEventType(EventType::PSAS);
+    // pBoard->setEventType(EventType::PSAS);
 
     HybridContainer* ChipVec = pBoard->at(0)->at(0);
 

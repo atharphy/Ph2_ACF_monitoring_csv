@@ -34,12 +34,12 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  */
 
 class PSInterface : public ReadoutChipInterface
-{ // begin class 
-  private : 
-    // I2C config 
-    bool    fRetryI2C=true;
-    uint8_t fMaxI2CAttempts=20;
-    
+{ // begin class
+  private:
+    // I2C config
+    bool    fRetryI2C       = true;
+    uint8_t fMaxI2CAttempts = 20;
+
   public:
     PSInterface(const BeBoardFWMap& pBoardMap);
     ~PSInterface();
@@ -71,7 +71,7 @@ class PSInterface : public ReadoutChipInterface
     void                  Activate_pp(Ph2_HwDescription::Chip* pPS, uint8_t win = 0);
     void                  Activate_ss(Ph2_HwDescription::Chip* pPS, uint8_t win = 0);
     void                  Activate_ps(Ph2_HwDescription::Chip* pPS, uint8_t win = 8);
-	void 				  readAllBias(Ph2_HwDescription::ReadoutChip* pPS);
+    void                  readAllBias(Ph2_HwDescription::ReadoutChip* pPS);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
     void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
@@ -79,7 +79,7 @@ class PSInterface : public ReadoutChipInterface
     void Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
 
-    void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern=0xFF);
+    void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
     void             ReadASEvent(Ph2_HwDescription::ReadoutChip* pPS, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void             Pix_Smode(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string smode);
@@ -111,20 +111,25 @@ class PSInterface : public ReadoutChipInterface
 
     void Cleardata();
 
-
     //
-    void                              setRetryI2C(bool pRetry){ fRetryI2C = pRetry; theSSAInterface->setRetryI2C(fRetryI2C); }
-    void                              setMaxI2CAttempts(uint8_t pMaxAttempts){ fMaxI2CAttempts = pMaxAttempts; theSSAInterface->setMaxI2CAttempts(fMaxI2CAttempts); }
-    std::pair<uint16_t, uint16_t>     getSsaRetrySummary(){ return theSSAInterface->getRetrySummary(); };
-    std::pair<int,float>              getSsaWRattempts(){return theSSAInterface->getWRattempts(); };
-    std::pair<float, float>           getSsaMinMaxWRattempts(){return theSSAInterface->getMinMaxWRattempts(); };
-    std::pair<uint16_t,uint16_t>      getSsaReadBackErrorSummary(){ return theSSAInterface->getReadBackErrorSummary();};
-    std::pair<uint16_t,uint16_t>      getSsaWriteErrorSummary(){ return theSSAInterface->getWriteErrorSummary();}; 
-    void                              resetSsaRetrySummary(){ theSSAInterface->resetRetrySummary();};
-    void                              resetSsaErrorSummary(){ theSSAInterface->resetErrorSummary();};
+    void setRetryI2C(bool pRetry)
+    {
+        fRetryI2C = pRetry;
+        theSSAInterface->setRetryI2C(fRetryI2C);
+    }
+    void setMaxI2CAttempts(uint8_t pMaxAttempts)
+    {
+        fMaxI2CAttempts = pMaxAttempts;
+        theSSAInterface->setMaxI2CAttempts(fMaxI2CAttempts);
+    }
+    std::pair<uint16_t, uint16_t> getSsaRetrySummary() { return theSSAInterface->getRetrySummary(); };
+    std::pair<int, float>         getSsaWRattempts() { return theSSAInterface->getWRattempts(); };
+    std::pair<float, float>       getSsaMinMaxWRattempts() { return theSSAInterface->getMinMaxWRattempts(); };
+    std::pair<uint16_t, uint16_t> getSsaReadBackErrorSummary() { return theSSAInterface->getReadBackErrorSummary(); };
+    std::pair<uint16_t, uint16_t> getSsaWriteErrorSummary() { return theSSAInterface->getWriteErrorSummary(); };
+    void                          resetSsaRetrySummary() { theSSAInterface->resetRetrySummary(); };
+    void                          resetSsaErrorSummary() { theSSAInterface->resetErrorSummary(); };
     // void                              printErrorSummary();
-    
-    
 };
 } // namespace Ph2_HwInterface
 

@@ -360,4 +360,3 @@ class Tool : public Ph2_System::SystemController
 };
 
 #endif
-

@@ -12,8 +12,8 @@
 
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/Event.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 #include "Tool.h"
 // #include "../Utils/PSSharedConstants.h"
 // #include "../HWInterface/PSFWInterface.h"
@@ -45,36 +45,34 @@ class PSPhysics : public Tool
     // void fillDataContainer(BoardContainer* const& cBoard, Ph2_HwInterface::Event* event);
     void fillDataContainer(BoardContainer* const& cBoard, const std::vector<Ph2_HwInterface::Event*> eventList);
 
-
   private:
     // DetectorDataContainer fPSSyncContainer   ;
-    DetectorDataContainer fStubContainer     ;
+    DetectorDataContainer fStubContainer;
     DetectorDataContainer fOccupancyContainer;
 
-    void initHisto();
-    void fillHisto();
-    void display();
-    void chipErrorReport();
+    void         initHisto();
+    void         fillHisto();
+    void         display();
+    void         chipErrorReport();
     unsigned int getDataFromBoards();
-    void clearContainers(BoardContainer* theBoard);
+    void         clearContainers(BoardContainer* theBoard);
 
     // ########
     // # ROOT #
     // ########
 #ifdef __USE_ROOT__
     PSPhysicsHistograms histos;
-    TApplication*        myApp;
+    TApplication*       myApp;
 #endif
 
   protected:
-    std::string fileRes;
-    std::string fileReg;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveRawData;
-    bool        doLocal;
+    std::string  fileRes;
+    std::string  fileReg;
+    bool         doUpdateChip;
+    bool         doDisplay;
+    bool         saveRawData;
+    bool         doLocal;
     unsigned int fTotalDataSize = 0;
-
 };
 
 #endif

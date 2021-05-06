@@ -43,26 +43,26 @@ class Cluster
 
 class PSCluster
 {
-    public : 
-        uint32_t fPixelId; 
-        uint8_t  fWidth;
-        uint8_t  fMip; 
-        uint8_t  fFeId; 
+  public:
+    uint32_t fPixelId;
+    uint8_t  fWidth;
+    uint8_t  fMip;
+    uint8_t  fFeId;
 };
 class PCluster
 {
   public:
-    PCluster() : fAddress(255u), fWidth(255u), fZpos(255u) {};
+    PCluster() : fAddress(255u), fWidth(255u), fZpos(255u){};
     uint8_t fAddress;
     uint8_t fWidth;
     uint8_t fZpos;
-    float   getBaricentre();//Barycenter?
+    float   getBaricentre(); // Barycenter?
 };
 
 class SCluster
 {
   public:
-    SCluster() : fAddress(255u), fMip(255u), fWidth(255u) {};
+    SCluster() : fAddress(255u), fMip(255u), fWidth(255u){};
     uint8_t fAddress;
     uint8_t fMip;
     uint8_t fWidth;
@@ -78,7 +78,7 @@ class Stub
         fCenter = static_cast<float>((pPosition / 2.)); // for PS
         // fCenter = static_cast<float>((pPosition / 2.) - 1); // is this correct for 2S?
     }
-    Stub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.) {};
+    Stub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.){};
     uint8_t getPosition() { return fPosition; }
     uint8_t getBend() { return fBend; }
     uint8_t getRow() { return fRow; }
@@ -265,7 +265,7 @@ class Event
      */
     virtual std::string HexString() const { return ""; }
 
-    uint16_t GetL1Number() const {return fL1Number;}
+    uint16_t GetL1Number() const { return fL1Number; }
 
     // user interface
     /*!

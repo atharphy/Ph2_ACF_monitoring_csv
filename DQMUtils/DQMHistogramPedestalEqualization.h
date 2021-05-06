@@ -60,7 +60,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     void fillOccupancyPlots(DetectorDataContainer& theOccupancy);
 
   private:
-    uint32_t NCH = 0;
+    uint32_t              NCH = 0;
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fDetectorVplusHistograms;
     DetectorDataContainer fDetectorOffsetHistograms;

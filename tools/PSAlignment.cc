@@ -235,9 +235,9 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                                 for(auto& st: stubs)
                                 {
                                     if((2 * cCol) == st.getPosition() and (cRow - 1) == st.getRow()) MatchNStubtot += 1; // Match row and column
-                                     std::cout << "getPosition "<<+st.getPosition()<< std::endl;
-                                     std::cout << "getBend "<<+st.getBend()<< std::endl;
-                                     std::cout << "getRow " <<+st.getRow()<<std::endl;
+                                    std::cout << "getPosition " << +st.getPosition() << std::endl;
+                                    std::cout << "getBend " << +st.getBend() << std::endl;
+                                    std::cout << "getRow " << +st.getRow() << std::endl;
                                 }
                             }
                         }
@@ -409,7 +409,7 @@ bool PSAlignment::Align()
         fBeBoardInterface->ChipReSync(cBoard);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
 
-        //cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
+        // cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
 
         cStubAligned = cStubAligned && this->AlignStubInputs(cBoard);
 

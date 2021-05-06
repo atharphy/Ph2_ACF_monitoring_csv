@@ -25,18 +25,14 @@ class Physics2SHistograms : public DQMHistogramBase
 
     // void fillData(const DetectorDataContainer& DataContainer);
     void fillOccupancy(const DetectorDataContainer& DataContainer);
-    void fillStub     (const DetectorDataContainer& DataContainer);
+    void fillStub(const DetectorDataContainer& DataContainer);
 
   private:
     DetectorDataContainer fDetectorData;
 
-
-    DetectorDataContainer fTopSensorHistogramContainer   ;
+    DetectorDataContainer fTopSensorHistogramContainer;
     DetectorDataContainer fBottomSensorHistogramContainer;
-    DetectorDataContainer fStubHistogramContainer        ;
-
-
-
+    DetectorDataContainer fStubHistogramContainer;
 };
 
 #endif

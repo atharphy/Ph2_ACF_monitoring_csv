@@ -45,34 +45,33 @@ class Physics2S : public Tool
     void fillDataContainer(BoardContainer* cBoard, const std::vector<Ph2_HwInterface::Event*> eventList);
 
   private:
-    DetectorDataContainer f2SDataContainer;
-    DetectorDataContainer fStubContainer     ;
+    // DetectorDataContainer f2SDataContainer;
+    DetectorDataContainer fStubContainer;
     DetectorDataContainer fOccupancyContainer;
 
-    void initHisto();
-    void fillHisto();
-    void display();
-    void chipErrorReport();
+    void         initHisto();
+    void         fillHisto();
+    void         display();
+    void         chipErrorReport();
     unsigned int getDataFromBoards();
-    void clearContainers(BoardContainer* theBoard);
+    void         clearContainers(BoardContainer* theBoard);
 
     // ########
     // # ROOT #
     // ########
 #ifdef __USE_ROOT__
     Physics2SHistograms histos;
-    TApplication*        myApp;
+    TApplication*       myApp;
 #endif
 
   protected:
-    std::string fileRes;
-    std::string fileReg;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveRawData;
-    bool        doLocal;
+    std::string  fileRes;
+    std::string  fileReg;
+    bool         doUpdateChip;
+    bool         doDisplay;
+    bool         saveRawData;
+    bool         doLocal;
     unsigned int fTotalDataSize = 0;
-
 };
 
 #endif

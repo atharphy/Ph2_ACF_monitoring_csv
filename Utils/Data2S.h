@@ -13,21 +13,17 @@
 #define __DATA2S_H__
 
 #include "../Utils/Container.h"
-#include <iostream>
-#include <math.h>
 #include "../Utils/Event.h"
 #include "../Utils/GenericDataArray.h"
-
+#include <iostream>
+#include <math.h>
 
 template <size_t ClusterSize, size_t StubSize>
 class Data2S //: public streammable
 {
   public:
-
-    GenericDataArray<ClusterSize, Ph2_HwInterface::Cluster> fClusters   ;
-    GenericDataArray<StubSize   , Ph2_HwInterface::Stub>     fStubs     ;
+    GenericDataArray<ClusterSize, Ph2_HwInterface::Cluster> fClusters;
+    GenericDataArray<StubSize, Ph2_HwInterface::Stub>       fStubs;
 };
 
-
 #endif
-

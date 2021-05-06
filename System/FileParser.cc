@@ -138,14 +138,14 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     else
     {
         cEventTypeString = cEventTypeAttribute.value();
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
-        //std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
+        // std::cout << cEventTypeString << std::endl;
         if(cEventTypeString == "ZS")
             cBeBoard->setEventType(EventType::ZS);
         else if(cEventTypeString == "SSAAS")

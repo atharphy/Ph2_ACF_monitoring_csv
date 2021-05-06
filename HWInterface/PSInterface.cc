@@ -144,10 +144,7 @@ void PSInterface::Pix_Set_enable(ReadoutChip* pPS,
 
 void PSInterface::Set_calibration(Chip* pPS, uint32_t cal)
 {
-    if(pPS->getFrontEndType() == FrontEndType::MPA) 
-	{ 
-		return theMPAInterface->Set_calibration(pPS, cal); 
-	}
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->Set_calibration(pPS, cal); }
     else if(pPS->getFrontEndType() == FrontEndType::SSA)
     {
         return theSSAInterface->Set_calibration(pPS, cal);
@@ -190,21 +187,18 @@ bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop
     return false;
 }
 
-
 void PSInterface::readAllBias(ReadoutChip* pPS)
 {
-    if(pPS->getFrontEndType() == FrontEndType::MPA) {theMPAInterface->readAllBias(pPS); }
- 
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->readAllBias(pPS); }
 }
-
 
 //
 std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode) { return theMPAInterface->decodeBendCode(pChip, pBendCode); }
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections,pPattern); }
-    // add SSA here 
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
+    // add SSA here
     // if( pChip->getFrontEndType() == FrontEndType::SSA )
     // {
     //     theSSAInterface->WriteChipReg(pChip, "ENFLAGS_ALL", 0x0);
@@ -214,7 +208,7 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     //     {
     //         theSSAInterface->WriteChipReg(pChip, "ENFLAGS_S" + std::to_string(cInj.fRow), 0x9);
     //     }
-                        
+
     // }
 }
 

@@ -115,12 +115,12 @@ class MPAInterface : public ReadoutChipInterface
     void                  Activate_pp(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void                  Activate_ss(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win = 8);
-    void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-    void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-    void Disable_pixel(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-    void Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Disable_pixel(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-	void 				  readAllBias(Ph2_HwDescription::Chip* pMPA);
+    void readAllBias(Ph2_HwDescription::Chip* pMPA);
     void ReadASEvent(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void Pix_Smode(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p, std::string smode);
     void Enable_pix_BRcal(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p, std::string polarity = "rise", std::string smode = "edge");
@@ -165,19 +165,18 @@ class MPAInterface : public ReadoutChipInterface
     uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
 
   private:
-
     std::map<uint16_t, std::string> fMap;
-    D19clpGBTInterface*       flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
-    bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
-    bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
-    bool     WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
-    uint16_t ReadReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, bool pVerifLoop = true);
-    bool     maskPixel(Ph2_HwDescription::Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerifLoop);
-    bool     maskRowCol(Ph2_HwDescription::Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerifLoop);
-    uint16_t regPixel(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow, int pColumn);
-    uint16_t regPeri(Ph2_HwDescription::Chip* pChip, int pBaseRegister);
-    uint16_t regRow(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow);
+    D19clpGBTInterface*             flpGBTInterface = nullptr;
+    Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
+    bool                            WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
+    bool                            WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
+    bool                            WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
+    uint16_t                        ReadReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, bool pVerifLoop = true);
+    bool                            maskPixel(Ph2_HwDescription::Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerifLoop);
+    bool                            maskRowCol(Ph2_HwDescription::Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerifLoop);
+    uint16_t                        regPixel(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow, int pColumn);
+    uint16_t                        regPeri(Ph2_HwDescription::Chip* pChip, int pBaseRegister);
+    uint16_t                        regRow(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow);
 };
 } // namespace Ph2_HwInterface
 

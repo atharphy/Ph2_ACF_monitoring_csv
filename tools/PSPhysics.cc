@@ -8,12 +8,12 @@
 */
 
 #include "PSPhysics.h"
-#include "BackEndAlignment.h"
-#include "PSAlignment.h"
-#include "CicFEAlignment.h"
+#include "../Utils/GenericDataArray.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/PSSync.h"
-#include "../Utils/GenericDataArray.h"
+#include "BackEndAlignment.h"
+#include "CicFEAlignment.h"
+#include "PSAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -39,7 +39,7 @@ void PSPhysics::ConfigureCalibration()
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
 
-    //cPSAlignment.Align();
+    // cPSAlignment.Align();
     // cPSAlignment.Reset();
 
     if(!cAligned)
@@ -48,7 +48,7 @@ void PSPhysics::ConfigureCalibration()
         exit(1);
     }
 
-    for(auto board : *fDetectorContainer)
+    for(auto board: *fDetectorContainer)
     {
         for(auto opticalGroup: *board)
         {
@@ -78,7 +78,6 @@ void PSPhysics::ConfigureCalibration()
 
     // SystemController::Configure("settings/PS_HalfModule.xml");
 
-
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -92,7 +91,7 @@ void PSPhysics::ConfigureCalibration()
     // ContainerFactory::copyAndInitStructure<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>(*fDetectorContainer, fPSSyncContainer);
 
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fOccupancyContainer);
-    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer     );
+    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
     fChannelGroupHandler = new MPAChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(120, 16);
@@ -111,7 +110,7 @@ void PSPhysics::Running()
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
-    
+
     SystemController::Start(fRunNumber);
 
     PSPhysics::run();
@@ -124,16 +123,15 @@ void PSPhysics::Running()
 //     if(fStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fNetworkStreamer); }
 // }
 
-
 void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccupancyStream = prepareChannelContainerStreamer<float>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub"     );
+    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
 
-    if(fStreamerEnabled == true) 
-    { 
-        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer); 
-        theStubStream     .streamAndSendBoard(fStubContainer     .at(cBoard->getIndex()), fNetworkStreamer); 
+    if(fStreamerEnabled == true)
+    {
+        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fNetworkStreamer);
     }
 }
 
@@ -143,7 +141,7 @@ void PSPhysics::Stop()
 
     Tool::Stop();
 
-    fTotalDataSize+=getDataFromBoards();
+    fTotalDataSize += getDataFromBoards();
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << fTotalDataSize << RESET;
 
@@ -207,12 +205,10 @@ void PSPhysics::run()
 
     while(fKeepRunning)
     {
-        
-        fTotalDataSize+=getDataFromBoards();
+        fTotalDataSize += getDataFromBoards();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
-
 }
 
 void PSPhysics::draw()
@@ -239,7 +235,7 @@ void PSPhysics::fillHisto()
 #ifdef __USE_ROOT__
     // histos.fillSync(fPSSyncContainer);
     histos.fillOccupancy(fOccupancyContainer);
-    histos.fillStub     (fStubContainer);
+    histos.fillStub(fStubContainer);
 #endif
 }
 
@@ -276,7 +272,8 @@ void PSPhysics::display()
 //                 // std::cout<<"Strip cluster centers = ";
 //                 // for(size_t pos = 0; pos<MAX_NUMBER_OF_STRIP_CLUSTERS; ++pos) std::cout << +curPSSync.fSClusters[pos].fAddress << " ";
 //                 // std::cout<<std::endl;
-//                 curPSSync.fStubs     = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_PS , Stub    >(static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(), cChip->getId()));
+//                 curPSSync.fStubs     = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_PS , Stub    >(static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(),
+//                 cChip->getId()));
 //                 // std::cout<<"Stub cluster centers = ";
 //                 // for(size_t pos = 0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos) std::cout << +curPSSync.fStubs[pos].getPosition() << " ";
 //                 // std::cout<<std::endl;
@@ -286,14 +283,13 @@ void PSPhysics::display()
 //                 //     std::cout<< "Stub = " << curPSSync.fStubs[pos].getPosition(),curPSSync.fStubs[pos].getRow()) << std::endl;
 //                 // }
 
-//                 if(psClusterVector.size()>0 && psClusterVector[0].fAddress != 255) std::cout<< "PixelCluster = " << +curPSSync.fPClusters[0].fAddress << " it should have been " << +psClusterVector[0].fAddress << std::endl;
+//                 if(psClusterVector.size()>0 && psClusterVector[0].fAddress != 255) std::cout<< "PixelCluster = " << +curPSSync.fPClusters[0].fAddress << " it should have been " <<
+//                 +psClusterVector[0].fAddress << std::endl;
 //             }
 //         }
 //     }
 
 // }
-
-
 
 void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vector<Event*> eventList)
 {
@@ -301,7 +297,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
     clearContainers(cBoard);
     // std::cout<<__LINE__<<std::endl;
 
-    for(auto event : eventList)
+    for(auto event: eventList)
     {
         // ###################
         // # Fill containers #
@@ -312,7 +308,6 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
             {
                 for(const auto cChip: *cHybrid)
                 {
-
                     // std::cout<<__LINE__<<std::endl;
                     auto currentChip = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
                     if(currentChip->getFrontEndType() != FrontEndType::MPA) continue;
@@ -320,55 +315,52 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     // std::cout<<__LINE__<<std::endl;
                     std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                     std::vector<SCluster> stripClusterList = static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                    std::vector<Stub    > stubList         = static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(), cChip->getId());
+                    std::vector<Stub>     stubList         = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
 
                     // std::cout<<__LINE__<<std::endl;
-                    for(auto & pixelCluster : pixelClusterList)
+                    for(auto& pixelCluster: pixelClusterList)
                     {
-                        for(int subPixel=0; subPixel<(pixelCluster.fWidth-1); ++subPixel)
-                        {
-                            ++cChip->getChannel<float>(pixelCluster.fZpos,pixelCluster.fAddress+subPixel);
-                        }
+                        for(int subPixel = 0; subPixel < (pixelCluster.fWidth - 1); ++subPixel) { ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel); }
                     }
 
                     // std::cout<<__LINE__<<std::endl;
-                    ChipDataContainer *theStubChipContainer = fStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    ChipDataContainer* theStubChipContainer = fStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
                     // std::cout<<__LINE__<<std::endl;
-                    for(auto & stub : stubList)
+                    for(auto& stub: stubList)
                     {
                         // std::cout<<"stub.getRow()            = "<<+stub.getRow()           <<std::endl;
                         // std::cout<<"stub.getCenter()         = "<<stub.getCenter()         <<std::endl;
                         // std::cout<<"size_t(stub.getCenter()) = "<<size_t(stub.getCenter())<<std::endl;
                         // std::cout<<"stub.getPosition()       = "<<+stub.getPosition()     <<std::endl;
-                    // std::cout<<__LINE__<<std::endl;
-                        if(ceil(stub.getCenter()) !=  stub.getCenter())
+                        // std::cout<<__LINE__<<std::endl;
+                        if(ceil(stub.getCenter()) != stub.getCenter())
                         {
-                    // std::cout<<__LINE__<<std::endl;
-                            if(size_t(ceil (stub.getCenter()))<120u) theStubChipContainer->getChannel<float>(stub.getRow(),size_t(ceil(stub.getCenter())))  += 0.5;
-                    // std::cout<<__LINE__<<std::endl;
-                            if(size_t(floor(stub.getCenter()))<120u) theStubChipContainer->getChannel<float>(stub.getRow(),size_t(floor(stub.getCenter()))) += 0.5;
-                    // std::cout<<__LINE__<<std::endl;
+                            // std::cout<<__LINE__<<std::endl;
+                            if(size_t(ceil(stub.getCenter())) < 120u) theStubChipContainer->getChannel<float>(stub.getRow(), size_t(ceil(stub.getCenter()))) += 0.5;
+                            // std::cout<<__LINE__<<std::endl;
+                            if(size_t(floor(stub.getCenter())) < 120u) theStubChipContainer->getChannel<float>(stub.getRow(), size_t(floor(stub.getCenter()))) += 0.5;
+                            // std::cout<<__LINE__<<std::endl;
                         }
                         else
                         {
-                    // std::cout<<__LINE__<<std::endl;
+                            // std::cout<<__LINE__<<std::endl;
 
-                            if(stub.getPosition()<120u) ++theStubChipContainer->getChannel<float>(stub.getRow(),size_t(stub.getCenter()));
-                    // std::cout<<__LINE__<<std::endl;
+                            if(stub.getPosition() < 120u) ++theStubChipContainer->getChannel<float>(stub.getRow(), size_t(stub.getCenter()));
+                            // std::cout<<__LINE__<<std::endl;
                         }
-                    // std::cout<<__LINE__<<std::endl;
+                        // std::cout<<__LINE__<<std::endl;
                     }
 
                     // std::cout<<__LINE__<<std::endl;
 
-                    if(currentChip->getId() == 3) continue; //patch for bug in the FEH I2C address 
+                    if(currentChip->getId() == 3) continue; // patch for bug in the FEH I2C address
 
                     // std::cout<<__LINE__<<std::endl;
                     uint16_t theCorrespondingSSAIndex = 9999;
-                    for(auto theCorrespondingSSA : *fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))
+                    for(auto theCorrespondingSSA: *fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))
                     {
                         if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA) continue;
-                        if(theCorrespondingSSA->getId() == currentChip->getId()) 
+                        if(theCorrespondingSSA->getId() == currentChip->getId())
                         {
                             theCorrespondingSSAIndex = theCorrespondingSSA->getIndex();
                             break;
@@ -379,15 +371,11 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     ChipDataContainer* theSSAContainer = cHybrid->at(theCorrespondingSSAIndex);
 
-                    for(auto & stripCluster : stripClusterList)
+                    for(auto& stripCluster: stripClusterList)
                     {
-                        for(int subStrip=0; subStrip<(stripCluster.fWidth-1); ++subStrip)
-                        {
-                            ++theSSAContainer->getChannel<float>(stripCluster.fAddress+subStrip);
-                        }
+                        for(int subStrip = 0; subStrip < (stripCluster.fWidth - 1); ++subStrip) { ++theSSAContainer->getChannel<float>(stripCluster.fAddress + subStrip); }
                     }
                     // std::cout<<__LINE__<<std::endl;
-
                 }
             }
         }
@@ -398,7 +386,6 @@ void PSPhysics::chipErrorReport() {}
 
 void PSPhysics::clearContainers(BoardContainer* theBoard)
 {
-
     // ####################
     // # Clear containers #
     // ####################
@@ -408,7 +395,7 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
         {
             for(const auto cChip: *cHybrid)
             {
-                for(auto &cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
+                for(auto& cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
             }
         }
     }
@@ -419,11 +406,8 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
         {
             for(const auto cChip: *cHybrid)
             {
-                for(auto &cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
+                for(auto& cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
             }
         }
     }
 }
-
-
-

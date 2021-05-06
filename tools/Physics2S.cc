@@ -8,10 +8,10 @@
 */
 
 #include "Physics2S.h"
-#include "../Utils/Occupancy.h"
+#include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/Data2S.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -28,7 +28,9 @@ void Physics2S::ConfigureCalibration()
     // # Initialize directory and data container #
     // ###########################################
     this->CreateResultDirectory(RESULTDIR, false, false);
-    ContainerFactory::copyAndInitStructure<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>(*fDetectorContainer, f2SDataContainer);
+
+    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fOccupancyContainer);
+    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
     fChannelGroupHandler = new CBCChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(120, 16);
@@ -55,12 +57,12 @@ void Physics2S::Running()
 void Physics2S::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccupancyStream = prepareChannelContainerStreamer<float>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub"     );
+    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
 
-    if(fStreamerEnabled == true) 
-    { 
-        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer); 
-        theStubStream     .streamAndSendBoard(fStubContainer     .at(cBoard->getIndex()), fNetworkStreamer); 
+    if(fStreamerEnabled == true)
+    {
+        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fNetworkStreamer);
     }
 }
 
@@ -70,7 +72,7 @@ void Physics2S::Stop()
 
     Tool::Stop();
 
-    fTotalDataSize+=getDataFromBoards();
+    fTotalDataSize += getDataFromBoards();
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << fTotalDataSize << RESET;
 
@@ -113,8 +115,8 @@ unsigned int Physics2S::getDataFromBoards()
         if(dataSize != 0)
         {
             const std::vector<Event*>& events = SystemController::GetEvents();
-            PSPhysics::fillDataContainer(cBoard, events);
-            PSPhysics::sendBoardData(cBoard);
+            fillDataContainer(cBoard, events);
+            sendBoardData(cBoard);
         }
     }
     return dataSize;
@@ -126,7 +128,7 @@ void Physics2S::run()
 
     while(fKeepRunning)
     {
-        ffTotalDataSize+=getDataFromBoards();
+        fTotalDataSize += getDataFromBoards();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
@@ -168,13 +170,12 @@ void Physics2S::display()
 // void Physics2S::fillDataContainer(BoardContainer* const& cBoard)
 // {
 
-
 //     // ###################
 //     // # Fill containers #
 //     // ###################
 //     const std::vector<Event*>& events = SystemController::GetEvents();
-//     for(const auto& event: events) 
-// 	{ 
+//     for(const auto& event: events)
+// 	{
 // 		for(const auto cOpticalGroup: *f2SDataContainer.at(cBoard->getIndex()))
 // 		{
 // 		    for(const auto cHybrid: *cOpticalGroup)
@@ -196,15 +197,13 @@ void Physics2S::display()
 
 void Physics2S::chipErrorReport() {}
 
-
-
 void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Event*> eventList)
 {
     // std::cout<<__LINE__<<std::endl;
     clearContainers(cBoard);
     // std::cout<<__LINE__<<std::endl;
 
-    for(auto event : eventList)
+    for(auto event: eventList)
     {
         event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup());
         // ###################
@@ -216,41 +215,37 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
             {
                 for(const auto cChip: *cHybrid)
                 {
+                    std::vector<Stub> stubList = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
 
-                    std::vector<Stub   > stubList    = static_cast<D19cCic2Event*>(event)->StubVector (cHybrid->getId(), cChip->getId());
-
-                    for(auto & stub : stubList)
+                    for(auto& stub: stubList)
                     {
-                    // std::cout<<__LINE__<<std::endl;
-                        if(ceil(stub.getCenter()) !=  stub.getCenter())
+                        // std::cout<<__LINE__<<std::endl;
+                        if(ceil(stub.getCenter()) != stub.getCenter())
                         {
-                    // std::cout<<__LINE__<<std::endl;
-                            if(size_t(ceil (stub.getCenter()))<254u) theStubChipContainer->getChannel<float>(stub.getRow(),size_t(ceil(stub.getCenter())))  += 0.5;
-                    // std::cout<<__LINE__<<std::endl;
-                            if(size_t(floor(stub.getCenter()))<254u) theStubChipContainer->getChannel<float>(stub.getRow(),size_t(floor(stub.getCenter()))) += 0.5;
-                    // std::cout<<__LINE__<<std::endl;
+                            // std::cout<<__LINE__<<std::endl;
+                            if(size_t(ceil(stub.getCenter())) < 254u) cChip->getChannel<float>(stub.getRow(), size_t(ceil(stub.getCenter()))) += 0.5;
+                            // std::cout<<__LINE__<<std::endl;
+                            if(size_t(floor(stub.getCenter())) < 254u) cChip->getChannel<float>(stub.getRow(), size_t(floor(stub.getCenter()))) += 0.5;
+                            // std::cout<<__LINE__<<std::endl;
                         }
                         else
                         {
-                    // std::cout<<__LINE__<<std::endl;
-                            if(stub.getPosition()<254u) ++cChip->getChannel<float>(stub.getRow(),size_t(stub.getCenter()));
-                    // std::cout<<__LINE__<<std::endl;
+                            // std::cout<<__LINE__<<std::endl;
+                            if(stub.getPosition() < 254u) ++cChip->getChannel<float>(stub.getRow(), size_t(stub.getCenter()));
+                            // std::cout<<__LINE__<<std::endl;
                         }
-                    // std::cout<<__LINE__<<std::endl;
+                        // std::cout<<__LINE__<<std::endl;
                     }
 
                     // std::cout<<__LINE__<<std::endl;
-
                 }
             }
         }
     }
 }
 
-
 void Physics2S::clearContainers(BoardContainer* theBoard)
 {
-
     // ####################
     // # Clear containers #
     // ####################
@@ -260,7 +255,7 @@ void Physics2S::clearContainers(BoardContainer* theBoard)
         {
             for(const auto cChip: *cHybrid)
             {
-                for(auto &cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
+                for(auto& cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
             }
         }
     }
@@ -271,9 +266,8 @@ void Physics2S::clearContainers(BoardContainer* theBoard)
         {
             for(const auto cChip: *cHybrid)
             {
-                for(auto &cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
+                for(auto& cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
             }
         }
     }
 }
-

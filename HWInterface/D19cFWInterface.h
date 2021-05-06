@@ -89,7 +89,6 @@ class D19cFpgaConfig;
 class D19cSSAEvent;
 class D19clpGBTInterface;
 
-
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -138,7 +137,6 @@ class D19cFWInterface : public BeBoardFWInterface
     int fResetAttempts;
 
     D19clpGBTInterface* fLocalLpGBTInterface;
-
 
   public:
     /*!
@@ -272,11 +270,10 @@ class D19cFWInterface : public BeBoardFWInterface
     void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
     uint32_t getStubOffset() { return fStubOffset; };
     uint8_t  getI2Cstatus() { return fI2Cstatus; }
-    void                       LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface);
+    void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface);
 
-
-private:
-    bool     fReTryCPB            = true; 
+  private:
+    bool     fReTryCPB            = true;
     uint8_t  fI2Cstatus           = 0x00;
     uint8_t  fFastCommandDuration = 0;
     uint32_t fReadoutAttempts     = 0;
@@ -364,7 +361,6 @@ private:
 
     void ReadErrors();
 
-
   public:
     void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
     ///////////////////////////////////////////////////////
@@ -403,7 +399,7 @@ private:
     void ChipTrigger();
     void Trigger(uint8_t pDuration = 1);
     // Readout chip specific stuff
-    void Send_pulses(uint32_t pNtriggers, bool manual=false);
+    void Send_pulses(uint32_t pNtriggers, bool manual = false);
 
     void ReadoutChipReset();
     // CIC BE stuff
@@ -765,7 +761,7 @@ private:
     // # Read/Write Optical Group #
     // ############################
     const uint8_t                   flpGBTAddress = 0x70;
-    uint8_t                   fI2CFrequency = 3; // 1 MHz
+    uint8_t                         fI2CFrequency = 3; // 1 MHz
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
@@ -782,8 +778,8 @@ private:
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override;
-    // configure I2C speed 
-    void    SetI2CFrequency(uint8_t pFrequency){fI2CFrequency=pFrequency;};
+    // configure I2C speed
+    void SetI2CFrequency(uint8_t pFrequency) { fI2CFrequency = pFrequency; };
 
     // function for I2C transactions using lpGBT I2C Masters
     bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
@@ -792,10 +788,9 @@ private:
 
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify = false) override;
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false) override;
-    // fast command generic block 
+    // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
-
 };
 } // namespace Ph2_HwInterface
 

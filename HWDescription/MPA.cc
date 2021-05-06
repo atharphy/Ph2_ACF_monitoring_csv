@@ -75,8 +75,7 @@ void MPA::loadfRegMap(const std::string& filename)
                 fRegItem.fAddress  = strtoul(fAddress_str.c_str(), 0, 16);
                 fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, 16);
                 fRegItem.fValue    = strtoul(fValue_str.c_str(), 0, 16);
-           
-               
+
                 fRegMap[fName] = fRegItem;
                 // std::cout << __PRETTY_FUNCTION__ <<fName<<"," <<fRegItem.fValue << std::endl;
                 cLineCounter++;

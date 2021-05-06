@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
     cPSAlignment.MapMPAOutputs();
     cPSAlignment.Reset();
 
-
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
     cCicAligner.Start(0);
@@ -137,36 +136,35 @@ int main(int argc, char* argv[])
             {
                 if(cMPA->getFrontEndType() == FrontEndType::MPA)
                 {
-                    MPA* theMPA = static_cast<MPA*>(cMPA);
-					uint32_t MPAen=0x37;
-					//uint32_t MPAen=0x3b;
+                    MPA*     theMPA = static_cast<MPA*>(cMPA);
+                    uint32_t MPAen  = 0x37;
+                    // uint32_t MPAen=0x3b;
 
                     gpix = theMPA->PNglobal(std::pair<uint32_t, uint32_t>(row, col));
                     thePSInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
                     thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+1), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+2), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+3), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+4), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+5), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+6), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+7), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+8), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+9), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+10), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+11), MPAen);
-                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix+12), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 1), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 2), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 3), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 4), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 5), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 6), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 7), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 8), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 9), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 10), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 11), MPAen);
+                    thePSInterface->WriteChipReg(cMPA, "ENFLAGS_P" + std::to_string(gpix + 12), MPAen);
                     thePSInterface->WriteChipReg(cMPA, "DigPattern_ALL", 0xA);
                     thePSInterface->WriteChipReg(cMPA, "TriggerLatency", truelat - 1, false);
 
                     thePSInterface->WriteChipReg(cMPA, "ClusterCut_ALL", 0x04);
                     thePSInterface->WriteChipReg(cMPA, "HipCut_ALL", 0x05);
                     thePSInterface->WriteChipReg(cMPA, "ModeSel_ALL", 0x00);
-                    //thePSInterface->WriteChipReg(cMPA, "StubWindow", 0x01);
+                    // thePSInterface->WriteChipReg(cMPA, "StubWindow", 0x01);
                 }
                 if(cMPA->getFrontEndType() == FrontEndType::SSA)
                 {
-
                     thePSInterface->WriteChipReg(cMPA, "ENFLAGS_ALL", 0x0);
                     thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col), 0x9);
                     // thePSInterface->WriteChipReg(cMPA, "ENFLAGS_S" + std::to_string(col+2), 0x9);
@@ -174,7 +172,6 @@ int main(int argc, char* argv[])
                     thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_L_ALL", 0x01);
                     thePSInterface->WriteChipReg(cMPA, "DigCalibPattern_H_ALL", 0x00);
                     thePSInterface->WriteChipReg(cMPA, "TriggerLatency", truelat - 2, false);
-
 
                     /*thePSInterface->WriteChipReg(cMPA, "ReadoutMode", 0x0);
                     thePSInterface->WriteChipReg(cMPA, "ClusterCut", 0x0);

@@ -9,6 +9,8 @@
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMInterface.h"
+#include "PSPhysicsHistograms.h"
+#include "Physics2SHistograms.h"
 #include "RD53ClockDelayHistograms.h"
 #include "RD53GainHistograms.h"
 #include "RD53GainOptimizationHistograms.h"
@@ -20,8 +22,6 @@
 #include "RD53ThrEqualizationHistograms.h"
 #include "RD53ThresholdHistograms.h"
 #include "SSAPhysicsHistograms.h"
-#include "PSPhysicsHistograms.h"
-#include "Physics2SHistograms.h"
 
 #include "TFile.h"
 

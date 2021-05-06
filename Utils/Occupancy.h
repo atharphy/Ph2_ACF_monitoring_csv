@@ -46,14 +46,11 @@ template <>
 inline void
 Occupancy::makeChannelAverage<Occupancy>(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
 {
-    for(const auto occupancy: *theChipContainer->getChannelContainer<Occupancy>()) { 
-
-fOccupancy += std::min(float(1.0),occupancy.fOccupancy); }
-//fOccupancy += occupancy.fOccupancy; }
+    for(const auto occupancy: *theChipContainer->getChannelContainer<Occupancy>()) { fOccupancy += std::min(float(1.0), occupancy.fOccupancy); }
+    // fOccupancy += occupancy.fOccupancy; }
     int numberOfEnabledChannels = cTestChannelGroup->getNumberOfEnabledChannels(chipOriginalMask);
     fOccupancy /= float(numberOfEnabledChannels);
     fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
 }
 
 #endif
-

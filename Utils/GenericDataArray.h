@@ -10,8 +10,8 @@
 #ifndef GenericDataArray_H
 #define GenericDataArray_H
 
-#include <iostream>
 #include "../Utils/ConsoleColor.h"
+#include <iostream>
 
 template <size_t size, typename T = float>
 class GenericDataArray
@@ -30,15 +30,13 @@ inline GenericDataArray<size, T> fromVectorToGenericDataArray(const std::vector<
 {
     if(theInputVector.size() > size)
     {
-        LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << " input vector size (" << theInputVector.size() << ") is greater than the array size (" << size << ")\nSome data may be lost in the conversion"; 
+        LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << " input vector size (" << theInputVector.size() << ") is greater than the array size (" << size
+                     << ")\nSome data may be lost in the conversion";
     }
     GenericDataArray<size, T> theOutputVector;
 
-    for(size_t it = 0; it < std::min(theInputVector.size(),size); ++it)
-    {
-      theOutputVector[it] = theInputVector[it];
-    }
-    
+    for(size_t it = 0; it < std::min(theInputVector.size(), size); ++it) { theOutputVector[it] = theInputVector[it]; }
+
     return theOutputVector;
 }
 

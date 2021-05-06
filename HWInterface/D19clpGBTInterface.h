@@ -18,11 +18,10 @@
 
 namespace Ph2_HwInterface
 {
-
 struct lpGBTClockConfig
 {
-    uint8_t              fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
-    uint8_t              fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
+    uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
+    uint8_t fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
 };
 
 class D19clpGBTInterface : public lpGBTInterface
@@ -53,9 +52,8 @@ class D19clpGBTInterface : public lpGBTInterface
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
 
-    void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
-    void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
-
+    void StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
+    void StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override{};
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -133,7 +131,6 @@ class D19clpGBTInterface : public lpGBTInterface
 
     bool IsPUSMDone(Ph2_HwDescription::Chip* pChip);
 
-
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
@@ -149,7 +146,6 @@ class D19clpGBTInterface : public lpGBTInterface
     uint8_t GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
     // Check if I2C Transaction is successful
     bool IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-
 
     // ###########################
     // # LpGBT Vref function #
@@ -257,55 +253,91 @@ class D19clpGBTInterface : public lpGBTInterface
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
 
     // 0 [RHS], 1 [LHS]
-    // active reset functions 
-    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable)? 0 : 1 ); }
-    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_SSA}, (pEnable)? 0 : 1 ); }
-    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0 ){ if( pSide == 0 ) ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable)? 0 : 1 ); else ConfigureGPIOLevel(pChip, {fReset_LHS_MPA}, (pEnable)? 0 : 1 ); }
+    // active reset functions
+    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable) ? 0 : 1);
+    }
+    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_SSA}, (pEnable) ? 0 : 1);
+    }
+    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_MPA}, (pEnable) ? 0 : 1);
+    }
 
     // 0 [RHS], 1 [LHS]
-    // send reset functions 
-    void resetCic(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ cicReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); cicReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
-    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ ssaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); ssaReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
-    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0){ mpaReset(pChip, 1 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod)); mpaReset(pChip, 0 , pSide); std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));}
-    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk , lpGBTClockConfig pClkCnfg)
+    // send reset functions
+    void resetCic(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
     {
-        fClkConfig.fClkFreq=pClkCnfg.fClkFreq;
-        fClkConfig.fClkInvert = pClkCnfg.fClkInvert;
-        fClkConfig.fClkDriveStr=pClkCnfg.fClkDriveStr;
-        fClkConfig.fClkInvert=pClkCnfg.fClkInvert;
-        fClkConfig.fClkPreEmphWidth=pClkCnfg.fClkPreEmphWidth;
-        fClkConfig.fClkPreEmphMode=pClkCnfg.fClkPreEmphMode;
-        fClkConfig.fClkPreEmphStr=pClkCnfg.fClkPreEmphStr;
+        cicReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        cicReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        ssaReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        ssaReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        mpaReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        mpaReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
+    {
+        fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
+        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+        fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
+        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+        fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
+        fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
+        fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
 
         std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
         std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
         WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
         WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
     }
-    void cicClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg ); }
-    void hybridClock(Ph2_HwDescription::Chip* pChip , lpGBTClockConfig pClkCnfg, uint8_t pSide = 0){ configureClockSettings(pChip, (pSide==0)? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
+    void cicClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg); }
+    void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
 
   private:
-    // default clock configuration 
-    lpGBTClockConfig fClkConfig; 
+    // default clock configuration
+    lpGBTClockConfig fClkConfig;
 
-    // reset 
-    uint8_t  fResetMinPeriod   = 100;   // ms was 100
+    // reset
+    uint8_t fResetMinPeriod = 100; // ms was 100
 
     // clocks
-    uint8_t fClock_RHS_Hybrid = 1; 
+    uint8_t fClock_RHS_Hybrid = 1;
     uint8_t fClock_LHS_Hybrid = 11;
-    uint8_t fClock_LHS_CIC = 6 ; 
-    uint8_t fClock_RHS_CIC= 26; 
+    uint8_t fClock_LHS_CIC    = 6;
+    uint8_t fClock_RHS_CIC    = 26;
 
-    // reset GPIOs 
-    uint8_t fReset_LHS_CIC = 0 ; 
-    uint8_t fReset_LHS_MPA = 1; 
-    uint8_t fReset_LHS_SSA = 3 ; 
-    // rhs 
-    uint8_t fReset_RHS_CIC = 6 ; 
-    uint8_t fReset_RHS_MPA = 9; 
-    uint8_t fReset_RHS_SSA = 12 ; 
+    // reset GPIOs
+    uint8_t fReset_LHS_CIC = 0;
+    uint8_t fReset_LHS_MPA = 1;
+    uint8_t fReset_LHS_SSA = 3;
+    // rhs
+    uint8_t fReset_RHS_CIC = 6;
+    uint8_t fReset_RHS_MPA = 9;
+    uint8_t fReset_RHS_SSA = 12;
 
     std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
                                                    {"ADC1", 1},

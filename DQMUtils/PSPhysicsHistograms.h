@@ -25,19 +25,18 @@ class PSPhysicsHistograms : public DQMHistogramBase
 
     // void fillSync(const DetectorDataContainer& DataContainer);
     void fillOccupancy(const DetectorDataContainer& DataContainer);
-    void fillStub     (const DetectorDataContainer& DataContainer);
+    void fillStub(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer fDetectorData     ;
+    DetectorDataContainer fDetectorData;
     DetectorContainer*    fDetectorContainer;
     // DetectorDataContainer fSClusterHistograms;
     // DetectorDataContainer fPClusterHistograms;
     // DetectorDataContainer fStubHistograms;
 
-    DetectorDataContainer fStubHistogramContainer     ;
+    DetectorDataContainer fStubHistogramContainer;
     DetectorDataContainer fOccupancyHistogramContainer;
     DetectorDataContainer fStripOccupancyHistogramContainer;
-
 };
 
 #endif

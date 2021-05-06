@@ -31,17 +31,16 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     // Load register map from configuration file
     if(!fUseOpticalLink)
     {
-      ChipRegMap clpGBTRegMap = pChip->getRegMap();
-      for(const auto& cRegItem: clpGBTRegMap)
-      {
-        if(cRegItem.second.fAddress < 0x13c)
+        ChipRegMap clpGBTRegMap = pChip->getRegMap();
+        for(const auto& cRegItem: clpGBTRegMap)
+        {
+            if(cRegItem.second.fAddress < 0x13c)
             {
                 LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec
                           << "]" << RESET;
                 WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
             }
-        
-      }
+        }
     }
     PrintChipMode(pChip);
     SetPUSMDone(pChip, true, true);
@@ -58,7 +57,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 #elif __SEH_USB__
     Configure2SSEH(pChip);
 #endif
-ConfigurePSROH(pChip);
+    ConfigurePSROH(pChip);
     return true;
 }
 
@@ -285,10 +284,9 @@ void D19clpGBTInterface::ConfigureDPPattern(Ph2_HwDescription::Chip* pChip, uint
 }
 bool D19clpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
 {
-    uint8_t cVal = pEnable << 7 | (pCorrection&0x3F);
-    bool cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
-    LOG (DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex 
-        << +cVal << std::dec << RESET;
+    uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
+    bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
+    LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     return cSuccess;
 }
@@ -402,7 +400,6 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
         else if(cGroup == 6)
             cTrainRxReg = "EPRXTrain32";
 
-
         // Starting or Stopping training
         if(pTrain)
             WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
@@ -494,7 +491,6 @@ uint8_t D19clpGBTInterface::GetPUSMStatus(Ph2_HwDescription::Chip* pChip)
     LOG(INFO) << BOLDBLUE << "lpGBT PUSM Status : " << ((cPUSMStatus == 18) ? BOLDGREEN : BOLDRED) << fPUSMStatusMap[cPUSMStatus] << RESET;
     return cPUSMStatus;
 }
-
 
 bool D19clpGBTInterface::IsPUSMDone(Ph2_HwDescription::Chip* pChip) { return GetPUSMStatus(pChip) == 18; }
 
@@ -708,13 +704,12 @@ uint16_t D19clpGBTInterface::ReadADC(Ph2_HwDescription::Chip* pChip, const std::
     ConfigureADC(pChip, pGain, true, false);
     // Enable Internal VREF
 
-
-    //this->ConfigureVref(pChip, 1, 0);
-    //WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+    // this->ConfigureVref(pChip, 1, 0);
+    // WriteChipReg(pChip, "VREFCNTR", 1 << 7);
     uint8_t cCurrVREFCNTR = ReadChipReg(pChip, "VREFCNTR");
-	//LOG(INFO) << BOLDBLUE << "cCurrVREFCNTR " <<+cCurrVREFCNTR<< RESET;
-	//LOG(INFO) << BOLDBLUE << "Writing " <<+cCurrVREFCNTR<< RESET;
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7|cCurrVREFCNTR);
+    // LOG(INFO) << BOLDBLUE << "cCurrVREFCNTR " <<+cCurrVREFCNTR<< RESET;
+    // LOG(INFO) << BOLDBLUE << "Writing " <<+cCurrVREFCNTR<< RESET;
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | cCurrVREFCNTR);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -818,7 +813,6 @@ bool D19clpGBTInterface::ReadGPIO(Ph2_HwDescription::Chip* pChip, const uint8_t&
     uint8_t cPIOInL = ReadChipReg(pChip, "PIOInL");
     return ((cPIOInH << 8 | cPIOInL) >> pGPIO) & 1;
 }
-
 
 /*---------------------------------*/
 /* Bit Error Rate Tester functions */
@@ -1045,19 +1039,19 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureHighSpeedPolarity(pChip, 1, 0);
     // Clocks
 
-    //std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid , fClock_LHS_Hybrid , fClock_RHS_CIC, fClock_LHS_CIC };
-    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
-    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    // disable all clocks 
-    // by setting frequency to 0 
-    cClkFreq = 0 ;
-    // and by setting drive strength to 0 
-    cClkDriveStr = 0 ;
-    // CIC 
-    ConfigureClocks(pChip, {fClock_RHS_CIC, fClock_LHS_CIC }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+    // std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid , fClock_LHS_Hybrid , fClock_RHS_CIC, fClock_LHS_CIC };
+    uint8_t cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
+    uint8_t cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
+    // disable all clocks
+    // by setting frequency to 0
+    cClkFreq = 0;
+    // and by setting drive strength to 0
+    cClkDriveStr = 0;
+    // CIC
+    ConfigureClocks(pChip, {fClock_RHS_CIC, fClock_LHS_CIC}, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // SSA
-    ConfigureClocks(pChip, {fClock_RHS_Hybrid , fClock_LHS_Hybrid }, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
-    
+    ConfigureClocks(pChip, {fClock_RHS_Hybrid, fClock_LHS_Hybrid}, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
     uint8_t              cTxDataRate = 3, cTxDriveStr = 4, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
@@ -1076,8 +1070,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 13;
-    // 320 
-    //uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    // 320
+    // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -1097,12 +1091,12 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
             ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    // configure phase shifter 
+    // configure phase shifter
     uint16_t cDelay = 0x00;
-    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5; // 4 --> 320 MHz || 5 --> 640 MHz
+    uint8_t  cFreq  = (cChipRate == 5) ? 4 : 5; // 4 --> 320 MHz || 5 --> 640 MHz
     ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDelay);
-    //PhaseAlignRx(pChip, cRxGroups, cRxChannels);
-    cRxTrackMode=0;
+    // PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Turn off PRBS for channels 0,2
     ConfigureRxPRBS(pChip, cRxGroups, cRxChannels, false);
@@ -1116,99 +1110,71 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cResetPinsLHS{fReset_LHS_SSA, fReset_LHS_MPA, fReset_LHS_CIC};
     //
     ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
-    //ConfigureGPIODriverStrength(pChip, cResetPinsRHS , 0x1);
+    // ConfigureGPIODriverStrength(pChip, cResetPinsRHS , 0x1);
     //
     ConfigureGPIODirection(pChip, cResetPinsLHS, 1);
-    //ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x1);
-    
+    // ConfigureGPIODriverStrength(pChip, cResetPinsLHS , 0x1);
+
     // test GPIO
     {
-        uint8_t cEnable=1;
-        uint8_t cUpDown=1;
+        uint8_t cEnable = 1;
+        uint8_t cUpDown = 1;
         ConfigureGPIODirection(pChip, cResetPinsRHS, 0);
         ConfigureGPIOPull(pChip, cResetPinsRHS, cEnable, cUpDown);
 
         ConfigureGPIODirection(pChip, cResetPinsLHS, 0);
         ConfigureGPIOPull(pChip, cResetPinsLHS, cEnable, cUpDown);
 
-        uint8_t cReadIOstateH = this->ReadChipReg(pChip,"PIOInH");
-        uint8_t cReadIOstateL = this->ReadChipReg(pChip,"PIOInL");
+        uint8_t cReadIOstateH = this->ReadChipReg(pChip, "PIOInH");
+        uint8_t cReadIOstateL = this->ReadChipReg(pChip, "PIOInL");
         // check RHS
-        for(auto cResetPin : cResetPinsRHS )
+        for(auto cResetPin: cResetPinsRHS)
         {
-            if( cResetPin < 8 )
+            if(cResetPin < 8)
             {
                 uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
-                if( cVal == 0 ) 
-                {
-                    LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
-                        << std::hex << (+cReadIOstateL)  << std::dec
-                        << " - " << +cVal << RESET;
-                }
+                if(cVal == 0) { LOG(INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" << std::hex << (+cReadIOstateL) << std::dec << " - " << +cVal << RESET; }
                 else
                 {
-                    LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x" 
-                        << std::hex << (+cReadIOstateL)  << std::dec
-                        << " - " << +cVal << RESET;
-                }   
+                    LOG(INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x" << std::hex << (+cReadIOstateL) << std::dec << " - " << +cVal << RESET;
+                }
             }
             else
             {
                 uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
-                if( cVal == 0 ) 
-                {
-                    LOG (INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" 
-                        << std::hex << (+cReadIOstateH)  << std::dec
-                        << " - " << +cVal << RESET;
-                }
+                if(cVal == 0) { LOG(INFO) << BOLDGREEN << "RHS RST pin " << +cResetPin << " connected - IO state L 0x" << std::hex << (+cReadIOstateH) << std::dec << " - " << +cVal << RESET; }
                 else
                 {
-                    LOG (INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x"  
-                        << std::hex << (+cReadIOstateH)  << std::dec
-                        << " - " << +cVal << RESET;
+                    LOG(INFO) << BOLDRED << "RHS RST pin " << +cResetPin << "  not connected - IO state L 0x" << std::hex << (+cReadIOstateH) << std::dec << " - " << +cVal << RESET;
                 }
             }
         }
-        // check LHS 
-        for(auto cResetPin : cResetPinsLHS )
+        // check LHS
+        for(auto cResetPin: cResetPinsLHS)
         {
-            if( cResetPin < 8 )
+            if(cResetPin < 8)
             {
                 uint8_t cVal = (cReadIOstateL & (0x1 << cResetPin)) >> cResetPin;
-                if( cVal == 0 ) 
-                {
-                    LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
-                        << std::hex << (+cReadIOstateL)  << std::dec
-                        << " - " << +cVal << RESET;
-                }
+                if(cVal == 0) { LOG(INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state L 0x" << std::hex << (+cReadIOstateL) << std::dec << " - " << +cVal << RESET; }
                 else
                 {
-                    LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state L 0x" 
-                        << std::hex << (+cReadIOstateL)  << std::dec
-                        << " - " << +cVal << RESET;
-                }   
+                    LOG(INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state L 0x" << std::hex << (+cReadIOstateL) << std::dec << " - " << +cVal << RESET;
+                }
             }
             else
             {
                 uint8_t cVal = (cReadIOstateH & (0x1 << cResetPin)) >> cResetPin;
-                if( cVal == 0 ) 
-                {
-                    LOG (INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
-                        << std::hex << (+cReadIOstateH)  << std::dec
-                        << " - " << +cVal << RESET;
-                }
+                if(cVal == 0) { LOG(INFO) << BOLDGREEN << "LHS RST pin " << +cResetPin << " - IO state H 0x" << std::hex << (+cReadIOstateH) << std::dec << " - " << +cVal << RESET; }
                 else
                 {
-                    LOG (INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state H 0x" 
-                        << std::hex << (+cReadIOstateH)  << std::dec
-                        << " - " << +cVal << RESET;
+                    LOG(INFO) << BOLDRED << "LHS RST pin " << +cResetPin << " - IO state H 0x" << std::hex << (+cReadIOstateH) << std::dec << " - " << +cVal << RESET;
                 }
             }
         }
-        
+
         // set back
-        cEnable=0;
-        cUpDown=0;
+        cEnable = 0;
+        cUpDown = 0;
         ConfigureGPIOPull(pChip, cResetPinsRHS, 0, 0);
         ConfigureGPIODirection(pChip, cResetPinsRHS, 1);
         ConfigureGPIOPull(pChip, cResetPinsLHS, 0, 0);
@@ -1222,16 +1188,15 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     //     resetMPA(pChip, cSide);
     //     resetCic(pChip, cSide);
     // }
-    
-    // Keep resets active after start-up  
-    for(size_t cSide=0; cSide<2; cSide++)
+
+    // Keep resets active after start-up
+    for(size_t cSide = 0; cSide < 2; cSide++)
     {
         ssaReset(pChip, true, cSide);
         mpaReset(pChip, true, cSide);
         cicReset(pChip, true, cSide);
     }
 }
-
 
 // Preliminary
 void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)

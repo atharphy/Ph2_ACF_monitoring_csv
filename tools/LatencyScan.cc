@@ -98,34 +98,32 @@ void LatencyScan::ScanLatency()
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
     for(auto board: theLatencyContainer)
     {
-
-            for(auto opticalGroup: *board)
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
             {
-                for(auto hybrid: *opticalGroup)
+                for(auto chip: *hybrid)
                 {
-                    for(auto chip: *hybrid)
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
+                    if(theChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
-							if(theChip->getFrontEndType() == FrontEndType::SSA)
-								{
-                    			LOG(INFO) << "SSA";
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x1);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
-								}
-							if(theChip->getFrontEndType() == FrontEndType::MPA)
-								{
-                    			LOG(INFO) << "MPA";
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x7);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ModeSel_ALL", 0x0);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HipCut_ALL", 0x1);
-    							// static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "InjectedCharge", 0);
-								}
-						
-					}
-				}
-			}
+                        LOG(INFO) << "SSA";
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x1);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
+                    }
+                    if(theChip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        LOG(INFO) << "MPA";
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x7);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ModeSel_ALL", 0x0);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HipCut_ALL", 0x1);
+                        // static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "InjectedCharge", 0);
+                    }
+                }
+            }
+        }
 
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
         for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
@@ -140,13 +138,13 @@ void LatencyScan::ScanLatency()
                 const std::vector<Event*>& events = GetEvents();
                 for(auto hybrid: *opticalGroup)
                 {
-                    uint32_t cHitSum = 0;
+                    uint32_t cHitSum    = 0;
                     uint32_t cHitSumMPA = 0;
                     uint32_t cHitSumSSA = 0;
                     for(auto& cEvent: events)
                     {
                         // first, reset the hit counter - I need separate counters for each event
-                        int cHitCounter = 0;
+                        int cHitCounter    = 0;
                         int cHitCounterMPA = 0;
                         int cHitCounterSSA = 0;
                         for(auto chip: *hybrid)
@@ -154,27 +152,27 @@ void LatencyScan::ScanLatency()
                             ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                             if(theChip->getFrontEndType() == FrontEndType::MPA)
                             {
-                                cHitCounterMPA += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(),theChip->getId())).size();
-								//LOG(INFO) << "cHitCounterMPA " << cHitCounterMPA<<RESET;
+                                cHitCounterMPA += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), theChip->getId())).size();
+                                // LOG(INFO) << "cHitCounterMPA " << cHitCounterMPA<<RESET;
                             }
                             else if(theChip->getFrontEndType() == FrontEndType::SSA)
                             {
-                                cHitCounterSSA += (static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(hybrid->getId(),theChip->getId())).size();
-								//LOG(INFO) << "GetExternalTriggerId " << (static_cast<D19cCic2Event*>(cEvent)->GetExternalTriggerId())<<RESET;
+                                cHitCounterSSA += (static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(hybrid->getId(), theChip->getId())).size();
+                                // LOG(INFO) << "GetExternalTriggerId " << (static_cast<D19cCic2Event*>(cEvent)->GetExternalTriggerId())<<RESET;
                             }
                             else
                                 cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
-                        cHitSum += cHitCounter; 
-                        cHitSum += cHitCounterMPA; 
-                        // cHitSum += cHitCounterSSA; 
-						cHitSumMPA+=cHitCounterMPA;
-						cHitSumSSA+=cHitCounterSSA;
+                        cHitSum += cHitCounter;
+                        cHitSum += cHitCounterMPA;
+                        // cHitSum += cHitCounterSSA;
+                        cHitSumMPA += cHitCounterMPA;
+                        cHitSumSSA += cHitCounterSSA;
 
                     } // end event loop
 
                     LOG(INFO) << "FE: " << +hybrid->getId() << "; Latency " << +cLat << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
-                    LOG(INFO) << "cHitSumMPA:" << cHitSumMPA<<" cHitSumSSA:" << cHitSumSSA;
+                    LOG(INFO) << "cHitSumMPA:" << cHitSumMPA << " cHitSumSSA:" << cHitSumSSA;
                     hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cHitSum;
                 } // end hybrid
 
@@ -726,8 +724,6 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
                         cHitCounter += (static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(cFe->getId(), cCbc->getId())).size();
                     else
                         cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
-
-
                 }
 
                 // now I have the number of hits in this particular event for all CBCs and the TDC value
@@ -783,4 +779,3 @@ void LatencyScan::updateHists(std::string pHistName, bool pFinal)
 }
 
 #endif
-

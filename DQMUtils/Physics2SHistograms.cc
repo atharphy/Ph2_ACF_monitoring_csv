@@ -18,14 +18,13 @@ using namespace Ph2_HwDescription;
 void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
-    HistContainer<TH1F> theTopSensorOccupancyHistogram    = HistContainer<TH1F>("TopSensorOccupancy"   , "Top Sensor Occupancy"   , NCHANNELS/2, -0.5 , float(NCHANNELS/2.) - 0.5 );
-    HistContainer<TH1F> theBottomSensorOccupancyHistogram = HistContainer<TH1F>("BottomSensorOccupancy", "Bottom Sensor Occupancy", NCHANNELS/2, -0.5 , float(NCHANNELS/2.) - 0.5 );
-    HistContainer<TH1F> theStubPositionHistogram          = HistContainer<TH1F>("Stub Position"        , "Stub Position"          , NCHANNELS  , -0.25, float(NCHANNELS/2.) - 0.25);
-    
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fTopSensorHistogramContainer   , theTopSensorOccupancyHistogram   );
+    HistContainer<TH1F> theTopSensorOccupancyHistogram    = HistContainer<TH1F>("TopSensorOccupancy", "Top Sensor Occupancy", NCHANNELS / 2, -0.5, float(NCHANNELS / 2.) - 0.5);
+    HistContainer<TH1F> theBottomSensorOccupancyHistogram = HistContainer<TH1F>("BottomSensorOccupancy", "Bottom Sensor Occupancy", NCHANNELS / 2, -0.5, float(NCHANNELS / 2.) - 0.5);
+    HistContainer<TH1F> theStubPositionHistogram          = HistContainer<TH1F>("Stub Position", "Stub Position", NCHANNELS, -0.25, float(NCHANNELS / 2.) - 0.25);
+
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fTopSensorHistogramContainer, theTopSensorOccupancyHistogram);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fBottomSensorHistogramContainer, theBottomSensorOccupancyHistogram);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fStubHistogramContainer        , theStubPositionHistogram         );
-   
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fStubHistogramContainer, theStubPositionHistogram);
 }
 
 // void Physics2SHistograms::fillData(const DetectorDataContainer& DataContainer)
@@ -67,7 +66,7 @@ void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 // 						if(data2S.fClusters[pos].fSensor == 0)topClusterHistograms->Fill(data2S.fClusters[pos].getBaricentre());
 // 						else bottomClusterHistograms->Fill(data2S.fClusters[pos].getBaricentre());
 // 		            }
-                    
+
 //                 }
 //             }
 //         }
@@ -77,36 +76,29 @@ void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContainer)
 {
     for(const auto board: DataContainer)
-	{
+    {
         for(const auto opticalGroup: *board)
-		{
+        {
             for(const auto hybrid: *opticalGroup)
-			{
+            {
                 for(const auto chip: *hybrid)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
-                
-                    TH1F* topSensorHistogram = fTopSensorHistogramContainer.at(board->getIndex())
-                                                    ->at(opticalGroup->getIndex())
-                                                    ->at(hybrid->getIndex())
-                                                    ->at(chip->getIndex())
-                                                    ->getSummary<HistContainer<TH1F>>()
-                                                    .fTheHistogram;
-                    
+
+                    TH1F* topSensorHistogram =
+                        fTopSensorHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
                     TH1F* bottomSensorHistogram = fBottomSensorHistogramContainer.at(board->getIndex())
-                                                    ->at(opticalGroup->getIndex())
-                                                    ->at(hybrid->getIndex())
-                                                    ->at(chip->getIndex())
-                                                    ->getSummary<HistContainer<TH1F>>()
-                                                    .fTheHistogram;
-                    
+                                                      ->at(opticalGroup->getIndex())
+                                                      ->at(hybrid->getIndex())
+                                                      ->at(chip->getIndex())
+                                                      ->getSummary<HistContainer<TH1F>>()
+                                                      .fTheHistogram;
+
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<float>())
-                    {        
-                        if((int(channelNumber) % 2) == 0)
-                        {
-                            bottomSensorHistogram->Fill(int(channelNumber / 2) + 1, channel);
-                        }
+                    {
+                        if((int(channelNumber) % 2) == 0) { bottomSensorHistogram->Fill(int(channelNumber / 2) + 1, channel); }
                         else
                         {
                             topSensorHistogram->Fill(int(channelNumber / 2) + 1, channel);
@@ -119,29 +111,24 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
     }
 }
 
-
 void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
 {
     for(const auto board: DataContainer)
-	{
+    {
         for(const auto opticalGroup: *board)
-		{
+        {
             for(const auto hybrid: *opticalGroup)
-			{
+            {
                 for(const auto chip: *hybrid)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
-                    TH2F* stubHistogram = fStubHistogramContainer.at(board->getIndex())
-                                                    ->at(opticalGroup->getIndex())
-                                                    ->at(hybrid->getIndex())
-                                                    ->at(chip->getIndex())
-                                                    ->getSummary<HistContainer<TH2F>>()
-                                                    .fTheHistogram;
+                    TH2F* stubHistogram =
+                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<float>())
-                    {        
+                    {
                         {
                             stubHistogram->Fill(float(channelNumber / 2.), channel);
                         }
@@ -158,12 +145,12 @@ bool Physics2SHistograms::fill(std::vector<char>& dataBuffer)
     // std::cout<<__PRETTY_FUNCTION__ << "Begin of function"<<std::endl;
     // ChipContainerStream<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>> thePSEventStreamer("PSPhysics");
     ChannelContainerStream<float> theOccupancyStream("PSPhysicsOccupancy");
-    ChannelContainerStream<float> theStubStream     ("PSPhysicsStub"     );
+    ChannelContainerStream<float> theStubStream("PSPhysicsStub");
 
     if(theOccupancyStream.attachBuffer(&dataBuffer))
     {
-        std::cout<<__PRETTY_FUNCTION__ << "attached Occupancy!!!"<<std::endl;
-        theOccupancyStream.decodeChipData(fDetectorData); 
+        std::cout << __PRETTY_FUNCTION__ << "attached Occupancy!!!" << std::endl;
+        theOccupancyStream.decodeChipData(fDetectorData);
         fillOccupancy(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -171,8 +158,8 @@ bool Physics2SHistograms::fill(std::vector<char>& dataBuffer)
 
     if(theStubStream.attachBuffer(&dataBuffer))
     {
-        std::cout<<__PRETTY_FUNCTION__ << "attached Stub!!!"<<std::endl;
-        theStubStream.decodeChipData(fDetectorData); 
+        std::cout << __PRETTY_FUNCTION__ << "attached Stub!!!" << std::endl;
+        theStubStream.decodeChipData(fDetectorData);
         fillStub(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -203,8 +190,3 @@ void Physics2SHistograms::process()
         }         // for on opticalGroup - end
     }             // for on boards - end*/
 }
-
-
-
-
-

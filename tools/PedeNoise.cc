@@ -40,9 +40,9 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDisableStubLogic = pDisableStubLogic;
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
@@ -196,7 +196,8 @@ void PedeNoise::sweepSCurves()
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(false);
-        if(cWithSSA || cWithMPA) setSameGlobalDac("InjectedCharge", 0);
+        if(cWithSSA || cWithMPA)
+            setSameGlobalDac("InjectedCharge", 0);
         else
             setSameGlobalDac("TestPulsePotNodeSel", 0);
 
@@ -369,7 +370,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int cCounter = 0;
     for(auto cSign: cSigns)
     {
-		bool firstlim=false;
+        bool firstlim      = false;
         bool cLimitFound   = false;
         int  cLimitCounter = 0;
         do
@@ -402,9 +403,9 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. "
                       << "Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;
-            if(cDistanceFromTarget <= cLimit || firstlim)// || globalOccupancy>1.0)
+            if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
             {
-				firstlim=true;
+                firstlim = true;
                 LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
                            << " -- current value is " << +cLimitCounter << RESET;
                 cLimitCounter++;

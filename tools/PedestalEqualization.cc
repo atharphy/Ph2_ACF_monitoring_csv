@@ -73,15 +73,15 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
                     // if it is a CBC3, disable the stub logic for this procedure
                     if(theChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        //fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
 
                     if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        //static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
+                        // static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
 
-                        //fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
                 }
@@ -129,7 +129,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedestalEqualization::FindVplus()
 {
-
     if(fTestPulse)
     {
         this->enableTestPulse(true);
@@ -161,15 +160,15 @@ void PedestalEqualization::FindVplus()
                     // if it is a CBC3, disable the stub logic for this procedure
                     if(theChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        //fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
 
                     if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        //static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
+                        // static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
 
-                        //fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
                 }
@@ -198,11 +197,8 @@ void PedestalEqualization::FindVplus()
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
 
-    float    cMeanValue = 0.;
+    float cMeanValue = 0.;
     float nCbc       = 0;
-
-
-
 
     for(auto board: theVcthContainer) // for on boards - begin
     {
@@ -210,27 +206,27 @@ void PedestalEqualization::FindVplus()
         {
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                //nCbc += hybrid->size();
+                // nCbc += hybrid->size();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t     tmpVthr = 0;
                     if(cWithCBC) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
                     if(cWithSSA) tmpVthr = theChip->getReg("Bias_THDAC");
-                    if(cWithMPA) 
-						{
-						tmpVthr = theChip->getReg("ThDAC0");
-                    	LOG(INFO) << GREEN << "tmpVthr "<<tmpVthr<< RESET;
-						}
+                    if(cWithMPA)
+                    {
+                        tmpVthr = theChip->getReg("ThDAC0");
+                        LOG(INFO) << GREEN << "tmpVthr " << tmpVthr << RESET;
+                    }
                     chip->getSummary<uint16_t>() = tmpVthr;
 
                     LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " ROC " << +chip->getId()
                               << " = " << tmpVthr << RESET;
-					uint32_t ENCHAN=theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
-					uint32_t TOTCHAN=chip->size();
-                    LOG(INFO) << GREEN << "NCHANNELS "<< ENCHAN <<" TOTCHAN "<<TOTCHAN<< RESET;
-                	nCbc += float(ENCHAN)/float(TOTCHAN);
-                    cMeanValue += tmpVthr*(float(ENCHAN)/float(TOTCHAN));
+                    uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
+                    uint32_t TOTCHAN = chip->size();
+                    LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
+                    nCbc += float(ENCHAN) / float(TOTCHAN);
+                    cMeanValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
                 } // for on chip - end
             }     // for on hybrid - end
         }         // for on opticalGroup - end
@@ -374,4 +370,3 @@ void PedestalEqualization::Stop()
 void PedestalEqualization::Pause() {}
 
 void PedestalEqualization::Resume() {}
-

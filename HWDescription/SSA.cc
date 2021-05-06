@@ -45,7 +45,7 @@ void SSA::loadfRegMap(const std::string& filename)
     std::ifstream file(filename.c_str(), std::ios::in);
     if(file)
     {
-	LOG(INFO) << "FILE";
+        LOG(INFO) << "FILE";
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;
@@ -79,13 +79,13 @@ void SSA::loadfRegMap(const std::string& filename)
                 fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, 16);
                 fRegItem.fValue    = strtoul(fValue_str.c_str(), 0, 16);
 
-				//LOG(INFO) << "CURS " << fRegItem.fAddress - 0x0101;
+                // LOG(INFO) << "CURS " << fRegItem.fAddress - 0x0101;
                 if(fRegItem.fPage == 0x00 && fRegItem.fAddress >= 0x0101 && fRegItem.fAddress <= 0x0178)
                 { // Register is a Mask
                     if(fRegItem.fValue == 0x0)
                     {
-						//LOG(INFO) << "DISABLE " << fRegItem.fAddress - 0x0101<<std::endl;
-						fChipOriginalMask->disableChannel(fRegItem.fAddress - 0x0101); 
+                        // LOG(INFO) << "DISABLE " << fRegItem.fAddress - 0x0101<<std::endl;
+                        fChipOriginalMask->disableChannel(fRegItem.fAddress - 0x0101);
                     }
                 }
                 fRegMap[fName] = fRegItem;
