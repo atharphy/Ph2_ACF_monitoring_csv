@@ -386,7 +386,8 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
-    if(dacName == "VCth" || dacName == "Threshold")
+    std::lock_guard<std::mutex> theGuard(fMutex);
+    if(dacName == "VCth")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
         {
@@ -775,10 +776,11 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
 }
 uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {
-    // ChipRegItem cRegItem;
-    // bool        cFailed = false;
-    // bool        cRead;
-    // uint8_t     cCbcId;
+    std::lock_guard<std::mutex> theGuard(fMutex);
+    ChipRegItem cRegItem;
+    bool        cFailed = false;
+    bool        cRead;
+    uint8_t     cCbcId;
     setBoard(pCbc->getBeBoardId());
     std::vector<uint32_t> cVecReq;
     if(pRegNode == "VCth")

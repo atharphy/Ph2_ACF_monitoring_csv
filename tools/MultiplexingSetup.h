@@ -30,7 +30,7 @@ class MultiplexingSetup : public Tool
     void Power(bool pEnable = true);
     // void writeObjects();
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;

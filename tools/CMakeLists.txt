@@ -7,6 +7,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
@@ -17,6 +19,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
     # Find source files
     file(GLOB HEADERS *.h)
@@ -87,7 +91,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
     if(NoDataShipping)
-        set(LIBS ${LIBS} Ph2_DQMUtils)
+        set(LIBS ${LIBS} Ph2_DQMUtils Ph2_MonitorDQM)
     endif()
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/tools *.cc)

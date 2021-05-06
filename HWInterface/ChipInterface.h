@@ -12,6 +12,7 @@
 
 #include "BeBoardFWInterface.h"
 #include <vector>
+#include <mutex>
 
 template <typename T>
 class ChannelContainer;
@@ -31,6 +32,7 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
+    std::mutex fMutex;
     BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
     BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
     uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */

@@ -18,6 +18,7 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../HWDescription/MPA.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/SSA.h"
+#include "../NetworkUtils/TCPClient.h"
 #include "../Utils/Exception.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
@@ -64,6 +65,8 @@ class BeBoardFWInterface : public RegManager
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
 
+    void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
+
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
@@ -107,7 +110,7 @@ class BeBoardFWInterface : public RegManager
     virtual void              ProgramCdce() {}
 
     // this is temporary until the modified command processor block is in place
-    virtual void selectLink(uint8_t pLinkId, uint32_t pWait_ms = 100) {}
+    virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
     /*! \brief Get the list of available FPGA configuration (or firmware images)*/
     virtual std::vector<std::string> getFpgaConfigList() { return std::vector<std::string>(); }
@@ -116,7 +119,7 @@ class BeBoardFWInterface : public RegManager
     virtual void DeleteFpgaConfig(const std::string& strId) {}
 
     /*! \brief Run Bit Error Rate test */
-    virtual bool RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
+    virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
 
     /*!
      * \brief Encode a/several word(s) readable for a Chip
@@ -279,18 +282,15 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)       = 0;
-    virtual void     ResetOptoLink()                                                                   = 0;
-    virtual bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(uint32_t pAddress)                                           = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                    = 0;
+    virtual void     ResetOptoLink()                                                                                                                = 0;
+    virtual bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
+    virtual uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)                                                       = 0;
 
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################
     // functions for new Command Processor Block
-    virtual void                  ResetCPB()                                                                          = 0;
-    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) = 0;
-    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false)                                = 0;
     // function to read/write lpGBT registers
     virtual bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) = 0;
     virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress)                                                  = 0;
@@ -298,16 +298,15 @@ class BeBoardFWInterface : public RegManager
     virtual bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) = 0;
     virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)                       = 0;
     // function for front-end slow control
-    // virtual uint8_t GetFEPage() = 0;
-    // virtual void    SetFEPage(uint8_t pPage) = 0;
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify = false) = 0;
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false)                                                = 0;
 
   protected:
-    uint32_t fBlockSize{0};
-    uint32_t fNPackets{0};
-    uint32_t numAcq{0};
-    uint32_t nbMaxAcq{0};
+    uint32_t   fBlockSize{0};
+    uint32_t   fNPackets{0};
+    uint32_t   numAcq{0};
+    uint32_t   nbMaxAcq{0};
+    TCPClient* fPowerSupplyClient;
 
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison

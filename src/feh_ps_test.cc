@@ -116,12 +116,11 @@ int main(int argc, char* argv[])
         TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
     std::string cResultfile = "Hybrid";
-    Timer       t, T;
+    Timer       t;
 
 #ifdef __TCUSB__
 #endif
 
-    T.start();
     std::stringstream outp;
     // hybrid testing tool
     // going to use this because it also
@@ -140,12 +139,12 @@ int main(int argc, char* argv[])
     cHybridTester.CreateResultDirectory(cDirectory);
     cHybridTester.InitResultFile(cResultfile);
     // set voltage  on PS FEH
-    // cHybridTester.SetHybridVoltage();
+    cHybridTester.SetHybridVoltage();
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
-    // cHybridTester.CheckHybridVoltages();
-    // LOG(INFO) << outp.str();
+    cHybridTester.CheckHybridVoltages();
+    LOG(INFO) << outp.str();
     // select CIC readout
     // cHybridTester.SelectCIC(true);
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
@@ -283,19 +282,19 @@ int main(int argc, char* argv[])
 
         // Configure and Start DataPlayer
         // to send phase alignment pattern
-        // uint8_t cPhaseAlignmentPattern = 0x55;
-        // cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
-        // cDPInterfacer.Start(cInterface);
-        // if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
-        // else
-        //     LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+        uint8_t cPhaseAlignmentPattern = 0x55;
+        cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+        cDPInterfacer.Start(cInterface);
+        if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
+        else
+            LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
         // align CIC inputs
-        // CicFEAlignment cCicAligner;
-        // cCicAligner.Inherit(&cHybridTester);
-        // cCicAligner.PhaseAlignmentMPA(100);
-        // cDPInterfacer.Stop(cInterface);
-        // cDPInterfacer.CheckNPatterns(cInterface);
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(&cHybridTester);
+        cCicAligner.PhaseAlignmentMPA(100);
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.CheckNPatterns(cInterface);
 
         // // still needs to be de-bugged!!
         // // does not work yet
@@ -510,7 +509,5 @@ int main(int argc, char* argv[])
     cHybridTester.Destroy();
 
     if(!batchMode) cApp.Run();
-    T.stop();
-    T.show("Total time = ");
     return 0;
 }

@@ -6,12 +6,26 @@
 export CACTUSBIN=/opt/cactus/bin
 export CACTUSLIB=/opt/cactus/lib
 export CACTUSINCLUDE=/opt/cactus/include
+export CACTUSROOT=/opt/cactus/
+#export CACTUSROOT=/opt/cactus_from_source/uhal/
+
+#export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
+#export CACTUSLIB=$CACTUSROOT/uhal/lib
+
+#export CACTUSLOGINCLUDE=$CACTUSROOT/log/include/
+#export CACTUSLOGLIB=$CACTUSROOT/log/lib/
+
+#export CACTUSGRAMMARINCLUDE=$CACTUSROOT/grammars/include/
+#export CACTUSGRAMMARLIB=$CACTUSROOT/grammars/lib/
 
 #########
 # BOOST #
 #########
 export KERNELRELEASE=$(uname -r)
 if [[ $KERNELRELEASE == *"el6"* ]]; then
+    export BOOST_LIB=/opt/cactus/lib
+    export BOOST_INCLUDE=/opt/cactus/include
+elif [[ $KERNELRELEASE == *"el8"* ]]; then
     export BOOST_LIB=/opt/cactus/lib
     export BOOST_INCLUDE=/opt/cactus/include
 elif [[ $KERNELRELEASE == "5."*"-generic" ]]; then
@@ -51,7 +65,6 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$PH2ACF_BASE_DIR/../CMSPh2_AntennaDriver
 export USBINSTDIR=$PH2ACF_BASE_DIR/../Ph2_USBInstDriver
 export EUDAQDIR=$PH2ACF_BASE_DIR/../eudaq
-export POWERSUPPLYDIR=$PH2ACF_BASE_DIR/../power_supply
 
 ###########
 # ANTENNA #
@@ -88,7 +101,6 @@ export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
 export EuDaqFlag='-D__EUDAQ__'
-export PowerSupplyFlag='-D__POWERSUPPLY__'
 
 ################
 # Compilations #
@@ -117,7 +129,13 @@ export CompileWithEUDAQ=false
 export CompileWithTCUSB=false
 export UseTCUSBforROH=false
 
- #Clang-format command
-alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs /opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format -i"
+# Clang-format command
+if command -v clang-format &> /dev/null; then
+  clang_command="clang-format" 
+else
+  clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
+fi
+
+alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
 
 echo "=== DONE ==="

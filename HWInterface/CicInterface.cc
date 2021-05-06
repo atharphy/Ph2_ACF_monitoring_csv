@@ -10,7 +10,6 @@
 #include "CicInterface.h"
 #include "BeBoardFWInterface.h"
 #include "D19cFWInterface.h"
-#include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
 
 #define DEV_FLAG 0
@@ -44,8 +43,7 @@ CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoard
 
 CicInterface::~CicInterface() {}
 
-//#FIXME temporary fix to use 1/2 PS skeleton
-void CicInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
+bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
 {
     flpGBTInterface = pLpGBTInterface;
     flpGBT          = pLpGBT;
@@ -153,7 +151,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 #ifdef COUNT_FLAG
-        fTransactionCount++;
+        fRegisterCount++;
 #endif
     }
     else
@@ -418,7 +416,11 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
     std::vector<uint32_t> cVec;
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
     cRegItem.fValue                = pValue;
-    bool cSuccess                  = this->WriteReg(pChip, cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
+    LOG(DEBUG) << BOLDBLUE << pRegNode << " , Value: 0x" << std::hex << cRegItem.fValue << std::dec << RESET;
+    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+    // now write the registers
+    uint8_t cWriteAttempts = 0;
+    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     return cSuccess;
 }
 

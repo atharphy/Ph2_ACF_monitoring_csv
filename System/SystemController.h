@@ -25,6 +25,7 @@
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
+#include "../NetworkUtils/TCPClient.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
@@ -37,7 +38,7 @@
 #include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
-#include "../Utils/DetectorMonitorConfig.h"
+#include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
@@ -82,6 +83,7 @@ class SystemController
     bool               fStreamerEnabled;
     TCPPublishServer*  fNetworkStreamer;
     DetectorMonitor*   fDetectorMonitor;
+    TCPClient*         fPowerSupplyClient{nullptr};
 
     /*!
      * \brief Constructor of the SystemController class
@@ -159,15 +161,6 @@ class SystemController
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureHw(bool bIgnoreI2c = false);
-
-    /*!
-     * \brief Run Bit Error Rate test
-     * \param chain2test     : which part of the chain to be tested
-     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
-     * \param frames_or_time : time [s] or number of frames
-     * \return: none
-     */
-    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!
      * \brief Read Monitor Data from pBoard

@@ -127,7 +127,7 @@ std::map<int, std::vector<int>> MultiplexingSetup::getAvailableCards(bool filter
 }
 
 // State machine control functions
-void MultiplexingSetup::Start(int currentRun)
+void MultiplexingSetup::Running()
 {
     LOG(INFO) << "Starting Multiplexing set-up";
     Initialise();

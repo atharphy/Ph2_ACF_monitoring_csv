@@ -8,6 +8,7 @@
 */
 
 #include "D19clpGBTInterface.h"
+#include <bitset>
 #include <chrono>
 #include <cstring>
 #include <fstream>
@@ -20,8 +21,14 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT#" << +pChip->getId() << RESET;
+#ifdef __SEH_USB__
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+#endif
+    LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
+    SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
     // Load register map from configuration file
     if(!fUseOpticalLink)
     {
@@ -87,12 +94,14 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
         if(fUseCPB)
             return fBoardFW->WriteLpGBTRegister(pAddress, pValue, pVerifLoop);
         else
-            return fBoardFW->WriteOptoLinkRegister(pAddress, pValue, pVerifLoop);
+            return fBoardFW->WriteOptoLinkRegister(pChip->getId(), pAddress, pValue, pVerifLoop);
     }
     else
     {
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
+        // use 2S_SEH test card USB interface
+        // fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
         fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
     }
@@ -108,6 +117,8 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
                 // Now pick one configuration mode
                 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
+                // Dont really see the point here. Write_i2c does not return a read back???
+                // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
                 cReadBack = fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
 #endif
                 cIter++;
@@ -125,12 +136,13 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
         if(fUseCPB)
             return fBoardFW->ReadLpGBTRegister(pAddress);
         else
-            return fBoardFW->ReadOptoLinkRegister(pAddress);
+            return fBoardFW->ReadOptoLinkRegister(pChip->getId(), pAddress);
     }
     else
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
+        // return fTC_2SSEH.read_i2c(pAddress);
         return fTC_USB->read_i2c(pAddress);
 #endif
     }
@@ -508,7 +520,9 @@ uint8_t D19clpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t
 {
     // Gets I2C Master status
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
-    return ReadChipReg(pChip, cI2CStatReg);
+    uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
+    LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
+    return cStatus;
 }
 
 /*----------------------------*/
@@ -547,6 +561,7 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
 {
     // Write Data to Slave Address using I2C Master
     uint8_t cFreq = 3; // 1 MHz
+    if(pMaster == 1) { cFreq = 2; }
     ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
 
     // Prepare Address Register
@@ -578,27 +593,24 @@ bool D19clpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     }
     // wait until the transaction is done
     uint8_t cMaxIter = 100, cIter = 0;
-    bool    cSuccess = false;
     do
     {
-        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C transaction to finisih" << RESET;
-        uint8_t cStatus = GetI2CStatus(pChip, pMaster);
-        LOG(DEBUG) << BOLDBLUE << "I2C Master " << +pMaster << " -- Status : " << fI2CStatusMap[cStatus] << RESET;
-        cSuccess = (cStatus == 4);
+        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C Write transaction to finisih" << RESET;
         cIter++;
-    } while(cIter < cMaxIter && !cSuccess);
-    if(!cSuccess)
+    } while(cIter < cMaxIter && !IsI2CSuccess(pChip, pMaster));
+    if(cIter == cMaxIter)
     {
-        LOG(INFO) << BOLDRED << "I2C Transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
         throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
     }
-    return cSuccess;
+    return true;
 }
 
 uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
     // Read Data from Slave Address using I2C Master
     uint8_t cFreq = 3; // 1 MHz
+    if(pMaster == 1) { cFreq = 2; }
     ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
     // Prepare Address Register
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
@@ -609,15 +621,32 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
     // Write Read Command and then Read from Read Data Register
     // Procedure and registers depend on number on Bytes
+
+    if(pNBytes == 1) { WriteChipReg(pChip, cI2CCmdReg, 0x3); }
+    else
+    {
+        WriteChipReg(pChip, cI2CCmdReg, 0xD);
+    }
+    // wait until the transaction is done
+    uint8_t cMaxIter = 100, cIter = 0;
+    do
+    {
+        LOG(DEBUG) << BOLDBLUE << "Waiting for I2C Read transaction to finisih" << RESET;
+        cIter++;
+    } while(cIter < cMaxIter && !IsI2CSuccess(pChip, pMaster));
+    if(cIter == cMaxIter)
+    {
+        LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
+        throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
+    }
+    // return read back value
     if(pNBytes == 1)
     {
-        WriteChipReg(pChip, cI2CCmdReg, 0x3);
         std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "ReadByte";
         return ReadChipReg(pChip, cI2CDataReg);
     }
     else
     {
-        WriteChipReg(pChip, cI2CCmdReg, 0xD);
         uint32_t cReadData = 0;
         for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
         {
@@ -627,6 +656,8 @@ uint32_t D19clpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMa
         return cReadData;
     }
 }
+
+bool D19clpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (GetI2CStatus(pChip, pMaster) == 4); }
 
 /*-------------------------*/
 /* lpGBT ADC-DAC functions */
@@ -760,6 +791,13 @@ void D19clpGBTInterface::ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const
     WriteChipReg(pChip, "PIOPullEnaL", cPullEnL);
     WriteChipReg(pChip, "PIOUpDownH", cUpDownH);
     WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
+}
+bool D19clpGBTInterface::ReadGPIO(Ph2_HwDescription::Chip* pChip, const uint8_t& pGPIO)
+{
+    LOG(INFO) << BOLDBLUE << "Reading GPIO value from " << std::to_string(pGPIO) << RESET;
+    uint8_t cPIOInH = ReadChipReg(pChip, "PIOInH");
+    uint8_t cPIOInL = ReadChipReg(pChip, "PIOInL");
+    return ((cPIOInH << 8 | cPIOInL) >> pGPIO) & 1;
 }
 
 /*---------------------------------*/

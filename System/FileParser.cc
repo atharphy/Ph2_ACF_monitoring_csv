@@ -84,6 +84,8 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     os << BOLDRED << "END OF HW SUMMARY" << RESET << std::endl;
 
     for(i = 0; i < 80; i++) os << "*";
+
+    os << std::endl;
 }
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
@@ -302,9 +304,8 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT")
         {
-            pBoard->setOptical(true);
             std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute("configfile").value());
-            os << BOLDBLUE << "|\t|----" << theChild.name() << " -->cFile: " << BOLDYELLOW << fileName << RESET << std::endl;
+            os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             theOpticalGroup->addlpGBT(thelpGBT);
 
@@ -981,7 +982,7 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
 
     for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
-        os << "\n" << std::endl;
+        os << std::endl;
 
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
@@ -1098,15 +1099,28 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child("MonitoringSleepTime").first_child().value());
 
-    os << "\n" << std::endl;
+    os << std::endl;
 
-    for(pugi::xml_node monitorElement = theMonitorNode.child("Enable"); monitorElement; monitorElement = monitorElement.next_sibling())
+    auto const theMonitoringElements = theMonitorNode.child("MonitoringElements");
+    if(theMonitoringElements != nullptr)
     {
-        std::string monitorElementName = monitorElement.attribute("name").value();
-        if(atoi(monitorElement.first_child().value()) > 0)
+        for(auto const& attr: theMonitoringElements.attributes())
         {
-            os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << monitorElementName << RESET;
-            theDetectorMonitorConfig.fMonitorElementList.emplace_back(std::move(monitorElementName));
+            uint16_t regvalue = convertAnyInt(attr.value());
+            if(regvalue == 1)
+            {
+                auto const& regname = attr.name();
+                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << ":" << BOLDYELLOW << "Yes" << RESET << std::endl;
+                theDetectorMonitorConfig.fMonitorElementList.emplace_back(regname);
+            }
+            else
+            {
+                auto const& regname = attr.name();
+                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << ":" << BOLDYELLOW << "No";
+                if(regvalue != 0) os << BOLDRED << " (invalid configuration value: " << BOLDYELLOW << regvalue << BOLDRED << " -> must be 0 or 1)";
+
+                os << RESET << std::endl;
+            }
         }
     }
 

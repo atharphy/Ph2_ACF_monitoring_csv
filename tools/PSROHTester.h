@@ -11,7 +11,7 @@
 #ifndef PSROHTester_h__
 #define PSROHTester_h__
 #include "OTHybridTester.h"
-
+#ifdef __USE_ROOT__
 using namespace Ph2_HwDescription;
 
 class PSROHTester : public OTHybridTester
@@ -40,7 +40,6 @@ class PSROHTester : public OTHybridTester
     void CheckFastCommandsBRAM(const std::string& sFastCommandLine);
     void WritePatternToBRAM(const std::string& sFileName);
     void FastCommandScope();
-    bool TestResetLines(uint8_t pLevel);
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
@@ -56,15 +55,6 @@ class PSROHTester : public OTHybridTester
     void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
-
-#ifdef __TCUSB__
-    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
-                                                                {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
-                                                                {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
-                                                                {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
-                                                                {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
-                                                                {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-#endif
 
     std::map<std::string, uint8_t> fInputDebugMap = {{"l_fcmd_cic", 0},
                                                      {"r_fcmd_cic", 1},
@@ -88,4 +78,5 @@ class PSROHTester : public OTHybridTester
     static const int NBRAMADDR = 1024;
 };
 
+#endif
 #endif

@@ -8,9 +8,9 @@
 */
 
 #include "SystemController.h"
-#include "../tools/CBCMonitor.h"
-#include "../tools/DetectorMonitor.h"
-#include "../tools/RD53Monitor.h"
+#include "../MonitorUtils/CBCMonitor.h"
+#include "../MonitorUtils/DetectorMonitor.h"
+#include "../MonitorUtils/RD53Monitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -49,6 +49,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNetworkStreamer      = pController->fNetworkStreamer;
     fDetectorContainer    = pController->fDetectorContainer;
     fCicInterface         = pController->fCicInterface;
+    fPowerSupplyClient    = pController->fPowerSupplyClient;
 }
 
 void SystemController::Destroy()
@@ -80,6 +81,9 @@ void SystemController::Destroy()
 
     delete fNetworkStreamer;
     fNetworkStreamer = nullptr;
+
+    delete fPowerSupplyClient;
+    fPowerSupplyClient = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -125,6 +129,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
+
+    fPowerSupplyClient = new TCPClient("131.225.179.123", 7000);
+    if(!fPowerSupplyClient->connect(1))
+    {
+        std::cerr << "Cannot connect to the Power Supply Server" << '\n';
+        delete fPowerSupplyClient;
+        fPowerSupplyClient = nullptr;
+    }
+    for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
 
     if(fDetectorContainer->size() > 0)
     {
@@ -233,9 +246,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(monitoringType != "None")
     {
         if(monitoringType == "2S")
-            fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new CBCMonitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "RD53")
-            fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
@@ -742,6 +755,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                 // are these needed?
                 uint8_t cLinkId = cOpticalGroup->getId();
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
+
                 if(cOpticalGroup->flpGBT != nullptr)
                 {
                     cIslpGBTI2C                         = !cBoard->ifUseOpticalLink();
@@ -896,9 +910,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                     LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
                     if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-                        LOG(INFO) << BOLDBLUE << "\t--> LpGBT chip configured" << RESET;
+                    {
+                        static_cast<RD53lpGBTInterface*>(flpGBTInterface)
+                            ->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, cBoard, cOpticalGroup, this->fBeBoardFWMap[cBoard->getId()], fReadoutChipInterface);
+                        LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
+                    }
                     else
-                        LOG(ERROR) << BOLDRED << "\t--> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ")" << RESET;
+                        LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53lpGBTconstants::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
                 }
 
             // #######################
@@ -922,7 +940,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         for(const auto cChip: *cHybrid)
                         {
                             LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
-                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(static_cast<RD53*>(cChip));
+                            static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
                         }
                     }
                 LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
@@ -935,7 +953,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             // ############################
             // # Configure frontend chips #
             // ############################
-            LOG(INFO) << CYAN << "=== Configuring frontend chip registers ===" << RESET;
+            LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
             for(auto cOpticalGroup: *cBoard)
             {
                 if(cOpticalGroup->flpGBT != nullptr) // @TMP@
@@ -954,13 +972,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                         if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
                         static_cast<RD53*>(cChip)->copyMaskToDefault();
-                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(static_cast<RD53*>(cChip));
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                         LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
                         // @TMP@ static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0);
                     }
                 }
             }
-            LOG(INFO) << CYAN << "================== Done ===================" << RESET;
+            LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
             LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
             RD53Event::ForkDecodingThreads();

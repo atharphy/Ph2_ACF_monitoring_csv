@@ -7,11 +7,15 @@ MESSAGE(STATUS " ")
 
 # Includes
 include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+include_directories(${UHAL_LOG_INCLUDE_PREFIX})
+include_directories(${PROJECT_SOURCE_DIR}/miniDAQ)
 include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
 include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
 include_directories(${PROJECT_SOURCE_DIR}/Utils)
 include_directories(${PROJECT_SOURCE_DIR}/System)
 include_directories(${PROJECT_SOURCE_DIR}/tools)
+include_directories(${PROJECT_SOURCE_DIR}/NetworkUtils)
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -20,7 +24,7 @@ link_directories(${UHAL_UHAL_LIB_PREFIX})
 link_directories(${PROJECT_SOURCE_DIR/lib})
 
 # Initial set of libraries
-set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_NetworkUtils)
+set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System NetworkUtils)
 
 # Check for ZMQ installed
 if(ZMQ_FOUND)
@@ -131,7 +135,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
               Ph2_Interface_${Ph2_ACF_Master}
               Ph2_System_${Ph2_ACF_Master}
               Ph2_Utils_${Ph2_ACF_Master}
-              Ph2_NetworkUtils_${Ph2_ACF_Master}
+              NetworkUtils_${Ph2_ACF_Master}
               Ph2_Tools_${Ph2_ACF_Master}
 
 #Ph2_DQMUtils_${Ph2_ACF_Master }

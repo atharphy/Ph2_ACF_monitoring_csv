@@ -71,7 +71,7 @@ class Physics : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport();
+    void chipErrorReport() const;
     void clearContainers(Ph2_HwDescription::BeBoard* cBoard);
 
   protected:

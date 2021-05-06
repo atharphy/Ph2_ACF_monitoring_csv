@@ -10,6 +10,9 @@
 #ifndef RD53lpGBTInterface_H
 #define RD53lpGBTInterface_H
 
+#include "../HWInterface/RD53FWInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
+/* #include "../Utils/Container.h" */
 #include "../Utils/RD53Shared.h"
 #include "lpGBTInterface.h"
 
@@ -40,10 +43,16 @@ class RD53lpGBTInterface : public lpGBTInterface
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-    bool     RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override;
+    double   RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0) override;
     void     StartPRBSpattern(Ph2_HwDescription::Chip* pChip) override;
     void     StopPRBSpattern(Ph2_HwDescription::Chip* pChip) override;
     // #############################
+
+    void ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+                              const Ph2_HwDescription::BeBoard*      pBoard,
+                              const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
+                              Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
+                              ReadoutChipInterface*                  pReadoutChipInterface);
 
   private:
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
@@ -90,7 +99,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     // # LpGBT specific routine functions #
     // ####################################
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain);
-    void PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void InternalPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
     // ################################
     // # LpGBT block status functions #

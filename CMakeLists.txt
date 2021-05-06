@@ -21,7 +21,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     cmake_minimum_required(VERSION 2.8)
@@ -73,10 +73,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    #original flags
-    #set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
-    #new temporary flags
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations -Wno-error=unused-variable    -Wno-error=unused-but-set-variable -Wno-error=overflow")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
     set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
@@ -97,7 +94,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
       endif()
     endif ()
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
@@ -134,12 +131,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # Power supplt
-    find_package(PH2_POWERSUPPLY) #========================================================
-    if(PH2_POWERSUPPLY_FOUND)
-        message(STATUS "    Building the PowerSupply components")
-    endif(PH2_POWERSUPPLY_FOUND)
-
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
       find_package(PH2_TCUSB)  
@@ -175,11 +166,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Boost
     file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
     if(uhal_boost)
-        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version") 
+        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version")
             set(Boost_NO_SYSTEM_PATHS TRUE)
             if(Boost_NO_SYSTEM_PATHS)
                 if(${CACTUS_FOUND})
-                    set(BOOST_ROOT ${CACTUS_ROOT})
+                    set(BOOST_ROOT /opt/cactus)
                 else(${CACTUS_FOUND})
                     set(BOOST_ROOT /opt/cactus)
                 endif(${CACTUS_FOUND})
@@ -214,6 +205,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(CompileForShep OR NoDataShipping)
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
+        add_subdirectory(MonitorDQM)
     endif()
 
     if(NoDataShipping OR (CompileForShep AND CompileForHerd))
@@ -226,13 +218,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
+    add_subdirectory(MonitorUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
     #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
     #set(ENV{LD_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/lib:$ENV(LD_LIBRARY_PATH)")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package done.")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
@@ -242,7 +235,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
@@ -266,7 +259,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # ZeroMQ
+    # ZeroMQ 
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -303,7 +296,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")

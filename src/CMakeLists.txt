@@ -7,6 +7,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
@@ -17,10 +19,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils Ph2_NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils Ph2_MonitorDQM Ph2_MonitorUtils NetworkUtils)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -135,6 +139,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           target_link_libraries(${name} ${LIBS})
         endif()
         #check for PowerSupply
+        if ("${name}" STREQUAL "SEHTest")
+            if(${PH2_POWERSUPPLY_FOUND})
+                target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
+            endif()
+        endif()
+        if ("${name}" STREQUAL "powersupply")
+            if(${PH2_POWERSUPPLY_FOUND})
+                target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
+            endif()
+        endif()
+
         if ("${name}" STREQUAL "powersupply")
         #if ("${name}" STREQUAL "powersupply" OR "${name}" STREQUAL "ps_power_consumption")
             if(${PH2_POWERSUPPLY_FOUND})

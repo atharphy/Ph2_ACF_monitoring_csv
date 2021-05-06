@@ -51,6 +51,9 @@
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
+
+class TCPClient;
+
 namespace Ph2_HwInterface
 {
 using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
@@ -91,6 +94,8 @@ class BeBoardInterface
      * \param pHandler : pointer to FileHandler object
      */
     void SetFileHandler(const Ph2_HwDescription::BeBoard* pBoard, FileHandler* pHandler);
+
+    void setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fPowerSupplyClient);
 
     /*!
      * \brief enable the file handler

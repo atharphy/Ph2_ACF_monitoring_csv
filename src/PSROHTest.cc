@@ -101,7 +101,9 @@ int main(int argc, char* argv[])
     // debug
     cmd.defineOption("debug", "Run debug", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("debug", "d");
-    // scope
+    // Test VTRx+ registers
+    cmd.defineOption("testVTRx+", "Test testVTRx+ slow control");
+    cmd.defineOptionAlternative("testVTRx+", "v");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -186,17 +188,24 @@ int main(int argc, char* argv[])
     /****************************/
     if(cmd.foundOption("testReset"))
     {
-        std::vector<std::pair<string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
-        std::vector<uint8_t>                    cGPIOs  = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-        for(auto cLevel: cLevels)
-        {
-            cPSROHTester.LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
-            bool cStatus = cPSROHTester.TestResetLines(cLevel.second);
-            if(cStatus)
-                LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
-            else
-                LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
-        }
+        bool cStatus = cPSROHTester.LpGBTTestResetLines();
+        cPSROHTester.LpGBTTestGPILines();
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "Reset test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+    }
+
+    // Test VTRx+ slow control
+
+    if(cmd.foundOption("testVTRx+"))
+    {
+        bool cStatus = cPSROHTester.LpGBTTestVTRx();
+
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
     }
 
     /********************/
@@ -217,6 +226,8 @@ int main(int argc, char* argv[])
     /**********************************/
     if(cmd.foundOption("testADC"))
     {
+        cPSROHTester.LpGBTTestFixedADCs();
+
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
         cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
     }
@@ -232,7 +243,8 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("bit-error-rate"))
     {
         uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
-        uint8_t  cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
+        // FIXME still hard coded
+        uint8_t cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
         cPSROHTester.LpGBTRunBitErrorRateTest(cCoarseSource, cFineSource, cMeasTime, cBERTPattern32);
     }
 
@@ -254,8 +266,12 @@ int main(int argc, char* argv[])
         {
             uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+            cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern);
         }
-        cPSROHTester.FastCommandScope();
+        else
+        {
+            cPSROHTester.FastCommandScope();
+        }
     }
 
     if(cDebug)

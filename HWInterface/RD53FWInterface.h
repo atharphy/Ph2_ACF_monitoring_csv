@@ -57,11 +57,13 @@ class RD53FWInterface : public BeBoardFWInterface
     void Pause() override;
     void Resume() override;
 
-    bool     RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override;
+    double   RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override;
     void     ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset() override;
     void     ChipReSync() override;
+
+    void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     // #############################
 
     // ####################################
@@ -69,17 +71,6 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     uint32_t ReadoutSpeed();
-    bool     DidIwriteChipReg(uint16_t optGroup_id) // @TMP@
-    {
-        RegManager::WriteReg("user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id);
-
-        RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 0x44, RD53Constants::PATTERN_CLOCK);
-        usleep(1000);
-        uint32_t readPattern = RegManager::ReadReg("user.stat_regs.rate_measurement_bx_counter");
-        std::cout << "AAAAA " << std::hex << readPattern << std::dec << std::endl;
-        if(readPattern == 0x5555) return true;
-        return false;
-    }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -177,8 +168,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
-    bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
+    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
 
     // ##########################################
     // # Read/Write new Command Processor Block #
@@ -194,8 +185,6 @@ class RD53FWInterface : public BeBoardFWInterface
     bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override { return true; };
     uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override { return 0; };
     // function for front-end slow control
-    // uint8_t GetFEPage() override { return 0; };
-    // void    SetFEPage(uint8_t pPage) override {};
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true, bool pVerify = false) override { return true; };
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = true) override { return 0; };
 
@@ -210,14 +199,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void                     CheckIfUploading();
     void                     RebootBoard();
     const FpgaConfig*        GetConfiguringFpga();
-
-    // ################################################
-    // # I2C block for programming peripheral devices #
-    // ################################################
-    bool I2cCmdAckWait(int nAttempts);
-    void WriteI2C(std::vector<uint32_t>& data);
-    void ReadI2C(std::vector<uint32_t>& data);
-    void ConfigureClockSi5324();
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #

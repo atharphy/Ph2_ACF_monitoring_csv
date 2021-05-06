@@ -14,7 +14,7 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 // initialize the static member
-
+#ifdef __USE_ROOT__
 PSROHTester::PSROHTester() : OTHybridTester() {}
 
 PSROHTester::~PSROHTester() {}
@@ -726,3 +726,4 @@ void PSROHTester::Stop()
 void PSROHTester::Pause() {}
 
 void PSROHTester::Resume() {}
+#endif

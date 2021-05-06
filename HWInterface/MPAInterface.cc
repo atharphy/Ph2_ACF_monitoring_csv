@@ -809,7 +809,7 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1, bool verbose)
     L1data  formL1data;
 
     std::vector<uint16_t> strip_data, pixel_data;
-    uint16_t              curdata;
+    uint16_t              curdata = 0;
 
     for(int i = 1; i < 200; i++)
     {

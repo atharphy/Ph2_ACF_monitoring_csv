@@ -14,7 +14,6 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -73,7 +72,7 @@ class PixelAlive : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport();
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

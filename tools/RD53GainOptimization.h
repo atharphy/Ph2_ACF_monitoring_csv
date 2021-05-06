@@ -68,7 +68,7 @@ class GainOptimization : public Gain
 
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-    void chipErrorReport();
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

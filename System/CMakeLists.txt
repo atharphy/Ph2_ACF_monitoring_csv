@@ -9,13 +9,18 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
+    include_directories(${PROJECT_SOURCE_DIR}/MonitorUtils)
     include_directories(${PROJECT_SOURCE_DIR}/NetworkUtils)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     # Library directories
     link_directories(${UHAL_UHAL_LIB_PREFIX})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
     # Find source files
     file(GLOB HEADERS *.h)
@@ -23,10 +28,22 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils)
+    if(NoDataShipping)
+        set(LIBS ${LIBS} Ph2_MonitorDQM)
+    endif()
+
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
-    # Check for TestCard USBDriver
+      #check for TestCard USBDriver
+      if(${PH2_TCUSB_FOUND})
+        include_directories(${PH2_TCUSB_INCLUDE_DIRS})
+        link_directories(${PH2_TCUSB_LIBRARY_DIRS})
+        set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+
+    endif()
+    #check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
@@ -38,6 +55,20 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforROH})
     endif(${PH2_TCUSB_FOUND})
+
+    if(NoDataShipping)
+        if(${ROOT_FOUND})
+            include_directories(${ROOT_INCLUDE_DIRS})
+            set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+            
+            #check for THttpServer
+            if(${ROOT_HAS_HTTP})
+                set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
+            endif()
+        endif()
+    endif()
 
     ####################################
     ## EXECUTABLES
