@@ -2487,7 +2487,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
         // in the handshake mode offset is cleared after each handshake
-        fDDR3Offset = 0;
+        // fDDR3Offset = 0;
     }
     else if(cAsync)
     {

@@ -529,7 +529,7 @@ void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::stri
     else
         cFileName = expandEnvironmentVariables(pHybridNode.attribute("configfile").value());
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
-    cMPA->setNumberOfChannels(1920);
+    cMPA->setNumberOfChannels(NMPACHANNELS / NSSACHANNELS, NSSACHANNELS);
     this->parseMPASettings(pHybridNode, cMPA);
 }
 

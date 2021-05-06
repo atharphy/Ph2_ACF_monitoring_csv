@@ -18,22 +18,25 @@
 class PSPhysicsHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};
 
-    void fillSync(const DetectorDataContainer& DataContainer);
+    // void fillSync(const DetectorDataContainer& DataContainer);
+    void fillOccupancy(const DetectorDataContainer& DataContainer);
+    void fillStub     (const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer fDetectorData;
+    DetectorDataContainer fDetectorData     ;
+    DetectorContainer*    fDetectorContainer;
+    // DetectorDataContainer fSClusterHistograms;
+    // DetectorDataContainer fPClusterHistograms;
+    // DetectorDataContainer fStubHistograms;
 
-
-    DetectorDataContainer fSClusterHistograms;
-    DetectorDataContainer fPClusterHistograms;
-    DetectorDataContainer fStubHistograms;
-
-
+    DetectorDataContainer fStubHistogramContainer     ;
+    DetectorDataContainer fOccupancyHistogramContainer;
+    DetectorDataContainer fStripOccupancyHistogramContainer;
 
 };
 

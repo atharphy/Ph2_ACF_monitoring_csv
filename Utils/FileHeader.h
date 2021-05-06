@@ -95,6 +95,7 @@ class FileHeader
         else
             cEventTypeString = "EventType::ZS";
 
+        std::cout<<"HEADER size = " <<cVec.size()<<std::endl;
         return cVec;
     }
 

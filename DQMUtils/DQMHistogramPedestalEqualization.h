@@ -35,7 +35,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram

@@ -42,15 +42,21 @@ class PSPhysics : public Tool
     void initialize(const std::string fileRes_, const std::string fileReg_);
     void run();
     void draw();
-    void fillDataContainer(BoardContainer* const& cBoard, Ph2_HwInterface::Event* event);
+    // void fillDataContainer(BoardContainer* const& cBoard, Ph2_HwInterface::Event* event);
+    void fillDataContainer(BoardContainer* const& cBoard, const std::vector<Ph2_HwInterface::Event*> eventList);
+
 
   private:
-    DetectorDataContainer fPSSyncContainer;
+    // DetectorDataContainer fPSSyncContainer   ;
+    DetectorDataContainer fStubContainer     ;
+    DetectorDataContainer fOccupancyContainer;
 
     void initHisto();
     void fillHisto();
     void display();
     void chipErrorReport();
+    unsigned int getDataFromBoards();
+    void clearContainers(BoardContainer* theBoard);
 
     // ########
     // # ROOT #
@@ -67,6 +73,8 @@ class PSPhysics : public Tool
     bool        doDisplay;
     bool        saveRawData;
     bool        doLocal;
+    unsigned int fTotalDataSize = 0;
+
 };
 
 #endif

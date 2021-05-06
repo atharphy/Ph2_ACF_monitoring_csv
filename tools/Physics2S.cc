@@ -54,9 +54,14 @@ void Physics2S::Running()
 
 void Physics2S::sendBoardData(BoardContainer* const& cBoard)
 {
-    auto thePSSyncStream = prepareChipContainerStreamer<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>,EmptyContainer>();
+    auto theOccupancyStream = prepareChannelContainerStreamer<float>("Occupancy");
+    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub"     );
 
-    if(fStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(f2SDataContainer.at(cBoard->getIndex()), fNetworkStreamer); }
+    if(fStreamerEnabled == true) 
+    { 
+        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer); 
+        theStubStream     .streamAndSendBoard(fStubContainer     .at(cBoard->getIndex()), fNetworkStreamer); 
+    }
 }
 
 void Physics2S::Stop()
@@ -64,6 +69,12 @@ void Physics2S::Stop()
     LOG(INFO) << GREEN << "[Physics2S::Stop] Stopping" << RESET;
 
     Tool::Stop();
+
+    fTotalDataSize+=getDataFromBoards();
+
+    LOG(WARNING) << BOLDBLUE << "Number of collected events = " << fTotalDataSize << RESET;
+
+    if(fTotalDataSize == 0) LOG(WARNING) << BOLDBLUE << "No data collected" << RESET;
 
     // ################
     // # Error report #
@@ -93,29 +104,32 @@ void Physics2S::initialize(const std::string fileRes_, const std::string fileReg
     doLocal = true;
 }
 
+unsigned int Physics2S::getDataFromBoards()
+{
+    unsigned int dataSize = 0;
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        dataSize += SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
+        if(dataSize != 0)
+        {
+            const std::vector<Event*>& events = SystemController::GetEvents();
+            PSPhysics::fillDataContainer(cBoard, events);
+            PSPhysics::sendBoardData(cBoard);
+        }
+    }
+    return dataSize;
+}
+
 void Physics2S::run()
 {
-    unsigned int totalDataSize = 0;
+    fTotalDataSize = 0;
 
     while(fKeepRunning)
     {
-        for(const auto cBoard: *fDetectorContainer)
-        {
-            unsigned int dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
-            if(dataSize != 0)
-            {
-                Physics2S::fillDataContainer(cBoard);
-                Physics2S::sendBoardData(cBoard);
-            }
-            totalDataSize += dataSize;
-        }
+        ffTotalDataSize+=getDataFromBoards();
 
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53FWconstants::READOUTSLEEP));
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
-
-    LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;
-
-    if(totalDataSize == 0) LOG(WARNING) << BOLDBLUE << "No data collected" << RESET;
 }
 
 void Physics2S::draw()
@@ -151,36 +165,115 @@ void Physics2S::display()
 #endif
 }
 
-void Physics2S::fillDataContainer(BoardContainer* const& cBoard)
-{
+// void Physics2S::fillDataContainer(BoardContainer* const& cBoard)
+// {
 
 
-    // ###################
-    // # Fill containers #
-    // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) 
-	{ 
-		for(const auto cOpticalGroup: *f2SDataContainer.at(cBoard->getIndex()))
-		{
-		    for(const auto cHybrid: *cOpticalGroup)
-			{
-		        for(const auto cChip: *cHybrid)
-				{
+//     // ###################
+//     // # Fill containers #
+//     // ###################
+//     const std::vector<Event*>& events = SystemController::GetEvents();
+//     for(const auto& event: events) 
+// 	{ 
+// 		for(const auto cOpticalGroup: *f2SDataContainer.at(cBoard->getIndex()))
+// 		{
+// 		    for(const auto cHybrid: *cOpticalGroup)
+// 			{
+// 		        for(const auto cChip: *cHybrid)
+// 				{
 
-    				auto curchip = cBoard->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());;
-                    if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
+//     				auto curchip = cBoard->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());;
+//                     if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
 
-					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
-                    data2S.fClusters    = fromVectorToGenericDataArray<NCHANNELS, Cluster>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
-                    data2S.fStubs       = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_2S, Stub>(static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId()));
-				}
-			}
-		}
-	}
-}
+// 					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
+//                     data2S.fClusters    = fromVectorToGenericDataArray<NCHANNELS, Cluster>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
+//                     data2S.fStubs       = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_2S, Stub>(static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId()));
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 void Physics2S::chipErrorReport() {}
 
 
+
+void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Event*> eventList)
+{
+    // std::cout<<__LINE__<<std::endl;
+    clearContainers(cBoard);
+    // std::cout<<__LINE__<<std::endl;
+
+    for(auto event : eventList)
+    {
+        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup());
+        // ###################
+        // # Fill containers #
+        // ###################
+        for(const auto cOpticalGroup: *fStubContainer.at(cBoard->getIndex()))
+        {
+            for(const auto cHybrid: *cOpticalGroup)
+            {
+                for(const auto cChip: *cHybrid)
+                {
+
+                    std::vector<Stub   > stubList    = static_cast<D19cCic2Event*>(event)->StubVector (cHybrid->getId(), cChip->getId());
+
+                    for(auto & stub : stubList)
+                    {
+                    // std::cout<<__LINE__<<std::endl;
+                        if(ceil(stub.getCenter()) !=  stub.getCenter())
+                        {
+                    // std::cout<<__LINE__<<std::endl;
+                            if(size_t(ceil (stub.getCenter()))<254u) theStubChipContainer->getChannel<float>(stub.getRow(),size_t(ceil(stub.getCenter())))  += 0.5;
+                    // std::cout<<__LINE__<<std::endl;
+                            if(size_t(floor(stub.getCenter()))<254u) theStubChipContainer->getChannel<float>(stub.getRow(),size_t(floor(stub.getCenter()))) += 0.5;
+                    // std::cout<<__LINE__<<std::endl;
+                        }
+                        else
+                        {
+                    // std::cout<<__LINE__<<std::endl;
+                            if(stub.getPosition()<254u) ++cChip->getChannel<float>(stub.getRow(),size_t(stub.getCenter()));
+                    // std::cout<<__LINE__<<std::endl;
+                        }
+                    // std::cout<<__LINE__<<std::endl;
+                    }
+
+                    // std::cout<<__LINE__<<std::endl;
+
+                }
+            }
+        }
+    }
+}
+
+
+void Physics2S::clearContainers(BoardContainer* theBoard)
+{
+
+    // ####################
+    // # Clear containers #
+    // ####################
+    for(const auto cOpticalGroup: *fOccupancyContainer.at(theBoard->getIndex()))
+    {
+        for(const auto cHybrid: *cOpticalGroup)
+        {
+            for(const auto cChip: *cHybrid)
+            {
+                for(auto &cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
+            }
+        }
+    }
+
+    for(const auto cOpticalGroup: *fStubContainer.at(theBoard->getIndex()))
+    {
+        for(const auto cHybrid: *cOpticalGroup)
+        {
+            for(const auto cChip: *cHybrid)
+            {
+                for(auto &cChannel: *cChip->getChannelContainer<float>()) cChannel = 0.;
+            }
+        }
+    }
+}
 

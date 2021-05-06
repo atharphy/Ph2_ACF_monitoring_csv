@@ -41,15 +41,20 @@ class Physics2S : public Tool
     void initialize(const std::string fileRes_, const std::string fileReg_);
     void run();
     void draw();
-    void fillDataContainer(BoardContainer* const& cBoard);
+    // void fillDataContainer(BoardContainer* const& cBoard);
+    void fillDataContainer(BoardContainer* cBoard, const std::vector<Ph2_HwInterface::Event*> eventList);
 
   private:
     DetectorDataContainer f2SDataContainer;
+    DetectorDataContainer fStubContainer     ;
+    DetectorDataContainer fOccupancyContainer;
 
     void initHisto();
     void fillHisto();
     void display();
     void chipErrorReport();
+    unsigned int getDataFromBoards();
+    void clearContainers(BoardContainer* theBoard);
 
     // ########
     // # ROOT #
@@ -66,6 +71,8 @@ class Physics2S : public Tool
     bool        doDisplay;
     bool        saveRawData;
     bool        doLocal;
+    unsigned int fTotalDataSize = 0;
+
 };
 
 #endif

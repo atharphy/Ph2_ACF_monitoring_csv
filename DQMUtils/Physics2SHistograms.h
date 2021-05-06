@@ -18,20 +18,22 @@
 class Physics2SHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};
 
-    void fillData(const DetectorDataContainer& DataContainer);
+    // void fillData(const DetectorDataContainer& DataContainer);
+    void fillOccupancy(const DetectorDataContainer& DataContainer);
+    void fillStub     (const DetectorDataContainer& DataContainer);
 
   private:
     DetectorDataContainer fDetectorData;
 
 
-    DetectorDataContainer fTopClusterHistograms   ;
-    DetectorDataContainer fBottomClusterHistograms;
-    DetectorDataContainer fStubPositionHistograms ;
+    DetectorDataContainer fTopSensorHistogramContainer   ;
+    DetectorDataContainer fBottomSensorHistogramContainer;
+    DetectorDataContainer fStubHistogramContainer        ;
 
 
 

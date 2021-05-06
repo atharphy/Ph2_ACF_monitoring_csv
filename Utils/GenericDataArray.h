@@ -26,7 +26,7 @@ class GenericDataArray
 };
 
 template <size_t size, typename T = float>
-inline GenericDataArray<size, T>&& fromVectorToGenericDataArray(const std::vector<T>& theInputVector)
+inline GenericDataArray<size, T> fromVectorToGenericDataArray(const std::vector<T>& theInputVector)
 {
     if(theInputVector.size() > size)
     {
@@ -34,12 +34,12 @@ inline GenericDataArray<size, T>&& fromVectorToGenericDataArray(const std::vecto
     }
     GenericDataArray<size, T> theOutputVector;
 
-    for(size_t it = 0; it < theInputVector.size(); ++it)
+    for(size_t it = 0; it < std::min(theInputVector.size(),size); ++it)
     {
-            theOutputVector[it] = theInputVector[it];
+      theOutputVector[it] = theInputVector[it];
     }
     
-    return std::move(theOutputVector);
+    return theOutputVector;
 }
 
 #endif

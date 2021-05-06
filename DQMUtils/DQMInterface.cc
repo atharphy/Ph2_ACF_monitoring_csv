@@ -1,7 +1,6 @@
 #include "../NetworkUtils/TCPSubscribeClient.h"
 #include "../System/FileParser.h"
 #include "../System/SystemController.h"
-#include "../Utils/Container.h"
 #include "../Utils/ObjectStream.h"
 
 #include "CBCHistogramPulseShape.h"
@@ -84,7 +83,6 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     Ph2_System::FileParser                                   fParser;
     std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
     std::stringstream                                        out;
-    DetectorContainer                                        fDetectorStructure;
     Ph2_System::SettingsMap                                  pSettingsMap;
 
     fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out, true);

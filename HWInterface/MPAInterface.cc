@@ -654,7 +654,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     {
 
         // for now .. don't configure each pixel 
-        if(cMapItem.second.find("_P") != std::string::npos)
+        if(cMapItem.second.find("ENFLAGS_P") != std::string::npos)
              continue;
     
         ChipRegItem& cItem = cMPARegMap[cMapItem.second]; 

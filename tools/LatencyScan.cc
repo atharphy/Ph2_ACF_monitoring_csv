@@ -115,9 +115,11 @@ void LatencyScan::ScanLatency()
 							if(theChip->getFrontEndType() == FrontEndType::MPA)
 								{
                     			LOG(INFO) << "MPA";
-    							//static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x7);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
-    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 150);
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x7);
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ModeSel_ALL", 0x0);
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HipCut_ALL", 0x1);
+    							// static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
+    							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
     							static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "InjectedCharge", 0);
 								}
 						
@@ -165,7 +167,7 @@ void LatencyScan::ScanLatency()
                         }
                         cHitSum += cHitCounter; 
                         cHitSum += cHitCounterMPA; 
-                        cHitSum += cHitCounterSSA; 
+                        // cHitSum += cHitCounterSSA; 
 						cHitSumMPA+=cHitCounterMPA;
 						cHitSumSSA+=cHitCounterSSA;
 

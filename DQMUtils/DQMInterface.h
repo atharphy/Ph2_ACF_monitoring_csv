@@ -3,6 +3,7 @@
 
 #include <future>
 #include <vector>
+#include "../Utils/Container.h"
 
 class TCPSubscribeClient;
 class DQMHistogramBase;
@@ -31,6 +32,8 @@ class DQMInterface
     bool                           fRunning;
     std::future<bool>              fRunningFuture;
     TFile*                         fOutputFile;
+    DetectorContainer              fDetectorStructure;
+
 };
 
 #endif

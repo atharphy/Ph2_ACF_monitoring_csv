@@ -29,7 +29,7 @@ DQMHistogramPedestalEqualization::DQMHistogramPedestalEqualization() {}
 DQMHistogramPedestalEqualization::~DQMHistogramPedestalEqualization() {}
 
 //========================================================================================================================
-void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();

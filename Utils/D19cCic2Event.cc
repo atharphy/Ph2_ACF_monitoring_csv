@@ -90,7 +90,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     fExternalTriggerID = (*(cEventIterator + 1) >> 16) & 0x7FFF;
     fTDC               = (*(cEventIterator + 2) >> 24) & 0xFF;
     fEventCount        = 0x00FFFFFF & *(cEventIterator + 2);
-    fBunch             = 0xFFFFFFFF & *(cEventIterator + 3);
+    // fBunch             = 0xFFFFFFFF & *(cEventIterator + 3);
+    fL1Number          = (0xFFFF0000 & *(cEventIterator + 3))>>16;
+    fBunch             = 0x0000FFFF & *(cEventIterator + 3);
     do
     {
         uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
@@ -562,12 +564,23 @@ uint8_t D19cCic2Event::GetNPixelClusters(uint8_t pFeId) const
 std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
     std::vector<PCluster> cPClusters;
-    auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    
+    decltype(fEventHitList[0].second) cClusterWords;
+    try
+    {
+        cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return cPClusters;
+    }
+    
     auto cIterator =  cClusterWords.begin() + GetNStripClusters( pFeId  );
     auto cEnd      = cClusterWords.end();
     while( cIterator != cEnd )
     {
-        LOG(INFO) << BOLDGREEN << "I am in while!!!" << RESET;
+        // LOG(INFO) << BOLDGREEN << "I am in while!!!" << RESET;
 
         uint32_t cVal = static_cast<uint32_t>((*cIterator));
         uint32_t cId = (uint32_t)( (cVal & (0x7 << 14) )  >> 14 );
@@ -589,7 +602,7 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
             aPCluster.fWidth   = cWdth;//((*cIterator) & ((0x7) << (0 + 4))) >> (0 + 4);
             aPCluster.fZpos    = cZInfo;//((*cIterator) & ((0xF) << 0)) >> 0;
             cPClusters.push_back(aPCluster);
-            LOG(INFO) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
+            LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
         }
         cIterator++;
 
@@ -623,7 +636,18 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
 std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
     std::vector<SCluster> cSClusters;
-    auto&  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+
+    decltype(fEventHitList[0].second) cClusterWords;
+    try
+    {
+        cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return cSClusters;
+    }
+
     auto cIterator =  cClusterWords.begin() ;
         //LOG (INFO) << BOLDBLUE << "NS " << +GetNStripClusters( pFeId  )<< RESET;
     
@@ -656,7 +680,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
             cSCluster.fMip     = cMip;//((*cIterator) & ((0x1) << 0)) >> 0;
 
             cSClusters.push_back(cSCluster);
-            LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
+            LOG(INFO) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
         }
         cIterator++;
     };
@@ -853,7 +877,7 @@ std::bitset<NMPACHANNELS>  D19cCic2Event::decodePClusters(uint8_t pFeId, uint8_t
                 aPCluster.fWidth = (cCluster & ((0x7) << (0+4))) >> (0+4);
                 aPCluster.fZpos = (cCluster & ((0xF) << 0)) >> 0;
                 //cPClusters.push_back(aPCluster);
-                LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
+                LOG(INFO) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
             }
             cClusterId++;
         }

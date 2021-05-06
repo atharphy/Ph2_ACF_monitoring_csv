@@ -1032,7 +1032,15 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
                             LOG(DEBUG) << BOLDBLUE << "Decoding CIC data " << RESET;
-                            fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
+                            try
+                            {
+                                fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
+                            }
+                            catch(const std::exception& e)
+                            {
+                                std::cerr << e.what() << '\n';
+                                // fEventList.push_back(new D19cCic2Event());
+                            }
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                         {
