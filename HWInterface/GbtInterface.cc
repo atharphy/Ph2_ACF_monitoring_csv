@@ -176,6 +176,7 @@ void GbtInterface::scaConfigure(BeBoardFWInterface* pInterface)
 }
 bool GbtInterface::scaSetGPIO(BeBoardFWInterface* pInterface, uint8_t cChannel, uint8_t cLevel)
 {
+    LOG(INFO) << BOLDBLUE << "Configuring GPIO outputs on SCA" << RESET;
     uint32_t cMask      = (1 << cChannel);
     cMask               = (~cMask & 0xFFFFFFFF);
     uint8_t cSCAchannel = 0x02;
@@ -859,33 +860,46 @@ uint32_t GbtInterface::cicRead(BeBoardFWInterface* pInterface, uint8_t pFeId, ui
 }
 bool GbtInterface::cicWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pReadBack)
 {
-    uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 16) | (pRegisterValue << 8), 3);
-    if(pReadBack && cWrite == 0)
+    bool   cRetry       = true;
+    size_t cMaxAttempts = (cRetry) ? 10 : 0;
+    size_t cAttempts    = 0;
+    bool   cSuccess     = false;
+    do
     {
-        uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
-        // serial interface & error register is special
-        // figure out how to avoid this if statement here
-        uint32_t cReadBack = this->cicRead(pInterface, pFeId, pRegisterAddress);
-        // uint32_t cReadBack = ( pRegisterAddress == 0x1D) ? cbcRead(pInterface, pFeId, pChipId, pPage ,
-        // pRegisterAddress) : pRegisterValue ;
-        LOG(DEBUG) << BOLDBLUE << "Read back " << +cReadBack << " after trying to write... " << +pRegisterValue;
-        bool cSuccess = (((cStatus & 0x4) >> 2) == 1);
-        if(!cSuccess)
+        uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 8 * 2) | (pRegisterValue << 8 * 1), 3);
+        cSuccess       = (cWrite == 0);
+        if(!pReadBack) continue;
+
+        if(cSuccess)
         {
-            LOG(INFO) << BOLDRED << "SCA status " << std::bitset<8>(cStatus) << " for hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
-            throw std::runtime_error(std::string("SCA status reporting error..."));
+            uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
+            // serial interface & error register is special
+            // figure out how to avoid this if statement here
+            uint32_t cReadBack = this->cicRead(pInterface, pFeId, pRegisterAddress);
+            // uint32_t cReadBack = ( pRegisterAddress == 0x1D) ? cbcRead(pInterface, pFeId, pChipId, pPage ,
+            // pRegisterAddress) : pRegisterValue ;
+            LOG(DEBUG) << BOLDBLUE << "Read back " << +cReadBack << " after trying to write... " << +pRegisterValue;
+            cSuccess = (((cStatus & 0x4) >> 2) == 1);
+            if(!cSuccess)
+            {
+                LOG(INFO) << BOLDRED << "SCA status " << std::bitset<8>(cStatus) << " for hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
+                throw std::runtime_error(std::string("SCA status reporting error..."));
+            }
+            cSuccess = (cReadBack == pRegisterValue);
+            if(!cSuccess)
+            {
+                LOG(INFO) << BOLDRED << "\t\t.. Attempt#" << +cAttempts << " I2C readback from CIC failed.. "
+                          << " on hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
+            }
         }
-        if(cReadBack != pRegisterValue)
-        {
-            LOG(INFO) << BOLDRED << "I2C readback failed.. "
-                      << " for hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
-            throw std::runtime_error(std::string("I2C readback mismatch..."));
-        }
-        cSuccess = cSuccess && (cReadBack == pRegisterValue);
-        return cSuccess;
+        cAttempts++;
+    } while(!cSuccess && cAttempts < cMaxAttempts);
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDRED << "I2C fail via GBtx for CIC on hybrid " << +pFeId << " register 0x" << std::hex << +pRegisterAddress << std::dec << " [CIC]." << RESET;
+        throw std::runtime_error(std::string("SCA status reporting error..."));
     }
-    else
-        return (cWrite == 0);
+    return cSuccess;
 }
 
 float GbtInterface::convAdcToTemp(float pAdcValue, std::string pThermistor)

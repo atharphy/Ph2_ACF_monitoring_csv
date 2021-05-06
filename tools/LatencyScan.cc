@@ -719,9 +719,9 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
                 {
                     // now loop the channels for this particular event and increment a counter
                     if(cCbc->getFrontEndType() == FrontEndType::MPA)
-                        cHitCounter += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(cFe->getId(), cCbc->getId())).size();
+                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cFe->getId(), cCbc->getId());
                     else if(cCbc->getFrontEndType() == FrontEndType::SSA)
-                        cHitCounter += (static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(cFe->getId(), cCbc->getId())).size();
+                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cFe->getId(), static_cast<SSA*>(cCbc)->getPartid());
                     else
                         cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
                 }

@@ -246,8 +246,6 @@ void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
     if(fSummaryTree) fSummaryTree->Fill();
 }
 
-TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
-
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
@@ -479,32 +477,7 @@ void Tool::SaveResults()
 
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
-    // Fabio: CBC specific -> to be moved out from Tool - BEGIN
-    bool cCheck = false;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find("HoleMode");
-
-    if(cSetting != std::end(fSettingsMap))
-    {
-        cCheck    = true;
-        cHoleMode = (cSetting->second == 1) ? true : false;
-    }
-
-    std::string cMode;
-
-    if(cCheck)
-    {
-        if(cHoleMode)
-            cMode = "_Hole";
-        else
-            cMode = "_Electron";
-    }
-    // Fabio: CBC specific -> to be moved out from Tool - END
-
     std::string nDirname = pDirname;
-
-    if(cCheck && pMode) nDirname += cMode;
-
     if(pDate) nDirname += currentDateTime();
 
     LOG(INFO) << GREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
@@ -978,7 +951,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDacList, allOneRegister);
     }
-    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allZeroRegister << RESET;
+    LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allZeroRegister << RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
     else
@@ -988,7 +961,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
-    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allOneRegister << RESET;
+    LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allOneRegister << RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
     else
@@ -1266,6 +1239,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
         {
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
+            // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
             fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents();
@@ -1426,6 +1400,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
 // set same local dac for all BeBoard
 void Tool::setSameLocalDac(const std::string& dacName, const uint16_t dacValue)
 {
+    LOG(INFO) << BOLDMAGENTA << "Setting local dac [ " << dacName << " ] to " << dacValue << RESET;
     for(auto cBoard: *fDetectorContainer) { setSameLocalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 
     return;

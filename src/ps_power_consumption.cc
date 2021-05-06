@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
                     cTool.fBeBoardInterface->ChipReSync(cBoard);
                     if(cSuccess)
                         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
-                                  << +cOuterTrackerHybrid->getLinkId() << RESET;
+                                  << +cOuterTrackerHybrid->getOpticalGroupId() << RESET;
                 }
             }
 
@@ -772,7 +772,7 @@ int main(int argc, char* argv[])
                             cTool.fBeBoardInterface->ChipReSync(cBoard);
                             if(cSuccess)
                                 LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
-                                          << +cOuterTrackerHybrid->getLinkId() << RESET;
+                                          << +cOuterTrackerHybrid->getOpticalGroupId() << RESET;
                         } // OG
                     }     // inter
                     else if(cHybrifCnfg == 2)
@@ -904,7 +904,7 @@ int main(int argc, char* argv[])
                                 cTool.fBeBoardInterface->ChipReSync(cBoard);
                                 if(cSuccess)
                                     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
-                                              << +cOuterTrackerHybrid->getLinkId() << RESET;
+                                              << +cOuterTrackerHybrid->getOpticalGroupId() << RESET;
                             } // prepare CIC
                         }     // OG
                     }         // inter2

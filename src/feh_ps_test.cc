@@ -169,7 +169,9 @@ int main(int argc, char* argv[])
     }
     // return 0;
 
-    std::string cMonitor = "right";
+    // bool        cMonitorLPGBT = true;
+    std::string cMonitor      = "right";
+    cHybridTester.ConfigureHw();
 
     if(cMonitorLPGBT)
     {
@@ -252,6 +254,13 @@ int main(int argc, char* argv[])
         }
     }
 
+    // align ASICs on PS module
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cHybridTester);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
+
     // interface to data player
     DPInterface         cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(cHybridTester.fBeBoardFWMap.find(0)->second);
@@ -294,15 +303,15 @@ int main(int argc, char* argv[])
 
         cHybridTester.dumpConfigFiles();
 
-        // Check if data player is running
-        // if(cDPInterfacer.IsRunning(cInterface))
-        // {
-        //     LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-        //     cDPInterfacer.Stop(cInterface);
-        // }
+        // // Check if data player is running
+        // // if(cDPInterfacer.IsRunning(cInterface))
+        // // {
+        // //     LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+        // //     cDPInterfacer.Stop(cInterface);
+        // // }
 
-        // Configure and Start DataPlayer
-        // to send phase alignment pattern
+        // // Configure and Start DataPlayer
+        // // to send phase alignment pattern
         // uint8_t cPhaseAlignmentPattern = 0x55;
         // cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
         // cDPInterfacer.Start(cInterface);
@@ -310,7 +319,7 @@ int main(int argc, char* argv[])
         // else
         //     LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-        // align CIC inputs
+        // // align CIC inputs
         // CicFEAlignment cCicAligner;
         // cCicAligner.Inherit(&cHybridTester);
         // cCicAligner.PhaseAlignmentMPA(100);
@@ -340,6 +349,8 @@ int main(int argc, char* argv[])
     // now go back to PS alignment and align inputs
     // need to do this if you're going to do any kind
     // of data tests
+    // cPSAlignment.Align();
+    // cPSAlignment.Reset();
 
     FrontEndType cFrontEndType;
     if(cChipType == "MPA")

@@ -158,6 +158,8 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setEventType(EventType::SSA);
         else if(cEventTypeString == "PSAS")
             cBeBoard->setEventType(EventType::PSAS);
+        else if(cEventTypeString == "VR2S")
+            cBeBoard->setEventType(EventType::VR2S);
         else
             cBeBoard->setEventType(EventType::VR);
     }
@@ -562,8 +564,11 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cHybrid = pOpticalGroup->addHybridContainer(
                 pHybridNode.attribute("Id").as_int(),
                 new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
+            // probably this can be removed now
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
         }
+        // link optical group id to hybrid (maybe this should be in the constructor?)
+        cHybrid->setOpticalGroupId(pOpticalGroup->getId());
 
         std::string cConfigFileDirectory;
         for(pugi::xml_node cChild: pHybridNode.children())
@@ -615,6 +620,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "----" << cName << "  "
                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
+                        cCic->setOpticalGroupId(pOpticalGroup->getId());
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
 
@@ -701,8 +707,8 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
 
     uint32_t     cChipId = pCbcNode.attribute("Id").as_int();
     ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName));
+    cCbc->setOpticalGroupId(cHybrid->getOpticalGroupId());
     cCbc->setNumberOfChannels(254);
-
     // parse the specific CBC settings so that Registers take precedence
     this->parseCbcSettings(pCbcNode, cCbc, os);
 

@@ -205,6 +205,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(CompileForShep OR NoDataShipping)
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
+        add_subdirectory(MonitorDQM)
     endif()
 
     if(NoDataShipping OR (CompileForShep AND CompileForHerd))
@@ -217,6 +218,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
+    add_subdirectory(MonitorUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
     #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")

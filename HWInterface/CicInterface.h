@@ -68,7 +68,7 @@ class CicInterface : public ChipInterface
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
     // CIC specific functions
-    std::pair<bool, uint16_t>         ReadChipReg(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
+    std::pair<bool, uint16_t>         ReadChipRegItem(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
     bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset = 0);
     bool                              SetOptimalTaps(Ph2_HwDescription::Chip* pChip, int pOffset = 0);
     uint8_t                           GetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, uint8_t pInput);
@@ -95,7 +95,7 @@ class CicInterface : public ChipInterface
     bool                              CheckSoftReset(Ph2_HwDescription::Chip* pChip);
     bool                              StartUp(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 7);
     bool                              ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
-    std::vector<std::vector<uint8_t>> ReadWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    std::vector<std::vector<uint8_t>> GetWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                              SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);
     bool                              SelectOutput(Ph2_HwDescription::Chip* pChip, bool pFixedPattern = true);
     bool                              EnableFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFEs = {0, 1, 2, 3, 4, 5, 6, 7}, bool pEnable = true);
@@ -135,13 +135,14 @@ class CicInterface : public ChipInterface
     std::vector<std::bitset<6>> getFeStates() { return fFeStates; }
     std::vector<std::bitset<4>> getPortStates() { return fPortStates; }
     std::vector<uint8_t>        getI2CStatus() { return fI2CStatus; }
+    void                        setWith8CBC3(bool cIsWith8CBC3) { fWith8CBC3 = cIsWith8CBC3; }
+    void                        setWithlpGBT(uint8_t pIsWithLpGBT) {}
 
   private:
+    bool    fWith8CBC3      = false;
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
-
-    D19clpGBTInterface*       flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
+    uint8_t fWithLpGBT      = 0;
 
     bool                           WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
@@ -162,10 +163,14 @@ class CicInterface : public ChipInterface
     uint16_t fReWR               = 0;
 
   protected:
-    std::vector<uint8_t> fFeMapping2S{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5}; // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};    // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMapping8CBC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};   // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5};   // Index CIC FE Id , Value Hybrid FE Id
 
+    void                         UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    bool                         ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
     bool                         ReadOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps);
     std::map<uint8_t, uint8_t>   fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                      fMaxDriveStrength = 5;
@@ -174,6 +179,8 @@ class CicInterface : public ChipInterface
     std::vector<std::vector<uint8_t>> fPhaseTaps;
     std::vector<std::bitset<6>>       fFeStates;
     std::vector<std::bitset<4>>       fPortStates;
+    std::vector<std::vector<uint8_t>> fWordAlignmentVals;
+
     // register map
 };
 } // namespace Ph2_HwInterface

@@ -39,7 +39,6 @@
             <MPA Id="6" configfile="MPA_minConfig.txt" />
             <MPA Id="7" configfile="MPA_minConfig.txt" /> -->
 
-
             <CIC_Files path="./settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>

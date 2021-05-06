@@ -11,6 +11,7 @@
 #define __CHIPINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
+#include <mutex>
 #include <vector>
 
 template <typename T>
@@ -31,12 +32,14 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
+    std::mutex          fMutex;
     BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
     BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
     uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
 
-    uint16_t fRegisterCount;    /*!< Counter for the number of Registers written */
-    uint16_t fTransactionCount; /*!< Counter for the number of Transactions */
+    uint16_t fRegisterCount;     /*!< Counter for the number of Registers written */
+    uint16_t fTransactionCount;  /*!< Counter for the number of Transactions */
+    bool     fWithlpGBT = false; /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with
@@ -100,6 +103,21 @@ class ChipInterface
      */
     virtual uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) = 0;
 
+    // this does not need to be virtual as its the same for all types of readout chips
+    bool lpGBTCheck(const Ph2_HwDescription::BeBoard* pBoard)
+    {
+        fWithlpGBT = false;
+        for(auto cOpticalGroup: *pBoard)
+        {
+            if(cOpticalGroup->getIndex() > 0) break;
+
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            fWithlpGBT   = (clpGBT != nullptr);
+        }
+        return fWithlpGBT;
+    }
+    //
+    bool lpGBTFound() { return fWithlpGBT; }
     void output();
 };
 } // namespace Ph2_HwInterface

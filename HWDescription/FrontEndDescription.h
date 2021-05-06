@@ -47,6 +47,12 @@ class FrontEndDescription
     uint8_t getFMCId() const { return fFMCId; }
 
     /*!
+     * \brief Get the OpticalGroup ID
+     * \return OpticalGroup ID
+     */
+    uint8_t getOpticalGroupId() const { return fOpticalGroupId; }
+
+    /*!
      * \brief Get the FE ID
      * \return The FE ID
      */
@@ -71,6 +77,11 @@ class FrontEndDescription
      */
     void setFMCId(uint8_t pFMCId) { fFMCId = pFMCId; }
     /*!
+     * \brief Set the Optical Group ID
+     * \param pOpticalGroupId
+     */
+    void setOpticalGroupId(uint8_t pOpticalGroupId) { fOpticalGroupId = pOpticalGroupId; }
+    /*!
      * \brief Set the FE ID
      * \param pFeId
      */
@@ -90,6 +101,8 @@ class FrontEndDescription
     uint8_t fBeId;
     // Id of the FMC Slot on the BIO Board, all FEs need to know so the right FW registers can be written
     uint8_t fFMCId;
+    // Id of the optical link used
+    uint8_t fOpticalGroupId;
     // Id of the FE (hybrid/hybrid, etc...)
     uint8_t fFeId;
     // status (true=active, false=disabled)

@@ -196,8 +196,18 @@ void PedeNoise::sweepSCurves()
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(false);
-        if(cWithSSA || cWithMPA)
+        if(cWithSSA)
             setSameGlobalDac("InjectedCharge", 0);
+        else if(cWithMPA)
+        {
+            setSameGlobalDac("CalDAC0", 0);
+            setSameGlobalDac("CalDAC1", 0);
+            setSameGlobalDac("CalDAC2", 0);
+            setSameGlobalDac("CalDAC3", 0);
+            setSameGlobalDac("CalDAC4", 0);
+            setSameGlobalDac("CalDAC5", 0);
+            setSameGlobalDac("CalDAC6", 0);
+        }
         else
             setSameGlobalDac("TestPulsePotNodeSel", 0);
 

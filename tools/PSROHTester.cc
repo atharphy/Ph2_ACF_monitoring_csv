@@ -686,6 +686,29 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
     }
 }
 
+bool PSROHTester::TestResetLines(uint8_t pLevel)
+{
+    bool cValid = true;
+#ifdef __TCUSB__
+    float cMeasurement;
+    auto  cMapIterator = fResetLines.begin();
+    do
+    {
+#ifdef __ROH_USB__
+        fTC_USB->adc_get(cMapIterator->second, cMeasurement);
+#endif
+        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
+        cValid               = cValid && (cDifference_mV <= 100);
+        if(cDifference_mV > 100)
+            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+        else
+            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+        cMapIterator++;
+    } while(cMapIterator != fResetLines.end());
+#endif
+    return cValid;
+}
+
 void PSROHTester::Start(int currentRun)
 {
     LOG(INFO) << BOLDBLUE << "Starting PS ROH Tester" << RESET;

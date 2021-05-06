@@ -27,7 +27,23 @@ class ChannelGroupBase;
 
 namespace ContainerFactory
 {
-void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy);
+inline void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
+{
+    for(const auto board: original)
+    {
+        BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
+        for(const auto opticalGroup: *board)
+        {
+            OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
+
+            for(const auto hybrid: *opticalGroup)
+            {
+                HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
+                for(const auto chip: *hybrid) { copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols()); }
+            }
+        }
+    }
+}
 
 template <typename T>
 void print(const DetectorDataContainer& detector)
