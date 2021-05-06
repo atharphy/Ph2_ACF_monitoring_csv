@@ -356,26 +356,14 @@ void MemoryCheck2S::Initialise()
                 cTree->Branch("EventId", &fStubEvent.fEventId);
                 cTree->Branch("L1Id", &fStubEvent.fL1Id);
                 //
-                cTree->Branch("MemoryRow", &fStubEvent.fMemoryRow);
-                cTree->Branch("MemoryColumn", &fStubEvent.fMemoryColumnExp);
-                cTree->Branch("MemoryColumnReported", &fStubEvent.fMemoryColumnRep);
-                //
                 cTree->Branch("TriggeredBx", &fStubEvent.fTriggeredBx);
                 cTree->Branch("TriggerNumberInBurst", &fStubEvent.fTriggerNumberInBurst);
-                //
-                cTree->Branch("Threshold", &fStubEvent.fThreshold);
-                cTree->Branch("Noise", &fStubEvent.fNoise);
-                cTree->Branch("Pedestal", &fStubEvent.fPedestal);
-                //
                 cTree->Branch("PackageDelay", &fStubEvent.fPkgDelay);
                 //
                 cTree->Branch("ExpSeed", &fStubEvent.fSeedExp);
                 cTree->Branch("ExpBend", &fStubEvent.fBendExp);
                 cTree->Branch("RepSeed", &fStubEvent.fSeedRep);
                 cTree->Branch("RepBend", &fStubEvent.fBendRep);
-                cTree->Branch("StubMatch", &fStubEvent.fMatchedStub);
-                //
-                cTree->Branch("Pass", &fStubEvent.fCorrectValue);
                 this->bookHistogram(cHybrid, "Stub2STree", cTree);
 
                 cName = Form("StubTest_Cic%d", cHybrid->getId());
@@ -383,38 +371,28 @@ void MemoryCheck2S::Initialise()
                 if(cObj) delete cObj;
 
                 cTree = new TTree(cName, "StubTest");
-                cTree->Branch("Type", &fStubEvent.fType);
-                cTree->Branch("ChipId", &fStubEvent.fChipId);
-                cTree->Branch("HybridId", &fStubEvent.fHybridId);
-                cTree->Branch("TrialId", &fStubEvent.fTrial);
-                cTree->Branch("ReadoutSuccess", &fStubEvent.fReadoutSuccess);
+                cTree->Branch("Type", &fStubCheck.fType);
+                cTree->Branch("ChipId", &fStubCheck.fChipId);
+                cTree->Branch("HybridId", &fStubCheck.fHybridId);
+                cTree->Branch("TrialId", &fStubCheck.fTrial);
+                cTree->Branch("ReadoutSuccess", &fStubCheck.fReadoutSuccess);
                 //
-                cTree->Branch("StartTime", &fStubEvent.fStartTime);
-                cTree->Branch("StopTime", &fStubEvent.fStopTime);
+                cTree->Branch("StartTime", &fStubCheck.fStartTime);
+                cTree->Branch("StopTime", &fStubCheck.fStopTime);
                 //
-                cTree->Branch("EventId", &fStubEvent.fEventId);
-                cTree->Branch("L1Id", &fStubEvent.fL1Id);
+                cTree->Branch("EventId", &fStubCheck.fEventId);
+                cTree->Branch("L1Id", &fStubCheck.fL1Id);
                 //
-                cTree->Branch("PackageDelay", &fStubEvent.fPkgDelay);
+                cTree->Branch("PackageDelay", &fStubCheck.fPkgDelay);
                 //
-                cTree->Branch("MemoryRow", &fStubEvent.fMemoryRow);
-                cTree->Branch("MemoryColumn", &fStubEvent.fMemoryColumnExp);
-                cTree->Branch("MemoryColumnReported", &fStubEvent.fMemoryColumnRep);
+                cTree->Branch("TriggeredBx", &fStubCheck.fTriggeredBx);
+                cTree->Branch("TriggerNumberInBurst", &fStubCheck.fTriggerNumberInBurst);
                 //
-                cTree->Branch("TriggeredBx", &fStubEvent.fTriggeredBx);
-                cTree->Branch("TriggerNumberInBurst", &fStubEvent.fTriggerNumberInBurst);
-                //
-                cTree->Branch("Threshold", &fStubEvent.fThreshold);
-                cTree->Branch("Noise", &fStubEvent.fNoise);
-                cTree->Branch("Pedestal", &fStubEvent.fPedestal);
-                //
-                cTree->Branch("ExpSeed", &fStubEvent.fSeedExp);
-                cTree->Branch("ExpBend", &fStubEvent.fBendExp);
-                cTree->Branch("RepSeed", &fStubEvent.fSeedRep);
-                cTree->Branch("RepBend", &fStubEvent.fBendRep);
-                cTree->Branch("StubMatch", &fStubEvent.fMatchedStub);
-                //
-                cTree->Branch("Pass", &fStubEvent.fCorrectValue);
+                cTree->Branch("ExpSeed", &fStubCheck.fSeedExp);
+                cTree->Branch("ExpBend", &fStubCheck.fBendExp);
+                cTree->Branch("RepSeed", &fStubCheck.fSeedRep);
+                cTree->Branch("RepBend", &fStubCheck.fBendRep);
+                cTree->Branch("StubMatch", &fStubCheck.fMatchedStub);
                 this->bookHistogram(cHybrid, "StubCheck2STree", cTree);
                 // for(auto cChip: *cHybrid)
                 // {
@@ -1122,6 +1100,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                 {
                     auto& cExpectedStubsThisChip = cExpectedStubsThisHybrid->at(cChip->getIndex());
                     auto& cExpectedStubs         = cExpectedStubsThisChip->getSummary<std::vector<Stub>>();
+                    cExpectedStubs.clear();
 
                     auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getIndex());
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
@@ -1420,7 +1399,7 @@ void MemoryCheck2S::MemoryCheck2SRaw()
             for(size_t cIndx = 0; cIndx < (size_t)cNOffsts; cIndx++)
             {
                 int cResync = cIndx * cBurstLength;
-                if(cIndx % 16 == 0) LOG(INFO) << BOLDMAGENTA << "\t.. Sending triggers to scan addresses from : " << +cResync << " to " << cResync + cBurstLength << RESET;
+                //if(cIndx % 16 == 0) LOG(INFO) << BOLDMAGENTA << "\t.. Sending triggers to scan addresses from : " << +cResync << " to " << cResync + cBurstLength << RESET;
                 this->SendGenericTestPulses(cResync);
             }
         }
@@ -1882,7 +1861,7 @@ void MemoryCheck2S::MonitorAnalogue()
     ContainerFactory::copyAndInitChip<AdcMeasurements>(*fDetectorContainer, cAnBiases);
     for(size_t cMuxIndx = 0; cMuxIndx < cAmuxSels.size(); cMuxIndx++)
     {
-        LOG(INFO) << BOLDBLUE << "Monitoring ADC values when AMUXs " << cAmuxLbls[cMuxIndx] << " is selected" << RESET;
+        //LOG(INFO) << BOLDBLUE << "Monitoring ADC values when AMUXs " << cAmuxLbls[cMuxIndx] << " is selected" << RESET;
 
         DetectorDataContainer cAdcMeasurements;
         ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cAdcMeasurements);
@@ -2008,7 +1987,7 @@ void MemoryCheck2S::MonitorAnalogue()
                         fADCmeasurement.fScaling     = 1;
                         fADCmeasurement.fVrefCorr    = cVrefCorr;
                         fADCmeasurement.fDescription = cAmuxLbls[cMuxIndx];
-                        PrintADCMeasurement(fADCmeasurement);
+                        //PrintADCMeasurement(fADCmeasurement);
                         cBias.push_back(fADCmeasurement);
 #ifdef __USE_ROOT__
                         TTree* cTree = static_cast<TTree*>(getHist(cBoard, "AnalogueTree"));
@@ -2141,22 +2120,23 @@ void MemoryCheck2S::Check()
                             auto& cExpectdStubsThisHybrd = cExpectdStubsThisOG->at(cHybrid->getIndex());
                             auto& cExpectdStubsThisROC   = cExpectdStubsThisHybrd->at(cChip->getIndex());
                             auto& cExpectedStubs         = cExpectdStubsThisROC->getSummary<std::vector<Stub>>();
-//
-#ifdef __USE_ROOT__
-                            TTree* cRawStubTree = static_cast<TTree*>(getHist(cHybrid, "Stub2STree"));
-                            for(auto cReadoutStub: cStubs)
-                            {
-                                fStubEvent.fSeedExp = 0xFF;
-                                fStubEvent.fBendExp = 0xFF;
-                                fStubEvent.fSeedRep = cReadoutStub.getPosition();
-                                fStubEvent.fBendRep = cReadoutStub.getBend();
-                            }
-                            cRawStubTree->Fill();
-#endif
+                            //
+                            #ifdef __USE_ROOT__
+                                TTree* cRawStubTree = static_cast<TTree*>(getHist(cHybrid, "Stub2STree"));
+                                for(auto cReadoutStub: cStubs)
+                                {
+                                    fStubEvent.fSeedExp = 0xFF;
+                                    fStubEvent.fBendExp = 0xFF;
+                                    fStubEvent.fSeedRep = cReadoutStub.getPosition();
+                                    fStubEvent.fBendRep = cReadoutStub.getBend();
+                                    cRawStubTree->Fill();
+                                }
+                            #endif
                             for(auto cStub: cExpectedStubs)
                             {
-                                fStubEvent.fSeedExp = cStub.getPosition();
-                                fStubEvent.fBendExp = cStub.getBend();
+                                CopyEvent(fStubCheck, fMemEvent);
+                                fStubCheck.fSeedExp = cStub.getPosition();
+                                fStubCheck.fBendExp = cStub.getBend();
 
                                 bool   cMatchFound         = false;
                                 size_t cMatchIndx          = 0;
@@ -2169,17 +2149,18 @@ void MemoryCheck2S::Check()
                                     if(cMatchFound) cMatchIndx = cReadoutStubCounter;
                                     cReadoutStubCounter++;
                                 }
-                                fStubEvent.fMatchedStub = (cMatchFound) ? 1 : 0;
+                                fStubCheck.fMatchedStub = (cMatchFound) ? 1 : 0;
                                 if(cMatchFound)
                                 {
-                                    fStubEvent.fSeedRep = cStubs[cMatchIndx].getPosition();
-                                    fStubEvent.fBendRep = cStubs[cMatchIndx].getBend();
+                                    fStubCheck.fSeedRep = cStubs[cMatchIndx].getPosition();
+                                    fStubCheck.fBendRep = cStubs[cMatchIndx].getBend();
                                 }
                                 else
-                                    fStubEvent.fSeedRep = 0xFF;
-                                fStubEvent.fBendRep = 0xFF;
-
-                                if(!cMatchFound) { cBadEventsSummary.push_back(fStubEvent); }
+                                {
+                                    fStubCheck.fSeedRep = 0xFF;
+                                    fStubCheck.fBendRep = 0xFF;
+                                }
+                                if(!cMatchFound) { cBadEventsSummary.push_back(fStubCheck); }
 #ifdef __USE_ROOT__
                                 TTree* cStubTree = static_cast<TTree*>(getHist(cHybrid, "StubCheck2STree"));
                                 cStubTree->Fill();
