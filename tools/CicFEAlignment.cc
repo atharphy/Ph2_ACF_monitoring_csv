@@ -839,7 +839,7 @@ uint8_t CicFEAlignment::getWordAlignmentValue(BeBoard* pBoard, OpticalGroup* pOp
 void CicFEAlignment::Stop()
 {
     dumpConfigFiles();
-    Destroy();
+    // Destroy();
 }
 
 void CicFEAlignment::Pause() {}

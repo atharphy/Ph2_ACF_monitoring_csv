@@ -156,7 +156,8 @@ void Physics2S::initHisto()
 void Physics2S::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos.fillData(f2SDataContainer);
+    histos.fillOccupancy(fOccupancyContainer);
+    histos.fillStub     (fStubContainer     );
 #endif
 }
 

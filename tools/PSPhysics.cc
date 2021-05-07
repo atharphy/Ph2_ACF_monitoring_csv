@@ -20,18 +20,18 @@ using namespace Ph2_HwInterface;
 
 void PSPhysics::ConfigureCalibration()
 {
-    // PSAlignment cPSAlignment;
-    // cPSAlignment.Inherit(this);
-    // cPSAlignment.Initialise();
-    // // map MPA outputs for PS module
-    // cPSAlignment.MapMPAOutputs();
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(this);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
 
-    // CicFEAlignment cCicAligner;
-    // cCicAligner.Inherit(this);
-    // cCicAligner.Start(0);
-    // cCicAligner.waitForRunToBeCompleted();
-    // cCicAligner.Reset();
-    // cCicAligner.dumpConfigFiles();
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(this);
+    cCicAligner.Start(0);
+    cCicAligner.waitForRunToBeCompleted();
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
 
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(this);
@@ -40,7 +40,7 @@ void PSPhysics::ConfigureCalibration()
     cBackEndAligner.resetPointers();
 
     // cPSAlignment.Align();
-    // cPSAlignment.Reset();
+    cPSAlignment.Reset();
 
     if(!cAligned)
     {
@@ -59,17 +59,18 @@ void PSPhysics::ConfigureCalibration()
                     if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
                         LOG(INFO) << "SSA";
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 90);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x0);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 150);
                     }
                     if(chip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x7);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ModeSel_ALL", 0x0);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "HipCut_ALL", 0x1);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0xF);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ModeSel_ALL", 0x2);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "HipCut_ALL", 0x0);
                         // static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x57);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 60);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 110);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "L1Offset_1_ALL", 79);
+                        std::cout<<static_cast<PSInterface*>(fReadoutChipInterface)->ReadChipReg(chip, "ReadoutMode")<<std::endl;
                     }
                 }
             }
@@ -306,6 +307,9 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
         {
             for(const auto cHybrid: *cOpticalGroup)
             {
+                // uint16_t L1Status = static_cast<D19cCic2Event*>(event)->L1Status(cHybrid->getId());
+                // if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 ) LOG(WARNING) << BOLDRED << "No packet from MPA to CIC" << RESET;
+                // std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(event)->L1Id(cHybrid->getId(),0)<<std::endl;
                 for(const auto cChip: *cHybrid)
                 {
                     // std::cout<<__LINE__<<std::endl;
@@ -314,6 +318,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     // std::cout<<__LINE__<<std::endl;
                     std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                    // std::cout<<"Numer of pixel clusters = "<<pixelClusterList.size() << " - ";
                     std::vector<SCluster> stripClusterList = static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId());
                     std::vector<Stub>     stubList         = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
 
@@ -377,6 +382,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     }
                     // std::cout<<__LINE__<<std::endl;
                 }
+                // std::cout<<std::endl;
             }
         }
     }

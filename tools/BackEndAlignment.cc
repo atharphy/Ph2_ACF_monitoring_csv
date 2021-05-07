@@ -772,7 +772,7 @@ bool BackEndAlignment::Align()
             LOG(INFO) << BOLDBLUE << "CICICICICICI " << RESET;
             cAligned = this->CICAlignment(theBoard);
 
-            // if(cWithMPA or cWithSSA) { cAligned = cAligned && this->Bx0Alignment(theBoard); }
+            if(cWithMPA or cWithSSA) { cAligned = cAligned && this->Bx0Alignment(theBoard); }
         }
         else
         {

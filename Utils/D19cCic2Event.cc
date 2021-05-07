@@ -662,7 +662,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
             cSCluster.fMip     = cMip;  //((*cIterator) & ((0x1) << 0)) >> 0;
 
             cSClusters.push_back(cSCluster);
-            LOG(INFO) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << "," << unsigned(cSCluster.fMip) << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "S-cluster, address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << "," << unsigned(cSCluster.fMip) << RESET;
         }
         cIterator++;
     };
@@ -857,7 +857,7 @@ std::bitset<NMPACHANNELS> D19cCic2Event::decodePClusters(uint8_t pFeId, uint8_t 
                 aPCluster.fWidth   = (cCluster & ((0x7) << (0 + 4))) >> (0 + 4);
                 aPCluster.fZpos    = (cCluster & ((0xF) << 0)) >> 0;
                 // cPClusters.push_back(aPCluster);
-                LOG(INFO) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << "," << unsigned(aPCluster.fZpos) << RESET;
+                LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << "," << unsigned(aPCluster.fZpos) << RESET;
             }
             cClusterId++;
         }

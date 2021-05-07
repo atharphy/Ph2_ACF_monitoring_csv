@@ -2,7 +2,7 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-#define PORT 5000 // The server listening port
+#define PORT 5001 // The server listening port
 
 int main(int argc, char** argv)
 {

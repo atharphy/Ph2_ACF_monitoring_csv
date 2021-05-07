@@ -55,7 +55,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     {
         ChipRegItem& cItem = cSSARegMap[cMapItem.second];
         // for now .. don't configure each strip
-        if(cMapItem.second.find("_S") != std::string::npos) continue;
+        // if(cMapItem.second.find("_S") != std::string::npos) continue;
 
         // create a register
         std::pair<uint16_t, uint16_t> cReg;

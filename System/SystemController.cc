@@ -122,7 +122,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fStreamerEnabled = streamData;
     if(streamData == true)
     {
-        fNetworkStreamer = new TCPPublishServer(6000, 1);
+        fNetworkStreamer = new TCPPublishServer(6001, 1);
         fNetworkStreamer->startAccept();
     }
 
@@ -130,7 +130,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
-    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7001);
     if(!fPowerSupplyClient->connect(1))
     {
         std::cerr << "Cannot connect to the Power Supply Server" << '\n';
