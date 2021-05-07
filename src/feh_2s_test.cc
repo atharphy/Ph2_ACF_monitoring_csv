@@ -14,6 +14,13 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/ShortFinder.h"
 
+#ifdef __POWERSUPPLY__
+// Libraries
+#include "DeviceHandler.h"
+#include "PowerSupply.h"
+#include "PowerSupplyChannel.h"
+#endif
+
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #include "TROOT.h"
@@ -134,6 +141,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("testTune", "Test tuning ....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
+    
+    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -191,6 +202,51 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
 #endif
 
+DeviceHandler cPowerSupplyHandler;
+std::vector<std::pair<std::string, bool>> cPowerSupplyChannels;    
+#ifdef __POWERSUPPLY__
+    std::string cPowerSupply = "MyRohdeSchwarz";
+    pugi::xml_document docSettings;
+
+    cPowerSupplyHandler.readSettings("settings/PSskeleton.xml", docSettings);
+    try
+    {
+        cPowerSupplyHandler.getPowerSupply(cPowerSupply);
+    }
+    catch(const std::out_of_range& oor)
+    {
+        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        exit(0);
+    }
+    // Get all channels of the powersupply
+    pugi::xml_document                        doc;
+    if(!doc.load_file("settings/PSskeleton.xml")) return -1;
+    pugi::xml_node devices = doc.child("Devices");
+    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
+    {
+        std::string s(ps.attribute("ID").value());
+        if(s == cPowerSupply)
+        {
+            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            {
+                std::string name(channel.attribute("ID").value());
+                std::string use(channel.attribute("InUse").value());
+
+                cPowerSupplyChannels.push_back(std::make_pair(name, use == "Yes"));
+            }
+        }
+    }
+    if(cmd.foundOption("cyclePower")) 
+    {
+        LOG(INFO) << BOLDRED << "Turn off all channels : " << cPowerSupply << RESET;
+        for(auto channelName: cPowerSupplyChannels) { if (!channelName.second) continue; cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOff(); }
+        std::this_thread::sleep_for(std::chrono::seconds(60));
+        LOG(INFO) << BOLDGREEN << "Turn on all channels : " << cPowerSupply << RESET;
+        for(auto channelName: cPowerSupplyChannels) { if (!channelName.second) continue; cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn(); }
+        std::this_thread::sleep_for(std::chrono::seconds(180));
+    }
+#endif
+
     std::stringstream outp;
     Tool              cTool;
     if(cSaveToFile)
@@ -207,6 +263,48 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
 
+    std::ofstream cPowerLog;
+#ifdef __POWERSUPPLY__ 
+    const auto cStart = std::chrono::system_clock::now();
+    int cStartTime             = (int)std::chrono::duration_cast<std::chrono::seconds>(cStart.time_since_epoch()).count();
+    cPowerLog.open(cTool.getDirectoryName() + "/PowerLog.tab", std::ios::app);
+    cPowerLog << cStartTime << "\t"; 
+    if( cmd.foundOption("powerState") )
+    {
+        // Give complete status reoort for all channels in the power supply
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(channelName.second)
+            {
+                LOG(INFO) << BOLDYELLOW << cPowerSupply << " status of channel " << channelName.first << ":" RESET;
+                bool        isOn       = cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->isOn();
+                std::string isOnResult = isOn ? "1" : "0";
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltageCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltage = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string currentCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string current = "-";
+                if(isOn) { current = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); }
+                LOG(INFO) << "\tIsOn:\t\t" << BOLDYELLOW << isOnResult << RESET;
+                LOG(INFO) << "\tV_max(set):\t\t" << BOLDYELLOW << voltageCompliance << RESET;
+                LOG(INFO) << "\tV(meas):\t" << BOLDYELLOW << voltage << RESET;
+                LOG(INFO) << "\tI_max(set):\t" << BOLDYELLOW << currentCompliance << RESET;
+                LOG(INFO) << "\tI(meas):\t" << BOLDYELLOW << current << RESET;
+                gui::data((channelName.first + ">IsOn").c_str(), isOnResult.c_str());
+                gui::data((channelName.first + ">v_max_set").c_str(), voltageCompliance.c_str());
+                gui::data((channelName.first + ">v_meas").c_str(), voltage.c_str());
+                gui::data((channelName.first + ">i_max_set").c_str(), currentCompliance.c_str());
+                gui::data((channelName.first + ">i_meas").c_str(), current.c_str());
+                cPowerLog << voltage << "\t" << current << "\t"; 
+            }
+        }
+        cPowerLog << "\n";
+    }
+    cPowerLog.close();
+#endif
     // for some reason this does not work
     // error I get is new TRootSnifferFull("sniff");
     // cTool.StartHttpServer();
@@ -507,7 +605,8 @@ int main(int argc, char* argv[])
             int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
-        cMemoryChecker.MemoryCheck2SRaw();
+        cMemoryChecker.MemoryCheck2SRaw(true);//all ones
+        cMemoryChecker.MemoryCheck2SRaw(false);//all zeros
 
         cMemoryChecker.MonitorAnalogue();
         cMemoryChecker.SaveOptimalTaps();
@@ -621,6 +720,43 @@ int main(int argc, char* argv[])
     cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
     cGoodRuns << cRunNumber << "\n";
     cGoodRuns.close();
+
+#ifdef __POWERSUPPLY__
+    cPowerLog.open(cTool.getDirectoryName() + "/PowerLog.tab", std::ios::app);
+    const auto cStop = std::chrono::system_clock::now();
+    int cStopTime    = (int)std::chrono::duration_cast<std::chrono::seconds>(cStop.time_since_epoch()).count();
+    if( cmd.foundOption("powerState") )
+    {
+        cPowerLog << cStopTime << "\t"; 
+        // Give complete status reoort for all channels in the power supply
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(channelName.second)
+            {
+                LOG(INFO) << BOLDYELLOW << cPowerSupply << " status of channel " << channelName.first << ":" RESET;
+                bool        isOn       = cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->isOn();
+                std::string isOnResult = isOn ? "1" : "0";
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltageCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltage = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string currentCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string current = "-";
+                if(isOn) { current = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); }
+                LOG(INFO) << "\tIsOn:\t\t" << BOLDYELLOW << isOnResult << RESET;
+                LOG(INFO) << "\tV_max(set):\t\t" << BOLDYELLOW << voltageCompliance << RESET;
+                LOG(INFO) << "\tV(meas):\t" << BOLDYELLOW << voltage << RESET;
+                LOG(INFO) << "\tI_max(set):\t" << BOLDYELLOW << currentCompliance << RESET;
+                LOG(INFO) << "\tI(meas):\t" << BOLDYELLOW << current << RESET;
+                cPowerLog << voltage << "\t" << current << "\t";
+            }
+        }
+        cPowerLog << "\n";
+    }
+    cPowerLog.close();
+#endif
 
     return 0;
 }

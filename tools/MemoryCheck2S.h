@@ -143,7 +143,7 @@ class MemoryCheck2S : public Tool
     void SetThreshold(float pSigma = 3);
     void EvaluatePedeNoise(int pNevents = 100, int pScanRange = 25);
     void DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTriggerSeparation = 500, bool pAllOnes = true);
-    void MemoryCheck2SRaw();
+    void MemoryCheck2SRaw(bool pAllOnes=true);
     void MemoryCheck2SSparse();
     void RegisterCheck();
     void OptimizeTPdelay();

@@ -279,16 +279,16 @@ void MemoryCheck2S::Initialise()
         if(cObj) delete cObj;
 
         TTree* cTree = new TTree(cName, "AnalogueMonitoring");
-        cTree->Branch("ADC", &fADCmeasurement.fADC);
-        cTree->Branch("StartTime", &fADCmeasurement.fStartTime);
-        cTree->Branch("StopTime", &fADCmeasurement.fStopTime);
-        cTree->Branch("LinkId", &fADCmeasurement.fLinkId);
-        cTree->Branch("HybridId", &fADCmeasurement.fHybridId);
-        cTree->Branch("ChipId", &fADCmeasurement.fChipId);
-        cTree->Branch("VrefCorr", &fADCmeasurement.fVrefCorr);
-        cTree->Branch("Scaling", &fADCmeasurement.fScaling);
-        cTree->Branch("Mean", &fADCmeasurement.fMean);
-        cTree->Branch("StdDev", &fADCmeasurement.fStdDev);
+        cTree->Branch("ADC", &fADCmeasurement.fADC,"ADC/b");
+        cTree->Branch("StartTime", &fADCmeasurement.fStartTime,"StartTime/I");
+        cTree->Branch("StopTime", &fADCmeasurement.fStopTime,"StopTime/I");
+        cTree->Branch("LinkId", &fADCmeasurement.fLinkId,"LinkId/b");
+        cTree->Branch("HybridId", &fADCmeasurement.fHybridId,"HybridId/b");
+        cTree->Branch("ChipId", &fADCmeasurement.fChipId,"ChipId/b");
+        cTree->Branch("VrefCorr", &fADCmeasurement.fVrefCorr,"VrefCorr/b");
+        cTree->Branch("Scaling", &fADCmeasurement.fScaling,"Scaling/f");
+        cTree->Branch("Mean", &fADCmeasurement.fMean,"Mean/f");
+        cTree->Branch("StdDev", &fADCmeasurement.fStdDev,"StdDev/f");
         cTree->Branch("Description", &fADCmeasurement.fDescription);
         this->bookHistogram(cBoard, "AnalogueTree", cTree);
 
@@ -1235,7 +1235,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
     }
     Reconfigure();
 }
-void MemoryCheck2S::MemoryCheck2SRaw()
+void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
 {
     // I still don't understand what is happening with the masking
     // but ok ..
@@ -1256,7 +1256,7 @@ void MemoryCheck2S::MemoryCheck2SRaw()
     fTypeOfTest          = 0;
     bool cInjection      = false;
     bool cSparisfication = false;
-    bool cAllOnes        = true;
+    bool cAllOnes        = pAllOnes;
     fTypeOfTest += (cAllOnes) ? 0 : 1;
     uint16_t cThreshold  = cAllOnes ? 1000 : 100;
     bool     cWithNoise  = !cInjection;
@@ -1393,7 +1393,10 @@ void MemoryCheck2S::MemoryCheck2SRaw()
         for(size_t cAttempt = 0; cAttempt < cNtrials; cAttempt++)
         {
             fTrial = cAttempt;
-            LOG(INFO) << BOLDMAGENTA << "MemoryCheck2SRaw - Attempt#" << +cAttempt << RESET;
+            if( cAllOnes )
+                LOG(INFO) << BOLDMAGENTA << "MemoryCheck2SRaw AllOnes - Attempt#" << +cAttempt << RESET;
+            else
+                LOG(INFO) << BOLDMAGENTA << "MemoryCheck2SRaw AllZeros - Attempt#" << +cAttempt << RESET;
             // generate enough fast command sequences
             //  to cover complete pipeline
             for(size_t cIndx = 0; cIndx < (size_t)cNOffsts; cIndx++)

@@ -5,6 +5,7 @@
 #include "../Utils/gui_logger.h"
 #include "../tools/Channel.h"
 #ifdef __POWERSUPPLY__
+// Libraries
 #include "DeviceHandler.h"
 #include "PowerSupply.h"
 #include "PowerSupplyChannel.h"
@@ -28,12 +29,12 @@ int main(int argc, char** argv)
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription("CMS Ph2_ACF power supply example application");
+    cmd.setIntroductoryDescription("CMS Ph2_ACF  system test application");
     // error codes
     cmd.addErrorCode(0, "Success");
     cmd.addErrorCode(1, "Error");
     // options
-    cmd.setHelpOption("h", "help", "Example: powersupply -f CMSIT.xml --name TestKeithley --channel Front -v 1.8");
+    cmd.setHelpOption("h", "help", "Print this help page");
 
     cmd.defineOption("name", "Name of the power supply as described in the HW file", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("name", "n");
@@ -65,8 +66,10 @@ int main(int argc, char** argv)
     cmd.defineOption("measure", "Measure current ");
     cmd.defineOptionAlternative("measure", "m");
 
+
     cmd.defineOption("report", "Report Status");
     cmd.defineOptionAlternative("report", "r");
+
 
     int result = cmd.parse(argc, argv);
 
@@ -136,11 +139,11 @@ int main(int argc, char** argv)
     if(cmd.foundOption("measure"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring current consumption on all channels.." << RESET;
-        for(auto channelName: channelNames)
-        {
-            std::string current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent());
+        for(auto channelName: channelNames) {
+            std::string current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); 
             std::string voltage = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
-            LOG(INFO) << "\tV(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << voltage << "\tI(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << current << RESET;
+            LOG(INFO) << "\tV(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << voltage 
+                << "\tI(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << current << RESET;
         }
     }
 
@@ -196,7 +199,7 @@ int main(int argc, char** argv)
             LOG(INFO) << "Turn on all channels" << cPowerSupply;
             for(auto channelName: channelNames) { theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn(); }
         }
-        if(cmd.foundOption("report"))
+        if( cmd.foundOption("report") )
         {
             // Give complete status reoort for all channels in the power supply
             for(auto channelName: channelNames)

@@ -135,7 +135,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           target_link_libraries(${name} ${LIBS})
         endif()
         #check for PowerSupply
-        if ("${name}" STREQUAL "powersupply")
+        if ("${name}" STREQUAL "powersupply"  OR ("${name}" STREQUAL "feh_2s_test"))
         #if ("${name}" STREQUAL "powersupply" OR "${name}" STREQUAL "ps_power_consumption")
             if(${PH2_POWERSUPPLY_FOUND})
                 target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
