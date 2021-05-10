@@ -70,7 +70,7 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
     std::string serverIP   = "127.0.0.1";
-    int         serverPort = 6000;
+    int         serverPort = 6001;
     fListener              = new TCPSubscribeClient(serverIP, serverPort);
 
     if(!fListener->connect())

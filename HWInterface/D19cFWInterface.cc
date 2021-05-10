@@ -1362,7 +1362,9 @@ void D19cFWInterface::TriggerConfiguration()
 }
 void D19cFWInterface::Start()
 {
-    ResetTriggerFSM();
+    ChipReSync();
+    // reset trigger config
+    this->ResetTriggerFSM();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // reset the readout
     this->ResetReadout();
@@ -2614,6 +2616,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         uint32_t cNWords    = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
         uint32_t cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         LOG(INFO) << BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
+        LOG(INFO) << BOLDGREEN << "cNWords = " << cNWords << RESET;
         if(cNWords == 0) return 0;
         cNEvents = this->GetData(pBoard, pData);
         // read all the words

@@ -180,10 +180,10 @@ int main(int argc, char* argv[])
     cAntennaTester.Initialize();
 #endif
 
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 5});
-    // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReconfigureTriggerFSM(cVecReg);
+    // std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    // cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 5});
+    // // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    // (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReconfigureTriggerFSM(cVecReg);
 
     if(cLatency || cStubLatency)
     {

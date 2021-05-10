@@ -906,7 +906,7 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 void CicFEAlignment::Stop()
 {
     dumpConfigFiles();
-    Destroy();
+    // Destroy();
 }
 
 void CicFEAlignment::Pause() {}

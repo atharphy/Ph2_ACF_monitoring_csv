@@ -207,7 +207,7 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
         detectorContainer.getObject(this->fHeaderStream.fBoardId)
             ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>())
             ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>())
-            ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>())
+            ->at(this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>())
             ->setChannelContainer(this->fDataStream.fChannelContainer);
         this->fDataStream.fChannelContainer = nullptr;
     }
@@ -233,7 +233,7 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
         this->fHeaderStream.fBoardId = boardId;
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybridId);
-        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getId());
+        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
         this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
     }
 };

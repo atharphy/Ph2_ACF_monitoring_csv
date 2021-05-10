@@ -23,6 +23,7 @@
 #include "MiddlewareController.h"
 //#include "../tools/SSAPhysics.h"
 #include "../tools/BackEndAlignment.h"
+#include "../tools/CicFEAlignment.h"
 #include "../tools/PSPhysics.h"
 #include "../tools/Physics2S.h"
 
@@ -95,7 +96,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         else if(getVariableValue("Calibration", buffer) == "cbcPulseShape")
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CBCPulseShape>;
         else if(getVariableValue("Calibration", buffer) == "OTLatency")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, LatencyScan>;
+            theSystemController_ = new CombinedCalibration<CicFEAlignment, BackEndAlignment, LatencyScan>;
 
         else if(getVariableValue("Calibration", buffer) == "pixelalive")
             theSystemController_ = new CombinedCalibration<PixelAlive>;

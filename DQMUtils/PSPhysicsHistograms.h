@@ -29,6 +29,7 @@ class PSPhysicsHistograms : public DQMHistogramBase
 
   private:
     DetectorDataContainer fDetectorData;
+    DetectorDataContainer fIsMPAContainer;
     DetectorContainer*    fDetectorContainer;
     // DetectorDataContainer fSClusterHistograms;
     // DetectorDataContainer fPClusterHistograms;

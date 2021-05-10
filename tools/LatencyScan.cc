@@ -114,9 +114,9 @@ void LatencyScan::ScanLatency()
                     if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
                         LOG(INFO) << "MPA";
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x7);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0xf);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ModeSel_ALL", 0x0);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HipCut_ALL", 0x1);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HipCut_ALL", 0x0);
                         // static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Threshold", 90);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "InjectedCharge", 0);
@@ -136,6 +136,7 @@ void LatencyScan::ScanLatency()
             for(auto opticalGroup: *board)
             {
                 const std::vector<Event*>& events = GetEvents();
+                std::cout<<"Event size = "<<events.size()<<std::endl;
                 for(auto hybrid: *opticalGroup)
                 {
                     uint32_t cHitSum    = 0;
@@ -143,9 +144,9 @@ void LatencyScan::ScanLatency()
                     uint32_t cHitSumSSA = 0;
                     for(auto& cEvent: events)
                     {
-                        uint16_t L1Status = static_cast<D19cCic2Event*>(cEvent)->L1Status(hybrid->getId());
-                        if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 ) LOG(WARNING) << BOLDRED << "No packet from MPA to CIC" << RESET;
-                        std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(cEvent)->L1Id(hybrid->getId(),0)<<std::endl;
+                        // uint16_t L1Status = static_cast<D19cCic2Event*>(cEvent)->L1Status(hybrid->getId());
+                        // if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 ) LOG(WARNING) << BOLDRED << "No packet from MPA to CIC" << RESET;
+                        // std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(cEvent)->L1Id(hybrid->getId(),0)<<std::endl;
                 
                         // first, reset the hit counter - I need separate counters for each event
                         int cHitCounter    = 0;
@@ -158,8 +159,8 @@ void LatencyScan::ScanLatency()
                             {
                                 cHitCounterMPA += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), theChip->getId())).size();
                                 // LOG(INFO) << "cHitCounterMPA " << cHitCounterMPA<<RESET;
-                                std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), chip->getId());
-                                std::cout<<"Numer of pixel clusters = "<<pixelClusterList.size() << " - ";
+                                // std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), chip->getId());
+                                // std::cout<<"Numer of pixel clusters = "<<pixelClusterList.size() << " - ";
                     
                             }
                             else if(theChip->getFrontEndType() == FrontEndType::SSA)
@@ -170,7 +171,8 @@ void LatencyScan::ScanLatency()
                             else
                                 cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
-                        std::cout<<std::endl;
+                        // std::cout<<std::endl;
+
                         cHitSum += cHitCounter;
                         cHitSum += cHitCounterMPA;
                         // cHitSum += cHitCounterSSA;
