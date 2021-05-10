@@ -101,6 +101,7 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 
 void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContainer)
 {
+    // std::cout<<__LINE__<<std::endl;
     for(const auto board: DataContainer)
     {
         // std::cout<<__LINE__<<std::endl;
@@ -116,7 +117,12 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
                     // std::cout<<__LINE__<<std::endl;
+                    // std::cout<<"board = "<<board->getIndex()<<std::endl;
+                    // std::cout<<"opticalGroup = "<<opticalGroup->getIndex()<<std::endl;
+                    // std::cout<<"hybrid = "<<hybrid->getIndex()<<std::endl;
+                    // std::cout<<"chip = "<<chip->getIndex()<<std::endl;
                     FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                    // std::cout<<__LINE__<<std::endl;
                     if(theFrontEndType == FrontEndType::MPA)
                     {
                         // std::cout<<__LINE__<<std::endl;
@@ -201,8 +207,11 @@ bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
     {
         std::cout << __PRETTY_FUNCTION__ << "attached Occupancy!!!" << std::endl;
         theOccupancyStream.decodeChipData(fDetectorData);
+        std::cout<<__LINE__<<std::endl;
         fillOccupancy(fDetectorData);
+        std::cout<<__LINE__<<std::endl;
         fDetectorData.cleanDataStored();
+        std::cout<<__LINE__<<std::endl;
         return true;
     }
 

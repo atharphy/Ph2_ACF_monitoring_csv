@@ -117,12 +117,12 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
         pVec = fFileHandler->readFileChunks(pNWords32);
 }
 
-void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData)
+void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber)
 {
     fStreamerEnabled = streamData;
     if(streamData == true)
     {
-        fNetworkStreamer = new TCPPublishServer(6000, 1);
+        fNetworkStreamer = new TCPPublishServer(DQMportNumber, 1);
         fNetworkStreamer->startAccept();
     }
 
@@ -655,7 +655,6 @@ void SystemController::ModuleStartUp2S()
     }         // board - config 2S-ROH + 2S-FEHs
 
     CicStartUp(cCicDriveStrength);
-std::cout<<__LINE__<<std::endl;
 
     // // start-up CIC
     // for(const auto cBoard: *fDetectorContainer)
@@ -1048,11 +1047,11 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
     std::stringstream outp;
 
-    InitializeHw(cHWFile, outp, true, enableStream);
+    InitializeHw(cHWFile, outp, true, enableStream, DQMportNumber);
     InitializeSettings(cHWFile, outp);
     std::cout << outp.str() << std::endl;
     ConfigureHw();

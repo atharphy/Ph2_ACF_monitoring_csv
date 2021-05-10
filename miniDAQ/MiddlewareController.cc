@@ -27,8 +27,9 @@
 #include "../tools/Physics2S.h"
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort, 1)
+MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1)
 {
+    theDQMPortnumber_ = DQM_PORT_BASE + portShift;
     // TCPServer::setReceiveTimeout(1,0);//Doesn't work
 }
 
@@ -131,7 +132,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         }
 
         LOG(INFO) << BOLDBLUE << "SystemController created" << RESET;
-        theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true);
+        theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true, theDQMPortnumber_);
         return "ConfigureDone";
     }
     else if(buffer.substr(0, 6) == "Error:")

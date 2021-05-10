@@ -147,11 +147,10 @@ else()
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
      )
 
-    cet_make(LIBRARY_NAME Ph2_Tools_${Ph2_ACF_Master}
+    cet_make(LIBRARY_NAME Ph2_MonitorUtils_${Ph2_ACF_Master}
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-            EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
             )
 
     install_headers()

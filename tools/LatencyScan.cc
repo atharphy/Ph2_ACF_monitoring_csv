@@ -143,6 +143,10 @@ void LatencyScan::ScanLatency()
                     uint32_t cHitSumSSA = 0;
                     for(auto& cEvent: events)
                     {
+                        uint16_t L1Status = static_cast<D19cCic2Event*>(cEvent)->L1Status(hybrid->getId());
+                        if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 ) LOG(WARNING) << BOLDRED << "No packet from MPA to CIC" << RESET;
+                        std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(cEvent)->L1Id(hybrid->getId(),0)<<std::endl;
+                
                         // first, reset the hit counter - I need separate counters for each event
                         int cHitCounter    = 0;
                         int cHitCounterMPA = 0;
@@ -154,6 +158,9 @@ void LatencyScan::ScanLatency()
                             {
                                 cHitCounterMPA += (static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), theChip->getId())).size();
                                 // LOG(INFO) << "cHitCounterMPA " << cHitCounterMPA<<RESET;
+                                std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), chip->getId());
+                                std::cout<<"Numer of pixel clusters = "<<pixelClusterList.size() << " - ";
+                    
                             }
                             else if(theChip->getFrontEndType() == FrontEndType::SSA)
                             {
@@ -163,6 +170,7 @@ void LatencyScan::ScanLatency()
                             else
                                 cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
                         }
+                        std::cout<<std::endl;
                         cHitSum += cHitCounter;
                         cHitSum += cHitCounterMPA;
                         // cHitSum += cHitCounterSSA;
