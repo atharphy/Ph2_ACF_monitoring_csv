@@ -59,16 +59,16 @@ void PSPhysics::ConfigureCalibration()
                     if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
                         LOG(INFO) << "SSA";
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x0);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 150);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 80);
                     }
                     if(chip->getFrontEndType() == FrontEndType::MPA)
                     {
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0xF);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ModeSel_ALL", 0x2);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ModeSel_ALL", 0x0);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "HipCut_ALL", 0x0);
                         // static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x57);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 110);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 90);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "L1Offset_1_ALL", 79);
                         std::cout<<static_cast<PSInterface*>(fReadoutChipInterface)->ReadChipReg(chip, "ReadoutMode")<<std::endl;
                     }
@@ -128,6 +128,22 @@ void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccupancyStream = prepareChannelContainerStreamer<float>("Occupancy");
     auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
+
+    // for(const auto board : fOccupancyContainer)
+    // {
+    //     for(const auto opticalGroup : *board)
+    //     {
+    //         for(const auto hybrid : *opticalGroup)
+    //         {
+    //             for(const auto chip : *hybrid)
+    //             {
+    //                 for(const auto channel : *chip->getChannelContainer<float>()) std::cout<< channel << " ";
+    //                 std::cout<<std::endl;
+    //             }
+    //         }
+
+    //     }
+    // }
 
     if(fStreamerEnabled == true)
     {
@@ -325,7 +341,10 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& pixelCluster: pixelClusterList)
                     {
-                        for(int subPixel = 0; subPixel < (pixelCluster.fWidth - 1); ++subPixel) { ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel); }
+                        for(uint8_t subPixel = 0; subPixel <= (pixelCluster.fWidth); ++subPixel) 
+                        { 
+                            if(pixelCluster.fAddress + subPixel < 120u) ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel); 
+                        }
                     }
 
                     // std::cout<<__LINE__<<std::endl;
@@ -350,7 +369,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                         {
                             // std::cout<<__LINE__<<std::endl;
 
-                            if(stub.getPosition() < 120u) ++theStubChipContainer->getChannel<float>(stub.getRow(), size_t(stub.getCenter()));
+                            if(size_t(stub.getCenter()) < 120u) ++theStubChipContainer->getChannel<float>(stub.getRow(), size_t(stub.getCenter()));
                             // std::cout<<__LINE__<<std::endl;
                         }
                         // std::cout<<__LINE__<<std::endl;
@@ -378,7 +397,10 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     for(auto& stripCluster: stripClusterList)
                     {
-                        for(int subStrip = 0; subStrip < (stripCluster.fWidth - 1); ++subStrip) { ++theSSAContainer->getChannel<float>(stripCluster.fAddress + subStrip); }
+                        for(uint8_t subStrip = 0; subStrip <= (stripCluster.fWidth); ++subStrip) 
+                        { 
+                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(stripCluster.fAddress + subStrip); 
+                        }
                     }
                     // std::cout<<__LINE__<<std::endl;
                 }
