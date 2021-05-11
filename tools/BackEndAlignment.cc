@@ -885,14 +885,14 @@ bool BackEndAlignment::Align()
         {
             cAligned = this->CICAlignment(theBoard);
             if(!cAligned) return cAligned;
-            uint8_t cAttempt           = 0;
-            bool    cPackageDelayFound = false;
-            do
-            {
-                cPackageDelayFound = this->FindPackageDelay(theBoard);
-                cAttempt++;
-            } while(!cPackageDelayFound && cAttempt < 1);
-            cAligned = cPackageDelayFound;
+            // uint8_t cAttempt           = 0;
+            // bool    cPackageDelayFound = false;
+            // do
+            // {
+            //     cPackageDelayFound = this->FindPackageDelay(theBoard);
+            //     cAttempt++;
+            // } while(!cPackageDelayFound && cAttempt < 1);
+            // cAligned = cPackageDelayFound;
         }
         else
         {

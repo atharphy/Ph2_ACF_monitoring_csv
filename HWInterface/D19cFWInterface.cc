@@ -1945,22 +1945,59 @@ bool D19cFWInterface::PhaseTuning(BeBoard* pBoard, uint8_t pFeId, uint8_t pChipI
 uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     uint32_t cNEvents       = 0;
+    if( pData.size() == 0 ) return cNEvents;
+
+    //size_t cOriginalDataSize = pData.size();
+    std::vector<uint32_t> cValidData(0); cValidData.clear(); 
     auto     cEventIterator = pData.begin();
+    bool     cFoundEmpty=false;
+    size_t   cOffset=0;
+    size_t   cCorr=0;
     do
     {
-        uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-        // for now .. print the data out here
-        for(size_t cOffset = 0; cOffset < cEventSize; cOffset++)
+        // check event header 
+        uint32_t cFirstWord = *cEventIterator; 
+        uint32_t cHeader = ((0xFFFF << 16) & cFirstWord) >> 16; 
+        if( cHeader != 0xFFFF ) 
         {
-            if(cOffset < 4)
-                LOG(DEBUG) << BOLDMAGENTA << "HEADER : " << std::bitset<32>(*(cEventIterator + cOffset)) << RESET;
-            else
-
-                LOG(DEBUG) << BOLDBLUE << "\t...DATA\t.. : " << std::bitset<32>(*(cEventIterator + cOffset)) << RESET;
+            if( !cFoundEmpty &&  cFirstWord == 0 )
+            {
+                cFoundEmpty=true;
+                cCorr = cOffset;//how far from start
+            }
+            LOG (INFO) << BOLDMAGENTA << "Event header " << std::bitset<16>(cHeader) << " not EXPECTED" << RESET;
+            cEventIterator = pData.end();
         }
-        cEventIterator += cEventSize;
-        cNEvents++;
+        else
+        {
+            uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+            uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            // LOG (INFO) << BOLDMAGENTA << "Valid event header .. copying over " 
+            //     << " event is made up of " << +cEventSize << " 32 bit words "
+            //     << " of which " << +cDummyCount << " are dummy words."
+            //     << RESET;
+            // for( size_t cIndx=0; cIndx < cEventSize; cIndx++)
+            //     LOG (INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator+cIndx)) << RESET;
+            
+            std::copy(pData.begin()+cOffset, pData.begin() + cOffset +  cEventSize - cDummyCount , std::back_inserter(cValidData));
+            cEventIterator += cEventSize;
+            cOffset += cEventSize;
+            cNEvents++;
+        }
     } while(cEventIterator < pData.end());
+    cCorr = ( cFoundEmpty ) ? pData.size() - cCorr : cCorr;
+    pData.clear();
+    // LOG (INFO) << BOLDMAGENTA << "Original data vector has " << cOriginalDataSize 
+    //     << " 32-bit words..  found empty word in position "
+    //     << cCorr 
+    //     << " from end of vector"
+    //     << RESET;
+    // adjust offset to first empty slot in DDR3
+    fDDR3Offset = ( cFoundEmpty ) ? cFoundEmpty - cOffset : fDDR3Offset; 
+    if( cValidData.size() == 0 ) return 0 ;
+    std::move(cValidData.begin(), cValidData.end() , std::back_inserter(pData));
+    // LOG (INFO) << BOLDMAGENTA << "Returning a data vector with " << +pData.size() 
+    //     << " valid 32 bit words" << RESET;
     return cNEvents;
 }
 void D19cFWInterface::FastAsyncRead(BeBoard* pBoard, std::vector<uint32_t>& pData, bool pRawMode)
@@ -2613,16 +2650,18 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
     if(fIsDDR3Readout && !cAsync)
     {
-        LOG(DEBUG) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
+        //LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // figure out how many events I've got
         cNEvents = this->CountFwEvents(pBoard, pData);
+        if( cNEvents == 0 ) LOG (INFO) << BOLDMAGENTA << "Read back " << +pData.size() << " valid words with " << +cNWords << " in the readout." << RESET;
         // uint32_t cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         // if( cNEvents != cNtriggers )
         //     LOG (INFO) << BOLDRED << "[D19cFWInterface::GetData] Trigger in counter is " << +cNtriggers
         //             << " number of events in readout is " << +cNEvents << RESET;
         LOG(DEBUG) << BOLDBLUE << "D19cFWInterface has received ... " << +cNEvents << " ... events from DDR3.."
                    << " data size is " << +pData.size() << " 32 bit words." << RESET;
+        //fDDR3Offset=0;
     }
     else if(cAsync)
     {
@@ -2801,27 +2840,80 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         pFailed = (!cAsync) ? (cNWords == 0) : false;
         if(pFailed) LOG(INFO) << BOLDYELLOW << "ReadData has found " << +cNtriggers << " triggers received by FC7 and " << +cNWords << " words in the readout." << RESET;
     }
-
     uint32_t cNEvents = 0;
-    if(data_handshake == 1 && !pFailed && !cAsync)
+    if(!pWait && data_handshake == 0 ) 
     {
-        LOG(DEBUG) << BOLDYELLOW << "Data handshake enabled with ReadData" << RESET;
+        pData.clear();
+        //LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake OFF and no WAIT" << RESET;
+        cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        if( cNWords == 0 ) return 0; 
+        auto cNewEvents = this->GetData(pBoard, pData);
+        pFailed = (cNewEvents == 0 ); 
+        if(!pFailed)  cNEvents += cNewEvents; 
+        // check if if the DD3 is almost full 
         uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        size_t   cCounter    = 0;
-        while(cReadoutReq == 0)
+        if( cReadoutReq == 1 )// DD3 almost full ? check this!!
         {
-            if(!pWait) { return 0; }
-
-            cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-            LOG(INFO) << BOLDRED << " ..... waiting for more words .... got " << +cNWords << " so far." << RESET;
-            cCounter++;
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            Pause();
+            ResetReadout();
+            Resume();   
         }
-        cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        LOG(DEBUG) << BOLDRED << " Final word count is " << +cNWords << " so far." << RESET;
+    }
+    else if(data_handshake == 1 && !pFailed && !cAsync) // check this properly!! 
+    {
+        pData.clear();
+        LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake ON" << RESET;
+        cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        if( cNWords == 0 ) return 0; 
 
-        // read all the words
-        cNEvents = this->GetData(pBoard, pData);
+        uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+        do
+        {
+          cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+        }while(cReadoutReq == 0 );
+        auto cNewEvents = this->GetData(pBoard, pData);
+        pFailed = (cNewEvents == 0 ); 
+        if( cReadoutReq == 1 )
+        { 
+            this->ResetReadout();
+            cNEvents += cNewEvents; 
+        }
+        // size_t   cCounter    = 0;
+        // do
+        // {
+        //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        //     std::vector<uint32_t> cData(0);
+        //     auto cNewEvents = this->GetData(pBoard, cData);
+        //     pFailed = (cNewEvents == 0 ); 
+        //     if( pFailed ) continue;
+
+        //     cNEvents += cNewEvents;
+        //     std::move(cData.begin(), cData.end(), std::back_inserter(pData));
+        //     cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+        //     // if(cReadoutReq == 0 && cCounter%10 == 0 ) 
+        //     //     LOG (INFO) << BOLDMAGENTA << "\t... waiting to clear ReadoutReq .. Trial#" << +cCounter << RESET;
+        //     cCounter++;
+        // }while( cReadoutReq == 0 && cCounter < 1000 && !pFailed);
+        // if( cReadoutReq == 1 )
+        // {
+        //     //LOG (INFO) << BOLDMAGENTA << "Readout request fullfilled.. reset offset" << RESET;
+        //     fDDR3Offset=0;
+        // }
+        // uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+        // size_t   cCounter    = 0;
+        // while(cReadoutReq == 0)
+        // {
+        //     if(!pWait) { return 0; }
+
+        //     cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        //     LOG(INFO) << BOLDRED << " ..... waiting for more words .... got " << +cNWords << " so far." << RESET;
+        //     cCounter++;
+        //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        // }
+        // cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        // LOG(DEBUG) << BOLDRED << " Final word count is " << +cNWords << " so far." << RESET;
+        // // read all the words
+        // cNEvents = this->GetData(pBoard, pData);
     }
     else if(!pFailed)
     {
@@ -2848,19 +2940,19 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     {
         pData.clear();
 
-        LOG(INFO) << BOLDRED << "Re-starting the run and resetting the readout" << RESET;
+        LOG(INFO) << BOLDRED << "Resetting the readout" << RESET;
 
-        this->Stop();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        LOG(INFO) << BOLDGREEN << " ... Run Stopped, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+        // this->Stop();
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // LOG(INFO) << BOLDGREEN << " ... Run Stopped, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
 
         // RESET the readout
         this->ResetReadout();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        this->Start();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        LOG(INFO) << BOLDGREEN << " ... Run Started, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+        // this->Start();
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // LOG(INFO) << BOLDGREEN << " ... Run Started, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
 
         LOG(INFO) << BOLDRED << " ... trying to read data again .... " << RESET;
         cNEvents = this->ReadData(pBoard, pBreakTrigger, pData, pWait);

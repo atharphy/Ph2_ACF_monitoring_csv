@@ -1212,50 +1212,55 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 auto   cEventIterator = pData.begin();
                 do
                 {
-                    uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-                    auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-                    // retrieve chunck of data vector belonging to this event
-                    if(cEnd - cEventIterator == cEventSize)
+                    uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
+                    if( cHeader != 0xFFFF ) cEventIterator++;
+                    else // valid event  // decode 
                     {
-                        std::vector<uint32_t> cEvent(cEventIterator, cEnd);
-                        // some useful debug information
-                        LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
-                                   << +cEventSize << " 32 bit words..." << RESET;
-                        if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
-                        else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
+                        uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+                        auto     cEnd       = ((cEventIterator + cEventSize ) > pData.end()) ? pData.end() : (cEventIterator + cEventSize );
+                        // retrieve chunck of data vector belonging to this event
+                        if(cEnd - cEventIterator == cEventSize )
                         {
-                            bool cWithCBC3 = !(fEventType == EventType::VR2S);
-                            if(cWithCBC3)
-                                LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 8CBC3 " << RESET;
-                            else
-                                LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
-                            fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3));
+                            std::vector<uint32_t> cEvent(cEventIterator, cEnd);
+                            // some useful debug information
+                            // LOG(INFO) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
+                            //            << +cEventSize << " 32 bit words..." << RESET;
+                            if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
+                            else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
+                            {
+                                bool cWithCBC3 = !(fEventType == EventType::VR2S);
+                                if(cWithCBC3)
+                                    LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 8CBC3 " << RESET;
+                                else
+                                    LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
+                                fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3));
+                            }
+                            else if(pBoard->getFrontEndType() == FrontEndType::SSA)
+                            {
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
+                            }
+                            else if(pBoard->getFrontEndType() == FrontEndType::MPA)
+                            {
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
+                                LOG(INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
+                                // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
+                                // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
+                                // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
+                                // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
+                                // for(auto cWord : cEvent )
+                                //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            }
+                            else if(pBoard->getFrontEndType() == FrontEndType::MPA)
+                            {
+                                LOG(INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
+                                // fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            }
+                            cEventIndex++;
                         }
-                        else if(pBoard->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
-                        }
-                        else if(pBoard->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
-                            LOG(INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
-                            // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
-                            // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
-                            // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
-                            // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
-                            // for(auto cWord : cEvent )
-                            //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
-                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNFe, cEvent));
-                        }
-                        else if(pBoard->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            LOG(INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
-                            // fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
-                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
-                        }
-                        cEventIndex++;
+                        cEventIterator += cEventSize;
                     }
-                    cEventIterator += cEventSize;
                 } while(cEventIterator < pData.end());
             }
         } // end zero check

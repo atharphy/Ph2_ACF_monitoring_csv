@@ -18,7 +18,7 @@
       <GBT phaseTap="7" enable="1"/>
         <Hybrid Id="0" Status="1" LinkId="0" >
             <Global>
-                <Settings threshold="550" latency="199"/>
+                <Settings threshold="580" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
@@ -103,7 +103,7 @@
     </Register>
 	<!-- Readout Block -->
     	<Register name="readout_block">
-            <Register name="packet_nbr"> 999 </Register>
+            <Register name="packet_nbr"> 9999 </Register>
             <Register name="global">
 		    <Register name="data_handshake_enable"> 0 </Register>
                     <Register name="int_trig_enable"> 0 </Register>

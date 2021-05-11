@@ -307,8 +307,13 @@ int main(int argc, char* argv[])
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 std::vector<uint32_t> cData(0);
                 cNevents += cTool.ReadData(cBeBoard, cData, false);
-                if(cIter % 10 == 0)
-                    LOG(INFO) << BOLDBLUE << "Npackets is " << +cNevents << " number of words in vector is " << cData.size() << " size of complete data is " << cCompleteData.size() << RESET;
+                if( cData.size() == 0 )
+                { 
+                    LOG (INFO) << BOLDBLUE << "No events read-back from board .. waiting for more .." << RESET;
+                    continue;
+                }
+                if(cIter % 100 == 0)
+                    LOG(INFO) << BOLDBLUE << "Nevents is " << +cNevents << " number of words in vector is " << cData.size() << " size of complete data is " << cCompleteData.size() << RESET;
                 std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
                 cIter++;
             } while(cNevents < pEventsperVcth);

@@ -94,8 +94,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
 
-        LOG(DEBUG) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
-                   << " dummy 32 bit words .. " << RESET;
+        // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
+        //            << " dummy 32 bit words .. " << RESET;
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
@@ -319,7 +319,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             }
                         }
                         else
-                            throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                        {
+                            LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
+                                   << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                            //throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                        }
                         cStatus = cStatus | (cStatusWord << (cRocIndex * 2));
                         // increment ROC index
                         cRocIndex++;
@@ -331,7 +335,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         }
         cEventIterator += cEventSize;
         cNEvents++;
-    } while(cEventIterator < pData.end());
+    } while(cEventIterator < pData.end() && pData.size() != 0 );//add dummy count check
 }
 void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
 {
