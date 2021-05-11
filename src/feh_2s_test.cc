@@ -202,9 +202,9 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
 #endif
 
-DeviceHandler cPowerSupplyHandler;
-std::vector<std::pair<std::string, bool>> cPowerSupplyChannels;    
 #ifdef __POWERSUPPLY__
+    DeviceHandler cPowerSupplyHandler;
+    std::vector<std::pair<std::string, bool>> cPowerSupplyChannels;    
     std::string cPowerSupply = "MyRohdeSchwarz";
     pugi::xml_document docSettings;
 
