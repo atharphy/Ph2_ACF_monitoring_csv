@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
     };
 
     int                 stateMachineStatus = INITIAL;
-    MiddlewareInterface theMiddlewareInterface("127.0.0.1", 5001);
+    MiddlewareInterface theMiddlewareInterface("127.0.0.1", 5000);
     theMiddlewareInterface.initialize();
 
     // int main ( int argc, char* argv[] )

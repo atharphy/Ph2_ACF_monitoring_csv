@@ -12,6 +12,9 @@
 #include "../Utils/Data2S.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/Occupancy.h"
+#include "BackEndAlignment.h"
+#include "CicFEAlignment.h"
+#include "PSAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -34,6 +37,35 @@ void Physics2S::ConfigureCalibration()
 
     fChannelGroupHandler = new CBCChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(120, 16);
+
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(this);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
+
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(this);
+    cCicAligner.Start(0);
+    cCicAligner.waitForRunToBeCompleted();
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
+
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(this);
+    cBackEndAligner.Initialise();
+    bool cAligned = cBackEndAligner.Align();
+    cBackEndAligner.resetPointers();
+
+    // cPSAlignment.Align();
+    cPSAlignment.Reset();
+
+    if(!cAligned)
+    {
+        LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
+        exit(1);
+    }
+
 }
 
 void Physics2S::Running()
@@ -115,6 +147,8 @@ unsigned int Physics2S::getDataFromBoards()
         if(dataSize != 0)
         {
             const std::vector<Event*>& events = SystemController::GetEvents();
+            for(const auto& event : events)
+                std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(event)->L1Id(1,0)<<std::endl;
             fillDataContainer(cBoard, events);
             sendBoardData(cBoard);
         }
