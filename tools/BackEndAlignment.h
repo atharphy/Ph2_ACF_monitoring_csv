@@ -37,6 +37,8 @@ class BackEndAlignment : public Tool
     void SetL1Debug(bool pDebug) { fL1Debug = pDebug; };
     void SetStubDebug(bool pDebug) { fStubDebug = pDebug; };
 
+    bool FindPackageDelay(Ph2_HwDescription::BeBoard* pBoard);
+    bool FindStubLatency(Ph2_HwDescription::BeBoard* pBoard);
     bool Bx0Alignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
@@ -50,12 +52,14 @@ class BackEndAlignment : public Tool
 
     // get alignment results
     bool getStatus() const { return fSuccess; }
-
+    
   protected:
     bool fL1Debug   = false;
     bool fStubDebug = false;
 
   private:
+    // 
+    bool fAlignStub=true;
     // status
     bool fSuccess;
     // Containers

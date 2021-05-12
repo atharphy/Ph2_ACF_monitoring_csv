@@ -130,7 +130,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
-    fPowerSupplyClient = new TCPClient("127.0.0.1", 7001);
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
         std::cerr << "Cannot connect to the Power Supply Server" << '\n';
@@ -992,6 +992,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
             else if(fEventType != EventType::ZS)
             {
+                // check data words because I'm desperate 
+                // for( auto cWord : pData )
+                //     LOG (INFO) << BOLDYELLOW << "SystemController \t..." << std::bitset<32>(cWord) << RESET;
+    
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
                 do

@@ -19,6 +19,7 @@
 #include "../Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
+#include "tools/PSAlignment.h"
 
 #include "../System/SystemController.h"
 
@@ -73,7 +74,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("output", "Output Directory for DQM plots & page. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("output", "o");
 
-    cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("alignCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -95,8 +98,6 @@ int main(int argc, char* argv[])
     cOutputFile    = "Data/" + string_format("run_%04d.raw", cRunNumber);
     pEventsperVcth = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10;
 
-    bool cWithCIC = (cmd.foundOption("withCIC"));
-
     std::string  cDAQFileName;
     FileHandler* cDAQFileHandler = nullptr;
     bool         cDAQFile        = cmd.foundOption("daq");
@@ -112,11 +113,6 @@ int main(int argc, char* argv[])
     std::unique_ptr<SLinkDQMHistogrammer> dqmH = nullptr;
 
     if(cDQM) dqmH = std::unique_ptr<SLinkDQMHistogrammer>(new SLinkDQMHistogrammer(0));
-
-    bool cPostscale   = cmd.foundOption("postscale");
-    int  cScaleFactor = 1;
-
-    if(cPostscale) cScaleFactor = atoi(cmd.optionValue("postscale").c_str());
 
     std::stringstream outp;
     Tool              cTool;
@@ -144,7 +140,7 @@ int main(int argc, char* argv[])
     cBackEndAligner.resetPointers();
 
     // if CIC is enabled then align CIC first
-    if(cWithCIC)
+    if(cmd.foundOption("alignCIC"))
     {
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
@@ -155,68 +151,119 @@ int main(int argc, char* argv[])
         cCicAligner.Reset();
         // cCicAligner.dumpConfigFiles();
     }
-
-    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-
-    // make event counter start at 1 as does the L1A counter
-    uint32_t cN      = 1;
-    uint32_t cNthAcq = 0;
-    uint32_t count   = 0;
-
-    cTool.fBeBoardInterface->Start(pBoard);
-    while(cN <= pEventsperVcth)
+    if( cmd.foundOption("alignPS"))
     {
-        uint32_t cPacketSize = cTool.ReadData(pBoard);
+        // align ASICs on PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        // map MPA outputs for PS module
+        cPSAlignment.MapMPAOutputs();
+    }
 
-        if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
+    for(auto cBoard: *cTool.fDetectorContainer)
+    {
+        BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
 
-        const std::vector<Event*>& events = cTool.GetEvents();
-        std::vector<DQMEvent*>     cDQMEvents;
+        // make sure triggers have stopped
+        // and that the readout has been reset
+        dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Stop();
 
-        for(auto& ev: events)
+        // if readNevents is used
+        if(cmd.foundOption("useReadNEvents"))
         {
+            // collect events
+            std::vector<Event*> cPh2Events;
+            cTool.ReadNEvents(cBeBoard, pEventsperVcth);
+        }
+        // default is to use ReadData
+        else
+        {
+            uint32_t cNevents = 0;
+            size_t   cIter    = 0;
+
+            std::vector<uint32_t> cCompleteData(0);
+            cTool.fBeBoardInterface->Start(cBeBoard);
+            size_t cNoData=0;
+            do
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(1000));
+                std::vector<uint32_t> cData(0);
+                cNevents += cTool.ReadData(cBeBoard, cData, false);
+                if( cData.size() == 0 )
+                { 
+                    if( cNoData%2500 == 0 )
+                        LOG (INFO) << BOLDMAGENTA << "\t...No events read-back from board .. waiting for more .." << RESET;
+                    cNoData++;
+                    cIter++;
+                    continue;
+                }
+                if(cIter % 2500 == 0)
+                    LOG(INFO) << BOLDBLUE << "Nevents is " << +cNevents << " number of words in vector is " << cData.size() << " size of complete data is " << cCompleteData.size() << RESET;
+                std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+                cIter++;
+            } while(cNevents < pEventsperVcth);
+            LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
+            cTool.fBeBoardInterface->Stop(cBeBoard);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+            // LOG (INFO) << BOLDBLUE << "Number of words in vector is "  << cCompleteData.size() << RESET;
+            // decoding data
+            cTool.DecodeData(cBeBoard, cCompleteData, cNevents, cTool.fBeBoardInterface->getBoardType(cBeBoard));
+        }
+
+        // process collected events
+        bool                       cPostscale   = cmd.foundOption("postscale");
+        int                        cScaleFactor = cPostscale ? atoi(cmd.optionValue("postscale").c_str()) : 1;
+        const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
+        LOG(INFO) << BOLDBLUE << "Need to process " << +cPh2Events.size() << " events from this board." << RESET;
+        uint32_t               cEventCounter = 0;
+        std::vector<DQMEvent*> cDQMEvents;
+        for(auto& cEvent: cPh2Events)
+        {
+            if(cEventCounter >= pEventsperVcth) continue;
+
             // if we write a DAQ file or want to run the DQM, get the SLink format
             if(cDAQFile || cDQM)
             {
-                SLinkEvent cSLev = ev->GetSLinkEvent(pBoard);
-
+                SLinkEvent cSLev = cEvent->GetSLinkEvent(cBeBoard);
                 if(cDAQFile)
                 {
                     auto data = cSLev.getData<uint32_t>();
                     cDAQFileHandler->setData(data);
                 }
 
-                // if DQM histos are enabled and we are treating the first event, book the histograms
-                if(cDQM && cN == 1)
+                if(cDQM && cEventCounter == 0)
                 {
                     DQMEvent* cDQMEv = new DQMEvent(&cSLev);
                     dqmH->bookHistograms(cDQMEv->trkPayload().feReadoutMapping());
                 }
-
-                if(cDQM)
-                {
-                    if(count % cScaleFactor == 0) cDQMEvents.emplace_back(new DQMEvent(&cSLev));
-                }
+                if(cDQM && cEventCounter % cScaleFactor == 0) { cDQMEvents.emplace_back(new DQMEvent(&cSLev)); }
             }
 
-            if(cPostscale)
-            {
-                if(count % cScaleFactor == 0)
+            //if(cEventCounter % (pEventsperVcth/10) == 0)
+            //{
+                for(auto cOpticalGroup: *cBoard)
                 {
-                    LOG(INFO) << ">>> Event #" << count;
-                    outp.str("");
-                    outp << *ev << std::endl;
-                    LOG(INFO) << outp.str();
-                }
-            }
-
-            if(count % 100 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
-
-            // increment event counter
-            count++;
-            cN++;
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        if( cBoard->getFrontEndType() == FrontEndType::CIC || cBoard->getFrontEndType() == FrontEndType::CIC2 )
+                        {
+                            auto cL1IdFirstROC = static_cast<D19cCic2Event*>(cEvent)->L1Id( cHybrid->getId(), 0 ); 
+                            LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id " 
+                                << +cEvent->GetExternalTriggerId() 
+                                << " Hybrid#" << +cHybrid->getId()
+                                << " L1 Id is " << +cL1IdFirstROC 
+                                << RESET;
+                        }
+                    }// hybrid
+                }// optical group
+                // outp.str("");
+                // outp << *cEvent;
+                // LOG(INFO) << outp.str() << RESET;
+            //}
+            cEventCounter++;
         }
-
         // finished  processing the events from this acquisition
         // thus now fill the histograms for the DQM
         if(cDQM)
@@ -224,8 +271,6 @@ int main(int argc, char* argv[])
             dqmH->fillHistograms(cDQMEvents);
             cDQMEvents.clear();
         }
-
-        cNthAcq++;
     }
 
     // done with the acquistion, now clean up
@@ -265,6 +310,115 @@ int main(int argc, char* argv[])
         RootWeb::makeDQMmonitor(dqmFilename, cDirBasePath, runLabel);
         LOG(INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath;
     }
+    // BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+
+    // // make event counter start at 1 as does the L1A counter
+    // uint32_t cN      = 1;
+    // uint32_t cNthAcq = 0;
+    // uint32_t count   = 0;
+
+    // cTool.fBeBoardInterface->Start(pBoard);
+    // while(cN <= pEventsperVcth)
+    // {
+    //     uint32_t cPacketSize = cTool.ReadData(pBoard);
+
+    //     if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
+
+    //     const std::vector<Event*>& events = cTool.GetEvents();
+    //     std::vector<DQMEvent*>     cDQMEvents;
+
+    //     for(auto& ev: events)
+    //     {
+    //         // if we write a DAQ file or want to run the DQM, get the SLink format
+    //         if(cDAQFile || cDQM)
+    //         {
+    //             SLinkEvent cSLev = ev->GetSLinkEvent(pBoard);
+
+    //             if(cDAQFile)
+    //             {
+    //                 auto data = cSLev.getData<uint32_t>();
+    //                 cDAQFileHandler->setData(data);
+    //             }
+
+    //             // if DQM histos are enabled and we are treating the first event, book the histograms
+    //             if(cDQM && cN == 1)
+    //             {
+    //                 DQMEvent* cDQMEv = new DQMEvent(&cSLev);
+    //                 dqmH->bookHistograms(cDQMEv->trkPayload().feReadoutMapping());
+    //             }
+
+    //             if(cDQM)
+    //             {
+    //                 if(count % cScaleFactor == 0) cDQMEvents.emplace_back(new DQMEvent(&cSLev));
+    //             }
+    //         }
+
+    //         if(cPostscale)
+    //         {
+    //             if(count % cScaleFactor == 0)
+    //             {
+    //                 LOG(INFO) << ">>> Event #" << count;
+    //                 outp.str("");
+    //                 outp << *ev << std::endl;
+    //                 LOG(INFO) << outp.str();
+    //             }
+    //         }
+
+    //         if(count % 100 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
+
+    //         // increment event counter
+    //         count++;
+    //         cN++;
+    //     }
+
+    //     // finished  processing the events from this acquisition
+    //     // thus now fill the histograms for the DQM
+    //     if(cDQM)
+    //     {
+    //         dqmH->fillHistograms(cDQMEvents);
+    //         cDQMEvents.clear();
+    //     }
+
+    //     cNthAcq++;
+    // }
+
+    // // done with the acquistion, now clean up
+    // if(cDAQFile)
+    //     // this closes the DAQ file
+    //     delete cDAQFileHandler;
+
+    // if(cDQM)
+    // {
+    //     // save and publish
+    //     // Create the DQM plots and generate the root file
+    //     // first of all, strip the folder name
+    //     std::vector<std::string> tokens;
+
+    //     tokenize(cOutputFile, tokens, "/");
+    //     std::string fname = tokens.back();
+
+    //     // now form the output Root filename
+    //     tokens.clear();
+    //     tokenize(fname, tokens, ".");
+    //     std::string runLabel    = tokens[0];
+    //     std::string dqmFilename = runLabel + "_dqm.root";
+    //     dqmH->saveHistograms(dqmFilename, runLabel + "_flat.root");
+
+    //     // find the folder (i.e DQM page) where the histograms will be published
+    //     std::string cDirBasePath;
+
+    //     if(cmd.foundOption("output"))
+    //     {
+    //         cDirBasePath = cmd.optionValue("output");
+    //         cDirBasePath += "/";
+    //     }
+    //     else
+    //         cDirBasePath = "Results/";
+
+    //     // now read back the Root file and publish the histograms on the DQM page
+    //     RootWeb::makeDQMmonitor(dqmFilename, cDirBasePath, runLabel);
+    //     LOG(INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath;
+    // }
 
     return 0;
 }

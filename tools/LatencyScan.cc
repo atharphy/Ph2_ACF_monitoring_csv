@@ -15,6 +15,7 @@ void LatencyScan::Initialize()
     fLatencyRange = findValueInSettings("LatencyRange", 1);
     fHoleMode     = findValueInSettings("HoleMode", 1);
     fNevents      = findValueInSettings("Nevents", 10);
+    std::cout<< "Going to read " << fNevents << " events"<<std::endl;
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);

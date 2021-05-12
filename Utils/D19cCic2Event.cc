@@ -87,31 +87,25 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     const uint8_t  VALID_STUB_HEADER   = 0x05;
     uint32_t       cNEvents            = 0;
     auto           cEventIterator      = pData.begin();
-    // counters from event header
-    fExternalTriggerID = (*(cEventIterator + 1) >> 16) & 0x7FFF;
-    fTDC               = (*(cEventIterator + 2) >> 24) & 0xFF;
-    fEventCount        = 0x00FFFFFF & *(cEventIterator + 2);
-    // fBunch             = 0xFFFFFFFF & *(cEventIterator + 3);
-    fL1Number = (0xFFFF0000 & *(cEventIterator + 3)) >> 16;
-    fBunch    = 0x0000FFFF & *(cEventIterator + 3);
     do
     {
         uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
-        uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-        uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
-
-        LOG(DEBUG) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
-                   << " dummy 32 bit words .. " << RESET;
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
+            uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+            //uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) 
+            //     << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
+            //     << " dummy 32 bit words .. " << RESET;
             // counters from event header
-            uint32_t cEvntCntTag = (*(cEventIterator + 2));
-            uint32_t cFc7EvtId   = (cEvntCntTag & (0x00FFFFFF));
-            fTDC                 = (cEvntCntTag & (0xFF << 24)) >> 24;
+            uint32_t cEvntCntTag = (*(cEventIterator + 1));
             // from tLU
-            cEvntCntTag        = (*(cEventIterator + 1));
             fExternalTriggerID = (cEvntCntTag & (0x7FFF << 16)) >> 16;
+            // TDC + L1A counter
+            cEvntCntTag        = (*(cEventIterator + 2));
+            uint32_t cFc7EvtId = (cEvntCntTag & (0x00FFFFFF));
+            fTDC               = (cEvntCntTag & (0xFF << 24)) >> 24;
             // internal counters
             cEvntCntTag         = (*(cEventIterator + 3));
             uint16_t cFc7BxId   = (cEvntCntTag & (0xFFFF));
@@ -142,16 +136,16 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
-                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
-                                   << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                        // LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
+                        //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x01)
                         {
                             bool                          cWithCIC2 = (cCic->getFrontEndType() == FrontEndType::CIC2);
                             std::pair<uint16_t, uint16_t> cL1Information;
                             cL1Information.first  = (*(cIterator + 2) & 0x7FC000) >> 14;
                             cL1Information.second = (*(cIterator + 2) & 0xFF800000) >> 23;
-                            LOG(DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
-                                       << std::bitset<9>(cL1Information.second) << RESET;
+                            // LOG(INFO) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
+                            //            << std::bitset<9>(cL1Information.second) << RESET;
                             int cL1Offset = cOffset + 2 + int(cWithCIC2);
                             if(fIsSparsified)
                             {
@@ -332,8 +326,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                     }
                 } // hybrid loop
             }     // hybrid loop
+            cEventIterator += cEventSize;
         }
-        cEventIterator += cEventSize;
+        else 
+        {
+            LOG (INFO) << BOLDRED << "Invalid Header D19cCic2Event" << RESET;
+            throw std::runtime_error(std::string("Incorrect Event header found when decoding D19cCic2Event data ... stopping"));
+        }
         cNEvents++;
     } while(cEventIterator < pData.end());
 }
@@ -591,7 +590,7 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
             aPCluster.fWidth   = cWdth;  //((*cIterator) & ((0x7) << (0 + 4))) >> (0 + 4);
             aPCluster.fZpos    = cZInfo; //((*cIterator) & ((0xF) << 0)) >> 0;
             cPClusters.push_back(aPCluster);
-            LOG(INFO) << BOLDGREEN << "P-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << "," << unsigned(aPCluster.fZpos) << RESET;
+            LOG(DEBUG) << BOLDGREEN << "P-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << "," << unsigned(aPCluster.fZpos) << RESET;
         }
         cIterator++;
     }
@@ -662,7 +661,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
             cSCluster.fMip     = cMip;  //((*cIterator) & ((0x1) << 0)) >> 0;
 
             cSClusters.push_back(cSCluster);
-            LOG(INFO) << BOLDYELLOW << "S-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << "," << unsigned(cSCluster.fMip) << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "S-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << "," << unsigned(cSCluster.fMip) << RESET;
         }
         cIterator++;
     };
