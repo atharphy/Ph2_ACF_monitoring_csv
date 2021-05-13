@@ -320,7 +320,25 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
             cTool.fBeBoardInterface->Stop(cBeBoard);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
+            LOG (INFO) << BOLDBLUE << "Data size after stop is " << cCompleteData.size() 
+                << " total number of events I expect is " << +cNevents
+                << RESET;
+            // until number of events have stopped increasing 
+            size_t cCurrentDataSize = 0; 
+            size_t cDataSize = cCompleteData.size(); 
+            do
+            {
+                cCurrentDataSize = cCompleteData.size(); 
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                std::vector<uint32_t> cData(0);
+                cNevents += cTool.ReadData(cBeBoard, cData, false);
+                if( cData.size() == 0 )   continue;
+                std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+                cDataSize = cCompleteData.size(); 
+            } while(cCurrentDataSize!= cDataSize);
+            LOG (INFO) << BOLDBLUE << "Data size before starting to decode is " << cCompleteData.size() 
+                << " total number of events I expect is " << +cNevents
+                << RESET;
             // LOG (INFO) << BOLDBLUE << "Number of words in vector is "  << cCompleteData.size() << RESET;
             // decoding data
             cTool.DecodeData(cBeBoard, cCompleteData, cNevents, cTool.fBeBoardInterface->getBoardType(cBeBoard));
