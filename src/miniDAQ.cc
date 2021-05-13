@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("maskROCs", "List of ROCs to mask", ArgvParser::OptionRequiresValue);
     cmd.defineOption("maskChannels", "List of channels to mask", ArgvParser::OptionRequiresValue);
     cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
-
+    cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
         // make sure triggers have stopped
         // and that the readout has been reset
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Stop();
-
+        if( cmd.foundOption("limitTriggers")) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
         // if readNevents is used
         if(cmd.foundOption("useReadNEvents"))
         {
@@ -330,13 +330,17 @@ int main(int argc, char* argv[])
         bool                       cPostscale   = cmd.foundOption("postscale");
         int                        cScaleFactor = cPostscale ? atoi(cmd.optionValue("postscale").c_str()) : 1;
         const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
-        LOG(INFO) << BOLDBLUE << "Need to process " << +cPh2Events.size() << " events from this board." << RESET;
+        uint32_t cNtriggers = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        
+        LOG(INFO) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from this board." << RESET;
         uint32_t               cEventCounter = 0;
         std::vector<DQMEvent*> cDQMEvents;
+        uint32_t               cEventId, cTriggerId; 
         for(auto& cEvent: cPh2Events)
         {
-            if(cEventCounter >= pEventsperVcth) continue;
-
+            //if(cEventCounter >= pEventsperVcth) continue;
+            cEventId = cEvent->GetEventCount(); 
+            cTriggerId = cEvent->GetExternalTriggerId(); 
             // if we write a DAQ file or want to run the DQM, get the SLink format
             if(cDAQFile || cDQM)
             {
@@ -355,15 +359,17 @@ int main(int argc, char* argv[])
                 if(cDQM && cEventCounter % cScaleFactor == 0) { cDQMEvents.emplace_back(new DQMEvent(&cSLev)); }
             }
 
-            if(cEventCounter % 100 == 0)
+            if(cEventCounter % 1000 == 0)
             {
-                LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id " << +cEvent->GetExternalTriggerId() << RESET;
+                LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
                 // outp.str("");
                 // outp << *cEvent;
                 // LOG(INFO) << outp.str() << RESET;
             }
             cEventCounter++;
         }
+        LOG(INFO) << BOLDBLUE << "Number of triggers received is " << +cNtriggers << "." << RESET;
+        
         // finished  processing the events from this acquisition
         // thus now fill the histograms for the DQM
         if(cDQM)
