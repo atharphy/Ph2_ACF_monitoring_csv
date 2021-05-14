@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
                 if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
                     while(theMiddlewareInterface.status() != "Done") usleep(5e5);
                 else
-                    usleep(120e6);
+                    usleep(20e6);
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
                 usleep(2e6);
                 theMiddlewareInterface.stop();

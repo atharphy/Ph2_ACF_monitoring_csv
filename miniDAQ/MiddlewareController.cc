@@ -133,8 +133,19 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         }
 
         LOG(INFO) << BOLDBLUE << "SystemController created" << RESET;
-        theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true, theDQMPortnumber_);
+        try
+        {
+            theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true);
+            /* code */
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            delete theSystemController_;
+            return "Error: " + e.what();
+        }
         return "ConfigureDone";
+        
     }
     else if(buffer.substr(0, 6) == "Error:")
     {

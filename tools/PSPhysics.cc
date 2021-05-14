@@ -61,6 +61,7 @@ void PSPhysics::ConfigureCalibration()
                         LOG(INFO) << "SSA";
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 80);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "L1-Latency_LSB", 79);
                     }
                     if(chip->getFrontEndType() == FrontEndType::MPA)
                     {
@@ -113,6 +114,19 @@ void PSPhysics::Running()
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
 
     SystemController::Start(fRunNumber);
+
+
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+
 
     PSPhysics::run();
 }
@@ -213,6 +227,7 @@ unsigned int PSPhysics::getDataFromBoards()
         // std::cout<<__LINE__<<std::endl;
         // std::cout<<__LINE__<<std::endl;
     }
+    std::cout<<"Readout " << dataSize << " events" << std::endl;
     return dataSize;
 }
 
@@ -222,9 +237,15 @@ void PSPhysics::run()
 
     while(fKeepRunning)
     {
+        // std::cout<<"Trigger status = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_stat.fast_command_block.general.source") << std::endl;
+        // std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+        
         fTotalDataSize += getDataFromBoards();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        std::cout<<"Readout in total = " << fTotalDataSize << " events" << std::endl;
+
+        // std::this_thread::sleep_for(std::chrono::seconds(60));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -262,51 +283,6 @@ void PSPhysics::display()
     histos.process();
 #endif
 }
-
-// void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, Event* event)
-// {
-
-//     // ###################
-//     // # Fill containers #
-//     // ###################
-//     for(const auto cOpticalGroup: *fPSSyncContainer.at(cBoard->getIndex()))
-//     {
-//         for(const auto cHybrid: *cOpticalGroup)
-//         {
-//             for(const auto cChip: *cHybrid)
-//             {
-
-//                 auto currentChip = cBoard->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());;
-//                 if(currentChip->getFrontEndType() != FrontEndType::MPA) continue;
-
-//                 auto curPSSync = cChip->getSummary<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
-//                 auto psClusterVector = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-//                 curPSSync.fPClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_PIXEL_CLUSTERS, PCluster>(psClusterVector);
-//                 // std::cout<<"Pixel cluster centers = ";
-//                 // for(size_t pos = 0; pos<MAX_NUMBER_OF_PIXEL_CLUSTERS; ++pos) std::cout << +curPSSync.fPClusters[pos].fAddress << " ";
-//                 // std::cout<<std::endl;
-//                 curPSSync.fSClusters = fromVectorToGenericDataArray<MAX_NUMBER_OF_STRIP_CLUSTERS, SCluster>(static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId()));
-//                 // std::cout<<"Strip cluster centers = ";
-//                 // for(size_t pos = 0; pos<MAX_NUMBER_OF_STRIP_CLUSTERS; ++pos) std::cout << +curPSSync.fSClusters[pos].fAddress << " ";
-//                 // std::cout<<std::endl;
-//                 curPSSync.fStubs     = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_PS , Stub    >(static_cast<D19cCic2Event*>(event)->StubVector      (cHybrid->getId(),
-//                 cChip->getId()));
-//                 // std::cout<<"Stub cluster centers = ";
-//                 // for(size_t pos = 0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos) std::cout << +curPSSync.fStubs[pos].getPosition() << " ";
-//                 // std::cout<<std::endl;
-
-//                 // for(int pos=0; pos<MAX_NUMBER_OF_STUB_CLUSTERS_PS; ++pos)
-//                 // {
-//                 //     std::cout<< "Stub = " << curPSSync.fStubs[pos].getPosition(),curPSSync.fStubs[pos].getRow()) << std::endl;
-//                 // }
-
-//                 if(psClusterVector.size()>0 && psClusterVector[0].fAddress != 255) std::cout<< "PixelCluster = " << +curPSSync.fPClusters[0].fAddress << " it should have been " <<
-//                 +psClusterVector[0].fAddress << std::endl;
-//             }
-//         }
-//     }
-
-// }
 
 void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vector<Event*> eventList)
 {

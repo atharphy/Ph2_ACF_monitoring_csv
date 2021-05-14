@@ -3,7 +3,7 @@
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR">
     <!-- PS half module FNAL-->
-    <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- B598 skeleton, direct powering -->
     <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- B14 skeleton, POH -->
@@ -56,8 +56,8 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 5 </Register>
-            <Register name="user_trigger_frequency"> 1</Register>
+            <Register name="trigger_source"> 3 </Register>
+            <Register name="user_trigger_frequency"> 1 </Register>
             <Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -105,12 +105,12 @@
         </Register>
         <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
-                <Register name = "stub_package_delay"> 2 </Register>
+                <Register name = "stub_package_delay"> 7 </Register>
         </Register>
     </Register>
     <!-- Readout Block -->
         <Register name="readout_block">
-            <Register name="packet_nbr"> 499 </Register>
+            <Register name="packet_nbr"> 9 </Register>
             <Register name="global">
                     <Register name="data_handshake_enable"> 0 </Register>
                     <Register name="int_trig_enable"> 0 </Register>
@@ -118,7 +118,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 194 </Register>
+                    <Register name="common_stubdata_delay"> 14 </Register>
             </Register>
         </Register>
     <!-- DIO5 Block -->
@@ -160,6 +160,7 @@
   </BeBoard>
 
 <Settings>
+    <Setting name="SaveRawData">1</Setting>
     <!--PedestalEqualization-->
     <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
