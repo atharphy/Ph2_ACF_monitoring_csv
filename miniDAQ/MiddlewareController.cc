@@ -142,7 +142,8 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         {
             std::cerr << e.what() << '\n';
             delete theSystemController_;
-            return "Error: " + e.what();
+            std::string errorString = "Error: " + e.what();
+            return errorString;
         }
         return "ConfigureDone";
         
