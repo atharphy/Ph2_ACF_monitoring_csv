@@ -14,7 +14,6 @@
 #include "../Utils/Occupancy.h"
 #include "BackEndAlignment.h"
 #include "CicFEAlignment.h"
-#include "PSAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -32,17 +31,11 @@ void Physics2S::ConfigureCalibration()
     // ###########################################
     this->CreateResultDirectory(RESULTDIR, false, false);
 
-    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fOccupancyContainer);
-    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
-
+    ContainerFactory::copyAndInitChannel<Occupancy>(*fDetectorContainer, fOccupancyContainer);
+    ContainerFactory::copyAndInitChannel<float    >(*fDetectorContainer, fStubContainer);
+    
     fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(120, 16);
-
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(this);
-    cPSAlignment.Initialise();
-    // map MPA outputs for PS module
-    cPSAlignment.MapMPAOutputs();
+    fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
@@ -56,9 +49,6 @@ void Physics2S::ConfigureCalibration()
     cBackEndAligner.Initialise();
     bool cAligned = cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
-
-    // cPSAlignment.Align();
-    cPSAlignment.Reset();
 
     if(!cAligned)
     {
@@ -88,8 +78,8 @@ void Physics2S::Running()
 
 void Physics2S::sendBoardData(BoardContainer* const& cBoard)
 {
-    auto theOccupancyStream = prepareChannelContainerStreamer<float>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
+    auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>("Occupancy");
+    auto theStubStream      = prepareChannelContainerStreamer<float    >("Stub");
 
     if(fStreamerEnabled == true)
     {
@@ -147,8 +137,8 @@ unsigned int Physics2S::getDataFromBoards()
         if(dataSize != 0)
         {
             const std::vector<Event*>& events = SystemController::GetEvents();
-            for(const auto& event : events)
-                std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(event)->L1Id(1,0)<<std::endl;
+            // for(const auto& event : events)
+            //     std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(event)->L1Id(1,0)<<std::endl;
             fillDataContainer(cBoard, events);
             sendBoardData(cBoard);
         }
@@ -251,22 +241,22 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
                 for(const auto cChip: *cHybrid)
                 {
                     std::vector<Stub> stubList = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
-
+                    
                     for(auto& stub: stubList)
                     {
                         // std::cout<<__LINE__<<std::endl;
                         if(ceil(stub.getCenter()) != stub.getCenter())
                         {
                             // std::cout<<__LINE__<<std::endl;
-                            if(size_t(ceil(stub.getCenter())) < 254u) cChip->getChannel<float>(stub.getRow(), size_t(ceil(stub.getCenter()))) += 0.5;
+                            if(size_t(ceil(stub.getCenter())) < 254u) cChip->getChannel<float>(size_t(ceil(stub.getCenter()))) += 0.5;
                             // std::cout<<__LINE__<<std::endl;
-                            if(size_t(floor(stub.getCenter())) < 254u) cChip->getChannel<float>(stub.getRow(), size_t(floor(stub.getCenter()))) += 0.5;
+                            if(size_t(floor(stub.getCenter())) < 254u) cChip->getChannel<float>(size_t(floor(stub.getCenter()))) += 0.5;
                             // std::cout<<__LINE__<<std::endl;
                         }
                         else
                         {
                             // std::cout<<__LINE__<<std::endl;
-                            if(stub.getPosition() < 254u) ++cChip->getChannel<float>(stub.getRow(), size_t(stub.getCenter()));
+                            if(stub.getCenter() < 254u) ++cChip->getChannel<float>(size_t(stub.getCenter()));
                             // std::cout<<__LINE__<<std::endl;
                         }
                         // std::cout<<__LINE__<<std::endl;

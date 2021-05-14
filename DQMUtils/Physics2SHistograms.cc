@@ -11,6 +11,7 @@
 #include "../HWDescription/Definition.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+#include "../Utils/Occupancy.h"
 #include "../Utils/Data2S.h"
 
 using namespace Ph2_HwDescription;
@@ -83,7 +84,7 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
             {
                 for(const auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<float>() == nullptr) continue;
+                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
 
                     TH1F* topSensorHistogram =
                         fTopSensorHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
@@ -96,12 +97,12 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                                                       .fTheHistogram;
 
                     uint16_t channelNumber = 0;
-                    for(auto channel: *chip->getChannelContainer<float>())
+                    for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
-                        if((int(channelNumber) % 2) == 0) { bottomSensorHistogram->Fill(int(channelNumber / 2) + 1, channel); }
+                        if((int(channelNumber) % 2) == 0) { bottomSensorHistogram->Fill(int(channelNumber / 2) + 1, channel.fOccupancy); }
                         else
                         {
-                            topSensorHistogram->Fill(int(channelNumber / 2) + 1, channel);
+                            topSensorHistogram->Fill(int(channelNumber / 2) + 1, channel.fOccupancy);
                         }
                         ++channelNumber;
                     }
@@ -144,8 +145,8 @@ bool Physics2SHistograms::fill(std::vector<char>& dataBuffer)
 {
     // std::cout<<__PRETTY_FUNCTION__ << "Begin of function"<<std::endl;
     // ChipContainerStream<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>> thePSEventStreamer("PSPhysics");
-    ChannelContainerStream<float> theOccupancyStream("PSPhysicsOccupancy");
-    ChannelContainerStream<float> theStubStream("PSPhysicsStub");
+    ChannelContainerStream<Occupancy> theOccupancyStream("Physics2SOccupancy");
+    ChannelContainerStream<float    > theStubStream("Physics2SStub");
 
     if(theOccupancyStream.attachBuffer(&dataBuffer))
     {
