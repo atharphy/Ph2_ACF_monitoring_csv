@@ -26,7 +26,9 @@
 #include "../DQMUtils/DQMEvent.h"
 #include "../DQMUtils/SLinkDQMHistogrammer.h"
 #include "../RootUtils/publisher.h"
+#include <atomic>
 #include "TROOT.h"
+#include <thread>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -34,6 +36,24 @@ using namespace Ph2_System;
 
 using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
+
+std::atomic<bool> keepRunning(false);
+
+void sendResync(Tool& theTool, uint32_t numberOfTriggersAfterResync, uint32_t triggerFrequency, uint32_t& numberOfResyncs)
+{
+    uint32_t microSecondSleepTime = float(numberOfTriggersAfterResync)/float(triggerFrequency) * 1000000;
+    LOG(INFO) << BOLDGREEN << "Sleeping for " << microSecondSleepTime << " us before sending a resync" << RESET;
+    while(!keepRunning) {/* waiting to start*/}
+    // wait 1/2 trigger period, not sure how much helps
+    // std::this_thread::sleep_for(std::chrono::microseconds(uint32_t(float(1000000/2)/float(triggerFrequency))));
+
+    while(keepRunning)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(microSecondSleepTime));
+        theTool.fBeBoardInterface->getFirmwareInterface()->ChipReSync();
+        ++numberOfResyncs;
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -77,6 +97,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("alignCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("limitTriggers", "Limit accepted trigges to the number of events required", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("sendResync", "Send continuosly resyncs every N triggers", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
 
@@ -161,6 +183,39 @@ int main(int argc, char* argv[])
         cPSAlignment.MapMPAOutputs();
     }
 
+
+    for(auto board: *cTool.fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    if(chip->getFrontEndType() == FrontEndType::SSA)
+                    {
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 100);
+                    }
+                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x7);
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 90);
+                    }
+                }
+            }
+        }
+    }
+
+    uint32_t numberOfResyncs=0;
+    if(cmd.foundOption("sendResync"))
+    {
+        uint32_t numberOfTriggersAfterResync = convertAnyInt(cmd.optionValue("sendResync").c_str());
+        uint32_t triggerFrequency = 1000 * cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+        std::thread theResyncThread(sendResync, std::ref(cTool), numberOfTriggersAfterResync, triggerFrequency, std::ref(numberOfResyncs));
+        theResyncThread.detach();
+    }
+
     for(auto cBoard: *cTool.fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
@@ -179,32 +234,45 @@ int main(int argc, char* argv[])
         // default is to use ReadData
         else
         {
+            if( cmd.foundOption("limitTriggers")) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
             uint32_t cNevents = 0;
             size_t   cIter    = 0;
 
             std::vector<uint32_t> cCompleteData(0);
             cTool.fBeBoardInterface->Start(cBeBoard);
-            size_t cNoData=0;
+            keepRunning = true;
+
+            // size_t cNoData=0;
             do
             {
-                std::this_thread::sleep_for(std::chrono::microseconds(1000));
+                std::this_thread::sleep_for(std::chrono::microseconds(100000));
                 std::vector<uint32_t> cData(0);
                 cNevents += cTool.ReadData(cBeBoard, cData, false);
-                if( cData.size() == 0 )
-                { 
-                    if( cNoData%2500 == 0 )
-                        LOG (INFO) << BOLDMAGENTA << "\t...No events read-back from board .. waiting for more .." << RESET;
-                    cNoData++;
-                    cIter++;
-                    continue;
-                }
+                // if( cData.size() == 0 )
+                // { 
+                //     if( cNoData%2500 == 0 )
+                //         LOG (INFO) << BOLDMAGENTA << "\t...No events read-back from board .. waiting for more .." << RESET;
+                //     cNoData++;
+                //     cIter++;
+                //     continue;
+                // }
                 if(cIter % 2500 == 0)
                     LOG(INFO) << BOLDBLUE << "Nevents is " << +cNevents << " number of words in vector is " << cData.size() << " size of complete data is " << cCompleteData.size() << RESET;
                 std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
                 cIter++;
+                if(cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth) break;
             } while(cNevents < pEventsperVcth);
             LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
             cTool.fBeBoardInterface->Stop(cBeBoard);
+            keepRunning = false;
+            
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            
+
+            std::vector<uint32_t> cData(0);
+            cNevents += cTool.ReadData(cBeBoard, cData, false);
+            std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+            
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
             // LOG (INFO) << BOLDBLUE << "Number of words in vector is "  << cCompleteData.size() << RESET;
@@ -219,6 +287,18 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Need to process " << +cPh2Events.size() << " events from this board." << RESET;
         uint32_t               cEventCounter = 0;
         std::vector<DQMEvent*> cDQMEvents;
+
+        // auto increment = [](uint16_t L1Counter) -> uint16_t
+        // {
+        //     L1Counter++;
+        //     if(L1Counter>=512) L1Counter = 0;
+        //     return L1Counter;
+        // }
+
+        // uint16_t lastL1WithTimeout = 0;
+        // bool timeoutErrorInPreviousEvent = false;
+        // bool isFirstUnrecoverableEvent   = true;
+        // uint16_t previousL1ID = 0;
         for(auto& cEvent: cPh2Events)
         {
             if(cEventCounter >= pEventsperVcth) continue;
@@ -249,12 +329,64 @@ int main(int argc, char* argv[])
                     {
                         if( cBoard->getFrontEndType() == FrontEndType::CIC || cBoard->getFrontEndType() == FrontEndType::CIC2 )
                         {
-                            auto cL1IdFirstROC = static_cast<D19cCic2Event*>(cEvent)->L1Id( cHybrid->getId(), 0 ); 
+
+                            uint16_t L1Status = static_cast<D19cCic2Event*>(cEvent)->L1Status(cHybrid->getId());
                             LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id " 
                                 << +cEvent->GetExternalTriggerId() 
                                 << " Hybrid#" << +cHybrid->getId()
-                                << " L1 Id is " << +cL1IdFirstROC 
+                                << " L1 Id is " << static_cast<D19cCic2Event*>(cEvent)->L1Id( cHybrid->getId(), 0 ) 
+                                << " L1 status flag = " << std::bitset<9>(L1Status) 
                                 << RESET;
+                            for(auto cChip : *cHybrid)
+                            {
+                                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                                uint16_t numberOfPixelClusters = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
+                                uint16_t numberOfStripClusters = static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(cHybrid->getId(), cChip->getId()).size();
+                                if(numberOfPixelClusters>0 || numberOfPixelClusters>0)
+                                {
+                                    LOG(INFO) << BOLDYELLOW << "Chip ID = " << +cChip->getId() << RESET;
+                                    LOG(INFO) << BOLDYELLOW << "Number of pixel clusters = "<< numberOfPixelClusters << RESET;
+                                    LOG(INFO) << BOLDYELLOW << "Number of strip clusters = "<< numberOfStripClusters << RESET;
+                                } 
+                                // LOG(INFO) << BOLDYELLOW << "Number of stubs          = "<<static_cast<D19cCic2Event*>(cEvent)->StubVector      (cHybrid->getId(), cChip->getId()).size() << RESET;
+                            }
+
+                            // if(previousL1ID != static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 0) -1)
+                            //     LOG(INFO) << BOLDRED << "L1Id reset after " << previousL1ID << RESET;
+                            // previousL1ID = static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 0);
+
+                            // if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 ) 
+                            // {
+                            //     if(isFirstUnrecoverableEvent && timeoutErrorInPreviousEvent)
+                            //     {
+                            //         auto theLastCorrectEvent = cPh2Events.at(cEventCounter-2);
+
+                            //         isFirstUnrecoverableEvent = false;
+                            //         LOG(INFO) << BOLDYELLOW << "Event before unrecoverable occupancy" << RESET;
+                            //         for(auto cChip : *cHybrid)
+                            //         {
+                            //             LOG(INFO) << BOLDYELLOW << "Chip ID = " << +cChip->getId() << RESET;
+                            //             LOG(INFO) << BOLDYELLOW << "Number of pixel clusters = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId()).size() << RESET;
+                            //             LOG(INFO) << BOLDYELLOW << "Number of strip clusters = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->GetStripClusters(cHybrid->getId(), cChip->getId()).size() << RESET;
+                            //             LOG(INFO) << BOLDYELLOW << "Number of stubs          = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->StubVector      (cHybrid->getId(), cChip->getId()).size() << RESET;
+                            //         }
+                            //     }
+                            //     timeoutErrorInPreviousEvent = true;
+                            //     LOG(WARNING) << BOLDRED << "No packet from MPA to CIC, L1 status flag = " << std::bitset<9>(L1Status) << RESET;
+
+                            //     auto cL1IdFirstROC = static_cast<D19cCic2Event*>(cEvent)->L1Id( cHybrid->getId(), 0 ); 
+                            //     LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id " 
+                            //         << +cEvent->GetExternalTriggerId() 
+                            //         << " Hybrid#" << +cHybrid->getId()
+                            //         << " L1 Id is " << +cL1IdFirstROC 
+                            //         << RESET;
+
+                            // }
+                            // else
+                            // {
+                            //     if(timeoutErrorInPreviousEvent) LOG(INFO) << BOLDGREEN << "RECOVERED" << RESET;
+                            //     timeoutErrorInPreviousEvent = false;
+                            // }
                         }
                     }// hybrid
                 }// optical group
@@ -271,7 +403,18 @@ int main(int argc, char* argv[])
             dqmH->fillHistograms(cDQMEvents);
             cDQMEvents.clear();
         }
+        uint32_t cNtriggers = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        // LOG(INFO) << BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
+
+        LOG(INFO) << "Number of triggers received         = " << cNtriggers                                 << RESET;
+        LOG(INFO) << "Number of events recorded           = " << cPh2Events.size()                          << RESET;
+        LOG(INFO) << "Last event GetEventCount            = " << +cPh2Events.back()->GetEventCount()        << RESET;
+        LOG(INFO) << "Last event GetExternalTriggerId     = " << +cPh2Events.back()->GetExternalTriggerId() << RESET;
+        LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs                            << RESET;
+        LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size()        << RESET;
+
     }
+
 
     // done with the acquistion, now clean up
     if(cDAQFile)
