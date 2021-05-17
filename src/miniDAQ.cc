@@ -299,34 +299,50 @@ int main(int argc, char* argv[])
         else
         {
             uint32_t cNevents = 0;
-            size_t   cIter    = 0;
-
             std::vector<uint32_t> cCompleteData(0);
             cTool.fBeBoardInterface->Start(cBeBoard);
             bool cBreak=false;
+            // if( cLimitTriggers )
+            // {
+            // try to only readout once I know I have enough events 
             do
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                std::vector<uint32_t> cData(0);
-                cNevents += cTool.ReadData(cBeBoard, cData, false);
-                if( cData.size() == 0 )
-                {
-                    if( cIter%100 == 0 ) 
-                        LOG (INFO) << BOLDBLUE << "No events read-back from board .. waiting for more .." << RESET;
-                }
-                else
-                {
-                    LOG (INFO) << BOLDBLUE << "\t... Read back.." << +cData.size() << " words." << RESET;
-                    std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-                }
-                cBreak = (cNevents >= pEventsperVcth); 
-                if( cLimitTriggers ) 
-                    cBreak = cBreak || ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth); 
-                cIter++;
-            } while(!cBreak && cIter < 1000 );
-            LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+                cBreak = ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth); 
+            } while(!cBreak);
             cTool.fBeBoardInterface->Stop(cBeBoard);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::vector<uint32_t> cData(0);
+            cNevents += cTool.ReadData(cBeBoard, cData, false);
+            if( cData.size() != 0 ) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+            //size_t   cIter    = 0;
+            // }   
+            // else
+            // {
+            //     do
+            //     {
+            //         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            //         std::vector<uint32_t> cData(0);
+            //         cNevents += cTool.ReadData(cBeBoard, cData, false);
+            //         if( cData.size() == 0 )
+            //         {
+            //             if( cIter%100 == 0 ) 
+            //                 LOG (INFO) << BOLDBLUE << "No events read-back from board .. waiting for more .." << RESET;
+            //         }
+            //         else
+            //         {
+            //             LOG (INFO) << BOLDBLUE << "\t... Read back.." << +cData.size() << " words." << RESET;
+            //             std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+            //         }
+            //         cBreak = (cNevents >= pEventsperVcth); 
+            //         if( cLimitTriggers ) 
+            //             cBreak = cBreak || ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth); 
+            //         cIter++;
+            //     } while(!cBreak && cIter < 1000 );
+            //     LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
+            //     cTool.fBeBoardInterface->Stop(cBeBoard);
+            //     std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            // }
             LOG (INFO) << BOLDBLUE << "Data size after stop is " << cCompleteData.size() 
                 << " total number of events I expect is " << +cNevents
                 << RESET;
