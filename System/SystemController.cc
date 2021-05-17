@@ -1079,6 +1079,8 @@ void SystemController::ReadData(bool pWait)
 uint32_t SystemController::ReadData(BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
 {
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
+    if( cNPackets == 0 ) return cNPackets; 
+    
     this->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
     return cNPackets;
 }

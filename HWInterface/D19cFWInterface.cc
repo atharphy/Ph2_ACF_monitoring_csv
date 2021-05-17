@@ -1348,6 +1348,8 @@ void D19cFWInterface::TriggerConfiguration()
 }
 void D19cFWInterface::Start()
 {
+    this->ChipReSync();
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     ResetTriggerFSM();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // reset the readout
@@ -2649,6 +2651,24 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
     if(fIsDDR3Readout && !cAsync)
     {
+        //this->Stop();
+        if( ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") == 0x1 ) 
+        {
+            size_t cCounter=0;
+            auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+            do
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+                if( cCounter%10 == 0 ) LOG (INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
+                cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+                cCounter++;
+            }while( cReadoutReq == 0 && cCounter < 100 );
+            if(cReadoutReq==0) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... " << RESET; }
+            else LOG(INFO) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
+        }
+        else 
+            LOG (INFO) << BOLDBLUE << "Data handshake not enabled" << RESET;
+
         //LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // figure out how many events I've got
@@ -3091,7 +3111,6 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         // configure trigger
         // data handshake has to be enabled in this mode
         // read data handshake mode
-        auto cHandshakeMode = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         cVecReg.push_back({"fc7_daq_cnfg.readout_block.packet_nbr", cNevents * (cMultiplicity + 1) - 1});
         cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
         // test pulse and async
@@ -3159,24 +3178,25 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cCounter=0;
                     do
                     {
-                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
                         cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                         cStopIncrement = (cNWords == cNWordsPrev);
                         cNWordsPrev    = cNWords;
                         if( cCounter%100 == 0 ) LOG (INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of words received is " << +cNWords << RESET;
                         cCounter++;
                     } while(!cStopIncrement);
-                    cCounter=0;
-                    cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-                    do
-                    {
-                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                        if( cCounter%10 == 0 ) LOG (INFO) << BOLDRED << "D19cFWInterface::WaitForData ReadoutReq is " << +cReadoutReq << RESET;
-                        cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-                        cCounter++;
-                    }while( cReadoutReq == 0 && cCounter < 100 );
-                    cFailed     = (cReadoutReq != 1);
-                    if(cFailed) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... re-trying " << RESET; }
+                    // this->Stop();
+                    // cCounter=0;
+                    // cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+                    // do
+                    // {
+                    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+                    //     if( cCounter%10 == 0 ) LOG (INFO) << BOLDRED << "D19cFWInterface::WaitForData ReadoutReq is " << +cReadoutReq << RESET;
+                    //     cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+                    //     cCounter++;
+                    // }while( cReadoutReq == 0 && cCounter < 100 );
+                    // cFailed     = (cReadoutReq != 1);
+                    // if(cFailed) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... re-trying " << RESET; }
                 } // check readout req
             }
             else // send triggers until the readout request flag is '1'
@@ -3238,8 +3258,6 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10);
             this->PS_Close_shutter(fFastCommandDuration);
         }
-        //
-        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
         // stop
         this->Stop();
     }
@@ -3305,11 +3323,13 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // write number of triggers to accept
     // in the handshake mode offset is cleared after each handshake
     //fDDR3Offset = 0;
+    auto cHandshakeMode = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
     this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
     bool cFailed = WaitForData(pBoard);
     if(!cFailed)
     {
         this->GetData(pBoard, pData);
+        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
         //fDDR3Offset = 0;
     }
     // again check if failed to re-run in case
@@ -3331,10 +3351,11 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         this->TriggerConfiguration();
 
         fReadoutAttempts++;
-        // send a ReSync
-        // if this helps then the problem is a system level one
-        // and now simply a FW/back-end one
-        this->ChipReSync();
+        // // send a ReSync
+        // // if this helps then the problem is a system level one
+        // // and now simply a FW/back-end one
+        // this->ChipReSync();
+        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
         // try again
         this->ReadNEvents(pBoard, pNEvents, pData);
     }

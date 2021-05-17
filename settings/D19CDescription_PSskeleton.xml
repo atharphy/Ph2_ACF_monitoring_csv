@@ -19,17 +19,18 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="5">
             <Global>
-               <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" />
-            <!--<SSA Id="1" configfile="SSA.txt" />
+            <!-- <SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
             <SSA Id="4" configfile="SSA.txt" />
             <SSA Id="5" configfile="SSA.txt" />
             <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" /> -->
+            <SSA Id="7" configfile="SSA.txt" /> 
+             -->
             
             <CIC_Files path="./settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" /> 
@@ -62,7 +63,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 1000 </Register>
+		<Register name="user_trigger_frequency"> 499 </Register>
             <Register name="stubs_mask"> 1 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -79,7 +80,7 @@
         <Register name="antenna_trigger_delay_value"> 200 </Register>
         <Register name="delay_between_two_consecutive"> 0 </Register>
         <Register name="misc">
-            <Register name="backpressure_enable"> 1 </Register>
+            <Register name="backpressure_enable"> 0 </Register>
             <Register name="stubOR"> 1 </Register>
             <Register name="initial_fast_reset_enable"> 0 </Register>
             <Register name="trigger_multiplicity"> 0 </Register>
