@@ -331,26 +331,27 @@ int main(int argc, char* argv[])
                 << " total number of events I expect is " << +cNevents
                 << RESET;
 
-            // until number of events have stopped increasing 
-            // do this a few times just to be sure 
-            // for(size_t cAttempt=0; cAttempt<1; cAttempt++)
-            // {
-            //     size_t cCurrentDataSize = 0; 
-            //     size_t cDataSize = cCompleteData.size(); 
-            //     do
-            //     {
-            //         cCurrentDataSize = cCompleteData.size(); 
-            //         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            //         std::vector<uint32_t> cData(0);
-            //         cNevents += cTool.ReadData(cBeBoard, cData, false);
-            //         if( cData.size() == 0 )   continue;
-            //         std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-            //         cDataSize = cCompleteData.size(); 
-            //     } while(cCurrentDataSize != cDataSize);
-            //     LOG (INFO) << BOLDBLUE << "Data size before starting to decode is " << cCompleteData.size() 
-            //         << " total number of events I expect is " << +cNevents
-            //         << RESET;
-            // }
+            //until number of events have stopped increasing 
+            for(size_t cAttempt=0; cAttempt<1; cAttempt++)
+            {
+                if( cLimitTriggers )  continue;
+
+                size_t cCurrentDataSize = 0; 
+                size_t cDataSize = cCompleteData.size(); 
+                do
+                {
+                    cCurrentDataSize = cCompleteData.size(); 
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    std::vector<uint32_t> cData(0);
+                    cNevents += cTool.ReadData(cBeBoard, cData, false);
+                    if( cData.size() == 0 )   continue;
+                    std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+                    cDataSize = cCompleteData.size(); 
+                } while(cCurrentDataSize != cDataSize);
+            }
+            LOG (INFO) << BOLDBLUE << "Data size before starting to decode is " << cCompleteData.size() 
+                << " total number of events I expect is " << +cNevents
+                << RESET;
             // decoding data
             cTool.DecodeData(cBeBoard, cCompleteData, cNevents, cTool.fBeBoardInterface->getBoardType(cBeBoard));
         }
@@ -367,7 +368,7 @@ int main(int argc, char* argv[])
         uint32_t               cEventId, cTriggerId; 
         for(auto& cEvent: cPh2Events)
         {
-            if(cEventCounter >= pEventsperVcth) continue;
+            //if(cEventCounter >= pEventsperVcth) continue;
             cEventId = cEvent->GetEventCount(); 
             cTriggerId = cEvent->GetExternalTriggerId(); 
             // if we write a DAQ file or want to run the DQM, get the SLink format
