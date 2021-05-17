@@ -286,7 +286,8 @@ int main(int argc, char* argv[])
         // make sure triggers have stopped
         // and that the readout has been reset
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Stop();
-        if( cmd.foundOption("limitTriggers")) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
+        bool cLimitTriggers = cmd.foundOption("limitTriggers");
+        if( cLimitTriggers ) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
         // if readNevents is used
         if(cmd.foundOption("useReadNEvents"))
         {
@@ -302,6 +303,7 @@ int main(int argc, char* argv[])
 
             std::vector<uint32_t> cCompleteData(0);
             cTool.fBeBoardInterface->Start(cBeBoard);
+            bool cBreak=false;
             do
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -317,8 +319,11 @@ int main(int argc, char* argv[])
                     LOG (INFO) << BOLDBLUE << "\t... Read back.." << +cData.size() << " words." << RESET;
                     std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
                 }
+                cBreak = (cNevents >= pEventsperVcth); 
+                if( cLimitTriggers ) 
+                    cBreak = cBreak || ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth); 
                 cIter++;
-            } while(cNevents < 2*pEventsperVcth && cIter < 1000 );
+            } while(!cBreak && cIter < 1000 );
             LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
             cTool.fBeBoardInterface->Stop(cBeBoard);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
