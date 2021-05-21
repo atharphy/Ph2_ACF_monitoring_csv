@@ -24,12 +24,12 @@ SSAInterface::SSAInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface
 SSAInterface::~SSAInterface() {}
 //
 
-//#FIXME temporary fix to use 1/2 PS skeleton
-void SSAInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
-{
-    flpGBTInterface = pLpGBTInterface;
-    flpGBT          = pLpGBT;
-}
+// //#FIXME temporary fix to use 1/2 PS skeleton
+// void SSAInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
+// {
+//     flpGBTInterface = pLpGBTInterface;
+//     flpGBT          = pLpGBT;
+// }
 
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
@@ -316,7 +316,8 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     // update value of register in memory
     pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     // write
-    if(flpGBTInterface == nullptr)
+    if(!lpGBTFound())
+    //if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
@@ -414,7 +415,8 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
 {
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
-    if(flpGBTInterface == nullptr)
+    if(!lpGBTFound())
+    //if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         cVec.clear();
@@ -507,10 +509,9 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
                     do
                     {
                         LOG(DEBUG) << BOLDRED << "\t.. attempt#" << +cWriteAttempt << RESET;
-                        cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
+                        cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry);
                         if(cSuccess)
                         {
-                            // uint32_t cValue = flpGBTInterface->ssaRead(flpGBT, pChip->getHybridId(), pChip->getId(),  cReg.first);
                             cValue   = fBoardFW->ReadFERegister(pChip, cReg.first);
                             cSuccess = (pSuccesses[cCount] == 1) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
                             if(!cSuccess)
@@ -569,7 +570,8 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     cRegItem.fPage    = 0x00;
     cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue   = 0;
-    if(flpGBTInterface == nullptr)
+    if(!lpGBTFound())
+    //if(flpGBTInterface == nullptr)
     {
         bool                  cFailed = false;
         bool                  cRead;
@@ -612,7 +614,8 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     cRegItem.fValue      = pValue & 0xFF;
     // update value of register in memory
     pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
-    if(flpGBTInterface == nullptr)
+    if(!lpGBTFound())
+    //if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);

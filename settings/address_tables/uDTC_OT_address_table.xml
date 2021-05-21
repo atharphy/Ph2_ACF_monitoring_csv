@@ -161,8 +161,9 @@
                 <node id="trigger_type"                     mask="0x0000f000"/>
                 <node id="data_type"                        mask="0x000f0000"/>
                 <node id="common_stubdata_delay"            mask="0x1ff00000"/>
-		<node id="zero_suppression_enable"          mask="0x00000200"/>
+		        <node id="zero_suppression_enable"          mask="0x00000200"/>
             </node>
+            <node id="timeout"                          address="0x002" mask="0x0000fff"/> 
         </node>
 
         <node id="dio5_block"                   address="0x6000">

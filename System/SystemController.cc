@@ -164,44 +164,30 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-                        bool cFoundLpgbt      = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
-                        if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Interface aware of the lpGBT connected to this board ... " << RESET;
                     }
                     else if(hasssa && hasmpa) // PS module
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS(s)" << RESET;
                         fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
-                        if(cFirstOpticalGroup->flpGBT != nullptr)
-                        {
-                            auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                            (static_cast<PSInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
-                        }
                     }
                     else if(hasmpa) // MPA only
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
                         fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-                        if(cFirstOpticalGroup->flpGBT != nullptr)
-                        {
-                            auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                            (static_cast<MPAInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
-                        }
                     }
                     else if(hasssa) // SSA only
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                         fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-                        if(cFirstOpticalGroup->flpGBT != nullptr)
-                        {
-                            auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                            (static_cast<SSAInterface*>(fReadoutChipInterface))->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
-                        }
                     }
                     else
                     {
                         LOG(ERROR) << BOLDRED << "No valid HWInterface found " << RESET;
                         // throw std::runtime_error(std::string("No valid HWInterface found ... stopping run."));
                     }
+                    bool cFoundLpgbt      = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
+                    if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Interface aware of the lpGBT connected to this board ... " << RESET;
+                    
 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);

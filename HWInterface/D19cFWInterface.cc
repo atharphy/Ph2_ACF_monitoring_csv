@@ -719,10 +719,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
     // this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock);
     // this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 0);
-    this->syncCDCE();
+    //this->syncCDCE();
 
-    // this->WriteReg("fc7_daq_cnfg.clock.ext_clk_en",1);
-    // this->WriteReg("clock_source_u8",2);
+    //this->WriteReg("fc7_daq_cnfg.clock.ext_clk_en",1);
+    //this->WriteReg("clock_source_u8",3);
 
     // check status of clocks
     bool c40MhzLocked    = false;
@@ -752,6 +752,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(ERROR) << BOLDRED << "One of the clocks failed to LOCK!" << RESET;
         exit(0);
     }
+    this->syncCDCE();
 
     // read info about current firmware
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
@@ -1973,7 +1974,7 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
         else
         {
             uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-            //uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
             // LOG (INFO) << BOLDMAGENTA << "Valid event header .. copying over " 
             //     << " event is made up of " << +cEventSize << " 32 bit words "
             //     << " of which " << +cDummyCount << " are dummy words."

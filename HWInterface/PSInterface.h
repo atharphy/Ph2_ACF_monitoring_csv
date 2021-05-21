@@ -45,7 +45,6 @@ class PSInterface : public ReadoutChipInterface
     ~PSInterface();
     Ph2_HwInterface::SSAInterface* theSSAInterface;
     Ph2_HwInterface::MPAInterface* theMPAInterface;
-    void                           LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
     void                           setFileHandler(FileHandler* pHandler);
     bool                           ConfigureChip(Ph2_HwDescription::Chip* pPS, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     uint32_t                       ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);

@@ -25,7 +25,7 @@ class SSAInterface : public ReadoutChipInterface
     SSAInterface(const BeBoardFWMap& pBoardMap);
     ~SSAInterface();
     // FIXME temporary fix to use 1/2 PS skeleton
-    void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
+    //void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;
@@ -81,8 +81,8 @@ class SSAInterface : public ReadoutChipInterface
     bool    fRetryI2C       = false;
     uint8_t fMaxI2CAttempts = 20;
 
-    D19clpGBTInterface*             flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
+    // D19clpGBTInterface*             flpGBTInterface = nullptr;
+    // Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
     std::map<uint16_t, std::string> fMap;
     // re-try counters
     std::map<uint8_t, uint16_t> fReWMap;

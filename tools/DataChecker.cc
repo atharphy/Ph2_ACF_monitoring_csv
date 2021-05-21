@@ -4792,6 +4792,8 @@ void DataChecker::ReadNeventsTest()
                             auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
                             LOG(INFO) << BOLDGREEN << "ROC#" << +cChip->getId() << " L1Id is " << +cL1Id << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
                                       << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
+                            for( auto cHit : cHits )
+                                LOG (INFO) << BOLDGREEN << "\t\t... hit in channel#" << +cHit << RESET;
                         }
                     }
                 }
