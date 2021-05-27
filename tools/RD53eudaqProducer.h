@@ -11,10 +11,11 @@
 #define RD53eudaqProducer_H
 
 #include "eudaq/Producer.hh"
-#include "RD53Physics.h"
+#include "Tool.h"
+class Physics;
 
 class RD53eudaqProducer : 
-  public Physics, public eudaq::Producer
+  public Tool, public eudaq::Producer
 {
     class RD53eudaqEvtConverter
     {
@@ -39,7 +40,7 @@ class RD53eudaqProducer :
   private:
     size_t      fRunNumber;
     std::string configFile;
-    Physics     RD53sysCntrPhys;
+    Physics     *RD53sysCntrPhys;
 };
 
 // ##################################

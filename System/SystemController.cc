@@ -213,22 +213,21 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
 
-    DetectorMonitorConfig theDetectorMonitorConfig;
-    std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os, pIsFile);
-
-    if(monitoringType != "None")
-    {
-        if(monitoringType == "2S")
-            fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
-        else if(monitoringType == "RD53")
-            fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
-        else
-        {
-            LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
-            abort();
-        }
-        fDetectorMonitor->forkMonitor();
-    }
+    // DetectorMonitorConfig theDetectorMonitorConfig;
+    // std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os, pIsFile);
+    // if(monitoringType != "None")
+    // {
+    //     if(monitoringType == "2S")
+    //         fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
+    //     else if(monitoringType == "RD53")
+    //         fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+    //     else
+    //     {
+    //         LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
+    //         abort();
+    //     }
+    //     fDetectorMonitor->forkMonitor();
+    // }
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
