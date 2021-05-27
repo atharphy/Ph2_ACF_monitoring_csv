@@ -8,6 +8,7 @@
 */
 
 #include "RD53eudaqProducer.h"
+#include "RD53Physics.h"
 
 RD53eudaqProducer::RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl)
     : eudaq::Producer(producerName, runControl), configFile(configFile)
@@ -46,7 +47,6 @@ void RD53eudaqProducer::DoConfigure()
 void RD53eudaqProducer::DoStartRun()
 {
     fRunNumber = this->GetRunNumber();
-
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
@@ -68,7 +68,7 @@ void RD53eudaqProducer::DoStopRun()
     // # Copy configuration file #
     // ###########################
     const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
-    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
+    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(fRunNumber) + "_" + configFileBasename;
     system(("cp " + configFile + " " + outputConfigFile).c_str());
 
     this->SetStatus(eudaq::Status::STATE_STOPPED, "RD53eudaqProducer::Stopped");
@@ -77,7 +77,7 @@ void RD53eudaqProducer::DoStopRun()
 
 void RD53eudaqProducer::DoTerminate() { RD53eudaqProducer::DoStopRun(); }
 
-void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList)
+void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
 {
     std::time_t timeStamp = std::time(nullptr);
 
@@ -99,12 +99,12 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             for(auto i = 0u; i < evt.chip_frames_events.size(); i++)
             {
                 std::vector<uint8_t> eudaq_hits;
-                eudaq_hits.push_back((RD53::nRows >> 0) & 0xFF);
-                eudaq_hits.push_back((RD53::nRows >> 8) & 0xFF);
-                eudaq_hits.push_back((RD53::nCols >> 0) & 0xFF);
-                eudaq_hits.push_back((RD53::nCols >> 8) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 0) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nRows >> 8) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 0) & 0xFF);
+                eudaq_hits.push_back((Ph2_HwDescription::RD53::nCols >> 8) & 0xFF);
                 eudaq_hits.push_back((evt.chip_frames_events[i].second.hit_data.size() >> 0) & 0xFF);
-                eudaq_hits.push_back((evt.chip_frames.events[i].second.hit_data.size() >> 8) & 0xFF);
+                eudaq_hits.push_back((evt.chip_frames_events[i].second.hit_data.size() >> 8) & 0xFF);
                 for(const auto& hit: evt.chip_frames_events[i].second.hit_data)
                 {
                     // #######

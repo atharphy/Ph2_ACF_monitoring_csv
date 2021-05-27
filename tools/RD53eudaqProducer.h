@@ -10,16 +10,17 @@
 #ifndef RD53eudaqProducer_H
 #define RD53eudaqProducer_H
 
-#include "RD53Physics.h"
 #include "eudaq/Producer.hh"
+#include "RD53Physics.h"
 
-class RD53eudaqProducer : public eudaq::Producer
+class RD53eudaqProducer : 
+  public Physics, public eudaq::Producer
 {
     class RD53eudaqEvtConverter
     {
       public:
         RD53eudaqEvtConverter(RD53eudaqProducer* eudaqProducer) : eudaqProducer(eudaqProducer) {}
-        void operator()(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList);
+        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList);
 
       private:
         RD53eudaqProducer* eudaqProducer;
@@ -36,6 +37,7 @@ class RD53eudaqProducer : public eudaq::Producer
     void DoTerminate() override;
 
   private:
+    size_t      fRunNumber;
     std::string configFile;
     Physics     RD53sysCntrPhys;
 };
