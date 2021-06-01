@@ -33,8 +33,7 @@ class CicInterface : public ChipInterface
      * \brief Destructor of the CICInterface Class
      */
     ~CicInterface();
-    void LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
-
+    
     /*!
      * \brief Configure the Cic with the Cic Config File
      * \param pCic: pointer to CIC object
@@ -140,9 +139,6 @@ class CicInterface : public ChipInterface
     bool    fWith8CBC3      = false;
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
-
-    D19clpGBTInterface*       flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT* flpGBT          = nullptr;
 
     bool                           WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);

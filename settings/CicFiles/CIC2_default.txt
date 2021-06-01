@@ -53,9 +53,9 @@ EXT_WA_DELAY19                                  0x03    0x65    0x44    0x44
 * PhyPort registers
 *--------------------------------------------------------------------------------
 PHY_PORT_CONFIG                                 0x00    0x0D    0x01    0x03
-scDllCurrentSet0                                0x00    0x01    0x00    0xFF
-scDllCurrentSet1                                0x00    0x02    0x00    0xFF
-scDllCurrentSet2                                0x00    0x03    0x00    0xFF
+scDllCurrentSet0                                0x00    0x01    0x00    0xAA
+scDllCurrentSet1                                0x00    0x02    0x00    0xAA
+scDllCurrentSet2                                0x00    0x03    0x00    0xAA
 scDllConfirmCountSelect0                        0x00    0x04    0x55    0xFF
 scDllConfirmCountSelect1                        0x00    0x05    0x55    0xFF
 scDllConfirmCountSelect2                        0x00    0x06    0x55    0xFF

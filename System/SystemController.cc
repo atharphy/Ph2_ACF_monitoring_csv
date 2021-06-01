@@ -185,22 +185,19 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         LOG(ERROR) << BOLDRED << "No valid HWInterface found " << RESET;
                         // throw std::runtime_error(std::string("No valid HWInterface found ... stopping run."));
                     }
-                    bool cFoundLpgbt      = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
-                    if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Interface aware of the lpGBT connected to this board ... " << RESET;
-                    
+                    if( fReadoutChipInterface!= nullptr )
+                    {
+                        bool cFoundLpgbt      = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
+                        if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Interface aware of the lpGBT connected to this board ... " << RESET;
+                    }
 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                     fCicInterface = new CicInterface(fBeBoardFWMap);
                     // check event type
                     bool cWithCBC3 = !(cFirstBoard->getEventType() == EventType::VR2S);
                     fCicInterface->setWith8CBC3(cWithCBC3);
-                    if(cFirstOpticalGroup->flpGBT != nullptr)
-                    {
-                        auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                        fCicInterface->LinkLpGBT(clpGBTInterface, cFirstOpticalGroup->flpGBT);
-                        // link lpGBT
-                        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLpGBT(clpGBTInterface);
-                    }
+                    bool cFoundLpgbt      = fCicInterface->lpGBTCheck(cFirstBoard);
+                    if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. CIC Interface aware of the lpGBT connected to this board ... " << RESET;       
                 }
             }
         }
@@ -568,7 +565,9 @@ void SystemController::ModuleStartUp2S()
     uint8_t  cHybridClockDrive = 4;
     uint16_t cReadoutRate      = 320;
     uint8_t  cCicDriveStrength = 4;
-    // configure PS-ROH + PS FEHs
+    uint8_t  cPreEmphMode = 0; //3
+    uint8_t  cPreEmphStr=5; //7
+    // configure 2S-FEHs + 2S SEHs
     for(const auto cBoard: *fDetectorContainer)
     {
         // read CIC sparsification setting
@@ -596,15 +595,41 @@ void SystemController::ModuleStartUp2S()
                 cClkCnfg.fClkDriveStr     = cHybridClockDrive;
                 cClkCnfg.fClkInvert       = (cSide == 0) ? 1 : 0;
                 cClkCnfg.fClkPreEmphWidth = 0;
-                cClkCnfg.fClkPreEmphMode  = 3; // 3;
-                cClkCnfg.fClkPreEmphStr   = 5; // 7;
+                cClkCnfg.fClkPreEmphMode  = cPreEmphMode; 
+                cClkCnfg.fClkPreEmphStr   = cPreEmphStr; 
                 LOG(INFO) << BOLDBLUE << "Enabling Hybrid clock [Side == " << +cSide << "]" << RESET;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
 
-                // hold CIC reset
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, cSide);
-                // Configure CBCs on this hybrid
+                // hold CBC reset
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cbcReset(clpGBT, true, cSide);
+                OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
+                auto&               cCic                  = theOuterTrackerHybrid->fCic;
+                
+                if(cCic == NULL) continue;
+                // Configure CICs on this hybrid
+                // release CIC reset
+                LOG(INFO) << BOLDBLUE << "Resetting CIC" << RESET;
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCic(clpGBT, cSide);
+                LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
+                fCicInterface->ConfigureChip(cCic);
+                fCicInterface->EnableFEs(cCic,{0,1,2,3,4,5,6,7}, false);//make sure all FEs are disabled by default 
+            } // Hybrid
+        }     // OG
+    }// board - config 2S-SEH + 2S-FEHs [CICs only]
+    // Start-up CIC 
+    CicStartUp(cCicDriveStrength);
+    // configure ROCs
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            if(clpGBT == nullptr) continue;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // configure CBCs
                 LOG(INFO) << BOLDBLUE << "Resetting CBCs" << RESET;
+                uint8_t          cSide = cHybrid->getId() % 2;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
                 for(auto cChip: *cHybrid)
                 {
@@ -613,87 +638,9 @@ void SystemController::ModuleStartUp2S()
                     LOG(INFO) << BOLDBLUE << "Configuring CBC [chip id " << +cChip->getId() << " ]" << RESET;
                     fReadoutChipInterface->ConfigureChip(cChip);
                 } // CBC config
-
-                OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-                auto&               cCic                  = theOuterTrackerHybrid->fCic;
-
-                if(cCic == NULL) continue;
-
-                // Configure CICs on this hybrid
-                // release CIC reset
-                LOG(INFO) << BOLDBLUE << "Resetting CIC" << RESET;
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCic(clpGBT, cSide);
-                LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
-                fCicInterface->ConfigureChip(cCic);
             } // Hybrid
         }     // OG
-    }         // board - config 2S-ROH + 2S-FEHs
-
-    CicStartUp(cCicDriveStrength);
-
-    // // start-up CIC
-    // for(const auto cBoard: *fDetectorContainer)
-    // {
-    //     bool cSparsified = cBoard->getSparsification();
-    //     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
-    //     for(auto cOpticalGroup: *cBoard)
-    //     {
-    //         uint8_t cLinkId = cOpticalGroup->getId();
-    //         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(cLinkId);
-    //         auto& clpGBT =  cOpticalGroup->flpGBT ;
-    //         uint8_t cChipRate = 5;
-    //         if(clpGBT != nullptr) cChipRate = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT);
-    //         for(auto cHybrid: *cOpticalGroup)
-    //         {
-    //             OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-    //             auto& cCic = theOuterTrackerHybrid->fCic;
-    //             if(cCic == NULL) continue;
-
-    //             // CIC start-up
-    //             bool cSuccess = true;
-    //             if(theOuterTrackerHybrid->size() > 0)
-    //             {
-    //                 auto         cFirstROC = static_cast<ReadoutChip*>(theOuterTrackerHybrid->at(0));
-    //                 FrontEndType cType     = FrontEndType::CBC3;
-    //                 if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
-    //                 uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
-    //                 // select CIC mode
-    //                 cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
-    //                 if(!cSuccess)
-    //                 {
-    //                     LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-    //                     exit(0);
-    //                 }
-    //                 LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
-    //             }
-    //             // select CIC FE enable register
-    //             std::vector<uint8_t> cFeIds(0);
-    //             for(auto cReadoutChip: *cHybrid)
-    //             {
-    //                  if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
-    //                 cFeIds.push_back(cReadoutChip->getId());
-    //             }
-    //             fCicInterface->EnableFEs(cCic, cFeIds, true);
-
-    //             // make sure data rate is correctly configured
-    //             uint8_t cFeConfigReg = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
-    //             uint8_t cNewValue = ( cFeConfigReg & 0xFD ) | ( (uint8_t)(cChipRate==10) << 1 );
-    //             cSuccess = fCicInterface->WriteChipReg(cCic,"FE_CONFIG", cNewValue);
-    //             // CIC start-up sequence
-    //             uint8_t cDriveStrength = cCicDriveStrength;
-    //             if( cSuccess) cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
-    //             if( cSuccess) cSuccess               = fCicInterface->SetSparsification(cCic, cSparsified);
-
-    //             // make sure mode is set for 2S
-    //             fCicInterface->SelectMode( cCic, 0 );
-    //             if( cSuccess )
-    //                 LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerHybrid->getId() % 2) << " connected to link "
-    //                       << +theOuterTrackerHybrid->getLinkId() << RESET;
-    //             LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
-    //         }
-    //     }//OG
-    //     fBeBoardInterface->ChipReSync(cBoard);
-    // }//board
+    }// board - config 2S-SEH + 2S-FEHs [CICs only]
 }
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {

@@ -44,12 +44,6 @@ CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoard
 
 CicInterface::~CicInterface() {}
 
-//#FIXME temporary fix to use 1/2 PS skeleton
-void CicInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
-{
-    flpGBTInterface = pLpGBTInterface;
-    flpGBT          = pLpGBT;
-}
 bool CicInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName)
 {
     auto     cRegItem = pChip->getRegItem(pRegName);
@@ -133,7 +127,8 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     bool cRetry   = true;
-    if(flpGBTInterface == nullptr)
+    if(!lpGBTFound())
+    //if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         cVec.clear();
@@ -349,7 +344,8 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     // update register map
     pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     // write
-    if(flpGBTInterface == nullptr)
+    if(!lpGBTFound())
+    //if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x"
@@ -438,7 +434,8 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem pRegItem)
 {
     setBoard(pChip->getBeBoardId());
-    if(flpGBTInterface == nullptr)
+    if(!lpGBTFound())
+    //if(flpGBTInterface == nullptr)
     {
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x"
         //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
