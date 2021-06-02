@@ -185,9 +185,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         LOG(ERROR) << BOLDRED << "No valid HWInterface found " << RESET;
                         // throw std::runtime_error(std::string("No valid HWInterface found ... stopping run."));
                     }
-                    if( fReadoutChipInterface!= nullptr )
+                    if(fReadoutChipInterface != nullptr)
                     {
-                        bool cFoundLpgbt      = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
+                        bool cFoundLpgbt = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
                         if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Interface aware of the lpGBT connected to this board ... " << RESET;
                     }
 
@@ -196,8 +196,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     // check event type
                     bool cWithCBC3 = !(cFirstBoard->getEventType() == EventType::VR2S);
                     fCicInterface->setWith8CBC3(cWithCBC3);
-                    bool cFoundLpgbt      = fCicInterface->lpGBTCheck(cFirstBoard);
-                    if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. CIC Interface aware of the lpGBT connected to this board ... " << RESET;       
+                    bool cFoundLpgbt = fCicInterface->lpGBTCheck(cFirstBoard);
+                    if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. CIC Interface aware of the lpGBT connected to this board ... " << RESET;
                 }
             }
         }
@@ -565,8 +565,8 @@ void SystemController::ModuleStartUp2S()
     uint8_t  cHybridClockDrive = 4;
     uint16_t cReadoutRate      = 320;
     uint8_t  cCicDriveStrength = 4;
-    uint8_t  cPreEmphMode = 0; //3
-    uint8_t  cPreEmphStr=5; //7
+    uint8_t  cPreEmphMode      = 0; // 3
+    uint8_t  cPreEmphStr       = 5; // 7
     // configure 2S-FEHs + 2S SEHs
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -595,8 +595,8 @@ void SystemController::ModuleStartUp2S()
                 cClkCnfg.fClkDriveStr     = cHybridClockDrive;
                 cClkCnfg.fClkInvert       = (cSide == 0) ? 1 : 0;
                 cClkCnfg.fClkPreEmphWidth = 0;
-                cClkCnfg.fClkPreEmphMode  = cPreEmphMode; 
-                cClkCnfg.fClkPreEmphStr   = cPreEmphStr; 
+                cClkCnfg.fClkPreEmphMode  = cPreEmphMode;
+                cClkCnfg.fClkPreEmphStr   = cPreEmphStr;
                 LOG(INFO) << BOLDBLUE << "Enabling Hybrid clock [Side == " << +cSide << "]" << RESET;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
 
@@ -604,7 +604,7 @@ void SystemController::ModuleStartUp2S()
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cbcReset(clpGBT, true, cSide);
                 OuterTrackerHybrid* theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                 auto&               cCic                  = theOuterTrackerHybrid->fCic;
-                
+
                 if(cCic == NULL) continue;
                 // Configure CICs on this hybrid
                 // release CIC reset
@@ -612,11 +612,11 @@ void SystemController::ModuleStartUp2S()
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCic(clpGBT, cSide);
                 LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
                 fCicInterface->ConfigureChip(cCic);
-                fCicInterface->EnableFEs(cCic,{0,1,2,3,4,5,6,7}, false);//make sure all FEs are disabled by default 
-            } // Hybrid
-        }     // OG
-    }// board - config 2S-SEH + 2S-FEHs [CICs only]
-    // Start-up CIC 
+                fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
+            }                                                                    // Hybrid
+        }                                                                        // OG
+    }                                                                            // board - config 2S-SEH + 2S-FEHs [CICs only]
+    // Start-up CIC
     CicStartUp(cCicDriveStrength);
     // configure ROCs
     for(const auto cBoard: *fDetectorContainer)
@@ -629,7 +629,7 @@ void SystemController::ModuleStartUp2S()
             {
                 // configure CBCs
                 LOG(INFO) << BOLDBLUE << "Resetting CBCs" << RESET;
-                uint8_t          cSide = cHybrid->getId() % 2;
+                uint8_t cSide = cHybrid->getId() % 2;
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
                 for(auto cChip: *cHybrid)
                 {
@@ -638,9 +638,9 @@ void SystemController::ModuleStartUp2S()
                     LOG(INFO) << BOLDBLUE << "Configuring CBC [chip id " << +cChip->getId() << " ]" << RESET;
                     fReadoutChipInterface->ConfigureChip(cChip);
                 } // CBC config
-            } // Hybrid
-        }     // OG
-    }// board - config 2S-SEH + 2S-FEHs [CICs only]
+            }     // Hybrid
+        }         // OG
+    }             // board - config 2S-SEH + 2S-FEHs [CICs only]
 }
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {
@@ -1011,8 +1011,8 @@ void SystemController::ReadData(bool pWait)
 uint32_t SystemController::ReadData(BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
 {
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
-    if( cNPackets == 0 ) return cNPackets; 
-    
+    if(cNPackets == 0) return cNPackets;
+
     this->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
     return cNPackets;
 }
@@ -1146,14 +1146,15 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 auto   cEventIterator = pData.begin();
                 do
                 {
-                    uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
-                    if( cHeader != 0xFFFF ) cEventIterator++;
-                    else // valid event  // decode 
+                    uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
+                    if(cHeader != 0xFFFF)
+                        cEventIterator++;
+                    else // valid event  // decode
                     {
                         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-                        auto     cEnd       = ((cEventIterator + cEventSize ) > pData.end()) ? pData.end() : (cEventIterator + cEventSize );
+                        auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
                         // retrieve chunck of data vector belonging to this event
-                        if(cEnd - cEventIterator == cEventSize )
+                        if(cEnd - cEventIterator == cEventSize)
                         {
                             std::vector<uint32_t> cEvent(cEventIterator, cEnd);
                             // some useful debug information

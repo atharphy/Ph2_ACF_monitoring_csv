@@ -54,8 +54,8 @@ void Eudaq2Producer::DoConfigure()
 
     // only thing I don't understand is where the run number goes
     // getting the configuration
-    //auto              cRunNumber = GetRunNumber();
-    auto              conf       = GetConfiguration();
+    // auto              cRunNumber = GetRunNumber();
+    auto              conf = GetConfiguration();
     std::stringstream outp;
     fHWFile = conf->Get("HWFile", "./settings/D19CDescription.xml");
 
@@ -322,7 +322,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             // build sensor id (one needs divide by two because 2 hybrids per hybrid, but multiply by two because 2
             // sensors per hybrid)
             cSensorId = (cFeId0 - (cFeId0 % 2));
-            
+
             // vectors to srore data
             std::vector<uint8_t> top_channel_data;
             std::vector<uint8_t> bottom_channel_data;
@@ -331,9 +331,9 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             std::vector<uint8_t> bottom_data_final(6);
 
             // we have two hybrids (FE) per hybrid therefore we iterate a bit here
-            // if we are 
-            uint32_t cIterRange = ((cFeId0 % 2) == 0) ? 2 : 1; // now we also need to make sure that we starting from the right hybrid (0)
-            auto cFeIterCurrent = cFeIter; 
+            // if we are
+            uint32_t cIterRange     = ((cFeId0 % 2) == 0) ? 2 : 1; // now we also need to make sure that we starting from the right hybrid (0)
+            auto     cFeIterCurrent = cFeIter;
             for(uint32_t i = 0; i < cIterRange; i++)
             {
                 // check that we are still not at the end
@@ -394,7 +394,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                         }
                     } // end of hit loop
                 }     // end of cCbc loop
-                cFeIterCurrent++; 
+                cFeIterCurrent++;
                 cFeIter++;
             } // end fe within a hybrid loop loop
 

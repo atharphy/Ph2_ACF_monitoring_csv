@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
         // cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.timeout", 0x1);
         //
         bool cLimitTriggers = cmd.foundOption("limitTriggers");
-        if( cLimitTriggers ) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
+        if(cLimitTriggers) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
         // if readNevents is used
         if(cmd.foundOption("useReadNEvents"))
         {
@@ -301,23 +301,23 @@ int main(int argc, char* argv[])
         // default is to use ReadData
         else
         {
-            uint32_t cNevents = 0;
+            uint32_t              cNevents = 0;
             std::vector<uint32_t> cCompleteData(0);
             cTool.fBeBoardInterface->Start(cBeBoard);
-            bool cBreak=false;
+            bool cBreak = false;
             // if( cLimitTriggers )
             // {
-            // try to only readout once I know I have enough events 
+            // try to only readout once I know I have enough events
             do
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
-                cBreak = ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth); 
+                cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
             } while(!cBreak);
             cTool.fBeBoardInterface->Stop(cBeBoard);
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             std::vector<uint32_t> cData(0);
             cNevents += cTool.ReadData(cBeBoard, cData, false);
-            if( cData.size() != 0 ) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+            if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
 
             // size_t   cIter    = 0;
             // do
@@ -327,7 +327,7 @@ int main(int argc, char* argv[])
             //     cNevents += cTool.ReadData(cBeBoard, cData, false);
             //     if( cData.size() == 0 )
             //     {
-            //         if( cIter%100 == 0 ) 
+            //         if( cIter%100 == 0 )
             //             LOG (INFO) << BOLDBLUE << "No events read-back from board .. waiting for more .." << RESET;
             //     }
             //     else
@@ -335,39 +335,35 @@ int main(int argc, char* argv[])
             //         LOG (INFO) << BOLDBLUE << "\t... Read back.." << +cData.size() << " words." << RESET;
             //         std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
             //     }
-            //     cBreak = (cNevents >= pEventsperVcth); 
-            //     if( cLimitTriggers ) 
-            //         cBreak = cBreak || ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth); 
+            //     cBreak = (cNevents >= pEventsperVcth);
+            //     if( cLimitTriggers )
+            //         cBreak = cBreak || ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
             //     cIter++;
             // } while(!cBreak && cIter < 1000 );
             // LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
             // cTool.fBeBoardInterface->Stop(cBeBoard);
             // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            LOG (INFO) << BOLDBLUE << "Data size after stop is " << cCompleteData.size() 
-                << " total number of events I expect is " << +cNevents
-                << RESET;
+            LOG(INFO) << BOLDBLUE << "Data size after stop is " << cCompleteData.size() << " total number of events I expect is " << +cNevents << RESET;
 
-            //until number of events have stopped increasing 
-            for(size_t cAttempt=0; cAttempt<1; cAttempt++)
+            // until number of events have stopped increasing
+            for(size_t cAttempt = 0; cAttempt < 1; cAttempt++)
             {
-                if( cLimitTriggers )  continue;
+                if(cLimitTriggers) continue;
 
-                size_t cCurrentDataSize = 0; 
-                size_t cDataSize = cCompleteData.size(); 
+                size_t cCurrentDataSize = 0;
+                size_t cDataSize        = cCompleteData.size();
                 do
                 {
-                    cCurrentDataSize = cCompleteData.size(); 
+                    cCurrentDataSize = cCompleteData.size();
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     std::vector<uint32_t> cData(0);
                     cNevents += cTool.ReadData(cBeBoard, cData, false);
-                    if( cData.size() == 0 )   continue;
+                    if(cData.size() == 0) continue;
                     std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-                    cDataSize = cCompleteData.size(); 
+                    cDataSize = cCompleteData.size();
                 } while(cCurrentDataSize != cDataSize);
             }
-            LOG (INFO) << BOLDBLUE << "Data size before starting to decode is " << cCompleteData.size() 
-                << " total number of events I expect is " << +cNevents
-                << RESET;
+            LOG(INFO) << BOLDBLUE << "Data size before starting to decode is " << cCompleteData.size() << " total number of events I expect is " << +cNevents << RESET;
             // decoding data
             cTool.DecodeData(cBeBoard, cCompleteData, cNevents, cTool.fBeBoardInterface->getBoardType(cBeBoard));
         }
@@ -376,17 +372,17 @@ int main(int argc, char* argv[])
         bool                       cPostscale   = cmd.foundOption("postscale");
         int                        cScaleFactor = cPostscale ? atoi(cmd.optionValue("postscale").c_str()) : 1;
         const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
-        uint32_t cNtriggers = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        uint32_t                   cNtriggers   = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         LOG(INFO) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from this board." << RESET;
         LOG(INFO) << BOLDBLUE << "Number of triggers received is " << +cNtriggers << "." << RESET;
         uint32_t               cEventCounter = 0;
         std::vector<DQMEvent*> cDQMEvents;
-        uint32_t               cEventId, cTriggerId; 
+        uint32_t               cEventId, cTriggerId;
         for(auto& cEvent: cPh2Events)
         {
-            //if(cEventCounter >= pEventsperVcth) continue;
-            cEventId = cEvent->GetEventCount(); 
-            cTriggerId = cEvent->GetExternalTriggerId(); 
+            // if(cEventCounter >= pEventsperVcth) continue;
+            cEventId   = cEvent->GetEventCount();
+            cTriggerId = cEvent->GetExternalTriggerId();
             // if we write a DAQ file or want to run the DQM, get the SLink format
             if(cDAQFile || cDQM)
             {
@@ -405,17 +401,17 @@ int main(int argc, char* argv[])
                 if(cDQM && cEventCounter % cScaleFactor == 0) { cDQMEvents.emplace_back(new DQMEvent(&cSLev)); }
             }
 
-            //if(cEventCounter % 1000 == 0)
+            // if(cEventCounter % 1000 == 0)
             //{
-                auto     cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(0, 0);
-                LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << RESET;
-                // outp.str("");
-                // outp << *cEvent;
-                // LOG(INFO) << outp.str() << RESET;
+            auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(0, 0);
+            LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << RESET;
+            // outp.str("");
+            // outp << *cEvent;
+            // LOG(INFO) << outp.str() << RESET;
             //}
             cEventCounter++;
         }
-        
+
         // finished  processing the events from this acquisition
         // thus now fill the histograms for the DQM
         if(cDQM)

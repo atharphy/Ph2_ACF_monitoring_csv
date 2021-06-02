@@ -223,8 +223,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 {
                                     if(cIs2S)
                                     {
-                                        const size_t cFullSize = 8; 
-                                        const size_t cNblocks = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
+                                        const size_t cFullSize = 8;
+                                        const size_t cNblocks  = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
 
                                         // for( size_t cWrdOffset = 0 ; cWrdOffset < cHitInfoSize ; cWrdOffset++  )
                                         //     LOG (INFO) << BOLDGREEN << "\t\t\t..." << std::bitset<32>(*(cIterator+cWrdOffset)) << RESET;
@@ -322,8 +322,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         else
                         {
                             LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
-                                   << "... status word " << std::bitset<2>(cStatusWord) << RESET;
-                            //throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                                      << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                            // throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
                         }
                         cStatus = cStatus | (cStatusWord << (cRocIndex * 2));
                         // increment ROC index
@@ -336,7 +336,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         }
         cEventIterator += cEventSize;
         cNEvents++;
-    } while(cEventIterator < pData.end() && pData.size() != 0 );//add dummy count check
+    } while(cEventIterator < pData.end() && pData.size() != 0); // add dummy count check
 }
 void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
 {
@@ -671,10 +671,10 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
 
 std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
-    auto cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
-    size_t cIndx = 7 - cChipIdMapped;
-    auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cIndx];
-    //size_t cIndx = 0;
+    auto   cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+    size_t cIndx         = 7 - cChipIdMapped;
+    auto&  cDataBitset   = fEventRawList[getFeIndex(pFeId)].second[cIndx];
+    // size_t cIndx = 0;
     // if there are some FEs diabled.. what happens?
     // std::vector<uint8_t> cIds(0);
     // for(auto cRocId: fROCIds[pFeId]) { cIds.push_back(getChipIdMapped(pFeId, cRocId)); }
@@ -690,7 +690,7 @@ std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pRead
     // LOG (INFO) << BOLDMAGENTA << "D19cCic2Event::getRawL1Word Hybrid ChipId# " << +pReadoutChipId
     //         << " Index in local vector is " << +cChipIndex
     //         << " Index in data vector from CIC is " << +cIndx << RESET;
-    //auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cIndx];
+    // auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cIndx];
     return cDataBitset;
 }
 

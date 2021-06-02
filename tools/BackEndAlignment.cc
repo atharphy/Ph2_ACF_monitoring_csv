@@ -693,7 +693,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         }
     }
     bool cAligned = true;
-    fL1Debug=true;
+    fL1Debug      = true;
     if(!pBoard->ifOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning(pBoard, fL1Debug);
     if(!cAligned)
     {
@@ -714,7 +714,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
     }
-    //fL1Debug = false;
+    // fL1Debug = false;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1WordAlignment(pBoard, fL1Debug);
     if(!cAligned)
     {

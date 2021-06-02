@@ -409,10 +409,10 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>())
                     {
-                        float cNoise = (std::isnan(channel.fNoise)) ? 666 : channel.fNoise ;
-                        float cNoiseErr = (std::isnan(channel.fNoiseError)) ? 666 : channel.fNoiseError ;
-                        float cPedestal = (std::isnan(channel.fThreshold)) ? 666 : channel.fThreshold ;
-                        float cPedestalErr = (std::isnan(channel.fThreshold)) ? 666 : channel.fThresholdError ;
+                        float cNoise       = (std::isnan(channel.fNoise)) ? 666 : channel.fNoise;
+                        float cNoiseErr    = (std::isnan(channel.fNoiseError)) ? 666 : channel.fNoiseError;
+                        float cPedestal    = (std::isnan(channel.fThreshold)) ? 666 : channel.fThreshold;
+                        float cPedestalErr = (std::isnan(channel.fThreshold)) ? 666 : channel.fThresholdError;
                         chipPedestalHistogram->Fill(cPedestal);
                         chipNoiseHistogram->Fill(cNoise);
                         hybridNoiseHistogram->Fill(cNoise);
@@ -429,12 +429,12 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                             chipStripNoiseOddHistogram->SetBinContent(int(channelNumber / 2) + 1, cNoise);
                             chipStripNoiseOddHistogram->SetBinError(int(channelNumber / 2) + 1, cNoiseErr);
                             hybridStripNoiseOddHistogram->SetBinContent(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoise);
-                            hybridStripNoiseOddHistogram->SetBinError(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1,cNoiseErr);
+                            hybridStripNoiseOddHistogram->SetBinError(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoiseErr);
                         }
 
                         chipStripNoiseHistogram->SetBinContent(channelNumber + 1, cNoise);
                         chipStripNoiseHistogram->SetBinError(channelNumber + 1, cNoiseErr);
-                        chipStripPedestalHistogram->SetBinContent(channelNumber + 1,  cPedestal);
+                        chipStripPedestalHistogram->SetBinContent(channelNumber + 1, cPedestal);
                         chipStripPedestalHistogram->SetBinError(channelNumber + 1, cPedestalErr);
                         hybridStripNoiseHistogram->SetBinContent(NCHANNELS * chip->getId() + channelNumber + 1, cNoise);
                         hybridStripNoiseHistogram->SetBinError(NCHANNELS * chip->getId() + channelNumber + 1, cNoiseErr);

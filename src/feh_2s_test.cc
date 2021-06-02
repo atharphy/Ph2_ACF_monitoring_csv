@@ -143,8 +143,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
-    
-    
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -203,10 +202,10 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef __POWERSUPPLY__
-    DeviceHandler cPowerSupplyHandler;
-    std::vector<std::pair<std::string, bool>> cPowerSupplyChannels;    
-    std::string cPowerSupply = "MyRohdeSchwarz";
-    pugi::xml_document docSettings;
+    DeviceHandler                             cPowerSupplyHandler;
+    std::vector<std::pair<std::string, bool>> cPowerSupplyChannels;
+    std::string                               cPowerSupply = "MyRohdeSchwarz";
+    pugi::xml_document                        docSettings;
 
     cPowerSupplyHandler.readSettings("settings/PSskeleton.xml", docSettings);
     try
@@ -219,7 +218,7 @@ int main(int argc, char* argv[])
         exit(0);
     }
     // Get all channels of the powersupply
-    pugi::xml_document                        doc;
+    pugi::xml_document doc;
     if(!doc.load_file("settings/PSskeleton.xml")) return -1;
     pugi::xml_node devices = doc.child("Devices");
     for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
@@ -236,13 +235,21 @@ int main(int argc, char* argv[])
             }
         }
     }
-    if(cmd.foundOption("cyclePower")) 
+    if(cmd.foundOption("cyclePower"))
     {
         LOG(INFO) << BOLDRED << "Turn off all channels : " << cPowerSupply << RESET;
-        for(auto channelName: cPowerSupplyChannels) { if (!channelName.second) continue; cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOff(); }
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(!channelName.second) continue;
+            cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOff();
+        }
         std::this_thread::sleep_for(std::chrono::seconds(60));
         LOG(INFO) << BOLDGREEN << "Turn on all channels : " << cPowerSupply << RESET;
-        for(auto channelName: cPowerSupplyChannels) { if (!channelName.second) continue; cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn(); }
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(!channelName.second) continue;
+            cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn();
+        }
         std::this_thread::sleep_for(std::chrono::seconds(180));
     }
 #endif
@@ -264,12 +271,12 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
 
     std::ofstream cPowerLog;
-#ifdef __POWERSUPPLY__ 
-    const auto cStart = std::chrono::system_clock::now();
-    int cStartTime             = (int)std::chrono::duration_cast<std::chrono::seconds>(cStart.time_since_epoch()).count();
+#ifdef __POWERSUPPLY__
+    const auto cStart     = std::chrono::system_clock::now();
+    int        cStartTime = (int)std::chrono::duration_cast<std::chrono::seconds>(cStart.time_since_epoch()).count();
     cPowerLog.open(cTool.getDirectoryName() + "/PowerLog.tab", std::ios::app);
-    cPowerLog << cStartTime << "\t"; 
-    if( cmd.foundOption("powerState") )
+    cPowerLog << cStartTime << "\t";
+    if(cmd.foundOption("powerState"))
     {
         // Give complete status reoort for all channels in the power supply
         for(auto channelName: cPowerSupplyChannels)
@@ -298,7 +305,7 @@ int main(int argc, char* argv[])
                 gui::data((channelName.first + ">v_meas").c_str(), voltage.c_str());
                 gui::data((channelName.first + ">i_max_set").c_str(), currentCompliance.c_str());
                 gui::data((channelName.first + ">i_meas").c_str(), current.c_str());
-                cPowerLog << voltage << "\t" << current << "\t"; 
+                cPowerLog << voltage << "\t" << current << "\t";
             }
         }
         cPowerLog << "\n";
@@ -595,7 +602,7 @@ int main(int argc, char* argv[])
             std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
-            cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
+            cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
             // find correct stub latency with TP
             for(auto cBoard: *cMemoryChecker.fDetectorContainer)
             {
@@ -605,8 +612,8 @@ int main(int argc, char* argv[])
             int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
-        cMemoryChecker.MemoryCheck2SRaw(true);//all ones
-        cMemoryChecker.MemoryCheck2SRaw(false);//all zeros
+        cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
+        cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
 
         cMemoryChecker.MonitorAnalogue();
         cMemoryChecker.SaveOptimalTaps();
@@ -723,11 +730,11 @@ int main(int argc, char* argv[])
 
 #ifdef __POWERSUPPLY__
     cPowerLog.open(cTool.getDirectoryName() + "/PowerLog.tab", std::ios::app);
-    const auto cStop = std::chrono::system_clock::now();
-    int cStopTime    = (int)std::chrono::duration_cast<std::chrono::seconds>(cStop.time_since_epoch()).count();
-    if( cmd.foundOption("powerState") )
+    const auto cStop     = std::chrono::system_clock::now();
+    int        cStopTime = (int)std::chrono::duration_cast<std::chrono::seconds>(cStop.time_since_epoch()).count();
+    if(cmd.foundOption("powerState"))
     {
-        cPowerLog << cStopTime << "\t"; 
+        cPowerLog << cStopTime << "\t";
         // Give complete status reoort for all channels in the power supply
         for(auto channelName: cPowerSupplyChannels)
         {

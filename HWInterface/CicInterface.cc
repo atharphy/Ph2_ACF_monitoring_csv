@@ -128,7 +128,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
     bool cSuccess = true;
     bool cRetry   = true;
     if(!lpGBTFound())
-    //if(flpGBTInterface == nullptr)
+    // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         cVec.clear();
@@ -345,7 +345,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     // write
     if(!lpGBTFound())
-    //if(flpGBTInterface == nullptr)
+    // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x"
@@ -435,7 +435,7 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
 {
     setBoard(pChip->getBeBoardId());
     if(!lpGBTFound())
-    //if(flpGBTInterface == nullptr)
+    // if(flpGBTInterface == nullptr)
     {
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x"
         //     << std::hex << +pRegItem.fAddress << std::dec << RESET;

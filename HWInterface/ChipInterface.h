@@ -116,7 +116,7 @@ class ChipInterface
     }
     //
     bool lpGBTFound() { return fWithlpGBT; }
-    
+
     void output();
 };
 } // namespace Ph2_HwInterface

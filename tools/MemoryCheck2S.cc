@@ -279,16 +279,16 @@ void MemoryCheck2S::Initialise()
         if(cObj) delete cObj;
 
         TTree* cTree = new TTree(cName, "AnalogueMonitoring");
-        cTree->Branch("ADC", &fADCmeasurement.fADC,"ADC/b");
-        cTree->Branch("StartTime", &fADCmeasurement.fStartTime,"StartTime/I");
-        cTree->Branch("StopTime", &fADCmeasurement.fStopTime,"StopTime/I");
-        cTree->Branch("LinkId", &fADCmeasurement.fLinkId,"LinkId/b");
-        cTree->Branch("HybridId", &fADCmeasurement.fHybridId,"HybridId/b");
-        cTree->Branch("ChipId", &fADCmeasurement.fChipId,"ChipId/b");
-        cTree->Branch("VrefCorr", &fADCmeasurement.fVrefCorr,"VrefCorr/b");
-        cTree->Branch("Scaling", &fADCmeasurement.fScaling,"Scaling/f");
-        cTree->Branch("Mean", &fADCmeasurement.fMean,"Mean/f");
-        cTree->Branch("StdDev", &fADCmeasurement.fStdDev,"StdDev/f");
+        cTree->Branch("ADC", &fADCmeasurement.fADC, "ADC/b");
+        cTree->Branch("StartTime", &fADCmeasurement.fStartTime, "StartTime/I");
+        cTree->Branch("StopTime", &fADCmeasurement.fStopTime, "StopTime/I");
+        cTree->Branch("LinkId", &fADCmeasurement.fLinkId, "LinkId/b");
+        cTree->Branch("HybridId", &fADCmeasurement.fHybridId, "HybridId/b");
+        cTree->Branch("ChipId", &fADCmeasurement.fChipId, "ChipId/b");
+        cTree->Branch("VrefCorr", &fADCmeasurement.fVrefCorr, "VrefCorr/b");
+        cTree->Branch("Scaling", &fADCmeasurement.fScaling, "Scaling/f");
+        cTree->Branch("Mean", &fADCmeasurement.fMean, "Mean/f");
+        cTree->Branch("StdDev", &fADCmeasurement.fStdDev, "StdDev/f");
         cTree->Branch("Description", &fADCmeasurement.fDescription);
         this->bookHistogram(cBoard, "AnalogueTree", cTree);
 
@@ -1393,7 +1393,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
         for(size_t cAttempt = 0; cAttempt < cNtrials; cAttempt++)
         {
             fTrial = cAttempt;
-            if( cAllOnes )
+            if(cAllOnes)
                 LOG(INFO) << BOLDMAGENTA << "MemoryCheck2SRaw AllOnes - Attempt#" << +cAttempt << RESET;
             else
                 LOG(INFO) << BOLDMAGENTA << "MemoryCheck2SRaw AllZeros - Attempt#" << +cAttempt << RESET;
@@ -1402,7 +1402,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
             for(size_t cIndx = 0; cIndx < (size_t)cNOffsts; cIndx++)
             {
                 int cResync = cIndx * cBurstLength;
-                //if(cIndx % 16 == 0) LOG(INFO) << BOLDMAGENTA << "\t.. Sending triggers to scan addresses from : " << +cResync << " to " << cResync + cBurstLength << RESET;
+                // if(cIndx % 16 == 0) LOG(INFO) << BOLDMAGENTA << "\t.. Sending triggers to scan addresses from : " << +cResync << " to " << cResync + cBurstLength << RESET;
                 this->SendGenericTestPulses(cResync);
             }
         }
@@ -1864,7 +1864,7 @@ void MemoryCheck2S::MonitorAnalogue()
     ContainerFactory::copyAndInitChip<AdcMeasurements>(*fDetectorContainer, cAnBiases);
     for(size_t cMuxIndx = 0; cMuxIndx < cAmuxSels.size(); cMuxIndx++)
     {
-        //LOG(INFO) << BOLDBLUE << "Monitoring ADC values when AMUXs " << cAmuxLbls[cMuxIndx] << " is selected" << RESET;
+        // LOG(INFO) << BOLDBLUE << "Monitoring ADC values when AMUXs " << cAmuxLbls[cMuxIndx] << " is selected" << RESET;
 
         DetectorDataContainer cAdcMeasurements;
         ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cAdcMeasurements);
@@ -1990,7 +1990,7 @@ void MemoryCheck2S::MonitorAnalogue()
                         fADCmeasurement.fScaling     = 1;
                         fADCmeasurement.fVrefCorr    = cVrefCorr;
                         fADCmeasurement.fDescription = cAmuxLbls[cMuxIndx];
-                        //PrintADCMeasurement(fADCmeasurement);
+                        // PrintADCMeasurement(fADCmeasurement);
                         cBias.push_back(fADCmeasurement);
 #ifdef __USE_ROOT__
                         TTree* cTree = static_cast<TTree*>(getHist(cBoard, "AnalogueTree"));
@@ -2123,18 +2123,18 @@ void MemoryCheck2S::Check()
                             auto& cExpectdStubsThisHybrd = cExpectdStubsThisOG->at(cHybrid->getIndex());
                             auto& cExpectdStubsThisROC   = cExpectdStubsThisHybrd->at(cChip->getIndex());
                             auto& cExpectedStubs         = cExpectdStubsThisROC->getSummary<std::vector<Stub>>();
-                            //
-                            #ifdef __USE_ROOT__
-                                TTree* cRawStubTree = static_cast<TTree*>(getHist(cHybrid, "Stub2STree"));
-                                for(auto cReadoutStub: cStubs)
-                                {
-                                    fStubEvent.fSeedExp = 0xFF;
-                                    fStubEvent.fBendExp = 0xFF;
-                                    fStubEvent.fSeedRep = cReadoutStub.getPosition();
-                                    fStubEvent.fBendRep = cReadoutStub.getBend();
-                                    cRawStubTree->Fill();
-                                }
-                            #endif
+//
+#ifdef __USE_ROOT__
+                            TTree* cRawStubTree = static_cast<TTree*>(getHist(cHybrid, "Stub2STree"));
+                            for(auto cReadoutStub: cStubs)
+                            {
+                                fStubEvent.fSeedExp = 0xFF;
+                                fStubEvent.fBendExp = 0xFF;
+                                fStubEvent.fSeedRep = cReadoutStub.getPosition();
+                                fStubEvent.fBendRep = cReadoutStub.getBend();
+                                cRawStubTree->Fill();
+                            }
+#endif
                             for(auto cStub: cExpectedStubs)
                             {
                                 CopyEvent(fStubCheck, fMemEvent);

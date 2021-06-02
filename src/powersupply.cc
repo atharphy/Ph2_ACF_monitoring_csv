@@ -66,10 +66,8 @@ int main(int argc, char** argv)
     cmd.defineOption("measure", "Measure current ");
     cmd.defineOptionAlternative("measure", "m");
 
-
     cmd.defineOption("report", "Report Status");
     cmd.defineOptionAlternative("report", "r");
-
 
     int result = cmd.parse(argc, argv);
 
@@ -139,11 +137,11 @@ int main(int argc, char** argv)
     if(cmd.foundOption("measure"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring current consumption on all channels.." << RESET;
-        for(auto channelName: channelNames) {
-            std::string current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); 
+        for(auto channelName: channelNames)
+        {
+            std::string current = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent());
             std::string voltage = std::to_string(theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
-            LOG(INFO) << "\tV(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << voltage 
-                << "\tI(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << current << RESET;
+            LOG(INFO) << "\tV(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << voltage << "\tI(meas) [Ch#" << channelName.first << "] :\t" << BOLDWHITE << current << RESET;
         }
     }
 
@@ -199,7 +197,7 @@ int main(int argc, char** argv)
             LOG(INFO) << "Turn on all channels" << cPowerSupply;
             for(auto channelName: channelNames) { theHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn(); }
         }
-        if( cmd.foundOption("report") )
+        if(cmd.foundOption("report"))
         {
             // Give complete status reoort for all channels in the power supply
             for(auto channelName: channelNames)

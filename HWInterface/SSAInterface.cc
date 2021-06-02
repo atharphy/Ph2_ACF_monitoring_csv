@@ -317,7 +317,7 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     // write
     if(!lpGBTFound())
-    //if(flpGBTInterface == nullptr)
+    // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
@@ -416,7 +416,7 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     if(!lpGBTFound())
-    //if(flpGBTInterface == nullptr)
+    // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         cVec.clear();
@@ -571,7 +571,7 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue   = 0;
     if(!lpGBTFound())
-    //if(flpGBTInterface == nullptr)
+    // if(flpGBTInterface == nullptr)
     {
         bool                  cFailed = false;
         bool                  cRead;
@@ -615,7 +615,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     // update value of register in memory
     pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     if(!lpGBTFound())
-    //if(flpGBTInterface == nullptr)
+    // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);

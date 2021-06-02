@@ -154,7 +154,7 @@ class MPAInterface : public ReadoutChipInterface
     L1data Format_l1(std::vector<uint8_t> rawl1, bool verbose = false);
 
     void Cleardata();
- 
+
     //
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);

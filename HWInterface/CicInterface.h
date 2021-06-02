@@ -33,7 +33,7 @@ class CicInterface : public ChipInterface
      * \brief Destructor of the CICInterface Class
      */
     ~CicInterface();
-    
+
     /*!
      * \brief Configure the Cic with the Cic Config File
      * \param pCic: pointer to CIC object
