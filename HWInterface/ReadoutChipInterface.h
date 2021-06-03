@@ -123,16 +123,6 @@ class ReadoutChipInterface : public ChipInterface
     virtual bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) = 0;
 
     /*!
-     * \brief Start Pseudo Random Number generator Sequence from the specified chip
-     */
-    virtual void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) = 0;
-
-    /*!
-     * \brief Stop Pseudo Random Number generator Sequence from the specified chip, and return to normal data encoded output
-     */
-    virtual void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) = 0;
-
-    /*!
      * \brief Monitorign memeber functions
      */
     virtual float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip)

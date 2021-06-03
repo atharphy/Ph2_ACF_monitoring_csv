@@ -28,10 +28,26 @@ const uint8_t fictitiousGroup   = 6;    // Fictitious group used when no need to
 const uint8_t fictitiousChannel = 0;    // Fictitious channel used when no need to speficy frontend chip
 } // namespace lpGBTconstants
 
+#ifdef __TCUSB__
+#include "TCInterface.h"
+#endif
+
 namespace Ph2_HwInterface
 {
+
 class lpGBTInterface : public ChipInterface
 {
+  private : 
+    // I think eventually this will want to change 
+    #ifdef __TCUSB__ 
+        #ifdef __ROH_USB__
+            typedef TCInterface<TC_PSROH> ExternalInterface ;
+        #elif __SEH_USB__
+            typedef TCInterface<TC_2SSEH> ExternalInterface ;
+        #endif
+        ExternalInterface fExternalInterface{};
+    #endif
+    const float    fClockSpeed  = 40e6; // 40 MHz clock for the lpGBT 
   public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
@@ -45,6 +61,12 @@ class lpGBTInterface : public ChipInterface
                                       Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
                                       ReadoutChipInterface*                  pReadoutChipInterface){};
 
+    // #######################################
+    // # Chip configuration functions #
+    // #######################################
+    bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop=false) override;
+    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
@@ -93,8 +115,13 @@ class lpGBTInterface : public ChipInterface
     void   ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
     void   ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     double GetBERTResult(Ph2_HwDescription::Chip* pChip);
-    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0);
+    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time);
 
+    // ############## 
+    // # LpGBT Manual phase alignment of Rx ports 
+    // #############
+    void ManualPhaseAlignRx(Ph2_HwDescription::Chip*  pChip, uint8_t pGroup, uint8_t pChannel);
+    
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
@@ -105,12 +132,28 @@ class lpGBTInterface : public ChipInterface
     uint8_t  GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
     bool     IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
+    // #######################################
+    // # functions to link to external interfaces # 
+    // #######################################
+    #ifdef __TCUSB__ 
+        template <class T>
+        void LinkExternalInterface(T pInterface) 
+        {
+            fExternalInterface = pInterface;
+        }
+    #endif
+
   protected:
+    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
+    
+
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
     void SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
+    void ConfigureRxAlignmentMode(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode);
+    uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup ); 
     void ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
     void ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
                              const std::vector<uint8_t>& pGroups,
@@ -224,6 +267,7 @@ class lpGBTInterface : public ChipInterface
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+  
 };
 
 } // namespace Ph2_HwInterface

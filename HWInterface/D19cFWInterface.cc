@@ -4310,7 +4310,8 @@ void D19cFWInterface::ResetOptoLink()
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.gbtx", 0x00}});
 }
 
-bool D19cFWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
+
+bool D19cFWInterface::WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // Reset
     ResetOptoLink();
@@ -4341,7 +4342,7 @@ bool D19cFWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
     return true;
 }
 
-uint32_t D19cFWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
+uint32_t D19cFWInterface::ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress)
 {
     // Reset
     ResetOptoLink();
@@ -4355,6 +4356,17 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const 
     uint32_t cReadBack = this->ReadReg("fc7_daq_stat.optical_block.ic.data");
     LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pAddress << std::dec << "]" << RESET;
     return cReadBack;
+}
+
+bool D19cFWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
+{
+    if(fUseCPB) return WriteLpGBTRegister( pAddress, pData,  pVerifLoop);
+    else return WriteOptoLpGBTRegister(linkNumber, pAddress, pData, pVerifLoop);
+}
+uint32_t D19cFWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
+{
+    if(fUseCPB) return ReadLpGBTRegister( pAddress );
+    else return ReadOptoLpGBTRegister(linkNumber, pAddress);
 }
 
 // ##########################################

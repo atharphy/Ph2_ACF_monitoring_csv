@@ -20,10 +20,6 @@ class RD53lpGBTInterface : public lpGBTInterface
     RD53lpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
 
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
-    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-
     void ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
                               const Ph2_HwDescription::BeBoard*      pBoard,
                               const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
@@ -31,8 +27,6 @@ class RD53lpGBTInterface : public lpGBTInterface
                               ReadoutChipInterface*                  pReadoutChipInterface) override;
 
   private:
-    bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
-    uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
 };
 
 } // namespace Ph2_HwInterface

@@ -14,6 +14,67 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
+
+// #######################################
+// # LpGBT chip register write and read functions #
+// #######################################
+bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop)
+{
+    //set board 
+    this->setBoard(pChip->getBeBoardId());
+    auto cAddress = pChip->getRegItem(pDacName).fAddress;
+    if(pDacValue > 0xFF)
+    {
+        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
+        return false;
+    }
+    if(cAddress >= 0x13C)
+    {
+        LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
+        return false;
+    }
+    bool cSuccess=false; 
+    if( pChip->isOptical() )
+    {
+        cSuccess = fBoardFW->WriteOptoLinkRegister(pChip->getId(), cAddress, pDacValue  , pVerifLoop);
+    }
+    //TO-DO .. figure out what to do if piGBT is used 
+    else
+    { 
+        #ifdef __TCUSB__ 
+            cSuccess = fExternalInterface.getInterface().write_i2c(cAddress, static_cast<char>(pDacValue));
+            cSuccess =  (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip,pDacName) == pDacValue); 
+        #endif
+    }
+    // if failed .. throw an exception 
+    if(!cSuccess) throw Exception("[lpGBTInterface::WriteReg] LpGBT register writing issue");
+    
+    // update register value in memory 
+    pChip->setReg(pDacName, pDacValue);//make sure to update value in memory 
+    return cSuccess;
+}
+uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName) 
+{ 
+    this->setBoard(pChip->getBeBoardId());
+    auto cAddress = pChip->getRegItem(pDacName).fAddress;
+    uint16_t cValue = 0x00;
+    if( pChip->isOptical() ) cValue = fBoardFW->ReadOptoLinkRegister(pChip->getId(), cAddress);
+    else
+    {
+        #ifdef __TCUSB__ 
+            cValue = fExternalInterface.getInterface().read_i2c(cAddress );
+        #endif
+    }
+    pChip->setReg(pDacName, cValue);//make sure to update value in memory 
+    return cValue;
+}
+bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
+{
+    bool writeGood = true;
+    for(const auto& cReg: pRegVec) writeGood = WriteChipReg(pChip, cReg.first, cReg.second);
+    return writeGood;
+}
+
 // #######################################
 // # LpGBT block configuration functions #
 // #######################################
@@ -30,6 +91,26 @@ void lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& 
         std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
         WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
+}
+void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode)
+{
+    // Configure Rx Groups Phase Tracking mode
+    for(const auto& cGroup: pGroups)
+    {
+        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
+        auto cRegValue = ReadChipReg( pChip, cRXCntrlReg); 
+        WriteChipReg(pChip, cRXCntrlReg, (cRegValue & 0xFC ) | pTrackMode ); 
+    }
+}
+uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup )
+{
+    // chip rate 
+    uint16_t cChipRate      = GetChipRate(pChip);
+    // rx rate - encoded 
+    std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
+    auto cRegValue = ReadChipReg( pChip, cRXCntrlReg); 
+    uint16_t cValue = (cRegValue & 0xC) ; 
+    return (cChipRate/5.)*cValue*fClockSpeed;   
 }
 
 void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
@@ -650,36 +731,27 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     return (double)cErrors / cBitsChecked;
 }
 
-double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
-// ####################
-// # frontendSpeed    #
-// # 1.28 Gbit/s  = 0 #
-// # 640 Mbit/s   = 1 #
-// # 320 Mbit/s   = 2 #
-// ####################
+// I've changed it to reprt BERT as bits in error/ bits received 
+// individual users (i.e. IT/OT) can decide how to interpret the number of bits in error 
+// In addition, the BERT in the lpGBT itself doesn't need to 'know' anything external to the lpGBT - it knows how many bits 
+// it receives per second and you configure it to count for N clock cycles (or x seconds)
+// so no need to provide any information aside from how long to count for 
+double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time )
 {
-    const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
-    const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
+    const float cConfidenceLevel = 0.95; 
+    // figure out data rate at which I'm receiving data
+    // this should be totally based on the configuration of the lpGBT 
+    // and the e-port Rx 
+    // so I do not need to pass anything to this function 
+    // number of bits received per second 
+    uint16_t cRxRate        = GetRxDataRate(pChip, pGroup); 
+    // constants to allow me to calculate the error rate 
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
-    double         frames2run;
-    double         time2run;
-
-    if(given_time == true)
-    {
-        time2run   = frames_or_time;
-        frames2run = time2run * fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will send about " << BOLDYELLOW << frames2run << RESET << GREEN
-                  << " frames" << RESET;
-    }
-    else
-    {
-        frames2run = frames_or_time;
-        time2run   = frames2run / fps;
-        LOG(INFO) << GREEN << "Running " << BOLDYELLOW << std::fixed << std::setprecision(0) << frames2run << RESET << GREEN << " frames will take about " << BOLDYELLOW << time2run << RESET << GREEN
-                  << "s" << RESET;
-    }
-    uint32_t BERTMeasTime = (log2(time2run * 40e6) - 5) / 2.;
-
+    double         time2run = (given_time) ? bits_or_time : bits_or_time/cRxRate ; 
+    double         bitsRxd = (given_time) ? time2run*cRxRate : bits_or_time; 
+    LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
+              << " received bits." << RESET;
+    uint32_t BERTMeasTime = (log2(time2run * fClockSpeed) - 5) / 2.;
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
@@ -687,7 +759,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // # Configuring #
     // ###############
     lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, lpGBTconstants::PATTERN_NORMAL);
-    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
+    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - cRxRate)], BERTMeasTime);
 
     // #########
     // # Start #
@@ -706,7 +778,6 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << lpGBTInterface::GetBERTErrors(pChip) << RESET << GREEN << " frames with error(s)" << RESET;
         idx++;
     }
-    frames2run = time_per_step * idx * fps;
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
 
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
@@ -720,14 +791,12 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // ########
     auto nErrors = lpGBTInterface::GetBERTErrors(pChip);
     lpGBTInterface::StartBERT(pChip, false); // Stop
-
+    float cErrorRate = ( nErrors == 0 ) ? -1*log(1.0 - cConfidenceLevel)/bitsRxd : nErrors/bitsRxd ; // upper limit on BERT is I see no errors detected 
     // Read PRBS frame counter
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN
-              << "% of errors" << RESET;
+    LOG(INFO) << GREEN << "Final number of bits received : " << BOLDYELLOW << bitsRxd << RESET;
+    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " bits in error i.e. a BERT of " << BOLDYELLOW << cErrorRate << RESET ;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
-
     return nErrors;
 }
 
@@ -911,5 +980,66 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 }
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
+
+// ##############################################
+// # LpGBT Manual phase alignment of Rx ports 
+// ##############################################
+void lpGBTInterface::ManualPhaseAlignRx(Ph2_HwDescription::Chip*  pChip, uint8_t pGroup, uint8_t pChannel) 
+{
+    const double frames_or_time = 1; // @CONST@
+    const bool   given_time     = true;
+    
+    LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
+    uint8_t bestPhase      = 0;
+    uint8_t bestPhaseStart = 0;
+    uint8_t bestPhaseEnd   = 0;
+    uint8_t phaseGap       = 0;
+    double  bestBERtest    = -1;
+
+    // make sure that the chip is in manual alignment mode 
+    const uint8_t cFixedTrackMode=0;
+    ConfigureRxAlignmentMode( pChip, {pGroup}, cFixedTrackMode); 
+    // #########################################################
+    // # Search for largest interval and set into middle point #
+    // #########################################################
+    for(uint8_t phase = 0; phase < 16; phase++ )
+    {
+        LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
+        ConfigureRxPhase(pChip, pGroup, pChannel, phase);
+        double result = lpGBTInterface::RunBERtest(pChip, pGroup, pChannel, given_time, frames_or_time );
+        if(bestBERtest == -1)
+        {
+            bestPhaseStart = phase;
+            bestBERtest    = result;
+        }
+        else if(result < bestBERtest)
+        {
+            bestPhaseStart = phase;
+            bestBERtest    = result;
+        }
+        else if(result == bestBERtest)
+        {
+            bestPhaseEnd = phase;
+        }
+        else if((result > bestBERtest) && (bestPhaseEnd >= bestPhaseStart))
+        {
+            bestBERtest = result;
+        }
+        
+        if((bestPhaseEnd >= bestPhaseStart) && (bestPhaseEnd - bestPhaseStart > phaseGap))
+        {
+            bestPhase = (bestPhaseStart + bestPhaseEnd) / 2;
+            phaseGap  = bestPhaseEnd - bestPhaseStart;
+        }
+    }
+    if(bestBERtest == 0)
+        LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +pGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +pChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase
+                  << RESET;
+    else
+        LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +pGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +pChannel << BOLDRED << " has no good phase" << RESET;
+
+    ConfigureRxPhase(pChip, pGroup, pChannel, bestPhase);
+}
+
 
 } // namespace Ph2_HwInterface

@@ -83,6 +83,7 @@ class FrontEndDescription
 
     void setFrontEndType(FrontEndType pType) { fType = pType; }
 
+    bool isOptical(){ return fOptical; }
     FrontEndType getFrontEndType() const { return fType; }
 
   protected:
@@ -96,6 +97,8 @@ class FrontEndDescription
     bool fStatus;
     // Front End type enum (HYBRID, CBC2, CBC3, ...)
     FrontEndType fType;
+    // optical or electrical communication with back-end 
+    bool fOptical; 
 };
 } // namespace Ph2_HwDescription
 

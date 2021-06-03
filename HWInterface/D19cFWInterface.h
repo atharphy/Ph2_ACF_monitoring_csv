@@ -743,6 +743,11 @@ class D19cFWInterface : public BeBoardFWInterface
     const uint8_t                   flpGBTAddress = 0x70;
     const uint8_t                   fI2CFrequency = 3; // 1 MHz
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
+    
+    // OT implementation of write and read 
+    bool WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
+    uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress); 
+
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override;

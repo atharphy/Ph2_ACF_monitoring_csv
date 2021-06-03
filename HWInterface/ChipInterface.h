@@ -43,6 +43,7 @@ class ChipInterface
      * \param pBoardId
      */
     void setBoard(uint16_t pBoardIdentifier);
+    bool fWithlpGBT = false;
 
   public:
     /*!
@@ -99,6 +100,23 @@ class ChipInterface
      * \param pRegNode : Node of the register to read
      */
     virtual uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) = 0;
+
+    // this does not need to be virtual as its the same for all types of readout chips
+    bool lpGBTCheck(const Ph2_HwDescription::BeBoard* pBoard)
+    {
+        fWithlpGBT = false;
+        for(auto cOpticalGroup: *pBoard)
+        {
+            if(cOpticalGroup->getIndex() > 0) break;
+
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            fWithlpGBT   = (clpGBT != nullptr);
+        }
+        return fWithlpGBT;
+    }
+    //
+    bool lpGBTFound() { return fWithlpGBT; }
+
 
     void output();
 };
