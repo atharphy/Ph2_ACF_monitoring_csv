@@ -134,6 +134,7 @@ void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
     std::lock_guard<std::mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
+    LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +pBoard->getId() << RESET;
     fBoardFW->ConfigureBoard(pBoard);
 }
 

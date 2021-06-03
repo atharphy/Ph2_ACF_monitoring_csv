@@ -15,7 +15,7 @@ OTHybridTester::~OTHybridTester()
 
 void OTHybridTester::FindUSBHandler()
 {
-    bool cThereIsLpGBT = fReadoutChiInterface->lpGBTFound();
+    bool cThereIsLpGBT = fReadoutChipInterface->lpGBTFound();
     if( cThereIsLpGBT ) LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
     else LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
 }

@@ -168,8 +168,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
-    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
+    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
 
     // ###########################################
     // # Member functions to handle the firmware #

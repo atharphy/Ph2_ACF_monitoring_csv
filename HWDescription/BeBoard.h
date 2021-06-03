@@ -116,10 +116,7 @@ class BeBoard : public BoardContainer
         fClockRateCDCE = pClockRate;
     }
 
-    bool ifOptical() const { return fOptical; }
-
-    bool ifUseOpticalLink() const { return fUseOpticalLink; }
-
+    bool isOptical() const { return fOptical; }
     bool ifUseCPB() const { return fUseCPB; }
 
     std::pair<bool, uint32_t> configCDCE() const { return std::make_pair(fConfigureCDCE, fClockRateCDCE); }

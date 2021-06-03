@@ -5,6 +5,7 @@
 	<!-- FC7 system register address table -->
         <node id="sysreg" address="0x00000000" module="file://fc7_system_address_table.xml"/>
         <node id="clock_source"	    address="0x00000004" mask="0x00030000" description="Clock source switch, values: 3 = internal oscillator (default), 2 = backplane, 0 = AMC13"/>
+        <node id="coax_select"      address="0x00000004" mask="0x00000800" description="Coax select, values : 1 = ( select internal oscillator) , 0 = select coax input"/>
         <node id="clock_source_u7"  address="0x00000004" mask="0x00030000" description="Clock source switch, values: 3 = from clock_source_u8 (default), 2 = backplane, 0 = AMC13"/>
         <node id="clock_source_u8"  address="0x00000004" mask="0x00300000" description="Clock source switch, values: 3 = internal oscillator (default), 2 = fmc_l8_clk1, 1 = fmc_l8_clk0, 0 = COAX_IN"/>
 	<!-- GLIB user logic registers -->
@@ -62,6 +63,7 @@
                 <node id="slave_7_config" address="0x007"/>
                 <node id="slave_8_config" address="0x008"/>
             </node>
+            <node id="link_select"  address="0x020" description="Link select for CPB"/>
         </node>
 
         <node id="fast_command_block"           address="0x2000" description="internal fast signal is generated in the fast_signal_generator module and the settings are here.">
@@ -92,9 +94,9 @@
                 <node id="clear_counters"               mask="0x00000008" description="enable clear counters in async sequence"/>
                 <node id="cal_pulse"                    mask="0x00000010" description="choose cal pulse injection in async sequence"/>
             </node>
-	    <node id="stub_trigger_delay_value"		address="0x007" mask="0x000001FF" description="stub trigger delay before sending to CBCs"/>
-	    <node id="ext_trigger_delay_value"		address="0x007" mask="0x0003FE00" description="sets the delay of the external trigger (dio5 ch 5)"/>
-	    <node id="antenna_trigger_delay_value"	address="0x007" mask="0x07FC0000" description="sets the delay after antenna trigger"/>
+    	    <node id="stub_trigger_delay_value"		address="0x007" mask="0x000001FF" description="stub trigger delay before sending to CBCs"/>
+    	    <node id="ext_trigger_delay_value"		address="0x007" mask="0x0003FE00" description="sets the delay of the external trigger (dio5 ch 5)"/>
+    	    <node id="antenna_trigger_delay_value"	address="0x007" mask="0x07FC0000" description="sets the delay after antenna trigger"/>
             <node id="delay_between_two_consecutive"    address="0x008" mask="0x0000FFFF" description="sets the delay between two consecutive triggers"/>
             <node id="misc"                             address="0x009">
                 <node id="backpressure_enable"              mask="0x00000001" description="enables treatment of the backpressure bit"/>
@@ -103,6 +105,12 @@
                 <node id="trigger_timeout_enable"           mask="0x00000008" description="enables the triggering state machine timeout mode, instead of acquiring triggers_to_accept triggers"/>
                 <node id="trigger_multiplicity"             mask="0x00003f00" description="sets the multpilicity of the trigger, for instance, if set to 1 - the trigger signal will be high for 2 clock cycles"/>
             </node>
+             <node id="generic_fcmd"                             address="0x00B">
+                <node id="number_of_cmds_to_play"        mask="0x00003FFF" />
+                <node id="number_of_repetitions"         mask="0xFFFF0000" />
+            </node>
+            <node id="generic_fcmd_data"         address="0x00C" mask="0x0000000F" />
+            <node id="generic_fcmd_addr"         address="0x00D" mask="0x00003FFF" />
         </node>
 
         <node id="physical_interface_block"     address="0x3000">
@@ -133,10 +141,8 @@
             </node>
             
             <node id="slvs_debug" address = "0x000">
-                <!--<node id="hybrid_select"                   mask="0x000F0000"/>
-                <node id="chip_select"                     mask="0x00F00000"/>
-            --> <!-- for firmware with multiple hybrids -->
                 <node id="chip_select"                     mask="0x000F0000"/>
+                <node id="hybrid_select"                   mask="0x0F000000"/>
             </node>
 
             <!-- line debug -->
@@ -154,8 +160,9 @@
                 <node id="trigger_type"                     mask="0x0000f000"/>
                 <node id="data_type"                        mask="0x000f0000"/>
                 <node id="common_stubdata_delay"            mask="0x1ff00000"/>
-		<node id="zero_suppression_enable"          mask="0x00000200"/>
+		        <node id="zero_suppression_enable"          mask="0x00000200"/>
             </node>
+            <node id="timeout"                          address="0x002" mask="0x0000fff"/> 
         </node>
 
         <node id="dio5_block"                   address="0x6000">
@@ -236,6 +243,13 @@
             </node>
     </node>
     
+    <node id="sync_block"            address="0xC000">
+        <node id="enable"            address="0x000" mask="0x00000001"/>
+        <node id="is_bc0_enable"     address="0x000" mask="0x00000002"/>
+        <node id="is_resync_enable"  address="0x000" mask="0x00000004"/>
+        <node id="delay"             address="0x000" mask="0x000FFFF0"/>
+        <node id="num_triggers"      address="0x000" mask="0x1FF00000"/>
+    </node>
 
 	<node id="tlu_block"			address="0x7000">
 		<node id="handshake_mode"		address="0x000" mask="0x00000003"/>
@@ -293,6 +307,9 @@
                 <node id="stop_trigger"                    mask="0x00000004"/>
                 <node id="load_config"                 	   mask="0x00000008"/>
                 <node id="reset_test_pulse"		           mask="0x00000010"/>
+                <node id="start_generic"                   mask="0x00000020"/>
+                <node id="stop_generic"                    mask="0x00000040"/>
+                <node id="write_generic"                   mask="0x00000080"/>
                 <node id="fast_reset"		               mask="0x00010000"/>
                 <node id="fast_test_pulse"		           mask="0x00020000"/>
                 <node id="fast_trigger"		               mask="0x00040000"/>

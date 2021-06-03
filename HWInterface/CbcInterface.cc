@@ -27,11 +27,11 @@ CbcInterface::~CbcInterface() {}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    // std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;
-    // first, identify the correct BeBoardFWInterface
+    std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());
-
+    pCbc->printChipType(cOutput);
+    LOG(INFO) << BOLDBLUE << cOutput << "...Configuring chip with Id[" << +pCbc->getId() << "]" << RESET;
+    
     // vector to encode all the registers into
     std::vector<uint32_t> cVec;
 

@@ -10,7 +10,6 @@
 
 #include "Definition.h"
 #include <stdint.h>
-
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
@@ -41,6 +40,12 @@ class FrontEndDescription
     uint8_t getBeBoardId() const { return fBeId; }
 
     /*!
+     * \brief Get the Optical ID
+     * \return The Optical ID
+     */
+    uint8_t getOpticalId() const { return fOpticalId; }
+
+    /*!
      * \brief Get the FMC ID
      * \return The FMC ID
      */
@@ -66,6 +71,12 @@ class FrontEndDescription
      */
     void setBeBoardId(uint8_t pBeId) { fBeId = pBeId; }
     /*!
+     * \brief Set the Optical ID
+     * \param pOpticalId
+     */
+    void setOpticalId(uint8_t pOpticalId) { fOpticalId = pOpticalId; }
+    
+    /*!
      * \brief Set the FMC ID
      * \param pFMCId
      */
@@ -83,9 +94,10 @@ class FrontEndDescription
 
     void setFrontEndType(FrontEndType pType) { fType = pType; }
 
+    void setOptical(bool pOptical){ fOptical = pOptical;}
     bool isOptical(){ return fOptical; }
     FrontEndType getFrontEndType() const { return fType; }
-
+    
   protected:
     // BIO Board Id that the FE is connected to
     uint8_t fBeId;
@@ -93,6 +105,9 @@ class FrontEndDescription
     uint8_t fFMCId;
     // Id of the FE (hybrid/hybrid, etc...)
     uint8_t fFeId;
+    // Id of the Optical group (link # , etc.. )
+    uint8_t fOpticalId; 
+
     // status (true=active, false=disabled)
     bool fStatus;
     // Front End type enum (HYBRID, CBC2, CBC3, ...)

@@ -20,27 +20,36 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    // moved to system controller -- makes more sense there 
-    // #ifdef __SEH_USB__
-    //     //fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
-    //     LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //#endif
+    std::stringstream cOutput;
+    setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
-    SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
-    // Load register map from configuration file
-    if(!fUseOpticalLink)
+    SetConfigMode(pChip, pChip->isOptical(), fUseCPB);
+    // configure CPB 
+    CPBconfig cCPBconfig; 
+    cCPBconfig.fEnable = fUseCPB;
+    cCPBconfig.fI2CFrequency = 3; 
+    cCPBconfig.fWait_us=100;
+    cCPBconfig.fReTry=0;
+    cCPBconfig.fVerbose=1; 
+    fBoardFW->ConfigureCPB(cCPBconfig);
+    // Configure High Speed Link Tx Rx Polarity
+    // do this before doing anything else 
+    ConfigureHighSpeedPolarity(pChip, 1, 0);
+    bool cReconfigure=false;
+    if( cReconfigure )
     {
         ChipRegMap clpGBTRegMap = pChip->getRegMap();
+        std::vector<std::pair<std::string, uint16_t>> cRegVec; cRegVec.clear();
         for(const auto& cRegItem: clpGBTRegMap)
         {
-            LOG(INFO) << BOLDBLUE << "\tWriting 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " << cRegItem.first << " [0x" << std::hex << +cRegItem.second.fAddress << std::dec
-                      << "]" << RESET;
-            WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue);
+            if( cRegItem.second.fAddress <= 0x13c && cRegItem.first.find("ChipConfig") == std::string::npos ) cRegVec.push_back( std::make_pair(cRegItem.first, cRegItem.second.fValue) ); 
+        }// get read/write registers 
+        for( const auto& cReg: cRegVec)
+        {
+            LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
+            WriteChipReg(pChip, cReg.first, cReg.second);
         }
     }
-
-    PrintChipMode(pChip);
     SetPUSMDone(pChip, true, true);
     uint16_t cIter = 0, cMaxIter = 200;
     while(!IsPUSMDone(pChip) && cIter < cMaxIter)
@@ -48,15 +57,11 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     }
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
+    bool cSuccess = (cIter< cMaxIter);
+    if(!cSuccess) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-    // // moved to system controller  -- makes more sense there 
-    // // #ifdef __ROH_USB__
-    // //     ConfigurePSROH(pChip);
-    // // #elif __SEH_USB__
-    // //     Configure2SSEH(pChip);
-    // // #endif
-   return true;
+    PrintChipMode(pChip);
+    return cSuccess;
 } //
 
 /*-----------------------*/
@@ -67,11 +72,11 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
 {
     if(pUseOpticalLink)
     {
+        LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         #ifdef __ROH_USB__
             LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
             if(pToggleTC) fExternalInterface.getInterface().toggle_SCI2C();
         #endif
-        LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
         fUseOpticalLink = true;
         if(pUseCPB)
         {

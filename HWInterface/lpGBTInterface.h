@@ -35,6 +35,19 @@ const uint8_t fictitiousChannel = 0;    // Fictitious channel used when no need 
 namespace Ph2_HwInterface
 {
 
+struct lpGBTClockConfig
+{
+    uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
+    uint8_t fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
+};
+// struct i2cConfig
+// {
+//     uint8_t fMasterId=0; 
+//     uint8_t fI2CFrequency=3;
+//     uint8_t fSCLmode=0;
+//     uint8_t fRetry=0; 
+// };
+
 class lpGBTInterface : public ChipInterface
 {
   private : 
@@ -48,6 +61,9 @@ class lpGBTInterface : public ChipInterface
         ExternalInterface fExternalInterface{};
     #endif
     const float    fClockSpeed  = 40e6; // 40 MHz clock for the lpGBT 
+    //std::vector<i2cConfig> fI2Cconfigs(3);
+
+
   public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
@@ -133,6 +149,13 @@ class lpGBTInterface : public ChipInterface
     bool     IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
     // #######################################
+    // # LpGBT retreive configuration  #
+    // #######################################
+    
+    uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup ); 
+    uint8_t GetChipRate(Ph2_HwDescription::Chip* pChip);
+    
+    // #######################################
     // # functions to link to external interfaces # 
     // #######################################
     #ifdef __TCUSB__ 
@@ -142,6 +165,19 @@ class lpGBTInterface : public ChipInterface
             fExternalInterface = pInterface;
         }
     #endif
+
+    // ####################################
+    // # LpGBT I2C master config #
+    // ####################################
+    // void SetI2Cconfig(i2cConfig pConfig){ 
+    //     fI2Cconfigs[pConfig.fMasterId].fMasterId = pConfig.fMasterId; 
+    //     fI2Cconfigs[pConfig.fMasterId].fI2CFrequency = pConfig.fI2CFrequency; 
+    //     fI2Cconfigs[pConfig.fMasterId].fSCLmode = pConfig.fSCLmode; 
+    //     fI2Cconfigs[pConfig.fMasterId].fRetry = pConfig.fRetry; 
+    // }
+    // i2cConfig GetI2Cconfig(uint8_t pMasterId){
+    //     return fI2Cconfigs[pMasterId];
+    // }
 
   protected:
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
@@ -153,7 +189,6 @@ class lpGBTInterface : public ChipInterface
     void SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
     void ConfigureRxAlignmentMode(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode);
-    uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup ); 
     void ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
     void ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
                              const std::vector<uint8_t>& pGroups,
@@ -186,7 +221,6 @@ class lpGBTInterface : public ChipInterface
     // ################################
     bool    IsPUSMDone(Ph2_HwDescription::Chip* pChip);
     void    PrintChipMode(Ph2_HwDescription::Chip* pChip);
-    uint8_t GetChipRate(Ph2_HwDescription::Chip* pChip);
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);

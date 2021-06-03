@@ -960,10 +960,10 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
-bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
+bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(linkNumber);
+    RD53FWInterface::selectLink(pChip->getOpticalId());
 
     // Config
     RegManager::WriteStackReg(
@@ -977,7 +977,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
 
     if(pVerifLoop == true)
     {
-        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(linkNumber, pAddress);
+        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pChip, pAddress);
         if(cReadBack != pData)
         {
             LOG(ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for register 0x" << BOLDYELLOW << std::hex << std::uppercase << pAddress << std::dec
@@ -989,10 +989,10 @@ bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
     return true;
 }
 
-uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
+uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip,  const uint32_t pAddress)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(linkNumber);
+    RD53FWInterface::selectLink(pChip->getOpticalId());
 
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});

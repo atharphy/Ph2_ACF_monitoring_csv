@@ -160,7 +160,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         }
     }
     bool cAligned = true;
-    if(!pBoard->ifOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning(pBoard, fL1Debug);
+    if(!pBoard->isOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning(pBoard, fL1Debug);
     if(!cAligned)
     {
         LOG(INFO) << BOLDBLUE << "L1A phase alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;

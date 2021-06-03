@@ -178,9 +178,9 @@ class SystemController
     /*!
     * \brief Configure the Hardware with XML file indicated values
     */
-    void ModuleStartUpPS(Ph2_HwDescription::BeBoard* pBoard);
-    void ModuleStartUp2S(Ph2_HwDescription::BeBoard* pBoard);
-    void CicStartUp(Ph2_HwDescription::BeBoard* pBoard, uint8_t pDriveStrength=4); 
+    void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup); 
+    void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup); 
+    void CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength=4); 
 
 
     /*!

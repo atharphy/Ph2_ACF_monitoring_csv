@@ -117,11 +117,29 @@ class Chip : public FrontEndDescription
      */
     void setChipId(uint8_t pChipId) { fChipId = pChipId; }
 
-    virtual uint8_t getNumberOfBits(const std::string& dacName) = 0;
 
+    /*!
+     * \brief Set the clock frequency 
+     * \param cClkFrequency
+     */
+    void setClockFrequency(uint16_t cClkFrequency) { fClockFrequency = cClkFrequency; }
+    /*!
+     * \brief Get the clock frequency 
+     * \return the clock frequency 
+     */
+    uint16_t getClockFrequency(){ return fClockFrequency; }
+    virtual uint8_t getNumberOfBits(const std::string& dacName) = 0;
+    void      printChipType(std::ostream& os) const {
+        if( fType ==  FrontEndType::SSA ) os << "FrontEndType\t--> SSA" ; 
+        if( fType ==  FrontEndType::MPA ) os << "FrontEndType\t--> MPA" ;
+        if( fType ==  FrontEndType::CBC3 ) os << "FrontEndType\t--> CB3" ;
+        if( fType ==  FrontEndType::CIC ) os << "FrontEndType\t--> CIC" ;
+        if( fType ==  FrontEndType::CIC2 ) os <<"FrontEndType\t--> CIC2" ;
+    }
   protected:
     uint8_t    fChipId;
     uint16_t   fMaxRegValue;
+    uint16_t   fClockFrequency; 
     ChipRegMap fRegMap;
     CommentMap fCommentMap;
 };

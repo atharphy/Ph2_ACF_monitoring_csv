@@ -36,7 +36,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     bool cSuccess=false; 
     if( pChip->isOptical() )
     {
-        cSuccess = fBoardFW->WriteOptoLinkRegister(pChip->getId(), cAddress, pDacValue  , pVerifLoop);
+        cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue  , pVerifLoop);
     }
     //TO-DO .. figure out what to do if piGBT is used 
     else
@@ -58,7 +58,7 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     this->setBoard(pChip->getBeBoardId());
     auto cAddress = pChip->getRegItem(pDacName).fAddress;
     uint16_t cValue = 0x00;
-    if( pChip->isOptical() ) cValue = fBoardFW->ReadOptoLinkRegister(pChip->getId(), cAddress);
+    if( pChip->isOptical() ) cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress);
     else
     {
         #ifdef __TCUSB__ 
