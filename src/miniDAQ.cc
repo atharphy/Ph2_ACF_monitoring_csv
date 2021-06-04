@@ -301,6 +301,8 @@ int main(int argc, char* argv[])
         // default is to use ReadData
         else
         {
+
+            LOG (INFO) << BOLDBLUE << "MiniDAQ running using ReadData" << RESET;
             uint32_t              cNevents = 0;
             std::vector<uint32_t> cCompleteData(0);
             cTool.fBeBoardInterface->Start(cBeBoard);

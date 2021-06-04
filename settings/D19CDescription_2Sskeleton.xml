@@ -38,7 +38,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <!-- <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="580" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
@@ -60,35 +60,8 @@
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
+        </Hybrid> -->
 	 </OpticalGroup>
-
-    <!-- <OpticalGroup Id="1" FMCId="0">
-        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
-        <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
-          <Settings
-          />
-        </lpGBT>
-        <Hybrid Id="0" Status="1" LinkId="0">
-            <Global>
-               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
-            </Global>
-
-            <SSA_Files path="./settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" />
-            <SSA Id="1" configfile="SSA.txt" />
-            <SSA Id="2" configfile="SSA.txt" />
-            <SSA Id="4" configfile="SSA.txt" />
-            <SSA Id="5" configfile="SSA.txt" />
-            <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" /> 
-                 
-
-            <CIC_Files path="./settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" /> 
-        </Hybrid>
-    </OpticalGroup> -->
     
     <!--CONFIG-->
     <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
