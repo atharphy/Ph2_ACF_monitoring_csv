@@ -149,6 +149,13 @@ class lpGBTInterface : public ChipInterface
     uint8_t  GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
     bool     IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
+    // ###########################
+    // # LpGBT ADC-DAC functions #
+    // ###########################
+    void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion);
+    void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
+    bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
+
     // #######################################
     // # LpGBT retreive configuration  #
     // #######################################
@@ -237,13 +244,7 @@ class lpGBTInterface : public ChipInterface
     void ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr);
     void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
 
-    // ###########################
-    // # LpGBT ADC-DAC functions #
-    // ###########################
-    void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion);
-    void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
-    bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
-
+    
     // ##############
     // # LpGBT BERT #
     // ##############

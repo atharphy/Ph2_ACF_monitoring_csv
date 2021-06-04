@@ -354,7 +354,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 
     // reconfigure fast commands
     // fast command config
-    uint8_t                  cMult            = 1;
+    uint8_t                  cMult            = 0;
     uint8_t                  cTriggerSource   = 6;
     uint16_t                 cDelayAfterReset = 100;
     uint16_t                 cDelayAfterTP    = 300;
@@ -383,6 +383,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalReadout)
         {
             // for 2S - do with ananlogue injection into CBC
+            size_t cNinjectedStubsThisHybrid=0;
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
                 if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
@@ -393,7 +394,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 std::vector<int>     cBends{0};
                 // make sure we are within the limits of the CIC
                 // only inject 3 stubs here 
-                if(cNinjectedStubs > 3 ) 
+                if(cNinjectedStubsThisHybrid > 3 ) 
                 {
                     cSeeds.clear();
                     cBends.clear();
@@ -408,6 +409,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 }
 
                 cNinjectedStubs += cSeeds.size();
+                cNinjectedStubsThisHybrid += cSeeds.size();
                 (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
                 // enable stub logic
                 // make sure OR mode is used
@@ -554,16 +556,19 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
+                        size_t cNstubsThisHybrd=0;
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
                         } // ROCs
-                    }     // hybrids
-                }         // OGs
-            }             // events
+                        LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << RESET;
+                    } // hybrids
+                } // OGs
+            }// events
             cFoundCorrectStubLatency = (cNStubsFound > 0.9 * cNinjectedStubs * cEvents.size());
             if(cFoundCorrectStubLatency)
             {
@@ -892,7 +897,7 @@ bool BackEndAlignment::Align()
             {
                 cPackageDelayFound = this->FindPackageDelay(theBoard);
                 cAttempt++;
-            } while(!cPackageDelayFound && cAttempt < 1);
+            } while(!cPackageDelayFound && cAttempt < 10);
             cAligned = cPackageDelayFound;
             if(!cAligned) return cAligned; 
             return this->FindStubLatency(theBoard);
@@ -912,10 +917,7 @@ bool BackEndAlignment::Align()
         // re-load configuration of fast command block from register map loaded from xml file
         LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(theBoard);
-
-        // now send a fast reset
-        // fBeBoardInterface->ChipReSync(theBoard);
-    }
+   }
     return cAligned;
 }
 void BackEndAlignment::writeObjects() {}
