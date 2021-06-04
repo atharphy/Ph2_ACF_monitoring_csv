@@ -421,18 +421,18 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     // depends on module type
     for(auto cOpticalGroup: *pBoard)
     {
-        uint8_t pCICUseNegEdge=0; 
+        uint8_t pCICUseNegEdge = 0;
         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTracker2S module " << RESET;
             ModuleStartUp2S(cOpticalGroup);
-            pCICUseNegEdge=1;
+            pCICUseNegEdge = 1;
         }
         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTrackerPS module " << RESET;
             ModuleStartUpPS(cOpticalGroup);
-            pCICUseNegEdge=0;
+            pCICUseNegEdge = 0;
         }
 
         auto& clpGBT = cOpticalGroup->flpGBT;
@@ -473,8 +473,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     if(cChip->getFrontEndType() != cType) continue;
                     fReadoutChipInterface->ConfigureChip(cChip);
                 } // ROC config
-            }// hybrid
-        }// configure all FE types
+            }     // hybrid
+        }         // configure all FE types
     }
 
     // send a ReSync to all chips before starting
