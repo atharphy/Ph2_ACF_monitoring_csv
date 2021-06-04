@@ -53,17 +53,11 @@ class OpticalGroup
 
         for(auto* cHybrid: *this) static_cast<Hybrid*>(cHybrid)->accept(pVisitor);
     }
-
-    uint8_t getOpticalGroupId() const { return fOpticalGroupId; };
-
-    void setOpticalGroupId(uint8_t pOpticalGroupId) { fOpticalGroupId = pOpticalGroupId; };
-
     void addlpGBT(lpGBT* plpGBT) { flpGBT = plpGBT; }
 
     lpGBT* flpGBT = nullptr;
 
   protected:
-    uint8_t fOpticalGroupId;
 };
 } // namespace Ph2_HwDescription
 

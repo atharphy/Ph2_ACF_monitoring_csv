@@ -1361,7 +1361,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
             for(auto cFe: *cOpticalGroup)
             {
                 auto cFeId = cFe->getId();
-                LOG(INFO) << BOLDBLUE << "Link Id : " << +cFe->getOpticalGroupId() << RESET;
+                LOG(INFO) << BOLDBLUE << "Link Id : " << +cFe->getOpticalId() << RESET;
                 TH2D*     cBxCounter    = static_cast<TH2D*>(getHist(cFe, "BxCounter"));
                 TProfile* cMatchedStubs = static_cast<TProfile*>(getHist(cFe, "MatchedStubs"));
                 TProfile* cMatchedBends = static_cast<TProfile*>(getHist(cFe, "CorrectBend"));
@@ -1534,7 +1534,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
                     {
                         auto cFeId = cFe->getId();
                         auto cBxId = cEvent->BxId(cFe->getId());
-                        LOG(DEBUG) << BOLDBLUE << "Link Id : " << +static_cast<OuterTrackerHybrid*>(cFe)->getOpticalGroupId() << " FE " << +cFeId << " - Bx Id " << +cBxId << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Link Id : " << +static_cast<OuterTrackerHybrid*>(cFe)->getOpticalId() << " FE " << +cFeId << " - Bx Id " << +cBxId << RESET;
                         // cBxCounter->Fill( static_cast<float>(cEventCount) , cFeId , cBxId );
                         TH2D* cL1Status     = static_cast<TH2D*>(getHist(cFe, "L1Status"));
                         TH2D* cMatchedStubs = static_cast<TH2D*>(getHist(cFe, "MatchedStubs"));

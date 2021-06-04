@@ -32,7 +32,6 @@
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
 #include "../Utils/D19cCic2Event.h"
-#include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cMPAEvent.h"
 #include "../Utils/D19cMPAEventAS.h"
 #include "../Utils/D19cPSEventAS.h"

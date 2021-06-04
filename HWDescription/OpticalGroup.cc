@@ -12,10 +12,10 @@
 namespace Ph2_HwDescription
 {
 // Default C'tor
-OpticalGroup::OpticalGroup() : FrontEndDescription(), OpticalGroupContainer(0), fOpticalGroupId(0) {}
+OpticalGroup::OpticalGroup() : FrontEndDescription(), OpticalGroupContainer(0) {}
 
-OpticalGroup::OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalGroupId) : FrontEndDescription(pFeDesc), OpticalGroupContainer(pOpticalGroupId), fOpticalGroupId(pOpticalGroupId) {}
+OpticalGroup::OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalGroupId) : FrontEndDescription(pFeDesc), OpticalGroupContainer(pOpticalGroupId)  {}
 
-OpticalGroup::OpticalGroup(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId) : FrontEndDescription(pBeId, pFMCId, 0), OpticalGroupContainer(pOpticalGroupId), fOpticalGroupId(pOpticalGroupId) {}
+OpticalGroup::OpticalGroup(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId) : FrontEndDescription(pBeId, pFMCId, 0), OpticalGroupContainer(pOpticalGroupId) {}
 
 } // namespace Ph2_HwDescription

@@ -597,7 +597,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
         }
         cHybrid->setOptical(pBoard->isOptical());
-        cHybrid->setOpticalId(pOpticalGroup->getOpticalGroupId());
+        cHybrid->setOpticalId(pOpticalGroup->getOpticalId());
         std::string cConfigFileDirectory;
         for(pugi::xml_node cChild: pHybridNode.children())
         {
@@ -649,7 +649,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "----" << cName << "  "
                            << "Id" << cChipId << " , File: " << cFileName << RESET << std::endl;
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
-                        cCic->setOpticalGroupId(pOpticalGroup->getId());
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
                         cCic->setOptical(cHybrid->isOptical());

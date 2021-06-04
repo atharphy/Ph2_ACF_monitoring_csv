@@ -91,27 +91,32 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     do
     {
         uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
+        uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+        // for( size_t cIndx=0; cIndx<4; cIndx++)
+        // {
+        //     LOG (INFO) << BOLDMAGENTA << "Event Header L#" << +cIndx << " " << std::bitset<32>(*(cEventIterator+cIndx)) << RESET;
+        // }
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
             //uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
             // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) 
             //     << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
             //     << " dummy 32 bit words .. " << RESET;
             // counters from event header
-            uint32_t cEvntCntTag = (*(cEventIterator + 1));
-            // from tLU
-            fExternalTriggerID = (cEvntCntTag & (0x7FFF << 16)) >> 16;
             // TDC + L1A counter
-            cEvntCntTag        = (*(cEventIterator + 2));
+            uint32_t cEvntCntTag        = (*(cEventIterator + 2));
+            //LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint32_t cFc7EvtId = (cEvntCntTag & (0x00FFFFFF));
             fTDC               = (cEvntCntTag & (0xFF << 24)) >> 24;
+            //LOG (INFO) << BOLDMAGENTA << "\t... TDC is " << cFc7EvtId << " eventId is " << cFc7EvtId << RESET;
             // internal counters
             cEvntCntTag         = (*(cEventIterator + 3));
+            //LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint16_t cFc7BxId   = (cEvntCntTag & (0xFFFF));
             uint16_t cFc7TrigId = (cEvntCntTag & (0xFFFF << 16)) >> 16;
-
+            //LOG (INFO) << BOLDMAGENTA << "\t... BxId is " << cFc7BxId << " trigger Id is " << cFc7TrigId << RESET;
+            
             fExternalTriggerID = cFc7TrigId; //(*(cEventIterator + 1) >> 16) & 0x7FFF;
             fEventCount        = cFc7EvtId;  // 0x00FFFFFF & *(cEventIterator + 2);
             fBunch             = cFc7BxId;   // 0xFFFFFFFF & *(cEventIterator + 3);

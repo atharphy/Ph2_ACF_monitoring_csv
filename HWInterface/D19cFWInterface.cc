@@ -1270,8 +1270,6 @@ void D19cFWInterface::TriggerConfiguration()
 }
 void D19cFWInterface::Start()
 {
-    this->ChipReSync();
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     ResetTriggerFSM();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // reset the readout
@@ -1340,7 +1338,7 @@ void D19cFWInterface::Resume()
 
 void D19cFWInterface::ResetReadout()
 {
-    // LOG (DEBUG) << BOLDBLUE << "Resetting readout..." << RESET;
+    LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
@@ -1349,7 +1347,7 @@ void D19cFWInterface::ResetReadout()
 
     if(fIsDDR3Readout)
     {
-        LOG(DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
+        LOG(INFO) << BOLDBLUE << "Reseting DDR3 " << RESET;
         fDDR3Offset     = 0;
         fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
         bool i          = false;
@@ -2990,7 +2988,7 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 }
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
-    LOG(DEBUG) << BOLDBLUE << "Waiting for data from the FC7.... Attempt#" << fReadoutAttempts << RESET;
+    LOG(INFO) << BOLDBLUE << "Waiting for data from the FC7.... Attempt#" << fReadoutAttempts << RESET;
 
     bool cFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
@@ -3055,7 +3053,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             this->PS_Open_shutter(fFastCommandDuration);
         }
         // start triggering machine which will collect N events
-        LOG(DEBUG) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
+        LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
         this->Start();
         if(!cAsync)
         {
@@ -3353,7 +3351,7 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
     uint8_t pCbcId       = pChip->getId();
-    uint8_t pLinkId      = pChip->getOpticalGroupId();
+    uint8_t pLinkId      = pChip->getOpticalId();
     uint8_t pFeId        = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
     bool    cFound       = (cMapIterator != fI2CSlaveMap.end());
@@ -3366,7 +3364,7 @@ void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::v
         bool pUseMask = false;
         if(fOptical)
         {
-            this->selectLink(pChip->getOpticalGroupId());
+            this->selectLink(pLinkId);
             // new command consists of one word if its read command, and of two words if its write. first word is always
             uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
             pVecReq.push_back(cWord);
