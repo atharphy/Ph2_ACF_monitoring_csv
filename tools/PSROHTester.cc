@@ -688,7 +688,6 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
 
 bool PSROHTester::TestResetLines(uint8_t pLevel)
 {
-#ifdef __TCUSB__
     bool cValid = true;
     float cMeasurement;
     auto  cMapIterator = fResetLines.begin();
@@ -705,7 +704,6 @@ bool PSROHTester::TestResetLines(uint8_t pLevel)
             LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
         cMapIterator++;
     } while(cMapIterator != fResetLines.end());
-#endif
     return cValid;
 }
 
