@@ -93,8 +93,8 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
 
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
-        fTCInterface.getInterface()->read_supply(fTCInterface.getInterface()->I_SEH, I_SEH);
-        fTCInterface.getInterface()->read_supply(fTCInterface.getInterface()->U_SEH, U_SEH);
+        fTCInterface.getInterface().read_supply(fTCInterface.getInterface().I_SEH, I_SEH);
+        fTCInterface.getInterface().read_supply(fTCInterface.getInterface().U_SEH, U_SEH);
 #endif
 #endif
 
@@ -181,17 +181,17 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
 
-    fTCInterface.getInterface()->set_HV(false, true, true, 0);
+    fTCInterface.getInterface().set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    fTCInterface.getInterface()->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
+    fTCInterface.getInterface().set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
 
     std::this_thread::sleep_for(std::chrono::milliseconds(15000));
 
-    fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->Mon, cUMon);
-    fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->VHVJ7, cVHVJ7);
-    fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->VHVJ8, cVHVJ8);
+    fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().Mon, cUMon);
+    fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().VHVJ7, cVHVJ7);
+    fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().VHVJ8, cVHVJ8);
     //----------------------------------------------------
-    fTCInterface.getInterface()->set_HV(false, true, true, 0);
+    fTCInterface.getInterface().set_HV(false, true, true, 0);
 
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
@@ -207,13 +207,13 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-        fTCInterface.getInterface()->set_HV(true, true, true, cDACValue); // 0x155 = 100V
+        fTCInterface.getInterface().set_HV(true, true, true, cDACValue); // 0x155 = 100V
 
         std::this_thread::sleep_for(std::chrono::milliseconds(15000));
 
-        fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->Mon, cUMon);
-        fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->VHVJ7, cVHVJ7);
-        fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->VHVJ8, cVHVJ8);
+        fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().Mon, cUMon);
+        fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().VHVJ7, cVHVJ7);
+        fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().VHVJ8, cVHVJ8);
 
         LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cDACValVect.push_back(cDACValue);
@@ -256,7 +256,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoMonGraph->SetMarkerStyle(22);
     cDACtoHVMultiGraph->Add(cDACtoMonGraph);
 
-    fTCInterface.getInterface()->set_HV(false, true, true, 0);
+    fTCInterface.getInterface().set_HV(false, true, true, 0);
 
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("HV DAC");
@@ -267,7 +267,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
 
-    fTCInterface.getInterface()->set_HV(false, false, false, 0);
+    fTCInterface.getInterface().set_HV(false, false, false, 0);
 #endif
 #endif
 #endif
@@ -276,7 +276,7 @@ void SEHTester::TurnOn()
 {
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
-    fTCInterface.getInterface()->set_SehSupply(fTCInterface.getInterface()->sehSupply_On);
+    fTCInterface.getInterface().set_SehSupply(fTCInterface.getInterface().sehSupply_On);
 #endif
 #endif
 }
@@ -298,7 +298,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     // clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_MONOTONIC, &startTime);
-    fTCInterface.getInterface()->set_HV(true, false, false, pHvDacValue);
+    fTCInterface.getInterface().set_HV(true, false, false, pHvDacValue);
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
     // Create variables for TTree branches
@@ -322,9 +322,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         // time_t timer;
         // time(&timer);
         clock_gettime(CLOCK_MONOTONIC, &timer);
-        fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->Mon, UMon);
+        fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        fTCInterface.getInterface()->read_hvmon(fTCInterface.getInterface()->HV_meas, ILeak);
+        fTCInterface.getInterface().read_hvmon(fTCInterface.getInterface().HV_meas, ILeak);
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
         // cTimeValVect.push_back(timer-startTime);
@@ -367,7 +367,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
 
-    fTCInterface.getInterface()->set_HV(false, false, false, 0);
+    fTCInterface.getInterface().set_HV(false, false, false, 0);
 #endif
 #endif
 #endif
@@ -412,8 +412,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     // We run three times; Only right side, only left side and load on both sides
     for(const auto& cSide: pSides)
     {
-        fTCInterface.getInterface()->set_load1(false, false, 0);
-        fTCInterface.getInterface()->set_load2(false, false, 0);
+        fTCInterface.getInterface().set_load1(false, false, 0);
+        fTCInterface.getInterface().set_load2(false, false, 0);
 
         cIoutValVect.clear(), cIinValVect.clear();
         cEfficencyValVect.clear();
@@ -430,19 +430,19 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
 
             if(cSide == "both")
             {
-                fTCInterface.getInterface()->set_load1(true, false, cLoadValue);
-                fTCInterface.getInterface()->set_load2(true, false, cLoadValue);
+                fTCInterface.getInterface().set_load1(true, false, cLoadValue);
+                fTCInterface.getInterface().set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { fTCInterface.getInterface()->set_load1(true, false, cLoadValue); }
-            if(cSide == "right") { fTCInterface.getInterface()->set_load2(true, false, cLoadValue); }
+            if(cSide == "left") { fTCInterface.getInterface().set_load1(true, false, cLoadValue); }
+            if(cSide == "right") { fTCInterface.getInterface().set_load2(true, false, cLoadValue); }
             // Delay needs to be optimized during functional testing
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            fTCInterface.getInterface()->read_load(fTCInterface.getInterface()->I_P1V2_R, I_P1V2_R);
-            fTCInterface.getInterface()->read_load(fTCInterface.getInterface()->I_P1V2_L, I_P1V2_L);
-            fTCInterface.getInterface()->read_supply(fTCInterface.getInterface()->I_SEH, I_SEH);
-            fTCInterface.getInterface()->read_load(fTCInterface.getInterface()->U_P1V2_R, U_P1V2_R);
-            fTCInterface.getInterface()->read_load(fTCInterface.getInterface()->U_P1V2_L, U_P1V2_L);
-            fTCInterface.getInterface()->read_supply(fTCInterface.getInterface()->U_SEH, U_SEH);
+            fTCInterface.getInterface().read_load(fTCInterface.getInterface().I_P1V2_R, I_P1V2_R);
+            fTCInterface.getInterface().read_load(fTCInterface.getInterface().I_P1V2_L, I_P1V2_L);
+            fTCInterface.getInterface().read_supply(fTCInterface.getInterface().I_SEH, I_SEH);
+            fTCInterface.getInterface().read_load(fTCInterface.getInterface().U_P1V2_R, U_P1V2_R);
+            fTCInterface.getInterface().read_load(fTCInterface.getInterface().U_P1V2_L, U_P1V2_L);
+            fTCInterface.getInterface().read_supply(fTCInterface.getInterface().U_SEH, U_SEH);
 
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
@@ -477,8 +477,8 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         iterator++;
     }
 
-    fTCInterface.getInterface()->set_load1(false, false, 0);
-    fTCInterface.getInterface()->set_load2(false, false, 0);
+    fTCInterface.getInterface().set_load1(false, false, 0);
+    fTCInterface.getInterface().set_load2(false, false, 0);
 
     fResultFile->cd();
     cIouttoIinTree->Write();
@@ -660,26 +660,26 @@ void SEHTester::TestCardVoltages()
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        fTCInterface.getInterface()->read_supply(c2SSEHMapIterator->second, k);
+        fTCInterface.getInterface().read_supply(c2SSEHMapIterator->second, k);
 #ifdef __USE_ROOT__
         fillSummaryTree(c2SSEHMapIterator->first, k);
 #endif
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTCInterface.getInterface()->set_SehSupply(fTCInterface.getInterface()->sehSupply_On);
+    fTCInterface.getInterface().set_SehSupply(fTCInterface.getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        fTCInterface.getInterface()->read_supply(d2SSEHMapIterator->second, k);
+        fTCInterface.getInterface().read_supply(d2SSEHMapIterator->second, k);
 #ifdef __USE_ROOT__
         fillSummaryTree(d2SSEHMapIterator->first, k);
 #endif
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTCInterface.getInterface()->set_SehSupply(fTCInterface.getInterface()->sehSupply_Off);
+    fTCInterface.getInterface().set_SehSupply(fTCInterface.getInterface().sehSupply_Off);
 #endif
 #endif
 }
