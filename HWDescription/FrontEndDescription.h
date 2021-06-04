@@ -75,7 +75,7 @@ class FrontEndDescription
      * \param pOpticalId
      */
     void setOpticalId(uint8_t pOpticalId) { fOpticalId = pOpticalId; }
-    
+
     /*!
      * \brief Set the FMC ID
      * \param pFMCId
@@ -94,10 +94,10 @@ class FrontEndDescription
 
     void setFrontEndType(FrontEndType pType) { fType = pType; }
 
-    void setOptical(bool pOptical){ fOptical = pOptical;}
-    bool isOptical(){ return fOptical; }
+    void         setOptical(bool pOptical) { fOptical = pOptical; }
+    bool         isOptical() { return fOptical; }
     FrontEndType getFrontEndType() const { return fType; }
-    
+
   protected:
     // BIO Board Id that the FE is connected to
     uint8_t fBeId;
@@ -106,14 +106,14 @@ class FrontEndDescription
     // Id of the FE (hybrid/hybrid, etc...)
     uint8_t fFeId;
     // Id of the Optical group (link # , etc.. )
-    uint8_t fOpticalId; 
+    uint8_t fOpticalId;
 
     // status (true=active, false=disabled)
     bool fStatus;
     // Front End type enum (HYBRID, CBC2, CBC3, ...)
     FrontEndType fType;
-    // optical or electrical communication with back-end 
-    bool fOptical; 
+    // optical or electrical communication with back-end
+    bool fOptical;
 };
 } // namespace Ph2_HwDescription
 

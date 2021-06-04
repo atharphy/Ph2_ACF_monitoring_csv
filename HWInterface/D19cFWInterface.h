@@ -258,7 +258,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
 
   private:
-    bool           fIs2S = true;
+    bool     fIs2S                = true;
     uint8_t  fFastCommandDuration = 0;
     uint16_t fWait_us             = 10000; // 10 ms
     uint8_t  fResetMinPeriod_ms   = 100;   // was 100
@@ -345,6 +345,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void ReadErrors();
     void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
     void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
+
   public:
     ///////////////////////////////////////////////////////
     //      CBC Methods                                 //
@@ -423,7 +424,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void configureCDCE(uint16_t pClockRate = 120, std::pair<std::string, float> pCDCEselect = std::make_pair("sec", 40));
     void syncCDCE();
     void epromCDCE();
-
 
     // phase tuning commands - d19c
     struct PhaseTuner
@@ -741,13 +741,13 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t                   fI2Cstatus = 0;
-    const uint8_t             flpGBTAddress = 0x70;
+    uint8_t                         fI2Cstatus    = 0;
+    const uint8_t                   flpGBTAddress = 0x70;
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}, {FrontEndType::CBC3, 0x40}};
-    
-    // OT implementation of write and read 
-    bool WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
-    uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress); 
+
+    // OT implementation of write and read
+    bool     WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
+    uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress);
 
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
@@ -765,7 +765,7 @@ class D19cFWInterface : public BeBoardFWInterface
     bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;
     // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pLinkId,  uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
+    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
     uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
     // function for front-end slow control
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;

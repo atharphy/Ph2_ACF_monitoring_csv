@@ -151,8 +151,8 @@ enum class FrontEndType
     RD53,
     CIC,
     CIC2,
-    OuterTracker2S, 
-    OuterTrackerPS, 
+    OuterTracker2S,
+    OuterTrackerPS,
     InnerTrackerDouble,
     InnerTrackerQuad
 };

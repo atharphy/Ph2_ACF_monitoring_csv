@@ -31,7 +31,7 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     setBoard(pCbc->getBeBoardId());
     pCbc->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput << "...Configuring chip with Id[" << +pCbc->getId() << "]" << RESET;
-    
+
     // vector to encode all the registers into
     std::vector<uint32_t> cVec;
 

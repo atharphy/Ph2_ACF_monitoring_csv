@@ -35,15 +35,14 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 
 namespace Ph2_HwInterface
 {
-
 struct CPBconfig
 {
-    uint8_t  fEnable  = 0;
-    uint8_t  fReTry   = 0; 
-    uint8_t  fVerbose = 0;
-    uint32_t fWait_us = 50;  
-    uint16_t fMaxAttempts = 500;
-    uint8_t  fI2CFrequency=3;
+    uint8_t  fEnable       = 0;
+    uint8_t  fReTry        = 0;
+    uint8_t  fVerbose      = 0;
+    uint32_t fWait_us      = 50;
+    uint16_t fMaxAttempts  = 500;
+    uint8_t  fI2CFrequency = 3;
 };
 
 /*!
@@ -280,8 +279,8 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                    = 0;
-    virtual void     ResetOptoLink()                                                                                                                = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                               = 0;
+    virtual void     ResetOptoLink()                                                                                                                           = 0;
     virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
     virtual uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress)                                                       = 0;
 
@@ -290,7 +289,7 @@ class BeBoardFWInterface : public RegManager
     // ##########################################
     // functions for new Command Processor Block
     virtual void                  ResetCPB() {}
-    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector ) {}
+    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) {}
     virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) { return {}; }
     // function to read/write lpGBT registers
     virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
@@ -302,21 +301,23 @@ class BeBoardFWInterface : public RegManager
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
 
-    void ConfigureCPB(CPBconfig pConfig){ 
-        fCPBConfig.fEnable = pConfig.fEnable; 
-        fCPBConfig.fVerbose = pConfig.fVerbose;
-        fCPBConfig.fWait_us = pConfig.fWait_us;
-        fCPBConfig.fReTry   = pConfig.fReTry; 
-        fCPBConfig.fMaxAttempts = pConfig.fMaxAttempts;
+    void ConfigureCPB(CPBconfig pConfig)
+    {
+        fCPBConfig.fEnable       = pConfig.fEnable;
+        fCPBConfig.fVerbose      = pConfig.fVerbose;
+        fCPBConfig.fWait_us      = pConfig.fWait_us;
+        fCPBConfig.fReTry        = pConfig.fReTry;
+        fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
         fCPBConfig.fI2CFrequency = pConfig.fI2CFrequency;
     }
+
   protected:
     uint32_t   fBlockSize{0};
     uint32_t   fNPackets{0};
     uint32_t   numAcq{0};
     uint32_t   nbMaxAcq{0};
     TCPClient* fPowerSupplyClient;
-    CPBconfig  fCPBConfig; 
+    CPBconfig  fCPBConfig;
 
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison

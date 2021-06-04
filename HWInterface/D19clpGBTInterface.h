@@ -29,7 +29,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    
+
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
@@ -68,7 +68,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
 
-     // 0 [RHS], 1 [LHS]
+    // 0 [RHS], 1 [LHS]
     // active reset functions
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
     {
@@ -146,6 +146,7 @@ class D19clpGBTInterface : public lpGBTInterface
     }
     void cicClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg); }
     void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
+
   private:
     // default clock configuration
     lpGBTClockConfig fClkConfig;
@@ -175,7 +176,6 @@ class D19clpGBTInterface : public lpGBTInterface
     uint8_t fReset_RHS_MPA = 9;
     uint8_t fReset_RHS_SSA = 12;
     uint8_t fReset_RHS_CBC = 8;
-
 };
 } // namespace Ph2_HwInterface
 #endif

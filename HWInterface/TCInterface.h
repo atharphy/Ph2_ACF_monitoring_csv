@@ -21,28 +21,33 @@
  */
 namespace Ph2_HwInterface
 {
-	template <class T>
-	class TCInterface
-	{
-	public:
-	    TCInterface() ;
-	    ~TCInterface() { delete [] fPtr ; } 
-	    T getInterface() const { return *fPtr; } 
-	    // user-defined copy assignment (copy-and-swap idiom)
-	    //T& operator=(const T original) { *fPtr = *original.fPtr; return *this; }
-	    //user defined assignment operator
-	    TCInterface& operator=(const TCInterface& rhs){*fPtr = *rhs.fPtr; return *this;}
-	private:
-	    T* fPtr ;
-	} ;
+template <class T>
+class TCInterface
+{
+  public:
+    TCInterface();
+    ~TCInterface() { delete[] fPtr; }
+    T getInterface() const { return *fPtr; }
+    // user-defined copy assignment (copy-and-swap idiom)
+    // T& operator=(const T original) { *fPtr = *original.fPtr; return *this; }
+    // user defined assignment operator
+    TCInterface& operator=(const TCInterface& rhs)
+    {
+        *fPtr = *rhs.fPtr;
+        return *this;
+    }
 
-	//constructor 
-	template <class T>
-	TCInterface<T>::TCInterface()
-	{
-	    fPtr = new T();
-	}
-	
+  private:
+    T* fPtr;
+};
+
+// constructor
+template <class T>
+TCInterface<T>::TCInterface()
+{
+    fPtr = new T();
 }
+
+} // namespace Ph2_HwInterface
 #endif // TCINTERFACE_H
 #endif

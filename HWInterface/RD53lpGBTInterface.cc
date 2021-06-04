@@ -55,8 +55,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // ###############################
     // # Configure Up and Down links #
     // ###############################
-    lpGBTInterface::ConfigureRxGroups(
-        pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
+    lpGBTInterface::ConfigureRxGroups(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
     lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, 0, 12);
 
     lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
@@ -72,10 +71,12 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
         if(cRegItem.second.fPrmptCfg == true)
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
-            if(cRegItem.second.fAddress < 0x13C) lpGBTInterface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
+            if(cRegItem.second.fAddress < 0x13C)
+                lpGBTInterface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
             else if((cRegItem.second.fAddress >= 0x1D0) && (cRegItem.second.fAddress < 0x1EB))
             {
-                lpGBTInterface::ConfigureRxPhase( pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
+                lpGBTInterface::ConfigureRxPhase(
+                    pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
             }
         }
@@ -98,7 +99,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
 {
     const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
-    //uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+    // uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
 
@@ -153,7 +154,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 {
                     bestBERtest = result;
                 }
-                
+
                 if((bestPhaseEnd >= bestPhaseStart) && (bestPhaseEnd - bestPhaseStart > phaseGap))
                 {
                     bestPhase = (bestPhaseStart + bestPhaseEnd) / 2;

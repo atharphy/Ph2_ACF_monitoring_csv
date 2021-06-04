@@ -24,28 +24,29 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     SetConfigMode(pChip, pChip->isOptical(), fUseCPB);
-    // configure CPB - do this here rather than in SystemController? Not sure 
-    CPBconfig cCPBconfig; 
-    cCPBconfig.fEnable = fUseCPB;
-    cCPBconfig.fI2CFrequency = 3; 
-    cCPBconfig.fWait_us=10;
-    cCPBconfig.fReTry=1;
-    cCPBconfig.fVerbose=1;
-    cCPBconfig.fMaxAttempts=100; 
+    // configure CPB - do this here rather than in SystemController? Not sure
+    CPBconfig cCPBconfig;
+    cCPBconfig.fEnable       = fUseCPB;
+    cCPBconfig.fI2CFrequency = 3;
+    cCPBconfig.fWait_us      = 10;
+    cCPBconfig.fReTry        = 1;
+    cCPBconfig.fVerbose      = 1;
+    cCPBconfig.fMaxAttempts  = 100;
     fBoardFW->ConfigureCPB(cCPBconfig);
     // Configure High Speed Link Tx Rx Polarity
-    // do this before doing anything else 
+    // do this before doing anything else
     ConfigureHighSpeedPolarity(pChip, 1, 0);
-    bool cReconfigure=false;
-    if( cReconfigure )
+    bool cReconfigure = false;
+    if(cReconfigure)
     {
-        ChipRegMap clpGBTRegMap = pChip->getRegMap();
-        std::vector<std::pair<std::string, uint16_t>> cRegVec; cRegVec.clear();
+        ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
+        std::vector<std::pair<std::string, uint16_t>> cRegVec;
+        cRegVec.clear();
         for(const auto& cRegItem: clpGBTRegMap)
         {
-            if( cRegItem.second.fAddress <= 0x13c && cRegItem.first.find("ChipConfig") == std::string::npos ) cRegVec.push_back( std::make_pair(cRegItem.first, cRegItem.second.fValue) ); 
-        }// get read/write registers 
-        for( const auto& cReg: cRegVec)
+            if(cRegItem.second.fAddress <= 0x13c && cRegItem.first.find("ChipConfig") == std::string::npos) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+        } // get read/write registers
+        for(const auto& cReg: cRegVec)
         {
             LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
             WriteChipReg(pChip, cReg.first, cReg.second);
@@ -58,7 +59,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     }
-    bool cSuccess = (cIter< cMaxIter);
+    bool cSuccess = (cIter < cMaxIter);
     if(!cSuccess) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     PrintChipMode(pChip);
@@ -74,10 +75,10 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
     if(pUseOpticalLink)
     {
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
-        #ifdef __ROH_USB__
-            LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-            if(pToggleTC) fExternalInterface.getInterface().toggle_SCI2C();
-        #endif
+#ifdef __ROH_USB__
+        LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
+        if(pToggleTC) fExternalInterface.getInterface().toggle_SCI2C();
+#endif
         fUseOpticalLink = true;
         if(pUseCPB)
         {

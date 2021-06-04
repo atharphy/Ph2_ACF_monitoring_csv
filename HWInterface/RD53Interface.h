@@ -42,8 +42,8 @@ class RD53Interface : public ReadoutChipInterface
     // ##################
     // # PRBS generator #
     // ##################
-    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) ;
-    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) ;
+    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
+    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
     // #############################
 
     void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType);

@@ -34,7 +34,6 @@ const uint8_t fictitiousChannel = 0;    // Fictitious channel used when no need 
 
 namespace Ph2_HwInterface
 {
-
 struct lpGBTClockConfig
 {
     uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
@@ -42,27 +41,26 @@ struct lpGBTClockConfig
 };
 // struct i2cConfig
 // {
-//     uint8_t fMasterId=0; 
+//     uint8_t fMasterId=0;
 //     uint8_t fI2CFrequency=3;
 //     uint8_t fSCLmode=0;
-//     uint8_t fRetry=0; 
+//     uint8_t fRetry=0;
 // };
 
 class lpGBTInterface : public ChipInterface
 {
-  private : 
-    // I think eventually this will want to change 
-    #ifdef __TCUSB__ 
-        #ifdef __ROH_USB__
-            typedef TCInterface<TC_PSROH> ExternalInterface ;
-        #elif __SEH_USB__
-            typedef TCInterface<TC_2SSEH> ExternalInterface ;
-        #endif
-        ExternalInterface fExternalInterface{};
-    #endif
-    const float    fClockSpeed  = 40e6; // 40 MHz clock for the lpGBT 
-    //std::vector<i2cConfig> fI2Cconfigs(3);
-
+  private:
+// I think eventually this will want to change
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+    typedef TCInterface<TC_PSROH> ExternalInterface;
+#elif __SEH_USB__
+    typedef TCInterface<TC_2SSEH> ExternalInterface;
+#endif
+    ExternalInterface fExternalInterface{};
+#endif
+    const float fClockSpeed = 40e6; // 40 MHz clock for the lpGBT
+                                    // std::vector<i2cConfig> fI2Cconfigs(3);
 
   public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
@@ -80,9 +78,9 @@ class lpGBTInterface : public ChipInterface
     // #######################################
     // # Chip configuration functions #
     // #######################################
-    bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop=false) override;
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop = false) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-    
+
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
@@ -133,11 +131,11 @@ class lpGBTInterface : public ChipInterface
     double GetBERTResult(Ph2_HwDescription::Chip* pChip);
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time);
 
-    // ############## 
-    // # LpGBT Manual phase alignment of Rx ports 
+    // ##############
+    // # LpGBT Manual phase alignment of Rx ports
     // #############
-    void ManualPhaseAlignRx(Ph2_HwDescription::Chip*  pChip, uint8_t pGroup, uint8_t pChannel);
-    
+    void ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
+
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
@@ -151,37 +149,36 @@ class lpGBTInterface : public ChipInterface
     // #######################################
     // # LpGBT retreive configuration  #
     // #######################################
-    
-    uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup ); 
-    uint8_t GetChipRate(Ph2_HwDescription::Chip* pChip);
-    
-    // #######################################
-    // # functions to link to external interfaces # 
-    // #######################################
-    #ifdef __TCUSB__ 
-        template <class T>
-        void LinkExternalInterface(T pInterface) 
-        {
-            fExternalInterface = pInterface;
-        }
-    #endif
+
+    uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
+    uint8_t  GetChipRate(Ph2_HwDescription::Chip* pChip);
+
+// #######################################
+// # functions to link to external interfaces #
+// #######################################
+#ifdef __TCUSB__
+    template <class T>
+    void LinkExternalInterface(T pInterface)
+    {
+        fExternalInterface = pInterface;
+    }
+#endif
 
     // ####################################
     // # LpGBT I2C master config #
     // ####################################
-    // void SetI2Cconfig(i2cConfig pConfig){ 
-    //     fI2Cconfigs[pConfig.fMasterId].fMasterId = pConfig.fMasterId; 
-    //     fI2Cconfigs[pConfig.fMasterId].fI2CFrequency = pConfig.fI2CFrequency; 
-    //     fI2Cconfigs[pConfig.fMasterId].fSCLmode = pConfig.fSCLmode; 
-    //     fI2Cconfigs[pConfig.fMasterId].fRetry = pConfig.fRetry; 
+    // void SetI2Cconfig(i2cConfig pConfig){
+    //     fI2Cconfigs[pConfig.fMasterId].fMasterId = pConfig.fMasterId;
+    //     fI2Cconfigs[pConfig.fMasterId].fI2CFrequency = pConfig.fI2CFrequency;
+    //     fI2Cconfigs[pConfig.fMasterId].fSCLmode = pConfig.fSCLmode;
+    //     fI2Cconfigs[pConfig.fMasterId].fRetry = pConfig.fRetry;
     // }
     // i2cConfig GetI2Cconfig(uint8_t pMasterId){
     //     return fI2Cconfigs[pMasterId];
     // }
 
   protected:
-    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
-    
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -301,7 +298,6 @@ class lpGBTInterface : public ChipInterface
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
-  
 };
 
 } // namespace Ph2_HwInterface

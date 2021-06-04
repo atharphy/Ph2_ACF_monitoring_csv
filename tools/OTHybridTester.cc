@@ -9,15 +9,15 @@ using namespace Ph2_System;
 
 OTHybridTester::OTHybridTester() : Tool() {}
 
-OTHybridTester::~OTHybridTester()
-{
-}
+OTHybridTester::~OTHybridTester() {}
 
 void OTHybridTester::FindUSBHandler()
 {
     bool cThereIsLpGBT = fReadoutChipInterface->lpGBTFound();
-    if( cThereIsLpGBT ) LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
-    else LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
+    if(cThereIsLpGBT)
+        LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
+    else
+        LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
 }
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
@@ -514,7 +514,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12};
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-    std::vector<uint8_t> cGPIOs = {0, 3, 6, 8};
+    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
 
     for(auto cLevel: cLevels)

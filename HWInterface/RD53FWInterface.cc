@@ -989,7 +989,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
     return true;
 }
 
-uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip,  const uint32_t pAddress)
+uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t pAddress)
 {
     // OptoChip ID
     RD53FWInterface::selectLink(pChip->getOpticalId());
