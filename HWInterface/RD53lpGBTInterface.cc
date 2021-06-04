@@ -176,7 +176,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
             static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
         }
 
-    return allGood;
-}
+        return allGood;
+    }
 
 } // namespace Ph2_HwInterface
