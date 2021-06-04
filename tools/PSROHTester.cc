@@ -689,7 +689,7 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
 bool PSROHTester::TestResetLines(uint8_t pLevel)
 {
     bool cValid = true;
-    float cMeasurement;
+    float cMeasurement=0;
     auto  cMapIterator = fResetLines.begin();
     do
     {
