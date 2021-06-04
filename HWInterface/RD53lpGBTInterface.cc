@@ -110,8 +110,8 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
         return true;
     }
 
-    bool allGood=true;
-    // do this once 
+    bool allGood = true;
+    // do this once
     static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
     for(const auto cHybrid: *pOpticalGroup)
     {
@@ -126,7 +126,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
             uint8_t phaseGap       = 0;
             double  bestBERtest    = -1;
 
-            //start for this ROC 
+            // start for this ROC
             static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
             for(uint8_t phase = 0; phase < 16; phase++)
             {
@@ -173,11 +173,11 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 allGood = false;
             }
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
-            //stop for this ROC 
+            // stop for this ROC
             static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
         }
     }
-    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); //do this once 
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // do this once
     return allGood;
 }
 

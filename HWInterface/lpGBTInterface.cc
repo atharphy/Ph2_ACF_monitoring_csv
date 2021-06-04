@@ -772,7 +772,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << lpGBTInterface::GetBERTErrors(pChip)  << RESET << GREEN << " bit(s) in error ...." << RESET;
+        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << lpGBTInterface::GetBERTErrors(pChip) << RESET << GREEN << " bit(s) in error ...." << RESET;
         idx++;
     }
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
