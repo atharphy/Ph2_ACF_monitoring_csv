@@ -811,7 +811,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         // now configure SCA + GBTx
         configureLink(pBoard);
     }
-    if(pBoard->isOptical())
+    if(pBoard->isOptical() && cWithlpGBT )
     {
         LOG(INFO) << BOLDBLUE << "Configuring optical link with lpGBT" << RESET;
         bool clpGBTlock = LinkLock(pBoard);
@@ -4467,10 +4467,11 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
     // always check parity  
     size_t cIter = 0;
-    while( cParityCheck != 1 && fCPBConfig.fReTry && cIter < fCPBConfig.fMaxAttempts )
+    bool   cValidTransaction = (cParityCheck == 1);
+    while( !cValidTransaction && fCPBConfig.fReTry && cIter < fCPBConfig.fMaxAttempts )
     {
         if(fCPBConfig.fVerbose) LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts 
-            << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+            << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks or failed parity check) from command processor block ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
@@ -4478,24 +4479,19 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
         cParityCheck     = cReplyVector[2] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cReadBack        = cReplyVector[7] & 0xFF;
+        cValidTransaction = (cParityCheck == 1 );
+        if( cValidTransaction && pVerifLoop)
+        { 
+            cValidTransaction = cValidTransaction && ((cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress)) ;
+            if(fCPBConfig.fVerbose && !cValidTransaction) LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts 
+                << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks) from command processor block ... retrying" << RESET;
+        }
         cIter++;
     }
+    // throw exception based on failure 
     if(cParityCheck != 1) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - failed parity check"));
-    // cIter=0; 
-    // if(!pVerifLoop) return (cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress);
-    // size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
-    // while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
-    // {
-    //     ResetCPB();
-    //     if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
-    //     cReplyVector.clear();
-    //     WriteCommandCPB(cCommandVector);
-    //     cReplyVector     = ReadReplyCPB(cExpectedReplySize);
-    //     cParityCheck     = cReplyVector[2] & 0xFF;
-    //     cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    //     cReadBack        = cReplyVector[7] & 0xFF;
-    //     cIter++;
-    // };
+    if(pVerifLoop && cReadBack != pRegisterValue ) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register value"));
+    if(pVerifLoop && cReadBackRegAddr != pRegisterAddress ) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register address"));
     return (pVerifLoop) ? ( (cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress) ) : (cParityCheck == 1 );
 }
 
@@ -4513,6 +4509,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAd
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(cExpectedReplySize);
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    //uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
     size_t                cIter = 0;
     while((cReadBackRegAddr != pRegisterAddress) && cIter < fCPBConfig.fMaxAttempts && fCPBConfig.fReTry )
     {

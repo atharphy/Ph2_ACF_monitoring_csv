@@ -24,7 +24,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     SetConfigMode(pChip, pChip->isOptical(), fUseCPB);
-    // configure CPB 
+    // configure CPB - do this here rather than in SystemController? Not sure 
     CPBconfig cCPBconfig; 
     cCPBconfig.fEnable = fUseCPB;
     cCPBconfig.fI2CFrequency = 3; 
@@ -50,8 +50,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
             WriteChipReg(pChip, cReg.first, cReg.second);
         }
+        SetPUSMDone(pChip, true, true);
     }
-    SetPUSMDone(pChip, true, true);
     uint16_t cIter = 0, cMaxIter = 200;
     while(!IsPUSMDone(pChip) && cIter < cMaxIter)
     {
