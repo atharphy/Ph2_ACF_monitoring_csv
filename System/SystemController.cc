@@ -408,13 +408,16 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             cWith2Smodule = cWith2Smodule || cCBCfound;
             cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
         }
-        if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
+        if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); 
+        }
         else if(cWith2Smodule)
         {
             cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
         }
         else
             LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
+        
+        static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType( cOpticalGroup->getFrontEndType() );
     }
 
     // module start-up

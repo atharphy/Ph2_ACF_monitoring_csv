@@ -147,9 +147,19 @@ class D19clpGBTInterface : public lpGBTInterface
     void cicClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg); }
     void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
 
+
+    void setFrontEndType(FrontEndType pType){ fFeType = pType; }
+    FrontEndType getFrontEndType(){ return fFeType; }
+    std::vector<uint8_t> getGPIOs(){ 
+        if( fFeType == FrontEndType::OuterTracker2S ) return {fReset_LHS_CIC,fReset_LHS_CBC,fReset_RHS_CIC,fReset_RHS_CBC};
+        if( fFeType == FrontEndType::OuterTrackerPS ) return {fReset_LHS_CIC,fReset_LHS_MPA,fReset_LHS_SSA,fReset_RHS_CIC,fReset_RHS_MPA,fReset_RHS_SSA}; 
+        return {};
+    }
   private:
     // default clock configuration
     lpGBTClockConfig fClkConfig;
+    // front-end type 
+    FrontEndType fFeType;
 
     // ###################################
     // # Outer Tracker specific objects  #

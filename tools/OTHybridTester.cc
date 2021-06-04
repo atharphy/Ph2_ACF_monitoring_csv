@@ -507,14 +507,14 @@ bool OTHybridTester::LpGBTTestResetLines()
     bool cValid = true;
 
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
+    // lpGBTinterface now nows this .. so don't need the if statements 
+    std::vector<uint8_t>                         cGPIOs      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getGPIOs();
 #ifdef __TCUSB__
     float cMeasurement;
 #ifdef __ROH_USB__
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
-    std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12};
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
 
     for(auto cLevel: cLevels)
