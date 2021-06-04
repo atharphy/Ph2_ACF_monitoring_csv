@@ -91,7 +91,7 @@ class CicInterface : public ChipInterface
     bool                              CheckReSync(Ph2_HwDescription::Chip* pChip);
     bool                              SoftReset(Ph2_HwDescription::Chip* pChip, uint32_t cWait_ms = 100);
     bool                              CheckSoftReset(Ph2_HwDescription::Chip* pChip);
-    bool                              StartUp(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 7);
+    bool                              StartUp(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 7, uint8_t pUseNegEdge = 1 );
     bool                              ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
     std::vector<std::vector<uint8_t>> GetWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                              SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);

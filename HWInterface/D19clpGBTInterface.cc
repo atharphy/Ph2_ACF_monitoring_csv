@@ -33,7 +33,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     cCPBconfig.fI2CFrequency = 3;
     cCPBconfig.fWait_us      = 10;
     cCPBconfig.fReTry        = 1;
-    cCPBconfig.fVerbose      = 0;
+    cCPBconfig.fVerbose      = 1;
     cCPBconfig.fMaxAttempts  = 100;
     fBoardFW->ConfigureCPB(cCPBconfig);
     // Configure High Speed Link Tx Rx Polarity

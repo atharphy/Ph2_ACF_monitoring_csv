@@ -28,7 +28,7 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
-            <!-- <CBC Id="1" configfile="CBC3_default.txt" /> -->
+            <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
             <CBC Id="3" configfile="CBC3_default.txt" />
             <CBC Id="4" configfile="CBC3_default.txt" />

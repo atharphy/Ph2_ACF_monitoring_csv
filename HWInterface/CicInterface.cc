@@ -1408,7 +1408,7 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
 }
 // start-up sequence for CIC [everything that does not require interaction
 // with the BE or the other readout ASICs on the chip
-bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
+bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegEdge)
 {
     std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getHybridId());
     if(pChip->getFrontEndType() == FrontEndType::CIC)
@@ -1487,7 +1487,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     }
 
     // select fast command edge
-    bool cNegEdge = false; // was false for PS - need to check
+    bool cNegEdge = (pUseNegEdge==1);// was false for PS - need to check
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else

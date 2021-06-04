@@ -51,7 +51,10 @@ export PH2ACF_BASE_DIR=$(pwd)
 ####################
 # External Plugins #
 ####################
-export EXTERNAL_TOOLS_BASE_DIR=/home/cmsTkUser 
+export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
+# if in the docker container I want to do this .. need to figure out how to make sure that this 
+# is set-up correctly 
+#export EXTERNAL_TOOLS_BASE_DIR=/home/cmsTkUser 
 export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
 export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver

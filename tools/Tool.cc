@@ -1269,7 +1269,13 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS)
-    { numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept"); }
+    { 
+        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept"); 
+    }
+    if( fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C ) 
+    {
+        numberOfEvents = numberOfEvents*(fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity")+1); 
+    }
     fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 }
 
@@ -1322,7 +1328,10 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
     theScan.setDacList(&dacList);
 
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-
+    if( fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C ) 
+    {
+        numberOfEvents = numberOfEvents*(fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity")+1); 
+    }
     for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 
     return;

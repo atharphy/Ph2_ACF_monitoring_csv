@@ -165,13 +165,6 @@ class SystemController
      */
     void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
 
-    // start-up PS modiule
-    void ModuleStartUpPS();
-    // start-up 2S modiule
-    void ModuleStartUp2S();
-    // start-up CIC
-    void CicStartUp(uint8_t pDriveStrength = 1);
-
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
@@ -188,8 +181,8 @@ class SystemController
      */
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength = 4);
-
+    void CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength = 4, uint8_t pUseNegEdge=0);
+    
     /*!
      * \brief Read Monitor Data from pBoard
      * \param pBeBoard
