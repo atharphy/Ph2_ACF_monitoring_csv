@@ -75,7 +75,7 @@
             <Register name="is_bc0_enable"   >1</Register>
             <Register name="is_resync_enable">0</Register>
             <Register name="delay">10</Register>
-            <Register name="num_triggers"    >499</Register>
+            <Register name="num_triggers"    >9</Register>
         </Register>
     <!-- Clock control -->
 	<Register name="clock">
