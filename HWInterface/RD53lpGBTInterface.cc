@@ -110,6 +110,9 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
         return true;
     }
 
+    bool allGood=true;
+    // do this once 
+    static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
     for(const auto cHybrid: *pOpticalGroup)
     {
         for(const auto cChip: *cHybrid)
@@ -123,13 +126,12 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
             uint8_t phaseGap       = 0;
             double  bestBERtest    = -1;
 
+            //start for this ROC 
+            static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
             for(uint8_t phase = 0; phase < 16; phase++)
             {
                 LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
                 lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
-
-                static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-                static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
                 double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time);
 
@@ -160,7 +162,6 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                     bestPhase = (bestPhaseStart + bestPhaseEnd) / 2;
                     phaseGap  = bestPhaseEnd - bestPhaseStart;
                 }
-                static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
             }
 
             if(bestBERtest == 0)
@@ -171,12 +172,13 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDRED << " has no good phase" << RESET;
                 allGood = false;
             }
-
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
-            static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
+            //stop for this ROC 
+            static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
         }
-
-        return allGood;
     }
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); //do this once 
+    return allGood;
+}
 
 } // namespace Ph2_HwInterface
