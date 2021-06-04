@@ -645,7 +645,6 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
     LOG(DEBUG) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
-    bool cRetry   = false;
     bool cVerify  = false;
     if(!lpGBTFound())
     {
@@ -675,7 +674,7 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         {
             if(cCount % 1000 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
             // cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
-            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cRetry, cVerify);
+            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cVerify);
             if(!cSuccess) continue;
 #ifdef COUNT_FLAG
             fRegisterCount++;
@@ -704,10 +703,7 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     else
     {
-        // cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, pRegisterValue, pVerifLoop);
-        bool cRetry  = false;
-        bool cVerify = false;
-        cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cRetry, cVerify);
+        cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, pVerifLoop);
     }
     return cSuccess;
 }

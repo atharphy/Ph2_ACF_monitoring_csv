@@ -140,7 +140,6 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param puHalConfigFileName : path of the uHal Config File
      * \param pBoardId
      */
-    void Align_out();
     D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
     /*!
@@ -259,15 +258,12 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint32_t> GetHitData(uint8_t pIndex) { return fD19cFWEvts.fBoardHitData[pIndex]; }
     // vector of 32 bit words for ROC#pIndex [stubs]
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
-    // check chips connected to board can be read from
-    void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
     // set stub offset
     void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
     uint32_t getStubOffset() { return fStubOffset; };
     uint8_t  getI2Cstatus() { return fI2Cstatus; }
 
   private:
-    bool     fIs2S                = true;
     uint8_t  fFastCommandDuration = 0;
     uint32_t fReadoutAttempts     = 0;
     uint16_t fWait_us             = 10000; // 10 ms
@@ -1017,8 +1013,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##########################################
     // functions for new Command Processor Block
     void                  ResetCPB() override;
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) override;
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) override;
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector ) override;
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;

@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     std::string cMPAsToEnable          = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "";
     std::string cHybridsToReset        = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "";
     std::string cMPAsToEnableClock     = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("enableMPAclock") : "";
-    uint16_t    cI2CSpeed              = (cmd.foundOption("speedI2C")) ? convertAnyInt(cmd.optionValue("speedI2C").c_str()) : 1000;
+   //uint16_t    cI2CSpeed              = (cmd.foundOption("speedI2C")) ? convertAnyInt(cmd.optionValue("speedI2C").c_str()) : 1000;
     uint8_t     cMaxI2Cattempts        = (cmd.foundOption("maxI2Cattempts")) ? convertAnyInt(cmd.optionValue("maxI2Cattempts").c_str()) : 10;
 
     std::string cMonitor    = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none";
@@ -194,20 +194,20 @@ int main(int argc, char* argv[])
         LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
         LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 
-        if(cI2CSpeed == 1000)
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(3);
-        else if(cI2CSpeed == 400)
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(2);
-        else if(cI2CSpeed == 200)
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(1);
-        else if(cI2CSpeed == 100)
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(0);
-        else
-        {
-            LOG(INFO) << BOLDBLUE << "Un-defined I2C frequency, valid options are 100 , 200 , 400 , 1000 [kHz] " << RESET;
-            LOG(INFO) << BOLDBLUE << "Will configure for 100 kHz." << RESET;
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(0);
-        }
+        // if(cI2CSpeed == 1000)
+        //     static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(3);
+        // else if(cI2CSpeed == 400)
+        //     static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(2);
+        // else if(cI2CSpeed == 200)
+        //     static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(1);
+        // else if(cI2CSpeed == 100)
+        //     static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(0);
+        // else
+        // {
+        //     LOG(INFO) << BOLDBLUE << "Un-defined I2C frequency, valid options are 100 , 200 , 400 , 1000 [kHz] " << RESET;
+        //     LOG(INFO) << BOLDBLUE << "Will configure for 100 kHz." << RESET;
+        //     static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->SetI2CFrequency(0);
+        // }
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -386,7 +386,7 @@ int main(int argc, char* argv[])
                     LOG(INFO) << BOLDBLUE << "Resetting hybrid [Side == " << +cSide << "]" << RESET;
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetMPA(clpGBT, cSide);
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetSSA(clpGBT, cSide);
-                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCIC(clpGBT, cSide);
                 }
             }
             if(cmd.foundOption("resetSSA"))
@@ -402,7 +402,7 @@ int main(int argc, char* argv[])
             if(cmd.foundOption("resetCIC"))
             {
                 // then send reset
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT);
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCIC(clpGBT);
             }
 
         } // enable ROCs
@@ -858,7 +858,7 @@ int main(int argc, char* argv[])
                                 }     // ROCs
                             }
 
-                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+                            static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCIC(clpGBT, cSide);
 
                             // configuring CIC
                             LOG(INFO) << BOLDBLUE << "Configuring CIC(s)" << RESET;
@@ -1066,7 +1066,7 @@ int main(int argc, char* argv[])
                                     // reset CIC
                                     uint8_t cSide = cHybrid->getId() % 2;
                                     LOG(INFO) << BOLDBLUE << "Applying reset to the CIC" << RESET;
-                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCIC(clpGBT, cSide);
                                     OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                                     auto&               cCic                = cOuterTrackerHybrid->fCic;
                                     LOG(INFO) << BOLDBLUE << "Configuring CIC [ Attempt#" << +cTst << " ]" << RESET;
@@ -1106,7 +1106,7 @@ int main(int argc, char* argv[])
                                     // reset CIC
                                     uint8_t cSide = cHybrid->getId() % 2;
                                     LOG(INFO) << BOLDBLUE << "Applying reset to the CIC" << RESET;
-                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCic(clpGBT, cSide);
+                                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCIC(clpGBT, cSide);
                                     OuterTrackerHybrid* cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                                     auto&               cCic                = cOuterTrackerHybrid->fCic;
                                     LOG(INFO) << BOLDBLUE << "Configuring CIC [ Attempt#" << +cTst << " ]" << RESET;

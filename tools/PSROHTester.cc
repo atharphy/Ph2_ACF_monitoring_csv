@@ -695,7 +695,7 @@ bool PSROHTester::TestResetLines(uint8_t pLevel)
     do
     {
 #ifdef __ROH_USB__
-        fTC_USB->adc_get(cMapIterator->second, cMeasurement);
+        fTCInterface.getInterface()->adc_get(cMapIterator->second, cMeasurement);
 #endif
         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
         cValid               = cValid && (cDifference_mV <= 100);

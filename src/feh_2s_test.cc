@@ -138,6 +138,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("calibrateADC", "Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("monitorAMUX", "Calibrate ADC on lpGBT....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("monitorSEH", "Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("readIDs", "Read chip ids....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("testTune", "Test tuning ....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
@@ -416,16 +417,19 @@ int main(int argc, char* argv[])
     }
 
     // read chip ids
-    for(const auto cBoard: *cTool.fDetectorContainer)
+    if(cmd.foundOption("readIDs"))
     {
-        for(auto cOpticalGroup: *cBoard)
+        for(const auto cBoard: *cTool.fDetectorContainer)
         {
-            for(auto cHybrid: *cOpticalGroup)
+            for(auto cOpticalGroup: *cBoard)
             {
-                for(auto cChip: *cHybrid)
+                for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto cFusedId = cTool.fReadoutChipInterface->ReadChipReg(cChip, "ChipId");
-                    LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto cFusedId = cTool.fReadoutChipInterface->ReadChipReg(cChip, "ChipId");
+                        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
+                    }
                 }
             }
         }

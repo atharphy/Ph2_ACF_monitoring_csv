@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S">
-    <!-- B598 skeleton, direct powering -->
-    <!--<connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
+    <!-- B598 skeleton -->
+    <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- B14 skeleton -->
-    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <CDCE configure="0" clockRate="320"/>
     
@@ -38,42 +38,56 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-	    <!-- <Hybrid Id="1" Status="1" LinkId="0">
+	 </OpticalGroup>
+
+    <!-- <OpticalGroup Id="1" FMCId="0">
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
+        <lpGBT_Files path="./settings/lpGBTFiles/" />
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+          <Settings
+          />
+        </lpGBT>
+        <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="580" latency="199"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
+            <SSA_Files path="./settings/SSAFiles/" />
+            <SSA Id="0" configfile="SSA.txt" />
+            <SSA Id="1" configfile="SSA.txt" />
+            <SSA Id="2" configfile="SSA.txt" />
+            <SSA Id="4" configfile="SSA.txt" />
+            <SSA Id="5" configfile="SSA.txt" />
+            <SSA Id="6" configfile="SSA.txt" />
+            <SSA Id="7" configfile="SSA.txt" /> 
+                 
 
-            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" configfile="CBC3_default.txt" />
-            <CBC Id="3" configfile="CBC3_default.txt" />
-            <CBC Id="4" configfile="CBC3_default.txt" />
-            <CBC Id="5" configfile="CBC3_default.txt" />
-            <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" />
-
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid> -->
-    </OpticalGroup>
+            <CIC_Files path="./settings/CicFiles/" />
+            <CIC Id="8" configfile="CIC_default.txt" /> 
+        </Hybrid>
+    </OpticalGroup> -->
     
     <!--CONFIG-->
-    <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <Register name="clock_source_u7">3</Register> 
+    <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <Register name="clock_source_u8">3</Register> 
     <Register name="fc7_daq_cnfg">
-	<!-- Clock control -->
+	   <!-- Sync block control -->
+        <Register name="sync_block">
+            <Register name="enable"          >0</Register>
+            <Register name="is_bc0_enable"   >0</Register>
+            <Register name="is_resync_enable">0</Register>
+            <Register name="delay">10</Register>
+            <Register name="num_triggers"    >99</Register>
+        </Register>
+    <!-- Clock control -->
 	<Register name="clock">
 	    <Register name="ext_clk_en"> 0 </Register>
 	</Register>
         <!-- TTC -->
         <Register name="ttc">
-            <Register name="ttc_enable"> 0 </Register>
+            <Register name="ttc_enable"> 1 </Register>
         </Register>
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
@@ -162,14 +176,14 @@
                 <Register name="threshold"> 0 </Register>
             </Register>
 	    <Register name="ch4">
-                <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch5">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
-                <Register name="threshold"> 50 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
             </Register>
 	</Register>
 	<!-- TLU Block -->

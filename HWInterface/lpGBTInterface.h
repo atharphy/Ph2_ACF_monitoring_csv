@@ -156,6 +156,12 @@ class lpGBTInterface : public ChipInterface
     uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t  GetChipRate(Ph2_HwDescription::Chip* pChip);
 
+    // ###########################
+    // # LpGBT Vref function #
+    // ###########################
+    bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
+
+
 // #######################################
 // # functions to link to external interfaces #
 // #######################################

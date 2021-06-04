@@ -246,8 +246,6 @@ void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
     if(fSummaryTree) fSummaryTree->Fill();
 }
 
-TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
-
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);

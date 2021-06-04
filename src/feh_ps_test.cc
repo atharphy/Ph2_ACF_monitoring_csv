@@ -289,12 +289,12 @@ int main(int argc, char* argv[])
         else
             LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-        // align CIC inputs
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cHybridTester);
-        cCicAligner.PhaseAlignmentMPA(100);
-        cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.CheckNPatterns(cInterface);
+        // // align CIC inputs
+        // CicFEAlignment cCicAligner;
+        // cCicAligner.Inherit(&cHybridTester);
+        // cCicAligner.PhaseAlignmentMPA(100);
+        // cDPInterfacer.Stop(cInterface);
+        // cDPInterfacer.CheckNPatterns(cInterface);
 
         // // still needs to be de-bugged!!
         // // does not work yet

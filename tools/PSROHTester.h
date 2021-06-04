@@ -40,6 +40,7 @@ class PSROHTester : public OTHybridTester
     void CheckFastCommandsBRAM(const std::string& sFastCommandLine);
     void WritePatternToBRAM(const std::string& sFileName);
     void FastCommandScope();
+    bool TestResetLines(uint8_t pLevel);
 
   private:
     void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);

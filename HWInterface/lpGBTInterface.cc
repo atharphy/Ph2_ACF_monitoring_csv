@@ -107,7 +107,7 @@ uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
-    return (cChipRate / 5.) * cValue * fClockSpeed;
+    return (cChipRate / 5.) * (int)cValue * (float)fClockSpeed/1e6;
 }
 
 void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
@@ -646,6 +646,19 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 }
 
 bool lpGBTInterface::IsReadADCDone(Chip* pChip) { return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1); }
+
+// ###########################
+// # LpGBT Vref functions #
+// ###########################
+
+bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
+{
+    uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
+    bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
+    LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    return cSuccess;
+}
 
 // #######################
 // # Bit Error Rate test #
