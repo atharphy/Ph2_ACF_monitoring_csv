@@ -437,10 +437,10 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
         for(auto cHybrid: *cOpticalReadout)
         {
             char name[100];
-            auto cBxId = static_cast<const D19cCicEvent*>(pPh2Event)->BxId(cHybrid->getId());
+            auto cBxId = static_cast<const D19cCic2Event*>(pPh2Event)->BxId(cHybrid->getId());
             std::sprintf(name, "bx_ID_%02d", cHybrid->getId());
             pEudaqSubEvent->SetTag(name, (uint32_t)cBxId);
-            auto cStatusBit = static_cast<const D19cCicEvent*>(pPh2Event)->Status(cHybrid->getId());
+            auto cStatusBit = static_cast<const D19cCic2Event*>(pPh2Event)->Status(cHybrid->getId());
             std::sprintf(name, "status_%02d", cHybrid->getId());
             pEudaqSubEvent->SetTag(name, (uint32_t)cStatusBit);
 
@@ -449,7 +449,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 char     name[100];
                 uint32_t cHybridId = cHybrid->getHybridId();
                 uint32_t cCbcId    = cCbc->getId();
-                // auto cL1Id = static_cast<const D19cCicEvent*>(pPh2Event)->L1Id( cHybrid->getId(), cCbc->getCId() );
+                // auto cL1Id = static_cast<const D19cCic2Event*>(pPh2Event)->L1Id( cHybrid->getId(), cCbc->getCId() );
                 std::sprintf(name, "pipeline_address_%02d_%02d", cHybridId, cCbcId);
                 pEudaqSubEvent->SetTag(name, (uint32_t)pPh2Event->PipelineAddress(cHybridId, cCbcId));
                 std::sprintf(name, "error_%02d_%02d", cHybridId, cCbcId);

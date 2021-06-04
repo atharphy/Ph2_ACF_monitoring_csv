@@ -90,8 +90,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     auto           cEventIterator      = pData.begin();
     do
     {
-        uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
-        uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+        uint32_t cHeader    = (0xFFFF0000 & (*cEventIterator)) >> 16;
+        uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         // for( size_t cIndx=0; cIndx<4; cIndx++)
         // {
         //     LOG (INFO) << BOLDMAGENTA << "Event Header L#" << +cIndx << " " << std::bitset<32>(*(cEventIterator+cIndx)) << RESET;
@@ -99,24 +99,24 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            //uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
-            // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) 
+            // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader)
             //     << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
             //     << " dummy 32 bit words .. " << RESET;
             // counters from event header
             // TDC + L1A counter
-            uint32_t cEvntCntTag        = (*(cEventIterator + 2));
-            //LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
+            uint32_t cEvntCntTag = (*(cEventIterator + 2));
+            // LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint32_t cFc7EvtId = (cEvntCntTag & (0x00FFFFFF));
             fTDC               = (cEvntCntTag & (0xFF << 24)) >> 24;
-            //LOG (INFO) << BOLDMAGENTA << "\t... TDC is " << cFc7EvtId << " eventId is " << cFc7EvtId << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "\t... TDC is " << cFc7EvtId << " eventId is " << cFc7EvtId << RESET;
             // internal counters
-            cEvntCntTag         = (*(cEventIterator + 3));
-            //LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
+            cEvntCntTag = (*(cEventIterator + 3));
+            // LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint16_t cFc7BxId   = (cEvntCntTag & (0xFFFF));
             uint16_t cFc7TrigId = (cEvntCntTag & (0xFFFF << 16)) >> 16;
-            //LOG (INFO) << BOLDMAGENTA << "\t... BxId is " << cFc7BxId << " trigger Id is " << cFc7TrigId << RESET;
-            
+            // LOG (INFO) << BOLDMAGENTA << "\t... BxId is " << cFc7BxId << " trigger Id is " << cFc7TrigId << RESET;
+
             fExternalTriggerID = cFc7TrigId; //(*(cEventIterator + 1) >> 16) & 0x7FFF;
             fEventCount        = cFc7EvtId;  // 0x00FFFFFF & *(cEventIterator + 2);
             fBunch             = cFc7BxId;   // 0xFFFFFFFF & *(cEventIterator + 3);
@@ -227,11 +227,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 fEventRawList[cFe->getIndex()].second.clear();
                                 if(cWithCIC2)
                                 {
-                                    size_t cFullSize=8;// going to assume that I will always readout 8*275 block of data 
-                                    const size_t  cNblocks = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
+                                    size_t                                  cFullSize = 8;                                      // going to assume that I will always readout 8*275 block of data
+                                    const size_t                            cNblocks  = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                                     std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                                     this->splitStream(pData, cL1Words, cL1Offset,
-                                                          cNblocks); // split 32 bit words in  blocks of 11 bits
+                                                      cNblocks); // split 32 bit words in  blocks of 11 bits
                                     // now try and arrange them by FE again ...
 
                                     for(size_t cChipIndex = 0; cChipIndex < cFullSize; cChipIndex++)
@@ -240,11 +240,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                         size_t                  cPosition = 0;
                                         for(size_t cBlockIndex = 0; cBlockIndex < RAW_L1_CBC / L1_BLOCK_SIZE; cBlockIndex++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
                                         {
-                                            auto  cIndex   = cChipIndex + cFullSize * cBlockIndex;
-                                            //auto  cIndex   = cChipIndex + cFullSize * cBlockIndex;
-                                            if( cIndex >= cL1Words.size() )
+                                            auto cIndex = cChipIndex + cFullSize * cBlockIndex;
+                                            // auto  cIndex   = cChipIndex + cFullSize * cBlockIndex;
+                                            if(cIndex >= cL1Words.size())
                                             {
-                                                LOG (INFO)  << BOLDRED << "\t... un-sparse decoder ... problem decoding block#" << +cIndex << RESET;
+                                                LOG(INFO) << BOLDRED << "\t... un-sparse decoder ... problem decoding block#" << +cIndex << RESET;
                                                 continue;
                                             }
                                             auto& cL1block = cL1Words[cIndex];
@@ -255,12 +255,12 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                                 cPosition++;
                                             }
                                         }
-                                        //LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                                        // LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
                                         fEventRawList[cFe->getIndex()].second.push_back(cBitset);
                                     }
-                                    // for( auto cChip : * cFe ) 
+                                    // for( auto cChip : * cFe )
                                     // {
-                                    //     if( cChip->getFrontEndType() == FrontEndType::SSA) continue; 
+                                    //     if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                                     //     auto cHits = GetHits(cFe->getId(), cChip->getId() );
                                     //     LOG (INFO) << BOLDGREEN << "\t.. Chip#" << +cChip->getId() << " found " << +cHits.size() << " hits." << RESET;
@@ -343,9 +343,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             }     // hybrid loop
             cEventIterator += cEventSize;
         }
-        else 
+        else
         {
-            LOG (INFO) << BOLDRED << "Invalid Header D19cCic2Event" << RESET;
+            LOG(INFO) << BOLDRED << "Invalid Header D19cCic2Event" << RESET;
             throw std::runtime_error(std::string("Incorrect Event header found when decoding D19cCic2Event data ... stopping"));
         }
         cNEvents++;

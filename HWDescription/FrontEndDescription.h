@@ -81,7 +81,7 @@ class FrontEndDescription
      * \param pFMCId
      */
     void setFMCId(uint8_t pFMCId) { fFMCId = pFMCId; }
-    
+
     /*!
      * \brief Set the FE ID
      * \param pFeId

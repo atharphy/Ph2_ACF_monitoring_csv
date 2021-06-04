@@ -694,7 +694,7 @@ void ExtraChecks::ExternalTriggers(uint16_t pNconsecutive, const std::string& pS
                     {
                         uint32_t cPipeline   = cEvent->PipelineAddress(cFe->getId(), cChip->getId());
                         auto     cEventCount = cEvent->GetEventCount();
-                        // uint32_t cL1Id = static_cast<D19cCicEvent*>(cEvent)->L1Id( cFe->getId(), cChip->getId() );
+                        // uint32_t cL1Id = static_cast<D19cCic2Event*>(cEvent)->L1Id( cFe->getId(), cChip->getId() );
                         LOG(INFO) << BOLDBLUE << "Event " << +cEventCount << "\t\t....CBC" << +cChip->getId() << " on FE" << +cFe->getId() << " ----  Pipeline address " << +cPipeline << RESET;
                     }
                     LOG(INFO) << RESET;
@@ -759,7 +759,7 @@ void ExtraChecks::ConsecutiveTriggers(uint8_t pNconsecutive)
                         uint32_t cPipeline   = cEvent->PipelineAddress(cFe->getId(), cChip->getId());
                         auto     cEventCount = cEvent->GetEventCount();
                         LOG(INFO) << BOLDBLUE << "Event " << +cEventCount << "\t\t....CBC" << +cChip->getId() << " on FE" << +cFe->getId() << " ----  Pipeline address " << +cPipeline << RESET;
-                        // uint32_t cL1Id = static_cast<D19cCicEvent*>(cEvent)->L1Id( cFe->getId(), cChip->getId() );
+                        // uint32_t cL1Id = static_cast<D19cCic2Event*>(cEvent)->L1Id( cFe->getId(), cChip->getId() );
                         // LOG (INFO) << "Event " << +cEventCount << "\t\t....CBC " << +cChip->getId() << "on FE" <<
                         // +cFe->getId() << " ----  Pipeline address " << +cPipeline << RESET;
                     }
@@ -1789,7 +1789,7 @@ void ExtraChecks::StubCheck(uint8_t pChipId, bool pUseNoise, uint8_t pTestPulseA
                                 {
                                     //debug information
                                     auto cEventCount = cEvent->GetEventCount();
-                                    uint32_t cL1Id = static_cast<D19cCicEvent*>(cEvent)->L1Id( cFe->getId(),
+                                    uint32_t cL1Id = static_cast<D19cCic2Event*>(cEvent)->L1Id( cFe->getId(),
                         cChip->getId() ); uint32_t cPipeline = cEvent->PipelineAddress( cFe->getId(), cChip->getId() );
                                     //hits
                                     auto cHits = cEvent->GetHits( cFe->getId(), cChip->getId() ) ;

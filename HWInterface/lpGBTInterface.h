@@ -244,7 +244,6 @@ class lpGBTInterface : public ChipInterface
     void ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr);
     void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
 
-    
     // ##############
     // # LpGBT BERT #
     // ##############

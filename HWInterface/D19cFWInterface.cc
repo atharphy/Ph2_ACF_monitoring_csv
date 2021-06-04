@@ -1338,7 +1338,7 @@ void D19cFWInterface::Resume()
 
 void D19cFWInterface::ResetReadout()
 {
-    //LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
+    // LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
@@ -1347,7 +1347,7 @@ void D19cFWInterface::ResetReadout()
 
     if(fIsDDR3Readout)
     {
-        //LOG(INFO) << BOLDBLUE << "Reseting DDR3 " << RESET;
+        // LOG(INFO) << BOLDBLUE << "Reseting DDR3 " << RESET;
         fDDR3Offset     = 0;
         fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
         bool i          = false;
@@ -1915,10 +1915,10 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
     //     << " from end of vector"
     //     << RESET;
     // adjust offset to first empty slot in DDR3
-    if( cFoundEmpty )
+    if(cFoundEmpty)
     {
-        LOG (INFO) << BOLDMAGENTA << "Found an empty event .. all 0s .. resetting DDR3 offset" << RESET;
-        //fDDR3Offset = (cFoundEmpty) ? cFoundEmpty - cOffset : fDDR3Offset;
+        LOG(INFO) << BOLDMAGENTA << "Found an empty event .. all 0s .. resetting DDR3 offset" << RESET;
+        // fDDR3Offset = (cFoundEmpty) ? cFoundEmpty - cOffset : fDDR3Offset;
     }
     if(cValidData.size() == 0) return 0;
     std::move(cValidData.begin(), cValidData.end(), std::back_inserter(pData));
@@ -2779,7 +2779,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     if(!pWait && data_handshake == 0)
     {
         pData.clear();
-        LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake OFF and no WAIT" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake OFF and no WAIT" << RESET;
         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
         if(cNWords == 0) return 0;
         auto cNewEvents = this->GetData(pBoard, pData);
@@ -2789,7 +2789,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
         if(cReadoutReq == 1) // DD3 almost full ? check this!!
         {
-            LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData resetting readout ... " << RESET;
+            LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData resetting readout ... " << RESET;
             Pause();
             ResetReadout();
             Resume();
