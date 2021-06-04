@@ -3099,7 +3099,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                         cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                         cStopIncrement = (cNWords == cNWordsPrev);
                         //cNWordsPrev    = cNWords;
-                        if(cCounter % 100 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of words received is " << +cNWords << RESET;
+                        //if(cCounter % 100 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of words received is " << +cNWords << RESET;
                         cCounter++;
                     } while(!cStopIncrement);
                     // this->Stop();

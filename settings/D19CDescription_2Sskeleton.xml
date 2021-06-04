@@ -22,7 +22,7 @@
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
@@ -71,11 +71,11 @@
     <Register name="fc7_daq_cnfg">
 	   <!-- Sync block control -->
         <Register name="sync_block">
-            <Register name="enable"          >0</Register>
-            <Register name="is_bc0_enable"   >0</Register>
+            <Register name="enable"          >1</Register>
+            <Register name="is_bc0_enable"   >1</Register>
             <Register name="is_resync_enable">0</Register>
             <Register name="delay">10</Register>
-            <Register name="num_triggers"    >9</Register>
+            <Register name="num_triggers"    >499</Register>
         </Register>
     <!-- Clock control -->
 	<Register name="clock">
