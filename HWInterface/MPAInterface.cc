@@ -600,8 +600,11 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(DEBUG) << BOLDBLUE << "MPACONFIG" << RESET;
+    std::stringstream cOutput;
     setBoard(pMPA->getBeBoardId());
+    pMPA->printChipType(cOutput);
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA->getId() << "]" << RESET;
+    
     std::vector<uint32_t> cVec;
     ChipRegMap            cMPARegMap = pMPA->getRegMap();
     // for some reason this makes block write work

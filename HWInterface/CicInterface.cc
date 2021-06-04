@@ -123,7 +123,8 @@ void CicInterface::CheckConfig(Chip* pChip)
 }
 bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop)
 {
-    setBoard(pChip->getBeBoardId());
+    std::stringstream cOutput;
+
     bool cSuccess = true;
     if(!lpGBTFound())
     // if(flpGBTInterface == nullptr)
@@ -297,8 +298,10 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
 
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << RESET;
+    std::stringstream cOutput;
     setBoard(pCic->getBeBoardId());
+    pCic->printChipType(cOutput);
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCic->getId() << "]" << RESET;
     std::vector<uint32_t> cVec;
 
     ChipRegMap cCicRegMap = pCic->getRegMap();

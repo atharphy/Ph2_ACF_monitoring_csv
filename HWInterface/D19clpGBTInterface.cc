@@ -22,7 +22,10 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 {
     std::stringstream cOutput;
     setBoard(pChip->getBeBoardId());
+    pChip->printChipType(cOutput);
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "]" << RESET;
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
+
     SetConfigMode(pChip, pChip->isOptical(), fUseCPB);
     // configure CPB - do this here rather than in SystemController? Not sure
     CPBconfig cCPBconfig;

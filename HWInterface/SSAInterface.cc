@@ -33,8 +33,11 @@ SSAInterface::~SSAInterface() {}
 
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDBLUE << "SSACONFIG" << RESET;
+    std::stringstream cOutput;
     setBoard(pSSA->getBeBoardId());
+    pSSA->printChipType(cOutput);
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA->getId() << "]" << RESET;
+    
     std::vector<uint32_t> cVec;
     ChipRegMap            cSSARegMap = pSSA->getRegMap();
     // get register map
