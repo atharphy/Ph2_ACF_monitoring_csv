@@ -32,7 +32,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    bool cSuccess = false;
+    bool cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop); 
     if(pChip->isOptical()) { cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop); }
     // TO-DO .. figure out what to do if piGBT is used
     else
