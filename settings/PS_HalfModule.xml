@@ -26,13 +26,13 @@
 
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
+            <!-- <MPA Id="0" configfile="BE0_OG0_FE0_Chip0.txt" /> -->
             <MPA Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
             <MPA Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
 
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
+            <!-- <SSA Id="0" configfile="BE0_OG0_FE0_Chip0.txt" /> -->
             <SSA Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
             <SSA Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
 

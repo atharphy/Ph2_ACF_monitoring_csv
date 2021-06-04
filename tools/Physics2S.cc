@@ -53,7 +53,7 @@ void Physics2S::ConfigureCalibration()
     if(!cAligned)
     {
         LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        exit(1);
+        throw std::runtime_error("Failed to align back-end");
     }
 
 }
