@@ -7,7 +7,7 @@
 
 #include <string>
 
-#define PORT_BASE     5000 // The server listening port base
+#define PORT_BASE 5000     // The server listening port base
 #define DQM_PORT_BASE 6000 // The DQM server listening port base
 
 class MiddlewareController : public TCPServer
@@ -34,7 +34,7 @@ class MiddlewareController : public TCPServer
     bool        paused_     = false;
 
   private:
-    Tool* theSystemController_;
+    Tool*    theSystemController_;
     uint16_t theDQMPortnumber_;
 };
 

@@ -207,11 +207,11 @@ bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
     {
         std::cout << __PRETTY_FUNCTION__ << "attached Occupancy!!!" << std::endl;
         theOccupancyStream.decodeChipData(fDetectorData);
-        std::cout<<__LINE__<<std::endl;
+        std::cout << __LINE__ << std::endl;
         fillOccupancy(fDetectorData);
-        std::cout<<__LINE__<<std::endl;
+        std::cout << __LINE__ << std::endl;
         fDetectorData.cleanDataStored();
-        std::cout<<__LINE__<<std::endl;
+        std::cout << __LINE__ << std::endl;
         return true;
     }
 

@@ -71,7 +71,7 @@ void PSPhysics::ConfigureCalibration()
                         // static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x57);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 90);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "L1Offset_1_ALL", 79);
-                        std::cout<<static_cast<PSInterface*>(fReadoutChipInterface)->ReadChipReg(chip, "ReadoutMode")<<std::endl;
+                        std::cout << static_cast<PSInterface*>(fReadoutChipInterface)->ReadChipReg(chip, "ReadoutMode") << std::endl;
                     }
                 }
             }
@@ -115,18 +115,16 @@ void PSPhysics::Running()
 
     SystemController::Start(fRunNumber);
 
-
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
+    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
 
     PSPhysics::run();
 }
@@ -227,7 +225,7 @@ unsigned int PSPhysics::getDataFromBoards()
         // std::cout<<__LINE__<<std::endl;
         // std::cout<<__LINE__<<std::endl;
     }
-    std::cout<<"Readout " << dataSize << " events" << std::endl;
+    std::cout << "Readout " << dataSize << " events" << std::endl;
     return dataSize;
 }
 
@@ -239,10 +237,10 @@ void PSPhysics::run()
     {
         // std::cout<<"Trigger status = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_stat.fast_command_block.general.source") << std::endl;
         // std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-        
+
         fTotalDataSize += getDataFromBoards();
 
-        std::cout<<"Readout in total = " << fTotalDataSize << " events" << std::endl;
+        std::cout << "Readout in total = " << fTotalDataSize << " events" << std::endl;
 
         // std::this_thread::sleep_for(std::chrono::seconds(60));
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -317,9 +315,9 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& pixelCluster: pixelClusterList)
                     {
-                        for(uint8_t subPixel = 0; subPixel <= (pixelCluster.fWidth); ++subPixel) 
-                        { 
-                            if(pixelCluster.fAddress + subPixel < 120u) ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel); 
+                        for(uint8_t subPixel = 0; subPixel <= (pixelCluster.fWidth); ++subPixel)
+                        {
+                            if(pixelCluster.fAddress + subPixel < 120u) ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel);
                         }
                     }
 
@@ -373,9 +371,9 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     for(auto& stripCluster: stripClusterList)
                     {
-                        for(uint8_t subStrip = 0; subStrip <= (stripCluster.fWidth); ++subStrip) 
-                        { 
-                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(stripCluster.fAddress + subStrip); 
+                        for(uint8_t subStrip = 0; subStrip <= (stripCluster.fWidth); ++subStrip)
+                        {
+                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(stripCluster.fAddress + subStrip);
                         }
                     }
                     // std::cout<<__LINE__<<std::endl;

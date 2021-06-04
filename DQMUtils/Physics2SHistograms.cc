@@ -11,8 +11,8 @@
 #include "../HWDescription/Definition.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
-#include "../Utils/Occupancy.h"
 #include "../Utils/Data2S.h"
+#include "../Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 
@@ -146,7 +146,7 @@ bool Physics2SHistograms::fill(std::vector<char>& dataBuffer)
     // std::cout<<__PRETTY_FUNCTION__ << "Begin of function"<<std::endl;
     // ChipContainerStream<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>> thePSEventStreamer("PSPhysics");
     ChannelContainerStream<Occupancy> theOccupancyStream("Physics2SOccupancy");
-    ChannelContainerStream<float    > theStubStream("Physics2SStub");
+    ChannelContainerStream<float>     theStubStream("Physics2SStub");
 
     if(theOccupancyStream.attachBuffer(&dataBuffer))
     {

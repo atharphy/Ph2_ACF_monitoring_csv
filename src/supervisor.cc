@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("port", "Port shift for TCP servers 0", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("port", "p");
-    
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)

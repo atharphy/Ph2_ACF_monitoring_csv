@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
     // return 0;
 
     // bool        cMonitorLPGBT = true;
-    std::string cMonitor      = "right";
+    std::string cMonitor = "right";
     cHybridTester.ConfigureHw();
 
     if(cMonitorLPGBT)

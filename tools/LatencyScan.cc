@@ -15,7 +15,7 @@ void LatencyScan::Initialize()
     fLatencyRange = findValueInSettings("LatencyRange", 1);
     fHoleMode     = findValueInSettings("HoleMode", 1);
     fNevents      = findValueInSettings("Nevents", 10);
-    std::cout<< "Going to read " << fNevents << " events"<<std::endl;
+    std::cout << "Going to read " << fNevents << " events" << std::endl;
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -137,7 +137,7 @@ void LatencyScan::ScanLatency()
             for(auto opticalGroup: *board)
             {
                 const std::vector<Event*>& events = GetEvents();
-                std::cout<<"Event size = "<<events.size()<<std::endl;
+                std::cout << "Event size = " << events.size() << std::endl;
                 for(auto hybrid: *opticalGroup)
                 {
                     uint32_t cHitSum    = 0;
@@ -148,7 +148,7 @@ void LatencyScan::ScanLatency()
                         // uint16_t L1Status = static_cast<D19cCic2Event*>(cEvent)->L1Status(hybrid->getId());
                         // if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 ) LOG(WARNING) << BOLDRED << "No packet from MPA to CIC" << RESET;
                         // std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(cEvent)->L1Id(hybrid->getId(),0)<<std::endl;
-                
+
                         // first, reset the hit counter - I need separate counters for each event
                         int cHitCounter    = 0;
                         int cHitCounterMPA = 0;
@@ -162,7 +162,6 @@ void LatencyScan::ScanLatency()
                                 // LOG(INFO) << "cHitCounterMPA " << cHitCounterMPA<<RESET;
                                 // std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(hybrid->getId(), chip->getId());
                                 // std::cout<<"Numer of pixel clusters = "<<pixelClusterList.size() << " - ";
-                    
                             }
                             else if(theChip->getFrontEndType() == FrontEndType::SSA)
                             {

@@ -38,7 +38,6 @@ po::variables_map process_program_options(const int argc, const char* const argv
     return vm;
 }
 
-
 int main(int argc, char** argv)
 {
     boost::program_options::variables_map v_map = process_program_options(argc, argv);

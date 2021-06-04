@@ -986,15 +986,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     if(cWithPSmodule) { ModuleStartUpPS(); }
     // start-up sequence for 2S module
     if(cWith2Smodule) { ModuleStartUp2S(); }
-std::cout<<__LINE__<<std::endl;
+    std::cout << __LINE__ << std::endl;
 
     if(fDetectorMonitor != nullptr)
     {
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
         fDetectorMonitor->startMonitoring();
     }
-std::cout<<__LINE__<<std::endl;
-
+    std::cout << __LINE__ << std::endl;
 }
 
 void SystemController::initializeWriteFileHandler()
@@ -1230,10 +1229,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
             else if(fEventType != EventType::ZS)
             {
-                // check data words because I'm desperate 
+                // check data words because I'm desperate
                 // for( auto cWord : pData )
                 //     LOG (INFO) << BOLDYELLOW << "SystemController \t..." << std::bitset<32>(cWord) << RESET;
-    
+
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
                 do

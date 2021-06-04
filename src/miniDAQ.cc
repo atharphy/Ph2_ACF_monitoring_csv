@@ -26,8 +26,8 @@
 #include "../DQMUtils/DQMEvent.h"
 #include "../DQMUtils/SLinkDQMHistogrammer.h"
 #include "../RootUtils/publisher.h"
-#include <atomic>
 #include "TROOT.h"
+#include <atomic>
 #include <thread>
 
 using namespace Ph2_HwDescription;
@@ -41,9 +41,11 @@ std::atomic<bool> keepRunning(false);
 
 void sendResync(Tool& theTool, uint32_t numberOfTriggersAfterResync, uint32_t triggerFrequency, uint32_t& numberOfResyncs)
 {
-    uint32_t microSecondSleepTime = float(numberOfTriggersAfterResync)/float(triggerFrequency) * 1000000;
+    uint32_t microSecondSleepTime = float(numberOfTriggersAfterResync) / float(triggerFrequency) * 1000000;
     LOG(INFO) << BOLDGREEN << "Sleeping for " << microSecondSleepTime << " us before sending a resync" << RESET;
-    while(!keepRunning) {/* waiting to start*/}
+    while(!keepRunning)
+    { /* waiting to start*/
+    }
     // wait 1/2 trigger period, not sure how much helps
     // std::this_thread::sleep_for(std::chrono::microseconds(uint32_t(float(1000000/2)/float(triggerFrequency))));
 
@@ -164,7 +166,7 @@ int main(int argc, char* argv[])
         cCicAligner.Reset();
         // cCicAligner.dumpConfigFiles();
     }
-    if( cmd.foundOption("alignPS"))
+    if(cmd.foundOption("alignPS"))
     {
         // align ASICs on PS module
         PSAlignment cPSAlignment;
@@ -173,7 +175,6 @@ int main(int argc, char* argv[])
         // map MPA outputs for PS module
         cPSAlignment.MapMPAOutputs();
     }
-
 
     for(auto board: *cTool.fDetectorContainer)
     {
@@ -198,11 +199,11 @@ int main(int argc, char* argv[])
         }
     }
 
-    uint32_t numberOfResyncs=0;
+    uint32_t numberOfResyncs = 0;
     if(cmd.foundOption("sendResync"))
     {
-        uint32_t numberOfTriggersAfterResync = convertAnyInt(cmd.optionValue("sendResync").c_str());
-        uint32_t triggerFrequency = 1000 * cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+        uint32_t    numberOfTriggersAfterResync = convertAnyInt(cmd.optionValue("sendResync").c_str());
+        uint32_t    triggerFrequency            = 1000 * cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
         std::thread theResyncThread(sendResync, std::ref(cTool), numberOfTriggersAfterResync, triggerFrequency, std::ref(numberOfResyncs));
         theResyncThread.detach();
     }
@@ -225,7 +226,7 @@ int main(int argc, char* argv[])
         // default is to use ReadData
         else
         {
-            if( cmd.foundOption("limitTriggers")) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
+            if(cmd.foundOption("limitTriggers")) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
             uint32_t cNevents = 0;
             size_t   cIter    = 0;
 
@@ -240,7 +241,7 @@ int main(int argc, char* argv[])
                 std::vector<uint32_t> cData(0);
                 cNevents += cTool.ReadData(cBeBoard, cData, false);
                 // if( cData.size() == 0 )
-                // { 
+                // {
                 //     if( cNoData%2500 == 0 )
                 //         LOG (INFO) << BOLDMAGENTA << "\t...No events read-back from board .. waiting for more .." << RESET;
                 //     cNoData++;
@@ -256,14 +257,13 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
             cTool.fBeBoardInterface->Stop(cBeBoard);
             keepRunning = false;
-            
+
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            
 
             std::vector<uint32_t> cData(0);
             cNevents += cTool.ReadData(cBeBoard, cData, false);
             std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-            
+
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
             // LOG (INFO) << BOLDBLUE << "Number of words in vector is "  << cCompleteData.size() << RESET;
@@ -312,78 +312,74 @@ int main(int argc, char* argv[])
                 if(cDQM && cEventCounter % cScaleFactor == 0) { cDQMEvents.emplace_back(new DQMEvent(&cSLev)); }
             }
 
-            //if(cEventCounter % (pEventsperVcth/10) == 0)
+            // if(cEventCounter % (pEventsperVcth/10) == 0)
             //{
-                for(auto cOpticalGroup: *cBoard)
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
                 {
-                    for(auto cHybrid: *cOpticalGroup)
+                    if(cBoard->getFrontEndType() == FrontEndType::CIC || cBoard->getFrontEndType() == FrontEndType::CIC2)
                     {
-                        if( cBoard->getFrontEndType() == FrontEndType::CIC || cBoard->getFrontEndType() == FrontEndType::CIC2 )
+                        uint16_t L1Status = static_cast<D19cCic2Event*>(cEvent)->L1Status(cHybrid->getId());
+                        LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id " << +cEvent->GetExternalTriggerId() << " Hybrid#" << +cHybrid->getId() << " L1 Id is "
+                                  << static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 0) << " L1 status flag = " << std::bitset<9>(L1Status) << RESET;
+                        for(auto cChip: *cHybrid)
                         {
-
-                            uint16_t L1Status = static_cast<D19cCic2Event*>(cEvent)->L1Status(cHybrid->getId());
-                            LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id " 
-                                << +cEvent->GetExternalTriggerId() 
-                                << " Hybrid#" << +cHybrid->getId()
-                                << " L1 Id is " << static_cast<D19cCic2Event*>(cEvent)->L1Id( cHybrid->getId(), 0 ) 
-                                << " L1 status flag = " << std::bitset<9>(L1Status) 
-                                << RESET;
-                            for(auto cChip : *cHybrid)
+                            if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                            uint16_t numberOfPixelClusters = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
+                            uint16_t numberOfStripClusters = static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(cHybrid->getId(), cChip->getId()).size();
+                            if(numberOfPixelClusters > 0 || numberOfPixelClusters > 0)
                             {
-                                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
-                                uint16_t numberOfPixelClusters = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
-                                uint16_t numberOfStripClusters = static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(cHybrid->getId(), cChip->getId()).size();
-                                if(numberOfPixelClusters>0 || numberOfPixelClusters>0)
-                                {
-                                    LOG(INFO) << BOLDYELLOW << "Chip ID = " << +cChip->getId() << RESET;
-                                    LOG(INFO) << BOLDYELLOW << "Number of pixel clusters = "<< numberOfPixelClusters << RESET;
-                                    LOG(INFO) << BOLDYELLOW << "Number of strip clusters = "<< numberOfStripClusters << RESET;
-                                } 
-                                // LOG(INFO) << BOLDYELLOW << "Number of stubs          = "<<static_cast<D19cCic2Event*>(cEvent)->StubVector      (cHybrid->getId(), cChip->getId()).size() << RESET;
+                                LOG(INFO) << BOLDYELLOW << "Chip ID = " << +cChip->getId() << RESET;
+                                LOG(INFO) << BOLDYELLOW << "Number of pixel clusters = " << numberOfPixelClusters << RESET;
+                                LOG(INFO) << BOLDYELLOW << "Number of strip clusters = " << numberOfStripClusters << RESET;
                             }
-
-                            // if(previousL1ID != static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 0) -1)
-                            //     LOG(INFO) << BOLDRED << "L1Id reset after " << previousL1ID << RESET;
-                            // previousL1ID = static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 0);
-
-                            // if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 ) 
-                            // {
-                            //     if(isFirstUnrecoverableEvent && timeoutErrorInPreviousEvent)
-                            //     {
-                            //         auto theLastCorrectEvent = cPh2Events.at(cEventCounter-2);
-
-                            //         isFirstUnrecoverableEvent = false;
-                            //         LOG(INFO) << BOLDYELLOW << "Event before unrecoverable occupancy" << RESET;
-                            //         for(auto cChip : *cHybrid)
-                            //         {
-                            //             LOG(INFO) << BOLDYELLOW << "Chip ID = " << +cChip->getId() << RESET;
-                            //             LOG(INFO) << BOLDYELLOW << "Number of pixel clusters = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId()).size() << RESET;
-                            //             LOG(INFO) << BOLDYELLOW << "Number of strip clusters = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->GetStripClusters(cHybrid->getId(), cChip->getId()).size() << RESET;
-                            //             LOG(INFO) << BOLDYELLOW << "Number of stubs          = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->StubVector      (cHybrid->getId(), cChip->getId()).size() << RESET;
-                            //         }
-                            //     }
-                            //     timeoutErrorInPreviousEvent = true;
-                            //     LOG(WARNING) << BOLDRED << "No packet from MPA to CIC, L1 status flag = " << std::bitset<9>(L1Status) << RESET;
-
-                            //     auto cL1IdFirstROC = static_cast<D19cCic2Event*>(cEvent)->L1Id( cHybrid->getId(), 0 ); 
-                            //     LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id " 
-                            //         << +cEvent->GetExternalTriggerId() 
-                            //         << " Hybrid#" << +cHybrid->getId()
-                            //         << " L1 Id is " << +cL1IdFirstROC 
-                            //         << RESET;
-
-                            // }
-                            // else
-                            // {
-                            //     if(timeoutErrorInPreviousEvent) LOG(INFO) << BOLDGREEN << "RECOVERED" << RESET;
-                            //     timeoutErrorInPreviousEvent = false;
-                            // }
+                            // LOG(INFO) << BOLDYELLOW << "Number of stubs          = "<<static_cast<D19cCic2Event*>(cEvent)->StubVector      (cHybrid->getId(), cChip->getId()).size() << RESET;
                         }
-                    }// hybrid
-                }// optical group
-                // outp.str("");
-                // outp << *cEvent;
-                // LOG(INFO) << outp.str() << RESET;
+
+                        // if(previousL1ID != static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 0) -1)
+                        //     LOG(INFO) << BOLDRED << "L1Id reset after " << previousL1ID << RESET;
+                        // previousL1ID = static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 0);
+
+                        // if( (L1Status & 0x1) == 1 && (L1Status & 0x1FE) != 0 )
+                        // {
+                        //     if(isFirstUnrecoverableEvent && timeoutErrorInPreviousEvent)
+                        //     {
+                        //         auto theLastCorrectEvent = cPh2Events.at(cEventCounter-2);
+
+                        //         isFirstUnrecoverableEvent = false;
+                        //         LOG(INFO) << BOLDYELLOW << "Event before unrecoverable occupancy" << RESET;
+                        //         for(auto cChip : *cHybrid)
+                        //         {
+                        //             LOG(INFO) << BOLDYELLOW << "Chip ID = " << +cChip->getId() << RESET;
+                        //             LOG(INFO) << BOLDYELLOW << "Number of pixel clusters = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->GetPixelClusters(cHybrid->getId(),
+                        //             cChip->getId()).size() << RESET; LOG(INFO) << BOLDYELLOW << "Number of strip clusters =
+                        //             "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->GetStripClusters(cHybrid->getId(), cChip->getId()).size() << RESET; LOG(INFO) << BOLDYELLOW << "Number of
+                        //             stubs          = "<<static_cast<D19cCic2Event*>(theLastCorrectEvent)->StubVector      (cHybrid->getId(), cChip->getId()).size() << RESET;
+                        //         }
+                        //     }
+                        //     timeoutErrorInPreviousEvent = true;
+                        //     LOG(WARNING) << BOLDRED << "No packet from MPA to CIC, L1 status flag = " << std::bitset<9>(L1Status) << RESET;
+
+                        //     auto cL1IdFirstROC = static_cast<D19cCic2Event*>(cEvent)->L1Id( cHybrid->getId(), 0 );
+                        //     LOG(INFO) << BOLDBLUE << "Event#" << +cEvent->GetEventCount() << " trigger Id "
+                        //         << +cEvent->GetExternalTriggerId()
+                        //         << " Hybrid#" << +cHybrid->getId()
+                        //         << " L1 Id is " << +cL1IdFirstROC
+                        //         << RESET;
+
+                        // }
+                        // else
+                        // {
+                        //     if(timeoutErrorInPreviousEvent) LOG(INFO) << BOLDGREEN << "RECOVERED" << RESET;
+                        //     timeoutErrorInPreviousEvent = false;
+                        // }
+                    }
+                } // hybrid
+            }     // optical group
+            // outp.str("");
+            // outp << *cEvent;
+            // LOG(INFO) << outp.str() << RESET;
             //}
             cEventCounter++;
         }
@@ -397,15 +393,13 @@ int main(int argc, char* argv[])
         uint32_t cNtriggers = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         // LOG(INFO) << BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
 
-        LOG(INFO) << "Number of triggers received         = " << cNtriggers                                 << RESET;
-        LOG(INFO) << "Number of events recorded           = " << cPh2Events.size()                          << RESET;
-        LOG(INFO) << "Last event GetEventCount            = " << +cPh2Events.back()->GetEventCount()        << RESET;
+        LOG(INFO) << "Number of triggers received         = " << cNtriggers << RESET;
+        LOG(INFO) << "Number of events recorded           = " << cPh2Events.size() << RESET;
+        LOG(INFO) << "Last event GetEventCount            = " << +cPh2Events.back()->GetEventCount() << RESET;
         LOG(INFO) << "Last event GetExternalTriggerId     = " << +cPh2Events.back()->GetExternalTriggerId() << RESET;
-        LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs                            << RESET;
-        LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size()        << RESET;
-
+        LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs << RESET;
+        LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size() << RESET;
     }
-
 
     // done with the acquistion, now clean up
     if(cDAQFile)

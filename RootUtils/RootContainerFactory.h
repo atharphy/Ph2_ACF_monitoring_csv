@@ -12,10 +12,10 @@
 #ifndef __ROOTCONTAINERFACTORY_H__
 #define __ROOTCONTAINERFACTORY_H__
 
+#include "../HWDescription/ReadoutChip.h"
 #include "../RootUtils/PlotContainer.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
-#include "../HWDescription/ReadoutChip.h"
 
 #include "TFile.h"
 #include <iostream>

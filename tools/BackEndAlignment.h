@@ -52,14 +52,14 @@ class BackEndAlignment : public Tool
 
     // get alignment results
     bool getStatus() const { return fSuccess; }
-    
+
   protected:
     bool fL1Debug   = false;
     bool fStubDebug = false;
 
   private:
-    // 
-    bool fAlignStub=true;
+    //
+    bool fAlignStub = true;
     // status
     bool fSuccess;
     // Containers

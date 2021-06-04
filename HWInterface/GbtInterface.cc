@@ -654,8 +654,8 @@ uint8_t GbtInterface::cbcSetPage(BeBoardFWInterface* pInterface, uint8_t pFeId, 
 uint32_t GbtInterface::cbcRead(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegisterAddress)
 {
     bool     cSuccess = false;
-    uint32_t cValue = 999;
-    for(int attempt=0; attempt<5; ++attempt)
+    uint32_t cValue   = 999;
+    for(int attempt = 0; attempt < 5; ++attempt)
     {
         uint8_t cErrorCode = cbcSetPage(pInterface, pFeId, pChipId, pPage);
         if(cErrorCode != 0)
@@ -666,11 +666,12 @@ uint32_t GbtInterface::cbcRead(BeBoardFWInterface* pInterface, uint8_t pFeId, ui
         cErrorCode = writeI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1 + pChipId), pRegisterAddress, 1);
         if(cErrorCode != 0) return cErrorCode;
         // std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-        cValue   = readI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1 + pChipId), 1);
+        cValue = readI2C(pInterface, fSCAMaster + pFeId, 0x40 | (1 + pChipId), 1);
         // std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-        uint8_t  cStatus  = this->scaStatus(pInterface, fSCAMaster + pFeId);
-        cSuccess = (((cStatus & 0x4) >> 2) == 1);
-        if(cSuccess) break;
+        uint8_t cStatus = this->scaStatus(pInterface, fSCAMaster + pFeId);
+        cSuccess        = (((cStatus & 0x4) >> 2) == 1);
+        if(cSuccess)
+            break;
         else
         {
             LOG(INFO) << BOLDRED << "Error in read-back of I2C from CBC, retying" << RESET;

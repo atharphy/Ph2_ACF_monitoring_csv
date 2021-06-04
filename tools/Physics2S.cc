@@ -32,8 +32,8 @@ void Physics2S::ConfigureCalibration()
     this->CreateResultDirectory(RESULTDIR, false, false);
 
     ContainerFactory::copyAndInitChannel<Occupancy>(*fDetectorContainer, fOccupancyContainer);
-    ContainerFactory::copyAndInitChannel<float    >(*fDetectorContainer, fStubContainer);
-    
+    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
+
     fChannelGroupHandler = new CBCChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
@@ -55,7 +55,6 @@ void Physics2S::ConfigureCalibration()
         LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
         throw std::runtime_error("Failed to align back-end");
     }
-
 }
 
 void Physics2S::Running()
@@ -79,7 +78,7 @@ void Physics2S::Running()
 void Physics2S::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float    >("Stub");
+    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
 
     if(fStreamerEnabled == true)
     {
@@ -181,7 +180,7 @@ void Physics2S::fillHisto()
 {
 #ifdef __USE_ROOT__
     histos.fillOccupancy(fOccupancyContainer);
-    histos.fillStub     (fStubContainer     );
+    histos.fillStub(fStubContainer);
 #endif
 }
 
@@ -241,7 +240,7 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
                 for(const auto cChip: *cHybrid)
                 {
                     std::vector<Stub> stubList = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
-                    
+
                     for(auto& stub: stubList)
                     {
                         // std::cout<<__LINE__<<std::endl;

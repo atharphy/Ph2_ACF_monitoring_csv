@@ -146,7 +146,6 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             return errorString;
         }
         return "ConfigureDone";
-        
     }
     else if(buffer.substr(0, 6) == "Error:")
     {

@@ -169,7 +169,7 @@ class SystemController
      * \param frames_or_time : time [s] or number of frames
      * \return: none
      */
-    
+
     void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!

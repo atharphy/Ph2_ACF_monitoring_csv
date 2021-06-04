@@ -1,8 +1,8 @@
 #ifndef CBC_MONITOR_H
 #define CBC_MONITOR_H
 
-#include "DetectorMonitor.h"
 #include "../Utils/EmptyContainer.h"
+#include "DetectorMonitor.h"
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
 #endif
