@@ -213,17 +213,18 @@ void InjectionDelay::draw()
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     InjectionDelay::fillHisto();
     histos->process();
     this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 

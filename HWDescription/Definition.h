@@ -157,7 +157,11 @@ enum class FrontEndType
     SSA,
     RD53,
     CIC,
-    CIC2
+    CIC2,
+    OuterTracker2S,
+    OuterTrackerPS,
+    InnerTrackerDouble,
+    InnerTrackerQuad
 };
 enum class SLinkDebugMode
 {

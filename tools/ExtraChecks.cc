@@ -802,14 +802,14 @@ void ExtraChecks::MonitorAmux(bool pAll)
                             std::vector<float> cValues(0);
                             for(size_t cIter = 0; cIter < 5; cIter++)
                             {
-                                std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->ifOptical());
+                                std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->isOptical());
                                 cValues.push_back(cReading.second);
                                 cScan->Fill(cChip->getId(), cThresholdValue, cReading.second);
                                 //
-                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", theBoard->ifOptical()
+                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", theBoard->isOptical()
                                 // ); cScanVBGbias->Fill( cChip->getId() , cThresholdValue , cReading.second );
                                 // //
-                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBG_LDO", theBoard->ifOptical()
+                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBG_LDO", theBoard->isOptical()
                                 // ); cScanVBGldo->Fill( cChip->getId() , cThresholdValue , cReading.second );
                             }
                             std::pair<float, float> cStats = getStats(cValues);
@@ -860,14 +860,14 @@ void ExtraChecks::MonitorAmux(bool pAll)
                             std::vector<float> cValues(0);
                             for(size_t cIter = 0; cIter < 5; cIter++)
                             {
-                                std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->ifOptical());
+                                std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->isOptical());
                                 cValues.push_back(cReading.second);
                                 cScan->Fill(cChip->getId(), cThreshold, cReading.second);
                                 //
-                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", theBoard->ifOptical()
+                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", theBoard->isOptical()
                                 // ); cScanVBGbias->Fill( cChip->getId() , cThreshold , cReading.second );
                                 // //
-                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBG_LDO", theBoard->ifOptical()
+                                // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBG_LDO", theBoard->isOptical()
                                 // ); cScanVBGldo->Fill( cChip->getId() , cThreshold , cReading.second );
                             }
                             std::pair<float, float> cStats = getStats(cValues);
@@ -912,16 +912,16 @@ void ExtraChecks::MonitorAmux(bool pAll)
                                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", static_cast<uint16_t>(cThreshold));
                                 for(size_t cIter = 0; cIter < 5; cIter++)
                                 {
-                                    std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->ifOptical());
+                                    std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->isOptical());
                                     cScan->Fill(cChip->getId(), cThreshold, cReading.second);
                                     if((cChip->getIndex() == cChipIndex) && cIter == 0)
                                         LOG(INFO) << BOLDBLUE << "\t\t.... Setting threshold to " << +static_cast<uint16_t>(cThreshold)
                                                   << " and recording voltage at output of AMUX : " << cReading.second << RESET;
 
-                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", cBoard->ifOptical()
+                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", cBoard->isOptical()
                                     // ); cScanVBGbias->Fill( cChip->getId() , cThreshold , cReading.second );
                                     // //
-                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBG_LDO", cBoard->ifOptical()
+                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBG_LDO", cBoard->isOptical()
                                     // ); cScanVBGldo->Fill( cChip->getId() , cThreshold , cReading.second );
                                 }
                             }
@@ -931,17 +931,17 @@ void ExtraChecks::MonitorAmux(bool pAll)
                                 static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", static_cast<uint16_t>(std::floor(cMeanPedestal + cDistance)));
                                 for(size_t cIter = 0; cIter < 5; cIter++)
                                 {
-                                    std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->ifOptical());
+                                    std::pair<uint16_t, float> cReading = ReadAmux(cFe->getId(), cChip->getId(), "VCth", theBoard->isOptical());
                                     cScan->Fill(cChip->getId(), std::floor(cMeanPedestal + cDistance), cReading.second);
                                     if((cChip->getIndex() == cChipIndex) && cIter == 0)
                                         LOG(INFO) << BOLDBLUE << "\t\t.... Setting threshold to " << +static_cast<uint16_t>(cMeanPedestal + cDistance)
                                                   << " and recording voltage at output of AMUX : " << cReading.second << " mV." << RESET;
                                     // bias
-                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", cBoard->ifOptical()
+                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", cBoard->isOptical()
                                     // ); cScanVBGbias->Fill( cChip->getId() , std::floor(cMeanPedestal + cDistance) ,
                                     // cReading.second );
                                     // //ldo
-                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", cBoard->ifOptical()
+                                    // cReading = ReadAmux(cFe->getId(), cChip->getId() , "VBGbias", cBoard->isOptical()
                                     // ); cScanVBGldo->Fill( cChip->getId() , std::floor(cMeanPedestal + cDistance) ,
                                     // cReading.second );
                                 }
@@ -1907,7 +1907,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        cOptical          = cOptical || theBoard->ifOptical();
+        cOptical          = cOptical || theBoard->isOptical();
         for(auto cOpticalGroup: *cBoard)
             for(auto cFe: *cOpticalGroup)
             {

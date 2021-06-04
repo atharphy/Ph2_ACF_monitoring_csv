@@ -27,10 +27,10 @@ CbcInterface::~CbcInterface() {}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    // std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;
-    // first, identify the correct BeBoardFWInterface
+    std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());
+    pCbc->printChipType(cOutput);
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCbc->getId() << "]" << RESET;
 
     // Deal with the ChipRegItems and encode them
     bool       cSuccess   = false;
@@ -311,7 +311,7 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     {
         bool cVerifLoop = true;
         bool cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
-        if(cSuccess) cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress, fRetry);
+        if(cSuccess) cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
     }
     return cErrorReg;
 }
@@ -554,7 +554,7 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
     // update page in map
     cIter->second = pPage;
     // write to page register in the CBC
-    cSuccess = fBoardFW->WriteFERegister(pCbc, cPageReg.fAddress, cRegValue, fRetry, pVerifLoop);
+    cSuccess = fBoardFW->WriteFERegister(pCbc, cPageReg.fAddress, cRegValue, pVerifLoop);
     // return false if this didn't work
     if(!cSuccess) return cSuccess;
     // update register value in map
@@ -600,7 +600,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
         if(!cSuccess) return cSuccess;
         // read only  register
         if(pRegNode.find("ChipIDFuse") != std::string::npos) { pVerifLoop = false; }
-        cSuccess = fBoardFW->WriteFERegister(pCbc, cRegItem.fAddress, pValue, fRetry, pVerifLoop);
+        cSuccess = fBoardFW->WriteFERegister(pCbc, cRegItem.fAddress, pValue, pVerifLoop);
     }
     // update the HWDescription object
     if(cSuccess) pCbc->setReg(pRegNode, pValue);
@@ -768,7 +768,7 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     {
         bool cVerifLoop = true;
         bool cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
-        if(cSuccess) cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress, fRetry);
+        if(cSuccess) cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
     }
     pCbc->setReg(pRegNode, cRegItem.fValue);
 

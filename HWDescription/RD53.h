@@ -98,7 +98,7 @@ constexpr float cap    = 8.5;    // [fF]
 constexpr float ele    = 1.6;    // [e-19]
 constexpr float offset = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
 
-constexpr float VCAl2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
+constexpr float VCal2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
 
 constexpr float Charge2VCal(float Charge) { return (Charge - offset) / (cap * 1e4) * ele / (par0 / par1); }
 } // namespace RD53chargeConverter
@@ -203,13 +203,31 @@ class RD53 : public ReadoutChip
         uint8_t cal_aux_delay;
     };
 
+    // #################
+    // # LpGBT mapping #
+    // #################
+    void    setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void    setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
+    void    setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
+    void    setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
+    uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
+    uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
+    uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
+
   private:
+    struct LpGBTmap
+    {
+        uint8_t RxGroup;
+        uint8_t RxChannel;
+        uint8_t TxGroup;
+        uint8_t TxChannel;
+    } fLpGBTmap;
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string                     configFileName;
     uint8_t                         myChipLane;
 };
-
 } // namespace Ph2_HwDescription
 
 // ###############################

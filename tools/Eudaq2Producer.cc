@@ -54,8 +54,8 @@ void Eudaq2Producer::DoConfigure()
 
     // only thing I don't understand is where the run number goes
     // getting the configuration
-    auto              cRunNumber = GetRunNumber();
-    auto              conf       = GetConfiguration();
+    // auto              cRunNumber = GetRunNumber();
+    auto              conf = GetConfiguration();
     std::stringstream outp;
     fHWFile = conf->Get("HWFile", "./settings/D19CDescription.xml");
 
@@ -195,7 +195,7 @@ void Eudaq2Producer::DoStopRun()
         this->fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
         LOG(INFO) << BOLDBLUE << "Shutter closed on board " << +cBoard->getId() << RESET;
     }
-
+    BeBoard* theFirstBoard = static_cast<BeBoard*>(fDetectorContainer->at(0));
     LOG(INFO) << "Run Stopped, number of triggers received so far: " << +this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
 
     fStarted = false, fStopped = true;
@@ -261,7 +261,7 @@ void Eudaq2Producer::ReadoutLoop()
                 continue;
             }
             fPh2FileHandler->setData(cRawData);
-            std::vector<Event*> cPh2NewEvents = this->GetEvents(theBoard);
+            std::vector<Event*> cPh2NewEvents = this->GetEvents();
             if(cPh2NewEvents.size() == 0)
             {
                 LOG(INFO) << BOLDBLUE << "Decoded 0 valid events.. not going to send anything ... " << RESET;
@@ -314,8 +314,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
 
     for(auto cOpticalReadout: *pBoard)
     {
-        std::vector<Hybrid*>::const_iterator cFeIter = cOpticalReadout->begin();
-        while(cFeIter < cOpticalReadout->end())
+        auto cFeIter = cOpticalReadout->begin();
+        while(cFeIter != cOpticalReadout->end())
         {
             // make sure that we always start counting from the right hybrid (hybrid0 within the hybrid)
             uint32_t cFeId0 = (*cFeIter)->getId();
@@ -331,13 +331,13 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             std::vector<uint8_t> bottom_data_final(6);
 
             // we have two hybrids (FE) per hybrid therefore we iterate a bit here
-            uint32_t cIterRange = ((cFeId0 % 2) == 0) ? 2 : 1; // now we also need to make sure that we starting from the right hybrid (0)
+            // if we are
+            uint32_t cIterRange     = ((cFeId0 % 2) == 0) ? 2 : 1; // now we also need to make sure that we starting from the right hybrid (0)
+            auto     cFeIterCurrent = cFeIter;
             for(uint32_t i = 0; i < cIterRange; i++)
             {
-                // get the current iterator
-                std::vector<Hybrid*>::const_iterator cFeIterCurrent = cFeIter + i;
                 // check that we are still not at the end
-                if(cFeIterCurrent >= cOpticalReadout->end()) continue;
+                if(cFeIterCurrent == cOpticalReadout->end()) continue;
                 // get the fe id
                 uint32_t cFeIdCurrent = (*cFeIterCurrent)->getId();
 
@@ -394,7 +394,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                         }
                     } // end of hit loop
                 }     // end of cCbc loop
-
+                cFeIterCurrent++;
+                cFeIter++;
             } // end fe within a hybrid loop loop
 
             //// top sensor
@@ -428,10 +429,6 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             bottom_data_final.insert(bottom_data_final.end(), bottom_channel_data.begin(), bottom_channel_data.end());
             // send
             pEudaqSubEvent->AddBlock(cSensorId + 1, bottom_data_final);
-
-            // now go to the next hybrid
-            cFeIter += cIterRange;
-
         } // end of cFe loop
     }
 
@@ -450,8 +447,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             for(auto cCbc: *cHybrid)
             {
                 char     name[100];
-                uint32_t cHybridId = cHybridId->getHybridId();
-                uint32_t cCbcId    = cCbc->getCId();
+                uint32_t cHybridId = cHybrid->getHybridId();
+                uint32_t cCbcId    = cCbc->getId();
                 // auto cL1Id = static_cast<const D19cCicEvent*>(pPh2Event)->L1Id( cHybrid->getId(), cCbc->getCId() );
                 std::sprintf(name, "pipeline_address_%02d_%02d", cHybridId, cCbcId);
                 pEudaqSubEvent->SetTag(name, (uint32_t)pPh2Event->PipelineAddress(cHybridId, cCbcId));

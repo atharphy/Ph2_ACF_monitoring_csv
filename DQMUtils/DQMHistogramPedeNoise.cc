@@ -420,41 +420,59 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>())
                     {
-                        LOG(INFO) << "channel.fNoise " << channel.fNoise << RESET;
-                        LOG(INFO) << "channel.fNoiseError " << channel.fNoiseError << RESET;
+                        float cNoise       = (std::isnan(channel.fNoise)) ? 666 : channel.fNoise;
+                        float cNoiseErr    = (std::isnan(channel.fNoiseError)) ? 666 : channel.fNoiseError;
+                        float cPedestal    = (std::isnan(channel.fThreshold)) ? 666 : channel.fThreshold;
+                        float cPedestalErr = (std::isnan(channel.fThreshold)) ? 666 : channel.fThresholdError;
+                        chipPedestalHistogram->Fill(cPedestal);
+                        chipNoiseHistogram->Fill(cNoise);
+                        hybridNoiseHistogram->Fill(cNoise);
 
-                        bool badChannel = (std::isnan(channel.fNoise) || std::isnan(channel.fNoiseError));
-                        if(!badChannel)
+                        chip2DPixelNoiseHistogram->SetBinContent(int(channelNumber % 120) + 1, int(channelNumber / 120) + 1, channel.fNoise);
+
+                        if((int(channelNumber) % 2) == 0)
                         {
-                            LOG(INFO) << "PLOTNOISE!" << RESET;
-                            chipPedestalHistogram->Fill(channel.fThreshold);
-                            chipNoiseHistogram->Fill(channel.fNoise);
-                            hybridNoiseHistogram->Fill(channel.fNoise);
-
-                            chip2DPixelNoiseHistogram->SetBinContent(int(channelNumber % 120) + 1, int(channelNumber / 120) + 1, channel.fNoise);
-
-                            if((int(channelNumber) % 2) == 0)
-                            {
-                                chipStripNoiseEvenHistogram->SetBinContent(int(channelNumber / 2) + 1, channel.fNoise);
-                                chipStripNoiseEvenHistogram->SetBinError(int(channelNumber / 2) + 1, channel.fNoiseError);
-                                hybridStripNoiseEvenHistogram->SetBinContent(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoise);
-                                hybridStripNoiseEvenHistogram->SetBinError(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoiseError);
-                            }
-                            else
-                            {
-                                chipStripNoiseOddHistogram->SetBinContent(int(channelNumber / 2) + 1, channel.fNoise);
-                                chipStripNoiseOddHistogram->SetBinError(int(channelNumber / 2) + 1, channel.fNoiseError);
-                                hybridStripNoiseOddHistogram->SetBinContent(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoise);
-                                hybridStripNoiseOddHistogram->SetBinError(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoiseError);
-                            }
-
-                            chipStripNoiseHistogram->SetBinContent(channelNumber + 1, channel.fNoise);
-                            chipStripNoiseHistogram->SetBinError(channelNumber + 1, channel.fNoiseError);
-                            chipStripPedestalHistogram->SetBinContent(channelNumber + 1, channel.fThreshold);
-                            chipStripPedestalHistogram->SetBinError(channelNumber + 1, channel.fThresholdError);
-                            hybridStripNoiseHistogram->SetBinContent(NCH * chip->getIndex() + channelNumber + 1, channel.fNoise);
-                            hybridStripNoiseHistogram->SetBinError(NCH * chip->getIndex() + channelNumber + 1, channel.fNoiseError);
+                            chipStripNoiseEvenHistogram->SetBinContent(int(channelNumber / 2) + 1, cNoise);
+                            chipStripNoiseEvenHistogram->SetBinError(int(channelNumber / 2) + 1, cNoiseErr);
+                            hybridStripNoiseEvenHistogram->SetBinContent(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoise);
+                            hybridStripNoiseEvenHistogram->SetBinError(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoiseErr);
                         }
+                        else
+                        {
+                            chipStripNoiseOddHistogram->SetBinContent(int(channelNumber / 2) + 1, cNoise);
+                            chipStripNoiseOddHistogram->SetBinError(int(channelNumber / 2) + 1, cNoiseErr);
+                            hybridStripNoiseOddHistogram->SetBinContent(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoise);
+                            hybridStripNoiseOddHistogram->SetBinError(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoiseErr);
+                        }
+
+                        chipStripNoiseHistogram->SetBinContent(channelNumber + 1, cNoise);
+                        chipStripNoiseHistogram->SetBinError(channelNumber + 1, cNoiseErr);
+                        chipStripPedestalHistogram->SetBinContent(channelNumber + 1, cPedestal);
+                        chipStripPedestalHistogram->SetBinError(channelNumber + 1, cPedestalErr);
+                        hybridStripNoiseHistogram->SetBinContent(NCHANNELS * chip->getId() + channelNumber + 1, cNoise);
+                        hybridStripNoiseHistogram->SetBinError(NCHANNELS * chip->getId() + channelNumber + 1, cNoiseErr);
+
+                        if((int(channelNumber) % 2) == 0)
+                        {
+                            chipStripNoiseEvenHistogram->SetBinContent(int(channelNumber / 2) + 1, channel.fNoise);
+                            chipStripNoiseEvenHistogram->SetBinError(int(channelNumber / 2) + 1, channel.fNoiseError);
+                            hybridStripNoiseEvenHistogram->SetBinContent(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoise);
+                            hybridStripNoiseEvenHistogram->SetBinError(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoiseError);
+                        }
+                        else
+                        {
+                            chipStripNoiseOddHistogram->SetBinContent(int(channelNumber / 2) + 1, channel.fNoise);
+                            chipStripNoiseOddHistogram->SetBinError(int(channelNumber / 2) + 1, channel.fNoiseError);
+                            hybridStripNoiseOddHistogram->SetBinContent(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoise);
+                            hybridStripNoiseOddHistogram->SetBinError(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, channel.fNoiseError);
+                        }
+
+                        chipStripNoiseHistogram->SetBinContent(channelNumber + 1, channel.fNoise);
+                        chipStripNoiseHistogram->SetBinError(channelNumber + 1, channel.fNoiseError);
+                        chipStripPedestalHistogram->SetBinContent(channelNumber + 1, channel.fThreshold);
+                        chipStripPedestalHistogram->SetBinError(channelNumber + 1, channel.fThresholdError);
+                        hybridStripNoiseHistogram->SetBinContent(NCH * chip->getIndex() + channelNumber + 1, channel.fNoise);
+                        hybridStripNoiseHistogram->SetBinError(NCH * chip->getIndex() + channelNumber + 1, channel.fNoiseError);
                         ++channelNumber;
                     }
                 }

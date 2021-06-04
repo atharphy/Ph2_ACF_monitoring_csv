@@ -24,8 +24,6 @@
 
     # Add the library
     add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
-    # this is what was used in OT...
-    # add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
     set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 

@@ -24,12 +24,6 @@ PSInterface::PSInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(p
 }
 PSInterface::~PSInterface() {}
 
-void PSInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
-{
-    theSSAInterface->LinkLpGBT(pLpGBTInterface, pLpGBT);
-    theMPAInterface->LinkLpGBT(pLpGBTInterface, pLpGBT);
-}
-
 // To generalize
 uint16_t PSInterface::ReadChipReg(Chip* pPS, const std::string& pRegName)
 {

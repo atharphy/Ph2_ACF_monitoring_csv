@@ -146,7 +146,7 @@ std::vector<uint32_t> FileHandler::readFile()
     }
 
     closeFile();
-    return std::move(cVector);
+    return cVector;
 }
 
 std::vector<uint32_t> FileHandler::readFileChunks(uint32_t pNWords)
@@ -168,7 +168,7 @@ std::vector<uint32_t> FileHandler::readFileChunks(uint32_t pNWords)
         cVector.emplace_back(word);
     }
 
-    return std::move(cVector);
+    return cVector;
 }
 
 void FileHandler::writeFile()

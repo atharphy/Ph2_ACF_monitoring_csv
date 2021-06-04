@@ -402,7 +402,10 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
     }
 }
 
-void Tool::WriteRootFile() { fResultFile->Write(); }
+void Tool::WriteRootFile()
+{
+    if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->Write();
+}
 #endif
 
 void Tool::SaveResults()
@@ -1264,6 +1267,8 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     // normalize by the number of triggers to accept
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS)
     { numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept"); }
+    if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
+    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
     fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 }
 
@@ -1316,7 +1321,8 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
     theScan.setDacList(&dacList);
 
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-
+    if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
+    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
     for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
 
     return;
@@ -1391,10 +1397,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
                 else
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
     else
-    {
-        LOG(INFO) << BOLDBLUE << "Broadcasting to chips on board.." << RESET;
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
-    }
 }
 
 // set same local dac for all BeBoard

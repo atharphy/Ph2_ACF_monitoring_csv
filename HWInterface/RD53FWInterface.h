@@ -26,8 +26,6 @@
 // #######################
 namespace RD53FWconstants
 {
-const uint8_t MAXATTEMPTS        = 20;   // Maximum number of attempts
-const uint8_t READOUTSLEEP       = 50;   // [microseconds]
 const uint8_t NLANE_HYBRID       = 4;    // Number of lanes per hybrid
 const uint8_t HEADEAR_WRTCMD     = 0xFF; // Header of chip write command sequence
 const uint8_t NBIT_FWVER         = 16;   // Number of bits for the firmware version
@@ -57,7 +55,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void Pause() override;
     void Resume() override;
 
-    double   RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override;
+    double   RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override;
     void     ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void     ChipReset() override;
@@ -65,6 +63,8 @@ class RD53FWInterface : public BeBoardFWInterface
 
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     // #############################
+
+    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -108,7 +108,7 @@ class RD53FWInterface : public BeBoardFWInterface
     {
         IPBus = 1,
         FastCMDFSM,
-        UserDefined, // --> It needs to set IPbus register "autozero_freq"
+        UserDefined, // --> Related to IPbus register "autozero_freq"
         Disabled = 0
     };
 
@@ -179,21 +179,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
-    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
-
-    // ##########################################
-    // # Read/Write new Command Processor Block #
-    // ##########################################
-    // function to read/write lpGBT registers
-    bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override { return true; }
-    uint8_t ReadLpGBTRegister(uint16_t pRegisterValue) override { return 0; }
-    // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override { return true; };
-    uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override { return 0; };
-    // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = true, bool pVerify = false) override { return true; };
-    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = true) override { return 0; };
+    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
 
     // ###########################################
     // # Member functions to handle the firmware #

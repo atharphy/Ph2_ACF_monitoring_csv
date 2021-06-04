@@ -31,6 +31,9 @@ class SCurve : public Tool
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
     }
 
     void Running() override;
@@ -71,7 +74,7 @@ class SCurve : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
     void chipErrorReport() const;
 
   protected:

@@ -422,8 +422,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
 
             cValue += cSign;
-            cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
-            if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
+            cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
             if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
 
         } while(!cLimitFound);

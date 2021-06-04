@@ -8,7 +8,6 @@
 
 #ifndef __CICINTERFACE_H__
 #define __CICINTERFACE_H__
-
 #include "ChipInterface.h"
 #include "D19clpGBTInterface.h"
 
@@ -34,7 +33,6 @@ class CicInterface : public ChipInterface
      * \brief Destructor of the CICInterface Class
      */
     ~CicInterface();
-    void LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
 
     /*!
      * \brief Configure the Cic with the Cic Config File
@@ -93,7 +91,7 @@ class CicInterface : public ChipInterface
     bool                              CheckReSync(Ph2_HwDescription::Chip* pChip);
     bool                              SoftReset(Ph2_HwDescription::Chip* pChip, uint32_t cWait_ms = 100);
     bool                              CheckSoftReset(Ph2_HwDescription::Chip* pChip);
-    bool                              StartUp(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 7);
+    bool                              StartUp(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 7, uint8_t pUseNegEdge = 1);
     bool                              ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
     std::vector<std::vector<uint8_t>> GetWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                              SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);
@@ -142,7 +140,6 @@ class CicInterface : public ChipInterface
     bool    fWith8CBC3      = false;
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
-    uint8_t fWithLpGBT      = 0;
 
     bool                           WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);

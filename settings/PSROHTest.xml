@@ -5,16 +5,22 @@
   ###############-->
   <BeBoard Id="0" boardType="D19C" eventType="SSA">
       <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
-      <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+      <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!--<connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" >
-        <lpGBT_Interface useOpticalLink="0" useCPB="0"/>
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt" 
+               RxHSLPolarity="0" TxHSLPolarity="1" 
+               RxDataRate="320" TxDataRate="320" ClockFrequency="320">
           <Settings />
         </lpGBT>
+        
+        <Hybrid Id="0" Status="1" LinkId="0">
+            <MapTolpGBT RxGroups="0,4,5,6" RxChannels="0,2" TxGroups="0,1,2,3" TxChannels="0" Clocks="1,26"/>
+        </Hybrid>
     </OpticalGroup>
 
     <SLink>

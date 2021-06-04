@@ -155,10 +155,13 @@ void ThrMinimization::draw()
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ThrMinimization::fillHisto();
     histos->process();
 
@@ -167,8 +170,6 @@ void ThrMinimization::draw()
     this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 
@@ -258,7 +259,6 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                                   << " <<<" << RESET;
                     }
 
-                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
@@ -347,7 +347,6 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
 
-                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 

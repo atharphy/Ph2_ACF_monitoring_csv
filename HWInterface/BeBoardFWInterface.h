@@ -35,6 +35,16 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 
 namespace Ph2_HwInterface
 {
+struct CPBconfig
+{
+    uint8_t  fEnable       = 0;
+    uint8_t  fReTry        = 0;
+    uint8_t  fVerbose      = 0;
+    uint32_t fWait_us      = 50;
+    uint16_t fMaxAttempts  = 500;
+    uint8_t  fI2CFrequency = 3;
+};
+
 /*!
  * \class BeBoardFWInterface
  * \brief Class separating board system FW interface from uHal wrapper
@@ -119,7 +129,7 @@ class BeBoardFWInterface : public RegManager
     virtual void DeleteFpgaConfig(const std::string& strId) {}
 
     /*! \brief Run Bit Error Rate test */
-    virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
+    virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
 
     /*!
      * \brief Encode a/several word(s) readable for a Chip
@@ -282,24 +292,37 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                    = 0;
-    virtual void     ResetOptoLink()                                                                                                                = 0;
-    virtual bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)                                                       = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                               = 0;
+    virtual void     ResetOptoLink()                                                                                                                           = 0;
+    virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
+    virtual uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress)                                                       = 0;
 
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################
     // functions for new Command Processor Block
+    virtual void                  ResetCPB() {}
+    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) {}
+    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) { return {}; }
     // function to read/write lpGBT registers
-    virtual bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) = 0;
-    virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress)                                                  = 0;
+    virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
+    virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress) { return 0; }
     // function for I2C transactions using lpGBT I2C Masters
-    virtual bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) = 0;
-    virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)                       = 0;
+    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) { return true; }
+    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) { return 0; }
     // function for front-end slow control
-    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false, bool pVerify = false) = 0;
-    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pRetry = false)                                                = 0;
+    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
+    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
+
+    void ConfigureCPB(CPBconfig pConfig)
+    {
+        fCPBConfig.fEnable       = pConfig.fEnable;
+        fCPBConfig.fVerbose      = pConfig.fVerbose;
+        fCPBConfig.fWait_us      = pConfig.fWait_us;
+        fCPBConfig.fReTry        = pConfig.fReTry;
+        fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
+        fCPBConfig.fI2CFrequency = pConfig.fI2CFrequency;
+    }
 
   protected:
     uint32_t   fBlockSize{0};
@@ -307,6 +330,7 @@ class BeBoardFWInterface : public RegManager
     uint32_t   numAcq{0};
     uint32_t   nbMaxAcq{0};
     TCPClient* fPowerSupplyClient;
+    CPBconfig  fCPBConfig;
 
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison

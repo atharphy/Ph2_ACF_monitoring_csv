@@ -175,20 +175,18 @@ void PixelAlive::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if(saveData == true)
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
     }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     PixelAlive::fillHisto();
     histos->process();
     if(saveData == true) this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    if(saveData == true) this->CloseResultFile();
 #endif
 }
 
@@ -263,18 +261,18 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                              .data1.size();
                         i++)
                     {
-                        int deltaBCID = theOccContainer->at(cBoard->getIndex())
-                                            ->at(cOpticalGroup->getIndex())
-                                            ->at(cHybrid->getIndex())
-                                            ->at(cChip->getIndex())
-                                            ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                            .data1[i] -
-                                        theOccContainer->at(cBoard->getIndex())
-                                            ->at(cOpticalGroup->getIndex())
-                                            ->at(cHybrid->getIndex())
-                                            ->at(cChip->getIndex())
-                                            ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                            .data1[i - 1];
+                        long int deltaBCID = theOccContainer->at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataVector, OccupancyAndPh>()
+                                                 .data1[i] -
+                                             theOccContainer->at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataVector, OccupancyAndPh>()
+                                                 .data1[i - 1];
                         deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
                         if(deltaBCID >= int(BCIDsize))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
@@ -295,18 +293,18 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                              .data2.size();
                         i++)
                     {
-                        int deltaTrgID = theOccContainer->at(cBoard->getIndex())
-                                             ->at(cOpticalGroup->getIndex())
-                                             ->at(cHybrid->getIndex())
-                                             ->at(cChip->getIndex())
-                                             ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                             .data2[i] -
-                                         theOccContainer->at(cBoard->getIndex())
-                                             ->at(cOpticalGroup->getIndex())
-                                             ->at(cHybrid->getIndex())
-                                             ->at(cChip->getIndex())
-                                             ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                             .data2[i - 1];
+                        long int deltaTrgID = theOccContainer->at(cBoard->getIndex())
+                                                  ->at(cOpticalGroup->getIndex())
+                                                  ->at(cHybrid->getIndex())
+                                                  ->at(cChip->getIndex())
+                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
+                                                  .data2[i] -
+                                              theOccContainer->at(cBoard->getIndex())
+                                                  ->at(cOpticalGroup->getIndex())
+                                                  ->at(cHybrid->getIndex())
+                                                  ->at(cChip->getIndex())
+                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
+                                                  .data2[i - 1];
                         deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
                         if(deltaTrgID >= int(TrgIDsize))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;

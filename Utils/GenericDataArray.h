@@ -11,7 +11,9 @@
 #define GenericDataArray_H
 
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/easylogging++.h"
 #include <iostream>
+#include <vector>
 
 template <size_t size, typename T = float>
 class GenericDataArray

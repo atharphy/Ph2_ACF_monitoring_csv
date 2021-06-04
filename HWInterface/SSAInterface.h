@@ -25,7 +25,7 @@ class SSAInterface : public ReadoutChipInterface
     SSAInterface(const BeBoardFWMap& pBoardMap);
     ~SSAInterface();
     // FIXME temporary fix to use 1/2 PS skeleton
-    void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
+    // void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;
@@ -38,8 +38,6 @@ class SSAInterface : public ReadoutChipInterface
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode) override;
-    void     StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
-    void     StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
     void     ReadASEvent(Ph2_HwDescription::ReadoutChip* pSSA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA, uint32_t n_pulse);
     void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
@@ -81,8 +79,8 @@ class SSAInterface : public ReadoutChipInterface
     bool    fRetryI2C       = false;
     uint8_t fMaxI2CAttempts = 20;
 
-    D19clpGBTInterface*             flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
+    // D19clpGBTInterface*             flpGBTInterface = nullptr;
+    // Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
     std::map<uint16_t, std::string> fMap;
     // re-try counters
     std::map<uint8_t, uint16_t> fReWMap;

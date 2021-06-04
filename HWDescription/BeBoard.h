@@ -116,10 +116,7 @@ class BeBoard : public BoardContainer
         fClockRateCDCE = pClockRate;
     }
 
-    bool ifOptical() const { return fOptical; }
-
-    bool ifUseOpticalLink() const { return fUseOpticalLink; }
-
+    bool isOptical() const { return fOptical; }
     bool ifUseCPB() const { return fUseCPB; }
 
     std::pair<bool, uint32_t> configCDCE() const { return std::make_pair(fConfigureCDCE, fClockRateCDCE); }
@@ -127,6 +124,11 @@ class BeBoard : public BoardContainer
     void setBoardType(const BoardType pBoardType) { fBoardType = pBoardType; }
 
     BoardType getBoardType() const { return fBoardType; }
+    void      printBoardType()
+    {
+        if(fBoardType == BoardType::RD53) LOG(INFO) << BOLDBLUE << "\t--> Found an Inner Tracker Readout-board" << RESET;
+        if(fBoardType == BoardType::D19C) LOG(INFO) << BOLDBLUE << "\t--> Found an Outer Tracker Readout-board" << RESET;
+    }
 
     void setEventType(const EventType pEventType) { fEventType = pEventType; }
 

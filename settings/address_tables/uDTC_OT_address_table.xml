@@ -64,7 +64,6 @@
                 <node id="slave_8_config" address="0x008"/>
             </node>
             <node id="link_select"  address="0x020" description="Link select for CPB"/>
-            
         </node>
 
         <node id="fast_command_block"           address="0x2000" description="internal fast signal is generated in the fast_signal_generator module and the settings are here.">
@@ -161,8 +160,9 @@
                 <node id="trigger_type"                     mask="0x0000f000"/>
                 <node id="data_type"                        mask="0x000f0000"/>
                 <node id="common_stubdata_delay"            mask="0x1ff00000"/>
-		<node id="zero_suppression_enable"          mask="0x00000200"/>
+		        <node id="zero_suppression_enable"          mask="0x00000200"/>
             </node>
+            <node id="timeout"                          address="0x002" mask="0x0000fff"/> 
         </node>
 
         <node id="dio5_block"                   address="0x6000">
@@ -243,6 +243,13 @@
             </node>
     </node>
     
+    <node id="sync_block"            address="0xC000">
+        <node id="enable"            address="0x000" mask="0x00000001"/>
+        <node id="is_bc0_enable"     address="0x000" mask="0x00000002"/>
+        <node id="is_resync_enable"  address="0x000" mask="0x00000004"/>
+        <node id="delay"             address="0x000" mask="0x000FFFF0"/>
+        <node id="num_triggers"      address="0x000" mask="0x1FF00000"/>
+    </node>
 
 	<node id="tlu_block"			address="0x7000">
 		<node id="handshake_mode"		address="0x000" mask="0x00000003"/>

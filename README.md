@@ -29,12 +29,12 @@ dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 06/04/2021
++ Last change made to this section: 10/05/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `IT-v4.0`
-- Firmware tag: `4.0`
+- Software git branch / tag : `Dev` / `v4-01`
+- Firmware tag: `4.1`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
@@ -95,7 +95,8 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 11. Clock delay scan
 12. Bit Error Rate test
 13. Data read back optimisation
-14. Physics
+14. Chip internal voltage tuning
+15. Physics
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 

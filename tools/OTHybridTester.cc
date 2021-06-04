@@ -9,39 +9,15 @@ using namespace Ph2_System;
 
 OTHybridTester::OTHybridTester() : Tool() {}
 
-OTHybridTester::~OTHybridTester()
-{
-#ifdef __TCUSB__
-    if(fTC_USB != nullptr) delete fTC_USB;
-#endif
-}
+OTHybridTester::~OTHybridTester() {}
 
 void OTHybridTester::FindUSBHandler()
 {
-#ifdef __TCUSB__
-    bool cThereIsLpGBT = false;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->at(0)->flpGBT != nullptr)
-        {
-            LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
-            cThereIsLpGBT = true;
-        }
-        else
-        {
-            LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
-            cThereIsLpGBT = false;
-        }
-    }
-    if(!cThereIsLpGBT)
-#ifdef __ROH_USB__
-        fTC_USB = new TC_PSROH();
-#elif __SEH_USB__
-        fTC_USB = new TC_2SSEH();
-#endif
+    bool cThereIsLpGBT = fReadoutChipInterface->lpGBTFound();
+    if(cThereIsLpGBT)
+        LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
     else
-        fTC_USB = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
-#endif
+        LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
 }
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
@@ -334,14 +310,13 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
                 {
 #ifdef __TCUSB__
-
 // Need to confirm conversion factor for 2S-SEH
 // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
 // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
 #ifdef __ROH_USB__
-                    fTC_USB->dac_output(cDACValue);
+                    fTCInterface.getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
-                    fTC_USB->set_AMUX(cDACValue, cDACValue);
+                    fTCInterface.getInterface().set_AMUX(cDACValue, cDACValue);
 #endif
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -424,9 +399,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
                 {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
-
-    fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-
+    fTCInterface.getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
 #elif __ROH_USB__
 
     cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
@@ -507,8 +480,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Write();
 
 #ifdef __SEH_USB__
-    fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
-
+    fTCInterface.getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
 #endif
 #endif
@@ -542,7 +514,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12};
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-    std::vector<uint8_t> cGPIOs = {0, 3, 6, 8};
+    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
 
     for(auto cLevel: cLevels)
@@ -554,9 +526,9 @@ bool OTHybridTester::LpGBTTestResetLines()
         do
         {
 #ifdef __ROH_USB__
-            fTC_USB->adc_get(cMapIterator->second, cMeasurement);
+            fTCInterface.getInterface().adc_get(cMapIterator->second, cMeasurement);
 #elif __SEH_USB__
-            fTC_USB->read_reset(cMapIterator->second, cMeasurement);
+            fTCInterface.getInterface().read_reset(cMapIterator->second, cMeasurement);
 #endif
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
             cStatus              = cStatus && (cDifference_mV <= 100);

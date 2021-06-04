@@ -5,6 +5,7 @@
 #include "../Utils/gui_logger.h"
 #include "../tools/Channel.h"
 #ifdef __POWERSUPPLY__
+// Libraries
 #include "DeviceHandler.h"
 #include "PowerSupply.h"
 #include "PowerSupplyChannel.h"
@@ -28,12 +29,12 @@ int main(int argc, char** argv)
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription("CMS Ph2_ACF power supply example application");
+    cmd.setIntroductoryDescription("CMS Ph2_ACF  system test application");
     // error codes
     cmd.addErrorCode(0, "Success");
     cmd.addErrorCode(1, "Error");
     // options
-    cmd.setHelpOption("h", "help", "Example: powersupply -f CMSIT.xml --name TestKeithley --channel Front -v 1.8");
+    cmd.setHelpOption("h", "help", "Print this help page");
 
     cmd.defineOption("name", "Name of the power supply as described in the HW file", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("name", "n");

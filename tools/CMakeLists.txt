@@ -71,7 +71,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
     endif(${PH2_TCUSB_FOUND})
-    
     #last but not least, find root and link against it
     if(NoDataShipping)
         if(${ROOT_FOUND})
@@ -89,7 +88,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_MonitorUtils)
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_DQMUtils Ph2_MonitorDQM)
     endif()

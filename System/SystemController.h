@@ -52,7 +52,13 @@
 #include <unordered_map>
 #include <vector>
 
+// librariries for communicating with Hybrid Test Cards
+#ifdef __TCUSB__
+#include "TCInterface.h"
+#endif
+
 class DetectorMonitor;
+
 /*!
  * \namespace Ph2_System
  * \brief Namespace regrouping the framework wrapper
@@ -73,17 +79,26 @@ class SystemController
     Ph2_HwInterface::ChipInterface*        fChipInterface;  //!< Interface to the Chip
     Ph2_HwInterface::lpGBTInterface*       flpGBTInterface; //!< Interface to the lpGBT
     Ph2_HwInterface::CicInterface*         fCicInterface;   //!< Interface to a CIC [only valid for OT]
-
-    DetectorContainer* fDetectorContainer;
-    BeBoardFWMap       fBeBoardFWMap;
-    SettingsMap        fSettingsMap;
-    FileHandler*       fFileHandler;
-    std::string        fRawFileName;
-    bool               fWriteHandlerEnabled;
-    bool               fStreamerEnabled;
-    TCPPublishServer*  fNetworkStreamer;
-    DetectorMonitor*   fDetectorMonitor;
-    TCPClient*         fPowerSupplyClient{nullptr};
+    DetectorContainer*                     fDetectorContainer;
+    BeBoardFWMap                           fBeBoardFWMap;
+    SettingsMap                            fSettingsMap;
+    FileHandler*                           fFileHandler;
+    std::string                            fRawFileName;
+    bool                                   fWriteHandlerEnabled;
+    bool                                   fStreamerEnabled;
+    TCPPublishServer*                      fNetworkStreamer;
+    DetectorMonitor*                       fDetectorMonitor;
+    TCPClient*                             fPowerSupplyClient{nullptr};
+// TestCard interfaces - eventually piGBT can be added here as well
+// should also add the interfaces for the 2S + PS FEHs
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+    typedef Ph2_HwInterface::TCInterface<TC_PSROH> TestCardInterface;
+#elif __SEH_USB__
+    typedef Ph2_HwInterface::TCInterface<TC_2SSEH> TestCardInterface;
+#endif
+    TestCardInterface fTCInterface{};
+#endif
 
     /*!
      * \brief Constructor of the SystemController class
@@ -150,17 +165,23 @@ class SystemController
      */
     void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
 
-    // start-up PS modiule
-    void ModuleStartUpPS();
-    // start-up 2S modiule
-    void ModuleStartUp2S();
-    // start-up CIC
-    void CicStartUp(uint8_t pDriveStrength = 1);
-
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureHw(bool bIgnoreI2c = false);
+    // IT + OT specific configurations
+    /*!
+     * \brief Configure the Hardware with XML file indicated values
+     */
+    void ConfigureIT(Ph2_HwDescription::BeBoard* pBoard);
+    void ConfigureOT(Ph2_HwDescription::BeBoard* pBoard);
+    // OT specific configurations for 2S + PS modules
+    /*!
+     * \brief Configure the Hardware with XML file indicated values
+     */
+    void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength = 4, uint8_t pUseNegEdge = 0);
 
     /*!
      * \brief Run Bit Error Rate test

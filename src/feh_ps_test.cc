@@ -310,15 +310,6 @@ int main(int argc, char* argv[])
         // //     cDPInterfacer.Stop(cInterface);
         // // }
 
-        // // Configure and Start DataPlayer
-        // // to send phase alignment pattern
-        // uint8_t cPhaseAlignmentPattern = 0x55;
-        // cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
-        // cDPInterfacer.Start(cInterface);
-        // if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
-        // else
-        //     LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
-
         // // align CIC inputs
         // CicFEAlignment cCicAligner;
         // cCicAligner.Inherit(&cHybridTester);

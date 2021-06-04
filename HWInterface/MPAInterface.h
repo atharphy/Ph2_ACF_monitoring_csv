@@ -99,9 +99,6 @@ class MPAInterface : public ReadoutChipInterface
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
 
-    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
-    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
-
     void                  Pix_write(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
     uint32_t              Pix_read(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
     void                  activate_I2C_chip();
@@ -153,7 +150,6 @@ class MPAInterface : public ReadoutChipInterface
     L1data Format_l1(std::vector<uint8_t> rawl1, bool verbose = false);
 
     void Cleardata();
-    void LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
     //
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
@@ -166,8 +162,6 @@ class MPAInterface : public ReadoutChipInterface
 
   private:
     std::map<uint16_t, std::string> fMap;
-    D19clpGBTInterface*             flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
 
     bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);

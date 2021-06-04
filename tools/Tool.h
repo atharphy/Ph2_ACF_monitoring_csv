@@ -82,7 +82,6 @@ class Tool : public Ph2_System::SystemController
      * \param cValue: Value of the measurement to be stored
      */
     void fillSummaryTree(TString cParameter, Double_t cValue);
-
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
     void bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject);
     void bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject);
