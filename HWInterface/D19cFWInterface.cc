@@ -823,97 +823,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         ResetCPB();
     }
 
-    // if(fI2CVersion >= 1 || cWithGBTx )
-    // {
-    //     fI2CSlaveMap.clear();
-    //     fSlaveMap.clear();
-
-    //     LOG (INFO) << BOLDBLUE << "Setting up I2C map in uDTC [OT]" << RESET;
-    //     for(auto cOpticalGroup: *pBoard)
-    //     {
-    //         if(cOpticalGroup->flpGBT != NULL) continue;
-    //         // default I2C map is for 8CBC3
-    //         for(auto cHybrid: *cOpticalGroup)
-    //         {
-    //             auto    cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-    //             auto&   cCic                = cOuterTrackerHybrid->fCic;
-    //             uint8_t cBaseAddress        = 0x41; // default value for CBC3
-    //             uint8_t cNBytes;
-    //             if(cCic != NULL)
-    //             {
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
-    //                     if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
-    //                     if(cChip->getFrontEndType() == FrontEndType::CBC3) cBaseAddress = 0x41;
-    //                     cBaseAddress += cChip->getId();
-
-    //                     cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
-    //                     uint8_t cLastValue = 1;
-    //                     if(fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end())
-    //                     {
-    //                         std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue, cChip->getId()};
-    //                         std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue};
-
-    //                         LOG(INFO) << BOLDBLUE << "Adding ROC with address 0x" << std::hex << +cBaseAddress << std::dec << " to I2C slave map.." << RESET;
-    //                         fI2CSlaveMap.insert(std::pair<uint8_t, std::vector<uint32_t>>(cChip->getId(), cI2CSlaveDescription));
-    //                         // fI2CSlaveMap[cChip->getId()] = cI2CSlaveDescription;
-    //                         fSlaveMap.push_back(cOldI2CSlaveDescription);
-    //                     }
-    //                 } // chips
-    //                 cBaseAddress                                  = 0x60;
-    //                 cNBytes                                       = 2;
-    //                 std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, 1, cCic->getId()};
-    //                 std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, 1};
-    //                 LOG(INFO) << BOLDBLUE << "Adding CIC with address 0x" << std::hex << +cBaseAddress << std::dec << " to I2C slave map.." << RESET;
-    //                 fI2CSlaveMap.insert(std::pair<uint8_t, std::vector<uint32_t>>(cCic->getId(), cI2CSlaveDescription));
-    //                 // fI2CSlaveMap[cCic->getId()]                   = cI2CSlaveDescription;
-    //                 fSlaveMap.push_back(cOldI2CSlaveDescription);
-    //             }
-    //             else
-    //             {
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     cBaseAddress = 0x41;
-    //                     if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
-    //                     if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
-    //                     if(cChip->getFrontEndType() == FrontEndType::CBC3) cBaseAddress = 0x40;
-
-    //                     cBaseAddress += cChip->getId();
-    //                     cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
-    //                     uint8_t cLastValue = 1;
-    //                     LOG(INFO) << BOLDBLUE << "Adding ROC with I2C address 0x" << std::hex << +cBaseAddress << std::dec << RESET;
-
-    //                     std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue, cChip->getId()};
-    //                     std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue};
-    //                     fI2CSlaveMap[cChip->getId()]                  = cI2CSlaveDescription;
-    //                     fSlaveMap.push_back(cOldI2CSlaveDescription);
-    //                 } // chips
-    //             }
-    //         } // hybrids
-    //     }     // hybrids
-    //     // and then loop over map and write
-    //     for(auto cIterator = fI2CSlaveMap.begin(); cIterator != fI2CSlaveMap.end(); cIterator++)
-    //     {
-    //         auto cDescription = cIterator->second;
-    //         // setting the params
-    //         uint32_t shifted_i2c_address             = (cDescription[0]) << 25;
-    //         uint32_t shifted_register_address_nbytes = cDescription[1] << 10;
-    //         uint32_t shifted_data_wr_nbytes          = cDescription[2] << 5;
-    //         uint32_t shifted_data_rd_nbytes          = cDescription[3] << 0;
-    //         uint32_t shifted_stop_for_rd_en          = cDescription[4] << 24;
-    //         uint32_t shifted_nack_en                 = cDescription[5] << 23;
-
-    //         // writing the item to the firmware
-    //         if(fFirmwareFrontEndType != FrontEndType::CBC3)
-    //         {
-    //             uint32_t    final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
-    //             std::string curreg     = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(std::distance(fI2CSlaveMap.begin(), cIterator)) + "_config";
-    //             LOG(INFO) << BOLDMAGENTA << "Writing " << std::bitset<32>(final_item) << " to register " << curreg << RESET;
-    //             this->WriteReg(curreg, final_item);
-    //         }
-    //     }
-    // }
+    
     if(fI2CVersion >= 1 || cWithGBTx)
     {
         fI2CSlaveMap.clear();
@@ -1051,7 +961,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET;
     }
 
-    if(pBoard->isOptical())
+    if(pBoard->isOptical() && cWithGBTx)
     {
         // read voltages on hybrid using ADC
         for(auto cLinkId: cLinkIds)
@@ -4555,12 +4465,13 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
     uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    if(!pVerifLoop) return (cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress);
-    size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
-    while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
+    // always check parity  
+    size_t cIter = 0;
+    while( cParityCheck != 1 && fCPBConfig.fReTry && cIter < fCPBConfig.fMaxAttempts )
     {
+        if(fCPBConfig.fVerbose) LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts 
+            << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector     = ReadReplyCPB(cExpectedReplySize);
@@ -4568,9 +4479,24 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cReadBack        = cReplyVector[7] & 0xFF;
         cIter++;
-    };
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block"));
-    return true;
+    }
+    if(cParityCheck != 1) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - failed parity check"));
+    // cIter=0; 
+    // if(!pVerifLoop) return (cReadBack == pRegisterValue && cReadBackRegAddr == pRegisterAddress);
+    // size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
+    // while((cReadBack != pRegisterValue || cReadBackRegAddr != pRegisterAddress || cParityCheck != 1) && cIter < cMaxIter)
+    // {
+    //     ResetCPB();
+    //     if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+    //     cReplyVector.clear();
+    //     WriteCommandCPB(cCommandVector);
+    //     cReplyVector     = ReadReplyCPB(cExpectedReplySize);
+    //     cParityCheck     = cReplyVector[2] & 0xFF;
+    //     cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    //     cReadBack        = cReplyVector[7] & 0xFF;
+    //     cIter++;
+    // };
+    return (pVerifLoop) ? ( (cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress) ) : (cParityCheck == 1 );
 }
 
 uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress)
@@ -4587,11 +4513,12 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAd
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(cExpectedReplySize);
     uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
     uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    size_t                cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
-    while((cReadBackRegAddr != pRegisterAddress) && cIter < cMaxIter)
+    size_t                cIter = 0;
+    while((cReadBackRegAddr != pRegisterAddress) && cIter < fCPBConfig.fMaxAttempts && fCPBConfig.fReTry )
     {
         ResetCPB();
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+        if(fCPBConfig.fVerbose) LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts 
+            << " of D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector     = ReadReplyCPB(cExpectedReplySize);
@@ -4599,8 +4526,8 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAd
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cIter++;
     };
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block"));
-    LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    if(cIter == (size_t)fCPBConfig.fMaxAttempts) throw std::runtime_error(std::string("[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block"));
+    //LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     return cReadBack;
 }
 

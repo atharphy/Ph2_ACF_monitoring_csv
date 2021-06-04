@@ -257,7 +257,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
                     }
                 }
                 cBeBoard->setOptical(cWithOptical);
-    
             }
         }
     }
@@ -273,12 +272,22 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     uint32_t      cBoardId        = pBoard->getId();
     OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
 
+    bool cWithOptical=false;
+    for(pugi::xml_node theChild: pOpticalGroupNode.children())
+    {
+        if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface")
+        {
+            cWithOptical = convertAnyInt(theChild.attribute("useOpticalLink").value());
+        }
+    }    
+    pBoard->setOptical(cWithOptical);
+    theOpticalGroup->setOptical(cWithOptical);
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
         if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface")
         {
-            pBoard->setOptical(convertAnyInt(theChild.attribute("useOpticalLink").value()));
+            //pBoard->setOptical(convertAnyInt(theChild.attribute("useOpticalLink").value()));
             pBoard->setUseCPB(convertAnyInt(theChild.attribute("useCPB").value()));
         }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Files")
@@ -292,6 +301,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             thelpGBT->setOptical( pBoard->isOptical() );
+            thelpGBT->setOpticalId( cOpticalGroupId );
             theOpticalGroup->addlpGBT(thelpGBT);
             // Initialize LpGBT settings from XML (only for IT)
             if(pBoard->getBoardType() == BoardType::RD53)
@@ -512,6 +522,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
         cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
     ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA->setOptical(pHybrid->isOptical());
+    cSSA->setOpticalId(pHybrid->getOpticalId());
     cSSA->setNumberOfChannels(120);
     cSSA->setClockFrequency(320);
     this->parseSSASettings(pSSAnode, cSSA);
@@ -537,6 +548,7 @@ void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::stri
         cFileName = expandEnvironmentVariables(pHybridNode.attribute("configfile").value());
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
     cMPA->setOptical(pHybrid->isOptical());
+    cMPA->setOpticalId(pHybrid->getOpticalId()); 
     cMPA->setNumberOfChannels(1920);
     cMPA->setClockFrequency(320);
     this->parseMPASettings(pHybridNode, cMPA);
@@ -571,6 +583,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
         }
         cHybrid->setOptical( pBoard->isOptical() );
+        cHybrid->setOpticalId( pOpticalGroup->getOpticalGroupId());
         std::string cConfigFileDirectory;
         for(pugi::xml_node cChild: pHybridNode.children())
         {
@@ -624,7 +637,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName);
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
-
+                        cCic->setOptical( cHybrid->isOptical() );
+                        cCic->setOpticalId( cHybrid->getOpticalId() );
                         os << GREEN << "|\t|\t|\t|----FrontEndType: ";
                         if(cType == FrontEndType::CIC)
                             os << RED << "CIC";
@@ -715,6 +729,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     uint32_t     cChipId = pCbcNode.attribute("Id").as_int();
     ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cChipId, cFileName));
     cCbc->setOptical(cHybrid->isOptical());
+    cCbc->setOpticalId(cHybrid->getOpticalId());
     cCbc->setClockFrequency(320);
     cCbc->setNumberOfChannels(254);
 

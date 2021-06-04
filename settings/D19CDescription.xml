@@ -5,7 +5,6 @@
     <CDCE configure="0" clockRate="120"/>
     
     <OpticalGroup Id="0" FMCId="0" >
-        
         <Hybrid Id="0" Status="1">
             <Global>
                 <Settings threshold="500" latency="29"/>
