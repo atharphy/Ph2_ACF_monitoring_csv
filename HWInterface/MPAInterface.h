@@ -13,10 +13,35 @@
 #define __MPAINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
+#include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
-
 #include "pugixml.hpp"
 #include <vector>
+
+// pixelEnable bits
+const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE =
+    {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR", 3}, {"CounterEnable", 4}, {"DigitalInjection", 5}, {"AnalogueInjection", 6}, {"BrClk", 7}};
+const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
+
+// periphery config register map
+const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0},
+                                                          {"ECM", 1},
+                                                          {"RetimePix", 2},
+                                                          {"ErrorL1", 40},
+                                                          {"LatencyRx320", 34},
+                                                          {"PhaseShift", 32},
+                                                          {"OutSetting_0", 14},
+                                                          {"OutSetting_1", 15},
+                                                          {"OutSetting_2", 16},
+                                                          {"OutSetting_3", 17},
+                                                          {"OutSetting_4", 18},
+                                                          {"OutSetting_5", 19}};
+
+// row config register map
+const std::map<std::string, uint8_t> ROW_CONFIG_TABLE = {{"L1Offset_1", 1}, {"L1Offset_2", 2}, {"ClrRst", 3}};
+// pixel config register map
+const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE =
+    {{"PixelEnable", 0}, {"ModelSel", 1}, {"TrimDAC", 2}, {"ClusterCut", 3}, {"HipCut", 4}, {"DigiPattern", 5}, {"ACCounter_LSB", 9}, {"ACCounter_MSB", 10}, {"SEUCounter", 11}};
 
 /*!
  * \namespace Ph2_HwInterface
@@ -50,6 +75,14 @@ struct L1data
     std::vector<uint8_t> width_pixel;
     std::vector<uint8_t> Z;
 };
+
+struct Injection
+{
+    uint8_t fRow;
+    uint8_t fColumn;
+    uint8_t fFeId;
+};
+
 class MPAInterface : public ReadoutChipInterface
 { // begin class
   public:
@@ -61,10 +94,10 @@ class MPAInterface : public ReadoutChipInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
     void     ReadMPA(Ph2_HwDescription::ReadoutChip* pMPA);
 
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode) override;
+    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
 
     void                  Pix_write(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
     uint32_t              Pix_read(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
@@ -76,8 +109,8 @@ class MPAInterface : public ReadoutChipInterface
     void                  PS_Start_counters_read(uint32_t duration = 0);
     void                  Activate_async(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_pp(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_ss(Ph2_HwDescription::Chip* pMPA);
+    void                  Activate_pp(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
+    void                  Activate_ss(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win = 8);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
@@ -118,6 +151,29 @@ class MPAInterface : public ReadoutChipInterface
     L1data Format_l1(std::vector<uint8_t> rawl1, bool verbose = false);
 
     void Cleardata();
+
+    //
+    void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
+    std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
+    std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pChip);
+    bool                 configPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum, uint8_t pValue, bool pVerifLoop = true);
+    uint16_t             readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum);
+    bool                 configRow(Ph2_HwDescription::Chip* pChip, std::string cReg, int pRowNum, uint8_t pValue, bool pVerifLoop = true);
+    bool                 configPeri(Ph2_HwDescription::Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop = true);
+    uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
+
+  private:
+    std::map<uint16_t, std::string> fMap;
+
+    bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
+    bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
+    bool     WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
+    uint16_t ReadReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, bool pVerifLoop = true);
+    bool     maskPixel(Ph2_HwDescription::Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerifLoop);
+    bool     maskRowCol(Ph2_HwDescription::Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerifLoop);
+    uint16_t regPixel(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow, int pColumn);
+    uint16_t regPeri(Ph2_HwDescription::Chip* pChip, int pBaseRegister);
+    uint16_t regRow(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow);
 };
 } // namespace Ph2_HwInterface
 

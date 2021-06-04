@@ -654,7 +654,7 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
     std::set<uint8_t>    cEnabledFe;
     for(auto cFe: *pBoard->at(0))
     {
-        uint8_t linkId = static_cast<OuterTrackerHybrid*>(cFe)->getLinkId();
+        uint8_t linkId = static_cast<OuterTrackerHybrid*>(cFe)->getOpticalGroupId();
         if(std::find(cLinkIds.begin(), cLinkIds.end(), linkId) == cLinkIds.end())
         {
             cEnabledFe.insert(linkId);
@@ -683,7 +683,7 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
         auto     cPositionHits    = cHitString.length();
         for(auto cFe: *pBoard->at(0))
         {
-            uint8_t linkId = static_cast<OuterTrackerHybrid*>(cFe)->getLinkId();
+            uint8_t linkId = static_cast<OuterTrackerHybrid*>(cFe)->getOpticalGroupId();
             if(linkId != cLinkId) continue;
 
             uint8_t cFeId = cFe->getId();

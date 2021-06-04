@@ -10,7 +10,7 @@ SLVS_PADS_CONFIG                                0x02    0x45    0x18    0x07
 * Front-end configuration 
 *--------------------------------------------------------------------------------
 FE_CONFIG                                       0x02    0x40    0xFF    0x0F
-FE_ENABLE                                       0x02    0x41    0xFF    0xFF
+FE_ENABLE                                       0x02    0x41    0xFF    0x0
 *--------------------------------------------------------------------------------
 * Stub packing configuration 
 *--------------------------------------------------------------------------------
@@ -53,16 +53,16 @@ EXT_WA_DELAY19                                  0x03    0x65    0x44    0x44
 * PhyPort registers
 *--------------------------------------------------------------------------------
 PHY_PORT_CONFIG                                 0x00    0x0D    0x01    0x03
-scDllCurrentSet0                                0x00    0x01    0x00    0xFF
-scDllCurrentSet1                                0x00    0x02    0x00    0xFF
-scDllCurrentSet2                                0x00    0x03    0x00    0xFF
+scDllCurrentSet0                                0x00    0x01    0x00    0xAA
+scDllCurrentSet1                                0x00    0x02    0x00    0xAA
+scDllCurrentSet2                                0x00    0x03    0x00    0xAA
 scDllConfirmCountSelect0                        0x00    0x04    0x55    0xFF
 scDllConfirmCountSelect1                        0x00    0x05    0x55    0xFF
 scDllConfirmCountSelect2                        0x00    0x06    0x55    0xFF
 scDllResetReq0                                  0x00    0x07    0x00    0x00
 scDllResetReq1                                  0x00    0x08    0x00    0x00
-scDllCoarseLockDetection0                       0x00    0x09    0x00    0xFF
-scDllCoarseLockDetection1                       0x00    0x0A    0x00    0xFF
+scDllCoarseLockDetection0                       0x00    0x09    0x00    0x00
+scDllCoarseLockDetection1                       0x00    0x0A    0x00    0x00
 scDllnitSMForceClockEnable0                     0x00    0x0B    0x00    0x00
 scDllnitSMForceClockEnable1                     0x00    0x0C    0x00    0x00
 scEnableLine0                                   0x00    0x0E    0xFF    0xFF

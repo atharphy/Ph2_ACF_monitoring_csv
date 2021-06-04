@@ -441,8 +441,14 @@ void Tool::SaveResults()
 
     for(const auto& cChip: fChipHistMap)
     {
+        std::string cDescr = "";
+        auto        cType  = static_cast<ReadoutChip*>(cChip.first)->getFrontEndType();
+        if(cType == FrontEndType::CBC3) cDescr = "CBC";
+        if(cType == FrontEndType::SSA) cDescr = "SSA";
+        if(cType == FrontEndType::MPA) cDescr = "MPA";
+
         // Fabio: CBC specific -> to be moved out from Tool
-        TString  cDirName = Form("FE%dCBC%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cChip.first->getId());
+        TString  cDirName = Form("Hybrid%d%s%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cDescr.c_str(), cChip.first->getId());
         TObject* cObj     = gROOT->FindObject(cDirName);
 
         // if ( cObj ) delete cObj;
@@ -476,32 +482,7 @@ void Tool::SaveResults()
 
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
-    // Fabio: CBC specific -> to be moved out from Tool - BEGIN
-    bool cCheck = false;
-    bool cHoleMode;
-    auto cSetting = fSettingsMap.find("HoleMode");
-
-    if(cSetting != std::end(fSettingsMap))
-    {
-        cCheck    = true;
-        cHoleMode = (cSetting->second == 1) ? true : false;
-    }
-
-    std::string cMode;
-
-    if(cCheck)
-    {
-        if(cHoleMode)
-            cMode = "_Hole";
-        else
-            cMode = "_Electron";
-    }
-    // Fabio: CBC specific -> to be moved out from Tool - END
-
     std::string nDirname = pDirname;
-
-    if(cCheck && pMode) nDirname += cMode;
-
     if(pDate) nDirname += currentDateTime();
 
     LOG(INFO) << GREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
@@ -746,7 +727,7 @@ void Tool::setFWTestPulse()
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
 
             if(!cAsync)
             {
@@ -756,8 +737,9 @@ void Tool::setFWTestPulse()
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                //#FIXME WHAT SHOULD I DO ??? 6 or 10 ?
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -972,7 +954,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDacList, allOneRegister);
     }
-    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allZeroRegister << RESET;
+    LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allZeroRegister << RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
     else
@@ -982,7 +964,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
-    LOG(INFO) << BOLDBLUE << "Setting all bits of registers " << dacName << "  to  " << +allOneRegister << RESET;
+    LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allOneRegister << RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
     else
@@ -1265,6 +1247,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
         {
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
+            // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
             fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents();
@@ -1422,6 +1405,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
 // set same local dac for all BeBoard
 void Tool::setSameLocalDac(const std::string& dacName, const uint16_t dacValue)
 {
+    LOG(INFO) << BOLDMAGENTA << "Setting local dac [ " << dacName << " ] to " << dacValue << RESET;
     for(auto cBoard: *fDetectorContainer) { setSameLocalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 
     return;

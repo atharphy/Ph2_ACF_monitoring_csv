@@ -47,6 +47,7 @@ class CbcInterface : public ReadoutChipInterface
      * \param pVerifLoop: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
+    bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerifLoop = true);
     bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
 
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
@@ -81,14 +82,6 @@ class CbcInterface : public ReadoutChipInterface
      * \param pValue : Value to write
      */
     bool WriteChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
-
-    /*!
-     * \brief Write the designated register in both Chip and Chip Config File
-     * \param pCbc
-     * \param pRegNode : Node of the register to write
-     * \param pValue : Value to write
-     */
-    bool WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
 
     /*!
      * \brief Write several registers in both Chip and Chip Config File
@@ -133,13 +126,20 @@ class CbcInterface : public ReadoutChipInterface
     std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend);
     bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerifLoop = true);
     bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerifLoop = true);
-    bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends,
-                                     bool pUseNoise = true); // address + bend in units of half strips
+    bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc,
+                                     std::vector<uint8_t>            pStubAddresses,
+                                     std::vector<int>                pStubBends,
+                                     bool                            pUseNoise   = true,
+                                     bool                            pUseOffsets = false,
+                                     uint8_t                         pAllOff     = 0xFF); // address + bend in units of half strips
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
 
   private:
-    std::bitset<NCHANNELS> fActiveChannels;
+    bool                        fRetry = true;
+    std::map<uint32_t, uint8_t> fPageMap;
+    bool                        fWithlpGBT = false;
+    std::bitset<NCHANNELS>      fActiveChannels;
     /*!
      * \brief Read CBC ID eFuse
      * \param pChip: pointer to Chip object
@@ -148,6 +148,15 @@ class CbcInterface : public ReadoutChipInterface
     // void ReadAllCbc ( const Hybrid* pHybrid );
     // void CbcCalibrationTrigger(const Cbc* pCbc );
     void output();
+
+    /*!
+     * \brief Write the designated register in both Chip and Chip Config File
+     * \param pCbc
+     * \param pRegNode : Node of the register to write
+     * \param pValue : Value to write
+     */
+    bool    WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
+    uint8_t ReadChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode);
 
     std::map<uint8_t, std::string> fChannelMaskMapCBC3 = {
         {0, "MaskChannel-008-to-001"},  {1, "MaskChannel-016-to-009"},  {2, "MaskChannel-024-to-017"},  {3, "MaskChannel-032-to-025"},  {4, "MaskChannel-040-to-033"},  {5, "MaskChannel-048-to-041"},

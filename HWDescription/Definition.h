@@ -24,6 +24,7 @@
 #define NCHANNELS 254
 #define NSSACHANNELS 120
 #define NMPACHANNELS 1920
+#define NMPACOLS 16
 
 // Events
 
@@ -169,7 +170,9 @@ enum class EventType
     SSA   = 3,
     MPA   = 4,
     SSAAS = 5,
-    MPAAS = 6
+    MPAAS = 6,
+    PSAS  = 7,
+    VR2S  = 8
 };
 
 #endif

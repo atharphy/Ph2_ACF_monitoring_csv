@@ -168,65 +168,68 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     for(auto cROC: *cFirstHybrid)
                     {
                         auto cChipType = cROC->getFrontEndType();
-                        if(cROC->getIndex() > 0) continue;
-
-                        LOG(INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() << " represents all ROCs on this hybrid" << RESET;
-                        if(cChipType == FrontEndType::CBC3)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
-                            fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
-                        }
-                        else if(cChipType == FrontEndType::SSA)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
-                            fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-                        }
-                        else if(cChipType == FrontEndType::MPA)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
-                            fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-                        }
+                        if(cChipType == FrontEndType::SSA) hasssa = true;
+                        if(cChipType == FrontEndType::MPA) hasmpa = true;
+                        if(cChipType == FrontEndType::CBC3) cWithCBC = true;
                     }
-                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
-                    fCicInterface = new CicInterface(fBeBoardFWMap);
+
+                    LOG(INFO) << BOLDBLUE << "\t\t\t...Assuming ROC#" << +cROC->getId() << " represents all ROCs on this hybrid" << RESET;
+                    if(cChipType == FrontEndType::CBC3)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
+                        fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+                    }
+                    else if(cChipType == FrontEndType::SSA)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+                        fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                    }
+                    else if(cChipType == FrontEndType::MPA)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                        fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+                    }
                 }
+                LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
+                fCicInterface = new CicInterface(fBeBoardFWMap);
             }
         }
-        else
-        {
-            flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-            fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
-        }
     }
-
-    if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
-
-    DetectorMonitorConfig theDetectorMonitorConfig;
-    std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os, pIsFile);
-
-    if(monitoringType != "None")
+    else
     {
-        if(monitoringType == "2S")
-            fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
-        else if(monitoringType == "RD53")
-            fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
-        else
-        {
-            LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
-            abort();
-        }
-        fDetectorMonitor->forkMonitor();
+        flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
+        fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
     }
+}
+
+if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
+
+DetectorMonitorConfig theDetectorMonitorConfig;
+std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os, pIsFile);
+
+if(monitoringType != "None")
+{
+    if(monitoringType == "2S")
+        fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
+    else if(monitoringType == "RD53")
+        fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+    else
+    {
+        LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
+        abort();
+    }
+    fDetectorMonitor->forkMonitor();
+}
 
 // turn on the SEH here - moved from the lpGBT interface
 // I think it makes more sense to have it in the initialization step
 #ifdef __SEH_USB__
-    fTCInterface.getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-    // move this to the TC library .. I shouldn't have to wait here - you should wait for me
-    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+fTCInterface.getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
+LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
+// move this to the TC library .. I shouldn't have to wait here - you should wait for me
+// std::this_thread::sleep_for(std::chrono::milliseconds(100));
 #endif
-}
+} // namespace Ph2_System
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
 
@@ -380,10 +383,6 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         // }
     }
 
-    // assign module type to each optical group
-    // a PS module contains an lpGBT and .. at least one of --> CIC/SSA/MPA
-    // a 2S module contains an lpGBT and .. at least one of --> CIC/CBC
-    for(auto cOpticalGroup: *pBoard)
     {
         bool cWithPSmodule = false;
         bool cWith2Smodule = false;
@@ -696,6 +695,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
             ConfigureIT(cBoard);
     }
 
+    // start-up sequence for PS module
+    if(cWithPSmodule) { ModuleStartUpPS(); }
+    // start-up sequence for 2S module
+    if(cWith2Smodule) { ModuleStartUp2S(); }
     if(fDetectorMonitor != nullptr)
     {
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
@@ -804,6 +807,8 @@ void SystemController::ReadData(bool pWait)
 uint32_t SystemController::ReadData(BeBoard* pBoard, std::vector<uint32_t>& pData, bool pWait)
 {
     uint32_t cNPackets = fBeBoardInterface->ReadData(pBoard, false, pData, pWait);
+    if(cNPackets == 0) return cNPackets;
+
     this->DecodeData(pBoard, pData, cNPackets, fBeBoardInterface->getBoardType(pBoard));
     return cNPackets;
 }
@@ -896,6 +901,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     else if(pType == BoardType::D19C)
     {
+        // for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
 
@@ -921,7 +927,11 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
-            if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
+            if(fEventType == EventType::PSAS) { fEventList.push_back(new D19cPSEventAS(pBoard, pData)); }
+            else if(fEventType == EventType::SSAAS)
+            {
+                fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
+            }
             else if(fEventType == EventType::MPAAS)
             {
                 fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
@@ -932,32 +942,56 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 auto   cEventIterator = pData.begin();
                 do
                 {
-                    uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-                    auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-
-                    // retrieve chunck of data vector belonging to this event
-                    if(cEnd - cEventIterator == cEventSize)
+                    uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
+                    if(cHeader != 0xFFFF)
+                        cEventIterator++;
+                    else // valid event  // decode
                     {
-                        std::vector<uint32_t> cEvent(cEventIterator, cEnd);
-                        // some useful debug information
-                        LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
-                                   << +cEventSize << " 32 bit words..." << RESET;
-                        if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
-                        else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
+                        uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+                        auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
+                        // retrieve chunck of data vector belonging to this event
+                        if(cEnd - cEventIterator == cEventSize)
                         {
-                            fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
+                            std::vector<uint32_t> cEvent(cEventIterator, cEnd);
+                            // some useful debug information
+                            // LOG(INFO) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
+                            //            << +cEventSize << " 32 bit words..." << RESET;
+                            if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
+                            else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
+                            {
+                                bool cWithCBC3 = !(fEventType == EventType::VR2S);
+                                if(cWithCBC3)
+                                    LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 8CBC3 " << RESET;
+                                else
+                                    LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
+                                fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3));
+                            }
+                            else if(pBoard->getFrontEndType() == FrontEndType::SSA)
+                            {
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
+                            }
+                            else if(pBoard->getFrontEndType() == FrontEndType::MPA)
+                            {
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
+                                LOG(INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
+                                // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
+                                // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
+                                // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
+                                // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
+                                // for(auto cWord : cEvent )
+                                //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            }
+                            else if(pBoard->getFrontEndType() == FrontEndType::MPA)
+                            {
+                                LOG(INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
+                                // fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                            }
+                            cEventIndex++;
                         }
-                        else if(pBoard->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
-                        }
-                        else if(pBoard->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
-                        }
-                        cEventIndex++;
+                        cEventIterator += cEventSize;
                     }
-                    cEventIterator += cEventSize;
                 } while(cEventIterator < pData.end());
             }
         } // end zero check

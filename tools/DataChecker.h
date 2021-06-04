@@ -18,6 +18,15 @@
 #ifndef ChannelList
 typedef std::vector<uint8_t> ChannelList;
 #endif
+#ifndef EventTag
+#ifndef EventId
+typedef std::pair<uint16_t, uint16_t> EventId;
+#endif
+typedef std::pair<EventId, uint8_t> EventTag; // [L1Id, BxId],Tag
+#endif
+#ifndef EventsList
+typedef std::vector<EventTag> EventsList;
+#endif
 
 #include <map>
 #ifdef __USE_ROOT__
@@ -46,6 +55,25 @@ class DataChecker : public Tool
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
 
+    void MemoryCheck2SRaw();
+    void MemoryCheck2SSparse();
+    void MemoryCheck2S();
+    // void TriggerBurstCheck();
+    void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
+    void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
+    void Eye_CIC();
+    bool GenericFastCommands();
+
+    bool SendGenericTestPulses(int pReSync = 0);
+    bool ReadAfterGenericBlock(int pNExpected);
+    void PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme);
+    void GenericTestPulse(int pReSync = 0);
+    void FastCommandMemChecks2S(int pNTrials = 1);
+    void FastCommandInjections(int pNTrials = 1);
+    void PSTriggerTests();
+    void PSNominal();
+
+    void TriggerBurstCheck(Ph2_HwDescription::BeBoard* pBoard);
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void AsyncTest();
@@ -75,8 +103,24 @@ class DataChecker : public Tool
         uint16_t tpFastReset     = 0;
         uint8_t  tpAmplitude     = 100;
     };
+    class FCMDs
+    {
+      public:
+        uint8_t fTrigger   = 0xC9; // trigger
+        uint8_t fTestPulse = 0xC5; // trigger
+        uint8_t fBC0       = 0xC3; // BC0
+        uint8_t fResync    = 0xD1; // Resync
+        uint8_t fClear     = 0xD3; // ReSync+BC0
+        uint8_t fEmpty     = 0xC1; // empty
+    };
 
   protected:
+    std::vector<uint16_t> fExpectedPipelineAddress;
+    std::vector<uint8_t>  fFastCommands;
+    std::vector<int>      fTriggeredBxs;
+    int                   fNInjectedTriggers   = 0;
+    int                   fTotalEventsExpected = 0;
+
   private:
     // masks
     ChannelGroup<254, 1> fCBCMask;
@@ -86,15 +130,27 @@ class DataChecker : public Tool
     DetectorDataContainer fHitCheckContainer, fStubCheckContainer;
     DetectorDataContainer fThresholds, fLogic, fHIPs;
     DetectorDataContainer fInjections;
-    DetectorDataContainer fDataMismatches;
+    DetectorDataContainer fDataMismatches, fGoodEvents, fBadEvents;
+    DetectorDataContainer fBxIdsMatches, fBxIdsMismatches;
 
-    int fPhaseTap     = 8;
-    int fAttempt      = 0;
-    int fMissedEvent  = 0;
-    int fEventCounter = 0;
+    int fPhaseTap           = 8;
+    int fAttempt            = 0;
+    int fMissedEvent        = 0;
+    int fEventCounter       = 0;
+    int fTriggerTestCounter = 0;
 
     //
     TPconfig fTPconfig;
+
+    //
+
+    std::vector<float>                      GetBxIds(std::vector<float> pRawBxIds);
+    std::vector<int>                        GenerateIds();
+    void                                    PreparePSInjection(DetectorDataContainer& pInjectionScheme);
+    std::vector<Ph2_HwInterface::Injection> GeneratePSInjections(int pMaxNstubs);
+    std::vector<Ph2_HwInterface::Injection> GenerateInjections(int pMaxClusters = 1, int pMaxNstubs = 17);
+    void                                    PSTriggerTest();
+    uint32_t                                GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
 
 // booking histograms
 #ifdef __USE_ROOT__

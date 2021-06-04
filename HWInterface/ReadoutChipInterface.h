@@ -31,6 +31,7 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  */
 class ReadoutChipInterface : public ChipInterface
 {
+  private:
   public:
     /*!
      * \brief Constructor of the ReadoutChipInterface Class

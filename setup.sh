@@ -51,10 +51,12 @@ export PH2ACF_BASE_DIR=$(pwd)
 ####################
 # External Plugins #
 ####################
+export EXTERNAL_TOOLS_BASE_DIR=/home/cmsTkUser 
 export AMC13DIR=$CACTUSINCLUDE/amc13
-export ANTENNADIR=$PH2ACF_BASE_DIR/../CMSPh2_AntennaDriver
-export USBINSTDIR=$PH2ACF_BASE_DIR/../Ph2_USBInstDriver
-export EUDAQDIR=$PH2ACF_BASE_DIR/../eudaq
+export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
+export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
+export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
+export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 ###########
 # ANTENNA #
@@ -113,7 +115,7 @@ export CompileForShep=false
 # export CompileForShep=true
 
 # Compile with EUDAQ libraries
-export CompileWithEUDAQ=false
+export CompileWithEUDAQ=true
 
 # Compile with TC_USB library
 export CompileWithTCUSB=true

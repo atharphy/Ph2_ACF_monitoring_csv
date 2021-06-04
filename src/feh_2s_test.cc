@@ -8,10 +8,18 @@
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
+#include "tools/MemoryCheck2S.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/ShortFinder.h"
+
+#ifdef __POWERSUPPLY__
+// Libraries
+#include "DeviceHandler.h"
+#include "PowerSupply.h"
+#include "PowerSupplyChannel.h"
+#endif
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -28,6 +36,10 @@
 #include "Antenna.h"
 #endif
 
+// reference volage for lpgBT
+float VREF_LPGBT        = 1.0;
+float cConversionFactor = VREF_LPGBT / 1024.;
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -35,6 +47,36 @@ using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
+
+uint16_t returnRunNumber(std::string cFileName)
+{
+    std::string   cLine;
+    int           cRunNumber = -1;
+    std::ifstream cStream(cFileName);
+    if(cStream.is_open())
+    {
+        while(std::getline(cStream, cLine))
+        {
+            std::istringstream cIStream(cLine);
+            cIStream >> cRunNumber;
+            LOG(INFO) << BOLDMAGENTA << cRunNumber << RESET;
+        }
+    }
+    return (uint16_t)(cRunNumber + 1);
+}
+
+std::vector<uint8_t> getArgs(std::string pArgsStr)
+{
+    std::vector<uint8_t> cSides;
+    std::stringstream    cArgsSS(pArgsStr);
+    int                  i;
+    while(cArgsSS >> i)
+    {
+        cSides.push_back(i);
+        if(cArgsSS.peek() == ',') cArgsSS.ignore();
+    };
+    return cSides;
+}
 
 int main(int argc, char* argv[])
 {
@@ -65,7 +107,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("findOpens", "perform latency scan with antenna on UIB", ArgvParser::NoOptionAttribute);
     cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
 
-    cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
 
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
@@ -92,6 +135,15 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkAsync", "Check Async readout methods [PS objects only]... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("noiseInjection", "Check noise injection...", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("calibrateADC", "Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("monitorAMUX", "Calibrate ADC on lpGBT....", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("monitorSEH", "Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("testTune", "Test tuning ....", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -114,10 +166,16 @@ int main(int argc, char* argv[])
 
     bool cSaveToFile = cmd.foundOption("save");
 
-    uint32_t    cThreshold = (cmd.foundOption("threshold")) ? convertAnyInt(cmd.optionValue("threshold").c_str()) : 560;
-    std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
-    std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    cDirectory += Form("FEH_2S_%s", cHybridId.c_str());
+    uint32_t      cThreshold = (cmd.foundOption("threshold")) ? convertAnyInt(cmd.optionValue("threshold").c_str()) : 560;
+    std::string   cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "Skeleton";
+    std::string   cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    auto          cRunNumber = returnRunNumber("RunNumbers.dat");
+    std::ofstream cRunLog;
+    cRunLog.open("RunNumbers.dat", std::fstream::app);
+    cRunLog << cRunNumber << "\n";
+    cRunLog.close();
+    LOG(INFO) << BOLDBLUE << "Run number is " << +cRunNumber << RESET;
+    cDirectory += Form("FEH_2S_%s_Run%d", cHybridId.c_str(), cRunNumber);
 
     TApplication cApp("Root Application", &argc, argv);
 
@@ -143,23 +201,235 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
 #endif
 
+#ifdef __POWERSUPPLY__
+    DeviceHandler                             cPowerSupplyHandler;
+    std::vector<std::pair<std::string, bool>> cPowerSupplyChannels;
+    std::string                               cPowerSupply = "MyRohdeSchwarz";
+    pugi::xml_document                        docSettings;
+
+    cPowerSupplyHandler.readSettings("settings/PSskeleton.xml", docSettings);
+    try
+    {
+        cPowerSupplyHandler.getPowerSupply(cPowerSupply);
+    }
+    catch(const std::out_of_range& oor)
+    {
+        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        exit(0);
+    }
+    // Get all channels of the powersupply
+    pugi::xml_document doc;
+    if(!doc.load_file("settings/PSskeleton.xml")) return -1;
+    pugi::xml_node devices = doc.child("Devices");
+    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
+    {
+        std::string s(ps.attribute("ID").value());
+        if(s == cPowerSupply)
+        {
+            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            {
+                std::string name(channel.attribute("ID").value());
+                std::string use(channel.attribute("InUse").value());
+
+                cPowerSupplyChannels.push_back(std::make_pair(name, use == "Yes"));
+            }
+        }
+    }
+    if(cmd.foundOption("cyclePower"))
+    {
+        LOG(INFO) << BOLDRED << "Turn off all channels : " << cPowerSupply << RESET;
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(!channelName.second) continue;
+            cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOff();
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(60));
+        LOG(INFO) << BOLDGREEN << "Turn on all channels : " << cPowerSupply << RESET;
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(!channelName.second) continue;
+            cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->turnOn();
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(180));
+    }
+#endif
+
     std::stringstream outp;
     Tool              cTool;
     if(cSaveToFile)
     {
-        std::string cRawFile = cmd.optionValue("save");
+        char cRawFileName[80];
+        std::snprintf(cRawFileName, sizeof(cRawFileName), "Run%.05d.raw", cRunNumber);
+        std::string cRawFile = cRawFileName;
         cTool.addFileHandler(cRawFile, 'w');
         LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
     }
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
-    cTool.CreateResultDirectory(cDirectory);
+    cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+
+    std::ofstream cPowerLog;
+#ifdef __POWERSUPPLY__
+    const auto cStart     = std::chrono::system_clock::now();
+    int        cStartTime = (int)std::chrono::duration_cast<std::chrono::seconds>(cStart.time_since_epoch()).count();
+    cPowerLog.open(cTool.getDirectoryName() + "/PowerLog.tab", std::ios::app);
+    cPowerLog << cStartTime << "\t";
+    if(cmd.foundOption("powerState"))
+    {
+        // Give complete status reoort for all channels in the power supply
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(channelName.second)
+            {
+                LOG(INFO) << BOLDYELLOW << cPowerSupply << " status of channel " << channelName.first << ":" RESET;
+                bool        isOn       = cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->isOn();
+                std::string isOnResult = isOn ? "1" : "0";
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltageCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltage = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string currentCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string current = "-";
+                if(isOn) { current = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); }
+                LOG(INFO) << "\tIsOn:\t\t" << BOLDYELLOW << isOnResult << RESET;
+                LOG(INFO) << "\tV_max(set):\t\t" << BOLDYELLOW << voltageCompliance << RESET;
+                LOG(INFO) << "\tV(meas):\t" << BOLDYELLOW << voltage << RESET;
+                LOG(INFO) << "\tI_max(set):\t" << BOLDYELLOW << currentCompliance << RESET;
+                LOG(INFO) << "\tI(meas):\t" << BOLDYELLOW << current << RESET;
+                gui::data((channelName.first + ">IsOn").c_str(), isOnResult.c_str());
+                gui::data((channelName.first + ">v_max_set").c_str(), voltageCompliance.c_str());
+                gui::data((channelName.first + ">v_meas").c_str(), voltage.c_str());
+                gui::data((channelName.first + ">i_max_set").c_str(), currentCompliance.c_str());
+                gui::data((channelName.first + ">i_meas").c_str(), current.c_str());
+                cPowerLog << voltage << "\t" << current << "\t";
+            }
+        }
+        cPowerLog << "\n";
+    }
+    cPowerLog.close();
+#endif
     // for some reason this does not work
     // error I get is new TRootSnifferFull("sniff");
     // cTool.StartHttpServer();
     cTool.ConfigureHw();
+
+    if(cmd.foundOption("calibrateADC"))
+    {
+        LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT = cOpticalGroup->flpGBT;
+                if(clpGBT == nullptr) continue;
+
+                // use Vin as the reference
+                // this I know does not change with anything
+                std::vector<std::string> cADCs_VoltageMonitors{"ADC2"};
+                std::vector<float>       cADCs_Refs{10.4 * 0.49 / 10.0};
+                size_t                   cIndx = cADCs_VoltageMonitors.size() - 1;
+                // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
+                // find correction
+                std::vector<float>   cVals(10, 0);
+                uint8_t              cEnableVref = 1;
+                std::string          cADCsel     = cADCs_VoltageMonitors[cIndx];
+                std::vector<uint8_t> cRefPoints{0, 0x05, 0x10, 0x20, 0x3F};
+                std::vector<float>   cMeasurements(0);
+                std::vector<float>   cSlopes(0);
+                for(auto cRef: cRefPoints)
+                {
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
+                    // wait until Vref is stable
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
+                    float cDifference_V = (cADCs_Refs[cIndx] - cMean);
+                    // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                    //         << " correction applied is " << +cRef
+                    //         << " reading [mean] is "
+                    //         << +cMean*1e3
+                    //         << " milli-volts."
+                    //         << "\t...Difference between expected and measured "
+                    //         << " values is "
+                    //         << cDifference_V*1e3
+                    //         << " milli-volts." << RESET;
+                    cMeasurements.push_back(cDifference_V);
+                    if(cMeasurements.size() > 1)
+                    {
+                        for(int cI = cMeasurements.size() - 2; cI >= 0; cI--)
+                        {
+                            float cSlope = (cMeasurements[cMeasurements.size() - 1] - cMeasurements[cI]) / (cRefPoints[cMeasurements.size() - 1] - cRefPoints[cI]);
+                            LOG(DEBUG) << BOLDBLUE << "Index " << +(cMeasurements.size() - 1) << " -- index " << cI << " slope is " << cSlope << RESET;
+                            cSlopes.push_back(cSlope);
+                        }
+                    }
+                }
+                float cMeanSlope = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.) / cSlopes.size();
+                float cIntcpt    = cMeasurements[0];
+                int   cCorr      = std::min(std::floor(-1.0 * cIntcpt / cMeanSlope), 63.);
+                // LOG (INFO) << BOLDMAGENTA << "Mean slope is " << cMeanSlope
+                //     << " , intercept is " << cIntcpt
+                //     << " correction is " << cCorr
+                //     << RESET;
+                // apply correction and check
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
+                // wait until Vref is stable
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                float cMeanValue = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
+                LOG(INFO) << BOLDMAGENTA << "Measured V_min after correction is " << std::setprecision(2) << std::fixed << cMeanValue * 1e3 << " mV , expected value is " << cADCs_Refs[cIndx] * 1e3
+                          << " difference is " << std::fabs(cMeanValue - cADCs_Refs[cIndx]) * 1e3 << " mV, correction needed to acheive this was  " << +cCorr << RESET;
+
+                // turn off ADC mon
+                // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
+            } // configure lpGBT
+        }
+    }
+    if(cmd.foundOption("monitorSEH"))
+    {
+        std::vector<std::string> cADCNames{"V_12V5", "V_Min", "PTAT_BPOL2V5", "PTAT_BPOL12V"};
+        std::vector<uint8_t>     cADCsels{1, 2, 6, 7};
+        LOG(INFO) << BOLDMAGENTA << "Looking at voltages and temperatures on SEH.." << RESET;
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT = cOpticalGroup->flpGBT;
+                if(clpGBT == nullptr) continue;
+
+                for(size_t cIndx = 0; cIndx < cADCsels.size(); cIndx++)
+                {
+                    std::vector<float> cVals(10);
+                    char               cADC[4];
+                    sprintf(cADC, "ADC%.1d", cADCsels[cIndx]);
+                    for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC) * cConversionFactor;
+                    float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
+                    LOG(INFO) << BOLDMAGENTA << "\t...ADC#" << +cADCsels[cIndx] << " " << cADCNames[cIndx] << " reading from lpGBT "
+                              << " is " << +cMean * 1e3 << " milli-volts. " << RESET;
+                }
+            }
+        }
+    }
+
+    // read chip ids
+    for(const auto cBoard: *cTool.fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    auto cFusedId = cTool.fReadoutChipInterface->ReadChipReg(cChip, "ChipId");
+                    LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
+                }
+            }
+        }
+    }
 
 // measure hybrid current and temperature
 #ifdef __ANTENNA__
@@ -170,14 +440,51 @@ int main(int argc, char* argv[])
     cAntenna.close();
 #endif
 
-    // align back-end
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
-    cBackEndAligner.waitForRunToBeCompleted();
-    // reset all chip and board registers
-    // to what they were before this tool was called
-    cBackEndAligner.Reset();
+    if(cmd.foundOption("monitorAMUX"))
+    {
+        auto cMuxSels = getArgs(cmd.optionValue("monitorAMUX"));
+        for(auto cMuxSel: cMuxSels)
+        {
+            for(const auto cBoard: *cTool.fDetectorContainer)
+            {
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    auto& clpGBT = cOpticalGroup->flpGBT;
+                    if(clpGBT == nullptr) continue;
+
+                    // enable voltage
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
+                        char    cADC[4];
+                        sprintf(cADC, "ADC%.1d", cADCsel);
+                        std::vector<uint8_t> cChipIds(0);
+                        for(auto cChip: *cHybrid) { cChipIds.push_back(cChip->getId()); }
+                        for(auto cChipId: cChipIds)
+                        {
+                            for(auto cChip: *cHybrid)
+                            {
+                                if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip, "AmuxOutput", 0);
+                                if(cChip->getId() != cChipId) continue;
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip, "AmuxOutput", cMuxSel);
+                            } // all FEs set to floating, except 0
+                            std::vector<float> cVals(10);
+                            for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC) * cConversionFactor;
+                            float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
+                            LOG(INFO) << BOLDMAGENTA << "\t...CBC#" << +cChipId << " " << cADC << " reading from lpGBT "
+                                      << " while monitoring AMUX#" << +cMuxSel << " is " << +cMean * 1e3 << " milli-volts. " << RESET;
+                        }
+                        for(auto cChip: *cHybrid)
+                        {
+                            if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                            cTool.fReadoutChipInterface->WriteChipReg(cChip, "AmuxOutput", 1);
+                        } // all FEs set to floating, except 0
+                    }     // hybrid
+                }         // OG
+            }             // board
+        }                 // mux sel
+    }                     // monitor AMUX
 
     // if CIC is enabled then align CIC first
     if(cWithCIC)
@@ -192,6 +499,18 @@ int main(int argc, char* argv[])
         cCicAligner.dumpConfigFiles();
     }
 
+    // align back-end
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    if(!cmd.foundOption("skipAlignment"))
+    {
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
+    }
+    // reset all chip and board registers
+    // to what they were before this tool was called
+    // cBackEndAligner.Reset();
+
     // measure some of the AMUX output voltages using ADC on UIB
     // MonitorAmux & hybridTester does not exist in this branch, nor it should...
     // HybridTester cHybridTester;
@@ -204,6 +523,10 @@ int main(int argc, char* argv[])
     // equalize thresholds on readout chips
     if(cTune)
     {
+        // uint8_t cFeId=0;
+        // auto cSelectFunction = [cFeId](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getId() == cFeId); };
+        // cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+
         t.start();
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
@@ -216,6 +539,8 @@ int main(int argc, char* argv[])
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
         t.show("Time to tune the front-ends on the system: ");
+        // // reset
+        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
 #ifdef __ANTENNA__
@@ -261,6 +586,40 @@ int main(int argc, char* argv[])
         cExtra.resetPointers();
     }
     // inject hits and stubs using mask and compare input against output
+    if(cmd.foundOption("memCheck"))
+    {
+        MemoryCheck2S cMemoryChecker;
+        cMemoryChecker.Inherit(&cTool);
+        cMemoryChecker.Initialise();
+
+        // configure reference voltage
+        cMemoryChecker.ConfigureVref();
+        cMemoryChecker.MonitorTemperature();
+        cMemoryChecker.MonitorInputVoltage();
+        // find pedestal and set threshold
+        if(cmd.foundOption("completeDataCheck"))
+        {
+            std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
+            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
+            cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
+            // find correct stub latency with TP
+            for(auto cBoard: *cMemoryChecker.fDetectorContainer)
+            {
+                cBackEndAligner.FindStubLatency(cBoard); // find stub latency
+            }
+            auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
+            int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
+            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
+        }
+        cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
+        cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
+
+        cMemoryChecker.MonitorAnalogue();
+        cMemoryChecker.SaveOptimalTaps();
+        cMemoryChecker.writeObjects();
+        cMemoryChecker.resetPointers();
+    }
     if(cCheckData)
     {
         std::string          cArgsStr = cmd.optionValue("checkData");
@@ -363,6 +722,48 @@ int main(int argc, char* argv[])
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");
+
+    std::ofstream cGoodRuns;
+    cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+    cGoodRuns << cRunNumber << "\n";
+    cGoodRuns.close();
+
+#ifdef __POWERSUPPLY__
+    cPowerLog.open(cTool.getDirectoryName() + "/PowerLog.tab", std::ios::app);
+    const auto cStop     = std::chrono::system_clock::now();
+    int        cStopTime = (int)std::chrono::duration_cast<std::chrono::seconds>(cStop.time_since_epoch()).count();
+    if(cmd.foundOption("powerState"))
+    {
+        cPowerLog << cStopTime << "\t";
+        // Give complete status reoort for all channels in the power supply
+        for(auto channelName: cPowerSupplyChannels)
+        {
+            if(channelName.second)
+            {
+                LOG(INFO) << BOLDYELLOW << cPowerSupply << " status of channel " << channelName.first << ":" RESET;
+                bool        isOn       = cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->isOn();
+                std::string isOnResult = isOn ? "1" : "0";
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltageCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltageCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string voltage = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getVoltage());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string currentCompliance = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrentCompliance());
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::string current = "-";
+                if(isOn) { current = std::to_string(cPowerSupplyHandler.getPowerSupply(cPowerSupply)->getChannel(channelName.first)->getCurrent()); }
+                LOG(INFO) << "\tIsOn:\t\t" << BOLDYELLOW << isOnResult << RESET;
+                LOG(INFO) << "\tV_max(set):\t\t" << BOLDYELLOW << voltageCompliance << RESET;
+                LOG(INFO) << "\tV(meas):\t" << BOLDYELLOW << voltage << RESET;
+                LOG(INFO) << "\tI_max(set):\t" << BOLDYELLOW << currentCompliance << RESET;
+                LOG(INFO) << "\tI(meas):\t" << BOLDYELLOW << current << RESET;
+                cPowerLog << voltage << "\t" << current << "\t";
+            }
+        }
+        cPowerLog << "\n";
+    }
+    cPowerLog.close();
+#endif
 
     return 0;
 }

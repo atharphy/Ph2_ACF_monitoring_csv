@@ -57,6 +57,9 @@ class BeBoardFWInterface : public RegManager
     FpgaConfig*  fFpgaConfig;
     uint32_t     fNthAcq{0}, fNpackets{0};
 
+    // for slow control
+    uint8_t fCurrentPage = 0;
+
     static const uint32_t cMask1 = 0xff;
     static const uint32_t cMask2 = 0xff00;
     static const uint32_t cMask3 = 0xff0000;
@@ -127,6 +130,16 @@ class BeBoardFWInterface : public RegManager
 
     /*! \brief Run Bit Error Rate test */
     virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
+
+    /*!
+     * \brief Encode a/several word(s) readable for a Chip
+     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
+     * \param pChip : Chip object
+     */
+    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
 
     /*!
      * \brief Encode a/several word(s) readable for a Chip

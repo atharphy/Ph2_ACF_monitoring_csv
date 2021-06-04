@@ -8,7 +8,7 @@
         <Hybrid Id="0" Status="1">
             <Global>
                 <Settings threshold="500" latency="29"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="4" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00011" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="11"/>
                 <ChannelMask disable=""/>

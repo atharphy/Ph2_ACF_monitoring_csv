@@ -15,7 +15,14 @@
 
 #include "Tool.h"
 #include <map>
-#ifdef __USE_ROOT__
+// #ifdef __USE_ROOT__
+
+#ifndef PortAlignment
+typedef std::vector<uint8_t> PortAlignment;
+#endif
+#ifndef PortAlignmentVals
+typedef std::vector<PortAlignment> PortAlignmentVals;
+#endif
 
 // add break codes here
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
@@ -31,23 +38,22 @@ class CicFEAlignment : public Tool
     CicFEAlignment();
     ~CicFEAlignment();
 
-    void                              Initialise();
-    bool                              PhaseAlignment(uint16_t pWait_ms = 100);
-    bool                              ManualPhaseAlignment(uint16_t pPhase = 10);
-    bool                              WordAlignment(uint16_t pWait_ms = 100);
-    bool                              Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
-    bool                              SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
-    bool                              BackEndAlignment();
-    bool                              PhaseAlignmentMPA(uint16_t pWait_ms);
-    bool                              WordAlignmentMPA(uint16_t pWait_ms);
-    std::vector<std::vector<uint8_t>> SortOptimalTaps(std::vector<std::vector<uint8_t>> pOptimalTaps);
-    std::vector<std::vector<uint8_t>> SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValue);
-    void                              Running() override;
-    void                              Stop() override;
-    void                              Pause() override;
-    void                              Resume() override;
-    void                              Reset();
-    void                              writeObjects();
+    void Initialise();
+    void SetStaticPhaseAlignment();
+    bool PhaseAlignment(uint16_t pWait_ms = 10, uint32_t pNTriggers = 500);
+    bool ManualPhaseAlignment(uint16_t pPhase = 10);
+    bool WordAlignment(uint16_t pWait_ms = 100);
+    bool Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
+    bool SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
+    bool BackEndAlignment();
+    bool PhaseAlignmentMPA(uint16_t pWait_ms = 100);
+    void Running() override;
+    void Stop() override;
+    void Pause() override;
+    void Resume() override;
+    void Reset();
+    void InjectAlignmentPattern(uint8_t pChipId, uint8_t pPhyPort);
+    void writeObjects();
 
     // injection
     void WordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns);
@@ -66,11 +72,20 @@ class CicFEAlignment : public Tool
     DetectorDataContainer fWordAlignmentValues;
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+    DetectorDataContainer fChipMasks;
+    // with MPA
+    bool fWithMPA;
 
     // mapping of FEs for CIC
-    std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
+    std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC [2S]
     void                 SetStubWindowOffsets(uint8_t pBendCode, int pBend);
+
+    // expected number of bx first stub
+    // appears after resync
+    // different for CBC and MPA
+    uint8_t fStubBxDelay2S = 8;
+    uint8_t fStubBxDelayPS = 22;
 };
 
 #endif
-#endif
+// #endif

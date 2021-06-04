@@ -41,6 +41,14 @@ class Cluster
     float   getBaricentre();
 };
 
+class PSCluster
+{
+  public:
+    uint32_t fPixelId;
+    uint8_t  fWidth;
+    uint8_t  fMip;
+    uint8_t  fFeId;
+};
 class PCluster
 {
   public:
@@ -391,7 +399,7 @@ class Event
 
     // split stream of data
     template <std::size_t N>
-    void splitStream(const std::vector<uint32_t> pData, std::vector<std::bitset<N>>& pBitSet, size_t pOffset, size_t pSize)
+    void splitStream(const std::vector<uint32_t> pData, std::vector<std::bitset<N>>& pBitSet, size_t pOffset, size_t pSize, size_t pBitOffset = 0)
     {
         uint32_t cBitCounter  = 0;
         uint32_t cId          = 0;
@@ -400,14 +408,13 @@ class Event
         do
         {
             auto cWord = std::bitset<32>(*cIterator);
-            LOG(DEBUG) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
+            // LOG(INFO) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
             for(size_t cIndex = 0; cIndex < 32; cIndex++)
             {
                 if(cId >= pSize) continue;
+                if(cIndex < pBitOffset and (cWordCounter == 0)) continue;
 
                 pBitSet[cId][N - 1 - cBitCounter] = cWord[31 - cIndex];
-                // LOG (INFO) << "\t..Bit index " << +(31  - cIndex) << " bit counter in hit word at index " <<
-                // +cBitCounter << RESET;
                 cId += (cBitCounter == (N - 1));
                 cBitCounter = (cBitCounter + 1) % N;
             }

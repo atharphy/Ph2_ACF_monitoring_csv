@@ -4,31 +4,33 @@
     <!---<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.13:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <!-- B598 skeleton, direct powering -->
-    <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <!-- <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- B14 skeleton, POH -->
-    <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
+    <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.71:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
 
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0">
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" LinkId="0">
+        <Hybrid Id="0" Status="1" LinkId="5">
             <Global>
-               <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" />
-            <!--<SSA Id="1" configfile="SSA.txt" />
+            <!-- <SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
             <SSA Id="4" configfile="SSA.txt" />
             <SSA Id="5" configfile="SSA.txt" />
             <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" /> -->
+            <SSA Id="7" configfile="SSA.txt" /> 
+             -->
             
             <CIC_Files path="./settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" /> 
@@ -44,7 +46,10 @@
     </SLink>
 
     <!--CONFIG-->
-    <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <!-- 3 = from clock_source_u8 (default;internal oscillator), 2 = backplane, 0 = AMC13 -->
+    <Register name="clock_source_u7">3</Register> 
+    <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <Register name="clock_source_u8">3</Register> 
     <Register name="fc7_daq_cnfg">
         <!-- Clock control -->
         <Register name="clock">
@@ -58,7 +63,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 1000 </Register>
+		<Register name="user_trigger_frequency"> 99 </Register>
             <Register name="stubs_mask"> 1 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -75,7 +80,7 @@
         <Register name="antenna_trigger_delay_value"> 200 </Register>
         <Register name="delay_between_two_consecutive"> 0 </Register>
         <Register name="misc">
-            <Register name="backpressure_enable"> 1 </Register>
+            <Register name="backpressure_enable"> 0 </Register>
             <Register name="stubOR"> 1 </Register>
             <Register name="initial_fast_reset_enable"> 0 </Register>
             <Register name="trigger_multiplicity"> 0 </Register>
@@ -102,34 +107,35 @@
                 <!--this is what is commonly known as stub latency-->
                 <Register name="common_stubdata_delay"> 194 </Register>
             </Register>
+            <Register name="timeout"> 100 </Register>
     	  </Register>
 	     <!-- DIO5 Block -->
 	     <Register name="dio5_block">
-            <Register name="dio5_en"> 0 </Register>
+            <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
-                <Register name="out_enable"> 1 </Register>
+                <Register name="out_enable"> 0 </Register>
                 <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
             <Register name="ch2">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
             <Register name="ch3">
-                <Register name="out_enable"> 1 </Register>
+                <Register name="out_enable"> 0 </Register>
                 <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
             <Register name="ch4">
-                <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
-                <Register name="threshold"> 50 </Register>
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
             </Register>
             <Register name="ch5">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
-                <Register name="threshold"> 50 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
             </Register>
         </Register>
         <!-- TLU Block -->

@@ -19,6 +19,7 @@
 #include "../HWInterface/CicInterface.h"
 #include "../HWInterface/D19clpGBTInterface.h"
 #include "../HWInterface/MPAInterface.h"
+#include "../HWInterface/PSInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
@@ -34,6 +35,7 @@
 #include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cMPAEvent.h"
 #include "../Utils/D19cMPAEventAS.h"
+#include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
 #include "../Utils/DetectorMonitorConfig.h"
@@ -162,6 +164,13 @@ class SystemController
      *\param os         : ostream to dump output
      */
     void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
+
+    // start-up PS modiule
+    void ModuleStartUpPS();
+    // start-up 2S modiule
+    void ModuleStartUp2S();
+    // start-up CIC
+    void CicStartUp(uint8_t pDriveStrength = 1);
 
     /*!
      * \brief Configure the Hardware with XML file indicated values

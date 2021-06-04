@@ -70,6 +70,25 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
 
+    // for now.. force to use async mode here
+    for(auto cBoard: *fDetectorContainer)
+    {
+        bool cAsyncEvent = cBoard->getEventType() == EventType::PSAS;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cROC: *cHybrid)
+                {
+                    if(!cAsyncEvent) continue;
+
+                    if(cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA) // force this to work in async mode for now
+                        fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                }
+            }
+        }
+    }
+
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -150,7 +169,7 @@ void PedeNoise::sweepSCurves()
     // configure TP amplitude
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cWithSSA)
+        if(cWithSSA || cWithMPA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
         else if(cWithMPA)
         {
@@ -189,8 +208,9 @@ void PedeNoise::sweepSCurves()
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(false);
-        if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
-        if(cWithMPA)
+        if(cWithSSA)
+            setSameGlobalDac("InjectedCharge", 0);
+        else if(cWithMPA)
         {
             setSameGlobalDac("CalDAC0", 0);
             setSameGlobalDac("CalDAC1", 0);
@@ -249,6 +269,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
+
     LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
@@ -285,13 +306,13 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                                 sprintf(cRegName, "Channel%03d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0xFF});
                             }
-                            if(cWithSSA)
+                            if(cROC->getFrontEndType() == FrontEndType::SSA)
                             {
                                 char cRegName[17];
                                 sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
-                            if(cWithMPA)
+                            if((cROC->getFrontEndType() == FrontEndType::MPA))
                             {
                                 char cRegName[12];
                                 sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
@@ -411,8 +432,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
 
             cValue += cSign;
-            cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
-            if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
+            cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
             if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
 
         } while(!cLimitFound);

@@ -315,6 +315,8 @@ class Tool : public Ph2_System::SystemController
         return theContainerStreamer;
     }
 
+    std::string getDirectoryName() { return fDirectoryName; }
+
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 
