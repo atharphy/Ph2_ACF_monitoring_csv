@@ -899,9 +899,9 @@ bool BackEndAlignment::Align()
                 cAttempt++;
             } while(!cPackageDelayFound && cAttempt < 10);
             return cPackageDelayFound;
-            //cAligned = cPackageDelayFound;
-            //if(!cAligned) return cAligned;
-            //return this->FindStubLatency(theBoard);
+            // cAligned = cPackageDelayFound;
+            // if(!cAligned) return cAligned;
+            // return this->FindStubLatency(theBoard);
         }
         else
         {

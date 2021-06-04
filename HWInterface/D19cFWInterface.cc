@@ -2574,7 +2574,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
             do
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                //if(cCounter % 10 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
+                // if(cCounter % 10 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
                 cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
                 cCounter++;
             } while(cReadoutReq == 0 && cCounter < 100);
@@ -2988,7 +2988,7 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 }
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
-    //LOG(INFO) << BOLDBLUE << "Waiting for data from the FC7.... Attempt#" << fReadoutAttempts << RESET;
+    // LOG(INFO) << BOLDBLUE << "Waiting for data from the FC7.... Attempt#" << fReadoutAttempts << RESET;
 
     bool cFailed        = false;
     auto cNevents       = this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
@@ -3053,7 +3053,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             this->PS_Open_shutter(fFastCommandDuration);
         }
         // start triggering machine which will collect N events
-        //LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
+        // LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
         this->Start();
         if(!cAsync)
         {
@@ -3075,7 +3075,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
                     cNtriggersPrev = cNtriggers;
-                    //if(cCounter % 100 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
+                    // if(cCounter % 100 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
                     cCounter++;
                 } while(cNtriggers < cNevents * (1 + cMultiplicity) && cFoundSame < cTimeoutValue);
                 cFailed = !(cNtriggers == cNevents * (1 + cMultiplicity));
