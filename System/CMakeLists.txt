@@ -27,7 +27,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_Tools NetworkUtils)
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
       #check for TestCard USBDriver
