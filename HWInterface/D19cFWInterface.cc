@@ -1338,7 +1338,7 @@ void D19cFWInterface::Resume()
 
 void D19cFWInterface::ResetReadout()
 {
-    LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
+    //LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
@@ -1347,7 +1347,7 @@ void D19cFWInterface::ResetReadout()
 
     if(fIsDDR3Readout)
     {
-        LOG(INFO) << BOLDBLUE << "Reseting DDR3 " << RESET;
+        //LOG(INFO) << BOLDBLUE << "Reseting DDR3 " << RESET;
         fDDR3Offset     = 0;
         fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
         bool i          = false;

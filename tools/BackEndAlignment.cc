@@ -392,8 +392,8 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 std::vector<uint8_t> cSeeds{10};
                 std::vector<int>     cBends{0};
                 // make sure we are within the limits of the CIC
-                // max 16
-                if(cChip->getId() % 2 == 0)
+                // only inject 3 stubs here 
+                if(cNinjectedStubs > 3 ) 
                 {
                     cSeeds.clear();
                     cBends.clear();
@@ -886,14 +886,17 @@ bool BackEndAlignment::Align()
         {
             cAligned = this->CICAlignment(theBoard);
             if(!cAligned) return cAligned;
-            // uint8_t cAttempt           = 0;
-            // bool    cPackageDelayFound = false;
-            // do
-            // {
-            //     cPackageDelayFound = this->FindPackageDelay(theBoard);
-            //     cAttempt++;
-            // } while(!cPackageDelayFound && cAttempt < 1);
-            // cAligned = cPackageDelayFound;
+            uint8_t cAttempt           = 0;
+            bool    cPackageDelayFound = false;
+            do
+            {
+                cPackageDelayFound = this->FindPackageDelay(theBoard);
+                cAttempt++;
+            } while(!cPackageDelayFound && cAttempt < 1);
+            cAligned = cPackageDelayFound;
+            if(!cAligned) return cAligned; 
+            return this->FindStubLatency(theBoard);
+
         }
         else
         {

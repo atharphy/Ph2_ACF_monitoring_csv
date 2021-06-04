@@ -22,23 +22,23 @@
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
-            <!-- <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
             <CBC Id="3" configfile="CBC3_default.txt" />
             <CBC Id="4" configfile="CBC3_default.txt" />
             <CBC Id="5" configfile="CBC3_default.txt" />
             <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" /> -->
+            <CBC Id="7" configfile="CBC3_default.txt" />
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <!-- <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="580" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
@@ -60,7 +60,7 @@
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid> -->
+        </Hybrid>
 	 </OpticalGroup>
     
     <!--CONFIG-->
@@ -71,8 +71,8 @@
     <Register name="fc7_daq_cnfg">
 	   <!-- Sync block control -->
         <Register name="sync_block">
-            <Register name="enable"          >1</Register>
-            <Register name="is_bc0_enable"   >1</Register>
+            <Register name="enable"          >0</Register>
+            <Register name="is_bc0_enable"   >0</Register>
             <Register name="is_resync_enable">0</Register>
             <Register name="delay">10</Register>
             <Register name="num_triggers"    >9</Register>
@@ -95,9 +95,9 @@
     		<Register name="stub_trigger_delay_value"> 0 </Register>
             <Register name="stub_trigger_veto_length"> 0 </Register>
     		<Register name="test_pulse">
-    			<Register name="delay_after_fast_reset"> 10 </Register>
-    			<Register name="delay_after_test_pulse"> 10 </Register>
-    			<Register name="delay_before_next_pulse"> 10 </Register>
+    			<Register name="delay_after_fast_reset"> 200 </Register>
+    			<Register name="delay_after_test_pulse"> 200 </Register>
+    			<Register name="delay_before_next_pulse"> 200 </Register>
     			<Register name="en_fast_reset"> 0 </Register>
     			<Register name="en_test_pulse"> 1 </Register>
     			<Register name="en_l1a"> 1 </Register>
