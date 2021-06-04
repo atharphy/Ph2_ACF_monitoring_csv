@@ -1013,7 +1013,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##########################################
     // functions for new Command Processor Block
     void                  ResetCPB() override;
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector ) override;
+    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;

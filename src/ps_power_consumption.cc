@@ -153,8 +153,8 @@ int main(int argc, char* argv[])
     std::string cMPAsToEnable          = (cmd.foundOption("enableMPA")) ? cmd.optionValue("enableMPA") : "";
     std::string cHybridsToReset        = (cmd.foundOption("resetHybrid")) ? cmd.optionValue("resetHybrid") : "";
     std::string cMPAsToEnableClock     = (cmd.foundOption("enableMPAclock")) ? cmd.optionValue("enableMPAclock") : "";
-   //uint16_t    cI2CSpeed              = (cmd.foundOption("speedI2C")) ? convertAnyInt(cmd.optionValue("speedI2C").c_str()) : 1000;
-    uint8_t     cMaxI2Cattempts        = (cmd.foundOption("maxI2Cattempts")) ? convertAnyInt(cmd.optionValue("maxI2Cattempts").c_str()) : 10;
+    // uint16_t    cI2CSpeed              = (cmd.foundOption("speedI2C")) ? convertAnyInt(cmd.optionValue("speedI2C").c_str()) : 1000;
+    uint8_t cMaxI2Cattempts = (cmd.foundOption("maxI2Cattempts")) ? convertAnyInt(cmd.optionValue("maxI2Cattempts").c_str()) : 10;
 
     std::string cMonitor    = (cmd.foundOption("monitor")) ? cmd.optionValue("monitor") : "none";
     uint16_t    cHybrifCnfg = (cmd.foundOption("configureHybrid")) ? convertAnyInt(cmd.optionValue("configureHybrid").c_str()) : 0;

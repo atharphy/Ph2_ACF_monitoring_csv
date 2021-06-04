@@ -107,7 +107,7 @@ uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
-    return (cChipRate / 5.) * (int)cValue * (float)fClockSpeed/1e6;
+    return (cChipRate / 5.) * (int)cValue * (float)fClockSpeed / 1e6;
 }
 
 void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,

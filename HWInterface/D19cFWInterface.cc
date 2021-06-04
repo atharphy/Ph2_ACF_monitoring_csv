@@ -5376,7 +5376,7 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pC
 
 // ##########################################
 // # Read/Write registers with CPB I2C functions #
-// #########################################   
+// #########################################
 bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
 {
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);

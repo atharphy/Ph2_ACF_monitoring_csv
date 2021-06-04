@@ -90,9 +90,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     auto           cEventIterator      = pData.begin();
     do
     {
-        uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
-        uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-        //uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+        uint32_t cHeader    = (0xFFFF0000 & (*cEventIterator)) >> 16;
+        uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+        // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
         // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader) << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
         //            << " dummy 32 bit words .. " << RESET;
         // retrieve chunck of data vector belonging to this event

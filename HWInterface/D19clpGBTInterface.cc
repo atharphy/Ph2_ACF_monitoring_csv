@@ -57,8 +57,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         SetPUSMDone(pChip, true, true);
     }
     uint16_t cIter = 0, cMaxIter = 200;
-    bool cReady = false;
-    while( !cReady && cIter < cMaxIter)
+    bool     cReady = false;
+    while(!cReady && cIter < cMaxIter)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cReady = IsPUSMDone(pChip);
@@ -66,7 +66,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(cReady) LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
     if(!cReady) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
-    //PrintChipMode(pChip);
+    // PrintChipMode(pChip);
     return cReady;
 } //
 
@@ -103,8 +103,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH lpGBT configuration for " << +cChipRate << "G module." << RESET;
-    
-    // Clocks - by default all are off 
+
+    // Clocks - by default all are off
     std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid, fClock_LHS_Hybrid}; // Reduced number of clocks and only 320 MHz
     uint8_t              cClkFreq = 0, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
@@ -156,7 +156,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cClocks  = {1, 6, 11, 26};
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    cClkFreq =0; 
+    cClkFreq = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};

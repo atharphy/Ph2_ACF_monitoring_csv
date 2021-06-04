@@ -18,7 +18,6 @@
 
 namespace Ph2_HwInterface
 {
-
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:

@@ -37,7 +37,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     setBoard(pSSA->getBeBoardId());
     pSSA->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA->getId() << "]" << RESET;
-    
+
     std::vector<uint32_t> cVec;
     ChipRegMap            cSSARegMap = pSSA->getRegMap();
     // get register map
@@ -309,7 +309,7 @@ uint8_t SSAInterface::ReadChipId(Chip* pChip)
 
 bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop)
 {
-    //bool cRetry   = false;
+    // bool cRetry   = false;
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
     auto cRegItem     = pChip->getRegItem(fMap[pRegisterAddress]);
@@ -331,8 +331,8 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     {
         LOG(DEBUG) << BOLDBLUE << "Writing address 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
         // cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress, cRegItem.fValue, pVerifLoop);
-        //bool cVerify = false;
-        cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, pVerifLoop);
+        // bool cVerify = false;
+        cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, pVerifLoop);
         fRegisterWrites++;
         if(!cSuccess)
         {
@@ -451,7 +451,7 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         for(const auto& cReg: pRegs)
         {
             // cSuccess = flpGBTInterface->ssaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, cRetry);
-            cSuccess     = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, pVerifLoop);
+            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, pVerifLoop);
             fRegisterWrites++;
             // update value of register in memory
             auto cRegItem = pChip->getRegItem(fMap[cReg.first]);

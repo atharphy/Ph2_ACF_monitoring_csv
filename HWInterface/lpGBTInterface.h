@@ -161,7 +161,6 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
 
-
 // #######################################
 // # functions to link to external interfaces #
 // #######################################
