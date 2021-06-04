@@ -237,8 +237,10 @@
     <Setting name="TAP0Stop">          1023 </Setting>
     <Setting name="TAP1Start">            0 </Setting>
     <Setting name="TAP1Stop">           511 </Setting>
+    <Setting name="InvTAP1">              1 </Setting>
     <Setting name="TAP2Start">            0 </Setting>
     <Setting name="TAP2Stop">           511 </Setting>
+    <Setting name="InvTAP2">              0 </Setting>
 
     <Setting name="chain2Test">           0 </Setting>
     <Setting name="byTime">               1 </Setting>

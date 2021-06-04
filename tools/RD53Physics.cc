@@ -142,6 +142,9 @@ void Physics::initializeFiles(const std::string fileRes_, int currentRun)
 #ifdef __USE_ROOT__
     delete histos;
     histos = new PhysicsHistograms;
+
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)) this->InitResultFile(fileRes);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
@@ -154,9 +157,9 @@ void Physics::run()
         Physics::analyze();
         theGuard.lock();
         genericEvtConverter(RD53Event::decodedEvents);
+        numberOfEventsPerRun += RD53Event::decodedEvents.size();
         theGuard.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
-        numberOfEventsPerRun += RD53Event::decodedEvents.size();
     }
 }
 
@@ -169,13 +172,8 @@ void Physics::draw()
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(fileRes);
-        LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
-    }
+    LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Physics::fillHisto();
     histos->process();
     this->WriteRootFile();
@@ -200,6 +198,10 @@ void Physics::analyze(bool doReadBinary)
 
         if(dataSize != 0)
         {
+#ifdef __USE_ROOT__
+            Physics::fillHisto();
+#endif
+
             Physics::fillDataContainer(cBoard);
             Physics::sendBoardData(cBoard);
         }

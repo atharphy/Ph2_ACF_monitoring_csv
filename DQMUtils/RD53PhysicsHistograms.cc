@@ -93,9 +93,10 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
                         {
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != 0)
                             {
+                                Occupancy2DHist->SetBinContent(col + 1, row + 1, Occupancy2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-                                Occupancy2DHist->SetBinContent(col + 1, row + 1, Occupancy2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+                                ToT2DHist->SetBinError(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPhError);
                             }
 
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);

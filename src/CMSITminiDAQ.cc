@@ -31,9 +31,8 @@
 #include <chrono>
 #include <thread>
 
-#ifdef __USE_ROOT__
 #include "TApplication.h"
-#endif
+#include "TROOT.h"
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -73,7 +72,7 @@ void interruptHandler(int handler)
 
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
-    const unsigned int    wordDataSize = 32;
+    const unsigned int    wordDataSize = 32; // @CONST@
     unsigned int          errors       = 0;
     std::vector<uint32_t> data;
 
@@ -145,6 +144,9 @@ int main(int argc, char** argv)
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .raw)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
+    cmd.defineOption("runtime", "Set running time for physics mode", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("runtime", "t");
+
     int result = cmd.parse(argc, argv);
     if(result != CommandLineProcessing::ArgvParser::NoParserError)
     {
@@ -171,6 +173,7 @@ int main(int argc, char** argv)
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        supervisor = cmd.foundOption("sup") == true ? true : false;
     bool        reset      = cmd.foundOption("reset") == true ? true : false;
+    size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : ARBITRARYDELAY;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -193,7 +196,6 @@ int main(int argc, char** argv)
     // ######################
     if(supervisor == true)
     {
-#ifdef __USE_ROOT__
         // #######################
         // # Run Supervisor Mode #
         // #######################
@@ -279,9 +281,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending stop" << RESET;
 
-                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
+                    std::this_thread::sleep_for(std::chrono::seconds(runtime));
                     theMiddlewareInterface.stop();
-                    std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
+                    std::this_thread::sleep_for(std::chrono::seconds(runtime));
                     theDQMInterface.stopProcessingData();
 
                     stateMachineStatus = STOPPED;
@@ -301,10 +303,6 @@ int main(int argc, char** argv)
             theApp.Run();
         else
             theApp.Terminate(0);
-#else
-        LOG(WARNING) << BOLDBLUE << "ROOT flag was OFF during compilation" << RESET;
-        exit(EXIT_FAILURE);
-#endif
     }
     else
     {
@@ -612,7 +610,7 @@ int main(int argc, char** argv)
             {
                 ph.localConfigure(fileName, -1);
                 ph.Start(runNumber);
-                std::this_thread::sleep_for(std::chrono::seconds(ARBITRARYDELAY));
+                std::this_thread::sleep_for(std::chrono::seconds(runtime));
                 ph.Stop();
             }
             else
@@ -630,9 +628,8 @@ int main(int argc, char** argv)
             // ######################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing EUDAQ data taking @@@" << RESET;
 
-#ifdef __USE_ROOT__
             gROOT->SetBatch(true);
-#endif
+
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
             try
             {

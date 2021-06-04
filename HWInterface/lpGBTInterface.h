@@ -69,11 +69,14 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
-    virtual void ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+    virtual bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
                                       const Ph2_HwDescription::BeBoard*      pBoard,
                                       const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
                                       Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
-                                      ReadoutChipInterface*                  pReadoutChipInterface){};
+                                      ReadoutChipInterface*                  pReadoutChipInterface)
+    {
+        return true;
+    };
 
     // #######################################
     // # Chip configuration functions #
@@ -294,6 +297,22 @@ class lpGBTInterface : public ChipInterface
                                                      {18, "READY"}};
 
     std::map<std::string, uint8_t> revertedPUSMStatusMap;
+    std::map<uint8_t, double>      fBERTMeasTimeMap = {{0, RD53Shared::setBits(4) + 1},
+                                                  {1, RD53Shared::setBits(6) + 1},
+                                                  {2, RD53Shared::setBits(8) + 1},
+                                                  {3, RD53Shared::setBits(10) + 1},
+                                                  {4, RD53Shared::setBits(12) + 1},
+                                                  {5, RD53Shared::setBits(14) + 1},
+                                                  {6, RD53Shared::setBits(16) + 1},
+                                                  {7, RD53Shared::setBits(18) + 1},
+                                                  {8, RD53Shared::setBits(20) + 1},
+                                                  {9, RD53Shared::setBits(22) + 1},
+                                                  {10, RD53Shared::setBits(24) + 1},
+                                                  {11, RD53Shared::setBits(26) + 1},
+                                                  {12, RD53Shared::setBits(28) + 1},
+                                                  {13, RD53Shared::setBits(30) + 1},
+                                                  {14, RD53Shared::setBits(32) + 1},
+                                                  {15, RD53Shared::setBits(34) + 1}};
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 

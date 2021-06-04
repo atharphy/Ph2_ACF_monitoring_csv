@@ -11,6 +11,7 @@
 #define GenericDataArray_H
 
 #include <iostream>
+#include <vector>
 
 template <size_t size, typename T = float>
 class GenericDataArray

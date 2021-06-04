@@ -17,6 +17,10 @@
 #include <thread>
 #include <vector>
 
+#define BOOST_UBLAS_NDEBUG 1
+#include <boost/numeric/ublas/lu.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+
 namespace RD53Shared
 {
 const char     RESULTDIR[]   = "Results";                                       // Directory containing the results
@@ -41,6 +45,30 @@ template <typename T>
 inline void myMove(std::vector<T> source, std::vector<T>& destination)
 {
     destination.insert(destination.end(), std::make_move_iterator(source.begin()), std::make_move_iterator(source.end()));
+}
+
+template <typename T>
+T mtxInversion(const boost::numeric::ublas::matrix<T>& input, boost::numeric::ublas::matrix<T>& inverse)
+{
+    if(input.size1() != input.size2()) return 0;
+
+    boost::numeric::ublas::matrix<T>                  mLU(input);
+    boost::numeric::ublas::permutation_matrix<size_t> pivots(mLU.size1());
+
+    bool isSingular;
+    if((isSingular = boost::numeric::ublas::lu_factorize(mLU, pivots)) != false) return 0;
+
+    T det = 1;
+    for(auto i = 0; i < pivots.size(); i++)
+    {
+        if(pivots(i) != i) det *= -1;
+        det *= mLU(i, i);
+    }
+
+    inverse.assign(boost::numeric::ublas::identity_matrix<T>(mLU.size1()));
+    boost::numeric::ublas::lu_substitute(mLU, pivots, inverse);
+
+    return det;
 }
 
 } // namespace RD53Shared

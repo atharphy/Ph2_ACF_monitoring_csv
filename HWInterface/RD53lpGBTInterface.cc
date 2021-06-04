@@ -91,7 +91,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 // # RD53 specific routine functions #
 // ####################################
 
-void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
+bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               const BeBoard*        pBoard,
                                               const OpticalGroup*   pOpticalGroup,
                                               BeBoardFWInterface*   pBeBoardFWInterface,
@@ -107,7 +107,7 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
     if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
     {
         LOG(INFO) << BOLDBLUE << "\t--> The phase for this chip was already aligned (maybe from configuration file)" << RESET;
-        return;
+        return true;
     }
 
     for(const auto cHybrid: *pOpticalGroup)
@@ -167,12 +167,16 @@ void RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +bestPhase
                           << RESET;
             else
+            {
                 LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDRED << " has no good phase" << RESET;
+                allGood = false;
+            }
 
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
-            static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
+            static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
         }
-    }
+
+    return allGood;
 }
 
 } // namespace Ph2_HwInterface

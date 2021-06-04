@@ -404,7 +404,10 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
     }
 }
 
-void Tool::WriteRootFile() { fResultFile->Write(); }
+void Tool::WriteRootFile()
+{
+    if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->Write();
+}
 #endif
 
 void Tool::SaveResults()

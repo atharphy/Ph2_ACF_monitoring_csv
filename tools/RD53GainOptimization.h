@@ -19,7 +19,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NSTDEV 1.5 // Number of standard deviations for gain tolerance
+#define NSTDEV 4. // Number of standard deviations for gain tolerance
 
 // ################################
 // # Gain optimization test suite #
@@ -27,7 +27,13 @@
 class GainOptimization : public Gain
 {
   public:
-    ~GainOptimization() { this->CloseResultFile(); }
+    ~GainOptimization()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

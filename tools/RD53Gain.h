@@ -13,7 +13,7 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/GainAndIntercept.h"
+#include "../Utils/GainFit.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
@@ -21,6 +21,11 @@
 #include "../DQMUtils/RD53GainHistograms.h"
 #include "TApplication.h"
 #endif
+
+// #############
+// # CONSTANTS #
+// #############
+#define NGAINPAR 4 // Number of parameters for gain data regression
 
 // ###################
 // # Gain test suite #
@@ -31,7 +36,9 @@ class Gain : public Tool
     ~Gain()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
+#ifdef __USE_ROOT__
         this->CloseResultFile();
+#endif
     }
 
     void Running() override;
@@ -47,6 +54,8 @@ class Gain : public Tool
     size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
     void   saveChipRegisters(int currentRun);
 
+    static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q + par[2] * q * q + par[3] * log(q); }
+
 #ifdef __USE_ROOT__
     GainHistograms* histos;
 #endif
@@ -59,6 +68,7 @@ class Gain : public Tool
     size_t nEvents;
     size_t startValue;
     size_t stopValue;
+    float  targetCharge;
     size_t nSteps;
     size_t offset;
     size_t nHITxCol;
@@ -68,11 +78,11 @@ class Gain : public Tool
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     std::vector<DetectorDataContainer*>      detectorContainerVector;
-    std::shared_ptr<DetectorDataContainer>   theGainAndInterceptContainer;
+    std::shared_ptr<DetectorDataContainer>   theGainContainer;
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr);
+    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& DoF);
     void chipErrorReport() const;
 
   protected:

@@ -98,7 +98,7 @@ constexpr float cap    = 8.5;    // [fF]
 constexpr float ele    = 1.6;    // [e-19]
 constexpr float offset = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
 
-constexpr float VCAl2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
+constexpr float VCal2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
 
 constexpr float Charge2VCal(float Charge) { return (Charge - offset) / (cap * 1e4) * ele / (par0 / par1); }
 } // namespace RD53chargeConverter

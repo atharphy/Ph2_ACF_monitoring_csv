@@ -94,6 +94,7 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                             {
                                 hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(0) / 2.);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
+                                ToT2DHist->SetBinError(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPhError);
                             }
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
@@ -128,10 +129,19 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
                                 ErrorFit2DHist->Fill(col + 1, row + 1);
                             else if(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
                             {
+                                // #################
+                                // # 1D histograms #
+                                // #################
                                 Threshold1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
                                 Noise1DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+
+                                // #################
+                                // # 2D histograms #
+                                // #################
                                 Threshold2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                                Threshold2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThresholdError);
                                 Noise2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                                Noise2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoiseError);
                             }
                 }
 }

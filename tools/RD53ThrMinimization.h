@@ -22,7 +22,13 @@
 class ThrMinimization : public PixelAlive
 {
   public:
-    ~ThrMinimization() { this->CloseResultFile(); }
+    ~ThrMinimization()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

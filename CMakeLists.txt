@@ -257,7 +257,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # ZeroMQ 
+    # ZeroMQ
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)

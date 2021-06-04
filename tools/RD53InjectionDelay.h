@@ -22,7 +22,13 @@
 class InjectionDelay : public PixelAlive
 {
   public:
-    ~InjectionDelay() { this->CloseResultFile(); }
+    ~InjectionDelay()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

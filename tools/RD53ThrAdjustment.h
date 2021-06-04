@@ -27,7 +27,13 @@
 class ThrAdjustment : public PixelAlive
 {
   public:
-    ~ThrAdjustment() { this->CloseResultFile(); }
+    ~ThrAdjustment()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

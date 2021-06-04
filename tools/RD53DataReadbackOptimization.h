@@ -10,6 +10,7 @@
 #ifndef RD53DataReadbackOptimization_H
 #define RD53DataReadbackOptimization_H
 
+#include "../Utils/GenericDataArray.h"
 #include "RD53BERtest.h"
 
 #ifdef __USE_ROOT__
@@ -23,7 +24,13 @@
 class DataReadbackOptimization : public BERtest
 {
   public:
-    ~DataReadbackOptimization() { this->CloseResultFile(); }
+    ~DataReadbackOptimization()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
@@ -46,8 +53,10 @@ class DataReadbackOptimization : public BERtest
     size_t stopValueTAP0;
     size_t startValueTAP1;
     size_t stopValueTAP1;
+    bool   invTAP1;
     size_t startValueTAP2;
     size_t stopValueTAP2;
+    bool   invTAP2;
 
     std::vector<uint16_t> dacListTAP0;
     std::vector<uint16_t> dacListTAP1;

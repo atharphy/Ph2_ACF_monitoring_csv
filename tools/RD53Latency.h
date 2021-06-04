@@ -22,7 +22,13 @@
 class Latency : public PixelAlive
 {
   public:
-    ~Latency() { this->CloseResultFile(); }
+    ~Latency()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;

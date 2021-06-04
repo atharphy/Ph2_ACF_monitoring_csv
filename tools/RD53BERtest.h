@@ -11,6 +11,7 @@
 #define RD53BERtest_H
 
 #include "../Utils/Container.h"
+#include "../Utils/ContainerFactory.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -24,7 +25,13 @@
 class BERtest : public Tool
 {
   public:
-    ~BERtest() { this->CloseResultFile(); }
+    ~BERtest()
+    {
+#ifdef __USE_ROOT__
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
