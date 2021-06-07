@@ -674,18 +674,24 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         cVec.clear();
         for(const auto& cReg: pRegs)
         {
-            ChipRegItem cRegItem;
-            cRegItem.fPage    = 0x00;
-            cRegItem.fAddress = cReg.first;
-            cRegItem.fValue   = cReg.second & 0xFF;
+            auto cRegItem   = pChip->getRegItem(fMap[cReg.first]);
+            cRegItem.fValue = cReg.second & 0xFF;
             fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
         }
         uint8_t cWriteAttempts = 0;
-        cVerify                = pVerifLoop && (cReg.fStatusReg == 0);
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, cVerify);
+        if(cSuccess)
+        {
+            for(const auto& cReg: pRegs)
+            {
+                auto cRegItem   = pChip->getRegItem(fMap[cReg.first]);
+                cRegItem.fValue = cReg.second & 0xFF;
+                pChip->setReg(fMap[cReg.first], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
+            }
+        }
 #ifdef COUNT_FLAG
         fTransactionCount++;
 #endif
@@ -695,10 +701,13 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         int cCount = 0;
         for(const auto& cReg: pRegs)
         {
+            auto cRegItem   = pChip->getRegItem(fMap[cReg.first]);
+            cRegItem.fValue = cReg.second & 0xFF;
+            cVerify         = pVerifLoop && (cRegItem.fStatusReg == 0);
             if(cCount % 1000 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
             // cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
-            cVerify  = pVerifLoop && (cReg.fStatusReg == 0);
-            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cVerify);
+            if(fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cVerify)) pChip->setReg(fMap[cReg.first], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
+
             if(!cSuccess) continue;
 #ifdef COUNT_FLAG
             fRegisterCount++;
@@ -713,6 +722,8 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
 {
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
+    auto cRegItem   = pChip->getRegItem(fMap[pRegisterAddress]);
+    cRegItem.fValue = pRegisterValue & 0xFF;
     // write
     if(!lpGBTFound())
     {
@@ -727,8 +738,10 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     }
     else
     {
-        cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, pVerifLoop);
+        bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
+        cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cVerify);
     }
+    if(cSuccess) pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     return cSuccess;
 }
 
