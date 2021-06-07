@@ -184,10 +184,10 @@ void CicFEAlignment::Initialise()
 void CicFEAlignment::writeObjects()
 {
     this->SaveResults();
-    /*#ifdef __USE_ROOT__
-        fDQMHistogramHybridTest.process();
-    #endif*/
+#ifdef __USE_ROOT__
+    // fDQMHistogramHybridTest.process();
     fResultFile->Flush();
+#endif
 }
 // State machine control functions
 void CicFEAlignment::Running()
@@ -906,7 +906,7 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
 void CicFEAlignment::Stop()
 {
     dumpConfigFiles();
-    Destroy();
+    // Destroy();
 }
 
 void CicFEAlignment::Pause() {}

@@ -9,11 +9,11 @@
 
 #include "RD53Monitor.h"
 
-RD53Monitor::RD53Monitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig) {}
+RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig) {}
 
 void RD53Monitor::runMonitor()
 {
     if(fDetectorMonitorConfig.fMonitorElementList.empty()) return;
 
-    for(const auto cBoard: *theSystCntr.fDetectorContainer) theSystCntr.ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList);
+    for(const auto cBoard: *fTheSystemController->fDetectorContainer) fTheSystemController->ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList);
 }

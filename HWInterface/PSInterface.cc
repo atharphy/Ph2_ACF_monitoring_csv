@@ -180,6 +180,12 @@ bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop
         LOG(ERROR) << "Bad chip for PS interface";
     return false;
 }
+
+void PSInterface::readAllBias(ReadoutChip* pPS)
+{
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->readAllBias(pPS); }
+}
+
 //
 std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode) { return theMPAInterface->decodeBendCode(pChip, pBendCode); }
 //

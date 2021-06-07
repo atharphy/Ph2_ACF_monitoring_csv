@@ -75,6 +75,7 @@ class ChannelGroup : public ChannelGroupBase
     }
     inline void disableChannel(uint16_t row, uint16_t col = 0) override
     {
+        // std::cout<<"disableChannel "<<row<<" "<<col<<std::endl;
         channelsBitset_[row + numberOfRows_ * col] = false;
         numberOfEnabledChannels_                   = channelsBitset_.count();
     }

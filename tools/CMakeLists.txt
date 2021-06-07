@@ -90,7 +90,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
     if(NoDataShipping)
-        set(LIBS ${LIBS} Ph2_DQMUtils)
+        set(LIBS ${LIBS} Ph2_DQMUtils Ph2_MonitorDQM)
     endif()
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/tools *.cc)
@@ -139,6 +139,7 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
+    include_directories($ENV{PH2ACF_BASE_DIR}/HWInterface)
 
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined

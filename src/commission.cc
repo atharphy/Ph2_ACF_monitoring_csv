@@ -3,18 +3,18 @@
 //#include "../Utils/easylogging++.h"
 #include "../Utils/Timer.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/argvparser.h"
 #include "../tools/AntennaTester.h"
 #include "../tools/CBCPulseShape.h"
 #include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/SignalScan.h"
 #include "../tools/SignalScanFit.h"
-#include "tools/BackEndAlignment.h"
-#include "tools/CicFEAlignment.h"
-
-#include "../Utils/argvparser.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/PSAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -140,29 +140,39 @@ int main(int argc, char* argv[])
     cTool.StartHttpServer();
     cTool.ConfigureHw();
 
-    // align back-end .. if this moves to firmware then we can get rid of this step
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Initialise();
-    bool cAligned = cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
-    if(!cAligned)
-    {
-        LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        exit(0);
-    }
-
     // if CIC is enabled then align CIC first
     if(cWithCIC)
     {
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        // map MPA outputs for PS module
+        cPSAlignment.MapMPAOutputs();
+
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
-        // reset all chip and board registers
-        // to what they were before this tool was called
+        cCicAligner.waitForRunToBeCompleted();
         cCicAligner.Reset();
         cCicAligner.dumpConfigFiles();
+
+        BackEndAlignment cBackEndAligner;
+        cBackEndAligner.Inherit(&cTool);
+        cBackEndAligner.Initialise();
+        bool cAligned = cBackEndAligner.Align();
+        cBackEndAligner.resetPointers();
+
+        // cPSAlignment.Align();
+        cPSAlignment.Reset();
+
+        if(!cAligned)
+        {
+            LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
+            exit(0);
+        }
     }
+
+    // align back-end .. if this moves to firmware then we can get rid of this step
 
 #ifdef __ANTENNA__
     AntennaTester cAntennaTester;
@@ -170,8 +180,14 @@ int main(int argc, char* argv[])
     cAntennaTester.Initialize();
 #endif
 
+    // std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    // cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 5});
+    // // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    // (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReconfigureTriggerFSM(cVecReg);
+
     if(cLatency || cStubLatency)
     {
+        LOG(INFO) << BOLDBLUE << "STARTLAT" << RESET;
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
@@ -184,8 +200,10 @@ int main(int argc, char* argv[])
 #ifdef __ANTENNA__
             if(cAntenna) cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
 #endif
+            LOG(INFO) << BOLDBLUE << "LATSCAN" << RESET;
 
             cLatencyScan.ScanLatency();
+            LOG(INFO) << BOLDBLUE << "LATSCANDONE" << RESET;
         }
 
         if(cStubLatency) cLatencyScan.StubLatencyScan();

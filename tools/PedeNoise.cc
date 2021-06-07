@@ -40,20 +40,18 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDisableStubLogic = pDisableStubLogic;
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-
-    cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
     if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
 
     initializeRecycleBin();
-
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
     // For async only -- to fix
-    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
+    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(120, 16);
     fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -63,7 +61,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-
+    LOG(INFO) << BOLDRED << "I8" << RESET;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
@@ -171,16 +169,6 @@ void PedeNoise::sweepSCurves()
     {
         if(cWithSSA || cWithMPA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
-        else if(cWithMPA)
-        {
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC3", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fPulseAmplitude);
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fPulseAmplitude);
-        }
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
@@ -377,8 +365,8 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
 void PedeNoise::measureSCurves(uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
-    float    cLimit         = 0.005;
-    int      cMinBreakCount = 5;
+    float    cLimit         = 0.05;
+    int      cMinBreakCount = 40;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
     // uint16_t cMinValue      = 0;
@@ -392,6 +380,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int cCounter = 0;
     for(auto cSign: cSigns)
     {
+        bool firstlim      = false;
         bool cLimitFound   = false;
         int  cLimitCounter = 0;
         do
@@ -424,8 +413,9 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. "
                       << "Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;
-            if(cDistanceFromTarget <= cLimit)
+            if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
             {
+                firstlim = true;
                 LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
                            << " -- current value is " << +cLimitCounter << RESET;
                 cLimitCounter++;

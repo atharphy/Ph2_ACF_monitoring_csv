@@ -14,6 +14,7 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
 #include <bitset>
+#include <numeric>
 
 using namespace Ph2_HwDescription;
 
@@ -64,7 +65,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     {
         ChipRegItem& cItem = cSSARegMap[cMapItem.second];
         // for now .. don't configure each strip
-        if(cMapItem.second.find("_S") != std::string::npos) continue;
+        // if(cMapItem.second.find("_S") != std::string::npos) continue;
 
         // create a register
         std::pair<uint16_t, uint16_t> cReg;
@@ -179,7 +180,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         uint8_t pStripEnable    = (pValue != 0x00); // 1 == enable , 0 == disable
         uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
         cRegValue               = cRegValue | (pStripEnable << 0);
-        LOG(INFO) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(DEBUG) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
         bool cEnableReg = WriteChipSingleReg(pSSA, cRegName, 1, pVerifLoop);
         return cEnableReg && cReadoutMode;
     }
@@ -617,6 +618,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
+        LOG(INFO) << BOLDRED << "HUH" << RESET;
         fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
@@ -769,7 +771,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
 
 void SSAInterface::ReadASEvent(ReadoutChip* pSSA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange)
 {
-    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0}) pSRange = std::pair<uint32_t, uint32_t>{1, pSSA->getNumberOfChannels()};
+    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0}) pSRange = std::pair<uint32_t, uint32_t>{1, pSSA->getNumberOfChannels() - 1};
     for(uint32_t i = pSRange.first; i <= pSRange.second; i++)
     {
         char cRegName[100];
@@ -777,6 +779,7 @@ void SSAInterface::ReadASEvent(ReadoutChip* pSSA, std::vector<uint32_t>& pData, 
         pData.push_back(this->ReadChipReg(pSSA, cRegName));
         // uint8_t cRP1 = this->ReadChipReg(pSSA, "ReadCounter_LSB_S" + std::to_string(i));
         // uint8_t cRP2 = this->ReadChipReg(pSSA, "ReadCounter_MSB_S" + std::to_string(i));
+        // LOG(INFO) << BOLDBLUE << "cRP1 "<<+cRP1 <<  " cRP2 " << +cRP2<< RESET;
         // pData.push_back((cRP2*256) + cRP1);
     }
 }
@@ -815,4 +818,5 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
         return this->ReadReg(pSSA, cRegItem.fAddress) & 0xFF;
     }
 }
+
 } // namespace Ph2_HwInterface

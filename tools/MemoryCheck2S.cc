@@ -2210,7 +2210,9 @@ void MemoryCheck2S::Check()
 void MemoryCheck2S::writeObjects()
 {
     this->SaveResults();
+#ifdef __USE_ROOT__
     fResultFile->Flush();
+#endif
 }
 // State machine control functions
 void MemoryCheck2S::Running() { Initialise(); }
@@ -2218,10 +2220,14 @@ void MemoryCheck2S::Running() { Initialise(); }
 void MemoryCheck2S::Stop()
 {
     this->SaveResults();
+#ifdef __USE_ROOT__
     fResultFile->Flush();
+#endif
 
     SaveResults();
+#ifdef __USE_ROOT__
     CloseResultFile();
+#endif
     Destroy();
 }
 

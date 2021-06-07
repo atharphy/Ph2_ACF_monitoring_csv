@@ -58,6 +58,8 @@ class BackEndAlignment : public Tool
     bool fStubDebug = false;
 
   private:
+    //
+    bool fAlignStub = true;
     // status
     bool fSuccess;
     // Containers

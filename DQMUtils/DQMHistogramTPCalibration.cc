@@ -27,7 +27,7 @@ DQMHistogramTPCalibration::DQMHistogramTPCalibration() {}
 DQMHistogramTPCalibration::~DQMHistogramTPCalibration() {}
 
 //========================================================================================================================
-void DQMHistogramTPCalibration::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramTPCalibration::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 }

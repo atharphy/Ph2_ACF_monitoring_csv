@@ -52,15 +52,17 @@ class PSCluster
 class PCluster
 {
   public:
+    PCluster() : fAddress(255u), fWidth(255u), fZpos(255u){};
     uint8_t fAddress;
     uint8_t fWidth;
     uint8_t fZpos;
-    float   getBaricentre();
+    float   getBaricentre(); // Barycenter?
 };
 
 class SCluster
 {
   public:
+    SCluster() : fAddress(255u), fMip(255u), fWidth(255u){};
     uint8_t fAddress;
     uint8_t fMip;
     uint8_t fWidth;
@@ -73,8 +75,10 @@ class Stub
     Stub(uint8_t pPosition, uint8_t pBend, uint8_t pRow = 0) : fPosition(pPosition), fBend(pBend), fRow(pRow)
     {
         // with Strips starting at 0
-        fCenter = static_cast<float>((pPosition / 2.) - 1);
+        fCenter = static_cast<float>((pPosition / 2.)); // for PS
+        // fCenter = static_cast<float>((pPosition / 2.) - 1); // is this correct for 2S?
     }
+    Stub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.){};
     uint8_t getPosition() { return fPosition; }
     uint8_t getBend() { return fBend; }
     uint8_t getRow() { return fRow; }
@@ -110,6 +114,7 @@ class Event
     uint32_t fLumi;          /*!< LuminositySection value */
     uint32_t fEventCountCBC; /*!< Cbc Event Counter */
     uint32_t fEventSize;
+    uint16_t fL1Number;
 
     // for CBC3 use
     uint8_t  fBeId;
@@ -259,6 +264,8 @@ class Event
      * \return Data string in hex
      */
     virtual std::string HexString() const { return ""; }
+
+    uint16_t GetL1Number() const { return fL1Number; }
 
     // user interface
     /*!

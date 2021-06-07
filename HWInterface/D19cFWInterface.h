@@ -19,6 +19,7 @@
 #include "BeBoardFWInterface.h"
 #include <limits.h>
 #include <map>
+#include <mutex>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -87,6 +88,8 @@ namespace Ph2_HwInterface
 {
 class D19cFpgaConfig;
 class D19cSSAEvent;
+class D19clpGBTInterface;
+
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -95,6 +98,7 @@ class D19cSSAEvent;
 class D19cFWInterface : public BeBoardFWInterface
 {
   private:
+    std::mutex                               fMutex;
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
@@ -349,10 +353,10 @@ class D19cFWInterface : public BeBoardFWInterface
     }
 
     void ReadErrors();
-    void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
     void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
 
   public:
+    void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
     ///////////////////////////////////////////////////////
     //      CBC Methods                                 //
     /////////////////////////////////////////////////////
@@ -390,7 +394,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void ChipTrigger();
     void Trigger(uint8_t pDuration = 1);
     // Readout chip specific stuff
-    void Send_pulses(uint32_t pNtriggers);
+    void Send_pulses(uint32_t pNtriggers, bool manual = false);
 
     void ReadoutChipReset();
     // CIC BE stuff

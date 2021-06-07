@@ -84,9 +84,9 @@ void Tool::waitForRunToBeCompleted()
     while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    SystemController::Configure(cHWFile, enableStream);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
     ConfigureCalibration();
 }
 
@@ -605,8 +605,10 @@ void Tool::dumpConfigFiles()
                     for(auto chip: *hybrid)
                     {
                         std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId()) +
-                                                "_Chip" + std::to_string(chip->getId()) + ".txt";
+                                                "_Chip" + std::to_string(chip->getId());
                         LOG(DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
+                        if(chip->getFrontEndType() == FrontEndType::SSA) cFilename += "SSA";
+                        cFilename += ".txt";
                         chip->saveRegMap(cFilename.data());
                     }
                     auto& cCic = static_cast<OuterTrackerHybrid*>(hybrid)->fCic;
@@ -1013,11 +1015,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         else
                             currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
-                        // LOG (INFO) << BOLDBLUE << minDAC<<"
-                        // "<<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
-                        // << RESET; LOG (INFO) << BOLDBLUE <<
-                        // std::max(minDAC,previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()
-                        // & (0xFFFF - (1<<iBit))) << RESET;
+
+                        // LOG (INFO) << BOLDBLUE <<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
@@ -1042,9 +1041,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     {
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
-                            // LOG (INFO) << BOLDBLUE << "localocc "<<
-                            // currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<
-                            // RESET;
+                            // LOG (INFO) << BOLDBLUE << "localocc
+                            // "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<RESET;
 
                             if(currentStepOccupancyContainer->at(boardIndex)
                                    ->at(cOpticalGroup->getIndex())
@@ -1071,9 +1069,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     }
                     else
                     {
-                        // LOG (INFO) << BOLDBLUE << "globalocc
-                        // "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<
-                        // RESET;
+                        // LOG (INFO) << BOLDBLUE <<
+                        // "globalocc"<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<RESET;
 
                         if(currentStepOccupancyContainer->at(boardIndex)
                                ->at(cOpticalGroup->getIndex())

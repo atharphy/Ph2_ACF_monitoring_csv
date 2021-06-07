@@ -34,7 +34,7 @@ DQMHistogramLatencyScan::DQMHistogramLatencyScan()
 DQMHistogramLatencyScan::~DQMHistogramLatencyScan() {}
 
 //========================================================================================================================
-void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     // need to get settings from settings map
     parseSettings(pSettingsMap);

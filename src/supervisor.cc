@@ -113,6 +113,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
 
+    cmd.defineOption("port", "Port shift for TCP servers 0", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("port", "p");
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -191,6 +194,7 @@ int main(int argc, char* argv[])
         RUNNING,
         STOPPED
     };
+
     int                 stateMachineStatus = INITIAL;
     MiddlewareInterface theMiddlewareInterface("127.0.0.1", 5000);
     theMiddlewareInterface.initialize();
@@ -272,7 +276,10 @@ int main(int argc, char* argv[])
             }
             case RUNNING:
             {
-                while(theMiddlewareInterface.status() != "Done") usleep(5e5);
+                if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
+                    while(theMiddlewareInterface.status() != "Done") usleep(5e5);
+                else
+                    usleep(20e6);
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
                 usleep(2e6);
                 theMiddlewareInterface.stop();

@@ -19,6 +19,7 @@
 #include "../Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
+#include "tools/PSAlignment.h"
 
 #include "../System/SystemController.h"
 
@@ -26,6 +27,8 @@
 #include "../DQMUtils/SLinkDQMHistogrammer.h"
 #include "../RootUtils/publisher.h"
 #include "TROOT.h"
+#include <atomic>
+#include <thread>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -33,6 +36,26 @@ using namespace Ph2_System;
 
 using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
+
+std::atomic<bool> keepRunning(false);
+
+void sendResync(Tool& theTool, uint32_t numberOfTriggersAfterResync, uint32_t triggerFrequency, uint32_t& numberOfResyncs)
+{
+    uint32_t microSecondSleepTime = float(numberOfTriggersAfterResync) / float(triggerFrequency) * 1000000;
+    LOG(INFO) << BOLDGREEN << "Sleeping for " << microSecondSleepTime << " us before sending a resync" << RESET;
+    while(!keepRunning)
+    { /* waiting to start*/
+    }
+    // wait 1/2 trigger period, not sure how much helps
+    // std::this_thread::sleep_for(std::chrono::microseconds(uint32_t(float(1000000/2)/float(triggerFrequency))));
+
+    while(keepRunning)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(microSecondSleepTime));
+        theTool.fBeBoardInterface->getFirmwareInterface()->ChipReSync();
+        ++numberOfResyncs;
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -73,9 +96,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("output", "Output Directory for DQM plots & page. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("output", "o");
 
-    cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("maskROCs", "List of ROCs to mask", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("maskChannels", "List of channels to mask", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("alignCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     int result = cmd.parse(argc, argv);
@@ -98,8 +120,6 @@ int main(int argc, char* argv[])
     cOutputFile    = "Data/" + string_format("run_%04d.raw", cRunNumber);
     pEventsperVcth = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10;
 
-    bool cWithCIC = (cmd.foundOption("withCIC"));
-
     std::string  cDAQFileName;
     FileHandler* cDAQFileHandler = nullptr;
     bool         cDAQFile        = cmd.foundOption("daq");
@@ -115,11 +135,6 @@ int main(int argc, char* argv[])
     std::unique_ptr<SLinkDQMHistogrammer> dqmH = nullptr;
 
     if(cDQM) dqmH = std::unique_ptr<SLinkDQMHistogrammer>(new SLinkDQMHistogrammer(0));
-
-    // bool cPostscale   = cmd.foundOption("postscale");
-    // int  cScaleFactor = 1;
-
-    // if(cPostscale) cScaleFactor = atoi(cmd.optionValue("postscale").c_str());
 
     std::stringstream outp;
     Tool              cTool;
@@ -138,7 +153,7 @@ int main(int argc, char* argv[])
     cTool.addFileHandler(cOutputFile, 'w');
 
     // if CIC is enabled then align CIC first
-    if(cWithCIC)
+    if(cmd.foundOption("alignCIC"))
     {
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
@@ -149,135 +164,47 @@ int main(int argc, char* argv[])
         cCicAligner.Reset();
         // cCicAligner.dumpConfigFiles();
     }
-
-    // align back-end
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Initialise();
-    cBackEndAligner.Align();
-    // reset all chip and board registers
-    // to what they were before this tool was called
-    cBackEndAligner.resetPointers();
-
-    // list of ROCs to mask
-    if(cmd.foundOption("maskROCs"))
+    if(cmd.foundOption("alignPS"))
     {
-        std::string          cArgsStr = cmd.optionValue("maskROCs");
-        std::vector<uint8_t> cROCsToMask;
-        std::stringstream    cArgsSS(cArgsStr);
-        int                  i;
-        while(cArgsSS >> i)
-        {
-            cROCsToMask.push_back(i);
-            if(cArgsSS.peek() == ',') cArgsSS.ignore();
-        };
+        // align ASICs on PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        // map MPA outputs for PS module
+        cPSAlignment.MapMPAOutputs();
+    }
 
-        // and if we're also going to mask channels on the active ROCs
-        std::vector<uint8_t> cChannelsToMask;
-        if(cmd.foundOption("maskChannels"))
+    for(auto board: *cTool.fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
         {
-            std::string       cArgsStr = cmd.optionValue("maskChannels");
-            std::stringstream cArgsSS(cArgsStr);
-            int               i;
-            while(cArgsSS >> i)
+            for(auto hybrid: *opticalGroup)
             {
-                cChannelsToMask.push_back(i);
-                if(cArgsSS.peek() == ',') cArgsSS.ignore();
-            };
-        }
-
-        for(auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
+                for(auto chip: *hybrid)
                 {
-                    for(auto cChip: *cHybrid)
+                    if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        // mask ROCs in list
-                        if(std::find(cROCsToMask.begin(), cROCsToMask.end(), cChip->getId()) != cROCsToMask.end())
-                            cTool.fReadoutChipInterface->MaskAllChannels(cChip, true);
-                        else
-                        {
-                            ChannelGroup<254, 1> cChannelMask;
-                            cChannelMask.enableAllChannels();
-                            for(auto cChannelToMask: cChannelsToMask) cChannelMask.disableChannel(cChannelToMask);
-                            cTool.fReadoutChipInterface->maskChannelsGroup(cChip, &cChannelMask);
-                        }
-                    } // chip
-                }     // hybrid
-            }         // optical group
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 100);
+                    }
+                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x7);
+                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 90);
+                    }
+                }
+            }
         }
     }
 
-    // make event counter start at 1 as does the L1A counter
-    // uint32_t cN      = 1;
-    // uint32_t cNthAcq = 0;
-    // uint32_t count   = 0;
-    // cTool.fBeBoardInterface->Start(pBoard);
-    // while(cN <= pEventsperVcth)
-    // {
-    //     uint32_t cPacketSize = cTool.ReadData(pBoard);
-
-    //     if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
-
-    //     const std::vector<Event*>& events = cTool.GetEvents();
-    //     std::vector<DQMEvent*>     cDQMEvents;
-
-    //     for(auto& ev: events)
-    //     {
-    //         // if we write a DAQ file or want to run the DQM, get the SLink format
-    //         if(cDAQFile || cDQM)
-    //         {
-    //             SLinkEvent cSLev = ev->GetSLinkEvent(pBoard);
-
-    //             if(cDAQFile)
-    //             {
-    //                 auto data = cSLev.getData<uint32_t>();
-    //                 cDAQFileHandler->setData(data);
-    //             }
-
-    //             // if DQM histos are enabled and we are treating the first event, book the histograms
-    //             if(cDQM && cN == 1)
-    //             {
-    //                 DQMEvent* cDQMEv = new DQMEvent(&cSLev);
-    //                 dqmH->bookHistograms(cDQMEv->trkPayload().feReadoutMapping());
-    //             }
-
-    //             if(cDQM)
-    //             {
-    //                 if(count % cScaleFactor == 0) cDQMEvents.emplace_back(new DQMEvent(&cSLev));
-    //             }
-    //         }
-
-    //         if(cPostscale)
-    //         {
-    //             if(count % cScaleFactor == 0)
-    //             {
-    //                 LOG(INFO) << ">>> Event #" << count;
-    //                 outp.str("");
-    //                 outp << *ev << std::endl;
-    //                 LOG(INFO) << outp.str();
-    //             }
-    //         }
-
-    //         if(count % 100 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
-
-    //         // increment event counter
-    //         count++;
-    //         cN++;
-    //     }
-
-    //     // finished  processing the events from this acquisition
-    //     // thus now fill the histograms for the DQM
-    //     if(cDQM)
-    //     {
-    //         dqmH->fillHistograms(cDQMEvents);
-    //         cDQMEvents.clear();
-    //     }
-
-    //     cNthAcq++;
-    // }
+    uint32_t numberOfResyncs = 0;
+    if(cmd.foundOption("sendResync"))
+    {
+        uint32_t    numberOfTriggersAfterResync = convertAnyInt(cmd.optionValue("sendResync").c_str());
+        uint32_t    triggerFrequency            = 1000 * cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+        std::thread theResyncThread(sendResync, std::ref(cTool), numberOfTriggersAfterResync, triggerFrequency, std::ref(numberOfResyncs));
+        theResyncThread.detach();
+    }
 
     for(auto cBoard: *cTool.fDetectorContainer)
     {
@@ -420,6 +347,15 @@ int main(int argc, char* argv[])
             dqmH->fillHistograms(cDQMEvents);
             cDQMEvents.clear();
         }
+        cNtriggers = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        // LOG(INFO) << BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
+
+        LOG(INFO) << "Number of triggers received         = " << cNtriggers << RESET;
+        LOG(INFO) << "Number of events recorded           = " << cPh2Events.size() << RESET;
+        LOG(INFO) << "Last event GetEventCount            = " << +cPh2Events.back()->GetEventCount() << RESET;
+        LOG(INFO) << "Last event GetExternalTriggerId     = " << +cPh2Events.back()->GetExternalTriggerId() << RESET;
+        LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs << RESET;
+        LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size() << RESET;
     }
 
     // done with the acquistion, now clean up
@@ -459,6 +395,115 @@ int main(int argc, char* argv[])
         RootWeb::makeDQMmonitor(dqmFilename, cDirBasePath, runLabel);
         LOG(INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath;
     }
+    // BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+
+    // // make event counter start at 1 as does the L1A counter
+    // uint32_t cN      = 1;
+    // uint32_t cNthAcq = 0;
+    // uint32_t count   = 0;
+
+    // cTool.fBeBoardInterface->Start(pBoard);
+    // while(cN <= pEventsperVcth)
+    // {
+    //     uint32_t cPacketSize = cTool.ReadData(pBoard);
+
+    //     if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
+
+    //     const std::vector<Event*>& events = cTool.GetEvents();
+    //     std::vector<DQMEvent*>     cDQMEvents;
+
+    //     for(auto& ev: events)
+    //     {
+    //         // if we write a DAQ file or want to run the DQM, get the SLink format
+    //         if(cDAQFile || cDQM)
+    //         {
+    //             SLinkEvent cSLev = ev->GetSLinkEvent(pBoard);
+
+    //             if(cDAQFile)
+    //             {
+    //                 auto data = cSLev.getData<uint32_t>();
+    //                 cDAQFileHandler->setData(data);
+    //             }
+
+    //             // if DQM histos are enabled and we are treating the first event, book the histograms
+    //             if(cDQM && cN == 1)
+    //             {
+    //                 DQMEvent* cDQMEv = new DQMEvent(&cSLev);
+    //                 dqmH->bookHistograms(cDQMEv->trkPayload().feReadoutMapping());
+    //             }
+
+    //             if(cDQM)
+    //             {
+    //                 if(count % cScaleFactor == 0) cDQMEvents.emplace_back(new DQMEvent(&cSLev));
+    //             }
+    //         }
+
+    //         if(cPostscale)
+    //         {
+    //             if(count % cScaleFactor == 0)
+    //             {
+    //                 LOG(INFO) << ">>> Event #" << count;
+    //                 outp.str("");
+    //                 outp << *ev << std::endl;
+    //                 LOG(INFO) << outp.str();
+    //             }
+    //         }
+
+    //         if(count % 100 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
+
+    //         // increment event counter
+    //         count++;
+    //         cN++;
+    //     }
+
+    //     // finished  processing the events from this acquisition
+    //     // thus now fill the histograms for the DQM
+    //     if(cDQM)
+    //     {
+    //         dqmH->fillHistograms(cDQMEvents);
+    //         cDQMEvents.clear();
+    //     }
+
+    //     cNthAcq++;
+    // }
+
+    // // done with the acquistion, now clean up
+    // if(cDAQFile)
+    //     // this closes the DAQ file
+    //     delete cDAQFileHandler;
+
+    // if(cDQM)
+    // {
+    //     // save and publish
+    //     // Create the DQM plots and generate the root file
+    //     // first of all, strip the folder name
+    //     std::vector<std::string> tokens;
+
+    //     tokenize(cOutputFile, tokens, "/");
+    //     std::string fname = tokens.back();
+
+    //     // now form the output Root filename
+    //     tokens.clear();
+    //     tokenize(fname, tokens, ".");
+    //     std::string runLabel    = tokens[0];
+    //     std::string dqmFilename = runLabel + "_dqm.root";
+    //     dqmH->saveHistograms(dqmFilename, runLabel + "_flat.root");
+
+    //     // find the folder (i.e DQM page) where the histograms will be published
+    //     std::string cDirBasePath;
+
+    //     if(cmd.foundOption("output"))
+    //     {
+    //         cDirBasePath = cmd.optionValue("output");
+    //         cDirBasePath += "/";
+    //     }
+    //     else
+    //         cDirBasePath = "Results/";
+
+    //     // now read back the Root file and publish the histograms on the DQM page
+    //     RootWeb::makeDQMmonitor(dqmFilename, cDirBasePath, runLabel);
+    //     LOG(INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath;
+    // }
 
     return 0;
 }

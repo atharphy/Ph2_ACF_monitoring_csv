@@ -12,6 +12,7 @@
 #include "D19cFWInterface.h"
 #include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
+#include <numeric>
 
 #define DEV_FLAG 0
 // #define COUNT_FLAG 0
@@ -217,7 +218,6 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
             LOG(DEBUG) << BOLDMAGENTA << "Running verification loop for CicInterface::WriteRegs" << RESET;
             for(const auto& cReg: pRegs)
             {
-                // uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
                 uint32_t cValue = fBoardFW->ReadFERegister(pChip, cReg.first);
                 cSuccess        = (pSuccesses[cCount] == 1) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
                 if(!cSuccess && fRetryI2C)
@@ -233,8 +233,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                         if(cSuccess)
                         {
                             uint32_t cValue = fBoardFW->ReadFERegister(pChip, cReg.first);
-                            // uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), cReg.first);
-                            cSuccess = (pSuccesses[cCount] == 1) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
+                            cSuccess        = (pSuccesses[cCount] == 1) ? this->runVerification(pChip, cValue, fMap[cReg.first]) : true;
                             if(!cSuccess)
                             {
                                 auto cIter = fReWrMap.find(cReg.first);
@@ -454,8 +453,6 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
     {
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) via lpGBT Register 0x"
         //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
-
-        // auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
         uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
 
         return std::make_pair(true, cValue);

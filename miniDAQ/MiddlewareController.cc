@@ -23,10 +23,14 @@
 #include "MiddlewareController.h"
 //#include "../tools/SSAPhysics.h"
 #include "../tools/BackEndAlignment.h"
+#include "../tools/CicFEAlignment.h"
+#include "../tools/PSPhysics.h"
+#include "../tools/Physics2S.h"
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort, 1)
+MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1)
 {
+    theDQMPortnumber_ = DQM_PORT_BASE + portShift;
     // TCPServer::setReceiveTimeout(1,0);//Doesn't work
 }
 
@@ -92,7 +96,7 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         else if(getVariableValue("Calibration", buffer) == "cbcPulseShape")
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CBCPulseShape>;
         else if(getVariableValue("Calibration", buffer) == "OTLatency")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, LatencyScan>;
+            theSystemController_ = new CombinedCalibration<CicFEAlignment, BackEndAlignment, LatencyScan>;
 
         else if(getVariableValue("Calibration", buffer) == "pixelalive")
             theSystemController_ = new CombinedCalibration<PixelAlive>;
@@ -118,7 +122,10 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<ClockDelay>;
         else if(getVariableValue("Calibration", buffer) == "physics")
             theSystemController_ = new Physics;
-
+        else if(getVariableValue("Calibration", buffer) == "psphysics")
+            theSystemController_ = new PSPhysics;
+        else if(getVariableValue("Calibration", buffer) == "2sphysics")
+            theSystemController_ = new Physics2S;
         else
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Calibration type " << getVariableValue("Calibration", buffer) << " not found, Aborting" << RESET;
@@ -126,7 +133,18 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         }
 
         LOG(INFO) << BOLDBLUE << "SystemController created" << RESET;
-        theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true);
+        try
+        {
+            theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true);
+            /* code */
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            delete theSystemController_;
+            std::string errorString = std::string("Error: ") + e.what();
+            return errorString;
+        }
         return "ConfigureDone";
     }
     else if(buffer.substr(0, 6) == "Error:")

@@ -137,6 +137,12 @@
 #define VECSIZE 1000
 //------------------------------------------------------------------------------
 
+// OT Physics parameters
+#define MAX_NUMBER_OF_STRIP_CLUSTERS 5
+#define MAX_NUMBER_OF_PIXEL_CLUSTERS 5
+#define MAX_NUMBER_OF_STUB_CLUSTERS_PS 5
+#define MAX_NUMBER_OF_STUB_CLUSTERS_2S 3
+
 enum class BoardType
 {
     D19C,

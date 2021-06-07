@@ -889,6 +889,7 @@ bool BackEndAlignment::Align()
         }         // OGs
         if(cWithCIC)
         {
+            LOG(INFO) << BOLDBLUE << "CICICICICICI " << RESET;
             cAligned = this->CICAlignment(theBoard);
             if(!cAligned) return cAligned;
             uint8_t cAttempt           = 0;

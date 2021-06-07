@@ -11,6 +11,7 @@
 #define __CHIPINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
+#include <mutex>
 #include <vector>
 
 template <typename T>
@@ -31,19 +32,20 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
+    std::mutex          fMutex;
     BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
     BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
     uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
 
-    uint16_t fRegisterCount;    /*!< Counter for the number of Registers written */
-    uint16_t fTransactionCount; /*!< Counter for the number of Transactions */
+    uint16_t fRegisterCount;     /*!< Counter for the number of Registers written */
+    uint16_t fTransactionCount;  /*!< Counter for the number of Transactions */
+    bool     fWithlpGBT = false; /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with
      * \param pBoardId
      */
     void setBoard(uint16_t pBoardIdentifier);
-    bool fWithlpGBT = false;
 
   public:
     /*!

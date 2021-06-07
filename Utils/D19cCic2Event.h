@@ -303,7 +303,7 @@ class D19cCic2Event : public Event
     // templated decoding function
     // split stream of data
     template <std::size_t N>
-    void decodeCicClusters(uint8_t pFeId, uint8_t pReadoutChipId)
+    std::bitset<N> decodeCicClusters(uint8_t pFeId, uint8_t pReadoutChipId)
     {
         auto&          cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
         std::bitset<N> cBitSet(0);

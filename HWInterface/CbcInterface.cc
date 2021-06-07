@@ -386,7 +386,8 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
-    if(dacName == "VCth" || dacName == "Threshold")
+    std::lock_guard<std::mutex> theGuard(fMutex);
+    if(dacName == "VCth")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
         {
@@ -775,10 +776,8 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
 }
 uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {
-    // ChipRegItem cRegItem;
-    // bool        cFailed = false;
-    // bool        cRead;
-    // uint8_t     cCbcId;
+    std::lock_guard<std::mutex> theGuard(fMutex);
+    ChipRegItem                 cRegItem;
     setBoard(pCbc->getBeBoardId());
     std::vector<uint32_t> cVecReq;
     if(pRegNode == "VCth")
@@ -786,19 +785,6 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint8_t  cReg0      = ReadChipSingleReg(pCbc, "VCth1");
         uint8_t  cReg1      = ReadChipSingleReg(pCbc, "VCth2");
         uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
-        // fBoardFW->EncodeReg(pCbc->getRegItem("VCth1"), pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->EncodeReg(pCbc->getRegItem("VCth2"), pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->ReadChipBlockReg(cVecReq);
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-
-        // uint16_t cReg0 = cRegItem.fValue;
-        // pCbc->setReg("VCth1", cRegItem.fValue);
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[1], cRead, cFailed);
-        // if(cFailed) return 0;
-
-        // pCbc->setReg("VCth2", cRegItem.fValue);
-        // uint16_t cReg1      = cRegItem.fValue;
-        // uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
         return cThreshold;
     }
     else if(pRegNode == "Threshold")
@@ -808,53 +794,26 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     else if(pRegNode == "HitLogic")
     {
         uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
-        // cRegItem = pCbc->getRegItem("Pipe&StubInpSel&Ptwidth");
-        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->ReadChipBlockReg(cVecReq);
-        // // bools to find the values of failed and read
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        // if(!cFailed) pCbc->setReg("Pipe&StubInpSel&Ptwidth", cRegItem.fValue);
         return (cRegValue & 0xC0) >> 6;
     }
     else if(pRegNode == "StubLogic")
     {
         uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
-        // cRegItem = pCbc->getRegItem("Pipe&StubInpSel&Ptwidth");
-        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->ReadChipBlockReg(cVecReq);
-        // // bools to find the values of failed and read
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        // if(!cFailed) pCbc->setReg("Pipe&StubInpSel&Ptwidth", cRegItem.fValue);
         return (cRegValue & 0x30) >> 4;
     }
     else if(pRegNode == "HitOr")
     {
         uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
-        // cRegItem = pCbc->getRegItem("40MhzClk&Or254");
-        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->ReadChipBlockReg(cVecReq);
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        // if(!cFailed) pCbc->setReg("40MhzClk&Or254", cRegItem.fValue);
         return (cRegValue & 0x40) >> 6;
     }
     else if(pRegNode == "LayerSwap")
     {
         uint8_t cRegValue = ReadChipSingleReg(pCbc, "LayerSwap&CluWidth");
-        // cRegItem = pCbc->getRegItem("LayerSwap&CluWidth");
-        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->ReadChipBlockReg(cVecReq);
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        // if(!cFailed) pCbc->setReg("LayerSwap&CluWidth", cRegItem.fValue);
         return (cRegValue & 0x08) >> 3;
     }
     else if(pRegNode == "PtCut")
     {
         uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
-        // cRegItem = pCbc->getRegItem("Pipe&StubInpSel&Ptwidth");
-        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->ReadChipBlockReg(cVecReq);
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        // if(!cFailed) pCbc->setReg("Pipe&StubInpSel&Ptwidth", cRegItem.fValue);
         return (cRegValue & 0x0F);
     }
     else if(pRegNode == "ChipId")
@@ -863,13 +822,6 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     }
     else
     {
-        // cRegItem = pCbc->getRegItem(pRegNode);
-        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        // fBoardFW->ReadChipBlockReg(cVecReq);
-        // // bools to find the values of failed and read
-        // fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        // if(!cFailed) pCbc->setReg(pRegNode, cRegItem.fValue);
-
         return ReadChipSingleReg(pCbc, pRegNode) & 0xFF;
     }
 }

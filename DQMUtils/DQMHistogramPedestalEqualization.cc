@@ -29,17 +29,18 @@ DQMHistogramPedestalEqualization::DQMHistogramPedestalEqualization() {}
 DQMHistogramPedestalEqualization::~DQMHistogramPedestalEqualization() {}
 
 //========================================================================================================================
-void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
+    NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
 
     HistContainer<TH1I> hVplus("VplusValue", "Vplus Value", 1, 0, 1);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorVplusHistograms, hVplus);
 
-    HistContainer<TH1I> hOffset("OffsetValues", "Offset Values", 254, -.5, 253.5);
+    HistContainer<TH1I> hOffset("OffsetValues", "Offset Values", NCH, -0.5, float(NCH) - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffset);
 
-    HistContainer<TH1F> hOccupancy("OccupancyAfterOffsetEqualization", "Occupancy After Offset Equalization", 254, -.5, 253.5);
+    HistContainer<TH1F> hOccupancy("OccupancyAfterOffsetEqualization", "Occupancy After Offset Equalization", NCH, -0.5, float(NCH) - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancy);
 }
 

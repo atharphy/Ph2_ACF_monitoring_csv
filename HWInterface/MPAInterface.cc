@@ -70,6 +70,7 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
         return this->ReadReg(pMPA, cRegItem.fAddress) & 0xFF;
     }
 }
+
 uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
@@ -250,6 +251,19 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
     return cRegAddress;
 }
 
+void MPAInterface::readAllBias(Chip* pChip)
+{
+    std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
+    for(int ipoint = 0; ipoint < 5; ipoint++)
+    {
+        for(int iblock = 0; iblock < 7; iblock++)
+        {
+            std::string DAC = nameDAC[ipoint] + std::to_string(iblock);
+            LOG(INFO) << BOLDBLUE << DAC << ": bias:" << +ReadChipReg(pChip, DAC) << " on MPA" << +pChip->getId() << RESET;
+        }
+    }
+}
+
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pMPA->getBeBoardId());
@@ -303,6 +317,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         bool    cConfigReg2  = this->configRow(pMPA, "L1Offset_2", 0, cLatencyReg2);
         return cConfigReg1 && cConfigReg2;
     }
+
     else if(pRegName == "StubInputPhase")
     {
         uint8_t cBitShift = 3;
@@ -451,8 +466,8 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 
     else if(pRegName == "Threshold" or pRegName == "Bias_THDAC")
     {
-        LOG(INFO) << BOLDBLUE << "Setting "
-                  << " bias thresh to " << +pValue << " on MPA" << +pMPA->getId() << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Setting "
+                   << " bias thresh to " << +pValue << " on MPA" << +pMPA->getId() << RESET;
         Set_threshold(pMPA, pValue);
         return true;
     }
@@ -623,15 +638,18 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     }
     // update map
     cMPARegMap = pMPA->getRegMap();
+
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
     cRegs.clear();
     for(auto& cMapItem: fMap)
     {
         // for now .. don't configure each pixel
-        if(cMapItem.second.find("_P") != std::string::npos) continue;
+        if(cMapItem.second.find("ENFLAGS_P") != std::string::npos) continue;
+        // if(cMapItem.second.find("_P") != std::string::npos) continue;
 
         ChipRegItem& cItem = cMPARegMap[cMapItem.second];
         // create a register
+
         std::pair<uint16_t, uint16_t> cReg;
         cReg.first  = cMapItem.first;
         cReg.second = cItem.fValue;
@@ -645,7 +663,6 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 
 bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDRED << "Be#" << +pChip->getBeBoardId() << RESET;
     setBoard(pChip->getBeBoardId());
     bool cSuccess = true;
     bool cVerify  = false;

@@ -3,6 +3,7 @@
 #include "ContainerFactory.h"
 #include "DataContainer.h"
 #include "Occupancy.h"
+#include "SSAChannelGroupHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -448,9 +449,10 @@ void OpenFinder::FindOpensPS()
                 {
                     if(cChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
-                        fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0);
+                        static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cChip, "AnalogueAsync", 1);
+                        static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cChip, "Threshold", cThreshold);
+                        static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cChip, "InjectedCharge", 0);
+                        static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cChip, "InjectedCharge", 200);
                     }
                 }
             }
@@ -500,13 +502,18 @@ void OpenFinder::FindOpensPS()
                                 }
                                 else
                                 {
-                                    LOG(DEBUG) << BOLDBLUE << "\t... "
-                                               << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits " << RESET;
+                                    LOG(INFO) << BOLDBLUE << "\t... "
+                                              << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits " << RESET;
                                     if(cHitVector[iChannel] <= (1.0 - THRESHOLD_OPEN) * fParameters.nTriggers)
                                     {
                                         cOpensFound = true;
+                                        char charRegName[20];
+
+                                        sprintf(charRegName, "ENFLAGS_S%d", iChannel + 1);
+                                        static_cast<SSAInterface*>(fReadoutChipInterface)->WriteChipReg(cChip, charRegName, 0);
                                         LOG(INFO) << BOLDRED << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
                                                   << +fParameters.nTriggers << " were expected." << RESET;
+                                        LOG(INFO) << BOLDRED << "Disable " << charRegName << RESET;
                                     }
                                     else
                                     {
@@ -528,6 +535,7 @@ void OpenFinder::FindOpensPS()
     // std::this_thread::sleep_for (std::chrono::milliseconds (10000) );
     fParameters.potentiometer = 512;
     SelectAntennaPosition("Disable");
+    dumpConfigFiles();
     // check counters
 }
 void OpenFinder::FindOpens() {}

@@ -75,18 +75,7 @@ void MPA::loadfRegMap(const std::string& filename)
                 fRegItem.fAddress  = strtoul(fAddress_str.c_str(), 0, 16);
                 fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, 16);
                 fRegItem.fValue    = strtoul(fValue_str.c_str(), 0, 16);
-                // FIXME this channel masking part is currently using the MPA values. Need to check what the SSA format
-                // is
-                if(fRegItem.fPage == 0x00 && fRegItem.fAddress >= 0x20 && fRegItem.fAddress <= 0x3F)
-                { // Register is a Mask
-                    if(fRegItem.fValue != 0xFF)
-                    {
-                        for(uint8_t channel = 0; channel < 8; ++channel)
-                        {
-                            if((fRegItem.fValue & (0x1 << channel)) == 0) { fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20) * 8 + channel); }
-                        }
-                    }
-                }
+
                 fRegMap[fName] = fRegItem;
                 // std::cout << __PRETTY_FUNCTION__ <<fName<<"," <<fRegItem.fValue << std::endl;
                 cLineCounter++;

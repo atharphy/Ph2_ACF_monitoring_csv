@@ -112,13 +112,12 @@ class MPAInterface : public ReadoutChipInterface
     void                  Activate_pp(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void                  Activate_ss(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win = 8);
-
-    void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-    void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-    void Disable_pixel(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-    void Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Disable_pixel(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
+    void                  Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-
+    void readAllBias(Ph2_HwDescription::Chip* pMPA);
     void ReadASEvent(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void Pix_Smode(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p, std::string smode);
     void Enable_pix_BRcal(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p, std::string polarity = "rise", std::string smode = "edge");
@@ -151,7 +150,6 @@ class MPAInterface : public ReadoutChipInterface
     L1data Format_l1(std::vector<uint8_t> rawl1, bool verbose = false);
 
     void Cleardata();
-
     //
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);

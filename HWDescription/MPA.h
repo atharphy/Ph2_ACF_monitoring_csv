@@ -73,7 +73,7 @@ class MPA : public ReadoutChip
 
     // row, col starts at index 0, global pix number starts at number 1
 
-    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120 + 1, ((PN + 1) % 120) - 1); }
+    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120 + 1, ((PN - 1) % 120) + 1); }
 
     uint32_t getNumberOfChannels() const override { return NMPACHANNELS; }
 

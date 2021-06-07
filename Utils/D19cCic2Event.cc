@@ -571,9 +571,20 @@ uint8_t D19cCic2Event::GetNPixelClusters(uint8_t pFeId) const
 std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
     std::vector<PCluster> cPClusters;
-    auto&                 cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
-    auto                  cIterator     = cClusterWords.begin() + GetNStripClusters(pFeId);
-    auto                  cEnd          = cClusterWords.end();
+
+    decltype(fEventHitList[0].second) cClusterWords;
+    try
+    {
+        cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return cPClusters;
+    }
+
+    auto cIterator = cClusterWords.begin() + GetNStripClusters(pFeId);
+    auto cEnd      = cClusterWords.end();
     while(cIterator != cEnd)
     {
         uint32_t cVal   = static_cast<uint32_t>((*cIterator));
@@ -589,12 +600,14 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
         if(cChipId == cChipIdMapped)
         {
             PCluster aPCluster;
+
             // LOG (INFO) << BOLDGREEN << "PCLUS ..... " << std::bitset<16>(*cIterator)  << RESET;
             aPCluster.fAddress = cAdd;   //((*cIterator) & ((0x7F) << (0 + 4 + 3))) >> (0 + 4 + 3);
             aPCluster.fWidth   = cWdth;  //((*cIterator) & ((0x7) << (0 + 4))) >> (0 + 4);
             aPCluster.fZpos    = cZInfo; //((*cIterator) & ((0xF) << 0)) >> 0;
             cPClusters.push_back(aPCluster);
-            LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << "," << unsigned(aPCluster.fZpos) << RESET;
+            LOG(DEBUG) << BOLDGREEN << "P-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << ","
+                       << unsigned(aPCluster.fZpos) << RESET;
         }
         cIterator++;
     }
@@ -625,8 +638,19 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pFeId, uint8_t pRe
 std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pReadoutChipId) const
 {
     std::vector<SCluster> cSClusters;
-    auto&                 cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
-    auto                  cIterator     = cClusterWords.begin();
+
+    decltype(fEventHitList[0].second) cClusterWords;
+    try
+    {
+        cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return cSClusters;
+    }
+
+    auto cIterator = cClusterWords.begin();
     // LOG (INFO) << BOLDBLUE << "NS " << +GetNStripClusters( pFeId  )<< RESET;
 
     auto cEnd = cClusterWords.begin() + GetNStripClusters(pFeId);
@@ -652,7 +676,8 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pFeId, uint8_t pRe
             cSCluster.fWidth   = cWdth; //((*cIterator) & ((0x7) << (0 + 1))) >> (0 + 1);
             cSCluster.fMip     = cMip;  //((*cIterator) & ((0x1) << 0)) >> 0;
             cSClusters.push_back(cSCluster);
-            LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << "," << unsigned(cSCluster.fMip) << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "S-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << ","
+                       << unsigned(cSCluster.fMip) << RESET;
         }
         cIterator++;
     };
@@ -783,6 +808,7 @@ uint32_t D19cCic2Event::Error(uint8_t pFeId, uint8_t pReadoutChipId) const
         if(pReadoutChipId < 8) cChipIdMapped = 1 + this->getChipIdMapped(pFeId, pReadoutChipId);
         // auto     cChipIdMapped   = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
         uint32_t cError = (cHitInformation.second & (0x1 << (cChipIdMapped))) >> (cChipIdMapped);
+
         return cError;
     }
     else
@@ -912,7 +938,7 @@ bool D19cCic2Event::DataBit(uint8_t pFeId, uint8_t pReadoutChipId, uint32_t i) c
     if(fIsSparsified) { return (decodeClusters(pFeId, pReadoutChipId)[i] > 0); }
     else
     {
-        size_t cOffset = 0; // 2 + 9 + 9;
+        size_t cOffset = 2 + 9 + 9;
         return (getRawL1Word(pFeId, pReadoutChipId)[cOffset + i] > 0);
     }
 }

@@ -73,13 +73,15 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
                     // if it is a CBC3, disable the stub logic for this procedure
                     if(theChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
 
                     if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0x57);
+                        // static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
+
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
                         fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
                     }
                 }
@@ -136,16 +138,6 @@ void PedestalEqualization::FindVplus()
         {
             if(cWithSSA or cWithMPA)
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
-            else if(cWithMPA)
-            {
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC0", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC1", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC2", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC3", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC4", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC5", fTestPulseAmplitude);
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "CalDAC6", fTestPulseAmplitude);
-            }
             else
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
         }
@@ -157,6 +149,33 @@ void PedestalEqualization::FindVplus()
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    for(auto board: *fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(chip);
+                    // if it is a CBC3, disable the stub logic for this procedure
+                    if(theChip->getFrontEndType() == FrontEndType::SSA)
+                    {
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
+                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
+                    }
+
+                    if(theChip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        // static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
+
+                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
+                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
+                    }
+                }
+            }
+        }
+    }
 
     LOG(INFO) << BOLDBLUE << "Identifying optimal Vplus for ROC..." << RESET;
     if(cWithCBC) setSameDac("VCth", fTargetVcth);
@@ -180,8 +199,8 @@ void PedestalEqualization::FindVplus()
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
 
-    float    cMeanValue = 0.;
-    uint32_t nCbc       = 0;
+    float cMeanValue = 0.;
+    float nCbc       = 0;
 
     for(auto board: theVcthContainer) // for on boards - begin
     {
@@ -189,20 +208,27 @@ void PedestalEqualization::FindVplus()
         {
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                nCbc += hybrid->size();
+                // nCbc += hybrid->size();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t     tmpVthr = 0;
                     if(cWithCBC) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
                     if(cWithSSA) tmpVthr = theChip->getReg("Bias_THDAC");
-                    if(cWithMPA) tmpVthr = theChip->getReg("ThDAC0");
-
+                    if(cWithMPA)
+                    {
+                        tmpVthr = theChip->getReg("ThDAC0");
+                        LOG(INFO) << GREEN << "tmpVthr " << tmpVthr << RESET;
+                    }
                     chip->getSummary<uint16_t>() = tmpVthr;
 
                     LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " ROC " << +chip->getId()
                               << " = " << tmpVthr << RESET;
-                    cMeanValue += tmpVthr;
+                    uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
+                    uint32_t TOTCHAN = chip->size();
+                    LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
+                    nCbc += float(ENCHAN) / float(TOTCHAN);
+                    cMeanValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
                 } // for on chip - end
             }     // for on hybrid - end
         }         // for on opticalGroup - end
@@ -294,7 +320,6 @@ void PedestalEqualization::FindOffsets()
             }     // for on hybrid - end
         }         // for on opticalGroup - end
     }             // for on board - end
-
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
     fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);

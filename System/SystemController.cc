@@ -8,9 +8,9 @@
 */
 
 #include "SystemController.h"
-#include "../tools/CBCMonitor.h"
-#include "../tools/DetectorMonitor.h"
-#include "../tools/RD53Monitor.h"
+#include "../MonitorUtils/CBCMonitor.h"
+#include "../MonitorUtils/DetectorMonitor.h"
+#include "../MonitorUtils/RD53Monitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -117,12 +117,12 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
         pVec = fFileHandler->readFileChunks(pNWords32);
 }
 
-void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData)
+void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber)
 {
     fStreamerEnabled = streamData;
     if(streamData == true)
     {
-        fNetworkStreamer = new TCPPublishServer(6000, 1);
+        fNetworkStreamer = new TCPPublishServer(DQMportNumber, 1);
         fNetworkStreamer->startAccept();
     }
 
@@ -130,7 +130,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
-    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    fPowerSupplyClient = new TCPClient("131.225.179.123", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
         delete fPowerSupplyClient;
@@ -216,9 +216,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(monitoringType != "None")
     {
         if(monitoringType == "2S")
-            fDetectorMonitor = new CBCMonitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new CBCMonitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "RD53")
-            fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
@@ -656,7 +656,6 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     } // all hybrids connected to this OG
 }
-
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {
     if(fDetectorContainer == nullptr)
@@ -681,6 +680,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
         fDetectorMonitor->startMonitoring();
     }
+    std::cout << __LINE__ << std::endl;
 }
 
 void SystemController::initializeWriteFileHandler()
@@ -733,11 +733,11 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
     std::stringstream outp;
 
-    InitializeHw(cHWFile, outp, true, enableStream);
+    InitializeHw(cHWFile, outp, true, enableStream, DQMportNumber);
     InitializeSettings(cHWFile, outp);
     std::cout << outp.str() << std::endl;
     ConfigureHw();
@@ -882,7 +882,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
 
-        if(pNevents == 0) { LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET; }
+        if(pNevents == 0)
+        {
+            // LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET;
+        }
         else
         {
             EventType fEventType = pBoard->getEventType();
@@ -915,6 +918,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
             else if(fEventType != EventType::ZS)
             {
+                // check data words because I'm desperate
+                // for( auto cWord : pData )
+                //     LOG (INFO) << BOLDYELLOW << "SystemController \t..." << std::bitset<32>(cWord) << RESET;
+
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
                 do

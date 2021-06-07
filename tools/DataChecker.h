@@ -13,6 +13,7 @@
 #ifndef DataChecker_h_
 #define DataChecker_h_
 
+#ifdef __USE_ROOT__
 #include "Tool.h"
 
 #ifndef ChannelList
@@ -28,8 +29,6 @@ typedef std::pair<EventId, uint8_t> EventTag; // [L1Id, BxId],Tag
 typedef std::vector<EventTag> EventsList;
 #endif
 
-#include <map>
-#ifdef __USE_ROOT__
 #include "TCanvas.h"
 #include "TGraphErrors.h"
 #include "TH2.h"
@@ -37,7 +36,7 @@ typedef std::vector<EventTag> EventsList;
 #include "TProfile2D.h"
 #include "TString.h"
 #include "TText.h"
-#endif
+#include <map>
 
 const uint8_t FAILED_DATA_TEST = 4;
 
@@ -157,4 +156,5 @@ class DataChecker : public Tool
 //  DQMHistogramCic fDQMHistogram;
 #endif
 };
+#endif
 #endif
