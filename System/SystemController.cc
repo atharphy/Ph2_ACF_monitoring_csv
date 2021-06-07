@@ -532,15 +532,16 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide);
 
             bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
+            uint16_t cRegisterPadStrength = 0x1018;
+            uint8_t  cSLVSdriveSSA        = 7;
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
-                uint16_t cRegisterPadStrength = 0x1018;
-                uint8_t  cSLVSdriveSSA        = 7;
                 if(cSkipSSA3 && cSSAId == 3) continue;
 
                 LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
                 SSA* cSSA = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSAPreCalibSYNC.txt");
                 cSSA->setOpticalId(cHybrid->getOpticalId());
+                cSSA->setOptical(cHybrid->isOptical());
                 (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA);
             }
         } // hybrid

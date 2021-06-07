@@ -295,6 +295,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     }
     pBoard->setOptical(cWithOptical);
     theOpticalGroup->setOptical(cWithOptical);
+    theOpticalGroup->setOpticalId(cOpticalGroupId);
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
         if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
@@ -598,6 +599,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         }
         cHybrid->setOptical(pBoard->isOptical());
         cHybrid->setOpticalId(pOpticalGroup->getOpticalId());
+         os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalId() << RESET;
+       
         std::string cConfigFileDirectory;
         for(pugi::xml_node cChild: pHybridNode.children())
         {
