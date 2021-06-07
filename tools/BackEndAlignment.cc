@@ -231,6 +231,17 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     uint8_t cPackageDelay = 7;
     uint8_t cFinalDelay   = cPackageDelay;
 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            if(cCic == NULL) continue;
+            // I don't actually need any FEs enabled to do this step
+            // if I do this I am sure they are all off
+            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
+        }
+    }
     for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
     {
         if(cCorrectDelay) continue;
@@ -729,6 +740,8 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 
     // enable CIC output of alignmnent pattern on stub lines
     // .. and enable all FEs again
+    auto cType    = FrontEndType::MPA;
+    bool cWithMPA = false;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -736,9 +749,13 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             // enable alignment output for stubs
             fCicInterface->SelectOutput(cCic, true);
+            auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+            cWithMPA       = cWithMPA || cMPAfound;
         }
     }
-    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, false);
+    fStubDebug     = true;
+    size_t cNlines = cWithMPA ? 6 : 5;
+    cAligned       = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, fStubDebug, cNlines);
 
     // disable CIC output of pattern on stub + l1 lines
     for(auto cOpticalReadout: *pBoard)
@@ -897,7 +914,7 @@ bool BackEndAlignment::Align()
             {
                 cPackageDelayFound = this->FindPackageDelay(theBoard);
                 cAttempt++;
-            } while(!cPackageDelayFound && cAttempt < 10);
+            } while(!cPackageDelayFound && cAttempt < 5);
             return cPackageDelayFound;
             // cAligned = cPackageDelayFound;
             // if(!cAligned) return cAligned;

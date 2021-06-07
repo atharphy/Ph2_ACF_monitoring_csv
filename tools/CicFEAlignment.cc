@@ -33,7 +33,7 @@ void CicFEAlignment::Reset()
             for(auto cHybrid: *cOpticalGroup)
             {
                 uint16_t hybridIndex = cHybrid->getIndex();
-                LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+                LOG(INFO) << BOLDBLUE << "CicFEAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
                     uint16_t                                      chipIndex = cChip->getIndex();
@@ -446,7 +446,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 if(cLocked)
                 {
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
-                    this->SetStaticPhaseAlignment();
+                    // this->SetStaticPhaseAlignment();
                 }
                 cAligned = cAligned && cLocked;
 

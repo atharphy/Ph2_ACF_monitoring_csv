@@ -444,7 +444,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTrackerPS module " << RESET;
             ModuleStartUpPS(cOpticalGroup);
-            pCICUseNegEdge = 0;
+            pCICUseNegEdge = 1;
         }
 
         auto& clpGBT = cOpticalGroup->flpGBT;

@@ -45,7 +45,6 @@ void SSA::loadfRegMap(const std::string& filename)
     std::ifstream file(filename.c_str(), std::ios::in);
     if(file)
     {
-        LOG(INFO) << "FILE";
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;

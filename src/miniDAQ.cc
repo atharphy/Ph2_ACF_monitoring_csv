@@ -102,6 +102,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkData", "Check data..", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -154,6 +156,16 @@ int main(int argc, char* argv[])
 
     cTool.addFileHandler(cOutputFile, 'w');
 
+    if(cmd.foundOption("alignPS"))
+    {
+        // align ASICs on PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        // map MPA outputs for PS module
+        cPSAlignment.MapMPAOutputs();
+    }
+
     // if CIC is enabled then align CIC first
     if(cmd.foundOption("alignCIC"))
     {
@@ -166,14 +178,15 @@ int main(int argc, char* argv[])
         cCicAligner.Reset();
         // cCicAligner.dumpConfigFiles();
     }
-    if(cmd.foundOption("alignPS"))
+
+    // align back-end
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    if(!cmd.foundOption("skipAlignment"))
     {
-        // align ASICs on PS module
-        PSAlignment cPSAlignment;
-        cPSAlignment.Inherit(&cTool);
-        cPSAlignment.Initialise();
-        // map MPA outputs for PS module
-        cPSAlignment.MapMPAOutputs();
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
+        cBackEndAligner.Reset();
     }
 
     for(auto board: *cTool.fDetectorContainer)
@@ -206,6 +219,25 @@ int main(int argc, char* argv[])
         uint32_t    triggerFrequency            = 1000 * cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
         std::thread theResyncThread(sendResync, std::ref(cTool), numberOfTriggersAfterResync, triggerFrequency, std::ref(numberOfResyncs));
         theResyncThread.detach();
+    }
+
+    if(cmd.foundOption("checkData"))
+    {
+        cTool.CreateResultDirectory("Results/DataChecker");
+        cTool.InitResultFile("DataLog");
+        DataChecker cDataChecker;
+        cDataChecker.Inherit(&cTool);
+        cDataChecker.InjectionTestPS(pEventsperVcth);
+        // for(auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cDataChecker.ReadDataTestPS( cBoard, pEventsperVcth);
+        // }
+        cDataChecker.dumpConfigFiles();
+        cDataChecker.writeObjects();
+        cDataChecker.SaveResults();
+        cDataChecker.WriteRootFile();
+        cDataChecker.CloseResultFile();
+        return 0;
     }
 
     for(auto cBoard: *cTool.fDetectorContainer)
@@ -249,30 +281,6 @@ int main(int argc, char* argv[])
             cNevents += cTool.ReadData(cBeBoard, cData, false);
             if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
 
-            // size_t   cIter    = 0;
-            // do
-            // {
-            //     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            //     std::vector<uint32_t> cData(0);
-            //     cNevents += cTool.ReadData(cBeBoard, cData, false);
-            //     if( cData.size() == 0 )
-            //     {
-            //         if( cIter%100 == 0 )
-            //             LOG (INFO) << BOLDBLUE << "No events read-back from board .. waiting for more .." << RESET;
-            //     }
-            //     else
-            //     {
-            //         LOG (INFO) << BOLDBLUE << "\t... Read back.." << +cData.size() << " words." << RESET;
-            //         std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-            //     }
-            //     cBreak = (cNevents >= pEventsperVcth);
-            //     if( cLimitTriggers )
-            //         cBreak = cBreak || ( cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
-            //     cIter++;
-            // } while(!cBreak && cIter < 1000 );
-            // LOG(INFO) << BOLDBLUE << "Stopping triggers..." << RESET;
-            // cTool.fBeBoardInterface->Stop(cBeBoard);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(1));
             LOG(INFO) << BOLDBLUE << "Data size after stop is " << cCompleteData.size() << " total number of events I expect is " << +cNevents << RESET;
 
             // until number of events have stopped increasing
@@ -354,29 +362,13 @@ int main(int argc, char* argv[])
 
         LOG(INFO) << "Number of triggers received         = " << cNtriggers << RESET;
         LOG(INFO) << "Number of events recorded           = " << cPh2Events.size() << RESET;
-        LOG(INFO) << "Last event GetEventCount            = " << +cPh2Events.back()->GetEventCount() << RESET;
-        LOG(INFO) << "Last event GetExternalTriggerId     = " << +cPh2Events.back()->GetExternalTriggerId() << RESET;
-        LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs << RESET;
-        LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size() << RESET;
-    }
-
-    if(cmd.foundOption("checkData"))
-    {
-        cTool.CreateResultDirectory("Results/DataChecker");
-        cTool.InitResultFile("DataLog");
-        DataChecker cDataChecker;
-        cDataChecker.Inherit(&cTool);
-        cDataChecker.InjectionTestPS(pEventsperVcth);
-        // for(auto cBoard: *cTool.fDetectorContainer)
-        // {
-        //     cDataChecker.ReadDataTestPS( cBoard, pEventsperVcth);
-        // }
-        cDataChecker.dumpConfigFiles();
-        cDataChecker.writeObjects();
-        cDataChecker.SaveResults();
-        cDataChecker.WriteRootFile();
-        cDataChecker.CloseResultFile();
-        return 0;
+        if(cPh2Events.size() != 0)
+        {
+            LOG(INFO) << "Last event GetEventCount            = " << +cPh2Events.back()->GetEventCount() << RESET;
+            LOG(INFO) << "Last event GetExternalTriggerId     = " << +cPh2Events.back()->GetExternalTriggerId() << RESET;
+            LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs << RESET;
+            LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size() << RESET;
+        }
     }
 
     // done with the acquistion, now clean up
@@ -416,115 +408,6 @@ int main(int argc, char* argv[])
         RootWeb::makeDQMmonitor(dqmFilename, cDirBasePath, runLabel);
         LOG(INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath;
     }
-    // BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-
-    // // make event counter start at 1 as does the L1A counter
-    // uint32_t cN      = 1;
-    // uint32_t cNthAcq = 0;
-    // uint32_t count   = 0;
-
-    // cTool.fBeBoardInterface->Start(pBoard);
-    // while(cN <= pEventsperVcth)
-    // {
-    //     uint32_t cPacketSize = cTool.ReadData(pBoard);
-
-    //     if(cN + cPacketSize >= pEventsperVcth) cTool.fBeBoardInterface->Stop(pBoard);
-
-    //     const std::vector<Event*>& events = cTool.GetEvents();
-    //     std::vector<DQMEvent*>     cDQMEvents;
-
-    //     for(auto& ev: events)
-    //     {
-    //         // if we write a DAQ file or want to run the DQM, get the SLink format
-    //         if(cDAQFile || cDQM)
-    //         {
-    //             SLinkEvent cSLev = ev->GetSLinkEvent(pBoard);
-
-    //             if(cDAQFile)
-    //             {
-    //                 auto data = cSLev.getData<uint32_t>();
-    //                 cDAQFileHandler->setData(data);
-    //             }
-
-    //             // if DQM histos are enabled and we are treating the first event, book the histograms
-    //             if(cDQM && cN == 1)
-    //             {
-    //                 DQMEvent* cDQMEv = new DQMEvent(&cSLev);
-    //                 dqmH->bookHistograms(cDQMEv->trkPayload().feReadoutMapping());
-    //             }
-
-    //             if(cDQM)
-    //             {
-    //                 if(count % cScaleFactor == 0) cDQMEvents.emplace_back(new DQMEvent(&cSLev));
-    //             }
-    //         }
-
-    //         if(cPostscale)
-    //         {
-    //             if(count % cScaleFactor == 0)
-    //             {
-    //                 LOG(INFO) << ">>> Event #" << count;
-    //                 outp.str("");
-    //                 outp << *ev << std::endl;
-    //                 LOG(INFO) << outp.str();
-    //             }
-    //         }
-
-    //         if(count % 100 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
-
-    //         // increment event counter
-    //         count++;
-    //         cN++;
-    //     }
-
-    //     // finished  processing the events from this acquisition
-    //     // thus now fill the histograms for the DQM
-    //     if(cDQM)
-    //     {
-    //         dqmH->fillHistograms(cDQMEvents);
-    //         cDQMEvents.clear();
-    //     }
-
-    //     cNthAcq++;
-    // }
-
-    // // done with the acquistion, now clean up
-    // if(cDAQFile)
-    //     // this closes the DAQ file
-    //     delete cDAQFileHandler;
-
-    // if(cDQM)
-    // {
-    //     // save and publish
-    //     // Create the DQM plots and generate the root file
-    //     // first of all, strip the folder name
-    //     std::vector<std::string> tokens;
-
-    //     tokenize(cOutputFile, tokens, "/");
-    //     std::string fname = tokens.back();
-
-    //     // now form the output Root filename
-    //     tokens.clear();
-    //     tokenize(fname, tokens, ".");
-    //     std::string runLabel    = tokens[0];
-    //     std::string dqmFilename = runLabel + "_dqm.root";
-    //     dqmH->saveHistograms(dqmFilename, runLabel + "_flat.root");
-
-    //     // find the folder (i.e DQM page) where the histograms will be published
-    //     std::string cDirBasePath;
-
-    //     if(cmd.foundOption("output"))
-    //     {
-    //         cDirBasePath = cmd.optionValue("output");
-    //         cDirBasePath += "/";
-    //     }
-    //     else
-    //         cDirBasePath = "Results/";
-
-    //     // now read back the Root file and publish the histograms on the DQM page
-    //     RootWeb::makeDQMmonitor(dqmFilename, cDirBasePath, runLabel);
-    //     LOG(INFO) << "Saving root file to " << dqmFilename << " and webpage to " << cDirBasePath;
-    // }
 
     return 0;
 }

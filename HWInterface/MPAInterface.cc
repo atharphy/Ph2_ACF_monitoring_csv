@@ -216,15 +216,13 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pV
 }
 bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDBLUE << "Configuring peri register " << cReg << " writing " << +pValue << RESET;
+    LOG(INFO) << BOLDBLUE << "Configuring peri register " << cReg << " writing " << +pValue << RESET;
     // LOG (INFO) << BOLDRED << PERI_CONFIG_TABLE.size() << " items in peri map." << RESET;
     // for( auto cMapItem : PERI_CONFIG_TABLE )
     //     LOG (INFO) << cMapItem.first << " " << +cMapItem.second << RESET;
     uint8_t  cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second;
     uint16_t cAddress    = this->regPeri(pChip, cRegAddress);
     LOG(DEBUG) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
-    // update register map
-    pChip->setReg(cReg, pValue);
     return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
 }
 uint16_t MPAInterface::readPeri(Chip* pChip, std::string cReg)
@@ -489,10 +487,18 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 
 bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg writing " << pRegNode << RESET;
+    bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    bool        cSuccess = true;
-    ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-    cRegItem.fValue      = pValue & 0xFF;
+    bool cFound = pChip->getRegMap().find(pRegNode) != pChip->getRegMap().end();
+
+    ChipRegItem cRegItem;
+    if(cFound)
+        cRegItem = pChip->getRegItem(pRegNode);
+    else
+        return cFound;
+
+    cRegItem.fValue = pValue & 0xFF;
     if(!lpGBTFound())
     {
         std::vector<uint32_t> cVec;
@@ -502,25 +508,20 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     }
     else
     {
-        // cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
-        cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue);
+        bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
+        cSuccess     = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue, cVerify);
+        if(cSuccess) pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
     }
     if(cSuccess && !lpGBTFound()) // check is done in lpGBTInterface for opto
     {
-        pChip->setReg(pRegNode, pValue);
-        if(pVerifLoop)
-        {
-            if(pRegNode != "ENFLAGS" && pRegNode != "DigCalibPattern_L" && pRegNode != "DigCalibPattern_H")
-            {
-                uint16_t cReadBack = ReadChipReg(pChip, pRegNode);
-                if(cReadBack != pValue)
-                {
-                    LOG(INFO) << BOLDRED << "Read back value from " << pRegNode << BOLDBLUE << " at I2C address " << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
-                              << std::hex << +cRegItem.fValue << std::dec << RESET;
-                    return false;
-                }
-            }
-        }
+        bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
+        cSuccess     = (cVerify) ? (ReadChipReg(pChip, pRegNode) == pValue) : true;
+    }
+    if(cSuccess && cFound)
+    {
+        pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
+        cRegItem = pChip->getRegItem(pRegNode);
+        // LOG (INFO) << BOLDGREEN << "\t\t... MPAInterface::WriteChipSingleReg written " << pValue << " to " << pRegNode << " Status flag is " << +cRegItem.fStatusReg << RESET;
     }
 #ifdef COUNT_FLAG
     fRegisterCount++;
@@ -573,7 +574,7 @@ bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std:
         for(const auto& cReg: pVecReq)
         {
             cRegItem = pMPA->getRegItem(cReg.first);
-            pMPA->setReg(cReg.first, cReg.second);
+            pMPA->setReg(cReg.first, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
         }
     }
 
@@ -720,10 +721,18 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
 
 bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop)
 {
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg writing 0x" << std::hex << pRegisterAddress << std::dec << RESET;
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    auto cRegItem   = pChip->getRegItem(fMap[pRegisterAddress]);
+    bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
+
+    ChipRegItem cRegItem;
+    if(cFound)
+        cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
+    else
+        cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue = pRegisterValue & 0xFF;
+
     // write
     if(!lpGBTFound())
     {
@@ -741,7 +750,19 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
         bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
         cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cVerify);
     }
-    if(cSuccess) pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
+    if(cSuccess && !lpGBTFound()) // check is done in lpGBTInterface for opto
+    {
+        bool     cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
+        uint16_t cValue  = 0x00;
+        if(cVerify) cValue = (!cFound) ? ReadReg(pChip, pRegisterAddress) : ReadChipReg(pChip, fMap[pRegisterAddress]);
+        cSuccess = (cVerify) ? (cValue == pRegisterValue) : true;
+    }
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDRED << "Read back value from " << fMap[pRegisterAddress] << BOLDBLUE << " at I2C address " << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
+                  << std::hex << +cRegItem.fValue << std::dec << RESET;
+    }
+    if(cSuccess && cFound) { pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg); }
     return cSuccess;
 }
 

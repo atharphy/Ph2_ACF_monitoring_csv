@@ -1282,14 +1282,14 @@ void D19cFWInterface::PowerOnDIO5(uint8_t pFMCId)
 
 void D19cFWInterface::TriggerConfiguration()
 {
-    std::cout << "Trigger status = " << ReadReg("fc7_daq_stat.fast_command_block.general.source") << std::endl;
-
-    auto cSource       = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
-    auto cRate         = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-    auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    auto cConfiguredSrc = ReadReg("fc7_daq_stat.fast_command_block.general.source");
+    auto cSource        = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
+    auto cRate          = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+    auto cMultiplicity  = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     LOG(DEBUG) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
     if(cSource != 6 && cSource != 10) LOG(DEBUG) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
     LOG(DEBUG) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
+    if(cConfiguredSrc != cSource) LOG(ERROR) << BOLDRED << "Mismatch in trigger source configuration." << RESET;
 }
 void D19cFWInterface::Start()
 {

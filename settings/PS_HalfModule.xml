@@ -24,17 +24,9 @@
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA Id="0" configfile="MPA_minConfig.txt" />  
-            <!-- <MPA Id="1" configfile="MPATSTSYNC.txt" />
-            <MPA Id="2" configfile="MPATSTSYNC.txt" />
-            <MPA Id="3" configfile="MPATSTSYNC.txt" />
-            <MPA Id="4" configfile="MPATSTSYNC.txt" />
-            <MPA Id="5" configfile="MPATSTSYNC.txt" />
-            <MPA Id="6" configfile="MPATSTSYNC.txt" />
-            <MPA Id="7" configfile="MPATSTSYNC.txt" />  
-             -->
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSAPreCalib.txt" /> 
+            <SSA Id="0" configfile="SSA.txt" /> 
             <!-- <SSA Id="1" configfile="SSAPreCalib.txt" /> 
             <SSA Id="2" configfile="SSAPreCalib.txt" /> 
             <SSA Id="4" configfile="SSAPreCalib.txt" /> 
@@ -56,7 +48,7 @@
         <Register name="is_bc0_enable"   >0</Register>
         <Register name="is_resync_enable">1</Register>
         <Register name="delay">10000</Register>
-        <Register name="num_triggers"    >99</Register>
+        <Register name="num_triggers"    >9</Register>
     </Register>
       
     <!-- Clock control -->
