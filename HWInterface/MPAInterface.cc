@@ -112,7 +112,7 @@ void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInj
         uint32_t           cPixelIds = (uint32_t)(pInjection.fColumn) * 120 + (uint32_t)pInjection.fRow;
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
-        LOG(DEBUG) << BOLDMAGENTA << "\t... injecting digitally " << cRegName.str() << RESET;
+        // LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
         this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
 }
@@ -206,7 +206,9 @@ bool MPAInterface::maskRowCol(Chip* pChip, int pRow, int pColumn, uint8_t pMask,
 }
 bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDBLUE << "Configuring row register " << cReg << " writing " << +pValue << RESET;
+    // LOG(INFO) << BOLDBLUE << "Configuring row register "
+    //     << cReg
+    //     << " on MPA#"<< +pChip->getId() << " : " << cReg << " writing " << +pValue << RESET;
     uint8_t cRegAddress = ROW_CONFIG_TABLE.find(cReg)->second;
     // if global register don't readback
     pVerifLoop        = (pRow == 0) ? false : pVerifLoop;
@@ -216,7 +218,9 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pV
 }
 bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
 {
-    LOG(INFO) << BOLDBLUE << "Configuring peri register " << cReg << " writing " << +pValue << RESET;
+    // LOG(INFO) << BOLDBLUE << "Configuring peri register "
+    //     << cReg
+    //     << " on MPA#"<< +pChip->getId() << " : " << cReg << " writing " << +pValue << RESET;
     // LOG (INFO) << BOLDRED << PERI_CONFIG_TABLE.size() << " items in peri map." << RESET;
     // for( auto cMapItem : PERI_CONFIG_TABLE )
     //     LOG (INFO) << cMapItem.first << " " << +cMapItem.second << RESET;
@@ -265,6 +269,8 @@ void MPAInterface::readAllBias(Chip* pChip)
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pMPA->getBeBoardId());
+    // LOG (INFO) << BOLDMAGENTA << " MPAInterface::WriteChipReg writing to " << pRegName << RESET;
+
     // need to or success
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)
     {
@@ -396,40 +402,6 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         bool cConfigPattern = this->configPixel(pMPA, "DigiPattern", cPixelNumber, pValue, pVerifLoop);
         return cReadoutMode && cEnableDigital && cConfigPattern;
     }
-    // else if(pRegName == "DigitalSync" )
-    // {
-
-    //     uint8_t cPixelMask=0;
-    //     uint8_t cPolarity=1;
-    //     uint8_t cEnEdgeBR=1;
-    //     uint8_t cEnLvlBr=0;
-    //     uint8_t cEnCount=0;
-    //     uint8_t cDigCal=1;
-    //     uint8_t cAnaCal=0;
-    //     uint8_t cBrClk=0;
-    //     uint8_t cRegValue = (cEnEdgeBR << 2 ) | (cPolarity << 1 ) | cPixelMask;
-    //     cRegValue = cRegValue | (  (cDigCal << 5 ) | (cEnCount << 4 ) | (cEnLvlBr << 3) ) ;
-    //     cRegValue = cRegValue | (  (cBrClk << 7 ) | (cAnaCal << 6 ) ) ;
-    //     // enable digital injection on all pixels
-    //     bool    cEnableDigital = this->configPixel(pMPA, "PixelEnable" , 0 , cRegValue, pVerifLoop);
-    //     // for now .. only one on pixel
-    //     uint8_t cPixel=1;
-    //     this->maskPixel(pMPA, cPixel,0, pVerifLoop);
-    //     // configure pattern
-    //     bool    cConfigPattern = this->configPixel(pMPA, "DigiPattern" , pValue , pValue, pVerifLoop);
-
-    //     //if( pValue == 1 )
-    //     //     LOG (INFO) << BOLDBLUE << "Enabling digital injection on MPA by setting register ENFLAGS_ALL to 0x"
-    //     //         << std::hex << +cRegValue << std::dec << RESET;
-    //     // else
-    //     //     LOG (INFO) << BOLDBLUE << "Disabling digital injection on MPA by setting register ENFLAGS_ALL to 0x"
-    //     //         << std::hex << +cRegValue << std::dec << RESET;
-
-    //     // bool    cEnableDigital = WriteChipSingleReg(pMPA, "ENFLAGS_ALL", cRegValue, false);
-    //     // LOG (INFO) << BOLDBLUE << "Enabling readout of L1 data on MPA by setting register ReadoutMode to 0x"
-    //     //         << std::hex << +(0) << std::dec << RESET;
-    //     return cEnableDigital && cReadoutMode && cConfigPattern;
-    // }
     else if(pRegName == "AnalogueAsync")
     {
         // readout mode 1 -- ASYNC counter
@@ -705,7 +677,7 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
             auto cRegItem   = pChip->getRegItem(fMap[cReg.first]);
             cRegItem.fValue = cReg.second & 0xFF;
             cVerify         = pVerifLoop && (cRegItem.fStatusReg == 0);
-            if(cCount % 1000 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
+            // if(cCount % 1000 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
             // cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
             if(fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cVerify)) pChip->setReg(fMap[cReg.first], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
 

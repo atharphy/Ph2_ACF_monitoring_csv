@@ -65,6 +65,7 @@ class BackEndAlignment : public Tool
     // Containers
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+    DetectorDataContainer fEnabledFEs;
     DetectorDataContainer fChipMasks;
     void                  Reconfigure(Ph2_HwDescription::BeBoard* pBoard);
 

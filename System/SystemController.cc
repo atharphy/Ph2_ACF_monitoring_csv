@@ -148,8 +148,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             {
                 auto cFirstOpticalGroup = cFirstBoard->at(0);
                 LOG(INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << +cFirstBoard->size() << " optical group(s) found ..." << RESET;
-
-                if(cFirstOpticalGroup->flpGBT != nullptr)
+                bool cWithLpGBT = (cFirstOpticalGroup->flpGBT != nullptr);
+                if(cWithLpGBT)
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->isOptical(), cFirstBoard->ifUseCPB());
@@ -176,17 +176,17 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
-                    if(cWithSSA && !cWithMPA)
+                    if(cWithSSA && !cWithMPA && !cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                         fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
                     }
-                    if(cWithMPA && !cWithSSA)
+                    if(cWithMPA && !cWithSSA && !cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
                         fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
                     }
-                    if(cWithMPA || cWithSSA)
+                    if((cWithMPA || cWithSSA) && cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS module(s)" << RESET;
                         fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
@@ -444,7 +444,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTrackerPS module " << RESET;
             ModuleStartUpPS(cOpticalGroup);
-            pCICUseNegEdge = 1;
+            pCICUseNegEdge = 0;
         }
 
         auto& clpGBT = cOpticalGroup->flpGBT;
@@ -477,8 +477,16 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                 if(clpGBT != nullptr && cHybridIter != cHybrid->end())
                 {
                     // no SSA because I don't want to reset it here. . already done earlier
-                    if(cType == FrontEndType::MPA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
-                    if(cType == FrontEndType::CBC3) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
+                    if(cType == FrontEndType::MPA)
+                    {
+                        LOG(INFO) << BOLDBLUE << "Resetting MPA" << RESET;
+                        static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
+                    }
+                    if(cType == FrontEndType::CBC3)
+                    {
+                        LOG(INFO) << BOLDBLUE << "Resetting CBC" << RESET;
+                        static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
+                    }
                 }
                 for(auto cChip: *cHybrid)
                 {
@@ -489,6 +497,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         }         // configure all FE types
     }
 
+    LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
     // send a ReSync to all chips before starting
     fBeBoardInterface->ChipReSync(pBoard);
 }

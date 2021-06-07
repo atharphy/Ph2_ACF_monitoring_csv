@@ -63,21 +63,28 @@ void BackEndAlignment::Initialise()
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitChip<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
+    ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, fEnabledFEs);
     for(auto cBoard: *fDetectorContainer)
     {
+        auto& cEnabledFEs = fEnabledFEs.at(cBoard->getIndex());
         //
         auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
         for(auto cOpticalGroup: *cBoard)
         {
+            auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
+                auto& cEnabledFEsHybrid = cEnabledFEsOG->at(cHybrid->getIndex());
+                auto& cEnabled          = cEnabledFEsHybrid->getSummary<uint8_t>();
+                cEnabled                = 0;
                 for(auto cChip: *cHybrid)
                 {
                     ChipRegMap&       theChipMap     = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
                     const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
                     theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end());
+                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::CBC3) cEnabled = cEnabled | (1 << cChip->getId());
                 }
             }
         }
@@ -314,17 +321,27 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
-    // reconfigure sparsification
+    // reconfigure sparsification + FEs enabled in this CIC
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    auto& cEnabledFEs = fEnabledFEs.at(pBoard->getIndex());
     for(auto cOpticalGroup: *pBoard)
     {
+        auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SetSparsification(cCic, cSparsified);
-        } // hybrids
-    }     // OG
+            auto&                cEnabledFEsCIC = cEnabledFEsOG->at(cHybrid->getIndex());
+            auto                 cEnableMsk     = cEnabledFEsCIC->getSummary<uint8_t>();
+            std::vector<uint8_t> cIds(0);
+            for(size_t cIndx = 0; cIndx < 8; cIndx++)
+            {
+                if(((cEnableMsk & (0x1 << cIndx)) >> cIndx) == 1) cIds.push_back(cIndx);
+            }
+            fCicInterface->EnableFEs(cCic, cIds, true); // make sure all FEs are disabled by default
+        }                                               // hybrids
+    }                                                   // OG
 
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
     LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
@@ -775,6 +792,26 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             fCicInterface->EnableFEs(cCic, cEnabledFEs, true);
         } // hybrids [CICs]
     }     // optical groups [modules]
+
+    // reconfigure FEs enabled in this CIC
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::CICAlignment Resetting FE_ENABLE" << RESET;
+    auto& cEnabledFEs = fEnabledFEs.at(pBoard->getIndex());
+    for(auto cOpticalGroup: *pBoard)
+    {
+        auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getIndex());
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto&                cCic           = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            auto&                cEnabledFEsCIC = cEnabledFEsOG->at(cHybrid->getIndex());
+            auto                 cEnableMsk     = cEnabledFEsCIC->getSummary<uint8_t>();
+            std::vector<uint8_t> cIds(0);
+            for(size_t cIndx = 0; cIndx < 8; cIndx++)
+            {
+                if(((cEnableMsk & (0x1 << cIndx)) >> cIndx) == 1) cIds.push_back(cIndx);
+            }
+            fCicInterface->EnableFEs(cCic, cIds, true); // make sure all FEs are disabled by default
+        }                                               // hybrids
+    }                                                   // OG
 
     // re-load configuration of fast command block from register map loaded from xml file
     LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;

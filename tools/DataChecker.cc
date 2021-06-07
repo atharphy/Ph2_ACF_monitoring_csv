@@ -714,6 +714,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         {
             for(auto cHybrid: *cOpticalReadout)
             {
+                auto&    cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                uint16_t cValue = fCicInterface->ReadChipReg(cCic, "FE_ENABLE");
+                LOG(INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
+                // fCicInterface->WriteChipReg(cCic,"FE_ENABLE",0xFF);
+                // cValue = fCicInterface->ReadChipReg(cCic, "FE_ENABLE");
+                LOG(INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
+
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
@@ -725,7 +732,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         }
     }
 
-    size_t cNEventsPerAttempt = 3 * 30 * 10;
+    size_t cNEventsPerAttempt = 10; // * 30 * 10;
     // random c++
     std::srand(std::time(NULL));
     std::random_device cRndm{};
