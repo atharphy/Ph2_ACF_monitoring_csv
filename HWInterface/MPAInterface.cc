@@ -268,7 +268,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 {
     setBoard(pMPA->getBeBoardId());
     // need to or success
-    if(pRegName == "ThDAC_ALL")
+    if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)
     {
         this->Set_threshold(pMPA, pValue);
         return true;
@@ -632,7 +632,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         // can be read back from
         if(cRegItem.first.find("_ALL") != std::string::npos)
         {
-            LOG(DEBUG) << BOLDMAGENTA << "\t.. found a status register : " << cRegItem.first << RESET;
+            LOG(INFO) << BOLDMAGENTA << "\t.. found a status register : " << cRegItem.first << RESET;
             pMPA->setReg(cRegItem.first, cRegItem.second.fValue, cRegItem.second.fPrmptCfg, 1);
         }
     }
@@ -644,7 +644,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     for(auto& cMapItem: fMap)
     {
         // for now .. don't configure each pixel
-        if(cMapItem.second.find("ENFLAGS_P") != std::string::npos) continue;
+        // if(cMapItem.second.find("ENFLAGS_P") != std::string::npos) continue;
         // if(cMapItem.second.find("_P") != std::string::npos) continue;
 
         ChipRegItem& cItem = cMPARegMap[cMapItem.second];
@@ -654,8 +654,10 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         cReg.first  = cMapItem.first;
         cReg.second = cItem.fValue;
         cRegs.push_back(cReg);
-        LOG(DEBUG) << BOLDBLUE << "Register map for MPA#" << +pMPA->getId() << " contains a register with address " << std::hex << +cReg.first << std::dec << " register value " << std::hex
-                   << +cReg.second << std::dec << " status bit is " << +cItem.fStatusReg << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Register map for MPA#" << +pMPA->getId() << " contains a register with the name "
+        //         << cMapItem.second
+        //         << " -  address " << std::hex << +cReg.first << std::dec << " register value " << std::hex
+        //         << +cReg.second << std::dec << " status bit is " << +cItem.fStatusReg << RESET;
     }
     LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers " << RESET;
     return this->WriteRegs(pMPA, cRegs, pVerifLoop);
@@ -682,7 +684,8 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
 #endif
         }
         uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+        cVerify                = pVerifLoop && (cReg.fStatusReg == 0);
+        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, cVerify);
 #ifdef COUNT_FLAG
         fTransactionCount++;
 #endif
@@ -694,6 +697,7 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         {
             if(cCount % 1000 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
             // cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
+            cVerify  = pVerifLoop && (cReg.fStatusReg == 0);
             cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cVerify);
             if(!cSuccess) continue;
 #ifdef COUNT_FLAG
@@ -998,7 +1002,6 @@ void MPAInterface::Set_calibration(Chip* pMPA, uint32_t cal)
 void MPAInterface::Set_threshold(Chip* pMPA, uint32_t th)
 {
     setBoard(pMPA->getBeBoardId());
-
     this->WriteChipReg(pMPA, "ThDAC0", th);
     this->WriteChipReg(pMPA, "ThDAC1", th);
     this->WriteChipReg(pMPA, "ThDAC2", th);

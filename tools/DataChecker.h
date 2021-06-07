@@ -40,6 +40,43 @@ typedef std::vector<EventTag> EventsList;
 
 const uint8_t FAILED_DATA_TEST = 4;
 
+#ifndef PSEvent
+struct PSEvent
+{
+    // readout
+    uint8_t fReadoutSuccess = 0;
+    // event information
+    uint32_t fEventId       = 0;
+    uint32_t fInjectionId   = 0;
+    uint32_t fAttemptId     = 0;
+    uint32_t fBurstId       = 0;
+    uint16_t fTriggerId     = 0;
+    uint16_t fBxId          = 0;
+    uint16_t fL1IdCic       = 0;
+    uint8_t  fPackageDelay  = 0;
+    int      fStubOffset    = 0;
+    int      fLatencyOffset = 0;
+    //
+    uint16_t fMPALatency  = 0;
+    uint16_t fSSALatency  = 0;
+    uint32_t fStubLatency = 0;
+    //
+    uint16_t fHybridId = 0;
+    uint16_t fChipId   = 0;
+    uint16_t fChipL1Id = 0;
+    //
+    uint16_t fNSclusters = 0;
+    uint16_t fNPclusters = 0;
+    //
+    uint16_t fPClusterSize = 0;
+    uint16_t fSClusterSize = 0;
+    uint16_t fStubSize     = 0;
+    //
+    uint16_t fL1Status = 0;
+};
+typedef std::vector<PSEvent> PSEvents;
+#endif
+
 class DataChecker : public Tool
 {
   public:
@@ -54,25 +91,18 @@ class DataChecker : public Tool
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
 
-    void MemoryCheck2SRaw();
-    void MemoryCheck2SSparse();
-    void MemoryCheck2S();
-    // void TriggerBurstCheck();
+    void InjectionTestPS(uint32_t pMaxTriggersToAccept = 1000);
+    void ReadDataTestPS(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNevents = 10000);
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
     void DigitalInjectionTest(bool pBypassCic = false, bool pShiftRegMode = true);
     void Eye_CIC();
     bool GenericFastCommands();
 
-    bool SendGenericTestPulses(int pReSync = 0);
-    bool ReadAfterGenericBlock(int pNExpected);
     void PrepareDigitalInjection(DetectorDataContainer& pInjectionScheme);
-    void GenericTestPulse(int pReSync = 0);
-    void FastCommandMemChecks2S(int pNTrials = 1);
     void FastCommandInjections(int pNTrials = 1);
     void PSTriggerTests();
     void PSNominal();
 
-    void TriggerBurstCheck(Ph2_HwDescription::BeBoard* pBoard);
     void noiseCheck(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void matchEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub);
     void AsyncTest();
@@ -102,25 +132,16 @@ class DataChecker : public Tool
         uint16_t tpFastReset     = 0;
         uint8_t  tpAmplitude     = 100;
     };
-    class FCMDs
-    {
-      public:
-        uint8_t fTrigger   = 0xC9; // trigger
-        uint8_t fTestPulse = 0xC5; // trigger
-        uint8_t fBC0       = 0xC3; // BC0
-        uint8_t fResync    = 0xD1; // Resync
-        uint8_t fClear     = 0xD3; // ReSync+BC0
-        uint8_t fEmpty     = 0xC1; // empty
-    };
 
   protected:
-    std::vector<uint16_t> fExpectedPipelineAddress;
-    std::vector<uint8_t>  fFastCommands;
-    std::vector<int>      fTriggeredBxs;
-    int                   fNInjectedTriggers   = 0;
-    int                   fTotalEventsExpected = 0;
+    std::vector<uint8_t> fFastCommands;
+    std::vector<int>     fTriggeredBxs;
+    std::vector<int>     fBurstIds;
+    int                  fNInjectedTriggers = 0;
 
   private:
+    //
+    PSEvent fPSevent;
     // masks
     ChannelGroup<254, 1> fCBCMask;
 
@@ -140,12 +161,28 @@ class DataChecker : public Tool
 
     //
     TPconfig fTPconfig;
-
+    void     printPSevent()
+    {
+        if(fPSevent.fL1IdCic != 511 && fPSevent.fL1Status == 0x00)
+            LOG(INFO) << BOLDBLUE << "\t...Event#" << +fPSevent.fEventId << " trigger Id " << +fPSevent.fTriggerId << " Hybrid#" << +fPSevent.fHybridId << " L1 Id is " << fPSevent.fL1IdCic
+                      << " BX Id is " << fPSevent.fBxId << " L1 status flag = " << std::bitset<9>(fPSevent.fL1Status) << " " << fPSevent.fPClusterSize << " p clusters [total] and "
+                      << " " << fPSevent.fSClusterSize << " s clusters [total]" << RESET;
+        else if(fPSevent.fL1IdCic == 511)
+            LOG(INFO) << BOLDRED << "\t...Event#" << +fPSevent.fEventId << " trigger Id " << +fPSevent.fTriggerId << " Hybrid#" << +fPSevent.fHybridId << " L1 Id is " << fPSevent.fL1IdCic
+                      << " BX Id is " << fPSevent.fBxId << " L1 status flag = " << std::bitset<9>(fPSevent.fL1Status) << " " << fPSevent.fPClusterSize << " p clusters [total] and "
+                      << " " << fPSevent.fSClusterSize << " s clusters [total]" << RESET;
+        else
+            LOG(INFO) << BOLDMAGENTA << "\t...Event#" << +fPSevent.fEventId << " trigger Id " << +fPSevent.fTriggerId << " Hybrid#" << +fPSevent.fHybridId << " L1 Id is " << fPSevent.fL1IdCic
+                      << " BX Id is " << fPSevent.fBxId << " L1 status flag = " << std::bitset<9>(fPSevent.fL1Status) << " " << fPSevent.fPClusterSize << " p clusters [total] and "
+                      << " " << fPSevent.fSClusterSize << " s clusters [total]" << RESET;
+    }
     //
 
     std::vector<float>                      GetBxIds(std::vector<float> pRawBxIds);
     std::vector<int>                        GenerateIds();
     void                                    PreparePSInjection(DetectorDataContainer& pInjectionScheme);
+    std::vector<uint8_t>                    GeneratePSstrpClusters(int pMaxNSclusters);
+    std::vector<Ph2_HwInterface::Injection> GeneratePSpxlClusters(int pMaxNPclusters);
     std::vector<Ph2_HwInterface::Injection> GeneratePSInjections(int pMaxNstubs);
     std::vector<Ph2_HwInterface::Injection> GenerateInjections(int pMaxClusters = 1, int pMaxNstubs = 17);
     void                                    PSTriggerTest();

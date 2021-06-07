@@ -118,6 +118,7 @@ class ChipInterface
     }
     //
     bool lpGBTFound() { return fWithlpGBT; }
+    void setWithLpGBT(bool pValue) { fWithlpGBT = pValue; }
 
     void output();
 };

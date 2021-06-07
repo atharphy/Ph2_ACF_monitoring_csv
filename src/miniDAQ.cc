@@ -19,6 +19,7 @@
 #include "../Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
+#include "tools/DataChecker.h"
 #include "tools/PSAlignment.h"
 
 #include "../System/SystemController.h"
@@ -100,6 +101,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkData", "Check data..", ArgvParser::NoOptionAttribute);
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -356,6 +358,25 @@ int main(int argc, char* argv[])
         LOG(INFO) << "Last event GetExternalTriggerId     = " << +cPh2Events.back()->GetExternalTriggerId() << RESET;
         LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs << RESET;
         LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size() << RESET;
+    }
+
+    if(cmd.foundOption("checkData"))
+    {
+        cTool.CreateResultDirectory("Results/DataChecker");
+        cTool.InitResultFile("DataLog");
+        DataChecker cDataChecker;
+        cDataChecker.Inherit(&cTool);
+        cDataChecker.InjectionTestPS(pEventsperVcth);
+        // for(auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cDataChecker.ReadDataTestPS( cBoard, pEventsperVcth);
+        // }
+        cDataChecker.dumpConfigFiles();
+        cDataChecker.writeObjects();
+        cDataChecker.SaveResults();
+        cDataChecker.WriteRootFile();
+        cDataChecker.CloseResultFile();
+        return 0;
     }
 
     // done with the acquistion, now clean up

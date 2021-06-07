@@ -39,7 +39,13 @@ void CicFEAlignment::Reset()
                     uint16_t                                      chipIndex = cChip->getIndex();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     for(auto cReg: fRegMapContainer.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<ChipRegMap>())
+                    {
+                        // if( cChip->getFrontEndType() == FrontEndType::MPA )
+                        //     LOG (INFO) << BOLDBLUE << "MPA I2C register " << cReg.first << RESET;
+                        // else if( cChip->getFrontEndType() == FrontEndType::SSA )
+                        //     LOG (INFO) << BOLDBLUE << "MPA I2C register " << cReg.first << RESET;
                         cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
+                    }
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }

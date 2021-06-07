@@ -119,6 +119,12 @@ class PSInterface : public ReadoutChipInterface
         fMaxI2CAttempts = pMaxAttempts;
         theSSAInterface->setMaxI2CAttempts(fMaxI2CAttempts);
     }
+    void SetOptical()
+    {
+        bool cFoundLpgbt = this->lpGBTFound();
+        theSSAInterface->setWithLpGBT(cFoundLpgbt);
+        theMPAInterface->setWithLpGBT(cFoundLpgbt);
+    }
     std::pair<uint16_t, uint16_t> getSsaRetrySummary() { return theSSAInterface->getRetrySummary(); };
     std::pair<int, float>         getSsaWRattempts() { return theSSAInterface->getWRattempts(); };
     std::pair<float, float>       getSsaMinMaxWRattempts() { return theSSAInterface->getMinMaxWRattempts(); };

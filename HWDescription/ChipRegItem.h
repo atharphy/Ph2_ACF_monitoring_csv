@@ -15,7 +15,10 @@ namespace Ph2_HwDescription
 struct ChipRegItem
 {
     ChipRegItem(){};
-    ChipRegItem(uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue) : fPage(pPage), fAddress(pAddress), fDefValue(pDefValue), fValue(pValue) {}
+    ChipRegItem(uint8_t pPage, uint16_t pAddress, uint16_t pDefValue, uint16_t pValue, uint8_t pStatus = 0)
+        : fPage(pPage), fAddress(pAddress), fDefValue(pDefValue), fValue(pValue), fStatusReg(pStatus)
+    {
+    }
 
     uint8_t  fPage;
     uint16_t fAddress;
