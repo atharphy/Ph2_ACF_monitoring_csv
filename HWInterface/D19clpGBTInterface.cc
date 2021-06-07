@@ -147,12 +147,11 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}, 1);
     ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}, 1);
     // hold resets
-    for(uint8_t cSide=0; cSide < 2 ; cSide++)
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
     {
         this->cbcReset(pChip, true, cSide);
         this->cicReset(pChip, true, cSide);
     }
-    
 }
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
@@ -204,10 +203,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for Skeleton test
-    ConfigureGPIODirection(pChip,{fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
+    ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
     ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
     // hold resets
-    for(uint8_t cSide=0; cSide < 2 ; cSide++)
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
     {
         this->ssaReset(pChip, true, cSide);
         this->mpaReset(pChip, true, cSide);

@@ -408,16 +408,15 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             cWith2Smodule = cWith2Smodule || cCBCfound;
             cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
         }
-        if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); 
-        }
+        if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
         else if(cWith2Smodule)
         {
             cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
         }
         else
             LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
-        
-        static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType( cOpticalGroup->getFrontEndType() );
+
+        static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
     }
 
     // module start-up
@@ -531,7 +530,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide);
 
-            bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
+            bool     cSkipSSA3            = true; // eventually this needs to be set in the xml somewhere
             uint16_t cRegisterPadStrength = 0x1018;
             uint8_t  cSLVSdriveSSA        = 7;
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
