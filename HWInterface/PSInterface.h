@@ -132,6 +132,18 @@ class PSInterface : public ReadoutChipInterface
     std::pair<uint16_t, uint16_t> getSsaWriteErrorSummary() { return theSSAInterface->getWriteErrorSummary(); };
     void                          resetSsaRetrySummary() { theSSAInterface->resetRetrySummary(); };
     void                          resetSsaErrorSummary() { theSSAInterface->resetErrorSummary(); };
+
+    void UpdateModifiedRegisterMap(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        auto cModMap = ( pChip->getFrontEndType() == FrontEndType::SSA ) ? theSSAInterface->GetModifiedRegisterMap(pChip) : theMPAInterface->GetModifiedRegisterMap(pChip) ; 
+        OverwriteModifiedRegisterMap(pChip, cModMap);
+    }
+    void ResetModifiedRegisterMap()
+    {
+        theSSAInterface->ClearModifiedRegisterMap();
+        theMPAInterface->ClearModifiedRegisterMap();
+    }
+
     // void                              printErrorSummary();
 };
 } // namespace Ph2_HwInterface

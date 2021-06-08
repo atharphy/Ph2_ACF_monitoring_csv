@@ -1444,7 +1444,7 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
 
 void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
 {
-    this->ConfigureTriggerFSM(0, 10, 3);
+    //this->ConfigureTriggerFSM(0, 10, 3);
     // disable back-pressure
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     this->Start();
@@ -1616,8 +1616,6 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     // original reg map
     BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
-    if(pScope) this->L1ADebug();
-
     PhaseTuner pTuner;
     bool       cSuccess = true;
 
@@ -1626,15 +1624,16 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // configure trigger
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 1000});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1000});
     this->ReconfigureTriggerFSM(cVecReg);
+    if(pScope) this->L1ADebug();
 
     // back-end tuning on l1 lines
     for(auto cOpticalGroup: *pBoard)
     {
-        selectLink(cOpticalGroup->getId());
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;

@@ -714,13 +714,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         {
             for(auto cHybrid: *cOpticalReadout)
             {
-                auto&    cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 uint16_t cValue = fCicInterface->ReadChipReg(cCic, "FE_ENABLE");
-                LOG(INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
+                LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
                 // fCicInterface->WriteChipReg(cCic,"FE_ENABLE",0xFF);
                 // cValue = fCicInterface->ReadChipReg(cCic, "FE_ENABLE");
-                LOG(INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
-
+                LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
+                
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
@@ -732,7 +732,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         }
     }
 
-    size_t cNEventsPerAttempt = 10; // * 30 * 10;
+    size_t cNEventsPerAttempt = 1;// * 30 * 10;
     // random c++
     std::srand(std::time(NULL));
     std::random_device cRndm{};
@@ -761,9 +761,10 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     int     cL1MaxOffset       = (cScanL1Latency == 1) ? cOptimalOffset + cTriggerMult + 2 : cL1MinOffset + 1;
     cSetting                   = fSettingsMap.find("ScanStubLatency");
     uint8_t cScanStubLatency   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
-    uint8_t cOptimalStubOffset = 77;
-    int     cStubMinOffset     = (cScanStubLatency == 1) ? cOptimalStubOffset - 5 : cOptimalStubOffset;
-    int     cStubMaxOffset     = (cScanStubLatency == 1) ? cOptimalStubOffset + cTriggerMult + 2 : cOptimalStubOffset + 1;
+    uint8_t cOptimalStubOffset =  70 ;
+    int     cStubMinOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset - 25 : cOptimalStubOffset;
+    int     cStubMaxOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset + 25 + cTriggerMult + 2 : cOptimalStubOffset + 1;
+    LOG (INFO) << BOLDMAGENTA << "DataChecker::InjectionTestPS TestMode is " << +cMode << RESET;
     for(int cLatencyOffset = cL1MinOffset; cLatencyOffset < cL1MaxOffset; cLatencyOffset++)
     {
         for(int cStubOffset = cStubMinOffset; cStubOffset < cStubMaxOffset; cStubOffset++)
@@ -828,7 +829,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                     cStubLatency       = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue);
                     // cStubLatency = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue) + cStubSel;
                     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
-                    // LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << "... stub latency set to " << +cStubLatency << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "\t\t.. Package delay set to " << +cPackageDelay << "... stub latency set to " << +cStubLatency << RESET;
                 }
             } // boards
 

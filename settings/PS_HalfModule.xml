@@ -23,10 +23,10 @@
             </Global>
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="0" configfile="MPA.txt" />  
+            <MPA Id="1" configfile="MPA.txt" />  
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" /> 
+            <SSA Id="1" configfile="SSA.txt" /> 
             
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -57,7 +57,7 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register>
-            <Register name="user_trigger_frequency"> 5 </Register>
+            <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -65,7 +65,7 @@
             <Register name="test_pulse">
                 <Register name="delay_after_fast_reset"> 80 </Register>
                 <Register name="delay_after_test_pulse"> 100 </Register>
-                <Register name="delay_before_next_pulse"> 8000 </Register>
+                <Register name="delay_before_next_pulse"> 100 </Register>
                 <Register name="en_fast_reset"> 0 </Register>
                 <Register name="en_test_pulse"> 1 </Register>
                 <Register name="en_l1a"> 1 </Register>
@@ -220,7 +220,7 @@
     <!-- FIFO depth -->
     <Setting name="FifoDepth">8</Setting>
     <!-- check for stubs -->
-    <Setting name="CheckForStubs">0</Setting>
+    <Setting name="CheckForStubs">1</Setting>
     <Setting name="ScanL1Latency">0</Setting>
     <Setting name="ScanStubLatency">1</Setting>
     <!-- injection configuration, fast commands -->

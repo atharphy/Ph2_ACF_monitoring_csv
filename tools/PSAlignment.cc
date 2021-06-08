@@ -81,7 +81,6 @@ void PSAlignment::Initialise()
 }
 void PSAlignment::MapMPAOutputs(std::string pSetupType)
 {
-    LOG(INFO) << BOLDBLUE << "Configuring MPA output register [mapping between output bits and output pads] .... " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalReadout: *cBoard)
@@ -97,12 +96,20 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                     // mapping for probe station/etc. can be different
                     if(pSetupType.find("PSModule") != std::string::npos)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_0", 1); // 1
-                        fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_1", 2); // 2
-                        fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_2", 3); // 3
-                        fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_3", 4); // 4
-                        fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_4", 5); // 5
-                        fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_5", 0); // L1 line
+                        std::vector<int> cMappedTo{1,2,3,4,5,0};
+                        for( size_t cIndx=0; cIndx < cMappedTo.size(); cIndx++)
+                        {
+                            LOG(INFO) << BOLDBLUE << "Configuring MPA output register [mapping between output bits and output pads] .... Output# " << +cIndx << RESET;
+                            std::ostringstream cRegName; 
+                            cRegName << "OutSetting_" << cIndx ; 
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cMappedTo[cIndx]); 
+                        }
+                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_0", 1); // 2
+                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_1", 2); // 2
+                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_2", 3); // 3
+                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_3", 4); // 4
+                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_4", 5); // 5
+                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_5", 0); // L1 line
                     }
                 } // chip
             }     // hybrid

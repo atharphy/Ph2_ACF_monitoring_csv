@@ -16,7 +16,6 @@
 
 template <typename T>
 class ChannelContainer;
-
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
@@ -31,7 +30,9 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  */
 class ReadoutChipInterface : public ChipInterface
 {
-  private:
+  protected:
+    std::map<uint32_t, Ph2_HwDescription::ChipRegMap> fModifiedRegisters; 
+
   public:
     /*!
      * \brief Constructor of the ReadoutChipInterface Class
@@ -44,6 +45,38 @@ class ReadoutChipInterface : public ChipInterface
      */
     ~ReadoutChipInterface();
 
+    /*!
+     * \brief Clear Register Map 
+     */
+    void ClearModifiedRegisterMap(){ fModifiedRegisters.clear(); }
+    Ph2_HwDescription::ChipRegMap GetModifiedRegisterMap(Ph2_HwDescription::ReadoutChip* pChip ){ 
+        Ph2_HwDescription::ChipRegMap cMap; 
+        uint32_t cChipId = (uint8_t)(pChip->getFrontEndType()==FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
+        cChipId = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId() ;
+        auto cIter = fModifiedRegisters.find(cChipId);
+        if(cIter != fModifiedRegisters.end() ) 
+        {
+            //std::cout << "GetModifiedRegisterMap interface --- " << +cChipId << " contains " << cIter->second.size() << " items.\n";
+            return cIter->second;
+    
+        }
+        else
+        {
+            //std::cout << "GetModifiedRegisterMap interface --- " << +cChipId << " contains " << 0 << " items.\n";
+            return cMap;
+        }
+    }
+    void OverwriteModifiedRegisterMap(Ph2_HwDescription::ReadoutChip* pChip, Ph2_HwDescription::ChipRegMap pRegMap )
+    {
+        uint32_t cChipId = (uint8_t)(pChip->getFrontEndType()==FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
+        cChipId = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId() ;
+        auto cIter = fModifiedRegisters.find(cChipId);
+        if(cIter != fModifiedRegisters.end() ) fModifiedRegisters.erase(cChipId); 
+        //std::cout << "Overwriting map with an item that has " << pRegMap.size() << " entries.\n";
+        fModifiedRegisters[cChipId] = pRegMap;
+        //std::cout << "OverwriteModifiedRegisterMap interface --- " << +cChipId << " contains " << fModifiedRegisters[cChipId].size() << " items.\n";
+        
+    }
     /*!
      * \brief setChannels fo be injected
      * \param pChip: pointer to Chip object
