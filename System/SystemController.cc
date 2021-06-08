@@ -670,6 +670,7 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         // CIC start-up sequence
         if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
         if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
+        if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
         if(cSuccess)
             LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +cHybrid->getId() % 2 << " connected to link " << +cHybrid->getOpticalId() << RESET;
         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;

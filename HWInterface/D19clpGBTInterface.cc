@@ -31,7 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     CPBconfig cCPBconfig;
     cCPBconfig.fEnable       = fUseCPB;
     cCPBconfig.fI2CFrequency = 3;
-    cCPBconfig.fWait_us      = 0;  // TO-DO - make configurable from xml
+    cCPBconfig.fWait_us      = 50;  // TO-DO - make configurable from xml
     cCPBconfig.fReTry        = 1;   // TO-DO - make configurable from xml
     cCPBconfig.fVerbose      = 0;   // TO-DO - make configurable from xml
     cCPBconfig.fMaxAttempts  = 100; // TO-DO - make configurable from xml
@@ -180,7 +180,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 10;
-    //uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 12;
+    //uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)

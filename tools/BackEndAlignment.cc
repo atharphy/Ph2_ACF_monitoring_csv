@@ -815,18 +815,9 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SelectOutput(cCic, false);
-
-            // figure out which FEs are active
-            std::vector<uint8_t> cEnabledFEs(0);
-            for(auto cReadoutChip: *cHybrid)
-            {
-                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
-                cEnabledFEs.push_back(cReadoutChip->getId());
-            }
-            fCicInterface->EnableFEs(cCic, cEnabledFEs, true);
         } // hybrids [CICs]
-    }     // optical groups [modules]
-
+    } // optical groups [modules]
+    
     // reconfigure FEs enabled in this CIC
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::CICAlignment Resetting FE_ENABLE" << RESET;
     auto& cEnabledFEs = fEnabledFEs.at(pBoard->getIndex());

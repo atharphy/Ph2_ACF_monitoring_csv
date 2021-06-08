@@ -1624,13 +1624,13 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // configure trigger
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 1000});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1000});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1});
     this->ReconfigureTriggerFSM(cVecReg);
     if(pScope) this->L1ADebug();
-
+    
     // back-end tuning on l1 lines
     for(auto cOpticalGroup: *pBoard)
     {

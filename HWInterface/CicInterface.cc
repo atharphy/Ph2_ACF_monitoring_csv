@@ -1321,6 +1321,24 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     // LOG(INFO) << BOLDBLUE << "Setting FE enable register [" << cRegName << "] to " << std::bitset<8>(cValue) << RESET;
     return true;
 }
+bool CicInterface::ConfigureStubOutput(Chip* pChip , uint8_t pLineSel )
+{
+    setBoard(pChip->getBeBoardId());
+    std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
+    auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
+    bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
+    uint8_t              cValue     = c2S ? 0 : 1 ; 
+    cRegName                        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "N_OUTPUT_TRIGGER_LINES_SEL" : "FE_CONFIG";
+    auto                 cRegValue  = this->ReadChipReg(pChip, cRegName);
+    uint8_t cMask                   = c2S ? 0xFE : 0xF7;
+    uint8_t cBitShift               = c2S ?    0 : 3 ;  
+    // if line select is not 0 . then don't auto configure 
+    cValue                          = ( pLineSel == 5 || pLineSel == 6 ) ? (uint8_t)(pLineSel == 6) : cValue;
+    uint8_t cValueToWrite           = (cRegValue & cMask) | (cValue << cBitShift);
+    uint8_t cNlines                 = 5 + cValue;
+    LOG (INFO) << BOLDMAGENTA << "Configuring CIC to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << " to CIC register " << cRegName << RESET;
+    return this->WriteChipReg(pChip, cRegName, cValueToWrite);
+}
 bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
 {
     setBoard(pChip->getBeBoardId());

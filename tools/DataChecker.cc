@@ -716,11 +716,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
             {
                 auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 uint16_t cValue = fCicInterface->ReadChipReg(cCic, "FE_ENABLE");
-                LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
-                // fCicInterface->WriteChipReg(cCic,"FE_ENABLE",0xFF);
-                // cValue = fCicInterface->ReadChipReg(cCic, "FE_ENABLE");
-                LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to " << +cValue << RESET;
-                
+                LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register in CIC set to 0x" << std::hex << +cValue << std::dec << RESET;
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
@@ -738,6 +734,9 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     std::random_device cRndm{};
     std::mt19937       cGen{cRndm()};
 
+    //
+    cSetting         = fSettingsMap.find("ActiveMPAs");
+    int cLastMPA = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
     // configure injections
     cSetting         = fSettingsMap.find("MinPclusters");
     int cMinNpClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
@@ -762,8 +761,8 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     cSetting                   = fSettingsMap.find("ScanStubLatency");
     uint8_t cScanStubLatency   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
     uint8_t cOptimalStubOffset =  70 ;
-    int     cStubMinOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset - 25 : cOptimalStubOffset;
-    int     cStubMaxOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset + 25 + cTriggerMult + 2 : cOptimalStubOffset + 1;
+    int     cStubMinOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset : cOptimalStubOffset;
+    int     cStubMaxOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset + 25 : cOptimalStubOffset + 1;
     LOG (INFO) << BOLDMAGENTA << "DataChecker::InjectionTestPS TestMode is " << +cMode << RESET;
     for(int cLatencyOffset = cL1MinOffset; cLatencyOffset < cL1MaxOffset; cLatencyOffset++)
     {
@@ -799,35 +798,23 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             auto& cFeLatencySmry = cFeLatencyChip->getSummary<uint16_t>();
                             if(cChip->getFrontEndType() != FrontEndType::SSA)
                             {
-                                // uint16_t cLatency = cDelay + cLatencyOffset ;
                                 cFeLatencySmry = (cDelay) + cLatencyOffset;
-                                // if( cTriggerMult != 1 )
-                                //     cFeLatencySmry = (cDelay + 1) + cLatencyOffset;
                                 if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                             }
                             else // SSA needs an additional clock cycle of delay
                             {
-                                // uint16_t cLatency = cDelay + (cLatencyOffset-1) ;
-                                // cFeLatencySmry = (cDelay + (cTriggerMult-1) ) + (cLatencyOffset - 1);
                                 cFeLatencySmry = (cDelay) + (cLatencyOffset - 1);
-                                // if( cTriggerMult != 1 )
-                                //     cFeLatencySmry = (cDelay + 1) + (cLatencyOffset - 1);
                             }
                             if(cDistributeInj) cFeLatencySmry = cFeLatencySmry + cChip->getId();
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cFeLatencySmry);
-                            // std::string cType = (cChip->getFrontEndType() != FrontEndType::SSA) ? "MPA" : "SSA";
-                            // LOG (DEBUG) << BOLDBLUE << "Setting L1 latency in " << cType << "#"
-                            //     << +cChip->getId()
-                            //     << " to " << +cFeLatencySmry
-                            //     << RESET;
                         } // chip
-                    }     // hybrid
-                }         // module
+                    }// hybrid
+                }// module
                 if(cWStubs)
                 {
                     auto& cStubLatency = cBrdLatency->getSummary<uint16_t>();
                     cStubLatency       = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue);
-                    // cStubLatency = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue) + cStubSel;
+                    //cStubLatency       = cStubOffset;
                     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
                     LOG(INFO) << BOLDMAGENTA << "\t\t.. Package delay set to " << +cPackageDelay << "... stub latency set to " << +cStubLatency << RESET;
                 }
@@ -895,11 +882,12 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
                                 if(cMode == 2) continue; // if in pixel-pixel mode then don't inject in the SSAs
-
+                                
                                 // quick test
                                 auto cStrpClstrs = GeneratePSstrpClusters(cMaxClustersPerSSA);
                                 // make sure all channels are masked
                                 fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                                if(cChip->getIndex() >= cLastMPA ) continue; 
                                 if(cStrpClstrs.size() == 0) continue;
 
                                 uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
@@ -931,6 +919,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                                 // mask all pixels first
                                 (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
+                                if(cChip->getIndex() >= cLastMPA ) continue; 
                                 if(cPxlInjections.size() == 0) continue;
 
                                 // LOG (INFO) << BOLDGREEN << "List of " <<  cPxlInjections.size() << " pxl clusters for MPA#" << +cChip->getId() << RESET;
@@ -1113,10 +1102,10 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 fPSevent.fNPclusters = cPclstrs.size();
                                 fPSevent.fNSclusters = cSclstrs.size();
                                 fPSevent.fStubSize   = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId()).size();
-                                if(fPSevent.fStubSize > 0)
-                                    LOG(INFO) << BOLDGREEN << "\t\t... found " << +fPSevent.fStubSize << " stubs in this event.." << RESET;
-                                else
-                                    LOG(INFO) << BOLDRED << "\t\t... found " << +fPSevent.fStubSize << " stubs in this event.." << RESET;
+                                if(fPSevent.fStubSize > 0 && cChip->getIndex() < cLastMPA )
+                                    LOG(INFO) << BOLDGREEN << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
+                                else if(cChip->getIndex() < cLastMPA )
+                                    LOG(INFO) << BOLDRED << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
                                 std::sort(std::begin(cSclstrs), std::end(cSclstrs), [](SCluster a, SCluster b) { return a.fAddress < b.fAddress; });
                                 // for( auto cScluster : cSclstrs)
                                 // {

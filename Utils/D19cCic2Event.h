@@ -259,7 +259,7 @@ class D19cCic2Event : public Event
         // assign front-end mapping
         std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
         if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-        if(fIs8CBC3) cFeMapping = fFeMapping8BC3;
+        if(fIs8CBC3 && fIs2S) cFeMapping = fFeMapping8BC3;
 
         // if( fIs2S && cHybridIds.size() == 0 ) return 0;
         // else if( fIs2S ) return (cHybridIds.size() - 1) - std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));
