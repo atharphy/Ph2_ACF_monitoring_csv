@@ -465,27 +465,31 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     bool cFound = pChip->getRegMap().find(pRegNode) != pChip->getRegMap().end();
 
     ChipRegItem cRegItem;
-    // modified registers map 
-    uint32_t cChipId = (uint8_t)(pChip->getFrontEndType()==FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
-    cChipId = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId() ;
-    //LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg writing " << pRegNode << " -- chip id in modified map is " << cChipId << RESET;
-    auto cMapIter = fModifiedRegisters.find(cChipId); 
-    if( cMapIter == fModifiedRegisters.end() ){ ChipRegMap cRegMap; fModifiedRegisters[cChipId] = cRegMap; } 
-    cMapIter = fModifiedRegisters.find(cChipId); 
-    auto& cModMap = cMapIter->second; 
-    //LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg ModMap contains " << cModMap.size() << " items." << RESET;
+    // modified registers map
+    uint32_t cChipId = (uint8_t)(pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
+    cChipId          = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId();
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg writing " << pRegNode << " -- chip id in modified map is " << cChipId << RESET;
+    auto cMapIter = fModifiedRegisters.find(cChipId);
+    if(cMapIter == fModifiedRegisters.end())
+    {
+        ChipRegMap cRegMap;
+        fModifiedRegisters[cChipId] = cRegMap;
+    }
+    cMapIter      = fModifiedRegisters.find(cChipId);
+    auto& cModMap = cMapIter->second;
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg ModMap contains " << cModMap.size() << " items." << RESET;
     if(cFound)
     {
         cRegItem = pChip->getRegItem(pRegNode);
-        // update map with value before it has been modified 
-        if( cModMap.find(pRegNode) == cModMap.end() ) cModMap[pRegNode]  = cRegItem;
+        // update map with value before it has been modified
+        if(cModMap.find(pRegNode) == cModMap.end()) cModMap[pRegNode] = cRegItem;
     }
     else
     {
         return cFound;
     }
-    //LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg ModMap contains " << cModMap.size() << " items." << RESET;
-    
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg ModMap contains " << cModMap.size() << " items." << RESET;
+
     cRegItem.fValue = pValue & 0xFF;
     if(!lpGBTFound())
     {
@@ -605,7 +609,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
 {
     // for now ...
-    bool cSkipLocalRegs=true; 
+    bool              cSkipLocalRegs = true;
     std::stringstream cOutput;
     setBoard(pMPA->getBeBoardId());
     pMPA->printChipType(cOutput);
@@ -621,10 +625,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         fMap[cRegItem.second.fAddress] = cRegItem.first;
         // update map to indicate that there are not registers that
         // can be read back from
-        if(cRegItem.first.find("_ALL") != std::string::npos)
-        {
-            pMPA->setReg(cRegItem.first, cRegItem.second.fValue, cRegItem.second.fPrmptCfg, 1);
-        }
+        if(cRegItem.first.find("_ALL") != std::string::npos) { pMPA->setReg(cRegItem.first, cRegItem.second.fValue, cRegItem.second.fPrmptCfg, 1); }
     }
     // update map
     cMPARegMap = pMPA->getRegMap();
@@ -632,16 +633,18 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     cRegs.clear();
     for(auto& cMapItem: fMap)
     {
-        if(cMapItem.second.find("_P") != std::string::npos && cSkipLocalRegs ) continue;
+        if(cMapItem.second.find("_P") != std::string::npos && cSkipLocalRegs) continue;
         // create a register
-        ChipRegItem& cItem = cMPARegMap[cMapItem.second];
+        ChipRegItem&                  cItem = cMPARegMap[cMapItem.second];
         std::pair<uint16_t, uint16_t> cReg;
         cReg.first  = cMapItem.first;
         cReg.second = cItem.fValue;
         cRegs.push_back(cReg);
     }
-    if( cSkipLocalRegs ) LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual pixels]" << RESET;
-    else LOG(INFO) << BOLDBLUE << "Complete configuration of MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual pixels]" << RESET;
+    if(cSkipLocalRegs)
+        LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual pixels]" << RESET;
+    else
+        LOG(INFO) << BOLDBLUE << "Complete configuration of MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual pixels]" << RESET;
     return this->WriteRegs(pMPA, cRegs, pVerifLoop);
 }
 
@@ -708,48 +711,50 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
 
     ChipRegItem cRegItem;
-    // modified registers map 
-    uint32_t cChipId = (uint8_t)(pChip->getFrontEndType()==FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
-    cChipId = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId() ;
-    //LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg writing " << pRegisterAddress << " -- chip id in modified map is " << cChipId << RESET;
-    
-    auto cMapIter = fModifiedRegisters.find(cChipId); 
-    if( cMapIter == fModifiedRegisters.end() ){ ChipRegMap cRegMap; fModifiedRegisters[cChipId] = cRegMap; } 
-    cMapIter = fModifiedRegisters.find(cChipId); 
-    auto& cModMap = cMapIter->second; 
-    //LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg ModMap contains " << cModMap.size() << " items." << RESET;
+    // modified registers map
+    uint32_t cChipId = (uint8_t)(pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
+    cChipId          = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId();
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg writing " << pRegisterAddress << " -- chip id in modified map is " << cChipId << RESET;
+
+    auto cMapIter = fModifiedRegisters.find(cChipId);
+    if(cMapIter == fModifiedRegisters.end())
+    {
+        ChipRegMap cRegMap;
+        fModifiedRegisters[cChipId] = cRegMap;
+    }
+    cMapIter      = fModifiedRegisters.find(cChipId);
+    auto& cModMap = cMapIter->second;
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg ModMap contains " << cModMap.size() << " items." << RESET;
     if(cFound)
     {
         cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
-        if( cModMap.find(fMap[pRegisterAddress]) == cModMap.end() ){ 
-            cModMap[fMap[pRegisterAddress]]  = cRegItem; 
-        }
+        if(cModMap.find(fMap[pRegisterAddress]) == cModMap.end()) { cModMap[fMap[pRegisterAddress]] = cRegItem; }
     }
     else
     {
         cRegItem.fAddress = pRegisterAddress;
-        // these still need to be added to the map 
-        // first check if the register address matches any of the map 
-        auto cModMapIter = cModMap.begin(); 
-        for(auto cMapItem : cModMap ) 
-        { 
-            if (cMapItem.second.fAddress == pRegisterAddress) break;
+        // these still need to be added to the map
+        // first check if the register address matches any of the map
+        auto cModMapIter = cModMap.begin();
+        for(auto cMapItem: cModMap)
+        {
+            if(cMapItem.second.fAddress == pRegisterAddress) break;
             cModMapIter++;
         }
-        bool cFoundMatchingAddress = cModMapIter != cModMap.end() ;
+        bool cFoundMatchingAddress = cModMapIter != cModMap.end();
         if(!cFoundMatchingAddress)
         {
-            // read back actual value from the chip 
-            if( cRegItem.fStatusReg == 0 ) 
+            // read back actual value from the chip
+            if(cRegItem.fStatusReg == 0)
             {
                 cRegItem.fValue = ReadReg(pChip, pRegisterAddress, pVerifLoop);
-                std::ostringstream cRegName; 
-                cRegName << "NewReg#" << cModMap.size(); 
-                cModMap[cRegName.str()] = cRegItem; 
+                std::ostringstream cRegName;
+                cRegName << "NewReg#" << cModMap.size();
+                cModMap[cRegName.str()] = cRegItem;
             }
         }
     }
-    //LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg ModMap contains " << cModMap.size() << " items." << RESET;
+    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg ModMap contains " << cModMap.size() << " items." << RESET;
     cRegItem.fValue = pRegisterValue & 0xFF;
 
     // write

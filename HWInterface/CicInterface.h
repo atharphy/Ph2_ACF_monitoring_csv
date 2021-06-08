@@ -101,7 +101,7 @@ class CicInterface : public ChipInterface
     bool                              AutoBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
     bool                              SelectMux(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort);
     bool                              ControlMux(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
-    bool                              ConfigureStubOutput(Ph2_HwDescription::Chip* pChip , uint8_t pLineSel = 0);
+    bool                              ConfigureStubOutput(Ph2_HwDescription::Chip* pChip, uint8_t pLineSel = 0);
     //
     bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
     std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }

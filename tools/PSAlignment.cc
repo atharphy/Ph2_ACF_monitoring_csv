@@ -96,13 +96,13 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                     // mapping for probe station/etc. can be different
                     if(pSetupType.find("PSModule") != std::string::npos)
                     {
-                        std::vector<int> cMappedTo{1,2,3,4,5,0};
-                        for( size_t cIndx=0; cIndx < cMappedTo.size(); cIndx++)
+                        std::vector<int> cMappedTo{1, 2, 3, 4, 5, 0};
+                        for(size_t cIndx = 0; cIndx < cMappedTo.size(); cIndx++)
                         {
                             LOG(INFO) << BOLDBLUE << "Configuring MPA output register [mapping between output bits and output pads] .... Output# " << +cIndx << RESET;
-                            std::ostringstream cRegName; 
-                            cRegName << "OutSetting_" << cIndx ; 
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cMappedTo[cIndx]); 
+                            std::ostringstream cRegName;
+                            cRegName << "OutSetting_" << cIndx;
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cMappedTo[cIndx]);
                         }
                         // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_0", 1); // 2
                         // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_1", 2); // 2

@@ -15,9 +15,8 @@ CicFEAlignment::CicFEAlignment() : Tool() { fRegMapContainer.reset(); }
 CicFEAlignment::~CicFEAlignment() {}
 void CicFEAlignment::Reset()
 {
-
     // set everything back to original values .. like I wasn't here
-    bool cWithPS=false;
+    bool cWithPS = false;
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
@@ -32,35 +31,32 @@ void CicFEAlignment::Reset()
         {
             bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
             for(auto cHybrid: *cOpticalGroup)
-            {   
+            {
                 auto cType    = FrontEndType::SSA;
                 bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 cType         = FrontEndType::MPA;
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT; 
-                cWithPS = cWithPS || cIsPS;
+                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
+                cWithPS       = cWithPS || cIsPS;
                 LOG(INFO) << BOLDBLUE << "CicFEAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    if( cIsPS ) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
-                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip); 
-                    LOG (INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    for( auto cMapItem : cModMap )
+                    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
+                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
+                    LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        LOG (INFO) << BOLDBLUE << "CicFEAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() 
-                            << " from " << cValueInMemory 
-                            << " to " << cMapItem.second.fValue 
-                            << RESET;
-                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first , cMapItem.second.fValue ); 
+                        LOG(INFO) << BOLDBLUE << "CicFEAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                                  << cMapItem.second.fValue << RESET;
+                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
                 }
-
             }
         }
     }
     fReadoutChipInterface->ClearModifiedRegisterMap();
-    if( cWithPS ) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
+    if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
     resetPointers();
 }
 
@@ -196,9 +192,9 @@ void CicFEAlignment::Initialise()
         }     // OG
     }
 
-    // clear map of modified registers 
+    // clear map of modified registers
     fReadoutChipInterface->ClearModifiedRegisterMap();
-    bool cIsPS=false;
+    bool cIsPS = false;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -211,11 +207,11 @@ void CicFEAlignment::Initialise()
                 bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 cType         = FrontEndType::MPA;
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT; 
+                cIsPS         = (cWithSSA && cWithMPA) && cWithLpGBT;
             }
         }
     }
-    if( cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();    
+    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
 }
 
 void CicFEAlignment::writeObjects()

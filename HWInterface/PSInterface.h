@@ -135,7 +135,7 @@ class PSInterface : public ReadoutChipInterface
 
     void UpdateModifiedRegisterMap(Ph2_HwDescription::ReadoutChip* pChip)
     {
-        auto cModMap = ( pChip->getFrontEndType() == FrontEndType::SSA ) ? theSSAInterface->GetModifiedRegisterMap(pChip) : theMPAInterface->GetModifiedRegisterMap(pChip) ; 
+        auto cModMap = (pChip->getFrontEndType() == FrontEndType::SSA) ? theSSAInterface->GetModifiedRegisterMap(pChip) : theMPAInterface->GetModifiedRegisterMap(pChip);
         OverwriteModifiedRegisterMap(pChip, cModMap);
     }
     void ResetModifiedRegisterMap()

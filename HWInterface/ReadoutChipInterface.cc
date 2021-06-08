@@ -18,7 +18,7 @@ namespace Ph2_HwInterface
 {
 ReadoutChipInterface::ReadoutChipInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap)
 {
-	fModifiedRegisters.clear();
+    fModifiedRegisters.clear();
 #ifdef COUNT_FLAG
     LOG(DEBUG) << "Counting number of Transactions!";
 #endif

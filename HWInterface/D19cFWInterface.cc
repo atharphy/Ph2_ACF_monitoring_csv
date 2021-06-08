@@ -1444,7 +1444,7 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
 
 void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
 {
-    //this->ConfigureTriggerFSM(0, 10, 3);
+    // this->ConfigureTriggerFSM(0, 10, 3);
     // disable back-pressure
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     this->Start();
@@ -1616,8 +1616,8 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     // original reg map
     BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
-    PhaseTuner pTuner;
-    bool       cSuccess = true;
+    PhaseTuner    pTuner;
+    bool          cSuccess = true;
 
     // configure triggers
     // make sure you're only sending one trigger at a time
@@ -1630,7 +1630,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1});
     this->ReconfigureTriggerFSM(cVecReg);
     if(pScope) this->L1ADebug();
-    
+
     // back-end tuning on l1 lines
     for(auto cOpticalGroup: *pBoard)
     {

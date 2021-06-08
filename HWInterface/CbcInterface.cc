@@ -32,7 +32,7 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     pCbc->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCbc->getId() << "]" << RESET;
 
-    bool cSkipLocalRegs=false; 
+    bool cSkipLocalRegs = false;
     // Deal with the ChipRegItems and encode them
     bool       cSuccess   = false;
     ChipRegMap cCbcRegMap = pCbc->getRegMap();
@@ -44,7 +44,7 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
         {
             // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
             // be e-fused in the CBC3
-            if (cRegItem.first.find("Channel") != std::string::npos && cSkipLocalRegs )  continue; 
+            if(cRegItem.first.find("Channel") != std::string::npos && cSkipLocalRegs) continue;
             if(cRegItem.first != "BandgapFuse" || cRegItem.first.find("ChipIDFuse") == std::string::npos)
             {
                 // if( cRegItem.second.fPage == 0 )
@@ -85,7 +85,7 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
         {
             // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
             // be e-fused in the CBC3
-            if(cRegItem.first.find("Channel") != std::string::npos && cSkipLocalRegs ) continue; 
+            if(cRegItem.first.find("Channel") != std::string::npos && cSkipLocalRegs) continue;
             if(cRegItem.first.find("BandgapFuse") != std::string::npos) continue;
             if(cRegItem.first.find("ChipIDFuse") != std::string::npos) continue;
 
@@ -569,7 +569,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
     bool cSuccess = false;
-    bool cFound = pCbc->getRegMap().find(pRegNode) != pCbc->getRegMap().end();
+    bool cFound   = pCbc->getRegMap().find(pRegNode) != pCbc->getRegMap().end();
     if(pRegNode.find("BandgapFuse") != std::string::npos)
     {
         LOG(ERROR) << "Cbc register  " << pRegNode << " is READ ONLY." << RESET;
@@ -582,25 +582,29 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     }
 
     ChipRegItem cRegItem;
-    // modified registers map 
-    uint32_t cChipId = (uint8_t)(pCbc->getFrontEndType()==FrontEndType::MPA || pCbc->getFrontEndType() == FrontEndType::RD53) << 12;
-    cChipId = cChipId | pCbc->getOpticalId() << 8 | pCbc->getHybridId() << 4 | pCbc->getId() ;
-    auto cMapIter = fModifiedRegisters.find(cChipId); 
-    if( cMapIter == fModifiedRegisters.end() ){ ChipRegMap cRegMap; fModifiedRegisters[cChipId] = cRegMap; } 
-    cMapIter = fModifiedRegisters.find(cChipId); 
-    auto& cModMap = cMapIter->second; 
+    // modified registers map
+    uint32_t cChipId = (uint8_t)(pCbc->getFrontEndType() == FrontEndType::MPA || pCbc->getFrontEndType() == FrontEndType::RD53) << 12;
+    cChipId          = cChipId | pCbc->getOpticalId() << 8 | pCbc->getHybridId() << 4 | pCbc->getId();
+    auto cMapIter    = fModifiedRegisters.find(cChipId);
+    if(cMapIter == fModifiedRegisters.end())
+    {
+        ChipRegMap cRegMap;
+        fModifiedRegisters[cChipId] = cRegMap;
+    }
+    cMapIter      = fModifiedRegisters.find(cChipId);
+    auto& cModMap = cMapIter->second;
     if(cFound)
     {
         cRegItem = pCbc->getRegItem(pRegNode);
-        // update map with value before it has been modified 
-        if( cModMap.find(pRegNode) == cModMap.end() ) cModMap[pRegNode]  = cRegItem;
+        // update map with value before it has been modified
+        if(cModMap.find(pRegNode) == cModMap.end()) cModMap[pRegNode] = cRegItem;
     }
     else
     {
         return cFound;
     }
-    cRegItem.fValue      = pValue & 0xFF;
-    
+    cRegItem.fValue = pValue & 0xFF;
+
     if(!lpGBTFound())
     {
         // vector for transaction
