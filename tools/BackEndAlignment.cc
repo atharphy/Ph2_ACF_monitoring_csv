@@ -255,11 +255,13 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     // and reload
     uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
     uint16_t cOriginalTriggerSrc = cTriggerSrc;
+    uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // now try and find correct package delay
@@ -350,6 +352,7 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     cRegVec.clear();
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // reconfigure sparsification + FEs enabled in this CIC

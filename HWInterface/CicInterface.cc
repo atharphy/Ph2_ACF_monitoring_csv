@@ -1336,7 +1336,7 @@ bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)
     cValue                = (pLineSel == 5 || pLineSel == 6) ? (uint8_t)(pLineSel == 6) : cValue;
     uint8_t cValueToWrite = (cRegValue & cMask) | (cValue << cBitShift);
     uint8_t cNlines       = 5 + cValue;
-    LOG(INFO) << BOLDMAGENTA << "Configuring CIC to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << " to CIC register " << cRegName << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Configuring CIC to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << std::dec << " to CIC register " << cRegName << RESET;
     return this->WriteChipReg(pChip, cRegName, cValueToWrite);
 }
 bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)

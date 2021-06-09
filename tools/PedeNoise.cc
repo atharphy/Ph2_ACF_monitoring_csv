@@ -366,7 +366,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit         = 0.05;
-    int      cMinBreakCount = 40;
+    int      cMinBreakCount = 10;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
     // uint16_t cMinValue      = 0;
@@ -410,13 +410,14 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 #endif
 
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-            LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. "
-                      << "Incrementing limit found counter "
-                      << " -- current value is " << +cLimitCounter << RESET;
+            LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
+                    << cDistanceFromTarget*100 
+                    << "\t..Incrementing limit found counter "
+                    << " -- current value is " << +cLimitCounter << RESET;
             if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
             {
                 firstlim = true;
-                LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
+                LOG(INFO) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
                            << " -- current value is " << +cLimitCounter << RESET;
                 cLimitCounter++;
             }
