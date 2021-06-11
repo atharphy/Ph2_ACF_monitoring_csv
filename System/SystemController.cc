@@ -177,17 +177,17 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
-                    if(cWithSSA && !cWithMPA && !cWithLpGBT)
+                    if(cWithSSA && !cWithMPA )
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                         fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
                     }
-                    if(cWithMPA && !cWithSSA && !cWithLpGBT)
+                    if(cWithMPA && !cWithSSA )
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
                         fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
                     }
-                    if((cWithMPA || cWithSSA) && cWithLpGBT)
+                    if((cWithMPA && cWithSSA) && cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS module(s)" << RESET;
                         fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
