@@ -69,24 +69,31 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(fFitSCurves) fPlotSCurves = true;
 
     // for now.. force to use async mode here
+    bool cForcePSasync = true; 
     for(auto cBoard: *fDetectorContainer)
     {
-        bool cAsyncEvent = cBoard->getEventType() == EventType::PSAS;
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
+                auto cType         = FrontEndType::SSA;
+                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType         = FrontEndType::MPA;
+                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                if( !cWithSSA && ! cWithMPA) continue; 
+
+                if( !cForcePSasync ) continue; 
+                
+                cBoard->setEventType( EventType::PSAS );
+                // set all SSAs + MPAs to output data in async mode 
                 for(auto cROC: *cHybrid)
                 {
-                    if(!cAsyncEvent) continue;
-
-                    if(cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA) // force this to work in async mode for now
-                        fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                    //TBC - what about MPA here?
+                    fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
         }
     }
-
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -417,8 +424,8 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
             {
                 firstlim = true;
-                LOG(INFO) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
-                           << " -- current value is " << +cLimitCounter << RESET;
+                // LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
+                //            << " -- current value is " << +cLimitCounter << RESET;
                 cLimitCounter++;
             }
 

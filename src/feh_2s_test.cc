@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
     cmd.defineOption("registerTest","Test I2C registers on ROCs" , ArgvParser::NoOptionAttribute);
-
+   
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)

@@ -61,29 +61,28 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-    for(auto board: *fDetectorContainer)
+    // for now.. force to use async mode here
+    bool cForcePSasync = true; 
+    for(auto cBoard: *fDetectorContainer)
     {
-        for(auto opticalGroup: *board)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto hybrid: *opticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto chip: *hybrid)
+                auto cType         = FrontEndType::SSA;
+                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType         = FrontEndType::MPA;
+                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                if( !cWithSSA && ! cWithMPA) continue; 
+
+                if( !cForcePSasync ) continue; 
+                
+                cBoard->setEventType( EventType::PSAS );
+                // set all SSAs + MPAs to output data in async mode 
+                for(auto cROC: *cHybrid)
                 {
-                    ReadoutChip* theChip = static_cast<ReadoutChip*>(chip);
-                    // if it is a CBC3, disable the stub logic for this procedure
-                    if(theChip->getFrontEndType() == FrontEndType::SSA)
-                    {
-                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 15);
-                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
-                    }
-
-                    if(theChip->getFrontEndType() == FrontEndType::MPA)
-                    {
-                        // static_cast<MPAInterface*>(fReadoutChipInterface)->readAllBias(theChip);
-
-                        // fReadoutChipInterface->WriteChipReg(theChip, "ENFLAGS_ALL", 0xc8);
-                        fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 1);
-                    }
+                    //TBC - what about MPA here?
+                    fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
         }
@@ -193,8 +192,8 @@ void PedestalEqualization::FindVplus()
     dumpConfigFiles();
 
     if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    if(cWithSSA) setSameLocalDac("ThresholdTrim", 0xFF);
-    if(cWithMPA) setSameLocalDac("ThresholdTrim", 0xFF);
+    if(cWithSSA) setSameLocalDac("ThresholdTrim", 0x1F);
+    if(cWithMPA) setSameLocalDac("ThresholdTrim", 0x1F);
 
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
@@ -226,7 +225,7 @@ void PedestalEqualization::FindVplus()
                               << " = " << tmpVthr << RESET;
                     uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
                     uint32_t TOTCHAN = chip->size();
-                    LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
+                    //LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
                     nCbc += float(ENCHAN) / float(TOTCHAN);
                     cMeanValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
                 } // for on chip - end
