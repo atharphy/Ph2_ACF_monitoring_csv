@@ -797,8 +797,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 
     // enable CIC output of alignmnent pattern on stub lines
     // .. and enable all FEs again
-    auto cType    = FrontEndType::MPA;
-    bool cWithMPA = false;
+    bool cIsPS = false;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -806,12 +805,19 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             // enable alignment output for stubs
             fCicInterface->SelectOutput(cCic, true);
+            // check for an MPA 
+            auto cType    = FrontEndType::MPA;
             auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-            cWithMPA       = cWithMPA || cMPAfound;
+            cIsPS       = cIsPS || cMPAfound;
+            // check for an SSA 
+            cType    = FrontEndType::SSA;
+            auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+            cIsPS       = cIsPS || cSSAfound;
+    
         }
     }
     fStubDebug     = true;
-    size_t cNlines = cWithMPA ? 6 : 5;
+    size_t cNlines = cIsPS ? 6 : 5;
     cAligned       = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, fStubDebug, cNlines);
 
     // disable CIC output of pattern on stub + l1 lines
