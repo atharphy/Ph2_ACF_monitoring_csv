@@ -134,6 +134,7 @@ class CbcInterface : public ReadoutChipInterface
                                      uint8_t                         pAllOff     = 0xFF); // address + bend in units of half strips
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
+    uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);
 
   private:
     bool                        fRetry = true;

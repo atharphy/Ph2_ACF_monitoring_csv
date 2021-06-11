@@ -16,7 +16,6 @@
 
             <CBC_Files path="./settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
         </Hybrid>
     </OpticalGroup>
 

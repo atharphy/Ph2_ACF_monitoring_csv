@@ -627,8 +627,13 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
         cSuccess = fBoardFW->WriteFERegister(pCbc, cRegItem.fAddress, pValue, pVerifLoop);
     }
     // update the HWDescription object
-    if(cSuccess) pCbc->setReg(pRegNode, pValue);
-
+    if(cSuccess){ 
+        // LOG (INFO) << BOLDMAGENTA << "CbcInterface::WriteChipSingleReg written 0x" 
+        //     << std::hex << +pValue << std::dec 
+        //     << " to register " << pRegNode 
+        //     << RESET;
+        pCbc->setReg(pRegNode, pValue);
+    }
 #ifdef COUNT_FLAG
     fRegisterCount++;
     fTransactionCount++;
@@ -636,7 +641,13 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
 
     return cSuccess;
 }
-
+uint8_t CbcInterface::GetLastPage(Chip* pCbc)
+{
+    uint32_t cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
+    auto     cIter    = fPageMap.find(cAddress);
+    if(cIter == fPageMap.end()) return 6;
+    else return cIter->second;
+}
 bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop)
 {
     // remember to sort by page . that is helpful for speeding things up later

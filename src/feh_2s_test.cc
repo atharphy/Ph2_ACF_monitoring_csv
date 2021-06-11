@@ -11,6 +11,7 @@
 #include "tools/MemoryCheck2S.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
+#include "tools/RegisterTester.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/ShortFinder.h"
 
@@ -144,6 +145,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("registerTest","Test I2C registers on ROCs" , ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -435,6 +437,14 @@ int main(int argc, char* argv[])
         }
     }
 
+    if( cmd.foundOption("registerTest") )
+    {
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.RegisterTest();
+    }
+    
+
 // measure hybrid current and temperature
 #ifdef __ANTENNA__
     cTemp    = cAntenna.GetHybridTemperature(CHIPSLAVE);
@@ -511,19 +521,7 @@ int main(int argc, char* argv[])
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
     }
-    // reset all chip and board registers
-    // to what they were before this tool was called
-    // cBackEndAligner.Reset();
-
-    // measure some of the AMUX output voltages using ADC on UIB
-    // MonitorAmux & hybridTester does not exist in this branch, nor it should...
-    // HybridTester cHybridTester;
-    // cHybridTester.Inherit (&cTool);
-    // cHybridTester.Initialize();
-    // monitor AMUX
-    // cHybridTester.MonitorAmux("VBG_LDO");
-    // cHybridTester.MonitorAmux("VBGbias");
-
+    
     // equalize thresholds on readout chips
     if(cTune)
     {

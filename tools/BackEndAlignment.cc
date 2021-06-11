@@ -58,8 +58,11 @@ void BackEndAlignment::Reset()
             }
         }
     }
-    fReadoutChipInterface->ClearModifiedRegisterMap();
-    if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
+    if( fReadoutChipInterface != nullptr )
+    {
+        fReadoutChipInterface->ClearModifiedRegisterMap();
+        if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
+    }
     resetPointers();
 }
 void BackEndAlignment::Initialise()
@@ -125,26 +128,29 @@ void BackEndAlignment::Initialise()
     }
 
     // clear map of modified registers
-    fReadoutChipInterface->ClearModifiedRegisterMap();
-    bool cIsPS = false;
-    for(auto cBoard: *fDetectorContainer)
+    if( fReadoutChipInterface != nullptr )  
     {
-        for(auto cOpticalGroup: *cBoard)
+        fReadoutChipInterface->ClearModifiedRegisterMap();
+        bool cIsPS = false;
+        for(auto cBoard: *fDetectorContainer)
         {
-            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
-            for(auto cHybrid: *cOpticalGroup)
+            for(auto cOpticalGroup: *cBoard)
             {
-                if(cIsPS) continue;
+                bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    if(cIsPS) continue;
 
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cIsPS         = (cWithSSA && cWithMPA) && cWithLpGBT;
+                    auto cType    = FrontEndType::SSA;
+                    bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                    cType         = FrontEndType::MPA;
+                    bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                    cIsPS         = (cWithSSA && cWithMPA) && cWithLpGBT;
+                }
             }
         }
+        if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
     }
-    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
 }
 void BackEndAlignment::Reconfigure(BeBoard* pBoard)
 {
