@@ -5602,7 +5602,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     if(cIter == cMaxIter)
     {
         LOG(INFO) << BOLDRED << "I2C status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET;
-        throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2CM" << +pMasterId << " Transaction Failed after maximum attempts"));
+        throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed after maximum attempts"));
     }
     if( fI2Cstatus != 4 ) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET; 
     return (fI2Cstatus == 4);
