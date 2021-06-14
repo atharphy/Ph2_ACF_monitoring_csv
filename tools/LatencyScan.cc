@@ -85,6 +85,7 @@ void LatencyScan::MeasureTriggerTDC()
 
 void LatencyScan::ScanLatency()
 {
+    bool cUseReadNevents=false;
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
 
@@ -133,9 +134,29 @@ void LatencyScan::ScanLatency()
         {
             // Set a Latency Value on all FEs
             setSameDacBeBoard(fDetectorContainer->at(board->getIndex()), "TriggerLatency", cLat);
-            //fBeBoardInterface->ChipReSync(cBoard);
-            // Read N events from the FC7 
-            ReadNEvents(cBoard, fNevents);
+            fBeBoardInterface->ChipReSync(cBoard);
+            
+            if( !cUseReadNevents ) 
+            {            
+                uint32_t              cNevents = 0;
+                std::vector<uint32_t> cCompleteData(0);
+                fBeBoardInterface->Start(cBoard);
+                bool cBreak = false;
+                fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fNevents);
+                do
+                {
+                    std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    cBreak = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter") >= fNevents;
+                } while(!cBreak);
+                fBeBoardInterface->Stop(cBoard);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::vector<uint32_t> cData(0);
+                cNevents += ReadData(cBoard, cData, false);
+                if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+            }
+            else // Read N events from the FC7 
+                ReadNEvents(cBoard, fNevents);
+            
             for(auto opticalGroup: *board)
             {
                 const std::vector<Event*>& events = GetEvents();
