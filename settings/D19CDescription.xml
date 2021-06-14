@@ -8,7 +8,7 @@
         <Hybrid Id="0" Status="1">
             <Global>
                 <Settings threshold="500" latency="29"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="0"/>
+                <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="4" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00011" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="11"/>
                 <ChannelMask disable=""/>
@@ -16,6 +16,13 @@
 
             <CBC_Files path="./settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" />
         </Hybrid>
     </OpticalGroup>
 
@@ -41,7 +48,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 3 </Register>
+            <Register name="trigger_source"> 6 </Register>
 		<Register name="user_trigger_frequency"> 10 </Register>
             <Register name="stubs_mask"> 1 </Register>
                 <!--this is the delay for the stub trigger-->
@@ -177,8 +184,8 @@
     <Setting name="ScanRange">5</Setting>
     
     <!-- Latency scan -->
-    <Setting name="LatencyStart">3</Setting>
-    <Setting name="LatencyStop">2</Setting>
+    <Setting name="StartLatency">190</Setting>
+    <Setting name="LatencyRange">20</Setting>
     
 </Settings>
 </HwDescription>

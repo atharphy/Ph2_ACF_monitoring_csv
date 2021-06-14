@@ -36,27 +36,46 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     // Deal with the ChipRegItems and encode them
     bool       cSuccess   = false;
     ChipRegMap cCbcRegMap = pCbc->getRegMap();
+    std::vector<std::pair<std::string, ChipRegItem>> cRegList; cRegList.clear(); 
+    for( auto cMapItem : cCbcRegMap )
+    {
+        std::pair<std::string, ChipRegItem> cItem; 
+        cItem.first = cMapItem.first; 
+        cItem.second = cMapItem.second;
+        cRegList.push_back(cItem);    
+    }
+    struct
+    {
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage < b.second.fPage; }
+    } customPageInc;
+
+    struct
+    {
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fAddress < b.second.fAddress; }
+    } customAddressInc;
+    std::sort(cRegList.begin(), cRegList.end(), customPageInc); // all to page0 then page 1
+    std::sort(cRegList.begin(), cRegList.end(), customAddressInc); // sort by address 
+                        
     if(!lpGBTFound())
     {
         // vector to encode all the registers into
         std::vector<uint32_t> cVec;
-        for(auto& cRegItem: cCbcRegMap)
+        for(auto& cRegItem: cRegList)
         {
             // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
             // be e-fused in the CBC3
             if(cRegItem.first.find("Channel") != std::string::npos && cSkipLocalRegs) continue;
-            if(cRegItem.first != "BandgapFuse" || cRegItem.first.find("ChipIDFuse") == std::string::npos)
-            {
-                // if( cRegItem.second.fPage == 0 )
-                // LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " <<
-                // cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec << " on
-                // page " << +cRegItem.second.fPage <<  RESET;
-                // fBoardFW->EncodeReg(cRegItem.second, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
-                fBoardFW->EncodeReg(cRegItem.second, pCbc, cVec, pVerifLoop, true);
+            if(cRegItem.first.find("BandgapFuse") != std::string::npos) continue;
+            if(cRegItem.first.find("ChipIDFuse") != std::string::npos) continue;
+
+            // if( cRegItem.second.fPage == 0 ) 
+            //     LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " <<
+            //         cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec 
+            //         << " on page " << +cRegItem.second.fPage <<  RESET;
+            fBoardFW->EncodeReg(cRegItem.second, pCbc, cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
-                fRegisterCount++;
+            fRegisterCount++;
 #endif
-            }
         }
 
         // write the registers, the answer will be in the same cVec
@@ -69,19 +88,9 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     }
     else
     {
-        // // remember to sort by page . that would be helpful for speeding things up later
-        // std::vector<std::pair< std::string,ChipRegItem>> cItems;
-        // struct { bool operator()(std::pair< std::string,ChipRegItem> a, std::pair< std::string,ChipRegItem> b) const { return a.second.fPage < b.second.fPage ; } } customLessForPage;
-        // for( auto& cRegItem: cCbcRegMap )
-        // {
-        //     cItems.push_back( std::make_pair( cRegItem.first, cRegItem.second ) );
-        // }
-        // std::sort(cItems.begin(), cItems.end(), customLessForPage);
-        // now configure
-        // LOG (INFO) << BOLDGREEN << "Configuring CBC#" << +pCbc->getId() << " via the lpGBT" << RESET;
         std::vector<std::pair<std::string, uint16_t>> cRegsToWrite;
         cRegsToWrite.clear();
-        for(auto& cRegItem: cCbcRegMap)
+        for(auto& cRegItem: cRegList)
         {
             // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
             // be e-fused in the CBC3
@@ -430,8 +439,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
                 uint16_t cLat2 = (pCbc->getReg("FeCtrl&TrgLat2") & 0xFE) | ((dacValue & 0x0100) >> 8);
                 cRegVec.emplace_back("TriggerLatency1", cLat1);
                 cRegVec.emplace_back("FeCtrl&TrgLat2", cLat2);
-                LOG(DEBUG) << BOLDBLUE << "Setting latency on " << +pCbc->getId() << " to " << +dacValue << " 0x" << std::hex << +cLat1 << std::dec << " --- 0x" << std::hex << +cLat2 << std::dec
-                           << RESET;
+                // LOG(INFO) << BOLDBLUE << "Setting latency on " << +pCbc->getId() << " to " << +dacValue << " 0x" << std::hex << +cLat1 << std::dec << " --- 0x" << std::hex << +cLat2 << std::dec
+                //            << " for a latency vale of " << dacValue << RESET;
                 return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
             }
         }

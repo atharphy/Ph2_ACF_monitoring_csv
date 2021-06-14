@@ -1029,6 +1029,7 @@ void BackEndAlignment::Running()
         Destroy();
         exit(FAILED_BACKEND_ALIGNMENT);
     }
+    Reset();
 }
 
 void BackEndAlignment::Stop()

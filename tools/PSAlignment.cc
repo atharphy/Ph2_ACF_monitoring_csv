@@ -104,12 +104,6 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                             cRegName << "OutSetting_" << cIndx;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cMappedTo[cIndx]);
                         }
-                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_0", 1); // 2
-                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_1", 2); // 2
-                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_2", 3); // 3
-                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_3", 4); // 4
-                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_4", 5); // 5
-                        // fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_5", 0); // L1 line
                     }
                 } // chip
             }     // hybrid

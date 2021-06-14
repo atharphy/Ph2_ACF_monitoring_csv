@@ -73,8 +73,10 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
+    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
-
+    cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
+    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -140,36 +142,33 @@ int main(int argc, char* argv[])
     cTool.StartHttpServer();
     cTool.ConfigureHw();
 
-    // if CIC is enabled then align CIC first
-    if(cWithCIC)
+    if(cmd.foundOption("alignPS"))
     {
+        // align ASICs on PS module
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Initialise();
         // map MPA outputs for PS module
         cPSAlignment.MapMPAOutputs();
-
+    }
+    
+    // if CIC is enabled then align CIC first
+    if(cWithCIC)
+    {
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
-        cCicAligner.Reset();
         cCicAligner.dumpConfigFiles();
+    }
 
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cTool);
-        cBackEndAligner.Initialise();
-        bool cAligned = cBackEndAligner.Align();
-        cBackEndAligner.resetPointers();
-
-        // cPSAlignment.Align();
-        cPSAlignment.Reset();
-
-        if(!cAligned)
-        {
-            LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-            exit(0);
-        }
+    // align back-end
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    if(!cmd.foundOption("skipAlignment"))
+    {
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
     }
 
     // align back-end .. if this moves to firmware then we can get rid of this step
@@ -179,11 +178,6 @@ int main(int argc, char* argv[])
     cAntennaTester.Inherit(&cTool);
     cAntennaTester.Initialize();
 #endif
-
-    // std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    // cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 5});
-    // // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    // (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->ReconfigureTriggerFSM(cVecReg);
 
     if(cLatency || cStubLatency)
     {

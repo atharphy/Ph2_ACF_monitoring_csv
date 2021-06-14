@@ -1054,6 +1054,7 @@ uint32_t D19cCic2Event::GetNHits(uint8_t pFeId, uint8_t pReadoutChipId) const
     uint32_t cNHits = 0;
     if(fIsSparsified)
     {
+        // only 2S for now 
         auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
         cNHits           = cDataBitset.count();
     }

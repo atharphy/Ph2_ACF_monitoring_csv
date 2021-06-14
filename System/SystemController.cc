@@ -375,14 +375,15 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     bool cSparsified = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
     pBoard->setSparsification(cSparsified);
 
-    LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs on Board " << int(pBoard->getId()) << RESET;
     // Configure CPB
     // Optical link start-up
     // first configure lpGBT
+    bool cNonModule=true;
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
 
+        LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << int(pBoard->getId()) << RESET;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         if(!clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT))
         {
@@ -406,9 +407,6 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         bool cWith2Smodule = false;
         for(auto cHybrid: *cOpticalGroup)
         {
-            // auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            // cWithPSmodule = (cCic != nullptr);
-            // cWith2Smodule = (cCic != nullptr);
             auto cType     = FrontEndType::MPA;
             auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
             cType          = FrontEndType::SSA;
@@ -419,6 +417,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             cWith2Smodule = cWith2Smodule || cCBCfound;
             cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
         }
+        cNonModule = cWithPSmodule || cWith2Smodule;
         if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
         else if(cWith2Smodule)
         {
@@ -466,9 +465,11 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
 
         // finally
         // configure ROCs on hybrid .. can have SSAs or MPAs
+        std::vector<FrontEndType> cFrontEndTypesAll{FrontEndType::SSA, FrontEndType::MPA, FrontEndType::CBC3};
         std::vector<FrontEndType> cFrontEndTypesPS{FrontEndType::SSA, FrontEndType::MPA};
         std::vector<FrontEndType> cFrontEndTypes2S{FrontEndType::CBC3};
         auto&                     cFrontEndTypes = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) ? cFrontEndTypes2S : cFrontEndTypesPS;
+        if( cNonModule ) cFrontEndTypes = cFrontEndTypesAll; 
         for(auto cType: cFrontEndTypes)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -494,8 +495,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     if(cChip->getFrontEndType() != cType) continue;
                     fReadoutChipInterface->ConfigureChip(cChip);
                 } // ROC config
-            }     // hybrid
-        }         // configure all FE types
+            } // hybrid
+        }// configure all FE types
     }
 
     LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
@@ -612,7 +613,6 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 }
 void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDriveStrength, uint8_t pCICUseNegEdge)
 {
-    LOG(INFO) << BOLDMAGENTA << "SystemController::CicStartUp for OpticalGroup#" << +pOpticalGroup->getId() << RESET;
     auto cBoardId    = pOpticalGroup->getBeBoardId();
     auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     auto cSparsified = (*cBoardIter)->getSparsification();
@@ -623,6 +623,8 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         if(cCic == NULL) continue;
 
+        LOG(INFO) << BOLDMAGENTA << "SystemController::CicStartUp for OpticalGroup#" << +pOpticalGroup->getId() << " CIC#" << +cCic->getId() << RESET;
+    
         // if there is an lpGBT .
         // its configuration overwrites whatever is in the xml
         if(clpGBT != nullptr)

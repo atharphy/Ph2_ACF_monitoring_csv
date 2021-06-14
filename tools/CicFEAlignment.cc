@@ -226,7 +226,6 @@ void CicFEAlignment::writeObjects()
 void CicFEAlignment::Running()
 {
     Initialise();
-
     bool cPhaseAligned = true;
     if(fWithMPA)
         cPhaseAligned = this->PhaseAlignmentMPA();
@@ -258,6 +257,7 @@ void CicFEAlignment::Running()
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
     fSuccess = (cPhaseAligned && cWordAligned && cBxAligned);
+    Reset();
 }
 void CicFEAlignment::SetStubWindowOffsets(uint8_t pBendCode, int pBend)
 {

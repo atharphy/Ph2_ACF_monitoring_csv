@@ -507,9 +507,6 @@ int main(int argc, char* argv[])
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cCicAligner.Reset();
         cCicAligner.dumpConfigFiles();
     }
 

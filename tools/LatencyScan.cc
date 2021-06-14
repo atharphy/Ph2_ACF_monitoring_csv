@@ -99,6 +99,7 @@ void LatencyScan::ScanLatency()
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
     for(auto board: theLatencyContainer)
     {
+        /* FIX ME 
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
@@ -125,19 +126,19 @@ void LatencyScan::ScanLatency()
                 }
             }
         }
-
-        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
+        */
+    
+        BeBoard* cBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
         for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
         {
-            //  Set a Latency Value on all FEs
-            cVisitor.setLatency(cLat);
-            this->accept(cVisitor);
-            ReadNEvents(theBoard, fNevents);
-
+            // Set a Latency Value on all FEs
+            setSameDacBeBoard(fDetectorContainer->at(board->getIndex()), "TriggerLatency", cLat);
+            //fBeBoardInterface->ChipReSync(cBoard);
+            // Read N events from the FC7 
+            ReadNEvents(cBoard, fNevents);
             for(auto opticalGroup: *board)
             {
                 const std::vector<Event*>& events = GetEvents();
-                std::cout << "Event size = " << events.size() << std::endl;
                 for(auto hybrid: *opticalGroup)
                 {
                     uint32_t cHitSum    = 0;
@@ -181,8 +182,8 @@ void LatencyScan::ScanLatency()
 
                     } // end event loop
 
-                    LOG(INFO) << "FE: " << +hybrid->getId() << "; Latency " << +cLat << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
-                    LOG(INFO) << "cHitSumMPA:" << cHitSumMPA << " cHitSumSSA:" << cHitSumSSA;
+                    LOG(INFO) << "FE: " << +hybrid->getId() << "; Latency " << +cLat << " clock cycles; Hits " << cHitSum << "; Events " << fNevents << RESET;
+                    //LOG(INFO) << "cHitSumMPA:" << cHitSumMPA << " cHitSumSSA:" << cHitSumSSA;
                     hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cHitSum;
                 } // end hybrid
 
