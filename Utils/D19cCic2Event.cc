@@ -162,6 +162,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 
                                 if(cIs2S)
                                 {
+                                    cNStripClusters       = (*(cIterator + 2) & (0x7F << 0)) >> 0;
                                     fNStripClusters[cFe->getIndex()] = cNStripClusters;
                                     // clusters/hit data first
                                     std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);
