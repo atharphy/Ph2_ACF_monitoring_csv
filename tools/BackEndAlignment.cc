@@ -50,7 +50,7 @@ void BackEndAlignment::Reset()
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        LOG(INFO) << BOLDBLUE << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                        LOG(DEBUG) << BOLDBLUE << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                   << cMapItem.second.fValue << RESET;
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
@@ -384,8 +384,8 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     }                                                   // OG
 
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
-    LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
-    Reconfigure(pBoard);
+    //LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
+    //Reconfigure(pBoard);
     return cCorrectDelay;
 }
 bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
@@ -676,7 +676,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindStubLatency] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
-    Reconfigure(pBoard);
+    //Reconfigure(pBoard);
     return cFoundCorrectStubLatency;
 }
 bool BackEndAlignment::PSAlignment(BeBoard* pBoard)

@@ -54,6 +54,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     // virtual void summarizeHistos();
 
     // Histogram Fillers
+    void fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy);
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
@@ -63,6 +64,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
 
     DetectorDataContainer fDetectorData;
+    DetectorDataContainer fLatencyHitMaps;
     DetectorDataContainer fLatencyHistograms;
     DetectorDataContainer fStubHistograms;
     DetectorDataContainer fLatencyScan2DHistograms;
