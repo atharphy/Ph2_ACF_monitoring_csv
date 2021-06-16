@@ -159,7 +159,6 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 fEventHitList[cFe->getIndex()].first = cL1Information;
                                 fEventHitList[cFe->getIndex()].second.clear();
                                 uint8_t cNStripClusters = 0;
-
                                 if(cIs2S)
                                 {
                                     cNStripClusters                  = (*(cIterator + 2) & (0x7F << 0)) >> 0;

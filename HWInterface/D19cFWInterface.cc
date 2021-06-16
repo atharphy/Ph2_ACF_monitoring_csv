@@ -1289,7 +1289,16 @@ void D19cFWInterface::TriggerConfiguration()
     LOG(DEBUG) << BOLDMAGENTA << "Trigger Source is : " << +cSource << RESET;
     if(cSource != 6 && cSource != 10) LOG(DEBUG) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
     LOG(DEBUG) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
-    if(cConfiguredSrc != cSource) LOG(ERROR) << BOLDRED << "Mismatch in trigger source configuration." << RESET;
+    if(cConfiguredSrc != cSource)
+    {
+        LOG(ERROR) << BOLDRED << "Mismatch in trigger source configuration... going to reload and check again " << RESET;
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        LOG(INFO) << BOLDRED << "Re-configuring trigger source to be " << +cSource << RESET;
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSource});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        this->WriteStackReg(cRegVec);
+        TriggerConfiguration();
+    }
 }
 void D19cFWInterface::Start()
 {

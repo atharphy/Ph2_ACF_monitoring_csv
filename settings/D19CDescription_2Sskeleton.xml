@@ -23,7 +23,7 @@
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
@@ -39,7 +39,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                 <Settings threshold="580" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="10" groundothers="0"/>
@@ -200,8 +200,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">30</Setting>
-    <Setting name="PedeNoisePulseAmplitude">30</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">0</Setting>
+    <Setting name="PedeNoisePulseAmplitude">0</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 
