@@ -51,14 +51,14 @@ void BackEndAlignment::Reset()
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         LOG(DEBUG) << BOLDBLUE << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                  << cMapItem.second.fValue << RESET;
+                                   << cMapItem.second.fValue << RESET;
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
                 }
             }
         }
     }
-    if( fReadoutChipInterface != nullptr )
+    if(fReadoutChipInterface != nullptr)
     {
         fReadoutChipInterface->ClearModifiedRegisterMap();
         if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
@@ -128,7 +128,7 @@ void BackEndAlignment::Initialise()
     }
 
     // clear map of modified registers
-    if( fReadoutChipInterface != nullptr )  
+    if(fReadoutChipInterface != nullptr)
     {
         fReadoutChipInterface->ClearModifiedRegisterMap();
         bool cIsPS = false;
@@ -384,8 +384,8 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     }                                                   // OG
 
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
-    //LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
-    //Reconfigure(pBoard);
+    // LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
+    // Reconfigure(pBoard);
     return cCorrectDelay;
 }
 bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
@@ -676,7 +676,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindStubLatency] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
-    //Reconfigure(pBoard);
+    // Reconfigure(pBoard);
     return cFoundCorrectStubLatency;
 }
 bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
@@ -805,15 +805,14 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             // enable alignment output for stubs
             fCicInterface->SelectOutput(cCic, true);
-            // check for an MPA 
-            auto cType    = FrontEndType::MPA;
+            // check for an MPA
+            auto cType     = FrontEndType::MPA;
             auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-            cIsPS       = cIsPS || cMPAfound;
-            // check for an SSA 
-            cType    = FrontEndType::SSA;
+            cIsPS          = cIsPS || cMPAfound;
+            // check for an SSA
+            cType          = FrontEndType::SSA;
             auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-            cIsPS       = cIsPS || cSSAfound;
-    
+            cIsPS          = cIsPS || cSSAfound;
         }
     }
     fStubDebug     = true;

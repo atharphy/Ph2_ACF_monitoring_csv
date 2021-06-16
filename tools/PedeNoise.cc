@@ -69,26 +69,26 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(fFitSCurves) fPlotSCurves = true;
 
     // for now.. force to use async mode here
-    bool cForcePSasync = true; 
+    bool cForcePSasync = true;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto cType         = FrontEndType::SSA;
+                auto cType    = FrontEndType::SSA;
                 bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 cType         = FrontEndType::MPA;
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                if( !cWithSSA && ! cWithMPA) continue; 
+                if(!cWithSSA && !cWithMPA) continue;
 
-                if( !cForcePSasync ) continue; 
-                
-                cBoard->setEventType( EventType::PSAS );
-                // set all SSAs + MPAs to output data in async mode 
+                if(!cForcePSasync) continue;
+
+                cBoard->setEventType(EventType::PSAS);
+                // set all SSAs + MPAs to output data in async mode
                 for(auto cROC: *cHybrid)
                 {
-                    //TBC - what about MPA here?
+                    // TBC - what about MPA here?
                     fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
@@ -418,9 +418,8 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
-                    << cDistanceFromTarget*100 
-                    << "\t..Incrementing limit found counter "
-                    << " -- current value is " << +cLimitCounter << RESET;
+                      << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
+                      << " -- current value is " << +cLimitCounter << RESET;
             if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
             {
                 firstlim = true;

@@ -3158,8 +3158,8 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     LOG(INFO) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " << +cNevents * (1 + cMultiplicity) << " and received " << +cNtriggers << " FSM state is "
                               << +cState << " .. re-trying" << RESET;
                 }
-                //LOG(INFO) << BOLDGREEN << "Trigger FSM received all triggers .. expected " << +cNevents * (1 + cMultiplicity) << " and received " << +cNtriggers << " .. continuing" << RESET;
-                //LOG(INFO) << BOLDGREEN << "Trigger to accept was = " << this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") << RESET;
+                // LOG(INFO) << BOLDGREEN << "Trigger FSM received all triggers .. expected " << +cNevents * (1 + cMultiplicity) << " and received " << +cNtriggers << " .. continuing" << RESET;
+                // LOG(INFO) << BOLDGREEN << "Trigger to accept was = " << this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") << RESET;
 
                 if(!cFailed)
                 {
@@ -5589,7 +5589,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
     {
-        if(fI2Cstatus != 4) LOG(INFO) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is weird - read back " << +fI2Cstatus << RESET; 
+        if(fI2Cstatus != 4) LOG(INFO) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is weird - read back " << +fI2Cstatus << RESET;
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2CM" << +pMasterId << " Transaction Failed" << RESET;
         ResetCPB();
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
@@ -5604,7 +5604,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
         LOG(INFO) << BOLDRED << "I2C status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET;
         throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed after maximum attempts"));
     }
-    if( fI2Cstatus != 4 ) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET; 
+    if(fI2Cstatus != 4) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET;
     return (fI2Cstatus == 4);
 }
 

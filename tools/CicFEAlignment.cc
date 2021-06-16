@@ -48,7 +48,7 @@ void CicFEAlignment::Reset()
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         LOG(DEBUG) << BOLDBLUE << "CicFEAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                  << cMapItem.second.fValue << RESET;
+                                   << cMapItem.second.fValue << RESET;
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
                 }

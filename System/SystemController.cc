@@ -131,7 +131,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
     fPowerSupplyClient = new TCPClient("192.168.179.123", 7000);
-    //fPowerSupplyClient = new TCPClient("131.225.179.123", 7000);
+    // fPowerSupplyClient = new TCPClient("131.225.179.123", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
         delete fPowerSupplyClient;
@@ -177,12 +177,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
-                    if(cWithSSA && !cWithMPA )
+                    if(cWithSSA && !cWithMPA)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                         fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
                     }
-                    if(cWithMPA && !cWithSSA )
+                    if(cWithMPA && !cWithSSA)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
                         fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
@@ -378,7 +378,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     // Configure CPB
     // Optical link start-up
     // first configure lpGBT
-    bool cNonModule=true;
+    bool cNonModule = true;
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -469,7 +469,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         std::vector<FrontEndType> cFrontEndTypesPS{FrontEndType::SSA, FrontEndType::MPA};
         std::vector<FrontEndType> cFrontEndTypes2S{FrontEndType::CBC3};
         auto&                     cFrontEndTypes = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) ? cFrontEndTypes2S : cFrontEndTypesPS;
-        if( cNonModule ) cFrontEndTypes = cFrontEndTypesAll; 
+        if(cNonModule) cFrontEndTypes = cFrontEndTypesAll;
         for(auto cType: cFrontEndTypes)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -495,8 +495,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     if(cChip->getFrontEndType() != cType) continue;
                     fReadoutChipInterface->ConfigureChip(cChip);
                 } // ROC config
-            } // hybrid
-        }// configure all FE types
+            }     // hybrid
+        }         // configure all FE types
     }
 
     LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
@@ -624,7 +624,7 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         if(cCic == NULL) continue;
 
         LOG(INFO) << BOLDMAGENTA << "SystemController::CicStartUp for OpticalGroup#" << +pOpticalGroup->getId() << " CIC#" << +cCic->getId() << RESET;
-    
+
         // if there is an lpGBT .
         // its configuration overwrites whatever is in the xml
         if(clpGBT != nullptr)

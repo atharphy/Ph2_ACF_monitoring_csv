@@ -12,7 +12,6 @@
 #ifndef RegisterTester_h__
 #define RegisterTester_h__
 
-
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
@@ -29,9 +28,9 @@
 using namespace Ph2_System;
 
 // Typedefs for Containers
-typedef std::map<uint32_t, std::set<std::string>> BadRegisters;
-typedef std::pair<std::string, Ph2_HwDescription::ChipRegItem> Register; 
-typedef std::vector<Register> Registers; 
+typedef std::map<uint32_t, std::set<std::string>>              BadRegisters;
+typedef std::pair<std::string, Ph2_HwDescription::ChipRegItem> Register;
+typedef std::vector<Register>                                  Registers;
 
 class RegisterTester : public Tool
 {
@@ -42,9 +41,8 @@ class RegisterTester : public Tool
     ~RegisterTester();
 
     void Initialise();
-    // Test registers for hybrid test test 
-    void RegisterTest(); 
-
+    // Test registers for hybrid test test
+    void RegisterTest();
 
     // Reload CBC registers from file found in directory.
     // If no directory is given use the default files for the different operational modes found in Ph2_ACF/settings
@@ -59,7 +57,6 @@ class RegisterTester : public Tool
 
     // Return true if all the CBCs passed the register check.
     bool PassedTest();
-
 
     void print(std::vector<uint8_t> pChipIds);
     void Running() override;
@@ -76,7 +73,7 @@ class RegisterTester : public Tool
     std::chrono::seconds::rep fStopTime;
 
     // Containers
-    BadRegisters fBadRegisters;
+    BadRegisters                 fBadRegisters;
     ContainerRecycleBin<uint8_t> fRecycleBin;
 
     // Counters
@@ -93,6 +90,5 @@ class RegisterTester : public Tool
     {
         bool operator()(Register a, Register b) const { return a.second.fPage > b.second.fPage; }
     } customGreaterThanPage;
-    
 };
 #endif

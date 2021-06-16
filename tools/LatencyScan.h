@@ -50,19 +50,19 @@ class LatencyScan : public Tool
     void                                ScanLatency2D();
     void                                StubLatencyScan();
     void                                writeObjects();
-    
-    //
 
+    //
 
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
-  protected : 
+
+  protected:
     void cleanContainerMap();
-    void     initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
-  
+    void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
+
   private:
     int  countStubs(Ph2_HwDescription::Hybrid* pFe, const Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
     int  countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
@@ -104,7 +104,7 @@ class LatencyScan : public Tool
 
         return cRegVec;
     }
-    
+
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 

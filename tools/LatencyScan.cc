@@ -1,11 +1,11 @@
 #include "LatencyScan.h"
 
 #include "../HWDescription/Cbc.h"
+#include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/MPAChannelGroupHandler.h"
+#include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
 
 LatencyScan::LatencyScan() : Tool() {}
@@ -15,23 +15,22 @@ LatencyScan::~LatencyScan() {}
 void LatencyScan::Initialize()
 {
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    bool cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    bool cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
-    
+    bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
     if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
     if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
 
     initializeRecycleBin();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    
+
     fStartLatency = findValueInSettings("StartLatency", 1);
     fLatencyRange = findValueInSettings("LatencyRange", 1);
     fHoleMode     = findValueInSettings("HoleMode", 1);
     fNevents      = findValueInSettings("Nevents", 10);
     std::cout << "Going to read " << fNevents << " events" << std::endl;
-
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -107,31 +106,28 @@ void LatencyScan::cleanContainerMap()
 void LatencyScan::ScanLatency()
 {
     LOG(INFO) << "Scanning Latency ... ";
-    size_t cTotalNChnls = 0; 
+    size_t cTotalNChnls = 0;
     for(auto board: *fDetectorContainer)
     {
-	for(auto opticalGroup: *board)
-	{
-	   for(auto hybrid: *opticalGroup)
-	   {
-	   	for(auto chip: *hybrid)
-		{
-		   cTotalNChnls += chip->size();
-		}//chip
-	   }//hybrid
-	 }//OG
-    }//board
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid) { cTotalNChnls += chip->size(); } // chip
+            }                                                             // hybrid
+        }                                                                 // OG
+    }                                                                     // board
     for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
-	DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-	fDetectorDataContainer                       = theOccupancyContainer;
-	fSCurveOccupancyMap[cLat]                  = theOccupancyContainer;
-	this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
-        float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;	
-	LOG (INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl*cTotalNChnls << " hits per event" << RESET; 
+        DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+        fDetectorDataContainer                       = theOccupancyContainer;
+        fSCurveOccupancyMap[cLat]                    = theOccupancyContainer;
+        this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
+        float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+        LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
 #ifdef __USE_ROOT__
-    fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
-#endif        
+        fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
+#endif
     }
     /*DetectorDataContainer theLatencyContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
@@ -151,9 +147,9 @@ void LatencyScan::ScanLatency()
 
             // Set a Latency Value on all FEs
             setSameDacBeBoard(fDetectorContainer->at(board->getIndex()), "TriggerLatency", cLat);
-            fBeBoardInterface->ChipReSync(cBoard); 
-            if( !cUseReadNevents ) 
-            {            
+            fBeBoardInterface->ChipReSync(cBoard);
+            if( !cUseReadNevents )
+            {
                 uint32_t              cNevents = 0;
                 std::vector<uint32_t> cCompleteData(0);
                 fBeBoardInterface->Start(cBoard);
@@ -170,9 +166,9 @@ void LatencyScan::ScanLatency()
                 cNevents += ReadData(cBoard, cData, false);
                 if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
             }
-            else // Read N events from the FC7 
+            else // Read N events from the FC7
                 ReadNEvents(cBoard, fNevents);
-            
+
             for(auto opticalGroup: *board)
             {
                 const std::vector<Event*>& events = GetEvents();
@@ -228,15 +224,15 @@ void LatencyScan::ScanLatency()
         cIterationCount++;
     } // end board loop
     */
-/*#ifdef __USE_ROOT__
-    fDQMHistogramLatencyScan.fillLatencyPlots(*theLatencyContainer);
-#else
-    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
-    for(auto board: theLatencyContainer)
-    {
-        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
-    }
-#endif*/
+    /*#ifdef __USE_ROOT__
+        fDQMHistogramLatencyScan.fillLatencyPlots(*theLatencyContainer);
+    #else
+        auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
+        for(auto board: theLatencyContainer)
+        {
+            if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
+        }
+    #endif*/
 }
 
 void LatencyScan::StubLatencyScan()

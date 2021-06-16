@@ -13,12 +13,11 @@ void RegisterTester::Initialise()
 {
     // this is needed if you're going to use groups anywhere
     initializeRecycleBin();
-    
+
     // read back original masks
     const auto cTimeStart = std::chrono::system_clock::now();
     fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
     LOG(INFO) << BOLDMAGENTA << "RegisterTester::Initialise at " << fStartTime << " s from epoch." << RESET;
-
 
     // clear map of modified registers
     fReadoutChipInterface->ClearModifiedRegisterMap();
@@ -45,15 +44,15 @@ void RegisterTester::Initialise()
 
 void RegisterTester::RegisterTest()
 {
-    // 0, increasing page order 
-    // 1, decreasing page order 
-    // 2, don't sort  
-    uint8_t cSortOrder=0;
-    size_t  cLimitPerPage=1;
-    for( size_t cAttempt = 0; cAttempt < 10; cAttempt++ )
+    // 0, increasing page order
+    // 1, decreasing page order
+    // 2, don't sort
+    uint8_t cSortOrder    = 0;
+    size_t  cLimitPerPage = 1;
+    for(size_t cAttempt = 0; cAttempt < 10; cAttempt++)
     {
-       // first I want to record the register map for this map 
-       // retreive original settings for all chips and all back-end boards
+        // first I want to record the register map for this map
+        // retreive original settings for all chips and all back-end boards
         DetectorDataContainer cRegListContainer;
         ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cRegListContainer);
         for(auto cBoard: *fDetectorContainer)
@@ -64,46 +63,46 @@ void RegisterTester::RegisterTest()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        Registers&       cRegList     = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                        Registers&        cRegList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
                         const ChipRegMap& cOriginalMap = cChip->getRegMap();
-                        for( auto cMapItem : cOriginalMap )
-                        {
-                            cRegList.push_back( std::make_pair(cMapItem.first, cMapItem.second ) );
-                        }
-                        // registers sorted by ... all on page 0 then all on page 1 
-                        if(cSortOrder == 0) std::sort(cRegList.begin(), cRegList.end(), customLessThanPage); // all to page0 then page 1
+                        for(auto cMapItem: cOriginalMap) { cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second)); }
+                        // registers sorted by ... all on page 0 then all on page 1
+                        if(cSortOrder == 0) std::sort(cRegList.begin(), cRegList.end(), customLessThanPage);    // all to page0 then page 1
                         if(cSortOrder == 1) std::sort(cRegList.begin(), cRegList.end(), customGreaterThanPage); // all to page1 then page 0
                     }
                 }
             }
-        }// board loop to save record of registers 
+        } // board loop to save record of registers
 
-        // so here .. I need to send a hard reset to the ROCs 
+        // so here .. I need to send a hard reset to the ROCs
         for(auto cBoard: *fDetectorContainer)
         {
             auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
-            if( !cWithLpGBT ){ fBeBoardInterface->ChipReset(cBoard); continue; } 
+            if(!cWithLpGBT)
+            {
+                fBeBoardInterface->ChipReset(cBoard);
+                continue;
+            }
             for(auto cOpticalGroup: *cBoard)
             {
                 auto& clpGBT = cOpticalGroup->flpGBT;
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto cType        = FrontEndType::CBC3;
+                    auto cType    = FrontEndType::CBC3;
                     bool cWithCBC = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                     cType         = FrontEndType::SSA;
                     bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                     cType         = FrontEndType::MPA;
                     bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
 
-                    if( cWithCBC ) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cHybrid->getId()%2 );
-                    if( cWithSSA ) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cHybrid->getId()%2 );
-                    if( cWithMPA ) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cHybrid->getId()%2 );
-
+                    if(cWithCBC) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cHybrid->getId() % 2);
+                    if(cWithSSA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cHybrid->getId() % 2);
+                    if(cWithMPA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cHybrid->getId() % 2);
                 }
             }
-        }// board loop to send hard reset 
+        } // board loop to send hard reset
 
-        // container to store default register values after a hard reset 
+        // container to store default register values after a hard reset
         DetectorDataContainer cDefRegListContainer;
         ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cDefRegListContainer);
         for(auto cBoard: *fDetectorContainer)
@@ -114,27 +113,26 @@ void RegisterTester::RegisterTest()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        Registers&       cOriginaList  = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        Registers&       cList          = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        // set page to that of the first register in the map  
-                        //if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, 1);//(*cOriginalMap.begin()).second.fPage );  
-                        for( auto cListItem : cOriginaList )
+                        Registers& cOriginaList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                        Registers& cList        = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                        // set page to that of the first register in the map
+                        // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, 1);//(*cOriginalMap.begin()).second.fPage );
+                        for(auto cListItem: cOriginaList)
                         {
-                            auto cRegItem = cListItem.second; 
-                            cRegItem.fValue  = fReadoutChipInterface->ReadChipReg(cChip, cListItem.first); 
-                            cList.push_back( std::make_pair(cListItem.first, cRegItem) ); 
-                            // LOG (INFO) << BOLDMAGENTA << "\t... Register " << cListItem.first << " default value after a hard reset is 0x" 
-                            //     << std::hex << +cRegItem.fValue << std::dec 
-                            //     << " value after configuration should be 0x" << std::hex << cListItem.second.fValue << std::dec 
+                            auto cRegItem   = cListItem.second;
+                            cRegItem.fValue = fReadoutChipInterface->ReadChipReg(cChip, cListItem.first);
+                            cList.push_back(std::make_pair(cListItem.first, cRegItem));
+                            // LOG (INFO) << BOLDMAGENTA << "\t... Register " << cListItem.first << " default value after a hard reset is 0x"
+                            //     << std::hex << +cRegItem.fValue << std::dec
+                            //     << " value after configuration should be 0x" << std::hex << cListItem.second.fValue << std::dec
                             //     << RESET;
-                        }//map
-                     }//chip
-                }//hybrid
-            }//OG
-        }// board loop to save record of registers 
+                        } // map
+                    }     // chip
+                }         // hybrid
+            }             // OG
+        }                 // board loop to save record of registers
 
-
-        // now .. try and re-write original values after config and look for mis-matches 
+        // now .. try and re-write original values after config and look for mis-matches
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -143,92 +141,91 @@ void RegisterTester::RegisterTest()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        LOG (INFO) << BOLDMAGENTA << "Test#" << +cAttempt << " I2C registers on ROC" << +cChip->getId() << RESET;
-                        Registers&       cList  = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        Registers        cOriginalList; 
-                        size_t           cNPage0Regs, cNPage1Regs = 0;
+                        LOG(INFO) << BOLDMAGENTA << "Test#" << +cAttempt << " I2C registers on ROC" << +cChip->getId() << RESET;
+                        Registers& cList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                        Registers  cOriginalList;
+                        size_t     cNPage0Regs, cNPage1Regs = 0;
                         cNPage0Regs = cNPage1Regs;
-                        for( auto cItem : cList )
+                        for(auto cItem: cList)
                         {
-                            bool cPushBack = ( cItem.second.fPage == 0 && cNPage0Regs < cLimitPerPage ) || ( cItem.second.fPage == 1 && cNPage1Regs < cLimitPerPage ); 
-                            if( !cPushBack ) continue; 
-                            
-                            cOriginalList.push_back(cItem); 
-                            if( cItem.second.fPage == 0 ) cNPage0Regs++; 
-                            if( cItem.second.fPage == 1 ) cNPage1Regs++; 
+                            bool cPushBack = (cItem.second.fPage == 0 && cNPage0Regs < cLimitPerPage) || (cItem.second.fPage == 1 && cNPage1Regs < cLimitPerPage);
+                            if(!cPushBack) continue;
+
+                            cOriginalList.push_back(cItem);
+                            if(cItem.second.fPage == 0) cNPage0Regs++;
+                            if(cItem.second.fPage == 1) cNPage1Regs++;
                         }
-                        Registers&       cCurrentList   = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        Registers cSensitiveRegisters; cSensitiveRegisters.clear();
-                        std::vector<std::string> cRegistersChecked; cRegistersChecked.clear();
-                        for( auto cConfigItem : cOriginalList ) 
+                        Registers& cCurrentList = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                        Registers  cSensitiveRegisters;
+                        cSensitiveRegisters.clear();
+                        std::vector<std::string> cRegistersChecked;
+                        cRegistersChecked.clear();
+                        for(auto cConfigItem: cOriginalList)
                         {
                             // auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
                             // auto& clpGBT = cOpticalGroup->flpGBT;
-                            // send a hard reset every time 
-                            // if( !cWithLpGBT ) fBeBoardInterface->ChipReset(cBoard); 
+                            // send a hard reset every time
+                            // if( !cWithLpGBT ) fBeBoardInterface->ChipReset(cBoard);
                             // else if( cChip->getFrontEndType() == FrontEndType::CBC3 )  static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cHybrid->getId()%2 );
-                            // skip read-only registers 
-                            if(cChip->getFrontEndType() == FrontEndType::CBC3 && (cConfigItem.first.find("Bandgap") != std::string::npos || cConfigItem.first.find("ChipIDFuse") != std::string::npos)) continue;
+                            // skip read-only registers
+                            if(cChip->getFrontEndType() == FrontEndType::CBC3 && (cConfigItem.first.find("Bandgap") != std::string::npos || cConfigItem.first.find("ChipIDFuse") != std::string::npos))
+                                continue;
                             // need to think of something smarter than this
-                            if(cChip->getFrontEndType() == FrontEndType::CBC3 && (cConfigItem.first.find("FeCtrl&TrgLat2") != std::string::npos )) continue;
-                
-                            // so .. first thing I want to do is write the test value to this register 
-                            // first make sure chips local map is  updated 
+                            if(cChip->getFrontEndType() == FrontEndType::CBC3 && (cConfigItem.first.find("FeCtrl&TrgLat2") != std::string::npos)) continue;
+
+                            // so .. first thing I want to do is write the test value to this register
+                            // first make sure chips local map is  updated
                             cChip->setReg(cConfigItem.first, cConfigItem.second.fValue, cConfigItem.second.fPrmptCfg, cConfigItem.second.fStatusReg);
                             // auto cReg = cChip->getRegItem(cConfigItem.first);
-                            // LOG (INFO) << BOLDMAGENTA << "\t..Register " << cConfigItem.first << " writing 0x" << std::hex << +cConfigItem.second.fValue << std::dec 
-                            //     << " value in memory map is 0x" << std::hex << +cReg.fValue << std::dec 
+                            // LOG (INFO) << BOLDMAGENTA << "\t..Register " << cConfigItem.first << " writing 0x" << std::hex << +cConfigItem.second.fValue << std::dec
+                            //     << " value in memory map is 0x" << std::hex << +cReg.fValue << std::dec
                             //     << RESET;
-                            fReadoutChipInterface->WriteChipReg(cChip,cConfigItem.first, cConfigItem.second.fValue);
-                            size_t cMatches=0;
-                            for( auto cItem : cCurrentList ) // loop over what I think the current values are 
+                            fReadoutChipInterface->WriteChipReg(cChip, cConfigItem.first, cConfigItem.second.fValue);
+                            size_t cMatches = 0;
+                            for(auto cItem: cCurrentList) // loop over what I think the current values are
                             {
-                                // skip checking a register against itself 
-                                if(cItem.first  == cConfigItem.first ) continue; 
+                                // skip checking a register against itself
+                                if(cItem.first == cConfigItem.first) continue;
 
-                                // compare the value read back from the chip against what is expected  
+                                // compare the value read back from the chip against what is expected
                                 auto cReadBack = fReadoutChipInterface->ReadChipReg(cChip, cItem.first);
-                                auto cValue    = cItem.second.fValue; 
-                                if( std::find(cRegistersChecked.begin(), cRegistersChecked.end(), cItem.first) != cRegistersChecked.end() ){ 
-                                   auto cName        = cItem.first;
-                                   auto cIter        = std::find_if(cOriginalList.begin(), cOriginalList.end(), [&cName](Register x) { return x.first == cName; } );
-                                   cValue = (*cIter).second.fValue; 
+                                auto cValue    = cItem.second.fValue;
+                                if(std::find(cRegistersChecked.begin(), cRegistersChecked.end(), cItem.first) != cRegistersChecked.end())
+                                {
+                                    auto cName = cItem.first;
+                                    auto cIter = std::find_if(cOriginalList.begin(), cOriginalList.end(), [&cName](Register x) { return x.first == cName; });
+                                    cValue     = (*cIter).second.fValue;
                                 }
 
-                                bool cCorrupted = cReadBack != cValue; 
-                                if( cCorrupted )
-                                { 
-                                    std::string cRegName = cItem.first; 
-                                    if( std::find_if(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), [&cRegName](Register x) { return x.first == cRegName; }) != cSensitiveRegisters.end() )
-                                        cSensitiveRegisters.push_back( cItem );
-                                    //if( cSensitiveRegister.find(cItem.first) == cSensitiveRegister.end() ) cSensitiveRegister[cItem.first] = cItem.second; 
-                                    LOG (INFO) << BOLDRED << "\t\t...Mismatch in I2C register " << cItem.first 
-                                        << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec 
-                                        << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec 
-                                        << RESET;
-                                }
-                                else 
+                                bool cCorrupted = cReadBack != cValue;
+                                if(cCorrupted)
                                 {
-                                    // LOG (INFO) << BOLDGREEN << "\t\t...Match in I2C register " << cItem.first 
-                                    //     << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec 
-                                    //     << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec 
+                                    std::string cRegName = cItem.first;
+                                    if(std::find_if(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), [&cRegName](Register x) { return x.first == cRegName; }) != cSensitiveRegisters.end())
+                                        cSensitiveRegisters.push_back(cItem);
+                                    // if( cSensitiveRegister.find(cItem.first) == cSensitiveRegister.end() ) cSensitiveRegister[cItem.first] = cItem.second;
+                                    LOG(INFO) << BOLDRED << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
+                                              << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
+                                }
+                                else
+                                {
+                                    // LOG (INFO) << BOLDGREEN << "\t\t...Match in I2C register " << cItem.first
+                                    //     << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
+                                    //     << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec
                                     //     << RESET;
                                     cMatches++;
                                 }
-                                    
-                            }// loop over current values and compare what I read back against what I have stored in memory 
-                            cRegistersChecked.push_back( cConfigItem.first );
-                            float cMatchedPerc = cMatches/(float)(cCurrentList.size() - 1); 
-                            LOG (INFO) << BOLDMAGENTA << " When writing register " << cConfigItem.first 
-                                << " on page " << +cConfigItem.second.fPage
-                                << " found read-back matched fraction from other registers to be "
-                                << 100*cMatchedPerc << " percent."
-                                << RESET; 
-                        }//register write loop 
-                    }//chip 
-                }//hybrid
-            }//OG
-        }//board loop to run test 
+
+                            } // loop over current values and compare what I read back against what I have stored in memory
+                            cRegistersChecked.push_back(cConfigItem.first);
+                            float cMatchedPerc = cMatches / (float)(cCurrentList.size() - 1);
+                            LOG(INFO) << BOLDMAGENTA << " When writing register " << cConfigItem.first << " on page " << +cConfigItem.second.fPage
+                                      << " found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent." << RESET;
+                        } // register write loop
+                    }     // chip
+                }         // hybrid
+            }             // OG
+        }                 // board loop to run test
     }
 }
 void RegisterTester::TestRegisters()
@@ -249,7 +246,7 @@ void RegisterTester::TestRegisters()
             {
                 for(auto cChip: *cFe)
                 {
-                    auto   cMap   = cChip->getRegMap();
+                    auto cMap = cChip->getRegMap();
 
                     for(const auto& cReg: cMap)
                     {
@@ -301,7 +298,7 @@ void RegisterTester::ReconfigureRegisters(std::string pDirectoryName)
             {
                 for(auto cChip: *cFe)
                 {
-                    std::string  pRegFile;
+                    std::string pRegFile;
 
                     if(pDirectoryName.empty())
                         pRegFile = "settings/CbcFiles/Cbc_default_electron.txt";
@@ -347,7 +344,6 @@ bool RegisterTester::PassedTest()
     bool passFlag = ((int)(fNBadRegisters) == 0) ? true : false;
     return passFlag;
 }
-
 
 //
 void RegisterTester::writeObjects()

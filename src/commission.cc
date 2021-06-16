@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
-    
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
         // map MPA outputs for PS module
         cPSAlignment.MapMPAOutputs();
     }
-    
+
     // if CIC is enabled then align CIC first
     if(cWithCIC)
     {

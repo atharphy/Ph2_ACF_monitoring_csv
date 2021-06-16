@@ -11,8 +11,8 @@
 #include "tools/MemoryCheck2S.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
-#include "tools/RegisterTester.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
 
 #ifdef __POWERSUPPLY__
@@ -145,8 +145,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("registerTest","Test I2C registers on ROCs" , ArgvParser::NoOptionAttribute);
-   
+    cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -437,13 +437,12 @@ int main(int argc, char* argv[])
         }
     }
 
-    if( cmd.foundOption("registerTest") )
+    if(cmd.foundOption("registerTest"))
     {
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
         cRegTester.RegisterTest();
     }
-    
 
 // measure hybrid current and temperature
 #ifdef __ANTENNA__
@@ -518,7 +517,7 @@ int main(int argc, char* argv[])
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
     }
-    
+
     // equalize thresholds on readout chips
     if(cTune)
     {

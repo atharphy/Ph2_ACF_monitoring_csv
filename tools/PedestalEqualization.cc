@@ -62,26 +62,26 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 #endif
 
     // for now.. force to use async mode here
-    bool cForcePSasync = true; 
+    bool cForcePSasync = true;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto cType         = FrontEndType::SSA;
+                auto cType    = FrontEndType::SSA;
                 bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 cType         = FrontEndType::MPA;
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                if( !cWithSSA && ! cWithMPA) continue; 
+                if(!cWithSSA && !cWithMPA) continue;
 
-                if( !cForcePSasync ) continue; 
-                
-                cBoard->setEventType( EventType::PSAS );
-                // set all SSAs + MPAs to output data in async mode 
+                if(!cForcePSasync) continue;
+
+                cBoard->setEventType(EventType::PSAS);
+                // set all SSAs + MPAs to output data in async mode
                 for(auto cROC: *cHybrid)
                 {
-                    //TBC - what about MPA here?
+                    // TBC - what about MPA here?
                     fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
@@ -225,7 +225,7 @@ void PedestalEqualization::FindVplus()
                               << " = " << tmpVthr << RESET;
                     uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
                     uint32_t TOTCHAN = chip->size();
-                    //LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
+                    // LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
                     nCbc += float(ENCHAN) / float(TOTCHAN);
                     cMeanValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
                 } // for on chip - end

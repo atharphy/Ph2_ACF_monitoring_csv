@@ -251,9 +251,11 @@ int main(int argc, char* argv[])
         // cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.timeout", 0x1);
         //
         bool cLimitTriggers = cmd.foundOption("limitTriggers");
-        if(cLimitTriggers) cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
-        else  cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
-        
+        if(cLimitTriggers)
+            cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
+        else
+            cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
+
         // if readNevents is used
         if(cmd.foundOption("useReadNEvents"))
         {
