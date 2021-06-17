@@ -361,7 +361,10 @@ void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
             for(auto chip: *hybrid)
             {
                 std::vector<uint32_t> cHits = this->GetHits(hybrid->getId(), chip->getId());
-                LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId() << " at index " << +chip->getIndex() << "\t.... " << +cHits.size() << " hits in chip." << RESET;
+                // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
+                //     << " at index " << +chip->getIndex()
+                //     << "\t.... " << +cHits.size() << " hits in chip."
+                //     << RESET;
                 for(auto cHit: cHits)
                 {
                     if(cTestChannelGroup->isChannelEnabled(cHit)) { chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }

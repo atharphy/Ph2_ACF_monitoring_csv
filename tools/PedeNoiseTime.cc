@@ -395,9 +395,11 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     fFastCommands.push_back(fFCMDs.fBC0);
     fFastCommands.push_back(fFCMDs.fEmpty);
     // gap until start of triggers
-    size_t cBxId = 0;
+    size_t cBxId     = 0;
+    size_t cMaxDepth = 16382;
     for(size_t cBx = 0; cBx < cReSyncSep; cBx++)
     {
+        if(fFastCommands.size() == cMaxDepth) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -407,6 +409,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         for(size_t cBx = 0; cBx < cBurstLength; cBx++)
         {
             if(fNInjectedTriggers >= pNtriggersToSend) continue;
+            if(fFastCommands.size() == cMaxDepth) continue;
 
             fFastCommands.push_back(fFCMDs.fTrigger);
             fNInjectedTriggers++;
@@ -417,12 +420,15 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         size_t cTriggerGap = std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
+            if(fFastCommands.size() == cMaxDepth) continue;
+
             fFastCommands.push_back(fFCMDs.fEmpty);
             cBxId++;
         }
     } while((size_t)fNInjectedTriggers < pNtriggersToSend);
     for(size_t cBx = 0; cBx < 10; cBx++)
     {
+        if(fFastCommands.size() == cMaxDepth) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -565,7 +571,7 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
     }                                                                                                                                                                                     // events
     auto cNevents = cPh2Events.size();
     for(auto cOccThisBoard: *fDetectorDataContainer)
-    { cOccThisBoard->normalizeAndAverageContainers(fDetectorContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents); }
+    { cOccThisBoard->normalizeAndAverageContainers(fDetectorDataContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents); }
     return cSuccess;
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
