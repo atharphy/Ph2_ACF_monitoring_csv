@@ -34,9 +34,10 @@ struct DataLogEventPedeNoiseTime
     // readout
     uint16_t fEventLoss = 0;
     // event information
-    uint32_t fEventCnt = 0;
-    uint16_t fEventId  = 0;
-    uint16_t fL1Id     = 0;
+    uint32_t fEventCnt   = 0;
+    uint16_t fEventId    = 0;
+    uint16_t fL1Id       = 0;
+    uint8_t  fL1Mismatch = 0;
     //
     uint16_t fHybridId = 0;
     uint16_t fChipId   = 0;
