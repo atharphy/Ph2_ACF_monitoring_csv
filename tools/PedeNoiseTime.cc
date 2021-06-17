@@ -605,7 +605,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             if(cWithMPA) cRegName = "ThDAC_ALL";
             this->setSameGlobalDac(cRegName, cValue);
             bool cSuccess = this->DataFromRandomTriggers(cMeanTriggerSeparation);
-            if(cSuccess) continue;
+            if(!cSuccess) continue;
 
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
             // #ifdef __USE_ROOT__
