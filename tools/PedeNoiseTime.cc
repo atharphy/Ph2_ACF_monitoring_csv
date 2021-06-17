@@ -491,6 +491,8 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 }
 bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSeparation)
 {
+    auto                  cMaxTriggersInBurst        = findValueInSettings("MaxNtriggersPerBurst", 1);
+    auto                  cNtriggersToSendPerAttempt = findValueInSettings("Ntriggers", 10);
     DetectorDataContainer cNtriggerContainer;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cNtriggerContainer);
     for(auto cBoard: *fDetectorContainer)
@@ -499,10 +501,9 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
         cNtriggers       = 0;
     } // make sure all start at 0
 
-    size_t cNtriggersToSendPerAttempt = 10;
-    fPerAttempt                       = cNtriggersToSendPerAttempt;
-    size_t cNrepetitions              = 50;
-    fReps                             = cNrepetitions;
+    fPerAttempt          = cNtriggersToSendPerAttempt;
+    size_t cNrepetitions = 50;
+    fReps                = cNrepetitions;
     // this means that I should send 500 triggers at a time
     bool   cContinue    = true;
     size_t cTriggerIter = 0;
@@ -510,7 +511,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     do
     {
         bool cSuccess = true;
-        GenericTriggers(cNtriggersToSendPerAttempt, pTriggerSeparation);
+        GenericTriggers(cNtriggersToSendPerAttempt, pTriggerSeparation, cMaxTriggersInBurst);
         // LOG (INFO) << BOLDMAGENTA << "Using fast command bram to inject " << fNInjectedTriggers << " into system..." << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
         // LOG (INFO) << BOLDMAGENTA << "TriggerIter#" << +cTriggerIter << RESET;
