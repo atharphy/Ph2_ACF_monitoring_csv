@@ -60,7 +60,8 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    size_t cMaxNevents           = 100;
+    fNEventsPerBurst             = (fEventsPerPoint >= cMaxNevents) ? cMaxNevents : -1;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
@@ -103,6 +104,7 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(cObj) delete cObj;
 
         TTree* cTree = new TTree(cName, "DataLog");
+        cTree->Branch("EventCnt", &fEvent.fEventCnt);
         cTree->Branch("EvntId", &fEvent.fEventId);
         cTree->Branch("EventLoss", &fEvent.fEventLoss);
         cTree->Branch("L1Id", &fEvent.fL1Id);
@@ -630,6 +632,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             // LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
             fEvent.fThreshold = cValue;
             fEvent.fEventLoss = fEventsPerPoint - cPh2Events.size();
+            fEvent.fEventCnt  = 0;
             for(auto& cEvent: cPh2Events)
             {
                 auto cTriggerId = cEvent->GetExternalTriggerId();
@@ -673,7 +676,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                         }     // hybrid
                     }         // OG
                 }             // BOARD
-
+                fEvent.fEventCnt++;
             } // events - I want to keep this because I want to look at what happens in an event/per event basis
             auto cNevents = cPh2Events.size();
             theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
