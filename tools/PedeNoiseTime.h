@@ -34,15 +34,16 @@ struct DataLogEventPedeNoiseTime
     // readout
     uint16_t fEventLoss = 0;
     // event information
-    uint16_t fEventId = 0;
-    uint16_t fL1Id    = 0;
+    uint16_t fEventId       = 0;
+    uint16_t fL1Id          = 0;
     //
     uint16_t fHybridId = 0;
     uint16_t fChipId   = 0;
-    // threshold for this chip
+    // threshold for this chip 
     float fThreshold = 0;
-    // hit list for this chip
+    // hit list for this chip 
     std::vector<uint32_t> fHits;
+
 };
 typedef std::vector<DataLogEventPedeNoiseTime> DataLogNoiseEvents;
 #endif
@@ -77,7 +78,7 @@ class PedeNoiseTime : public Tool
 
     // generic fast commands
     // generic triggers
-    void     GenericTriggers(size_t pNtriggersToSend = 10, int pReSync = 0, int pMaxBurstLength = 3);
+    void     GenericTriggers(size_t pNtriggersToSend = 10, int pReSync = 0, int pMaxBurstLength = 1);
     bool     SendGenericTriggers(size_t pNtriggersToSend = 10000, int pTriggerSeparation = 500);
     uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
     bool     DataFromRandomTriggers(int pTriggerSeparation = 500);
@@ -111,7 +112,7 @@ class PedeNoiseTime : public Tool
 
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
-    DataLogEventPedeNoiseTime                  fEvent;
+    DataLogEventPedeNoiseTime fEvent;
     class FCMDs
     {
       public:
