@@ -2581,8 +2581,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
             // else
             //     LOG(INFO) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
         }
-        else
-            LOG(INFO) << BOLDBLUE << "Data handshake not enabled" << RESET;
+        //else LOG(INFO) << BOLDBLUE << "Data handshake not enabled" << RESET;
 
         // LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
@@ -2782,7 +2781,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     if(!pWait && data_handshake == 0)
     {
         pData.clear();
-        LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake OFF and no WAIT" << RESET;
+        //LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake OFF and no WAIT" << RESET;
         cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
         if(cNWords == 0) return 0;
         auto cNewEvents = this->GetData(pBoard, pData);

@@ -556,16 +556,12 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
     // now retreive events
     const std::vector<Event*>& cPh2Events = GetEvents();
     LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
-    // calculate occupancy
-    DetectorDataContainer cOccupancyContainer;
-    fDetectorDataContainer = &cOccupancyContainer;
-    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     for(auto& cEvent: cPh2Events)
     {
-        // auto cEventId   = cEvent->GetEventCount();
-        // auto cTriggerId = cEvent->GetExternalTriggerId();
-        // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-        for(auto cOccThisBoard: cOccupancyContainer)
+        auto cEventId   = cEvent->GetEventCount();
+        auto cTriggerId = cEvent->GetExternalTriggerId();
+        LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+        for(auto cOccThisBoard: *fDetectorDataContainer)
         {
             cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup());
             cOccThisBoard->normalizeAndAverageContainers(fDetectorContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
