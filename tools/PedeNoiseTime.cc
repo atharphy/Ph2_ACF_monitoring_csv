@@ -601,15 +601,18 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             // now retreive events
             const std::vector<Event*>& cPh2Events = GetEvents();
             LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
-            for(auto& cEvent: cPh2Events)
-            {
-                // auto cEventId   = cEvent->GetEventCount();
-                // auto cTriggerId = cEvent->GetExternalTriggerId();
-                // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-                for(auto cBoard: *fDetectorContainer) { cEvent->fillDataContainer(fDetectorDataContainer->at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); } // boards
-            }                                                                                                                                                                 // events
-            // auto cNevents = cPh2Events.size();
-            // fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
+            // for(auto& cEvent: cPh2Events)
+            // {
+            //     // auto cEventId   = cEvent->GetEventCount();
+            //     // auto cTriggerId = cEvent->GetExternalTriggerId();
+            //     // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+            //     for(auto cBoard: *fDetectorContainer)
+            //     {
+            //         cEvent->fillDataContainer(fDetectorDataContainer->at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup());
+            //     } // boards
+            // }// events
+            // //auto cNevents = cPh2Events.size();
+            // //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 
             // #ifdef __USE_ROOT__
