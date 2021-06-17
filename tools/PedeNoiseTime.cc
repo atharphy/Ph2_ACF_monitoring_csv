@@ -479,10 +479,7 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     // make sure data handshake is disabled
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
-    // set the packet size to be exactly equal to the number we expect
-    //fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.packet_nbr", (fNInjectedTriggers - 1) * cNrepetitions);
-    //std::this_thread::sleep_for(std::chrono::microseconds(10));
-    // make sure this is set
+    // make sure this is set - then I am sure I only accept exactly as many triggers as I have sent 
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fNInjectedTriggers * cNrepetitions);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     // re-load configuration
@@ -523,7 +520,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
         // LOG (INFO) << BOLDMAGENTA << "Using fast command bram to inject " << fNInjectedTriggers << " into system..." << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
         // LOG (INFO) << BOLDMAGENTA << "TriggerIter#" << +cTriggerIter << RESET;
-        if( cTriggerIter%25 == 0) LOG (INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << cTriggerIter << RESET;
+        if( cTriggerIter%50 == 0) LOG (INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << cTriggerIter << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             auto cNevents = this->GenericTriggerConfig(cBoard, cNrepetitions);
@@ -543,12 +540,12 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
                 cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                 auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                 if( cCounter%25 == 0 && cTriggerIter%25 == 0 ) 
-                    LOG(INFO) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
+                    LOG(DEBUG) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
                         << +cTriggerCounter << " counted and "
                         << +cNWords << " words in the readout"
                         << RESET;
                 cCounter++;
-            } while(cCounter < 100 && cTriggerCounter < cNevents);
+            } while(cCounter < 10000 && cTriggerCounter < cNevents);
             cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             cSuccess        = cSuccess && (cTriggerCounter >= cNevents);
             if(cSuccess)
