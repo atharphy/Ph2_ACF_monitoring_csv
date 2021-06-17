@@ -600,19 +600,38 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 
             // now retreive events
             const std::vector<Event*>& cPh2Events = GetEvents();
-            LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
-            // for(auto& cEvent: cPh2Events)
-            // {
-            //     // auto cEventId   = cEvent->GetEventCount();
-            //     // auto cTriggerId = cEvent->GetExternalTriggerId();
-            //     // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-            //     for(auto cBoard: *fDetectorContainer)
-            //     {
-            //         cEvent->fillDataContainer(fDetectorDataContainer->at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup());
-            //     } // boards
-            // }// events
-            // //auto cNevents = cPh2Events.size();
-            // //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
+            // LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
+            for(auto& cEvent: cPh2Events)
+            {
+                auto cEventId   = cEvent->GetEventCount();
+                auto cTriggerId = cEvent->GetExternalTriggerId();
+                LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+                for(auto cOpticalGroup: *fDetectorContainer)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
+                        for(auto cChip: *cHybrid)
+                        {
+                            std::vector<uint32_t> cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                            // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
+                            //     << " at index " << +chip->getIndex()
+                            //     << "\t.... " << +cHits.size() << " hits in chip."
+                            //     << RESET;
+                            for(auto cHit: cHits)
+                            {
+                                if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
+                                {
+                                    LOG(INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
+                                    // chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                                }
+                            }
+                        }
+                    }
+                }
+            } // events
+            // auto cNevents = cPh2Events.size();
+            // fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 
             // #ifdef __USE_ROOT__
