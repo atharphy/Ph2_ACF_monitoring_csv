@@ -395,11 +395,11 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     fFastCommands.push_back(fFCMDs.fBC0);
     fFastCommands.push_back(fFCMDs.fEmpty);
     // gap until start of triggers
-    size_t cBxId     = 0;
-    size_t cMaxDepth = 16382;
+    size_t cBxId = 0;
+    size_t cMaxDepth = 16382; 
     for(size_t cBx = 0; cBx < cReSyncSep; cBx++)
     {
-        if(fFastCommands.size() == cMaxDepth) continue;
+        if( fFastCommands.size() == cMaxDepth ) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -409,7 +409,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         for(size_t cBx = 0; cBx < cBurstLength; cBx++)
         {
             if(fNInjectedTriggers >= pNtriggersToSend) continue;
-            if(fFastCommands.size() == cMaxDepth) continue;
+            if( fFastCommands.size() == cMaxDepth ) continue;
 
             fFastCommands.push_back(fFCMDs.fTrigger);
             fNInjectedTriggers++;
@@ -420,7 +420,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         size_t cTriggerGap = std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
-            if(fFastCommands.size() == cMaxDepth) continue;
+            if( fFastCommands.size() == cMaxDepth ) continue;
 
             fFastCommands.push_back(fFCMDs.fEmpty);
             cBxId++;
@@ -428,7 +428,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     } while((size_t)fNInjectedTriggers < pNtriggersToSend);
     for(size_t cBx = 0; cBx < 10; cBx++)
     {
-        if(fFastCommands.size() == cMaxDepth) continue;
+        if( fFastCommands.size() == cMaxDepth ) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -533,6 +533,9 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     } // check that all the board have received the correct number of triggers
     if(cSuccess)
     {
+        DetectorDataContainer theOccupancyContainer;
+        fDetectorDataContainer = &theOccupancyContainer;
+        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
         // now all triggers have been sent. . look at the data in the readout
         for(auto cBoard: *fDetectorContainer)
         {
@@ -567,11 +570,16 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
         // auto cEventId   = cEvent->GetEventCount();
         // auto cTriggerId = cEvent->GetExternalTriggerId();
         // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-        for(auto cOccThisBoard: *fDetectorDataContainer) { cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup()); } // boards
-    }                                                                                                                                                                                     // events
-    auto cNevents = cPh2Events.size();
+        for(auto cOccThisBoard: *fDetectorDataContainer)
+        {
+            cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup());
+        } // boards
+    }// events
+    auto cNevents = cPh2Events.size(); 
     for(auto cOccThisBoard: *fDetectorDataContainer)
-    { cOccThisBoard->normalizeAndAverageContainers(fDetectorDataContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents); }
+    {
+        cOccThisBoard->normalizeAndAverageContainers(fDetectorDataContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents);
+    }
     return cSuccess;
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
@@ -598,9 +606,9 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
         int  cLimitCounter = 0;
         do
         {
-            DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-            fDetectorDataContainer                       = theOccupancyContainer;
-            fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
+            // DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+            // fDetectorDataContainer                       = theOccupancyContainer;
+            // fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
             std::string cRegName                         = "VCth";
             if(cWithSSA) cRegName = "Bias_THDAC";
             if(cWithMPA) cRegName = "ThDAC_ALL";
@@ -608,7 +616,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             bool cSuccess = this->DataFromRandomTriggers(cMeanTriggerSeparation);
             if(!cSuccess) continue;
 
-            float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+            float globalOccupancy = fDetectorDataContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
             // #ifdef __USE_ROOT__
             //             if(fPlotSCurves) fDQMHistogramPedeNoiseTime.fillSCurvePlots(cValue, *theOccupancyContainer);
             // #else
