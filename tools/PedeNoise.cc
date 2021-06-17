@@ -405,7 +405,6 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             // this->setDacAndMeasureData("VCth", cValue, fEventsPerPoint);
 
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
 #else

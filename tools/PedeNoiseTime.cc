@@ -606,11 +606,10 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 // auto cEventId   = cEvent->GetEventCount();
                 // auto cTriggerId = cEvent->GetExternalTriggerId();
                 // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-                for(auto& cOccThisBoard: *fDetectorDataContainer)
-                { cEvent->fillDataContainer(fDetectorDataContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); } // boards
-            }                                                                                                                                  // events
-            auto cNevents = cPh2Events.size();
-            fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
+                for(auto cBoard: *fDetectorContainer) { cEvent->fillDataContainer(fDetectorDataContainer->at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); } // boards
+            }                                                                                                                                                                 // events
+            // auto cNevents = cPh2Events.size();
+            // fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 
             // #ifdef __USE_ROOT__
