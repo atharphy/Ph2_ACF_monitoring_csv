@@ -561,16 +561,11 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
         auto cEventId   = cEvent->GetEventCount();
         auto cTriggerId = cEvent->GetExternalTriggerId();
         LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-        for(auto cOccThisBoard: *fDetectorDataContainer)
-        {
-            cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup());
-        } // boards
-    }// events
-    auto cNevents = cPh2Events.size(); 
+        for(auto cOccThisBoard: *fDetectorDataContainer) { cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup()); } // boards
+    }                                                                                                                                                                                     // events
+    auto cNevents = cPh2Events.size();
     for(auto cOccThisBoard: *fDetectorDataContainer)
-    {
-        cOccThisBoard->normalizeAndAverageContainers(fDetectorContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents);
-    }
+    { cOccThisBoard->normalizeAndAverageContainers(fDetectorContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents); }
     return cSuccess;
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
