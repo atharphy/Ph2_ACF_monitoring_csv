@@ -126,6 +126,8 @@ class PedeNoiseTime : public Tool
     const FCMDs          fFCMDs;
     std::vector<uint8_t> fFastCommands;
     size_t               fNInjectedTriggers = 0;
+    size_t               fReps              = 0;
+    size_t               fPerAttempt        = 0;
 
 #ifdef __USE_ROOT__
     DQMHistogramPedeNoise fDQMHistogramPedeNoise;
