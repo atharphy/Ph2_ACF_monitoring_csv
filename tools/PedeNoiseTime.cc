@@ -475,6 +475,12 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
 {
     DetectorDataContainer cNtriggerContainer;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cNtriggerContainer);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cNtriggers = cNtriggerContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
+        cNtriggers       = 0;
+    } // make sure all start at 0
+
     size_t cNtriggersToSendPerAttempt = 50;
     size_t cNrepetitions              = 10;
     // this means that I should send 500 triggers at a time
@@ -518,7 +524,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
             {
                 auto& cNtriggers = cNtriggerContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
                 cNtriggers += cTriggerCounter;
-                // LOG (INFO) << BOLDGREEN << "\t\t\t...BeBoard#" << +cBoard->getIndex() << " .. received " << +cNtriggers << " triggers" << RESET;
+                LOG(INFO) << BOLDGREEN << "\t\t\t...BeBoard#" << +cBoard->getIndex() << " .. so far I have received " << +cNtriggers << " triggers" << RESET;
                 cContinue = cContinue && (cNtriggers < pNtriggersToSend);
             }
         } // board loop
