@@ -558,9 +558,9 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
     LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
     for(auto& cEvent: cPh2Events)
     {
-        auto cEventId   = cEvent->GetEventCount();
-        auto cTriggerId = cEvent->GetExternalTriggerId();
-        LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+        // auto cEventId   = cEvent->GetEventCount();
+        // auto cTriggerId = cEvent->GetExternalTriggerId();
+        // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
         for(auto cOccThisBoard: *fDetectorDataContainer) { cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup()); } // boards
     }                                                                                                                                                                                     // events
     auto cNevents = cPh2Events.size();
