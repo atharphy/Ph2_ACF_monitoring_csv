@@ -12,6 +12,7 @@
 #include "D19cFWInterface.h"
 #include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
+#include "boost/format.hpp"
 #include <numeric>
 
 #define DEV_FLAG 0
@@ -525,9 +526,9 @@ bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> 
     LOG(DEBUG) << BOLDBLUE << "Configuring word alignment patterns on CIC" << RESET;
     for(uint8_t cIndex = 0; cIndex < (uint8_t)pAlignmentPatterns.size(); cIndex += 1)
     {
-        char cBuffer[14];
-        sprintf(cBuffer, "CALIB_PATTERN%d", cIndex);
-        std::string cRegName(cBuffer, sizeof(cBuffer));
+        std::stringstream cBuffer;
+        cBuffer << "CALIB_PATTERN" << +cIndex;
+        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
         cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, pAlignmentPatterns[cIndex]);
         if(cSuccess) { LOG(DEBUG) << BOLDBLUE << "Calibration pattern [for word alignment] on stub line " << +cIndex << " set to " << std::bitset<8>(pAlignmentPatterns[cIndex]) << RESET; }
     }
@@ -713,10 +714,13 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
     LOG(INFO) << BOLDBLUE << "\t.... Enabling RESET on DLL" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
-        char cBuffer[14];
-        sprintf(cBuffer, "scDllResetReq%.1d", cIndex);
-        std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
-        cSuccess             = this->WriteChipReg(pChip, cRegName, 0xFF);
+        // char cBuffer[14];
+        // sprintf(cBuffer, "scDllResetReq%.1d", cIndex);
+        std::stringstream cBuffer;
+        cBuffer << "scDllResetReq" << +cIndex;
+        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
+        // std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
+        cSuccess = this->WriteChipReg(pChip, cRegName, 0xFF);
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC DLL reset" << RESET;
@@ -728,10 +732,13 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
     LOG(INFO) << BOLDBLUE << "\t... Disabling RESET on DLL" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
-        char cBuffer[14];
-        sprintf(cBuffer, "scDllResetReq%.1d", cIndex);
-        std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
-        cSuccess             = this->WriteChipReg(pChip, cRegName, 0x00);
+        // char cBuffer[14];
+        // sprintf(cBuffer, "scDllResetReq%.1d", cIndex);
+        std::stringstream cBuffer;
+        cBuffer << "scDllResetReq" << +cIndex;
+        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
+        // std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
+        cSuccess = this->WriteChipReg(pChip, cRegName, 0x00);
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC DLL reset" << RESET;
@@ -791,10 +798,13 @@ bool CicInterface::PhaseAlignerPorts(Chip* pChip, uint8_t pState)
         LOG(INFO) << BOLDRED << "Disabling " << BOLDBLUE << " all CIC phase aligner input..." << RESET;
     for(uint8_t cIndex = 0; cIndex < 6; cIndex += 1)
     {
-        char cBuffer[13];
-        sprintf(cBuffer, "scEnableLine%.1d", cIndex);
-        std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
-        cSuccess             = this->WriteChipReg(pChip, cRegName, (pState == 1) ? 0xFF : 0x00);
+        // char cBuffer[14];
+        // sprintf(cBuffer, "scEnableLine%.1d", cIndex);
+        std::stringstream cBuffer;
+        cBuffer << "scEnableLine" << +cIndex;
+        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
+        // std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
+        cSuccess = this->WriteChipReg(pChip, cRegName, (pState == 1) ? 0xFF : 0x00);
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error conifguring CIC" << RESET;
@@ -812,10 +822,13 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
     LOG(INFO) << BOLDBLUE << "\t.... Enabling RESET on all phase aligner inputs" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
-        char cBuffer[16];
-        sprintf(cBuffer, "scResetChannels%.1d", cIndex);
-        std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
-        cSuccess             = this->WriteChipReg(pChip, cRegName, 0xFF);
+        // char cBuffer[14];
+        // sprintf(cBuffer, "scResetChannels%.1d", cIndex);
+        std::stringstream cBuffer;
+        cBuffer << "scResetChannels" << +cIndex;
+        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
+        // std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
+        cSuccess = this->WriteChipReg(pChip, cRegName, 0xFF);
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC phase aligner reset" << RESET;
@@ -828,10 +841,13 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
     LOG(INFO) << BOLDBLUE << "\t... Disabling RESET on all phase aligner inputs" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
-        char cBuffer[16];
-        sprintf(cBuffer, "scResetChannels%.1d", cIndex);
-        std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
-        cSuccess             = this->WriteChipReg(pChip, cRegName, 0x00);
+        // char cBuffer[14];
+        // sprintf(cBuffer, "scResetChannels%.1d", cIndex);
+        std::stringstream cBuffer;
+        cBuffer << "scResetChannels" << +cIndex;
+        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
+        // std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
+        cSuccess = this->WriteChipReg(pChip, cRegName, 0x00);
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC phase aligner reset" << RESET;
@@ -935,14 +951,11 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
             cValue = cValue | ((fWordAlignmentVals[cFeId][cLine] & 0xF) << (cCounter % 2) * 4);
             if((1 + cCounter) % 2 == 0)
             {
-                char cBuffer[14];
-                sprintf(cBuffer, "EXT_WA_DELAY%.2d", cIndx);
-                std::string cRegName(cBuffer, sizeof(cBuffer));
-                // LOG(INFO) << BOLDBLUE << "\t..Setting static word alignment in register "
-                //     << cBuffer
-                //     << " to "
-                //     << +cValue
-                //     << RESET;
+                // char cBuffer[14];
+                // sprintf(cBuffer, "EXT_WA_DELAY%.2d", cIndx);
+                // std::string cRegName(cBuffer, sizeof(cBuffer));
+                std::string cRegName = "EXT_WA_DELAY" + (boost::format("%|02|") % cIndx).str();
+                LOG(INFO) << BOLDBLUE << "\t..Setting static word alignment in register " << cRegName << " to " << +cValue << RESET;
                 cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
                 cValue   = 0x00;
                 cIndx++;

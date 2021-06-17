@@ -105,10 +105,10 @@ void LatencyScan::cleanContainerMap()
 
 void LatencyScan::ScanLatency()
 {
-    bool cUseReadNevents=false;
+    //bool cUseReadNevents = false;
     LOG(INFO) << "Scanning Latency ... ";
     size_t cTotalNChnls = 0;
-    size_t cNHybrids=0;
+    size_t cNHybrids    = 0;
     for(auto board: *fDetectorContainer)
     {
         for(auto opticalGroup: *board)
@@ -121,84 +121,93 @@ void LatencyScan::ScanLatency()
         }                                                                 // OG
     }                                                                     // board
 
-    uint8_t cTriggerMult = 4; 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult);
-    }// set trigger multiplicity 
-
-    for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat+= cTriggerMult )
+    for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
         DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer                       = theOccupancyContainer;
-        //fSCurveOccupancyMap[cLat]                    = theOccupancyContainer;
-        //this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
-        
-        // Set a Latency Value on all FEs
-        setSameGlobalDac("TriggerLatency", cLat);
-        std::vector<uint32_t> cCompleteData(0);
-        for(auto cBoard: *fDetectorContainer)
-        {
-            if( !cUseReadNevents )
-            {
-                fBeBoardInterface->Start(cBoard);
-                bool cBreak = false;
-                fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fNevents*(1+cTriggerMult));
-                do
-                {
-                    std::this_thread::sleep_for(std::chrono::microseconds(100));
-                    cBreak = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter") >= fNevents*(1+cTriggerMult);
-                } while(!cBreak);
-                fBeBoardInterface->Stop(cBoard);
-                std::this_thread::sleep_for(std::chrono::microseconds(100));
-                // decoding data
-                std::vector<uint32_t> cData(0);
-                auto cNevents = ReadData(cBoard, cData, false);
-                if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-                DecodeData(cBoard, cCompleteData, cNevents, fBeBoardInterface->getBoardType(cBoard));
-            }
-            else // Read N events from the FC7
-                ReadNEvents(cBoard, fNevents*(1+cTriggerMult));
-        }//decode data 
-
-        const std::vector<Event*>& cEvents = GetEvents();
-        LOG (INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events..." << RESET;
-        auto  cIter = cEvents.begin(); 
-        size_t cEventIndx=0;
-        do
-        {
-            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEventIndx << RESET;
-            for(uint8_t cOffset=0; cOffset < 1+cTriggerMult; cOffset++ )
-            {
-                if( cIter >= cEvents.end() ) continue; 
-
-                LOG (INFO) << BOLDMAGENTA << "\t\t... Trigger#" << +cOffset << " in burst of " << +cTriggerMult << RESET;
-                for(auto cBoard: *fDetectorContainer)
-                {
-                    for(auto cOpticalGroup: *cBoard)
-                    {
-                        for(auto cHybrid: *cOpticalGroup)
-                        {
-                            for(auto cChip: *cHybrid) 
-                            { 
-                                auto cHitCounter = (*cIter)->GetNHits(cHybrid->getId(), cChip->getId());
-                                LOG (INFO) << BOLDMAGENTA << "\t\t\t.. Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() 
-                                    << " for a latency of " << (cLat+cOffset) << " found " << +cHitCounter << " hits." << RESET;
-                            }
-                        } // hybrid
-                    } // OG
-                }// board
-                cIter++;
-                cEventIndx++;
-            }// trigger mult 
-        }while( cIter < cEvents.end() );// event loop 
-        
-//         float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-//         LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls/cNHybrids << " hits per hybrid/per event" << RESET;
-// #ifdef __USE_ROOT__
-//         fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
-// #endif
+        fSCurveOccupancyMap[cLat]                    = theOccupancyContainer;
+        this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
+        float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+        LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
+#ifdef __USE_ROOT__
+        fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
+#endif
     }
+
+    // uint8_t cTriggerMult = 4;
+    // for(auto cBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult); } // set trigger multiplicity
+    // for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat += cTriggerMult)
+    // {
+    //     DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+    //     fDetectorDataContainer                       = theOccupancyContainer;
+    //     // fSCurveOccupancyMap[cLat]                    = theOccupancyContainer;
+    //     // this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
+
+    //     // Set a Latency Value on all FEs
+    //     setSameGlobalDac("TriggerLatency", cLat);
+    //     std::vector<uint32_t> cCompleteData(0);
+    //     for(auto cBoard: *fDetectorContainer)
+    //     {
+    //         if(!cUseReadNevents)
+    //         {
+    //             fBeBoardInterface->Start(cBoard);
+    //             bool cBreak = false;
+    //             fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fNevents * (1 + cTriggerMult));
+    //             do
+    //             {
+    //                 std::this_thread::sleep_for(std::chrono::microseconds(100));
+    //                 cBreak = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter") >= fNevents * (1 + cTriggerMult);
+    //             } while(!cBreak);
+    //             fBeBoardInterface->Stop(cBoard);
+    //             std::this_thread::sleep_for(std::chrono::microseconds(100));
+    //             // decoding data
+    //             std::vector<uint32_t> cData(0);
+    //             auto                  cNevents = ReadData(cBoard, cData, false);
+    //             if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+    //             DecodeData(cBoard, cCompleteData, cNevents, fBeBoardInterface->getBoardType(cBoard));
+    //         }
+    //         else // Read N events from the FC7
+    //             ReadNEvents(cBoard, fNevents * (1 + cTriggerMult));
+    //     } // decode data
+
+    //     const std::vector<Event*>& cEvents = GetEvents();
+    //     LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events..." << RESET;
+    //     auto   cIter      = cEvents.begin();
+    //     size_t cEventIndx = 0;
+    //     do
+    //     {
+    //         LOG(INFO) << BOLDMAGENTA << "Event#" << +cEventIndx << RESET;
+    //         for(uint8_t cOffset = 0; cOffset < 1 + cTriggerMult; cOffset++)
+    //         {
+    //             if(cIter >= cEvents.end()) continue;
+
+    //             LOG(INFO) << BOLDMAGENTA << "\t\t... Trigger#" << +cOffset << " in burst of " << +cTriggerMult << RESET;
+    //             for(auto cBoard: *fDetectorContainer)
+    //             {
+    //                 for(auto cOpticalGroup: *cBoard)
+    //                 {
+    //                     for(auto cHybrid: *cOpticalGroup)
+    //                     {
+    //                         for(auto cChip: *cHybrid)
+    //                         {
+    //                             auto cHitCounter = (*cIter)->GetNHits(cHybrid->getId(), cChip->getId());
+    //                             LOG(INFO) << BOLDMAGENTA << "\t\t\t.. Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() << " for a latency of " << (cLat + cOffset) << " found "
+    //                                       << +cHitCounter << " hits." << RESET;
+    //                         }
+    //                     } // hybrid
+    //                 }     // OG
+    //             }         // board
+    //             cIter++;
+    //             cEventIndx++;
+    //         }                           // trigger mult
+    //     } while(cIter < cEvents.end()); // event loop
+
+    //     //         float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+    //     //         LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls/cNHybrids << " hits per hybrid/per event" << RESET;
+    //     // #ifdef __USE_ROOT__
+    //     //         fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
+    //     // #endif
+    // }
     /*DetectorDataContainer theLatencyContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
     DetectorDataContainer cLatencyHitContainer;

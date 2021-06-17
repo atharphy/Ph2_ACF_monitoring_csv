@@ -3,6 +3,7 @@
 #include "../HWInterface/BackendAlignmentInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "boost/format.hpp"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -51,7 +52,7 @@ void BackEndAlignment::Reset()
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         LOG(INFO) << BOLDBLUE << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
+                                  << cMapItem.second.fValue << RESET;
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
                 }
@@ -731,9 +732,10 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 
                     for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
                     {
-                        char cBuffer[11];
-                        sprintf(cBuffer, "OutPattern%d", cLineId);
-                        std::string cRegName = (cLineId == 7) ? "OutPattern7/FIFOconfig" : std::string(cBuffer, sizeof(cBuffer));
+                        // char cBuffer[11];
+                        // sprintf(cBuffer, "OutPattern%d", cLineId);
+                        // std::string cRegName = (cLineId == 7) ? "OutPattern7/FIFOconfig" : std::string(cBuffer, sizeof(cBuffer));
+                        std::string cRegName = (cLineId == 7) ? "OutPattern7/FIFOconfig" : "OutPattern" + (boost::format("%|01|") % cLineId).str();
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cAlignmentPattern);
                         cTuned = cTuned &&
                                  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getIndex(), cChip->getIndex(), cLineId, cAlignmentPattern, 8);
@@ -817,6 +819,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     }
     fStubDebug     = true;
     size_t cNlines = cIsPS ? 6 : 5;
+    LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::CICAlignment ... stub alignment on " << +cNlines << "/6 lines from CIC.." << RESET;
     cAligned       = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, fStubDebug, cNlines);
 
     // disable CIC output of pattern on stub + l1 lines

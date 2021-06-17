@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 
+#include "boost/format.hpp"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 
@@ -558,9 +559,10 @@ void PSROHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pI
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
-        std::string cRegName = cBuffer;
+        // char cBuffer[19];
+        // sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        // std::string cRegName = cBuffer;
+        std::string cRegName = "debug_blk_counter" + (boost::format("%|02|") % cIndex).str();
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
     }
@@ -603,9 +605,10 @@ void PSROHTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> p
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
-        std::string cRegName = cBuffer;
+        // char cBuffer[19];
+        // sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        // std::string cRegName = cBuffer;
+        std::string cRegName = "debug_blk_counter" + (boost::format("%|02|") % cIndex).str();
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
     }

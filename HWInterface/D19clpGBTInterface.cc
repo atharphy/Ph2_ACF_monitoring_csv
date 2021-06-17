@@ -111,7 +111,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 2}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 5, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
@@ -179,25 +179,35 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 10;
-    // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 10;
+    //uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    std::vector<uint8_t> cInvGrpsLeft{1}; 
+    std::vector<uint8_t> cInvChnlsLeft{2};
+    //
+    std::vector<uint8_t> cInvGrpsRight{0}; 
+    std::vector<uint8_t> cInvChnlsRight{0};
     for(const auto& cGroup: cRxGroups)
     {
+        bool cFoundInvLeft = std::find( cInvGrpsLeft.begin(), cInvGrpsLeft.end(), cGroup) != cInvGrpsLeft.end() ;
+        bool cFoundInvRight = std::find( cInvGrpsRight.begin(), cInvGrpsRight.end(), cGroup) != cInvGrpsRight.end() ;
         for(const auto cChannel: cRxChannels)
         {
-            // Right Hybrid
-            if(cGroup == 0 && cChannel == 0)
-                cRxInvert = 1;
-            else if(cGroup == 4 || cGroup == 5 || cGroup == 6)
-                cRxInvert = 0;
-            // Left Hybrid
-            else if(cGroup == 1 && cChannel == 0)
-                cRxInvert = 1;
-            else if(cGroup == 3 && cChannel == 2)
-                cRxInvert = 1;
-            else if(cGroup == 2)
-                cRxInvert = 0;
-            ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+            cFoundInvLeft = cFoundInvLeft && (std::find( cInvChnlsLeft.begin(), cInvChnlsLeft.end(), cChannel) != cInvChnlsLeft.end()) ; 
+            cFoundInvRight = cFoundInvRight && (std::find( cInvChnlsRight.begin(), cInvChnlsRight.end(), cChannel) != cInvChnlsRight.end()) ; 
+            uint8_t cInvert = (cFoundInvLeft||cFoundInvRight) ? 1 : 0;
+            // // Right Hybrid
+            // if(cGroup == 0 && cChannel == 0)
+            //     cRxInvert = 1;
+            // else if(cGroup == 4 || cGroup == 5 || cGroup == 6)
+            //     cRxInvert = 0;
+            // // Left Hybrid
+            // else if(cGroup == 1 && cChannel == 0)
+            //     cRxInvert = 1;
+            // else if(cGroup == 3 && cChannel == 2)
+            //     cRxInvert = 1;
+            // else if(cGroup == 2)
+            //     cRxInvert = 0;
+            ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cInvert, cRxPhase);
         }
     }
     // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);

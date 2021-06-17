@@ -6,6 +6,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "Occupancy.h"
+#include "boost/format.hpp"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -1750,15 +1751,15 @@ void MemoryCheck2S::MonitorInputVoltage()
             if(clpGBT == nullptr) continue;
             auto    clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             uint8_t cADCsel         = 1;
-            char    cADC[4];
-            sprintf(cADC, "ADC%.1d", cADCsel);
-
-            const auto cTimeStart = std::chrono::system_clock::now();
-            fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
+            // char    cADC[4];
+            // sprintf(cADC, "ADC%.1d", cADCsel);
+            std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            const auto  cTimeStart = std::chrono::system_clock::now();
+            fStartTime             = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
             std::vector<float> cVals(10);
             for(size_t cM = 0; cM < cVals.size(); cM++)
             {
-                cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADC) * cFactor;
+                cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADC.c_str()) * cFactor;
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
             const auto cTimeStop = std::chrono::system_clock::now();
@@ -1808,18 +1809,19 @@ void MemoryCheck2S::MonitorTemperature()
                 if(clpGBT == nullptr) continue;
                 auto    clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                 uint8_t cADCsel         = cADCsels[cIndx];
-                char    cADC[4];
+                // char    cADC[4];
+                std::string cADC;
                 if(cADCsel == 14)
-                    sprintf(cADC, "TEMP");
+                    cADC = "TEMP";
                 else
-                    sprintf(cADC, "ADC%.1d", cADCsel);
+                    cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
 
                 const auto cTimeStart = std::chrono::system_clock::now();
                 fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
                 std::vector<float> cVals(10);
                 for(size_t cM = 0; cM < cVals.size(); cM++)
                 {
-                    cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADC) * cFactor;
+                    cVals[cM] = clpGBTInterface->ReadADC(clpGBT, cADC.c_str()) * cFactor;
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
                 const auto cTimeStop = std::chrono::system_clock::now();
@@ -1919,10 +1921,12 @@ void MemoryCheck2S::MonitorAnalogue()
                             if(cMeasIndx == 0) cMeas.clear();
 
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
-                            char    cADC[4];
-                            sprintf(cADC, "ADC%.1d", cADCsel);
+                            // char    cADC[4];
+                            // sprintf(cADC, "ADC%.1d", cADCsel);
+                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+
                             // now wait until the output is stable
-                            float cVal = clpGBTInterface->ReadADC(clpGBT, cADC) * cFactor;
+                            float cVal = clpGBTInterface->ReadADC(clpGBT, cADC.c_str()) * cFactor;
                             cMeas.push_back(cVal);
                             // if( cMeasIndx == 0 || cMeasIndx == cLengthLoop*5 - 1 )
                             //     LOG (INFO) << BOLDYELLOW << "\t\t\t...[ all floating ] measurement#" << +cMeasIndx
@@ -1957,8 +1961,10 @@ void MemoryCheck2S::MonitorAnalogue()
                             if(cMeasIndx == 0) cMeas.clear();
 
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
-                            char    cADC[4];
-                            sprintf(cADC, "ADC%.1d", cADCsel);
+                            // char    cADC[4];
+                            // sprintf(cADC, "ADC%.1d", cADCsel);
+                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+
                             // now wait until the output is stable
                             cMeas.push_back(clpGBTInterface->ReadADC(clpGBT, cADC) * cFactor);
                             std::this_thread::sleep_for(std::chrono::milliseconds(10));

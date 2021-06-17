@@ -130,15 +130,16 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
-    fPowerSupplyClient = new TCPClient("192.168.179.123", 7000);
-    // fPowerSupplyClient = new TCPClient("131.225.179.123", 7000);
+    /*
+    fPowerSupplyClient = new TCPClient("192.168.122.123", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
     for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
-
+    */
+    
     if(fDetectorContainer->size() > 0)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);

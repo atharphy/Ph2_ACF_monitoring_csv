@@ -1304,7 +1304,7 @@ void D19cFWInterface::Start()
 {
     this->Stop();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-    
+
     ChipReSync();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // ResetTriggerFSM();
@@ -1778,7 +1778,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
             // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
             this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
             this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-            if(pScope) this->StubDebug();
+            if(pScope) this->StubDebug(true, cNlines);
 
             LOG(INFO) << BOLDBLUE << "Performing phase tuning [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
             for(uint8_t cLineId = 1; cLineId < 1 + cNlines; cLineId += 1)

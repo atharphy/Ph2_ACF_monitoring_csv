@@ -45,7 +45,7 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     if(pIsFile)
         result = doc.load_file(pFilename.c_str());
     else
-        result = doc.load(pFilename.c_str());
+        result = doc.load_string(pFilename.c_str());
 
     if(!result)
     {
@@ -1009,7 +1009,7 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
     if(pIsFile == true)
         result = doc.load_file(pFilename.c_str());
     else
-        result = doc.load(pFilename.c_str());
+        result = doc.load_string(pFilename.c_str());
 
     if(result == false)
     {
@@ -1144,7 +1144,7 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
     if(pIsFile == true)
         result = doc.load_file(pFilename.c_str());
     else
-        result = doc.load(pFilename.c_str());
+        result = doc.load_string(pFilename.c_str());
 
     if(result == false)
     {

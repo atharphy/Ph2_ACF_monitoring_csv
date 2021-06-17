@@ -786,7 +786,9 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     // replace negative entries with 0s
-    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative)
+        std::replace_if(
+            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
@@ -797,7 +799,9 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
-    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative)
+        std::replace_if(
+            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     float cN            = static_cast<float>(cWeights.size() - std::count(cWeights.begin(), cWeights.end(), 0.));
     float cSumOfWeights = std::accumulate(cWeights.begin(), cWeights.end(), 0.);
     // weighted sum of scan values to get pedestal

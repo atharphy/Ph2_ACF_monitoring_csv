@@ -4,6 +4,7 @@
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
+#include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
@@ -12,6 +13,7 @@
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PedeNoiseTime.h"
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
 
@@ -105,6 +107,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
+    cmd.defineOption("scanNoiseTime", "measure pedestal and noise on readout chips connected to CIC.");
+
+
     cmd.defineOption("findOpens", "perform latency scan with antenna on UIB", ArgvParser::NoOptionAttribute);
     cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
 
@@ -192,17 +197,18 @@ int main(int argc, char* argv[])
     Timer       cGlobalTimer;
     cGlobalTimer.start();
 
-// measure hybrid current and temperature
-#ifdef __ANTENNA__
-    char    cBuffer[120];
-    Antenna cAntenna;
-    // cAntenna.setId("UIBV2-CMSPH2-BRD00050");
-    cAntenna.ConfigureSlaveADC(CHIPSLAVE);
-    float cTemp    = cAntenna.GetHybridTemperature(CHIPSLAVE);
-    float cCurrent = cAntenna.GetHybridCurrent(CHIPSLAVE);
-    sprintf(cBuffer, "Hybrid %s [pre-configuration with default setttings]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp, cCurrent);
-    LOG(INFO) << BOLDBLUE << cBuffer << RESET;
-#endif
+    // measure hybrid current and temperature
+    // remove for now
+    // #ifdef __ANTENNA__
+    //     char    cBuffer[120];
+    //     Antenna cAntenna;
+    //     // cAntenna.setId("UIBV2-CMSPH2-BRD00050");
+    //     cAntenna.ConfigureSlaveADC(CHIPSLAVE);
+    //     float cTemp    = cAntenna.GetHybridTemperature(CHIPSLAVE);
+    //     float cCurrent = cAntenna.GetHybridCurrent(CHIPSLAVE);
+    //     sprintf(cBuffer, "Hybrid %s [pre-configuration with default setttings]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp, cCurrent);
+    //     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
+    // #endif
 
 #ifdef __POWERSUPPLY__
     DeviceHandler                             cPowerSupplyHandler;
@@ -407,9 +413,10 @@ int main(int argc, char* argv[])
                 for(size_t cIndx = 0; cIndx < cADCsels.size(); cIndx++)
                 {
                     std::vector<float> cVals(10);
-                    char               cADC[4];
-                    sprintf(cADC, "ADC%.1d", cADCsels[cIndx]);
-                    for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC) * cConversionFactor;
+                    // char               cADC[4];
+                    std::string cADC = "ADC" + (boost::format("%|01|") % cADCsels[cIndx]).str();
+                    // sprintf(cADC, "ADC%.1d", cADCsels[cIndx]);
+                    for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * cConversionFactor;
                     float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     LOG(INFO) << BOLDMAGENTA << "\t...ADC#" << +cADCsels[cIndx] << " " << cADCNames[cIndx] << " reading from lpGBT "
                               << " is " << +cMean * 1e3 << " milli-volts. " << RESET;
@@ -444,14 +451,14 @@ int main(int argc, char* argv[])
         cRegTester.RegisterTest();
     }
 
-// measure hybrid current and temperature
-#ifdef __ANTENNA__
-    cTemp    = cAntenna.GetHybridTemperature(CHIPSLAVE);
-    cCurrent = cAntenna.GetHybridCurrent(CHIPSLAVE);
-    sprintf(cBuffer, "Hybrid %s [after configuration with default setttings]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp, cCurrent);
-    LOG(INFO) << BOLDBLUE << cBuffer << RESET;
-    cAntenna.close();
-#endif
+    // // measure hybrid current and temperature
+    // #ifdef __ANTENNA__
+    //     cTemp    = cAntenna.GetHybridTemperature(CHIPSLAVE);
+    //     cCurrent = cAntenna.GetHybridCurrent(CHIPSLAVE);
+    //     sprintf(cBuffer, "Hybrid %s [after configuration with default setttings]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp, cCurrent);
+    //     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
+    //     cAntenna.close();
+    // #endif
 
     if(cmd.foundOption("monitorAMUX"))
     {
@@ -469,8 +476,9 @@ int main(int argc, char* argv[])
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
-                        char    cADC[4];
-                        sprintf(cADC, "ADC%.1d", cADCsel);
+                        // char    cADC[4];
+                        // sprintf(cADC, "ADC%.1d", cADCsel);
+                        std::string          cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
                         std::vector<uint8_t> cChipIds(0);
                         for(auto cChip: *cHybrid) { cChipIds.push_back(cChip->getId()); }
                         for(auto cChipId: cChipIds)
@@ -483,7 +491,7 @@ int main(int argc, char* argv[])
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "AmuxOutput", cMuxSel);
                             } // all FEs set to floating, except 0
                             std::vector<float> cVals(10);
-                            for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC) * cConversionFactor;
+                            for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * cConversionFactor;
                             float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                             LOG(INFO) << BOLDMAGENTA << "\t...CBC#" << +cChipId << " " << cADC << " reading from lpGBT "
                                       << " while monitoring AMUX#" << +cMuxSel << " is " << +cMean * 1e3 << " milli-volts. " << RESET;
@@ -541,15 +549,15 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
-#ifdef __ANTENNA__
-    Antenna cAntenna2;
-    cAntenna2.ConfigureSlaveADC(CHIPSLAVE);
-    cTemp    = cAntenna2.GetHybridTemperature(CHIPSLAVE);
-    cCurrent = cAntenna2.GetHybridCurrent(CHIPSLAVE);
-    sprintf(cBuffer, "Hybrid %s [after calibration]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp, cCurrent);
-    LOG(INFO) << BOLDBLUE << cBuffer << RESET;
-    cAntenna2.close();
-#endif
+    // #ifdef __ANTENNA__
+    //     Antenna cAntenna2;
+    //     cAntenna2.ConfigureSlaveADC(CHIPSLAVE);
+    //     cTemp    = cAntenna2.GetHybridTemperature(CHIPSLAVE);
+    //     cCurrent = cAntenna2.GetHybridCurrent(CHIPSLAVE);
+    //     sprintf(cBuffer, "Hybrid %s [after calibration]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp, cCurrent);
+    //     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
+    //     cAntenna2.close();
+    // #endif
 
     // measure noise on FE chips
     if(cMeasurePedeNoise)
@@ -558,6 +566,25 @@ int main(int argc, char* argv[])
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
+        cPedeNoise.Inherit(&cTool);
+        // second parameter disables stub logic on CBC3
+        // auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==0);};
+        // auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
+        // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
+        cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        t.stop();
+        t.show("Time to Scan Pedestals and Noise");
+    }
+    if( cmd.foundOption("scanNoiseTime"))
+    {
+        t.start();
+        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        // tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoiseTime cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         // second parameter disables stub logic on CBC3
         // auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==0);};

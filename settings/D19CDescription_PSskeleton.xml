@@ -23,17 +23,17 @@
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" /> 
-            <SSA Id="1" configfile="SSA.txt" /> 
+           <!--  <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
             <SSA Id="4" configfile="SSA.txt" /> 
             <SSA Id="5" configfile="SSA.txt" /> 
             <SSA Id="6" configfile="SSA.txt" /> 
-            <SSA Id="7" configfile="SSA.txt" /> 
+            <SSA Id="7" configfile="SSA.txt" />  -->
            
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <!-- <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
@@ -49,7 +49,7 @@
            
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
-        </Hybrid>
+        </Hybrid> -->
     </OpticalGroup>
     
     <!--CONFIG-->
