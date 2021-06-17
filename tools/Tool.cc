@@ -600,6 +600,9 @@ void Tool::dumpConfigFiles()
 
             for(auto opticalGroup: *board)
             {
+                auto& clpGBT = opticalGroup->flpGBT;
+                if(clpGBT != nullptr) {}
+
                 for(auto hybrid: *opticalGroup)
                 {
                     for(auto chip: *hybrid)

@@ -480,6 +480,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     // this means that I should send 500 triggers at a time
     bool   cContinue    = true;
     size_t cTriggerIter = 0;
+    LOG(INFO) << BOLDMAGENTA << "Generic block used to send " << +pNtriggersToSend << " triggers." << RESET;
     do
     {
         bool cSuccess = true;
@@ -565,6 +566,7 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
+    fEventsPerPoint            = findValueInSettings("Nevents", 10);
     int cMeanTriggerSeparation = 500;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit         = 0.05;
