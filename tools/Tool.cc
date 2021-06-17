@@ -600,19 +600,19 @@ void Tool::dumpConfigFiles()
 
             for(auto opticalGroup: *board)
             {
-                // auto& clpGBT = opticalGroup->flpGBT;
-                // if(clpGBT != nullptr)
-                // {
-                //     auto cRegMap = clpGBT->getRegMap();
-                //     for(auto cItemInMap: cRegMap)
-                //     {
-                //         auto cReg = flpGBTInterface->ReadChipReg(clpGBT, cItemInMap.first);
-                //         clpGBT->setReg(cItemInMap.first, cReg);
-                //     }
-                //     std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_lpGBT" + std::to_string(clpGBT->getId());
-                //     cFilename += ".txt";
-                //     clpGBT->saveRegMap(cFilename.data());
-                // }
+                auto& clpGBT = opticalGroup->flpGBT;
+                if(clpGBT != nullptr)
+                {
+                    auto cRegMap = clpGBT->getRegMap();
+                    for(auto cItemInMap: cRegMap)
+                    {
+                        auto cReg = flpGBTInterface->ReadChipReg(clpGBT, cItemInMap.first);
+                        clpGBT->setReg(cItemInMap.first, cReg);
+                    }
+                    std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_lpGBT" + std::to_string(clpGBT->getId());
+                    cFilename += ".txt";
+                    clpGBT->saveRegMap(cFilename.data());
+                }
 
                 for(auto hybrid: *opticalGroup)
                 {

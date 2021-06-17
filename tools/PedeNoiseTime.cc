@@ -596,7 +596,7 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
-    fEventsPerPoint            = findValueInSettings("Nevents", 10) * 1000;
+    fEventsPerPoint            = findValueInSettings("Nevents", 10) * 100;
     int cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500);
     LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
