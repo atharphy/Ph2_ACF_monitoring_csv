@@ -480,7 +480,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     // this means that I should send 500 triggers at a time
     bool   cContinue    = true;
     size_t cTriggerIter = 0;
-    LOG(INFO) << BOLDMAGENTA << "Generic block used to send " << +pNtriggersToSend << " triggers." << RESET;
+    // LOG (INFO) << BOLDMAGENTA << "Generic block used to send " << +pNtriggersToSend << " triggers." << RESET;
     do
     {
         bool cSuccess = true;
@@ -533,6 +533,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     } // check that all the board have received the correct number of triggers
     if(cSuccess)
     {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
         DetectorDataContainer theOccupancyContainer;
         fDetectorDataContainer = &theOccupancyContainer;
         ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
