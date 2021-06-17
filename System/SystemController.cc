@@ -503,6 +503,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
     // send a ReSync to all chips before starting
     fBeBoardInterface->ChipReSync(pBoard);
+
+    //
 }
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {

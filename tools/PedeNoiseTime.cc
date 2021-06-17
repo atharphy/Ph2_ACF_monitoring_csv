@@ -599,7 +599,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 
             // now retreive events
             const std::vector<Event*>& cPh2Events = GetEvents();
-            // LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
+            LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
             for(auto& cEvent: cPh2Events)
             {
                 // auto cEventId   = cEvent->GetEventCount();
