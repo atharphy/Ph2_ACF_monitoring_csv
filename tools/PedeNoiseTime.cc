@@ -61,7 +61,6 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    LOG(INFO) << BOLDRED << "I8" << RESET;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
@@ -606,28 +605,36 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 auto cEventId   = cEvent->GetEventCount();
                 auto cTriggerId = cEvent->GetExternalTriggerId();
                 LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-                for(auto cOpticalGroup: *fDetectorContainer)
+                for(auto cBoard: *fDetectorContainer)
                 {
-                    for(auto cHybrid: *cOpticalGroup)
+                    auto& cOccThisBoard = theOccupancyContainer->at(cBoard->getIndex());
+                    LOG(DEBUG) << +cOccThisBoard->getIndex() << RESET;
+                    for(auto cBoard: *fDetectorContainer)
                     {
-                        // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
-                        for(auto cChip: *cHybrid)
+                        for(auto cOpticalGroup: *cBoard)
                         {
-                            std::vector<uint32_t> cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                            // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
-                            //     << " at index " << +chip->getIndex()
-                            //     << "\t.... " << +cHits.size() << " hits in chip."
-                            //     << RESET;
-                            for(auto cHit: cHits)
+                            for(auto cHybrid: *cOpticalGroup)
                             {
-                                if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
+                                // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
+                                for(auto cChip: *cHybrid)
                                 {
-                                    LOG(INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
-                                    // chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
-                                }
-                            }
-                        }
-                    }
+                                    std::vector<uint32_t> cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                                    // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
+                                    //     << " at index " << +chip->getIndex()
+                                    //     << "\t.... " << +cHits.size() << " hits in chip."
+                                    //     << RESET;
+                                    for(auto cHit: cHits)
+                                    {
+                                        if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
+                                        {
+                                            // LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
+                                            // chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                                        }
+                                    }
+                                } // CHIP
+                            }     // hybrid
+                        }         // OG
+                    }             // BOARD
                 }
             } // events
             // auto cNevents = cPh2Events.size();
