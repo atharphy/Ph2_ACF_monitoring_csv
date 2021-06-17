@@ -13,9 +13,9 @@
 #include "boost/format.hpp"
 #include <math.h>
 
-// #ifdef __USE_ROOT__
-// #include "../DQMUtils/DQMHistogramPedeNoiseTime.h"
-// #endif
+#ifdef __USE_ROOT__
+#include "../DQMUtils/DQMHistogramPedeNoise.h"
+#endif
 
 PedeNoiseTime::PedeNoiseTime() : Tool() {}
 
@@ -94,9 +94,9 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
             }
         }
     }
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogramPedeNoiseTime.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    // #endif
+#ifdef __USE_ROOT__
+    fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }
 
 void PedeNoiseTime::disableStubLogic()
@@ -253,24 +253,24 @@ void PedeNoiseTime::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     this->SetTestAllChannels(true);
     this->measureData(fEventsPerPoint * pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogramPedeNoiseTime.fillValidationPlots(theOccupancyContainer);
-    //     // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    //     // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    //     // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    // #else
-    //     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    //     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    //     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    //     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
-    //     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
+#ifdef __USE_ROOT__
+    fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+#else
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
+    // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
-    //     LOG(INFO) << "6 ";
-    //     for(auto board: theOccupancyContainer)
-    //     {
-    //         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
-    //     }
-    // #endif
+    LOG(INFO) << "6 ";
+    for(auto board: theOccupancyContainer)
+    {
+        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
     LOG(INFO) << "7 ";
     for(auto cBoard: *fDetectorContainer)
     {
@@ -394,11 +394,11 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     fFastCommands.push_back(fFCMDs.fBC0);
     fFastCommands.push_back(fFCMDs.fEmpty);
     // gap until start of triggers
-    size_t cBxId = 0;
-    size_t cMaxDepth = 16382; 
+    size_t cBxId     = 0;
+    size_t cMaxDepth = 16382;
     for(size_t cBx = 0; cBx < cReSyncSep; cBx++)
     {
-        if( fFastCommands.size() == cMaxDepth ) continue;
+        if(fFastCommands.size() == cMaxDepth) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -408,7 +408,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         for(size_t cBx = 0; cBx < cBurstLength; cBx++)
         {
             if(fNInjectedTriggers >= pNtriggersToSend) continue;
-            if( fFastCommands.size() == cMaxDepth ) continue;
+            if(fFastCommands.size() == cMaxDepth) continue;
 
             fFastCommands.push_back(fFCMDs.fTrigger);
             fNInjectedTriggers++;
@@ -419,7 +419,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         size_t cTriggerGap = std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
-            if( fFastCommands.size() == cMaxDepth ) continue;
+            if(fFastCommands.size() == cMaxDepth) continue;
 
             fFastCommands.push_back(fFCMDs.fEmpty);
             cBxId++;
@@ -427,7 +427,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     } while((size_t)fNInjectedTriggers < pNtriggersToSend);
     for(size_t cBx = 0; cBx < 10; cBx++)
     {
-        if( fFastCommands.size() == cMaxDepth ) continue;
+        if(fFastCommands.size() == cMaxDepth) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -538,13 +538,13 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
         // now all triggers have been sent. . look at the data in the readout
         for(auto cBoard: *fDetectorContainer)
         {
-            auto                  cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
             std::vector<uint32_t> cData(0);
             auto                  cNeventsReadBack = ReadData(cBoard, cData, false);
             DecodeData(cBoard, cData, cNeventsReadBack, fBeBoardInterface->getBoardType(cBoard));
-            LOG(INFO) << BOLDMAGENTA << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
-                      << " - Read-back " << +cData.size() << " 32 bit words "
-                      << " containing .." << +cNeventsReadBack << " events." << RESET;
+            // auto                  cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+            // LOG(INFO) << BOLDMAGENTA << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
+            //           << " - Read-back " << +cData.size() << " 32 bit words "
+            //           << " containing .." << +cNeventsReadBack << " events." << RESET;
         }
     }
     return cSuccess;
@@ -599,12 +599,12 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 
             // now retreive events
             const std::vector<Event*>& cPh2Events = GetEvents();
-            //LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
+            // LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
             for(auto& cEvent: cPh2Events)
             {
-                //auto cEventId   = cEvent->GetEventCount();
-                //auto cTriggerId = cEvent->GetExternalTriggerId();
-                //LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+                // auto cEventId   = cEvent->GetEventCount();
+                // auto cTriggerId = cEvent->GetExternalTriggerId();
+                // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
                 for(auto cBoard: *fDetectorContainer)
                 {
                     auto& cOccThisBoard = theOccupancyContainer->at(cBoard->getIndex());
@@ -616,8 +616,8 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                             auto& cOccThisHybrid = cOccThisOG->at(cHybrid->getIndex());
                             for(auto cChip: *cHybrid)
                             {
-                                auto& cOccThischip = cOccThisHybrid->at(cChip->getIndex());
-                                std::vector<uint32_t> cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                                auto&                 cOccThischip = cOccThisHybrid->at(cChip->getIndex());
+                                std::vector<uint32_t> cHits        = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                                 // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +cChip->getId()
                                 //     << " at index " << +cChip->getIndex()
                                 //     << "\t.... " << +cHits.size() << " hits in chip."
@@ -626,33 +626,32 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                                 {
                                     if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
                                     {
-                                        //LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
-                                        cOccThischip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
+                                        // LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
+                                        cOccThischip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
                                     }
                                 }
-                            }//CHIP
-                        }//hybrid
-                    }//OG
-                }//BOARD
-                
-            }// events
-            auto cNevents = cPh2Events.size(); 
+                            } // CHIP
+                        }     // hybrid
+                    }         // OG
+                }             // BOARD
+
+            } // events - I want to keep this because I want to look at what happens in an event/per event basis
+            auto cNevents = cPh2Events.size();
             theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-            
-            // #ifdef __USE_ROOT__
-            //             if(fPlotSCurves) fDQMHistogramPedeNoiseTime.fillSCurvePlots(cValue, *theOccupancyContainer);
-            // #else
-            //             if(fPlotSCurves)
-            //             {
-            //                 auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
-            //                 theSCurveStreamer.setHeaderElement(cValue);
-            //                 for(auto board: *theOccupancyContainer)
-            //                 {
-            //                     if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
-            //                 }
-            //             }
-            // #endif
+#ifdef __USE_ROOT__
+            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
+#else
+            if(fPlotSCurves)
+            {
+                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
+                theSCurveStreamer.setHeaderElement(cValue);
+                for(auto board: *theOccupancyContainer)
+                {
+                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                }
+            }
+#endif
 
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
@@ -773,15 +772,15 @@ void PedeNoiseTime::extractPedeNoiseTime()
 
 void PedeNoiseTime::producePedeNoiseTimePlots()
 {
-    // #ifdef __USE_ROOT__
-    //     if(!fFitSCurves) fDQMHistogramPedeNoiseTime.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
-    // #else
-    //     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
-    //     for(auto board: *fThresholdAndNoiseContainer)
-    //     {
-    //         if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
-    //     }
-    // #endif
+#ifdef __USE_ROOT__
+    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
+#else
+    auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
+    for(auto board: *fThresholdAndNoiseContainer)
+    {
+        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
+    }
+#endif
 }
 
 void PedeNoiseTime::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
@@ -822,9 +821,9 @@ void PedeNoiseTime::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma
 
 void PedeNoiseTime::writeObjects()
 {
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogramPedeNoiseTime.process();
-    // #endif
+#ifdef __USE_ROOT__
+    fDQMHistogramPedeNoise.process();
+#endif
 }
 
 void PedeNoiseTime::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedeNoiseTime"); }

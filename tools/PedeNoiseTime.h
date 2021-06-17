@@ -16,9 +16,9 @@
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/Visitor.h"
 #include "Tool.h"
-// #ifdef __USE_ROOT__
-// #include "../DQMUtils/DQMHistogramPedeNoiseTime.h"
-// #endif
+#ifdef __USE_ROOT__
+#include "../DQMUtils/DQMHistogramPedeNoise.h"
+#endif
 
 #include <map>
 #include <random>
@@ -106,9 +106,9 @@ class PedeNoiseTime : public Tool
     std::vector<uint8_t> fFastCommands;
     size_t               fNInjectedTriggers = 0;
 
-    // #ifdef __USE_ROOT__
-    //     DQMHistogramPedeNoiseTime fDQMHistogramPedeNoiseTime;
-    // #endif
+#ifdef __USE_ROOT__
+    DQMHistogramPedeNoise fDQMHistogramPedeNoise;
+#endif
 };
 
 #endif
