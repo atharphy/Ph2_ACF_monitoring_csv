@@ -55,12 +55,12 @@ class PedeNoiseTime : public Tool
     void     cleanContainerMap();
     void     initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
-    // generic fast commands 
+    // generic fast commands
     // generic triggers
-    void GenericTriggers(size_t pNtriggersToSend=10, int pReSync = 0, int pMaxBurstLength = 3);
-    bool SendGenericTriggers(size_t pNtriggersToSend = 10000 , int pTriggerSeparation = 500);
-    uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions=1);
-    bool DataFromRandomTriggers( int pTriggerSeparation = 500 ); 
+    void     GenericTriggers(size_t pNtriggersToSend = 10, int pReSync = 0, int pMaxBurstLength = 3);
+    bool     SendGenericTriggers(size_t pNtriggersToSend = 10000, int pTriggerSeparation = 500);
+    uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
+    bool     DataFromRandomTriggers(int pTriggerSeparation = 500);
 
     uint8_t  fPulseAmplitude{0};
     uint32_t fEventsPerPoint{0};
@@ -102,13 +102,13 @@ class PedeNoiseTime : public Tool
         uint8_t fClear     = 0xD3; // ReSync+BC0
         uint8_t fEmpty     = 0xC1; // empty
     };
-    const FCMDs  fFCMDs;
-    std::vector<uint8_t>  fFastCommands;
-    size_t fNInjectedTriggers = 0 ;
-    
-// #ifdef __USE_ROOT__
-//     DQMHistogramPedeNoiseTime fDQMHistogramPedeNoiseTime;
-// #endif
+    const FCMDs          fFCMDs;
+    std::vector<uint8_t> fFastCommands;
+    size_t               fNInjectedTriggers = 0;
+
+    // #ifdef __USE_ROOT__
+    //     DQMHistogramPedeNoiseTime fDQMHistogramPedeNoiseTime;
+    // #endif
 };
 
 #endif

@@ -139,7 +139,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
     for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
     */
-    
+
     if(fDetectorContainer->size() > 0)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);

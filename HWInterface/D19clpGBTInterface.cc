@@ -180,21 +180,21 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 10;
-    //uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
-    std::vector<uint8_t> cInvGrpsLeft{1}; 
+    // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    std::vector<uint8_t> cInvGrpsLeft{1};
     std::vector<uint8_t> cInvChnlsLeft{2};
     //
-    std::vector<uint8_t> cInvGrpsRight{0}; 
+    std::vector<uint8_t> cInvGrpsRight{0};
     std::vector<uint8_t> cInvChnlsRight{0};
     for(const auto& cGroup: cRxGroups)
     {
-        bool cFoundInvLeft = std::find( cInvGrpsLeft.begin(), cInvGrpsLeft.end(), cGroup) != cInvGrpsLeft.end() ;
-        bool cFoundInvRight = std::find( cInvGrpsRight.begin(), cInvGrpsRight.end(), cGroup) != cInvGrpsRight.end() ;
+        bool cFoundInvLeft  = std::find(cInvGrpsLeft.begin(), cInvGrpsLeft.end(), cGroup) != cInvGrpsLeft.end();
+        bool cFoundInvRight = std::find(cInvGrpsRight.begin(), cInvGrpsRight.end(), cGroup) != cInvGrpsRight.end();
         for(const auto cChannel: cRxChannels)
         {
-            cFoundInvLeft = cFoundInvLeft && (std::find( cInvChnlsLeft.begin(), cInvChnlsLeft.end(), cChannel) != cInvChnlsLeft.end()) ; 
-            cFoundInvRight = cFoundInvRight && (std::find( cInvChnlsRight.begin(), cInvChnlsRight.end(), cChannel) != cInvChnlsRight.end()) ; 
-            uint8_t cInvert = (cFoundInvLeft||cFoundInvRight) ? 1 : 0;
+            cFoundInvLeft   = cFoundInvLeft && (std::find(cInvChnlsLeft.begin(), cInvChnlsLeft.end(), cChannel) != cInvChnlsLeft.end());
+            cFoundInvRight  = cFoundInvRight && (std::find(cInvChnlsRight.begin(), cInvChnlsRight.end(), cChannel) != cInvChnlsRight.end());
+            uint8_t cInvert = (cFoundInvLeft || cFoundInvRight) ? 1 : 0;
             // // Right Hybrid
             // if(cGroup == 0 && cChannel == 0)
             //     cRxInvert = 1;

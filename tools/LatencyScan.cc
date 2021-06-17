@@ -105,7 +105,7 @@ void LatencyScan::cleanContainerMap()
 
 void LatencyScan::ScanLatency()
 {
-    //bool cUseReadNevents = false;
+    // bool cUseReadNevents = false;
     LOG(INFO) << "Scanning Latency ... ";
     size_t cTotalNChnls = 0;
     size_t cNHybrids    = 0;

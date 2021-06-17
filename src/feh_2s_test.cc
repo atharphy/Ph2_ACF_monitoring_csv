@@ -12,8 +12,8 @@
 #include "tools/MemoryCheck2S.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
-#include "tools/PedestalEqualization.h"
 #include "tools/PedeNoiseTime.h"
+#include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
 
@@ -108,7 +108,6 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
     cmd.defineOption("scanNoiseTime", "measure pedestal and noise on readout chips connected to CIC.");
-
 
     cmd.defineOption("findOpens", "perform latency scan with antenna on UIB", ArgvParser::NoOptionAttribute);
     cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
@@ -579,7 +578,7 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
-    if( cmd.foundOption("scanNoiseTime"))
+    if(cmd.foundOption("scanNoiseTime"))
     {
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration

@@ -819,8 +819,8 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     }
     fStubDebug     = true;
     size_t cNlines = cIsPS ? 6 : 5;
-    LOG (INFO) << BOLDMAGENTA << "BackEndAlignment::CICAlignment ... stub alignment on " << +cNlines << "/6 lines from CIC.." << RESET;
-    cAligned       = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, fStubDebug, cNlines);
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::CICAlignment ... stub alignment on " << +cNlines << "/6 lines from CIC.." << RESET;
+    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, fStubDebug, cNlines);
 
     // disable CIC output of pattern on stub + l1 lines
     for(auto cOpticalReadout: *pBoard)
