@@ -394,11 +394,11 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     fFastCommands.push_back(fFCMDs.fBC0);
     fFastCommands.push_back(fFCMDs.fEmpty);
     // gap until start of triggers
-    size_t cBxId     = 0;
-    size_t cMaxDepth = 16382;
+    size_t cBxId = 0;
+    size_t cMaxDepth = 16382; 
     for(size_t cBx = 0; cBx < cReSyncSep; cBx++)
     {
-        if(fFastCommands.size() == cMaxDepth) continue;
+        if( fFastCommands.size() == cMaxDepth ) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -408,7 +408,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         for(size_t cBx = 0; cBx < cBurstLength; cBx++)
         {
             if(fNInjectedTriggers >= pNtriggersToSend) continue;
-            if(fFastCommands.size() == cMaxDepth) continue;
+            if( fFastCommands.size() == cMaxDepth ) continue;
 
             fFastCommands.push_back(fFCMDs.fTrigger);
             fNInjectedTriggers++;
@@ -419,7 +419,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         size_t cTriggerGap = std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
-            if(fFastCommands.size() == cMaxDepth) continue;
+            if( fFastCommands.size() == cMaxDepth ) continue;
 
             fFastCommands.push_back(fFCMDs.fEmpty);
             cBxId++;
@@ -427,7 +427,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     } while((size_t)fNInjectedTriggers < pNtriggersToSend);
     for(size_t cBx = 0; cBx < 10; cBx++)
     {
-        if(fFastCommands.size() == cMaxDepth) continue;
+        if( fFastCommands.size() == cMaxDepth ) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -599,48 +599,53 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 
             // now retreive events
             const std::vector<Event*>& cPh2Events = GetEvents();
-            // LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
+            //LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
             for(auto& cEvent: cPh2Events)
             {
-                auto cEventId   = cEvent->GetEventCount();
-                auto cTriggerId = cEvent->GetExternalTriggerId();
-                LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+                //auto cEventId   = cEvent->GetEventCount();
+                //auto cTriggerId = cEvent->GetExternalTriggerId();
+                //LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
                 for(auto cBoard: *fDetectorContainer)
                 {
                     auto& cOccThisBoard = theOccupancyContainer->at(cBoard->getIndex());
-                    LOG(DEBUG) << +cOccThisBoard->getIndex() << RESET;
-                    for(auto cBoard: *fDetectorContainer)
+                    LOG (DEBUG) << "Board#" << +cOccThisBoard->getIndex() << RESET;
+                    for(auto cOpticalGroup: *cBoard)
                     {
-                        for(auto cOpticalGroup: *cBoard)
+                        auto& cOccThisOG = cOccThisBoard->at(cOpticalGroup->getIndex());
+                        LOG (DEBUG) << "OG#" << +cOccThisOG->getIndex() << RESET;
+                        for(auto cHybrid: *cOpticalGroup)
                         {
-                            for(auto cHybrid: *cOpticalGroup)
+                            auto& cOccThisHybrid = cOccThisOG->at(cHybrid->getIndex());
+                            LOG (DEBUG) << "Hybrid#" << +cHybrid->getIndex() << RESET;
+                            // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
+                            for(auto cChip: *cHybrid)
                             {
-                                // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
-                                for(auto cChip: *cHybrid)
+                                auto& cOccThischip = cOccThisHybrid->at(cChip->getIndex());
+                                LOG (DEBUG) << "Chip#" << +cOccThischip->getIndex() << RESET;
+                            
+                                std::vector<uint32_t> cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                                LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +cChip->getId()
+                                    << " at index " << +cChip->getIndex()
+                                    << "\t.... " << +cHits.size() << " hits in chip."
+                                    << RESET;
+                                for(auto cHit: cHits)
                                 {
-                                    std::vector<uint32_t> cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                                    // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
-                                    //     << " at index " << +chip->getIndex()
-                                    //     << "\t.... " << +cHits.size() << " hits in chip."
-                                    //     << RESET;
-                                    for(auto cHit: cHits)
+                                    if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
                                     {
-                                        if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
-                                        {
-                                            // LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
-                                            // chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
-                                        }
+                                        //LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
+                                        //chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
                                     }
-                                } // CHIP
-                            }     // hybrid
-                        }         // OG
-                    }             // BOARD
-                }
-            } // events
-            // auto cNevents = cPh2Events.size();
-            // fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
+                                }
+                            }//CHIP
+                        }//hybrid
+                    }//OG
+                }//BOARD
+                
+            }// events
+            //auto cNevents = cPh2Events.size(); 
+            //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-
+            
             // #ifdef __USE_ROOT__
             //             if(fPlotSCurves) fDQMHistogramPedeNoiseTime.fillSCurvePlots(cValue, *theOccupancyContainer);
             // #else
