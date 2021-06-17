@@ -634,8 +634,8 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 }             // BOARD
 
             } // events
-            // auto cNevents = cPh2Events.size();
-            // fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
+            auto cNevents = cPh2Events.size();
+            theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 
             // #ifdef __USE_ROOT__
