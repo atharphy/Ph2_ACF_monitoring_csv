@@ -562,19 +562,6 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
     } // make sure triggers have been stopped on all boards
     bool cSuccess = SendGenericTriggers(fEventsPerPoint, pTriggerSeparation);
     if(!cSuccess) return cSuccess;
-    // now retreive events
-    const std::vector<Event*>& cPh2Events = GetEvents();
-    LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
-    for(auto& cEvent: cPh2Events)
-    {
-        // auto cEventId   = cEvent->GetEventCount();
-        // auto cTriggerId = cEvent->GetExternalTriggerId();
-        // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
-        for(auto cOccThisBoard: *fDetectorDataContainer) { cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup()); } // boards
-    }                                                                                                                                                                                     // events
-    auto cNevents = cPh2Events.size();
-    for(auto cOccThisBoard: *fDetectorDataContainer)
-    { cOccThisBoard->normalizeAndAverageContainers(fDetectorDataContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents); }
     return cSuccess;
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
@@ -611,7 +598,21 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             bool cSuccess = this->DataFromRandomTriggers(cMeanTriggerSeparation);
             if(!cSuccess) continue;
 
-            float globalOccupancy = fDetectorDataContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+            // now retreive events
+            const std::vector<Event*>& cPh2Events = GetEvents();
+            LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
+            for(auto& cEvent: cPh2Events)
+            {
+                // auto cEventId   = cEvent->GetEventCount();
+                // auto cTriggerId = cEvent->GetExternalTriggerId();
+                // LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+                for(auto cOccThisBoard: *theOccupancyContainer) { cEvent->fillDataContainer(cOccThisBoard, fChannelGroupHandler->allChannelGroup()); } // boards
+            }                                                                                                                                          // events
+            auto cNevents = cPh2Events.size();
+            for(auto cOccThisBoard: *theOccupancyContainer)
+            { cOccThisBoard->normalizeAndAverageContainers(fDetectorContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents); }
+            float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+
             // #ifdef __USE_ROOT__
             //             if(fPlotSCurves) fDQMHistogramPedeNoiseTime.fillSCurvePlots(cValue, *theOccupancyContainer);
             // #else
