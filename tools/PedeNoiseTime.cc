@@ -564,9 +564,13 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
         for(auto cOccThisBoard: *fDetectorDataContainer)
         {
             cEvent->fillDataContainer((fDetectorDataContainer->at(cOccThisBoard->getIndex())), fChannelGroupHandler->allChannelGroup());
-            cOccThisBoard->normalizeAndAverageContainers(fDetectorContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
         } // boards
-    }     // events
+    }// events
+    auto cNevents = cPh2Events.size(); 
+    for(auto cOccThisBoard: *fDetectorDataContainer)
+    {
+        cOccThisBoard->normalizeAndAverageContainers(fDetectorContainer->at(cOccThisBoard->getIndex()), fChannelGroupHandler->allChannelGroup(), cNevents);
+    }
     return cSuccess;
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
