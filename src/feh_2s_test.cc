@@ -735,7 +735,7 @@ int main(int argc, char* argv[])
         cShortFinder.waitForRunToBeCompleted();
         cShortFinder.Stop();
     }
-
+    cTool.dumpConfigFiles();
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
