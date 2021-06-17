@@ -60,8 +60,7 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
-    size_t cMaxNevents           = 100;
-    fNEventsPerBurst             = (fEventsPerPoint >= cMaxNevents) ? cMaxNevents : -1;
+    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
@@ -594,7 +593,7 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
-    fEventsPerPoint            = findValueInSettings("Nevents", 10);
+    fEventsPerPoint            = findValueInSettings("Nevents", 10) * 1000;
     int cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500);
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit         = 0.1;
