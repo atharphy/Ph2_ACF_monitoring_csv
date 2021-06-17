@@ -542,10 +542,10 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
             std::vector<uint32_t> cData(0);
             auto                  cNeventsReadBack = ReadData(cBoard, cData, false);
             DecodeData(cBoard, cData, cNeventsReadBack, fBeBoardInterface->getBoardType(cBoard));
-            // auto                  cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-            // LOG(INFO) << BOLDMAGENTA << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
-            //           << " - Read-back " << +cData.size() << " 32 bit words "
-            //           << " containing .." << +cNeventsReadBack << " events." << RESET;
+            auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+            LOG(INFO) << BOLDMAGENTA << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
+                      << " - Read-back " << +cData.size() << " 32 bit words "
+                      << " containing .." << +cNeventsReadBack << " events." << RESET;
         }
     }
     return cSuccess;

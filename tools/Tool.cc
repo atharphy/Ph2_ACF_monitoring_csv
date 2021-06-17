@@ -600,8 +600,16 @@ void Tool::dumpConfigFiles()
 
             for(auto opticalGroup: *board)
             {
-                auto& clpGBT = opticalGroup->flpGBT;
-                if(clpGBT != nullptr) {}
+                // auto& clpGBT = opticalGroup->flpGBT;
+                // if(clpGBT != nullptr)
+                // {
+                //     auto cRegMap = flpGBTInterface->getRegMap(clpGBT);
+                //     for(auto cReg : cRegMap )
+                //     {
+                //         auto cReg = flpGBTInterface->ReadChipReg( clpGBT , cReg.first );
+                //         clpGBT->setReg(cReg.first , cReg );
+                //     }
+                // }
 
                 for(auto hybrid: *opticalGroup)
                 {
