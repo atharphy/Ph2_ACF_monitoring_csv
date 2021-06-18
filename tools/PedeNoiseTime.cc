@@ -594,8 +594,8 @@ bool PedeNoiseTime::DataFromExternalTriggers()
     bool cSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
         cBoard->setEventType(EventType::VR); // temp for PS tests
+        auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
         fBeBoardInterface->Stop(cBoard);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fEventsPerPoint);
@@ -610,7 +610,7 @@ bool PedeNoiseTime::DataFromExternalTriggers()
         cNtriggers       = 0;
         do
         {
-            cNtriggers += fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+            cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             /*auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
             LOG(INFO) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
                     << +cNtriggers << " counted and "
