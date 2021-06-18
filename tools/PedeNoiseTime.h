@@ -34,9 +34,9 @@ struct DataLogEventPedeNoiseTime
     // readout
     uint16_t fEventLoss = 0;
     // event information
-    uint32_t fEventCnt   = 0;
-    uint16_t fEventId    = 0;
-    // 
+    uint32_t fEventCnt = 0;
+    uint16_t fEventId  = 0;
+    //
     uint16_t fL1Latency  = 0;
     uint16_t fL1Id       = 0;
     uint8_t  fL1Mismatch = 0;
@@ -59,6 +59,7 @@ class PedeNoiseTime : public Tool
     void clearDataMembers();
 
     void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
+    bool GetDataFromFC7();
     void measureNoise(); // method based on the one below that actually analyzes the scurves and extracts the noise
     void sweepSCurves(); // actual methods to measure SCurves
     void Validate(uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
@@ -85,8 +86,11 @@ class PedeNoiseTime : public Tool
     bool     SendGenericTriggers(size_t pNtriggersToSend = 10000, int pTriggerSeparation = 500);
     uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
     bool     DataFromRandomTriggers(int pTriggerSeparation = 500);
-    // external triggers 
-    bool     DataFromExternalTriggers();
+    // external triggers
+    bool DataFromExternalTriggers();
+    //
+    void CalculateOccupancy(DetectorDataContainer* pOccupancyContainer);
+
     uint8_t  fPulseAmplitude{0};
     uint32_t fEventsPerPoint{0};
     uint32_t fMaxNevents{65535};
@@ -96,6 +100,7 @@ class PedeNoiseTime : public Tool
 
   private:
     // to hold the original register values
+    DetectorDataContainer  fTriggerCounter;
     DetectorDataContainer* fStubLogicValue;
     DetectorDataContainer* fHIPCountValue;
     bool                   cWithCBC = true;

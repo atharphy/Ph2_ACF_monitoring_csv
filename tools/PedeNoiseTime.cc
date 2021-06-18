@@ -94,28 +94,30 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
             }
         }
     }
-    #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
-        for(auto cBoard: *fDetectorContainer)
-        {
-            TString  cName = Form("DataLog_BeBoard%d", cBoard->getId());
-            TObject* cObj  = gROOT->FindObject(cName);
-            if(cObj) delete cObj;
+#ifdef __USE_ROOT__
+    fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        TString  cName = Form("DataLog_BeBoard%d", cBoard->getId());
+        TObject* cObj  = gROOT->FindObject(cName);
+        if(cObj) delete cObj;
 
-            TTree* cTree = new TTree(cName, "DataLog");
-            cTree->Branch("EventCnt",&fEvent.fEventCnt);
-            cTree->Branch("EvntId", &fEvent.fEventId); 
-            cTree->Branch("EventLoss",&fEvent.fEventLoss);
-            cTree->Branch("Latency",&fEvent.fL1Latency);
-            cTree->Branch("L1Id", &fEvent.fL1Id);
-            cTree->Branch("L1Mismatch",&fEvent.fL1Mismatch);
-            cTree->Branch("HybridId", &fEvent.fHybridId);
-            cTree->Branch("ChipId", &fEvent.fChipId);
-            cTree->Branch("Threshold", &fEvent.fThreshold);
-            cTree->Branch("Hits", &fEvent.fHits);
-            this->bookHistogram(cBoard, "DataLog", cTree);
-        }
-    #endif
+        TTree* cTree = new TTree(cName, "DataLog");
+        cTree->Branch("EventCnt", &fEvent.fEventCnt);
+        cTree->Branch("EvntId", &fEvent.fEventId);
+        cTree->Branch("EventLoss", &fEvent.fEventLoss);
+        cTree->Branch("Latency", &fEvent.fL1Latency);
+        cTree->Branch("L1Id", &fEvent.fL1Id);
+        cTree->Branch("L1Mismatch", &fEvent.fL1Mismatch);
+        cTree->Branch("HybridId", &fEvent.fHybridId);
+        cTree->Branch("ChipId", &fEvent.fChipId);
+        cTree->Branch("Threshold", &fEvent.fThreshold);
+        cTree->Branch("Hits", &fEvent.fHits);
+        this->bookHistogram(cBoard, "DataLog", cTree);
+    }
+#endif
+    ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, fTriggerCounter);
+    
 }
 
 void PedeNoiseTime::disableStubLogic()
@@ -272,24 +274,24 @@ void PedeNoiseTime::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     this->SetTestAllChannels(true);
     this->measureData(fEventsPerPoint * pMultiple);
     this->SetTestAllChannels(originalAllChannelFlag);
-    #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
-        // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-        // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-        // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    #else
-        std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-        auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
-        // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
+#ifdef __USE_ROOT__
+    fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+#else
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
+    // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
-        LOG(INFO) << "6 ";
-        for(auto board: theOccupancyContainer)
-        {
-            if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
-        }
-    #endif
+    LOG(INFO) << "6 ";
+    for(auto board: theOccupancyContainer)
+    {
+        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
     LOG(INFO) << "7 ";
     for(auto cBoard: *fDetectorContainer)
     {
@@ -413,11 +415,11 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     fFastCommands.push_back(fFCMDs.fBC0);
     fFastCommands.push_back(fFCMDs.fEmpty);
     // gap until start of triggers
-    size_t cBxId = 0;
-    size_t cMaxDepth = 16382; 
+    size_t cBxId     = 0;
+    size_t cMaxDepth = 16382;
     for(size_t cBx = 0; cBx < cReSyncSep; cBx++)
     {
-        if( fFastCommands.size() == cMaxDepth ) continue;
+        if(fFastCommands.size() == cMaxDepth) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -427,7 +429,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         for(size_t cBx = 0; cBx < cBurstLength; cBx++)
         {
             if(fNInjectedTriggers >= pNtriggersToSend) continue;
-            if( fFastCommands.size() == cMaxDepth ) continue;
+            if(fFastCommands.size() == cMaxDepth) continue;
 
             fFastCommands.push_back(fFCMDs.fTrigger);
             fNInjectedTriggers++;
@@ -438,7 +440,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         size_t cTriggerGap = std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
-            if( fFastCommands.size() == cMaxDepth ) continue;
+            if(fFastCommands.size() == cMaxDepth) continue;
 
             fFastCommands.push_back(fFCMDs.fEmpty);
             cBxId++;
@@ -446,7 +448,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
     } while((size_t)fNInjectedTriggers < pNtriggersToSend && fFastCommands.size() != cMaxDepth);
     for(size_t cBx = 0; cBx < 10; cBx++)
     {
-        if( fFastCommands.size() == cMaxDepth ) continue;
+        if(fFastCommands.size() == cMaxDepth) continue;
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
@@ -480,7 +482,7 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     // make sure data handshake is disabled
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
-    // make sure this is set - then I am sure I only accept exactly as many triggers as I have sent 
+    // make sure this is set - then I am sure I only accept exactly as many triggers as I have sent
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fNInjectedTriggers * cNrepetitions);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     // re-load configuration
@@ -489,39 +491,38 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 }
 bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSeparation)
 {
-    auto cMaxTriggersInBurst = findValueInSettings("MaxNtriggersPerBurst", 1);
-    auto cNtriggersToSendPerAttempt = findValueInSettings("Ntriggers", 10);
-    DetectorDataContainer cNtriggerContainer;
-    ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cNtriggerContainer);
+    auto                  cMaxTriggersInBurst        = findValueInSettings("MaxNtriggersPerBurst", 1);
+    auto                  cNtriggersToSendPerAttempt = findValueInSettings("Ntriggers", 10);
     DetectorDataContainer cNwordsContainer;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cNwordsContainer);
-    
+
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cNtriggers = cNtriggerContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
-        cNtriggers = 0; 
-        auto& cNwords = cNwordsContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
-        cNwords = 0; 
-    } // make sure all start at 0 
-    
-    fPerAttempt = cNtriggersToSendPerAttempt;
-    size_t cNrepetitions              = 1 + std::floor(pNtriggersToSend/fPerAttempt); fReps = cNrepetitions;
-    // LOG (DEBUG) << BOLDMAGENTA << "Generic block used to send " << +pNtriggersToSend << " triggers..." 
+        auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
+        cNtriggers       = 0;
+        auto& cNwords    = cNwordsContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
+        cNwords          = 0;
+    } // make sure all start at 0
+
+    fPerAttempt          = cNtriggersToSendPerAttempt;
+    size_t cNrepetitions = 1 + std::floor(pNtriggersToSend / fPerAttempt);
+    fReps                = cNrepetitions;
+    // LOG (DEBUG) << BOLDMAGENTA << "Generic block used to send " << +pNtriggersToSend << " triggers..."
     //     << " by sending " << cNrepetitions << " blocks of fast command sequences containing " << fPerAttempt
     //     << " triggers each."
     //     << RESET;
-    
+
     // this means that I should send 500 triggers at a time
     bool   cContinue    = true;
     size_t cTriggerIter = 0;
     do
     {
         bool cSuccess = true;
-        GenericTriggers(cNtriggersToSendPerAttempt, pTriggerSeparation,cMaxTriggersInBurst);
+        GenericTriggers(cNtriggersToSendPerAttempt, pTriggerSeparation, cMaxTriggersInBurst);
         // LOG (INFO) << BOLDMAGENTA << "Using fast command bram to inject " << fNInjectedTriggers << " into system..." << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
         // LOG (INFO) << BOLDMAGENTA << "TriggerIter#" << +cTriggerIter << RESET;
-        if( cTriggerIter%50 == 0) LOG (INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << cTriggerIter << RESET;
+        if(cTriggerIter % 50 == 0) LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << cTriggerIter << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             auto cNevents = this->GenericTriggerConfig(cBoard, cNrepetitions);
@@ -537,65 +538,41 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
             uint32_t cTriggerCounter = 0;
             do
             {
-                //std::this_thread::sleep_for(std::chrono::microseconds(10));
+                // std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-                if( cCounter%25 == 0 && cTriggerIter%25 == 0 ) 
-                    LOG(DEBUG) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
-                        << +cTriggerCounter << " counted and "
-                        << +cNWords << " words in the readout"
-                        << RESET;
+                auto cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+                if(cCounter % 25 == 0 && cTriggerIter % 25 == 0)
+                    LOG(DEBUG) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : " << +cTriggerCounter << " counted and " << +cNWords << " words in the readout" << RESET;
                 cCounter++;
             } while(cCounter < 10000 && cTriggerCounter < cNevents);
             cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             cSuccess        = cSuccess && (cTriggerCounter >= cNevents);
-            if(cSuccess) // check if 
+            if(cSuccess) // check if
             {
-                auto& cNtriggers = cNtriggerContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
+                auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
                 cNtriggers += cTriggerCounter;
-                //LOG (INFO) << BOLDGREEN << "\t\t\t...BeBoard#" << +cBoard->getIndex() << " .. so far I have received " << +cNtriggers << " triggers" << RESET;
+                // LOG (INFO) << BOLDGREEN << "\t\t\t...BeBoard#" << +cBoard->getIndex() << " .. so far I have received " << +cNtriggers << " triggers" << RESET;
                 cContinue = cContinue && (cNtriggers < pNtriggersToSend);
-                if( cNtriggers >= pNtriggersToSend ) LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found all the triggers" << RESET;
+                if(cNtriggers >= pNtriggersToSend) LOG(DEBUG) << BOLDMAGENTA << "\t\t.. found all the triggers" << RESET;
             }
-            auto& cNwords = cNwordsContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
-            auto cCurrentNwords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-            if( cContinue ) // if I'm still waiting .. just check the number of words in the readout 
+            auto& cNwords        = cNwordsContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
+            auto  cCurrentNwords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+            if(cContinue) // if I'm still waiting .. just check the number of words in the readout
             {
                 cContinue = (cNwords != cCurrentNwords);
-                if( cNwords ==  cCurrentNwords ) LOG (INFO) << BOLDRED <<  "\t\t.. word counter has stopped incrementing.. will stop..." << RESET;
+                if(cNwords == cCurrentNwords) LOG(INFO) << BOLDRED << "\t\t.. word counter has stopped incrementing.. will stop..." << RESET;
             }
-            cNwords = cCurrentNwords; 
+            cNwords = cCurrentNwords;
         } // board loop
         cTriggerIter++;
     } while(cContinue); // use generic block to send pNtriggersToSend ... generate 50 at a time
     bool cSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cNtriggers = cNtriggerContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
+        auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
         cSuccess         = cSuccess && (cNtriggers >= pNtriggersToSend);
 
     } // check that all the board have received the correct number of triggers
-    if(cSuccess)
-    {
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
-        DetectorDataContainer theOccupancyContainer;
-        fDetectorDataContainer = &theOccupancyContainer;
-        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-        // now all triggers have been sent. . look at the data in the readout
-        for(auto cBoard: *fDetectorContainer)
-        {
-            auto                  cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-            auto& cNtriggers = cNtriggerContainer.at(cBoard->getIndex())->getSummary<uint32_t>();
-            std::vector<uint32_t> cData(0);
-            auto                  cNeventsReadBack = ReadData(cBoard, cData, false);
-            DecodeData(cBoard, cData, cNeventsReadBack, fBeBoardInterface->getBoardType(cBoard));
-            if( cNtriggers != cNeventsReadBack )
-                LOG(INFO) << BOLDRED << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
-                  << " when " << +cNtriggers << " triggers were sent by the fast command block "      
-                  << " - Read-back " << +cData.size() << " 32 bit words "
-                  << " containing .." << +cNeventsReadBack << " events." << RESET;
-        }
-    }
     return cSuccess;
 }
 bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
@@ -614,7 +591,13 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
 }
 bool PedeNoiseTime::DataFromExternalTriggers()
 {
-    bool cSuccess=true;
+    bool cSuccess = true;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
+        cNtriggers       = 0;
+    } // make sure all start at 0
+
     for(auto cBoard: *fDetectorContainer)
     {
         cBoard->setEventType(EventType::VR); // temp for PS tests
@@ -624,7 +607,7 @@ bool PedeNoiseTime::DataFromExternalTriggers()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
         // make sure readout has been reset
         (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ResetReadout();
-	// start trigggers
+        // start trigggers
         fBeBoardInterface->Start(cBoard);
         // check if all triggers have been received
         // wait until all triggers have been seen by the FC7
@@ -632,167 +615,167 @@ bool PedeNoiseTime::DataFromExternalTriggers()
         uint32_t cTriggerCounter = 0;
         do
         {
-	    cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-	    /*auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-	    LOG(INFO) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
-          		<< +cTriggerCounter << " counted and "
-		<< +cNWords << " words in the readout"
-		<< RESET;*/
-	    cCounter++;
+            cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+            /*auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+            LOG(INFO) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
+                    << +cTriggerCounter << " counted and "
+            << +cNWords << " words in the readout"
+            << RESET;*/
+            cCounter++;
         } while(cCounter < 10000 && cTriggerCounter < fEventsPerPoint);
-	cSuccess = cSuccess && (cTriggerCounter >= fEventsPerPoint);
+        cSuccess = cSuccess && (cTriggerCounter >= fEventsPerPoint);
     } // make sure triggers have been stopped on all boards
     if(!cSuccess) return cSuccess;
     // now all triggers have been sent. . look at the data in thei readout
+    return cSuccess;
+}
+bool PedeNoiseTime::GetDataFromFC7()
+{
+    fEventsPerPoint            = findValueInSettings("NeventsScan", 10);
+    int cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500);
+    int cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
+    bool cSuccess = (cUseFcmdBram) ? this->DataFromRandomTriggers(cMeanTriggerSeparation) : this->DataFromExternalTriggers();
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    if(cSuccess)
+    {
         std::this_thread::sleep_for(std::chrono::microseconds(10));
+        DetectorDataContainer theOccupancyContainer;
+        fDetectorDataContainer = &theOccupancyContainer;
+        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+        // now all triggers have been sent. . look at the data in the readout
         for(auto cBoard: *fDetectorContainer)
         {
-            auto       cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-	    auto       cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+            auto                  cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+            auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
             std::vector<uint32_t> cData(0);
             auto                  cNeventsReadBack = ReadData(cBoard, cData, false);
             DecodeData(cBoard, cData, cNeventsReadBack, fBeBoardInterface->getBoardType(cBoard));
-            cSuccess = cSuccess && (cNeventsReadBack >= cNtriggers);
-	    if( cNtriggers != cNeventsReadBack )
+            cSuccess = cSuccess && (cNeventsReadBack == cNtriggers );// strict here.. since I know that I am constraining the number of received triggers
+            if(cNtriggers != cNeventsReadBack)
                 LOG(INFO) << BOLDRED << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
-                  << " when " << +cNtriggers << " triggers were sent by the fast command block "      
-                  << " - Read-back " << +cData.size() << " 32 bit words "
-                  << " containing .." << +cNeventsReadBack << " events." << RESET;
-           //else LOG (INFO) << BOLDGREEN << "Read-back " << +cNeventsReadBack << " events from the FC7." << RESET;
-	}
+                          << " when " << +cNtriggers << " triggers were sent by the fast command block "
+                          << " - Read-back " << +cData.size() << " 32 bit words "
+                          << " containing .." << +cNeventsReadBack << " events." << RESET;
+        }
+    }// get events 
     return cSuccess;
+}
+void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContainer)
+{
+    int cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
+    // now retreive events
+    const std::vector<Event*>& cPh2Events = GetEvents();
+    // LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
+    fEvent.fEventLoss = fEventsPerPoint - cPh2Events.size();
+    fEvent.fEventCnt  = 0;
+    for(auto& cEvent: cPh2Events)
+    {
+        auto cTriggerId = cEvent->GetExternalTriggerId();
+        fEvent.fEventId = cTriggerId;
+        // LOG(INFO) << BOLDBLUE << "Event#" << +fEvent.fEventCnt << " trigger Id " << +cTriggerId << RESET;
+        for(auto cBoard: *fDetectorContainer)
+        {
+            auto& cOccThisBoard = pOccupancyContainer->at(cBoard->getIndex());
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& cOccThisOG = cOccThisBoard->at(cOpticalGroup->getIndex());
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    auto& cOccThisHybrid = cOccThisOG->at(cHybrid->getIndex());
+                    fEvent.fHybridId     = cHybrid->getId();
+                    for(auto cChip: *cHybrid)
+                    {
+                        fEvent.fL1Id = cEvent->L1Id(cHybrid->getId(), cChip->getId());
+                        // L1 Id starts counting from 1 ..
+                        if(cUseFcmdBram) fEvent.fL1Mismatch = ((int)(fEvent.fL1Id - 1) != (int)(fEvent.fEventCnt % fPerAttempt));
+                        fEvent.fChipId = cChip->getId();
+                        // now for the occupancy
+                        auto& cOccThischip = cOccThisHybrid->at(cChip->getIndex());
+                        fEvent.fHits.clear();
+                        fEvent.fHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                        for(auto cHit: fEvent.fHits)
+                        {
+                            if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
+                            {
+                                // LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
+                                cOccThischip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                            }
+                        }
+                        #ifdef __USE_ROOT__
+                            TTree* cTree = static_cast<TTree*>(getHist(cBoard, "DataLog"));
+                            cTree->Fill();
+                        #endif
+                    } // CHIP
+                }// hybrid
+            } // OG
+        } // BOARD
+        fEvent.fEventCnt++;
+    } // event loop - I want to keep this because I want to look at what happens in an event/per event basis
+    auto cNevents = cPh2Events.size();
+    pOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
-    fEventsPerPoint              = findValueInSettings("NeventsScan", 10);
-    int cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500); 
-    int cUseFcmdBram           = findValueInSettings("UseFcmdBram",1);
-    int cStartLatency = findValueInSettings("StartLatency", 1);
-    int cLatencyRange = findValueInSettings("LatencyRange", 1);
-    LOG (INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " per point on the threshold scan" << RESET;
+    fEventsPerPoint            = findValueInSettings("NeventsScan", 10);
+    int cStartLatency          = findValueInSettings("StartLatency", 1);
+    int cLatencyRange          = findValueInSettings("LatencyRange", 1);
+    LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
-    float    cLimit         = 0.1;
-    int      cMinBreakCount = 10;
+    float    cLimit         = 0;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
     // uint16_t cMinValue      = 0;
     if(cWithSSA) cMaxValue = (1 << 8) - 1;
     if(cWithMPA) cMaxValue = (1 << 8) - 1;
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
-    std::vector<int>   cSigns{-1, 1};
-    std::vector<float> cLimits{cFirstLimit, 1 - cFirstLimit};
-    //(fDetectorContainer[0]->getBoardType() == BoardType::D19C)
-    
-    for( uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
+    std::vector<int>   cSigns{+1, -1}; // want to scan up then down 
+    std::vector<float> cLimits{1 - cFirstLimit, cFirstLimit};
+    std::vector<int>   cBreakCounts{ 5, 30 }; 
+    int cMinBreakCount = cBreakCounts[0];
+    for(uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
     {
-    // set latency
-    fEvent.fL1Latency = cTriggerLatency;  
-    this->setSameGlobalDac("TriggerLatency", cTriggerLatency);
-    LOG (INFO) << BOLDMAGENTA << "Threshold scan for a latency value of " << +cTriggerLatency << RESET;
-    int cCounter = 0;
-    for(auto cSign: cSigns)
-    {
-        bool firstlim      = false;
-        bool cLimitFound   = false;
-        int  cLimitCounter = 0;
-        do
+        // set latency
+        fEvent.fL1Latency = cTriggerLatency;
+        this->setSameGlobalDac("TriggerLatency", cTriggerLatency);
+        LOG(INFO) << BOLDMAGENTA << "Threshold scan for a latency value of " << +cTriggerLatency << RESET;
+        int cCounter = 0;
+        for(auto cSign: cSigns)
         {
-            DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-            fDetectorDataContainer                       = theOccupancyContainer;
-            fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
-            std::string cRegName                         = "VCth";
-            if(cWithSSA) cRegName = "Bias_THDAC";
-            if(cWithMPA) cRegName = "ThDAC_ALL";
-            this->setSameGlobalDac(cRegName, cValue); 
-            bool cSuccess = (cUseFcmdBram) ? this->DataFromRandomTriggers(cMeanTriggerSeparation) : this->DataFromExternalTriggers();
-            if(!cSuccess) continue;
-            // now retreive events
-            const std::vector<Event*>& cPh2Events = GetEvents();
-            //LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
-            fEvent.fThreshold = cValue;
-            fEvent.fEventLoss = fEventsPerPoint - cPh2Events.size(); 
-            fEvent.fEventCnt = 0; 
-            for(auto& cEvent: cPh2Events)
+            bool firstlim      = false;
+            bool cLimitFound   = false;
+            int  cLimitCounter = 0;
+            do
             {
-                auto cTriggerId = cEvent->GetExternalTriggerId();
-                fEvent.fEventId = cTriggerId; 
-                //LOG(INFO) << BOLDBLUE << "Event#" << +fEvent.fEventCnt << " trigger Id " << +cTriggerId << RESET;
-                for(auto cBoard: *fDetectorContainer)
+                DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+                fDetectorDataContainer                       = theOccupancyContainer;
+                fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
+                std::string cRegName                         = "VCth";
+                if(cWithSSA) cRegName = "Bias_THDAC";
+                if(cWithMPA) cRegName = "ThDAC_ALL";
+                fEvent.fThreshold = cValue;
+                this->setSameGlobalDac(cRegName, fEvent.fThreshold);
+                bool cSuccess = GetDataFromFC7();
+                if(!cSuccess) continue;
+                // now retreive events and calculate occupancy 
+                CalculateOccupancy(theOccupancyContainer);
+                float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+                auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
+                if( cCounter%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
+                          << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
+                          << " -- current value is " << +cLimitCounter << RESET;
+                if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
                 {
-                    auto& cOccThisBoard = theOccupancyContainer->at(cBoard->getIndex());
-                    for(auto cOpticalGroup: *cBoard)
-                    {
-                        auto& cOccThisOG = cOccThisBoard->at(cOpticalGroup->getIndex());
-                        for(auto cHybrid: *cOpticalGroup)
-                        {
-                            auto& cOccThisHybrid = cOccThisOG->at(cHybrid->getIndex());
-                            fEvent.fHybridId = cHybrid->getId();
-                            for(auto cChip: *cHybrid)
-                            {
-                                fEvent.fL1Id = cEvent->L1Id(cHybrid->getId(), cChip->getId());
-                                // L1 Id starts counting from 1 .. 
-                                if( cUseFcmdBram ) fEvent.fL1Mismatch = ( (int)(fEvent.fL1Id-1) != (int)(fEvent.fEventCnt%fPerAttempt));
-                                fEvent.fChipId = cChip->getId();
-                                // now for the occupancy 
-                                auto& cOccThischip = cOccThisHybrid->at(cChip->getIndex());
-                                fEvent.fHits.clear(); 
-                                fEvent.fHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                                #ifdef __USE_ROOT__
-                                    TTree* cTree = static_cast<TTree*>(getHist(cBoard, "DataLog"));
-                                    cTree->Fill();
-                                #endif
-                                for(auto cHit: fEvent.fHits)
-                                {
-                                    if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
-                                    {
-                                        //LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
-                                        cOccThischip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
-                                    }
-                                }
-                            }//CHIP
-                        }//hybrid
-                    }//OG
-                }//BOARD
-                fEvent.fEventCnt ++;
-            }// events - I want to keep this because I want to look at what happens in an event/per event basis
-            auto cNevents = cPh2Events.size(); 
-            theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
-            float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-            #ifdef __USE_ROOT__
-                        if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
-            #else
-                        if(fPlotSCurves)
-                        {
-                            auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
-                            theSCurveStreamer.setHeaderElement(cValue);
-                            for(auto board: *theOccupancyContainer)
-                            {
-                                if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
-                            }
-                        }
-            #endif
-
-            auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-            LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
-                      << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
-                      << " -- current value is " << +cLimitCounter << RESET;
-            if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
-            {
-                firstlim = true;
-                // LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
-                //            << " -- current value is " << +cLimitCounter << RESET;
-                cLimitCounter++;
-            }
-
-            cValue += cSign;
-            cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
-            if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
-
-        } while(!cLimitFound);
-        cCounter++;
-        cValue = pStartValue + cSigns[cCounter];
-    }// threshold loop 
-    }// latency loop 
+                    firstlim = true;
+                    cLimitCounter++;
+                }
+                cValue += cSign;
+                cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
+                if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;  cMinBreakCount = cBreakCounts[1];}
+            } while(!cLimitFound);
+            cCounter++;
+            cValue = pStartValue + cSigns[cCounter];
+        } // threshold loop
+    }     // latency loop
 }
 void PedeNoiseTime::extractPedeNoiseTime()
 {
@@ -890,15 +873,15 @@ void PedeNoiseTime::extractPedeNoiseTime()
 
 void PedeNoiseTime::producePedeNoiseTimePlots()
 {
-    #ifdef __USE_ROOT__
-        if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
-    #else
-        auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
-        for(auto board: *fThresholdAndNoiseContainer)
-        {
-            if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
-        }
-    #endif
+#ifdef __USE_ROOT__
+    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
+#else
+    auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
+    for(auto board: *fThresholdAndNoiseContainer)
+    {
+        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
+    }
+#endif
 }
 
 void PedeNoiseTime::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
@@ -939,9 +922,9 @@ void PedeNoiseTime::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma
 
 void PedeNoiseTime::writeObjects()
 {
-    #ifdef __USE_ROOT__
-        fDQMHistogramPedeNoise.process();
-    #endif
+#ifdef __USE_ROOT__
+    fDQMHistogramPedeNoise.process();
+#endif
 }
 
 void PedeNoiseTime::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedeNoiseTime"); }
