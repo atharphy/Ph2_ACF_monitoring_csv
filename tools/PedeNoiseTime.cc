@@ -106,6 +106,7 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
             cTree->Branch("EventCnt",&fEvent.fEventCnt);
             cTree->Branch("EvntId", &fEvent.fEventId); 
             cTree->Branch("EventLoss",&fEvent.fEventLoss);
+            cTree->Branch("Latency",&fEvent.fL1Latency);
             cTree->Branch("L1Id", &fEvent.fL1Id);
             cTree->Branch("L1Mismatch",&fEvent.fL1Mismatch);
             cTree->Branch("HybridId", &fEvent.fHybridId);
@@ -611,10 +612,63 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
     if(!cSuccess) return cSuccess;
     return cSuccess;
 }
+bool PedeNoiseTime::DataFromExternalTriggers()
+{
+    bool cSuccess=true;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        cBoard->setEventType(EventType::VR); // temp for PS tests
+        fBeBoardInterface->Stop(cBoard);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fEventsPerPoint);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
+        // make sure readout has been reset
+        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ResetReadout();
+	// start trigggers
+        fBeBoardInterface->Start(cBoard);
+        // check if all triggers have been received
+        // wait until all triggers have been seen by the FC7
+        uint32_t cCounter        = 0;
+        uint32_t cTriggerCounter = 0;
+        do
+        {
+	    cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+	    /*auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+	    LOG(INFO) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
+          		<< +cTriggerCounter << " counted and "
+		<< +cNWords << " words in the readout"
+		<< RESET;*/
+	    cCounter++;
+        } while(cCounter < 10000 && cTriggerCounter < fEventsPerPoint);
+	cSuccess = cSuccess && (cTriggerCounter >= fEventsPerPoint);
+    } // make sure triggers have been stopped on all boards
+    if(!cSuccess) return cSuccess;
+    // now all triggers have been sent. . look at the data in thei readout
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        for(auto cBoard: *fDetectorContainer)
+        {
+            auto       cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
+	    auto       cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+            std::vector<uint32_t> cData(0);
+            auto                  cNeventsReadBack = ReadData(cBoard, cData, false);
+            DecodeData(cBoard, cData, cNeventsReadBack, fBeBoardInterface->getBoardType(cBoard));
+            cSuccess = cSuccess && (cNeventsReadBack >= cNtriggers);
+	    if( cNtriggers != cNeventsReadBack )
+                LOG(INFO) << BOLDRED << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
+                  << " when " << +cNtriggers << " triggers were sent by the fast command block "      
+                  << " - Read-back " << +cData.size() << " 32 bit words "
+                  << " containing .." << +cNeventsReadBack << " events." << RESET;
+           //else LOG (INFO) << BOLDGREEN << "Read-back " << +cNeventsReadBack << " events from the FC7." << RESET;
+	}
+    return cSuccess;
+}
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
     fEventsPerPoint              = findValueInSettings("NeventsScan", 10);
     int cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500); 
+    int cUseFcmdBram           = findValueInSettings("UseFcmdBram",1);
+    int cStartLatency = findValueInSettings("StartLatency", 1);
+    int cLatencyRange = findValueInSettings("LatencyRange", 1);
     LOG (INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit         = 0.1;
@@ -628,7 +682,13 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     std::vector<int>   cSigns{-1, 1};
     std::vector<float> cLimits{cFirstLimit, 1 - cFirstLimit};
     //(fDetectorContainer[0]->getBoardType() == BoardType::D19C)
-
+    
+    for( uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
+    {
+    // set latency
+    fEvent.fL1Latency = cTriggerLatency;  
+    this->setSameGlobalDac("TriggerLatency", cTriggerLatency);
+    LOG (INFO) << BOLDMAGENTA << "Threshold scan for a latency value of " << +cTriggerLatency << RESET;
     int cCounter = 0;
     for(auto cSign: cSigns)
     {
@@ -643,10 +703,9 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             std::string cRegName                         = "VCth";
             if(cWithSSA) cRegName = "Bias_THDAC";
             if(cWithMPA) cRegName = "ThDAC_ALL";
-            this->setSameGlobalDac(cRegName, cValue);
-            bool cSuccess = this->DataFromRandomTriggers(cMeanTriggerSeparation);
+            this->setSameGlobalDac(cRegName, cValue); 
+            bool cSuccess = (cUseFcmdBram) ? this->DataFromRandomTriggers(cMeanTriggerSeparation) : this->DataFromExternalTriggers();
             if(!cSuccess) continue;
-
             // now retreive events
             const std::vector<Event*>& cPh2Events = GetEvents();
             //LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
@@ -657,8 +716,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             {
                 auto cTriggerId = cEvent->GetExternalTriggerId();
                 fEvent.fEventId = cTriggerId; 
-                //auto cEventId   = cEvent->GetEventCount();
-                //LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << RESET;
+                //LOG(INFO) << BOLDBLUE << "Event#" << +fEvent.fEventCnt << " trigger Id " << +cTriggerId << RESET;
                 for(auto cBoard: *fDetectorContainer)
                 {
                     auto& cOccThisBoard = theOccupancyContainer->at(cBoard->getIndex());
@@ -673,7 +731,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                             {
                                 fEvent.fL1Id = cEvent->L1Id(cHybrid->getId(), cChip->getId());
                                 // L1 Id starts counting from 1 .. 
-                                fEvent.fL1Mismatch = ( (int)(fEvent.fL1Id-1) != (int)(fEvent.fEventCnt%fPerAttempt));
+                                if( cUseFcmdBram ) fEvent.fL1Mismatch = ( (int)(fEvent.fL1Id-1) != (int)(fEvent.fEventCnt%fPerAttempt));
                                 fEvent.fChipId = cChip->getId();
                                 // now for the occupancy 
                                 auto& cOccThischip = cOccThisHybrid->at(cChip->getIndex());
@@ -733,9 +791,8 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
         } while(!cLimitFound);
         cCounter++;
         cValue = pStartValue + cSigns[cCounter];
-    }
-    // this->HttpServerProcess();
-    LOG(DEBUG) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET;
+    }// threshold loop 
+    }// latency loop 
 }
 void PedeNoiseTime::extractPedeNoiseTime()
 {

@@ -1307,8 +1307,8 @@ void D19cFWInterface::Start()
 
     ChipReSync();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-    // ResetTriggerFSM();
-    // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    ResetTriggerFSM();
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // reset the readout
     this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));

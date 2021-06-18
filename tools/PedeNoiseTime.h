@@ -36,6 +36,8 @@ struct DataLogEventPedeNoiseTime
     // event information
     uint32_t fEventCnt   = 0;
     uint16_t fEventId    = 0;
+    // 
+    uint16_t fL1Latency  = 0;
     uint16_t fL1Id       = 0;
     uint8_t  fL1Mismatch = 0;
     //
@@ -83,7 +85,8 @@ class PedeNoiseTime : public Tool
     bool     SendGenericTriggers(size_t pNtriggersToSend = 10000, int pTriggerSeparation = 500);
     uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
     bool     DataFromRandomTriggers(int pTriggerSeparation = 500);
-
+    // external triggers 
+    bool     DataFromExternalTriggers();
     uint8_t  fPulseAmplitude{0};
     uint32_t fEventsPerPoint{0};
     uint32_t fMaxNevents{65535};
