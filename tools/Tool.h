@@ -314,6 +314,37 @@ class Tool : public Ph2_System::SystemController
 
     std::string getDirectoryName() { return fDirectoryName; }
 
+    // summarize stats
+    // while removing NANs
+    struct StatsSum
+    {
+      public:
+        float fMean;
+        float fSum;
+        float fSqSum;
+        float fStdDev;
+        float fNentries;
+        float fMin;
+        float fMax;
+    };
+    template <typename T>
+    StatsSum SummarizeStats(std::vector<T> cData)
+    {
+        T cInitVal = (T)(0);
+        // remove NANs
+        cData.erase(std::remove_if(cData.begin(), cData.end(), [](T x) { return std::isnan(x); }), cData.end());
+        // calculate stats
+        StatsSum cStatsSum;
+        cStatsSum.fSum      = std::accumulate(cData.begin(), cData.end(), cInitVal);
+        cStatsSum.fMean     = cStatsSum.fSum / cData.size();
+        cStatsSum.fMax      = *(std::max_element(cData.begin(), cData.end()));
+        cStatsSum.fMin      = *(std::min_element(cData.begin(), cData.end()));
+        cStatsSum.fSqSum    = std::inner_product(cData.begin(), cData.end(), cData.begin(), 0.0);
+        cStatsSum.fStdDev   = std::sqrt(cStatsSum.fSqSum / cData.size() - cStatsSum.fMean * cStatsSum.fMean);
+        cStatsSum.fNentries = cData.size();
+        return cStatsSum;
+    }
+
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 

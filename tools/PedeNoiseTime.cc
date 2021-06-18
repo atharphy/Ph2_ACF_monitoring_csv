@@ -722,7 +722,6 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit         = 0;
-    uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
     // uint16_t cMinValue      = 0;
     if(cWithSSA) cMaxValue = (1 << 8) - 1;
@@ -734,12 +733,12 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     int cMinBreakCount = cBreakCounts[0];
     for(uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
     {
+        uint16_t cValue         = pStartValue;
         // set latency
         fEvent.fL1Latency = cTriggerLatency;
         this->setSameGlobalDac("TriggerLatency", cTriggerLatency);
         LOG(INFO) << BOLDMAGENTA << "Threshold scan for a latency value of " << +cTriggerLatency << RESET;
         int cCounter = 0;
-
         // containers to hold scan data 
         std::vector<DetectorDataContainer*> cScanData;
         ContainerRecycleBin<Occupancy>      cRecyclingBin;
@@ -829,12 +828,21 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                             cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise     = cPedeNoise.second;
                             cPedestalsThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
                             cNoiseThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
-                            if( cChnl%25 == 0 )
-                                LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
-                                    << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold
-                                    << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise
-                                    << RESET;
                         } // chnl loop
+                        auto cPedStats = SummarizeStats<float>(cPedestalsThisROC);
+                        auto cNoiseStats = SummarizeStats<float>(cNoiseThisROC);
+                        LOG (INFO) << BOLDGREEN << "Chip with Id" << +cROC->getId() << RESET;
+                        LOG (INFO) << BOLDMAGENTA << "\t\t... Pedestal Stats : " 
+                            << std::setprecision(2) << std::fixed
+                            << " - Mean is " << cPedStats.fMean
+                            << " - RMS is " << cPedStats.fStdDev
+                            << " - minimum value is " << cPedStats.fMin
+                            << " - maximum value is " << cPedStats.fMax
+                            << "; Noise Stats : Mean is " << cNoiseStats.fMean
+                            << " - RMS is " << cNoiseStats.fStdDev
+                            << " - minimum value is " << cNoiseStats.fMin
+                            << " - maximum value is " << cNoiseStats.fMax
+                            << RESET;
                     }//chip
                 }//hybrid
             }//OG
