@@ -595,11 +595,6 @@ bool PedeNoiseTime::DataFromExternalTriggers()
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
-        cNtriggers       = 0;
-    } // make sure all start at 0
-
-    for(auto cBoard: *fDetectorContainer)
-    {
         cBoard->setEventType(EventType::VR); // temp for PS tests
         fBeBoardInterface->Stop(cBoard);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
@@ -612,18 +607,18 @@ bool PedeNoiseTime::DataFromExternalTriggers()
         // check if all triggers have been received
         // wait until all triggers have been seen by the FC7
         uint32_t cCounter        = 0;
-        uint32_t cTriggerCounter = 0;
+        cNtriggers       = 0;
         do
         {
-            cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+            cNtriggers += fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             /*auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
             LOG(INFO) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
-                    << +cTriggerCounter << " counted and "
+                    << +cNtriggers << " counted and "
             << +cNWords << " words in the readout"
             << RESET;*/
             cCounter++;
-        } while(cCounter < 10000 && cTriggerCounter < fEventsPerPoint);
-        cSuccess = cSuccess && (cTriggerCounter >= fEventsPerPoint);
+        } while(cCounter < 10000 && cNtriggers < fEventsPerPoint);
+        cSuccess = cSuccess && (cNtriggers >= fEventsPerPoint);
     } // make sure triggers have been stopped on all boards
     if(!cSuccess) return cSuccess;
     // now all triggers have been sent. . look at the data in thei readout
