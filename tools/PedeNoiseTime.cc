@@ -734,6 +734,16 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
         this->setSameGlobalDac("TriggerLatency", cTriggerLatency);
         LOG(INFO) << BOLDMAGENTA << "Threshold scan for a latency value of " << +cTriggerLatency << RESET;
         int cCounter = 0;
+
+        // containers to hold scan data 
+        std::vector<DetectorDataContainer*> cScanData;
+        ContainerRecycleBin<Occupancy>      cRecyclingBin;
+        cRecyclingBin.setDetectorContainer(fDetectorContainer);
+        for(auto cContainer: cScanData) cRecyclingBin.free(cContainer);
+        cScanData.clear();
+        // and a vector to hold the values of the thresholds scanned 
+        std::vector<uint16_t> cThresholds(0);
+    
         for(auto cSign: cSigns)
         {
             bool firstlim      = false;
@@ -742,19 +752,23 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             size_t cStep=0; 
             do
             {
-                DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-                fDetectorDataContainer                       = theOccupancyContainer;
-                fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
+                //push back new entry into scan data container
+                cScanData.push_back(cRecyclingBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy()));
+                cThresholds.push_back(cValue);
+                //DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+                fDetectorDataContainer                       = cScanData[cScanData.size()-1];
+                fSCurveOccupancyMap[cValue]                  = cScanData[cScanData.size()-1];
                 std::string cRegName                         = "VCth";
                 if(cWithSSA) cRegName = "Bias_THDAC";
                 if(cWithMPA) cRegName = "ThDAC_ALL";
                 fEvent.fThreshold = cValue;
+                // now set threshold 
                 this->setSameGlobalDac(cRegName, fEvent.fThreshold);
                 bool cSuccess = GetDataFromFC7();
                 if(!cSuccess) continue;
                 // now retreive events and calculate occupancy 
-                CalculateOccupancy(theOccupancyContainer);
-                float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+                CalculateOccupancy(cScanData[cScanData.size()-1]);
+                float globalOccupancy = cScanData[cScanData.size()-1]->getSummary<Occupancy, Occupancy>().fOccupancy;
                 auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
                 if( cStep%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
                           << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
@@ -772,7 +786,55 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             cCounter++;
             cValue = pStartValue + cSigns[cCounter];
         } // threshold loop
-    }     // latency loop
+        
+        // calculate noise 
+        for(auto cBoard: *fDetectorContainer)
+        {
+            auto& cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getIndex());
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
+                for(auto cFe: *cOpticalGroup)
+                {
+                    auto& cThNoiseThisFE = cThNoiseThisOG->at(cFe->getIndex());
+                    for(auto cROC: *cFe)
+                    {
+                        if(cROC->getFrontEndType() != FrontEndType::CBC3) continue;
+
+                        auto&              cThNoiseThisChip = cThNoiseThisFE->at(cROC->getIndex());
+                        std::vector<float> cPedestalsThisROC(0);
+                        std::vector<float> cNoiseThisROC(0);
+                        for(size_t cChnl = 0; cChnl < cROC->size(); cChnl++)
+                        {
+                            // S-curve for this channel
+                            std::vector<float> cW(cThresholds.size(), 0);
+                            std::vector<float> cV(cThresholds.size(), 0);
+                            for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
+                            {
+                                auto& cDataThisBrd   = cScanData[cIndx]->at(cBoard->getIndex());
+                                auto& cDataThisOG    = cDataThisBrd->at(cOpticalGroup->getIndex());
+                                auto& cDataThisHybrd = cDataThisOG->at(cFe->getIndex());
+                                auto& cDataThisChip  = cDataThisHybrd->at(cROC->getIndex());
+                                cW[cIndx]            = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
+                                cV[cIndx]            = cThresholds[cIndx];
+                            }
+                            auto cPedeNoise                                                   = evalNoise(cW, cV, true);
+                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold = cPedeNoise.first;
+                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise     = cPedeNoise.second;
+                            cPedestalsThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
+                            cNoiseThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
+                            if( cChnl%25 == 0 )
+                                LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
+                                    << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold
+                                    << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise
+                                    << RESET;
+                        } // chnl loop
+                    }//chip
+                }//hybrid
+            }//OG
+        }//board
+
+    }// latency loop
 }
 void PedeNoiseTime::extractPedeNoiseTime()
 {
