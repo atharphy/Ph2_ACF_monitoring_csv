@@ -700,9 +700,10 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                         // now for the occupancy
                         auto& cOccThischip = cOccThisHybrid->at(cChip->getIndex());
                         fEvent.fHits.clear();
-                        fEvent.fHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                        for(auto cHit: fEvent.fHits)
+                        auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                        for(auto cHit: cHits)
                         {
+                            fEvent.fHits.push_back( (uint8_t)cHit );
                             if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
                             {
                                 // LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;

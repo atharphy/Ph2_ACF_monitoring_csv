@@ -41,12 +41,12 @@ struct DataLogEventPedeNoiseTime
     uint16_t fL1Id       = 0;
     uint8_t  fL1Mismatch = 0;
     //
-    uint16_t fHybridId = 0;
-    uint16_t fChipId   = 0;
+    uint8_t fHybridId = 0;
+    uint8_t fChipId   = 0;
     // threshold for this chip
     float fThreshold = 0;
     // hit list for this chip
-    std::vector<uint32_t> fHits;
+    std::vector<uint8_t> fHits;
 };
 typedef std::vector<DataLogEventPedeNoiseTime> DataLogNoiseEvents;
 #endif
