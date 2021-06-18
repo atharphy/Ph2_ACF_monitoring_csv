@@ -645,7 +645,7 @@ bool PedeNoiseTime::GetDataFromFC7()
             std::vector<uint32_t> cData(0);
             auto                  cNeventsReadBack = ReadData(cBoard, cData, false);
             DecodeData(cBoard, cData, cNeventsReadBack, fBeBoardInterface->getBoardType(cBoard));
-            cSuccess = cSuccess && (cNeventsReadBack == cNtriggers );// strict here.. since I know that I am constraining the number of received triggers
+            cSuccess = cSuccess && (cNeventsReadBack >= cNtriggers );// 
             if(cNtriggers != cNeventsReadBack)
                 LOG(INFO) << BOLDRED << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
                           << " when " << +cNtriggers << " triggers were sent by the fast command block "
