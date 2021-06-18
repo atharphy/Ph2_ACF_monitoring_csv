@@ -739,6 +739,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             bool firstlim      = false;
             bool cLimitFound   = false;
             int  cLimitCounter = 0;
+            size_t cStep=0; 
             do
             {
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
@@ -755,7 +756,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 CalculateOccupancy(theOccupancyContainer);
                 float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
                 auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-                if( cCounter%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
+                if( cStep%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
                           << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                           << " -- current value is " << +cLimitCounter << RESET;
                 if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
@@ -766,6 +767,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 cValue += cSign;
                 cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
                 if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;  cMinBreakCount = cBreakCounts[1];}
+                cStep++;
             } while(!cLimitFound);
             cCounter++;
             cValue = pStartValue + cSigns[cCounter];
