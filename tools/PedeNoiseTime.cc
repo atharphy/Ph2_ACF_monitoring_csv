@@ -121,7 +121,6 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
 
         cTree = new TTree(cName, "PedeNoiseSummary");
         cTree->Branch("Latency", &fEvent.fL1Latency);
-        cTree->Branch("Threshold", &fEvent.fL1Id);
         cTree->Branch("HybridId", &fEvent.fHybridId);
         cTree->Branch("ChipId", &fEvent.fChipId);
         cTree->Branch("Pedestal", &fPedestal);    
@@ -814,10 +813,12 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             {
                 for(auto cFe: *cOpticalGroup)
                 {
+                    fEvent.fHybridId = cFe->getId();
                     for(auto cROC: *cFe)
                     {
                         if(cROC->getFrontEndType() != FrontEndType::CBC3) continue;
 
+                        fEvent.fChipId = cROC->getId();
                         std::vector<float> cPedestalsThisROC(0);
                         std::vector<float> cNoiseThisROC(0);
                         for(size_t cChnl = 0; cChnl < cROC->size(); cChnl++)
