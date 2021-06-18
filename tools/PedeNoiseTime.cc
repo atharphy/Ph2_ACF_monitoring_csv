@@ -729,7 +729,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int>   cSigns{+1, -1}; // want to scan up then down 
     std::vector<float> cLimits{1 - cFirstLimit, cFirstLimit};
-    std::vector<int>   cBreakCounts{ 5, 30 }; 
+    std::vector<int>   cBreakCounts{ 10, 30 }; 
     int cMinBreakCount = cBreakCounts[0];
     for(uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
     {
@@ -774,9 +774,9 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 CalculateOccupancy(cScanData[cScanData.size()-1]);
                 float globalOccupancy = cScanData[cScanData.size()-1]->getSummary<Occupancy, Occupancy>().fOccupancy;
                 auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-                if( cStep%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
-                          << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
-                          << " -- current value is " << +cLimitCounter << RESET;
+                // if( cStep%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
+                //           << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
+                //           << " -- current value is " << +cLimitCounter << RESET;
                 if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
                 {
                     firstlim = true;
@@ -828,6 +828,11 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                             cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise     = cPedeNoise.second;
                             cPedestalsThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
                             cNoiseThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
+                            if( cChnl%100 == 0 )
+                                LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
+                                    << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold
+                                    << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise
+                                    << RESET;
                         } // chnl loop
                         auto cPedStats = SummarizeStats<float>(cPedestalsThisROC);
                         auto cNoiseStats = SummarizeStats<float>(cNoiseThisROC);
