@@ -114,6 +114,19 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
         cTree->Branch("Threshold", &fEvent.fThreshold);
         cTree->Branch("Hits", &fEvent.fHits);
         this->bookHistogram(cBoard, "DataLog", cTree);
+
+        cName = Form("PedeNoiseSummary_BeBoard%d", cBoard->getId());
+        cObj  = gROOT->FindObject(cName);
+        if(cObj) delete cObj;
+
+        cTree = new TTree(cName, "PedeNoiseSummary");
+        cTree->Branch("Latency", &fEvent.fL1Latency);
+        cTree->Branch("Threshold", &fEvent.fL1Id);
+        cTree->Branch("HybridId", &fEvent.fHybridId);
+        cTree->Branch("ChipId", &fEvent.fChipId);
+        cTree->Branch("Pedestal", &fPedestal);    
+        cTree->Branch("Noise", &fNoise);    
+        this->bookHistogram(cBoard, "PedeNoiseSummary", cTree);
     }
 #endif
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, fTriggerCounter);
@@ -729,7 +742,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int>   cSigns{+1, -1}; // want to scan up then down 
     std::vector<float> cLimits{1 - cFirstLimit, cFirstLimit};
-    std::vector<int>   cBreakCounts{ 10, 30 }; 
+    std::vector<int>   cBreakCounts{ 10, 10 }; 
     int cMinBreakCount = cBreakCounts[0];
     for(uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
     {
@@ -774,7 +787,8 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 CalculateOccupancy(cScanData[cScanData.size()-1]);
                 float globalOccupancy = cScanData[cScanData.size()-1]->getSummary<Occupancy, Occupancy>().fOccupancy;
                 auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-                // if( cStep%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
+                if( cStep%5 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << RESET; 
+                // if( cStep%5 == 0 ) LOG(DEBUG) << BOLDMAGENTA << "\t.. distance from target is "
                 //           << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                 //           << " -- current value is " << +cLimitCounter << RESET;
                 if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
@@ -791,22 +805,18 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             cValue = pStartValue + cSigns[cCounter];
         } // threshold loop
         
-        LOG(INFO) << BOLDMAGENTA << "Extracting epdestal and noise for a latency of " << +cTriggerLatency << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Extracting pedestal and noise for a latency value of " << +cTriggerLatency << RESET;
         // calculate noise 
         for(auto cBoard: *fDetectorContainer)
         {
-            auto& cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
-                auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
                 for(auto cFe: *cOpticalGroup)
                 {
-                    auto& cThNoiseThisFE = cThNoiseThisOG->at(cFe->getIndex());
                     for(auto cROC: *cFe)
                     {
                         if(cROC->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                        auto&              cThNoiseThisChip = cThNoiseThisFE->at(cROC->getIndex());
                         std::vector<float> cPedestalsThisROC(0);
                         std::vector<float> cNoiseThisROC(0);
                         for(size_t cChnl = 0; cChnl < cROC->size(); cChnl++)
@@ -824,30 +834,31 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                                 cV[cIndx]            = cThresholds[cIndx];
                             }
                             auto cPedeNoise                                                   = evalNoise(cW, cV, true);
-                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold = cPedeNoise.first;
-                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise     = cPedeNoise.second;
-                            cPedestalsThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
-                            cNoiseThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
-                            if( cChnl%100 == 0 )
-                                LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
-                                    << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold
-                                    << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise
-                                    << RESET;
+                            cPedestalsThisROC.push_back(cPedeNoise.first);
+                            cNoiseThisROC.push_back(cPedeNoise.second);
                         } // chnl loop
                         auto cPedStats = SummarizeStats<float>(cPedestalsThisROC);
                         auto cNoiseStats = SummarizeStats<float>(cNoiseThisROC);
-                        LOG (INFO) << BOLDGREEN << "Chip with Id" << +cROC->getId() << RESET;
+                        LOG (INFO) << BOLDGREEN << "Chip " << +cROC->getId() << " -- pedestal + noise summary " << RESET;
                         LOG (INFO) << BOLDMAGENTA << "\t\t... Pedestal Stats : " 
                             << std::setprecision(2) << std::fixed
                             << " - Mean is " << cPedStats.fMean
                             << " - RMS is " << cPedStats.fStdDev
                             << " - minimum value is " << cPedStats.fMin
                             << " - maximum value is " << cPedStats.fMax
-                            << "; Noise Stats : Mean is " << cNoiseStats.fMean
+                            << RESET;
+                        LOG (INFO) << BOLDMAGENTA << "\t\t... Noise Stats : " 
+                            << " - Mean is " << cNoiseStats.fMean
                             << " - RMS is " << cNoiseStats.fStdDev
                             << " - minimum value is " << cNoiseStats.fMin
                             << " - maximum value is " << cNoiseStats.fMax
                             << RESET;
+                        fPedestal = cPedStats.fMean;
+                        fNoise = cNoiseStats.fMean;
+                        #ifdef __USE_ROOT__
+                            TTree* cTree = static_cast<TTree*>(getHist(cBoard, "PedeNoiseSummary"));
+                            cTree->Fill();
+                        #endif
                     }//chip
                 }//hybrid
             }//OG

@@ -201,7 +201,7 @@ class MemoryCheck2S : public Tool
     MemEvent       fStubCheck;
     PhyPortTap     fPhyPort;
     uint8_t        fReadoutSuccess = 0;
-
+    
     // timing
     std::chrono::seconds::rep fStartTime;
     std::chrono::seconds::rep fStopTime;
