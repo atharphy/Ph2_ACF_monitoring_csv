@@ -711,6 +711,11 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
+    if( fThresholdAndNoiseContainer == nullptr )
+    {
+        fThresholdAndNoiseContainer = new DetectorDataContainer();
+        ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
+    }
     fEventsPerPoint            = findValueInSettings("NeventsScan", 10);
     int cStartLatency          = findValueInSettings("StartLatency", 1);
     int cLatencyRange          = findValueInSettings("LatencyRange", 1);
@@ -780,13 +785,14 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 }
                 cValue += cSign;
                 cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
-                if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;  cMinBreakCount = cBreakCounts[1];}
+                if(cLimitFound && cSign != cSigns[1]) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;  cMinBreakCount = cBreakCounts[1];}
                 cStep++;
             } while(!cLimitFound);
             cCounter++;
             cValue = pStartValue + cSigns[cCounter];
         } // threshold loop
         
+        LOG(INFO) << BOLDMAGENTA << "Extracting epdestal and noise for a latency of " << +cTriggerLatency << RESET;
         // calculate noise 
         for(auto cBoard: *fDetectorContainer)
         {
