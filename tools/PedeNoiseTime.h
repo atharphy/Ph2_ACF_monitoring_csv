@@ -122,7 +122,8 @@ class PedeNoiseTime : public Tool
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
     DataLogEventPedeNoiseTime                  fEvent;
-    float          fPedestal, fNoise;
+    StatsSum fNoiseStats, fPedestalStats; 
+     
    
     class FCMDs
     {

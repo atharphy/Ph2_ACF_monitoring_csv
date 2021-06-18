@@ -123,8 +123,14 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
         cTree->Branch("Latency", &fEvent.fL1Latency);
         cTree->Branch("HybridId", &fEvent.fHybridId);
         cTree->Branch("ChipId", &fEvent.fChipId);
-        cTree->Branch("Pedestal", &fPedestal);    
-        cTree->Branch("Noise", &fNoise);    
+        cTree->Branch("Pedestal", &fPedestalStats.fMean);    
+        cTree->Branch("Noise", &fNoiseStats.fMean);    
+        cTree->Branch("PedestalError", &fPedestalStats.fStdDev);    
+        cTree->Branch("NoiseError", &fNoiseStats.fStdDev);    
+        cTree->Branch("PedestalMax", &fPedestalStats.fMax);    
+        cTree->Branch("NoiseMax", &fNoiseStats.fMax);        
+        cTree->Branch("PedestalMin", &fPedestalStats.fMin);    
+        cTree->Branch("NoiseMin", &fNoiseStats.fMin);    
         this->bookHistogram(cBoard, "PedeNoiseSummary", cTree);
     }
 #endif
@@ -732,7 +738,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     fEventsPerPoint            = findValueInSettings("NeventsScan", 10);
     int cStartLatency          = findValueInSettings("StartLatency", 1);
     int cLatencyRange          = findValueInSettings("LatencyRange", 1);
-    LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " per point on the threshold scan" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " events per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit         = 0;
     uint16_t cMaxValue      = (1 << 10) - 1;
@@ -839,24 +845,22 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                             cPedestalsThisROC.push_back(cPedeNoise.first);
                             cNoiseThisROC.push_back(cPedeNoise.second);
                         } // chnl loop
-                        auto cPedStats = SummarizeStats<float>(cPedestalsThisROC);
-                        auto cNoiseStats = SummarizeStats<float>(cNoiseThisROC);
+                        fPedestalStats = SummarizeStats<float>(cPedestalsThisROC);
+                        fNoiseStats = SummarizeStats<float>(cNoiseThisROC);
                         LOG (INFO) << BOLDGREEN << "Chip " << +cROC->getId() << " -- pedestal + noise summary " << RESET;
                         LOG (INFO) << BOLDMAGENTA << "\t\t... Pedestal Stats : " 
                             << std::setprecision(2) << std::fixed
-                            << " - Mean is " << cPedStats.fMean
-                            << " - RMS is " << cPedStats.fStdDev
-                            << " - minimum value is " << cPedStats.fMin
-                            << " - maximum value is " << cPedStats.fMax
+                            << " - Mean is " << fPedestalStats.fMean
+                            << " - RMS is " << fPedestalStats.fStdDev
+                            << " - minimum value is " << fPedestalStats.fMin
+                            << " - maximum value is " << fPedestalStats.fMax
                             << RESET;
                         LOG (INFO) << BOLDMAGENTA << "\t\t... Noise Stats : " 
-                            << " - Mean is " << cNoiseStats.fMean
-                            << " - RMS is " << cNoiseStats.fStdDev
-                            << " - minimum value is " << cNoiseStats.fMin
-                            << " - maximum value is " << cNoiseStats.fMax
+                            << " - Mean is " << fNoiseStats.fMean
+                            << " - RMS is " << fNoiseStats.fStdDev
+                            << " - minimum value is " << fNoiseStats.fMin
+                            << " - maximum value is " << fNoiseStats.fMax
                             << RESET;
-                        fPedestal = cPedStats.fMean;
-                        fNoise = cNoiseStats.fMean;
                         #ifdef __USE_ROOT__
                             TTree* cTree = static_cast<TTree*>(getHist(cBoard, "PedeNoiseSummary"));
                             cTree->Fill();
