@@ -685,7 +685,7 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
 {
     int cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
     size_t cNeventsExpected    = fEventsPerPoint; 
-    if( cUseFcmdBram ) cNeventsExpected = fTriggersSentl
+    if( cUseFcmdBram ) cNeventsExpected = fTriggersSent;
     // now retreive events
     const std::vector<Event*>& cPh2Events = GetEvents();
     fEvent.fEventLoss = cNeventsExpected - cPh2Events.size();
