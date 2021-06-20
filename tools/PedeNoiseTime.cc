@@ -758,7 +758,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int>   cSigns{+1, -1}; // want to scan up then down 
     std::vector<float> cLimits{1 - cFirstLimit, cFirstLimit};
-    std::vector<int>   cBreakCounts{ 10, 10 }; 
+    std::vector<int>   cBreakCounts{ 20, 40 }; 
     int cMinBreakCount = cBreakCounts[0];
     for(uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
     {
