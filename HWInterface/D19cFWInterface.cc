@@ -1930,7 +1930,7 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
             LOG(INFO) << BOLDMAGENTA << "Valid event header .. copying over "
                       << " event is made up of " << +cEventSize << " 32 bit words "
                       << " of which " << +cDummyCount << " are dummy words." << RESET;
-            for(size_t cIndx = 0; cIndx < cEventSize; cIndx++) LOG(INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator + cIndx)) << RESET;
+            // for(size_t cIndx = 0; cIndx < cEventSize; cIndx++) LOG(INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator + cIndx)) << RESET;
             std::copy(pData.begin() + cOffset, pData.begin() + cOffset + cEventSize, std::back_inserter(cValidData));
             cEventIterator += cEventSize;
             cOffset += cEventSize;
