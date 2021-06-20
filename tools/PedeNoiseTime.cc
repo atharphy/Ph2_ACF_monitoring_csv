@@ -418,7 +418,7 @@ uint16_t PedeNoiseTime::findPedestal(bool forceAllChannels)
 // pTriggerSeparation
 void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparation, int pMaxBurstLength)
 {
-    size_t cReSyncSep = pTriggerSeparation + 10;
+    size_t cReSyncSep = 100;
     // random c++
     std::srand(std::time(NULL));
     std::random_device                 cRndm{};
@@ -459,7 +459,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         }
         // how many clocks to wait until
         // next trigger
-        size_t cTriggerGap = std::round(cDistTrigSep(cGen));
+        size_t cTriggerGap = pTriggerSeparation;//std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
             if(fFastCommands.size() == cMaxDepth) continue;
