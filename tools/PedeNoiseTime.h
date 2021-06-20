@@ -32,7 +32,7 @@ class Occupancy;
 struct DataLogEventPedeNoiseTime
 {
     // readout
-    uint16_t fEventLoss = 0;
+    int fEventLoss = 0;
     // event information
     uint32_t fEventCnt = 0;
     uint16_t fEventId  = 0;
@@ -142,6 +142,7 @@ class PedeNoiseTime : public Tool
     std::vector<uint8_t> fIters;
     std::vector<uint8_t> fFastCommands;
     std::vector<uint16_t> fTriggeredBxs;
+    size_t               fTriggersSent = 0 ;
     size_t               fNInjectedTriggers = 0;
     size_t               fReps              = 0;
     size_t               fPerAttempt        = 0;

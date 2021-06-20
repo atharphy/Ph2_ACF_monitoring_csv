@@ -539,12 +539,14 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     fEvent.fIter=0;
     fIters.clear();
     fTriggeredBxs.clear();
+    fTriggersSent=0; 
     do
     {
         bool cSuccess = true;
         GenericTriggers(cNtriggersToSendPerAttempt, pTriggerSeparation, cMaxTriggersInBurst);
         // LOG (INFO) << BOLDMAGENTA << "Using fast command bram to inject " << fNInjectedTriggers << " into system..." << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
+        fTriggersSent += fNInjectedTriggers * cNrepetitions;
         // LOG (INFO) << BOLDMAGENTA << "TriggerIter#" << +fEvent.fIter << RESET;
         //if(fEvent.fIter % 50 == 0) LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << fEvent.fIter << RESET;
         for(auto cBoard: *fDetectorContainer)
@@ -682,10 +684,12 @@ bool PedeNoiseTime::GetDataFromFC7()
 void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContainer)
 {
     int cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
+    size_t cNeventsExpected    = fEventsPerPoint; 
+    if( cUseFcmdBram ) cNeventsExpected = fTriggersSentl
     // now retreive events
     const std::vector<Event*>& cPh2Events = GetEvents();
-    LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at... and I've asked for " << fEventsPerPoint << RESET;
-    fEvent.fEventLoss = fEventsPerPoint - cPh2Events.size();
+    fEvent.fEventLoss = cNeventsExpected - cPh2Events.size();
+    if( fEvent.fEventLoss != 0 ) LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at... and I've asked for " << fEventsPerPoint << RESET;
     fEvent.fEventCnt  = 0;
     for(auto& cEvent: cPh2Events)
     {
