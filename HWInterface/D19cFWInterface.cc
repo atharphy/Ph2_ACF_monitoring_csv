@@ -1927,9 +1927,9 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
         {
             uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
             uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
-            LOG(INFO) << BOLDMAGENTA << "Valid event header .. copying over "
-                      << " event is made up of " << +cEventSize << " 32 bit words "
-                      << " of which " << +cDummyCount << " are dummy words." << RESET;
+            // LOG(INFO) << BOLDMAGENTA << "Valid event header .. copying over "
+            //           << " event is made up of " << +cEventSize << " 32 bit words "
+            //           << " of which " << +cDummyCount << " are dummy words." << RESET;
             // for(size_t cIndx = 0; cIndx < cEventSize; cIndx++) LOG(INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator + cIndx)) << RESET;
             std::copy(pData.begin() + cOffset, pData.begin() + cOffset + cEventSize, std::back_inserter(cValidData));
             cEventIterator += cEventSize;
@@ -2582,7 +2582,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 
         // LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
-        for(auto cWord: pData) LOG(INFO) << BOLDGREEN << std::bitset<32>(cWord) << RESET;
+        // for(auto cWord: pData) LOG(INFO) << BOLDGREEN << std::bitset<32>(cWord) << RESET;
         // figure out how many events I've got
         cNEvents = this->CountFwEvents(pBoard, pData);
         if(cNEvents == 0) LOG(INFO) << BOLDMAGENTA << "Read back " << +pData.size() << " valid words with " << +cNWords << " in the readout." << RESET;
