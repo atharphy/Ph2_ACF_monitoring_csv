@@ -546,7 +546,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
         // LOG (INFO) << BOLDMAGENTA << "Using fast command bram to inject " << fNInjectedTriggers << " into system..." << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
         // LOG (INFO) << BOLDMAGENTA << "TriggerIter#" << +fEvent.fIter << RESET;
-        if(fEvent.fIter % 50 == 0) LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << fEvent.fIter << RESET;
+        //if(fEvent.fIter % 50 == 0) LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << fEvent.fIter << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             auto cNevents = this->GenericTriggerConfig(cBoard, cNrepetitions);
@@ -803,7 +803,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 CalculateOccupancy(cScanData[cScanData.size()-1]);
                 float globalOccupancy = cScanData[cScanData.size()-1]->getSummary<Occupancy, Occupancy>().fOccupancy;
                 auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-                if( cStep%5 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << RESET; 
+                if( cStep%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << RESET; 
                 // if( cStep%5 == 0 ) LOG(DEBUG) << BOLDMAGENTA << "\t.. distance from target is "
                 //           << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                 //           << " -- current value is " << +cLimitCounter << RESET;
