@@ -527,7 +527,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     } // make sure all start at 0
 
     fPerAttempt          = cNtriggersToSendPerAttempt;
-    size_t cNrepetitions = 1 + std::floor(pNtriggersToSend / fPerAttempt);
+    size_t cNrepetitions = 1;// + std::floor(pNtriggersToSend / fPerAttempt);
     fReps                = cNrepetitions;
     // LOG (DEBUG) << BOLDMAGENTA << "Generic block used to send " << +pNtriggersToSend << " triggers..."
     //     << " by sending " << cNrepetitions << " blocks of fast command sequences containing " << fPerAttempt
