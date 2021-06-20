@@ -459,7 +459,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         }
         // how many clocks to wait until
         // next trigger
-        size_t cTriggerGap = pNtriggersToSend;//std::round(cDistTrigSep(cGen));
+        size_t cTriggerGap = pTriggerSeparation;//std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
             if(fFastCommands.size() == cMaxDepth) continue;
