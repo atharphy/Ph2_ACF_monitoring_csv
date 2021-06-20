@@ -1926,7 +1926,7 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
         else
         {
             uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-            uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
             // LOG(INFO) << BOLDMAGENTA << "Valid event header .. copying over "
             //           << " event is made up of " << +cEventSize << " 32 bit words "
             //           << " of which " << +cDummyCount << " are dummy words." << RESET;
