@@ -107,8 +107,6 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
         cTree->Branch("EvntId", &fEvent.fEventId);
         cTree->Branch("EventLoss", &fEvent.fEventLoss);
         cTree->Branch("Latency", &fEvent.fL1Latency);
-        cTree->Branch("Iteration",&fEvent.fIter);
-        cTree->Branch("TriggeredBx",&fEvent.fTriggeredBx);
         cTree->Branch("L1Id", &fEvent.fL1Id);
         cTree->Branch("L1Mismatch", &fEvent.fL1Mismatch);
         cTree->Branch("HybridId", &fEvent.fHybridId);
@@ -527,7 +525,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     } // make sure all start at 0
 
     fPerAttempt          = cNtriggersToSendPerAttempt;
-    size_t cNrepetitions = 1;// + std::floor(pNtriggersToSend / fPerAttempt);
+    size_t cNrepetitions = 1 + std::floor(pNtriggersToSend / fPerAttempt);
     fReps                = cNrepetitions;
     // LOG (DEBUG) << BOLDMAGENTA << "Generic block used to send " << +pNtriggersToSend << " triggers..."
     //     << " by sending " << cNrepetitions << " blocks of fast command sequences containing " << fPerAttempt
@@ -712,8 +710,8 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                         // L1 Id starts counting from 1 ..
                         if(cUseFcmdBram){ 
                             fEvent.fL1Mismatch = ((int)(fEvent.fL1Id - 1) != (int)(fEvent.fEventCnt % fPerAttempt));
-                            fEvent.fTriggeredBx = fTriggeredBxs[fEvent.fEventCnt]; 
-                            fEvent.fIter = fIters[fEvent.fEventCnt]; 
+                            //fEvent.fTriggeredBx = fTriggeredBxs[fEvent.fEventCnt]; 
+                            //fEvent.fIter = fIters[fEvent.fEventCnt]; 
                         }
                         fEvent.fChipId = cChip->getId();
                         // now for the occupancy
@@ -807,7 +805,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 CalculateOccupancy(cScanData[cScanData.size()-1]);
                 float globalOccupancy = cScanData[cScanData.size()-1]->getSummary<Occupancy, Occupancy>().fOccupancy;
                 auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-                if( cStep%10 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << RESET; 
+                if( cStep%5 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << RESET; 
                 // if( cStep%5 == 0 ) LOG(DEBUG) << BOLDMAGENTA << "\t.. distance from target is "
                 //           << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                 //           << " -- current value is " << +cLimitCounter << RESET;
