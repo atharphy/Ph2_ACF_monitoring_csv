@@ -747,15 +747,15 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         throw std::runtime_error(std::string("Trying to enable DIO5 when firmware isn't configured for that mezzanine!"));
     }
 
-    // set reference for CDCE
-    uint32_t cExternalClock = 0; // this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");
-    this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
-    this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock);
-    this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 0);
-    this->syncCDCE();
+    // // set reference for CDCE
+    // uint32_t cExternalClock = 0; // this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");
+    // this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
+    // this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock);
+    // this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 0);
+    // this->syncCDCE();
 
-    this->WriteReg("fc7_daq_cnfg.clock.ext_clk_en", 1);
-    this->WriteReg("clock_source_u8", 3);
+    // this->WriteReg("fc7_daq_cnfg.clock.ext_clk_en", 1);
+    // this->WriteReg("clock_source_u8", 3);
 
     // check status of clocks
     bool c40MhzLocked    = false;
