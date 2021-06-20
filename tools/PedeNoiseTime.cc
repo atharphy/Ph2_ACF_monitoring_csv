@@ -459,7 +459,7 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         }
         // how many clocks to wait until
         // next trigger
-        size_t cTriggerGap = std::round(cDistTrigSep(cGen));
+        size_t cTriggerGap = pNtriggersToSend;//std::round(cDistTrigSep(cGen));
         for(size_t cBx = 0; cBx < cTriggerGap; cBx++)
         {
             if(fFastCommands.size() == cMaxDepth) continue;
@@ -684,7 +684,7 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
     int cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
     // now retreive events
     const std::vector<Event*>& cPh2Events = GetEvents();
-    // LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at." << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at... and I've asked for " << fEventsPerPoint << RESET;
     fEvent.fEventLoss = fEventsPerPoint - cPh2Events.size();
     fEvent.fEventCnt  = 0;
     for(auto& cEvent: cPh2Events)
