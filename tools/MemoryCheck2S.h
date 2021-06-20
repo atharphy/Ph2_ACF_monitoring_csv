@@ -176,7 +176,6 @@ class MemoryCheck2S : public Tool
         uint8_t fClear     = 0xD3; // ReSync+BC0
         uint8_t fEmpty     = 0xC1; // empty
     };
-    
 
     void Reconfigure();
 
@@ -201,7 +200,7 @@ class MemoryCheck2S : public Tool
     MemEvent       fStubCheck;
     PhyPortTap     fPhyPort;
     uint8_t        fReadoutSuccess = 0;
-    
+
     // timing
     std::chrono::seconds::rep fStartTime;
     std::chrono::seconds::rep fStopTime;
@@ -300,7 +299,7 @@ class MemoryCheck2S : public Tool
                       << "\t.. noise on this channel is " << pEvent.fNoise << "\t.. pedestal on this channel is " << pEvent.fPedestal << "\t.. threshold during test is  " << pEvent.fThreshold
                       << RESET;
     }
-    
+
     // resets
     void ReconfigureOffsets();
 

@@ -723,7 +723,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
-
     // power on FMCs
     this->InitFMCPower();
 
@@ -749,14 +748,14 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
 
     // set reference for CDCE
-    // uint32_t cExternalClock = 0;//this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");
-    // this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
-    // this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock);
-    // this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 0);
-    // this->syncCDCE();
+    uint32_t cExternalClock = 0; // this->ReadReg("fc7_daq_cnfg.clock.ext_clk_en");
+    this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 1);
+    this->WriteReg("sysreg.ctrl.cdce_refsel", cExternalClock);
+    this->WriteReg("sysreg.ctrl.cdce_ctrl_sel", 0);
+    this->syncCDCE();
 
-    // this->WriteReg("fc7_daq_cnfg.clock.ext_clk_en",1);
-    // this->WriteReg("clock_source_u8",3);
+    this->WriteReg("fc7_daq_cnfg.clock.ext_clk_en", 1);
+    this->WriteReg("clock_source_u8", 3);
 
     // check status of clocks
     bool c40MhzLocked    = false;
@@ -798,9 +797,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     fCBC3Emulator         = (ReadReg("fc7_daq_stat.general.info.implementation") == 2);
     fIsDDR3Readout        = (ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") == 1);
     if(fIsDDR3Readout == 1) LOG(INFO) << BOLDBLUE << "DD3 Readout .... " << RESET;
-    fI2CVersion     = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
-    fOptical        = pBoard->isOptical();
-    fIs2S           = false;
+    fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
+    fOptical    = pBoard->isOptical();
+    fIs2S       = false;
+
     bool cWithlpGBT = false;
     for(auto cOpticalGroup: *pBoard)
     {
@@ -816,7 +816,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(pBoard->isOptical()) LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
     fOptical = pBoard->isOptical() && !cWithlpGBT;
     // fUseOpticalLink = pBoard->isOptical() && !fOptical;
-
     bool cWithGBTx = false;
     // if optical readout .. then configure links
     if(pBoard->isOptical() && !cWithlpGBT)
@@ -1926,14 +1925,12 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
         }
         else
         {
-            uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-            // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
-            // LOG (INFO) << BOLDMAGENTA << "Valid event header .. copying over "
-            //     << " event is made up of " << +cEventSize << " 32 bit words "
-            //     << " of which " << +cDummyCount << " are dummy words."
-            //     << RESET;
-            // for( size_t cIndx=0; cIndx < cEventSize; cIndx++)
-            //     LOG (INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator+cIndx)) << RESET;
+            uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+            uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            LOG(INFO) << BOLDMAGENTA << "Valid event header .. copying over "
+                      << " event is made up of " << +cEventSize << " 32 bit words "
+                      << " of which " << +cDummyCount << " are dummy words." << RESET;
+            for(size_t cIndx = 0; cIndx < cEventSize; cIndx++) LOG(INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator + cIndx)) << RESET;
             std::copy(pData.begin() + cOffset, pData.begin() + cOffset + cEventSize, std::back_inserter(cValidData));
             cEventIterator += cEventSize;
             cOffset += cEventSize;
@@ -2585,6 +2582,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 
         // LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
+        for(auto cWord: pData) LOG(INFO) << BOLDGREEN << std::bitset<32>(cWord) << RESET;
         // figure out how many events I've got
         cNEvents = this->CountFwEvents(pBoard, pData);
         if(cNEvents == 0) LOG(INFO) << BOLDMAGENTA << "Read back " << +pData.size() << " valid words with " << +cNWords << " in the readout." << RESET;
