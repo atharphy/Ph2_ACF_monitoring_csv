@@ -221,7 +221,7 @@ void LatencyScan::StubLatencyScan()
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
-            LOG(INFO) << BOLDBLUE << "BeBoard#" << +cBoard->getIndex() << " ..searching for a match between stub and hit data for a stub latency of  " << +cLat << RESET;
+            LOG(INFO) << BOLDMAGENTA << "BeBoard#" << +cBoard->getIndex() << " ..searching for a match between stub and hit data for a stub latency of  " << +cLat << RESET;
             for(auto& cEvent: cEvents)
             {
                 auto cEventCount = cEvent->GetEventCount();
@@ -295,6 +295,8 @@ void LatencyScan::StubLatencyScan()
                             }
                         } // chip
                         theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] += cNStubs;
+                        if( cEventCount%100 == 0 ) LOG (INFO) << BOLDBLUE << "\t\t.. found " <<  theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] 
+                                << " stubs that match hit information in the readout.." << RESET;
                     }// hybrids
                 } // optical group
             }// events
@@ -302,7 +304,7 @@ void LatencyScan::StubLatencyScan()
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " found " 
+                    LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << " found " 
                         << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
                         << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
                 } // hybrid
