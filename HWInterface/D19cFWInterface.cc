@@ -3146,7 +3146,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
 
-            uint32_t cTimeoutValue = 10;
+            uint32_t cTimeoutValue = 1000;
             if(cCountTriggers) // use trigger_in_counter to check state of trigger FSM
             {
                 // wait until all triggers received

@@ -146,51 +146,6 @@ void LatencyScan::ScanLatency()
 
 void LatencyScan::StubLatencyScan()
 {
-    // check if TP trigger is being used
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-    //     // check trigger source
-    //     uint16_t cTriggerSource = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    //     if(cTriggerSource == 6)
-    //     {
-    //         LOG(INFO) << BOLDBLUE << "Trigger source is ... using TP" << RESET;
-
-    //         // if TP on .. and CIC
-    //         // make sure stubs are only in one CBC
-    //         // becaause otherwise ..
-    //         uint8_t cTPgroup = 0;
-    //         for(auto cOpticalGroup: *cBoard)
-    //         {
-    //             for(auto cHybrid: *cOpticalGroup)
-    //             {
-    //                 auto& cCic        = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-    //                 bool  cMaskOthers = (cCic != NULL) ? true : false;
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     if((cChip->getFrontEndType() == FrontEndType::CBC3))
-    //                     {
-    //                         auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-    //                         if(cMaskOthers && cChip->getId() == 0)
-    //                         {
-    //                             if(cChip->getFrontEndType() == FrontEndType::CBC3)
-    //                             {
-    //                                 uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
-    //                                 cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
-    //                             }
-    //                         }
-    //                         else if(cMaskOthers && cChip->getFrontEndType() == FrontEndType::CBC3)
-    //                         {
-    //                             fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
-    //                         }
-    //                     }
-
-    //                 } // roc
-    //             }     // hybrid
-    //         }         // hybrid
-    //     }
-    // }
-
     DetectorDataContainer theStubContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theStubContainer);
 
@@ -234,7 +189,7 @@ void LatencyScan::StubLatencyScan()
         }//brds
     }
 
-    for(uint8_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
+    for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
         // container to hold scan result
         DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
