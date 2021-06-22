@@ -180,8 +180,8 @@ void LatencyScan::StubLatencyScan()
                         cUpperLimit =  cTriggerLatency - cStubOffset + cRange/2;
                         LOG (INFO) << BOLDMAGENTA << "Using latency value programmed in Chp#"
                             << +cChip->getId() 
-                            << " : modifying range of scan .. to start  at "
-                            << fStartLatency 
+                            << " : modifying range of scan .. to start looking for stubs at "
+                            << cLowerLimit 
                             << " clock cycles - trigger latency is set to "
                             << cTriggerLatency 
                             << " clock cycles."
@@ -192,10 +192,10 @@ void LatencyScan::StubLatencyScan()
         }//brds
     }
 
+   
     for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
-        if(!(cLat >= cLowerLimit && cLat < cUpperLimit)) continue;
-        
+       
         // container to hold scan result
         DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
         ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cMatchedEvents);
@@ -203,14 +203,23 @@ void LatencyScan::StubLatencyScan()
         LOG(INFO) << BOLDBLUE << "Stub Latency " << +cLat << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
-            int      cNStubs           = 0;
-            BeBoard* cBeBoard          = static_cast<BeBoard*>(cBoard);
+            // zero stub container 
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = 0;
+                } // hybrid
+            }//
+            
+            if(!(cLat >= cLowerLimit && cLat < cUpperLimit)) continue; 
+
             auto&    cMatchesThisBoard = cMatchedEvents->at(cBoard->getIndex());
             // Take Data for all Hybrids
             // here set the stub latency
 
-            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
-            this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
+            for(auto cReg: getStubLatencyName(cBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBoard, cReg, cLat);
+            this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)
@@ -230,6 +239,7 @@ void LatencyScan::StubLatencyScan()
                         //     LOG(INFO) << BOLDBLUE << "\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
                         // }
 
+                        size_t cNStubs = 0 ; 
                         for(auto cChip: *cHybrid)
                         {
                             auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
@@ -284,17 +294,17 @@ void LatencyScan::StubLatencyScan()
                                 cNStubs += cStubs.size();
                             }
                         } // chip
-                    }     // optical group
-                }         // hybrids
-            }             // events
-            LOG(INFO) << BOLDBLUE << "\t..." << +cNStubs << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
-
+                        theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] += cNStubs;
+                    }// hybrids
+                } // optical group
+            }// events
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cNStubs;
-
+                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " found " 
+                        << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+                        << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
                 } // hybrid
             }     // hybrid
 
