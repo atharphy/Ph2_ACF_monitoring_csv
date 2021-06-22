@@ -197,9 +197,8 @@ void LatencyScan::StubLatencyScan()
     {
        
         // container to hold scan result
-        DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
-        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cMatchedEvents);
-
+        // DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
+        // ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cMatchedEvents);
         for(auto cBoard: *fDetectorContainer)
         {
             // zero stub container 
@@ -213,7 +212,7 @@ void LatencyScan::StubLatencyScan()
             
             if(!(cLat >= cLowerLimit && cLat < cUpperLimit)) continue; 
 
-            auto&    cMatchesThisBoard = cMatchedEvents->at(cBoard->getIndex());
+            //auto&    cMatchesThisBoard = cMatchedEvents->at(cBoard->getIndex());
             // Take Data for all Hybrids
             // here set the stub latency
 
@@ -228,10 +227,10 @@ void LatencyScan::StubLatencyScan()
                 LOG(DEBUG) << BOLDBLUE << "\tEvent " << +cEventCount << RESET;
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
+                    //auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
+                        //auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
                         //auto& cCic               = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
                         // if(cCic != NULL)
                         // {
@@ -242,7 +241,7 @@ void LatencyScan::StubLatencyScan()
                         size_t cNStubs = 0 ; 
                         for(auto cChip: *cHybrid)
                         {
-                            auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
+                            //auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
                             if(cChip->getFrontEndType() == FrontEndType::CBC3)
                             {
                                 auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
@@ -267,7 +266,7 @@ void LatencyScan::StubLatencyScan()
                                     for(auto cHit: cExpectedHits)
                                     {
                                         auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
-                                        cMatchesThisROC->getChannel<Occupancy>(cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
+                                        //cMatchesThisROC->getChannel<Occupancy>(cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
                                         cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
                                     }
                                     // only count stubs where the match is perfect
