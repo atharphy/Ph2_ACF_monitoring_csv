@@ -955,7 +955,7 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
                 // sprintf(cBuffer, "EXT_WA_DELAY%.2d", cIndx);
                 // std::string cRegName(cBuffer, sizeof(cBuffer));
                 std::string cRegName = "EXT_WA_DELAY" + (boost::format("%|02|") % cIndx).str();
-                LOG(INFO) << BOLDBLUE << "\t..Setting static word alignment in register " << cRegName << " to " << +cValue << RESET;
+                //LOG(INFO) << BOLDBLUE << "\t..Setting static word alignment in register " << cRegName << " to " << +cValue << RESET;
                 cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
                 cValue   = 0x00;
                 cIndx++;
