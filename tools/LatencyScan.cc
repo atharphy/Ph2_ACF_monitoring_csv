@@ -294,7 +294,7 @@ void LatencyScan::StubLatencyScan()
                             }
                         } // chip
                         theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] += cNStubs;
-                        if( cEventCount%100 == 0 ) LOG (INFO) << BOLDBLUE << "\t\t.. found " <<  theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] 
+                        if( cEventCount%10 == 0 ) LOG (INFO) << BOLDBLUE << "Event#" << +cEventCount <<  "\t\t.. found " <<  theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] 
                                 << " stubs that match hit information in the readout.." << RESET;
                     }// hybrids
                 } // optical group
