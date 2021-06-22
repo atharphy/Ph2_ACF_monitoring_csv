@@ -340,155 +340,155 @@ void LatencyScan::StubLatencyScan()
         } // board
     }     // latency
 
-// #ifdef __USE_ROOT__
-//     fDQMHistogramLatencyScan.fillStubLatencyPlots(theStubContainer);
-// #else
-//     auto theStubStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
-//     for(auto board: theStubContainer)
-//     {
-//         if(fStreamerEnabled) theStubStream.streamAndSendBoard(board, fNetworkStreamer);
-//     }
-// #endif
-// }
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fillStubLatencyPlots(theStubContainer);
+#else
+    auto theStubStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
+    for(auto board: theStubContainer)
+    {
+        if(fStreamerEnabled) theStubStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
+}
 
-// void LatencyScan::ScanLatency2D()
-// {
-//     DetectorDataContainer theLatencyContainer;
-//     // 2D array -- hit latency vs stub latency
-//     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(*fDetectorContainer, theLatencyContainer);
+void LatencyScan::ScanLatency2D()
+{
+    DetectorDataContainer theLatencyContainer;
+    // 2D array -- hit latency vs stub latency
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(*fDetectorContainer, theLatencyContainer);
 
-//     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
-//     int            cNSteps = 0;
-//     for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
-//     {
-//         //  Set a Latency Value on all FEs
-//         cVisitor.setLatency(cLatency);
-//         this->accept(cVisitor);
+    LatencyVisitor cVisitor(fReadoutChipInterface, 0);
+    int            cNSteps = 0;
+    for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
+    {
+        //  Set a Latency Value on all FEs
+        cVisitor.setLatency(cLatency);
+        this->accept(cVisitor);
 
-//         // maximum stub latency can only be L1 latency ...
-//         for(uint8_t cStubLatency = 0; cStubLatency < cLatency; cStubLatency++)
-//         {
-//             // Take Data for all Hybrids
-//             for(auto pBoard: *fDetectorContainer)
-//             {
-//                 BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
-//                 // set a stub latency value on all FEs
-//                 for(auto cReg: getStubLatencyName(theBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(theBoard, cReg, cStubLatency);
+        // maximum stub latency can only be L1 latency ...
+        for(uint8_t cStubLatency = 0; cStubLatency < cLatency; cStubLatency++)
+        {
+            // Take Data for all Hybrids
+            for(auto pBoard: *fDetectorContainer)
+            {
+                BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
+                // set a stub latency value on all FEs
+                for(auto cReg: getStubLatencyName(theBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(theBoard, cReg, cStubLatency);
 
-//                 // I need this to normalize the TDC values I get from the Strasbourg FW
-//                 uint32_t cNevents       = 0;
-//                 uint32_t cNEvents_wHit  = 0;
-//                 uint32_t cNEvents_wStub = 0;
-//                 uint32_t cNEvents_wBoth = 0;
-//                 fBeBoardInterface->Start(theBoard);
-//                 do
-//                 {
-//                     uint32_t cNeventsReadBack = ReadData(theBoard);
-//                     if(cNeventsReadBack == 0)
-//                     {
-//                         LOG(INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET;
-//                         continue;
-//                     }
+                // I need this to normalize the TDC values I get from the Strasbourg FW
+                uint32_t cNevents       = 0;
+                uint32_t cNEvents_wHit  = 0;
+                uint32_t cNEvents_wStub = 0;
+                uint32_t cNEvents_wBoth = 0;
+                fBeBoardInterface->Start(theBoard);
+                do
+                {
+                    uint32_t cNeventsReadBack = ReadData(theBoard);
+                    if(cNeventsReadBack == 0)
+                    {
+                        LOG(INFO) << BOLDRED << "..... Read back " << +cNeventsReadBack << " events!! Why?!" << RESET;
+                        continue;
+                    }
 
-//                     const std::vector<Event*>& events = GetEvents();
-//                     cNevents += events.size();
-//                     for(auto cOpticalGroup: *pBoard)
-//                     {
-//                         for(auto cFe: *cOpticalGroup)
-//                         {
-//                             for(auto cEvent: events)
-//                             {
-//                                 bool cHitFound  = false;
-//                                 bool cStubFound = false;
-//                                 // now loop the channels for this particular event and increment a counter
-//                                 for(auto cCbc: *cFe)
-//                                 {
-//                                     int               cHitCounter  = cEvent->GetNHits(cFe->getId(), cCbc->getId());
-//                                     std::vector<Stub> cStubs       = cEvent->StubVector(cFe->getId(), cCbc->getId());
-//                                     int               cStubCounter = cStubs.size();
+                    const std::vector<Event*>& events = GetEvents();
+                    cNevents += events.size();
+                    for(auto cOpticalGroup: *pBoard)
+                    {
+                        for(auto cFe: *cOpticalGroup)
+                        {
+                            for(auto cEvent: events)
+                            {
+                                bool cHitFound  = false;
+                                bool cStubFound = false;
+                                // now loop the channels for this particular event and increment a counter
+                                for(auto cCbc: *cFe)
+                                {
+                                    int               cHitCounter  = cEvent->GetNHits(cFe->getId(), cCbc->getId());
+                                    std::vector<Stub> cStubs       = cEvent->StubVector(cFe->getId(), cCbc->getId());
+                                    int               cStubCounter = cStubs.size();
 
-//                                     if(cHitCounter == 0) {}
+                                    if(cHitCounter == 0) {}
 
-//                                     if(cHitCounter > 0) cHitFound = true;
+                                    if(cHitCounter > 0) cHitFound = true;
 
-//                                     if(cStubCounter > 0) cStubFound = true;
-//                                 }
-//                                 cNEvents_wHit += cHitFound ? 1 : 0;
-//                                 cNEvents_wStub += cStubFound ? 1 : 0;
-//                                 cNEvents_wBoth += (cHitFound && cStubFound) ? 1 : 0;
-//                             }
+                                    if(cStubCounter > 0) cStubFound = true;
+                                }
+                                cNEvents_wHit += cHitFound ? 1 : 0;
+                                cNEvents_wStub += cStubFound ? 1 : 0;
+                                cNEvents_wBoth += (cHitFound && cStubFound) ? 1 : 0;
+                            }
 
-//                             theLatencyContainer.at(pBoard->getIndex())
-//                                 ->at(cOpticalGroup->getIndex())
-//                                 ->at(cFe->getIndex())
-//                                 ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)] += cNEvents_wBoth;
-//                         }
-//                     }
+                            theLatencyContainer.at(pBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cFe->getIndex())
+                                ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)] += cNEvents_wBoth;
+                        }
+                    }
 
-//                 } while(cNevents < fNevents);
-//                 fBeBoardInterface->Stop(theBoard);
+                } while(cNevents < fNevents);
+                fBeBoardInterface->Stop(theBoard);
 
-//                 if(cNSteps % 10 == 0)
-//                 {
-//                     LOG(INFO) << BOLDBLUE << "For an L1 latency of " << +cLatency << " and a stub latency of " << +cStubLatency << " - found : " << RESET;
-//                     LOG(INFO) << BOLDBLUE << "\t\t " << cNEvents_wHit << "/" << cNevents << " events with a hit. " << RESET;
-//                     LOG(INFO) << BOLDBLUE << "\t\t " << cNEvents_wStub << "/" << cNevents << " events with a stub. " << RESET;
-//                     LOG(INFO) << BOLDBLUE << "\t\t " << cNEvents_wBoth << "/" << cNevents << " events with both a hit and a stub. " << RESET;
-//                 }
-//             }
-//             cNSteps++;
-//         }
-//     }
+                if(cNSteps % 10 == 0)
+                {
+                    LOG(INFO) << BOLDBLUE << "For an L1 latency of " << +cLatency << " and a stub latency of " << +cStubLatency << " - found : " << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t\t " << cNEvents_wHit << "/" << cNevents << " events with a hit. " << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t\t " << cNEvents_wStub << "/" << cNevents << " events with a stub. " << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t\t " << cNEvents_wBoth << "/" << cNevents << " events with both a hit and a stub. " << RESET;
+                }
+            }
+            cNSteps++;
+        }
+    }
 
-//     // now display a message to the user to let them know what the optimal latencies are for each FE
-//     for(auto pBoard: *fDetectorContainer)
-//     {
-//         for(auto cOpticalGroup: *pBoard)
-//         {
-//             for(auto cFe: *cOpticalGroup)
-//             {
-//                 std::pair<uint8_t, uint16_t> cOptimalLatencies;
-//                 cOptimalLatencies.first  = 0;
-//                 cOptimalLatencies.second = 0;
-//                 int cMaxNEvents_wBoth    = 0;
+    // now display a message to the user to let them know what the optimal latencies are for each FE
+    for(auto pBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *pBoard)
+        {
+            for(auto cFe: *cOpticalGroup)
+            {
+                std::pair<uint8_t, uint16_t> cOptimalLatencies;
+                cOptimalLatencies.first  = 0;
+                cOptimalLatencies.second = 0;
+                int cMaxNEvents_wBoth    = 0;
 
-//                 // run same loop as before
-//                 for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
-//                 {
-//                     // maximum stub latency can only be L1 latency ...
-//                     for(uint8_t cStubLatency = 0; cStubLatency < cLatency; cStubLatency++)
-//                     {
-//                         uint16_t val = theLatencyContainer.at(pBoard->getIndex())
-//                                            ->at(cOpticalGroup->getIndex())
-//                                            ->at(cFe->getIndex())
-//                                            ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)];
+                // run same loop as before
+                for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
+                {
+                    // maximum stub latency can only be L1 latency ...
+                    for(uint8_t cStubLatency = 0; cStubLatency < cLatency; cStubLatency++)
+                    {
+                        uint16_t val = theLatencyContainer.at(pBoard->getIndex())
+                                           ->at(cOpticalGroup->getIndex())
+                                           ->at(cFe->getIndex())
+                                           ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)];
 
-//                         if(val >= cMaxNEvents_wBoth)
-//                         {
-//                             cOptimalLatencies.first  = cStubLatency;
-//                             cOptimalLatencies.second = cLatency;
-//                             cMaxNEvents_wBoth        = val;
-//                         }
-//                     }
+                        if(val >= cMaxNEvents_wBoth)
+                        {
+                            cOptimalLatencies.first  = cStubLatency;
+                            cOptimalLatencies.second = cLatency;
+                            cMaxNEvents_wBoth        = val;
+                        }
+                    }
 
-//                     LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
-//                     LOG(INFO) << BOLDRED << "For FE" << +cFe->getId() << " found optimal latencies to be : " << RESET;
-//                     LOG(INFO) << BOLDRED << "........ Stub Latency of " << +cOptimalLatencies.first << " and a Trigger Latency of " << +cOptimalLatencies.second << RESET;
-//                     LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
-//                 }
-//             }
-//         }
-//     }
+                    LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
+                    LOG(INFO) << BOLDRED << "For FE" << +cFe->getId() << " found optimal latencies to be : " << RESET;
+                    LOG(INFO) << BOLDRED << "........ Stub Latency of " << +cOptimalLatencies.first << " and a Trigger Latency of " << +cOptimalLatencies.second << RESET;
+                    LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
+                }
+            }
+        }
+    }
 
-// #ifdef __USE_ROOT__
-//     fDQMHistogramLatencyScan.fill2DLatencyPlots(theLatencyContainer);
-// #else
-//     auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>("2D");
-//     for(auto board: theLatencyContainer)
-//     {
-//         if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
-//     }
-// #endif
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fill2DLatencyPlots(theLatencyContainer);
+#else
+    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>("2D");
+    for(auto board: theLatencyContainer)
+    {
+        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
 }
 
 //////////////////////////////////////          PRIVATE METHODS             //////////////////////////////////////
