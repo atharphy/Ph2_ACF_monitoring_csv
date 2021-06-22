@@ -200,7 +200,6 @@ void LatencyScan::StubLatencyScan()
         DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
         ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cMatchedEvents);
 
-        LOG(INFO) << BOLDBLUE << "Stub Latency " << +cLat << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             // zero stub container 
@@ -222,6 +221,7 @@ void LatencyScan::StubLatencyScan()
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
+            LOG(INFO) << BOLDBLUE << "BeBoard#" << +cBoard->getIndex() << " ..searching for a match between stub and hit data for a stub latency of  " << +cLat << RESET;
             for(auto& cEvent: cEvents)
             {
                 auto cEventCount = cEvent->GetEventCount();
