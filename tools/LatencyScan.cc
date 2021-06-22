@@ -217,13 +217,13 @@ void LatencyScan::StubLatencyScan()
                     auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cCic               = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
                         auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
-                        if(cCic != NULL)
-                        {
-                            auto cBx = cEvent->BxId(cHybrid->getId());
-                            LOG(INFO) << BOLDBLUE << "\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
-                        }
+                        //auto& cCic               = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
+                        // if(cCic != NULL)
+                        // {
+                        //     auto cBx = cEvent->BxId(cHybrid->getId());
+                        //     LOG(INFO) << BOLDBLUE << "\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+                        // }
 
                         for(auto cChip: *cHybrid)
                         {
@@ -245,8 +245,8 @@ void LatencyScan::StubLatencyScan()
                                     uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
                                     int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
                                     auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
-                                    LOG(INFO) << BOLDBLUE << "\t\t\t...Stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
-                                              << RESET;
+                                    // LOG(INFO) << BOLDBLUE << "\t\t\t...Stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
+                                    //           << RESET;
                                     // check that the hits from these stubs
                                     // match the hits in the event
                                     for(auto cHit: cExpectedHits)
@@ -260,12 +260,12 @@ void LatencyScan::StubLatencyScan()
                                 }
 
                                 //
-                                if(cStubs.size() > 0)
-                                    LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
-                                              << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
-                                else
-                                    LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
-                                              << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
+                                // if(cStubs.size() > 0)
+                                //     LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
+                                //               << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
+                                // else
+                                //     LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
+                                //               << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
                             }
                             else if(cChip->getFrontEndType() == FrontEndType::SSA)
                             {
