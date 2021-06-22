@@ -991,10 +991,10 @@ bool BackEndAlignment::Align()
                 cPackageDelayFound = this->FindPackageDelay(theBoard);
                 cAttempt++;
             } while(!cPackageDelayFound && cAttempt < 5);
-            return cPackageDelayFound;
-            // cAligned = cPackageDelayFound;
-            // if(!cAligned) return cAligned;
-            // return this->FindStubLatency(theBoard);
+            // return cPackageDelayFound;
+            cAligned = cPackageDelayFound;
+            if(!cAligned) return cAligned;
+            return this->FindStubLatency(theBoard);
         }
         else
         {

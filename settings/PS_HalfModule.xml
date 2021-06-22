@@ -2,8 +2,10 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR">
+    <!-- PS  module CERN-->
+    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- PS half module FNAL-->
-    <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- B598 skeleton, direct powering -->
     <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- B14 skeleton, POH -->
