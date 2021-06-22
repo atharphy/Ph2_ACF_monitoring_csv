@@ -151,6 +151,8 @@ void LatencyScan::StubLatencyScan()
 
     auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset(); 
     // means that at some point the stub latency was scanned and the correct value was identified 
+    uint16_t cLowerLimit = fStartLatency;
+    uint16_t cUpperLimit = fStartLatency + fLatencyRange; 
     if( cStubOffset != 0xFFFF )
     {
      LOG (INFO) << BOLDMAGENTA << "Since stub latency offset was already found to be " 
@@ -173,8 +175,9 @@ void LatencyScan::StubLatencyScan()
                         if( cChip->getIndex() > 0 ) break;
 
                         auto cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip,"TriggerLatency"); 
-                        fLatencyRange = 6;  
-                        fStartLatency = cTriggerLatency - cStubOffset - fLatencyRange/2;
+                        uint16_t cRange = 6; 
+                        cLowerLimit = cTriggerLatency - cStubOffset - cRange/2;
+                        cUpperLimit =  cTriggerLatency - cStubOffset + cRange/2;
                         LOG (INFO) << BOLDMAGENTA << "Using latency value programmed in Chp#"
                             << +cChip->getId() 
                             << " : modifying range of scan .. to start  at "
@@ -191,6 +194,8 @@ void LatencyScan::StubLatencyScan()
 
     for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
+        if(!(cLat >= cLowerLimit && cLat < cUpperLimit)) continue;
+        
         // container to hold scan result
         DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
         ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cMatchedEvents);
