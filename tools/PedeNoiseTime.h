@@ -37,8 +37,8 @@ struct DataLogEventPedeNoiseTime
     uint32_t fEventCnt = 0;
     uint16_t fEventId  = 0;
     //
-    uint16_t fTriggeredBx = 0 ; 
-    uint16_t fIter       = 0 ;
+    uint16_t fTriggeredBx = 0;
+    uint16_t fIter        = 0;
     //
     uint16_t fL1Latency  = 0;
     uint16_t fL1Id       = 0;
@@ -90,9 +90,9 @@ class PedeNoiseTime : public Tool
     uint32_t GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
     bool     DataFromRandomTriggers(int pTriggerSeparation = 500);
     // external triggers
-    bool     DataFromExternalTriggers();
-    // 
-    void     CalculateOccupancy(DetectorDataContainer* pOccupancyContainer); 
+    bool DataFromExternalTriggers();
+    //
+    void CalculateOccupancy(DetectorDataContainer* pOccupancyContainer);
 
     uint8_t  fPulseAmplitude{0};
     uint32_t fEventsPerPoint{0};
@@ -125,9 +125,8 @@ class PedeNoiseTime : public Tool
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
     DataLogEventPedeNoiseTime                  fEvent;
-    StatsSum fNoiseStats, fPedestalStats; 
-     
-   
+    StatsSum                                   fNoiseStats, fPedestalStats;
+
     class FCMDs
     {
       public:
@@ -138,14 +137,14 @@ class PedeNoiseTime : public Tool
         uint8_t fClear     = 0xD3; // ReSync+BC0
         uint8_t fEmpty     = 0xC1; // empty
     };
-    const FCMDs          fFCMDs;
-    std::vector<uint8_t> fIters;
-    std::vector<uint8_t> fFastCommands;
+    const FCMDs           fFCMDs;
+    std::vector<uint8_t>  fIters;
+    std::vector<uint8_t>  fFastCommands;
     std::vector<uint16_t> fTriggeredBxs;
-    size_t               fTriggersSent = 0 ;
-    size_t               fNInjectedTriggers = 0;
-    size_t               fReps              = 0;
-    size_t               fPerAttempt        = 0;
+    size_t                fTriggersSent      = 0;
+    size_t                fNInjectedTriggers = 0;
+    size_t                fReps              = 0;
+    size_t                fPerAttempt        = 0;
 
 #ifdef __USE_ROOT__
     DQMHistogramPedeNoise fDQMHistogramPedeNoise;

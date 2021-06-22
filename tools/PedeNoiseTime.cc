@@ -123,19 +123,18 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
         cTree->Branch("Latency", &fEvent.fL1Latency);
         cTree->Branch("HybridId", &fEvent.fHybridId);
         cTree->Branch("ChipId", &fEvent.fChipId);
-        cTree->Branch("Pedestal", &fPedestalStats.fMean);    
-        cTree->Branch("Noise", &fNoiseStats.fMean);    
-        cTree->Branch("PedestalError", &fPedestalStats.fStdDev);    
-        cTree->Branch("NoiseError", &fNoiseStats.fStdDev);    
-        cTree->Branch("PedestalMax", &fPedestalStats.fMax);    
-        cTree->Branch("NoiseMax", &fNoiseStats.fMax);        
-        cTree->Branch("PedestalMin", &fPedestalStats.fMin);    
-        cTree->Branch("NoiseMin", &fNoiseStats.fMin);    
+        cTree->Branch("Pedestal", &fPedestalStats.fMean);
+        cTree->Branch("Noise", &fNoiseStats.fMean);
+        cTree->Branch("PedestalError", &fPedestalStats.fStdDev);
+        cTree->Branch("NoiseError", &fNoiseStats.fStdDev);
+        cTree->Branch("PedestalMax", &fPedestalStats.fMax);
+        cTree->Branch("NoiseMax", &fNoiseStats.fMax);
+        cTree->Branch("PedestalMin", &fPedestalStats.fMin);
+        cTree->Branch("NoiseMin", &fNoiseStats.fMin);
         this->bookHistogram(cBoard, "PedeNoiseSummary", cTree);
     }
 #endif
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, fTriggerCounter);
-    
 }
 
 void PedeNoiseTime::disableStubLogic()
@@ -533,11 +532,11 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     //     << RESET;
 
     // this means that I should send 500 triggers at a time
-    bool   cContinue    = true;
-    fEvent.fIter=0;
+    bool cContinue = true;
+    fEvent.fIter   = 0;
     fIters.clear();
     fTriggeredBxs.clear();
-    fTriggersSent=0; 
+    fTriggersSent = 0;
     do
     {
         bool cSuccess = true;
@@ -546,7 +545,7 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
         fTriggersSent += fNInjectedTriggers * cNrepetitions;
         // LOG (INFO) << BOLDMAGENTA << "TriggerIter#" << +fEvent.fIter << RESET;
-        //if(fEvent.fIter % 50 == 0) LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << fEvent.fIter << RESET;
+        // if(fEvent.fIter % 50 == 0) LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::SendGenericTriggers TriggerIter#" << fEvent.fIter << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             auto cNevents = this->GenericTriggerConfig(cBoard, cNrepetitions);
@@ -630,8 +629,8 @@ bool PedeNoiseTime::DataFromExternalTriggers()
         fBeBoardInterface->Start(cBoard);
         // check if all triggers have been received
         // wait until all triggers have been seen by the FC7
-        uint32_t cCounter        = 0;
-        cNtriggers       = 0;
+        uint32_t cCounter = 0;
+        cNtriggers        = 0;
         do
         {
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -650,10 +649,10 @@ bool PedeNoiseTime::DataFromExternalTriggers()
 }
 bool PedeNoiseTime::GetDataFromFC7()
 {
-    fEventsPerPoint            = findValueInSettings("NeventsScan", 10);
-    int cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500);
-    int cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
-    bool cSuccess = (cUseFcmdBram) ? this->DataFromRandomTriggers(cMeanTriggerSeparation) : this->DataFromExternalTriggers();
+    fEventsPerPoint             = findValueInSettings("NeventsScan", 10);
+    int  cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500);
+    int  cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
+    bool cSuccess               = (cUseFcmdBram) ? this->DataFromRandomTriggers(cMeanTriggerSeparation) : this->DataFromExternalTriggers();
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     if(cSuccess)
     {
@@ -665,30 +664,30 @@ bool PedeNoiseTime::GetDataFromFC7()
         for(auto cBoard: *fDetectorContainer)
         {
             auto                  cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-            auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
+            auto&                 cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
             std::vector<uint32_t> cData(0);
             auto                  cNeventsReadBack = ReadData(cBoard, cData, false);
             DecodeData(cBoard, cData, cNeventsReadBack, fBeBoardInterface->getBoardType(cBoard));
-            cSuccess = cSuccess && (cNeventsReadBack >= cNtriggers );// 
+            cSuccess = cSuccess && (cNeventsReadBack >= cNtriggers); //
             if(cNtriggers != cNeventsReadBack)
                 LOG(INFO) << BOLDRED << "BeBoard#" << +cBoard->getIndex() << " found " << +cNWords << " words in the readout"
                           << " when " << +cNtriggers << " triggers were sent by the fast command block "
                           << " - Read-back " << +cData.size() << " 32 bit words "
                           << " containing .." << +cNeventsReadBack << " events." << RESET;
         }
-    }// get events 
+    } // get events
     return cSuccess;
 }
 void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContainer)
 {
-    int cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
-    size_t cNeventsExpected    = fEventsPerPoint; 
-    if( cUseFcmdBram ) cNeventsExpected = fTriggersSent;
+    int    cUseFcmdBram     = findValueInSettings("UseFcmdBram", 1);
+    size_t cNeventsExpected = fEventsPerPoint;
+    if(cUseFcmdBram) cNeventsExpected = fTriggersSent;
     // now retreive events
     const std::vector<Event*>& cPh2Events = GetEvents();
-    fEvent.fEventLoss = cNeventsExpected - cPh2Events.size();
-    if( fEvent.fEventLoss != 0 ) LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at... and I've asked for " << fEventsPerPoint << RESET;
-    fEvent.fEventCnt  = 0;
+    fEvent.fEventLoss                     = cNeventsExpected - cPh2Events.size();
+    if(fEvent.fEventLoss != 0) LOG(INFO) << BOLDMAGENTA << "Have " << +cPh2Events.size() << " events to look at... and I've asked for " << fEventsPerPoint << RESET;
+    fEvent.fEventCnt = 0;
     for(auto& cEvent: cPh2Events)
     {
         auto cTriggerId = cEvent->GetExternalTriggerId();
@@ -708,10 +707,11 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                     {
                         fEvent.fL1Id = cEvent->L1Id(cHybrid->getId(), cChip->getId());
                         // L1 Id starts counting from 1 ..
-                        if(cUseFcmdBram){ 
+                        if(cUseFcmdBram)
+                        {
                             fEvent.fL1Mismatch = ((int)(fEvent.fL1Id - 1) != (int)(fEvent.fEventCnt % fPerAttempt));
-                            //fEvent.fTriggeredBx = fTriggeredBxs[fEvent.fEventCnt]; 
-                            //fEvent.fIter = fIters[fEvent.fEventCnt]; 
+                            // fEvent.fTriggeredBx = fTriggeredBxs[fEvent.fEventCnt];
+                            // fEvent.fIter = fIters[fEvent.fEventCnt];
                         }
                         fEvent.fChipId = cChip->getId();
                         // now for the occupancy
@@ -720,21 +720,21 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                         auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                         for(auto cHit: cHits)
                         {
-                            fEvent.fHits.push_back( (uint8_t)cHit );
+                            fEvent.fHits.push_back((uint8_t)cHit);
                             if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
                             {
                                 // LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
                                 cOccThischip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
                             }
                         }
-                        #ifdef __USE_ROOT__
-                            TTree* cTree = static_cast<TTree*>(getHist(cBoard, "DataLog"));
-                            cTree->Fill();
-                        #endif
+#ifdef __USE_ROOT__
+                        TTree* cTree = static_cast<TTree*>(getHist(cBoard, "DataLog"));
+                        cTree->Fill();
+#endif
                     } // CHIP
-                }// hybrid
-            } // OG
-        } // BOARD
+                }     // hybrid
+            }         // OG
+        }             // BOARD
         fEvent.fEventCnt++;
     } // event loop - I want to keep this because I want to look at what happens in an event/per event basis
     auto cNevents = cPh2Events.size();
@@ -742,70 +742,70 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
-    if( fThresholdAndNoiseContainer == nullptr )
+    if(fThresholdAndNoiseContainer == nullptr)
     {
         fThresholdAndNoiseContainer = new DetectorDataContainer();
         ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
     }
-    fEventsPerPoint            = findValueInSettings("NeventsScan", 10);
-    int cStartLatency          = findValueInSettings("StartLatency", 1);
-    int cLatencyRange          = findValueInSettings("LatencyRange", 1);
+    fEventsPerPoint   = findValueInSettings("NeventsScan", 10);
+    int cStartLatency = findValueInSettings("StartLatency", 1);
+    int cLatencyRange = findValueInSettings("LatencyRange", 1);
     LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " events per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
-    float    cLimit         = 0;
-    uint16_t cMaxValue      = (1 << 10) - 1;
+    float    cLimit    = 0;
+    uint16_t cMaxValue = (1 << 10) - 1;
     // uint16_t cMinValue      = 0;
     if(cWithSSA) cMaxValue = (1 << 8) - 1;
     if(cWithMPA) cMaxValue = (1 << 8) - 1;
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
-    std::vector<int>   cSigns{+1, -1}; // want to scan up then down 
+    std::vector<int>   cSigns{+1, -1}; // want to scan up then down
     std::vector<float> cLimits{1 - cFirstLimit, cFirstLimit};
-    std::vector<int>   cBreakCounts{ 20, 40 }; 
-    int cMinBreakCount = cBreakCounts[0];
+    std::vector<int>   cBreakCounts{20, 40};
+    int                cMinBreakCount = cBreakCounts[0];
     for(uint16_t cTriggerLatency = cStartLatency; cTriggerLatency < cStartLatency + cLatencyRange; cTriggerLatency++)
     {
-        uint16_t cValue         = pStartValue;
+        uint16_t cValue = pStartValue;
         // set latency
         fEvent.fL1Latency = cTriggerLatency;
         this->setSameGlobalDac("TriggerLatency", cTriggerLatency);
         LOG(INFO) << BOLDMAGENTA << "Threshold scan for a latency value of " << +cTriggerLatency << RESET;
         int cCounter = 0;
-        // containers to hold scan data 
+        // containers to hold scan data
         std::vector<DetectorDataContainer*> cScanData;
         ContainerRecycleBin<Occupancy>      cRecyclingBin;
         cRecyclingBin.setDetectorContainer(fDetectorContainer);
         for(auto cContainer: cScanData) cRecyclingBin.free(cContainer);
         cScanData.clear();
-        // and a vector to hold the values of the thresholds scanned 
+        // and a vector to hold the values of the thresholds scanned
         std::vector<uint16_t> cThresholds(0);
-    
+
         for(auto cSign: cSigns)
         {
-            bool firstlim      = false;
-            bool cLimitFound   = false;
-            int  cLimitCounter = 0;
-            size_t cStep=0; 
+            bool   firstlim      = false;
+            bool   cLimitFound   = false;
+            int    cLimitCounter = 0;
+            size_t cStep         = 0;
             do
             {
-                //push back new entry into scan data container
+                // push back new entry into scan data container
                 cScanData.push_back(cRecyclingBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy()));
                 cThresholds.push_back(cValue);
-                //DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-                fDetectorDataContainer                       = cScanData[cScanData.size()-1];
-                fSCurveOccupancyMap[cValue]                  = cScanData[cScanData.size()-1];
-                std::string cRegName                         = "VCth";
+                // DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+                fDetectorDataContainer      = cScanData[cScanData.size() - 1];
+                fSCurveOccupancyMap[cValue] = cScanData[cScanData.size() - 1];
+                std::string cRegName        = "VCth";
                 if(cWithSSA) cRegName = "Bias_THDAC";
                 if(cWithMPA) cRegName = "ThDAC_ALL";
                 fEvent.fThreshold = cValue;
-                // now set threshold 
+                // now set threshold
                 this->setSameGlobalDac(cRegName, fEvent.fThreshold);
                 bool cSuccess = GetDataFromFC7();
                 if(!cSuccess) continue;
-                // now retreive events and calculate occupancy 
-                CalculateOccupancy(cScanData[cScanData.size()-1]);
-                float globalOccupancy = cScanData[cScanData.size()-1]->getSummary<Occupancy, Occupancy>().fOccupancy;
-                auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-                if( cStep%5 == 0 ) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << RESET; 
+                // now retreive events and calculate occupancy
+                CalculateOccupancy(cScanData[cScanData.size() - 1]);
+                float globalOccupancy     = cScanData[cScanData.size() - 1]->getSummary<Occupancy, Occupancy>().fOccupancy;
+                auto  cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
+                if(cStep % 5 == 0) LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << RESET;
                 // if( cStep%5 == 0 ) LOG(DEBUG) << BOLDMAGENTA << "\t.. distance from target is "
                 //           << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                 //           << " -- current value is " << +cLimitCounter << RESET;
@@ -816,15 +816,19 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                 }
                 cValue += cSign;
                 cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
-                if(cLimitFound && cSign != cSigns[1]) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;  cMinBreakCount = cBreakCounts[1];}
+                if(cLimitFound && cSign != cSigns[1])
+                {
+                    LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;
+                    cMinBreakCount = cBreakCounts[1];
+                }
                 cStep++;
             } while(!cLimitFound);
             cCounter++;
             cValue = pStartValue + cSigns[cCounter];
         } // threshold loop
-        
+
         LOG(INFO) << BOLDMAGENTA << "Extracting pedestal and noise for a latency value of " << +cTriggerLatency << RESET;
-        // calculate noise 
+        // calculate noise
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -853,36 +857,28 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
                                 cW[cIndx]            = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
                                 cV[cIndx]            = cThresholds[cIndx];
                             }
-                            auto cPedeNoise                                                   = evalNoise(cW, cV, true);
+                            auto cPedeNoise = evalNoise(cW, cV, true);
                             cPedestalsThisROC.push_back(cPedeNoise.first);
                             cNoiseThisROC.push_back(cPedeNoise.second);
                         } // chnl loop
                         fPedestalStats = SummarizeStats<float>(cPedestalsThisROC);
-                        fNoiseStats = SummarizeStats<float>(cNoiseThisROC);
-                        LOG (INFO) << BOLDGREEN << "Chip " << +cROC->getId() << " -- pedestal + noise summary " << RESET;
-                        LOG (INFO) << BOLDMAGENTA << "\t\t... Pedestal Stats : " 
-                            << std::setprecision(2) << std::fixed
-                            << " - Mean is " << fPedestalStats.fMean
-                            << " - RMS is " << fPedestalStats.fStdDev
-                            << " - minimum value is " << fPedestalStats.fMin
-                            << " - maximum value is " << fPedestalStats.fMax
-                            << RESET;
-                        LOG (INFO) << BOLDMAGENTA << "\t\t... Noise Stats : " 
-                            << " - Mean is " << fNoiseStats.fMean
-                            << " - RMS is " << fNoiseStats.fStdDev
-                            << " - minimum value is " << fNoiseStats.fMin
-                            << " - maximum value is " << fNoiseStats.fMax
-                            << RESET;
-                        #ifdef __USE_ROOT__
-                            TTree* cTree = static_cast<TTree*>(getHist(cBoard, "PedeNoiseSummary"));
-                            cTree->Fill();
-                        #endif
-                    }//chip
-                }//hybrid
-            }//OG
-        }//board
+                        fNoiseStats    = SummarizeStats<float>(cNoiseThisROC);
+                        LOG(INFO) << BOLDGREEN << "Chip " << +cROC->getId() << " -- pedestal + noise summary " << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "\t\t... Pedestal Stats : " << std::setprecision(2) << std::fixed << " - Mean is " << fPedestalStats.fMean << " - RMS is " << fPedestalStats.fStdDev
+                                  << " - minimum value is " << fPedestalStats.fMin << " - maximum value is " << fPedestalStats.fMax << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "\t\t... Noise Stats : "
+                                  << " - Mean is " << fNoiseStats.fMean << " - RMS is " << fNoiseStats.fStdDev << " - minimum value is " << fNoiseStats.fMin << " - maximum value is "
+                                  << fNoiseStats.fMax << RESET;
+#ifdef __USE_ROOT__
+                        TTree* cTree = static_cast<TTree*>(getHist(cBoard, "PedeNoiseSummary"));
+                        cTree->Fill();
+#endif
+                    } // chip
+                }     // hybrid
+            }         // OG
+        }             // board
 
-    }// latency loop
+    } // latency loop
 }
 void PedeNoiseTime::extractPedeNoiseTime()
 {

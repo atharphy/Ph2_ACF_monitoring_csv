@@ -131,7 +131,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t       fGBTphase;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
     // I'm going to add a variable to hold the stub offset
-    uint32_t fStubOffset = 0;
+    uint32_t fStubOffset = 0xFFFF;
 
     // some useful stuff
     int  fResetAttempts;
