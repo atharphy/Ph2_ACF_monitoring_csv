@@ -244,9 +244,12 @@ void LatencyScan::StubLatencyScan()
                             //auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
                             if(cChip->getFrontEndType() == FrontEndType::CBC3)
                             {
+                                // first check for hits 
+                                auto                 cHits                 = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                                if( cHits.size() == 0 )continue;
+                                
                                 auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                 std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
-                                auto                 cHits                 = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                                 auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                                 int                  cMatchedHits          = 0;
                                 for(auto cStub: cStubs)
