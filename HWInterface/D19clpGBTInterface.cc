@@ -115,8 +115,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
-        if(cGroup == 0) cTxInvert = 1;
-        if(cGroup == 2) cTxInvert = 0;
+        //if(cGroup == 0) cTxInvert = 1;
+        //if(cGroup == 2) cTxInvert = 0;
         for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
     }
     // Rx configuration and Phase Align
