@@ -151,7 +151,7 @@ void LatencyScan::ScanLatency()
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
 
-                    //LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. filling data container ... " << RESET;
+                    LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. counting occupancy for event " << (*cEventIter)->GetEventCount() << RESET;
                     //(*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
                     for(auto cOpticalGroup: *cBoard)
                     {
