@@ -129,7 +129,7 @@ void LatencyScan::ScanLatency()
         uint16_t cOffset=0; 
         for(auto cBoard: *fDetectorContainer)
         {
-            //auto cBrdIndx = cBoard->getIndex();
+            auto cBrdIndx = cBoard->getIndex();
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
