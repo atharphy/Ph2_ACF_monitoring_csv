@@ -1005,8 +1005,8 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
         uint8_t cBendMask      = (fIs2S) ? 0xF : 0x7;
 
         // 3 bit chip id
-        uint8_t cChipId       = static_cast<uint8_t>((cStubWord & (0x7 << (cIdOffset))) >> cIdOffset);
         auto    cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        uint8_t cChipId       = static_cast<uint8_t>((cStubWord & (0x7 << (cIdOffset))) >> cIdOffset);
         uint8_t cStubAddress = static_cast<uint8_t>((cStubWord & (0xFF << (cAddressOffset))) >> cAddressOffset);
         uint8_t cStubBend    = static_cast<uint8_t>((cStubWord & (cBendMask << (cBendOffset))) >> cBendOffset);
         uint8_t cRow         = fIs2S ? 0x00 : static_cast<uint8_t>((cStubWord & 0xF));
@@ -1017,9 +1017,7 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
                        // << " stub address is " << +cStubAddress << " stub bend is " << +cStubBend << " stub row is " << +cRow << RESET;
             cStubVec.emplace_back(cStubAddress, cStubBend, cRow);
         }
-        // else
-        //     LOG(DEBUG) << BOLDRED << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipIdMapped << " [ chip id on hybrid " << +pReadoutChipId << "]"
-        //                << RESET;
+        // CI
     }
     return cStubVec;
 }
