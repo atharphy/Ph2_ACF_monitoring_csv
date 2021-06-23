@@ -3163,7 +3163,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 if(!cFailed)
                 {
                     // wait until words in the readout have stopped inreasing
-                    LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::WaitForData Now checking words from the FC7" << RESET;
+                    //LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::WaitForData Now checking words from the FC7" << RESET;
                     cNWords                 = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                     uint32_t cNWordsPrev    = cNWords;
                     bool     cStopIncrement = false;
