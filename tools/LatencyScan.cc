@@ -146,7 +146,7 @@ void LatencyScan::ScanLatency()
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
                 auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
-                float cOccGlblMnl=0;
+                //float cOccGlblMnl=0;
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
