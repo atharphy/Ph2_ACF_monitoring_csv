@@ -165,8 +165,7 @@ void LatencyScan::ScanLatency()
                                 auto& cOccChip = cOccHybrid->at(cChip->getIndex());
                                 auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 cOccGlblMnl += (float)cHits.size()/(float)cChip->size() ;
-                                for( auto cHit : cHits )
-                                        if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) { cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
+                                for( auto cHit : cHits ) cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
                 
                                 if( cHits.size() > 0 )
                                     LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
