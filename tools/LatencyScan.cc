@@ -198,8 +198,9 @@ void LatencyScan::StubLatencyScan()
                         if(cChip->getIndex() > 0)
                         {
                             LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
-                                      << " setting threshold on Chip#" << +cChip->getId() << " to 100 Vcth units." << RESET;
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 100);
+                                      << " by disabling injection on Chip#" << +cChip->getId() << RESET;
+                            fReadoutChipInterface->enableInjection(cChip, false);
+
                         }
                     }
                 }
