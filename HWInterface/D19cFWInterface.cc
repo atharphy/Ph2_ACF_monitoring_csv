@@ -2526,7 +2526,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
 // }
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
-    LOG(INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
+    //LOG(INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
     if(pData.size())
     {
         LOG(INFO) << BOLDRED << "No data to retrieve .. fail!" << RESET;

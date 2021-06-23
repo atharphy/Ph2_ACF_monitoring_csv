@@ -927,7 +927,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             EventType fEventType = pBoard->getEventType();
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
-            LOG(INFO) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
+            //LOG(INFO) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
             // uint32_t nmpa = 0;
             uint32_t maxind = 0;

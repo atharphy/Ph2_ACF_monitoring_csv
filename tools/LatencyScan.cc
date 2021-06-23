@@ -141,7 +141,6 @@ void LatencyScan::ScanLatency()
                 << RESET;
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
-                LOG (INFO) << BOLDMAGENTA << "\t\t..Trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) << RESET;
                 auto cEventIter = cEvents.begin() + cTriggerId ;
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
@@ -152,30 +151,31 @@ void LatencyScan::ScanLatency()
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
                     //LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. counting occupancy for event " << (*cEventIter)->GetEventCount() << RESET;
-                    //(*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
-                    for(auto cOpticalGroup: *cBoard)
-                    {
-                        auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
-                        for(auto cHybrid: *cOpticalGroup)
-                        {
-                            auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
-                            for(auto cChip: *cHybrid)
-                            {
-                                auto& cOccChip = cOccHybrid->at(cChip->getIndex());
-                                auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                cOccGlblMnl += (float)cHits.size()/(float)cChip->size() ;
-                                for( auto cHit : cHits ) cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
-                                // if( cHits.size() > 0 )
-                                //     LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
-                                //         << +cHits.size() << " hits in this event.." << RESET;
-                            } // chip
-                        } // hybrids
-                    }// optical group
+                    (*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup()); 
+                    // for(auto cOpticalGroup: *cBoard)
+                    // {
+                    //     auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
+                    //     for(auto cHybrid: *cOpticalGroup)
+                    //     {
+                    //         auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
+                    //         for(auto cChip: *cHybrid)
+                    //         {
+                    //             auto& cOccChip = cOccHybrid->at(cChip->getIndex());
+                    //             auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                    //             cOccGlblMnl += (float)cHits.size()/(float)cChip->size() ;
+                    //             for( auto cHit : cHits ) cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
+                    //             // if( cHits.size() > 0 )
+                    //             //     LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
+                    //             //         << +cHits.size() << " hits in this event.." << RESET;
+                    //         } // chip
+                    //     } // hybrids
+                    // }// optical group
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " hits per board per event." << RESET;
+                LOG (INFO) << BOLDMAGENTA << "\t\t..Trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) 
+                    << ".. on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
                 #ifdef __USE_ROOT__
                     fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
                 #endif
