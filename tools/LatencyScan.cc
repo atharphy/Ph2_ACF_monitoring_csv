@@ -276,7 +276,7 @@ void LatencyScan::StubLatencyScan()
                                     uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
                                     int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
                                     auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
-                                    LOG(INFO) << BOLDBLUE << "\t\t\t...Stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
+                                    if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDBLUE << "\t\t\t...Hybrid#" << +cHybrid->getId() << " stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
                                               << RESET;
                                     // check that the hits from these stubs
                                     // match the hits in the event
@@ -318,7 +318,8 @@ void LatencyScan::StubLatencyScan()
                                              ->at(cOpticalGroup->getIndex())
                                              ->at(cHybrid->getIndex())
                                              ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
-                                      << " stubs that match hit information in the readout.." << RESET;
+                                      << " stubs on hybrid" << +cHybrid->getId() 
+                                      << " that match hit information in the readout.." << RESET;
                     } // hybrids
                 }     // optical group
             }         // events
