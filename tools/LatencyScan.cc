@@ -287,8 +287,8 @@ void LatencyScan::StubLatencyScan()
                                     uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
                                     int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
                                     auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
-                                    // LOG(INFO) << BOLDBLUE << "\t\t\t...Stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
-                                    //           << RESET;
+                                    LOG(INFO) << BOLDBLUE << "\t\t\t...Stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
+                                              << RESET;
                                     // check that the hits from these stubs
                                     // match the hits in the event
                                     for(auto cHit: cExpectedHits)
