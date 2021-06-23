@@ -151,7 +151,7 @@ void LatencyScan::ScanLatency()
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
 
-                    LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. counting occupancy for event " << (*cEventIter)->GetEventCount() << RESET;
+                    //LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. counting occupancy for event " << (*cEventIter)->GetEventCount() << RESET;
                     //(*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
                     for(auto cOpticalGroup: *cBoard)
                     {
@@ -160,7 +160,7 @@ void LatencyScan::ScanLatency()
                             for(auto cChip: *cHybrid)
                             {
                                 auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                cOccGlbl += cHits.size()/cChip->size() ;
+                                cOccGlbl += (float)cHits.size()/(float)cChip->size() ;
                                 if( cHits.size() > 0 )
                                     LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
                                         << +cHits.size() << " hits in this event.." << RESET;
