@@ -98,10 +98,10 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
-            LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader)
-                << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
-                << " dummy 32 bit words .. " << RESET;
+            // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader)
+            //     << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
+            //     << " dummy 32 bit words .. " << RESET;
             // counters from event header
             // TDC + L1A counter
             uint32_t cEvntCntTag = (*(cEventIterator + 2));
