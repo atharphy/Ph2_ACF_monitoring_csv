@@ -121,18 +121,66 @@ void LatencyScan::ScanLatency()
         }                                                                 // OG
     }                                                                     // board
 
-    for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
+    uint16_t cLat = fStartLatency; 
+    //for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
+    do
     {
-        DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-        fDetectorDataContainer                       = theOccupancyContainer;
-        fSCurveOccupancyMap[cLat]                    = theOccupancyContainer;
-        this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
-        float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-        LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
-#ifdef __USE_ROOT__
-        fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
-#endif
-    }
+        setSameDac("TriggerLatency", cLat);
+        uint16_t cOffset=0; 
+        for(auto cBoard: *fDetectorContainer)
+        {
+            auto cBrdIndx = cBoard->getIndex();
+            size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+            this->ReadNEvents(cBoard, fNevents);
+            const std::vector<Event*>& cEvents = this->GetEvents();
+            LOG (INFO) << BOLDMAGENTA << "Lateny Scan.. latency value of " << cLat << " going to fill occupancy plots when I am sending " 
+                << +(1+cTriggerMult)
+                << " triggers on every one received."
+                << RESET;
+            for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
+            {
+                auto cEventIter = cEvents.begin() + cTriggerId ;
+                DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+                fDetectorDataContainer                       = theOccupancyContainer;
+                fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
+                do
+                {   
+                    if( cEventIter >= cEvents.end() ) break; 
+
+                    (*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
+                    /*for(auto cOpticalGroup: *cBoard)
+                    {
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            for(auto cChip: *cHybrid)
+                            {
+                                auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                            } // chip
+                        } // hybrids
+                    }// optical group*/
+                    cEventIter += (1+cTriggerMult);
+                }while(cEventIter < cEvents.end());
+                fDetectorDataContainer->at(cBrdIndx)->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
+                float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+                LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
+                #ifdef __USE_ROOT__
+                 fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
+                #endif
+            }
+            if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
+        }
+        cLat += cOffset; 
+        // DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+        // fDetectorDataContainer                       = theOccupancyContainer;
+        // fSCurveOccupancyMap[cLat]                    = theOccupancyContainer;
+        // set trigger latency 
+        //this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
+//         float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+//         LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
+// #ifdef __USE_ROOT__
+//         fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
+// #endif
+    }while( cLat < fStartLatency + fLatencyRange );
     /*#ifdef __USE_ROOT__
         fDQMHistogramLatencyScan.fillLatencyPlots(*theLatencyContainer);
     #else
