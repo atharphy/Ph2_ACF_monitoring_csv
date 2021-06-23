@@ -159,8 +159,9 @@ void LatencyScan::ScanLatency()
                             for(auto cChip: *cHybrid)
                             {
                                 auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
-                                    << +cHits.size() << " hits in this event.." << RESET;
+                                if( cChip->getId() >=4 && cChip->getId() <= 6 )
+                                    LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
+                                        << +cHits.size() << " hits in this event.." << RESET;
                             } // chip
                         } // hybrids
                     }// optical group
