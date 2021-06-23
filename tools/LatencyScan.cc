@@ -175,6 +175,7 @@ void LatencyScan::ScanLatency()
                     }// optical group
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
+                fDetectorDataContainer->at(cBrdIndx)->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), fNevents);
                 float cOccGlbl = fDetectorDataContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
                 LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls/fNevents << " using the container " 
