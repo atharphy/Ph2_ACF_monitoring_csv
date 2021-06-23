@@ -129,13 +129,15 @@ void LatencyScan::ScanLatency()
         uint16_t cOffset=0; 
         for(auto cBoard: *fDetectorContainer)
         {
-            auto cBrdIndx = cBoard->getIndex();
+            //auto cBrdIndx = cBoard->getIndex();
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
             LOG (INFO) << BOLDMAGENTA << "Lateny Scan.. latency value of " << cLat << " going to fill occupancy plots when I am sending " 
                 << +(1+cTriggerMult)
-                << " triggers on every one received."
+                << " triggers on every one received... have "
+                << +cEvents.size() 
+                << " events to use"
                 << RESET;
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
@@ -148,25 +150,28 @@ void LatencyScan::ScanLatency()
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
 
-                    (*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
-                    /*for(auto cOpticalGroup: *cBoard)
+                    //LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. filling data container ... " << RESET;
+                    //(*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
+                    for(auto cOpticalGroup: *cBoard)
                     {
                         for(auto cHybrid: *cOpticalGroup)
                         {
                             for(auto cChip: *cHybrid)
                             {
-                                auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                                auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
+                                    << +cHits.size() << " hits in this event.." << RESET;
                             } // chip
                         } // hybrids
-                    }// optical group*/
+                    }// optical group
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
-                fDetectorDataContainer->at(cBrdIndx)->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
-                float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
-                #ifdef __USE_ROOT__
-                 fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
-                #endif
+                //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+                //float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+                //LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
+                //#ifdef __USE_ROOT__
+                // fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
+                //#endif
             }
             if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
         }//board
