@@ -1454,8 +1454,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     // }
     // bool cSuccess = this->SoftReset(pChip);
 
-    bool cClkTermination = true;
-    bool cRxTermination  = true;
+    bool cClkTermination = false;
+    bool cRxTermination  = false;
     //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the
     // crate set-up .. how to fix this?!?!
     std::string cRegName  = "SLVS_PADS_CONFIG";
