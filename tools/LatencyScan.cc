@@ -175,7 +175,7 @@ void LatencyScan::StubLatencyScan()
                         if( cChip->getIndex() > 0 ) break;
 
                         auto cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip,"TriggerLatency"); 
-                        uint16_t cRange = 6; 
+                        uint16_t cRange = 10; 
                         cLowerLimit = cTriggerLatency - cStubOffset - cRange/2;
                         cUpperLimit =  cTriggerLatency - cStubOffset + cRange/2;
                         LOG (INFO) << BOLDMAGENTA << "Using latency value programmed in Chp#"
