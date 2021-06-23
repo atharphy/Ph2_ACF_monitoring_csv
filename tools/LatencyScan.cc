@@ -146,6 +146,7 @@ void LatencyScan::ScanLatency()
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
+                float cOccGlbl=0;
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
@@ -159,7 +160,8 @@ void LatencyScan::ScanLatency()
                             for(auto cChip: *cHybrid)
                             {
                                 auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                if( cChip->getId() >=4 && cChip->getId() <= 6 )
+                                cOccGlbl += cHits.size()/cChip->size() ;
+                                if( cHits.size() > 0 )
                                     LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
                                         << +cHits.size() << " hits in this event.." << RESET;
                             } // chip
@@ -169,7 +171,7 @@ void LatencyScan::ScanLatency()
                 }while(cEventIter < cEvents.end());
                 //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
                 //float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-                //LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
                 //#ifdef __USE_ROOT__
                 // fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
                 //#endif
