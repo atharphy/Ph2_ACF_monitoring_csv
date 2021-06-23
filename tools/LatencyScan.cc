@@ -146,31 +146,38 @@ void LatencyScan::ScanLatency()
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
-                //float cOccGlbl=0;
+                auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
+                float cOccGlbl=0;
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
 
                     //LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. counting occupancy for event " << (*cEventIter)->GetEventCount() << RESET;
-                    (*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
-                    // for(auto cOpticalGroup: *cBoard)
-                    // {
-                    //     for(auto cHybrid: *cOpticalGroup)
-                    //     {
-                    //         for(auto cChip: *cHybrid)
-                    //         {
-                    //             auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                    //             cOccGlbl += (float)cHits.size()/(float)cChip->size() ;
-                    //             if( cHits.size() > 0 )
-                    //                 LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
-                    //                     << +cHits.size() << " hits in this event.." << RESET;
-                    //         } // chip
-                    //     } // hybrids
-                    // }// optical group
+                    //(*cEventIter)->fillDataContainer(fDetectorDataContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup()); 
+                    for(auto cOpticalGroup: *cBoard)
+                    {
+                        auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
+                            for(auto cChip: *cHybrid)
+                            {
+                                auto& cOccChip = cOccHybrid->at(cChip->getIndex());
+                                auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                cOccGlbl += (float)cHits.size()/(float)cChip->size() ;
+                                for( auto cHit : cHits )
+                                        if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) { cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
+                
+                                if( cHits.size() > 0 )
+                                    LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
+                                        << +cHits.size() << " hits in this event.." << RESET;
+                            } // chip
+                        } // hybrids
+                    }// optical group
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
                 //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), fNevents);
-                float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+                //float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
                 LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls/fNevents << " hits per event" << RESET;
                 //#ifdef __USE_ROOT__
                 // fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
