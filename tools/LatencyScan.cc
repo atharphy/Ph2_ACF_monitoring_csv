@@ -263,14 +263,14 @@ void LatencyScan::StubLatencyScan()
                                 auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                                 if(cHits.size() == 0) continue;
 
-                                for(auto cHit : cHits )
-                                {
-                                    if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
-                                            << " chip#" << +cChip->getId() 
-                                            << " hit found in channel " 
-                                            << +cHit
-                                            << RESET;
-                                }
+                                // for(auto cHit : cHits )
+                                // {
+                                //     if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
+                                //             << " chip#" << +cChip->getId() 
+                                //             << " hit found in channel " 
+                                //             << +cHit
+                                //             << RESET;
+                                // }
                                 auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                 std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
                                 auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
