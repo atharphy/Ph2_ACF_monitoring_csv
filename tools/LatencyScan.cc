@@ -192,7 +192,25 @@ void LatencyScan::StubLatencyScan()
         }//brds
     }
 
-   
+    // check for TP 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        uint16_t cTriggerSource = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        if( cTriggerSource == 6 )
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip : *cHybrid )
+                    {
+                        if( cChip->getIndex() > 0 ) fReadoutChipInterface->WriteChipReg(cChip,"Threshold",100);
+                    }    
+                }
+            }//
+        }//
+    }//
+
     for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
        
