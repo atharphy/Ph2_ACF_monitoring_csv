@@ -163,7 +163,7 @@ void LatencyScan::ScanLatency()
                 }while(cEventIter < cEvents.end());
                 fDetectorDataContainer->at(cBrdIndx)->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG(INFO) << BOLDMAGENTA << "\t\t\t..Latency of " << (cLat+cTriggerId) << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
                 #ifdef __USE_ROOT__
                  fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
                 #endif
