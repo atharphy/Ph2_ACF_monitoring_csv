@@ -133,12 +133,12 @@ void LatencyScan::ScanLatency()
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
-            LOG (INFO) << BOLDMAGENTA << "Lateny Scan.. latency value of " << cLat << " going to fill occupancy plots when I am sending " 
-                << +(1+cTriggerMult)
-                << " triggers on every one received... have "
-                << +cEvents.size() 
-                << " events to use"
-                << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "Lateny Scan.. latency value of " << cLat << " going to fill occupancy plots when I am sending " 
+            //     << +(1+cTriggerMult)
+            //     << " triggers on every one received... have "
+            //     << +cEvents.size() 
+            //     << " events to use"
+            //     << RESET;
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
                 auto cEventIter = cEvents.begin() + cTriggerId ;
