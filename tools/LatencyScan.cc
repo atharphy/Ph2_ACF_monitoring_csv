@@ -146,7 +146,7 @@ void LatencyScan::ScanLatency()
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
-                auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
+                auto& cOccBrd = fDetectorDataContainer->at(cBrdIndx);
                 float cOccGlblMnl=0;
                 do
                 {   
@@ -166,7 +166,7 @@ void LatencyScan::ScanLatency()
                                 auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 cOccGlblMnl += (float)cHits.size()/(float)cChip->size() ;
                                 for( auto cHit : cHits ) cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
-                
+                        
                                 if( cHits.size() > 0 )
                                     LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
                                         << +cHits.size() << " hits in this event.." << RESET;
@@ -176,7 +176,7 @@ void LatencyScan::ScanLatency()
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
                 //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), fNevents);
-                float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+                float cOccGlbl = fDetectorDataContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
                 LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls/fNevents << " using the container " 
                     << " and " << cOccGlblMnl << " manually.. all are in units of hits per event" << RESET;
                 //#ifdef __USE_ROOT__

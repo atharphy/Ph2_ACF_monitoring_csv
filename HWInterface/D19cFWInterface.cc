@@ -1920,7 +1920,7 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
             // LOG(INFO) << BOLDMAGENTA << "Valid event header .. copying over "
             //           << " event is made up of " << +cEventSize << " 32 bit words "
             //           << " of which " << +cDummyCount << " are dummy words." << RESET;
-            // for(size_t cIndx = 0; cIndx < cEventSize; cIndx++) LOG(INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator + cIndx)) << RESET;
+            //for(size_t cIndx = 0; cIndx < cEventSize; cIndx++) LOG(INFO) << BOLDYELLOW << "\t..." << std::bitset<32>(*(cEventIterator + cIndx)) << RESET;
             std::copy(pData.begin() + cOffset, pData.begin() + cOffset + cEventSize, std::back_inserter(cValidData));
             cEventIterator += cEventSize;
             cOffset += cEventSize;
@@ -2526,7 +2526,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
 // }
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
-    LOG(DEBUG) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
+    LOG(INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
     if(pData.size())
     {
         LOG(INFO) << BOLDRED << "No data to retrieve .. fail!" << RESET;
@@ -2559,7 +2559,8 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
             auto   cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             do {
                 std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                // if(cCounter % 10 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
+                // if(cCounter % 10 == 0) 
+                LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
                 cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
                 cCounter++;
             } while(cReadoutReq == 0 && cCounter < 100);
@@ -2573,6 +2574,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
         // for(auto cWord: pData) LOG(INFO) << BOLDGREEN << std::bitset<32>(cWord) << RESET;
         // figure out how many events I've got
+        LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::GetData " << +pData.size() << " words in the readout." << RESET;
         cNEvents = this->CountFwEvents(pBoard, pData);
         if(cNEvents == 0) LOG(INFO) << BOLDMAGENTA << "Read back " << +pData.size() << " valid words with " << +cNWords << " in the readout." << RESET;
         // uint32_t cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -3145,7 +3147,8 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
                     cNtriggersPrev = cNtriggers;
-                    // if(cCounter % 100 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
+                    // if(cCounter % 100 == 0) 
+                    LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
                     cCounter++;
                 } while(cNtriggers < cNevents * (1 + cMultiplicity) && cFoundSame < cTimeoutValue);
                 cFailed = !(cNtriggers >= cNevents * (1 + cMultiplicity));
@@ -3161,6 +3164,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 if(!cFailed)
                 {
                     // wait until words in the readout have stopped inreasing
+                    LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::WaitForData Now checking words from the FC7" << RESET;
                     cNWords                 = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                     uint32_t cNWordsPrev    = cNWords;
                     bool     cStopIncrement = false;

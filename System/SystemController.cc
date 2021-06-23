@@ -368,7 +368,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 // ######################################
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    const uint8_t cCicDriveStrength = 7;
+    const uint8_t cCicDriveStrength = 3;
     // set board sparisification
     // based on what is configured in the fw register
     // read CIC sparsification setting from fW register
@@ -439,7 +439,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTracker2S module " << RESET;
             ModuleStartUp2S(cOpticalGroup);
-            pCICUseNegEdge = 1;
+            pCICUseNegEdge = 0;
         }
         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
         {
@@ -678,8 +678,8 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
         if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
         if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
-        uint8_t cClkTerm = 1;
-        uint8_t cRxTerm  = 1;
+        uint8_t cClkTerm = 0;
+        uint8_t cRxTerm  = 0;
         if(cIs2S && clpGBT != nullptr)
         {
             cClkTerm = 0;
@@ -927,7 +927,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             EventType fEventType = pBoard->getEventType();
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
-            LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
+            LOG(INFO) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
             // uint32_t nmpa = 0;
             uint32_t maxind = 0;
@@ -963,10 +963,14 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 do {
                     uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
                     if(cHeader != 0xFFFF)
+                    {
+                        LOG (INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW" << RESET;
                         cEventIterator++;
+                    }
                     else // valid event  // decode
                     {
                         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+                        LOG (INFO) << BOLDMAGENTA << "SystemController::DecodeData Decoding event made of up " << +cEventSize << " 32 bit words. " << RESET;
                         auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
                         // retrieve chunck of data vector belonging to this event
                         if(cEnd - cEventIterator == cEventSize)

@@ -98,10 +98,10 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
-            // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader)
-            //     << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
-            //     << " dummy 32 bit words .. " << RESET;
+            uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader)
+                << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
+                << " dummy 32 bit words .. " << RESET;
             // counters from event header
             // TDC + L1A counter
             uint32_t cEvntCntTag = (*(cEventIterator + 2));
@@ -141,8 +141,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
-                        // LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
-                        //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
+                                   << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x01)
                         {
                             bool                          cWithCIC2 = (cCic->getFrontEndType() == FrontEndType::CIC2);
@@ -281,7 +281,10 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             }
                         }
                         else
+                        {
+                            LOG (INFO) << BOLDRED << "Incorrect L1 header from the firmware " << RESET;
                             throw std::runtime_error(std::string("Incorrect L1 header found when decoding data ... stopping"));
+                        }
 
                         // stub info
                         std::pair<uint16_t, uint16_t> cStubInformation;
@@ -289,7 +292,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
+                        LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
                                    << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         // for( uint32_t cIndx=0; cIndx < cStubInfoSize ; cIndx++)
                         // {
@@ -331,12 +334,18 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             }
                         }
                         else
-                            throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                        {
+                            LOG (INFO) << BOLDRED << "Incorrect stub header from the firmware" << RESET;
+                            //throw std::runtime_error(std::string("Incorrect Stub header found when decoding data ... stopping"));
+                        }
                         cStatus = cStatus | (cStatusWord << (cRocIndex * 2));
                         // increment ROC index
                         cRocIndex++;
                         // increment iterator
-                        cIterator += cHitInfoSize + cStubInfoSize;
+                        if(cStatusWord == 0x03)
+                        {
+                            cIterator += cHitInfoSize + cStubInfoSize;
+                        }
                     }
                 } // hybrid loop
             }     // hybrid loop
