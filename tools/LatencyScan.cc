@@ -139,6 +139,7 @@ void LatencyScan::ScanLatency()
                 << RESET;
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
+                LOG (INFO) << BOLDMAGENTA << "\t\t..Trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) << RESET;
                 auto cEventIter = cEvents.begin() + cTriggerId ;
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
@@ -162,13 +163,13 @@ void LatencyScan::ScanLatency()
                 }while(cEventIter < cEvents.end());
                 fDetectorDataContainer->at(cBrdIndx)->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "\t\t\t..Latency of " << (cLat+cTriggerId) << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
                 #ifdef __USE_ROOT__
                  fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
                 #endif
             }
             if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
-        }
+        }//board
         cLat += cOffset; 
         // DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         // fDetectorDataContainer                       = theOccupancyContainer;
