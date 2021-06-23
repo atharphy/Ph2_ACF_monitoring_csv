@@ -821,6 +821,16 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     size_t cNlines = cIsPS ? 6 : 5;
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::CICAlignment ... stub alignment on " << +cNlines << "/6 lines from CIC.." << RESET;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, fStubDebug, cNlines);
+    LOG (INFO) <<  BOLDMAGENTA << "Now looking at output of all hybrids " << RESET;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            LOG (INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
+            fBeBoardInterface->WriteBoardReg(pBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId()) ;
+            (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, cNlines);
+        } // hybrids
+    }// OG
 
     // disable CIC output of pattern on stub + l1 lines
     for(auto cOpticalReadout: *pBoard)
