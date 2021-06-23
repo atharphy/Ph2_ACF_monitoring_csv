@@ -141,8 +141,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
-                        LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
-                                   << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                        // LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
+                        //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x01)
                         {
                             bool                          cWithCIC2 = (cCic->getFrontEndType() == FrontEndType::CIC2);
@@ -292,15 +292,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
-                                   << "... status word " << std::bitset<2>(cStatusWord) << RESET;
-                        // for( uint32_t cIndx=0; cIndx < cStubInfoSize ; cIndx++)
-                        // {
-                        //      LOG (DEBUG) << BOLDBLUE << "\t...#"
-                        //         << +cIndx
-                        //         << ": " << std::bitset<32>(*(cIterator + cHitInfoSize + cIndx))
-                        //         << RESET;
-                        // }
+                        // LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cIndex << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
+                        //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x03)
                         {
                             // LOG(DEBUG) << BOLDGREEN << "\t... ReadoutChip#" << +cIndex << " adding stub data.. " << RESET;

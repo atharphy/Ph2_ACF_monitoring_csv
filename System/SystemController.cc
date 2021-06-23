@@ -970,7 +970,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                     else // valid event  // decode
                     {
                         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-                        LOG (INFO) << BOLDMAGENTA << "SystemController::DecodeData Decoding event made of up " << +cEventSize << " 32 bit words. " << RESET;
+                        //LOG (INFO) << BOLDMAGENTA << "SystemController::DecodeData Decoding event made of up " << +cEventSize << " 32 bit words. " << RESET;
                         auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
                         // retrieve chunck of data vector belonging to this event
                         if(cEnd - cEventIterator == cEventSize)

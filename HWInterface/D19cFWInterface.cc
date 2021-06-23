@@ -3147,8 +3147,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
                     cNtriggersPrev = cNtriggers;
-                    // if(cCounter % 100 == 0) 
-                    LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
+                    // if(cCounter % 100 == 0)  LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
                     cCounter++;
                 } while(cNtriggers < cNevents * (1 + cMultiplicity) && cFoundSame < cTimeoutValue);
                 cFailed = !(cNtriggers >= cNevents * (1 + cMultiplicity));

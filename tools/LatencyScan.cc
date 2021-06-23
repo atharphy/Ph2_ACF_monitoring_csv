@@ -176,11 +176,10 @@ void LatencyScan::ScanLatency()
                 }while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " using the container " 
-                    << " and " << cOccGlblMnl << " manually.. all are in units of hits per event" << RESET;
-                //#ifdef __USE_ROOT__
-                // fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
-                //#endif
+                LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls << " hits per board per event." << RESET;
+                #ifdef __USE_ROOT__
+                    fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
+                #endif
             }
             if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
         }//board
