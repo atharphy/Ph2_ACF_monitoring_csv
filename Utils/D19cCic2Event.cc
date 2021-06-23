@@ -1013,13 +1013,13 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
 
         if(cChipId == cChipIdMapped)
         {
-            LOG(INFO) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]"
-                       << " stub address is " << +cStubAddress << " stub bend is " << +cStubBend << " stub row is " << +cRow << RESET;
+            // LOG(INFO) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]"
+                       // << " stub address is " << +cStubAddress << " stub bend is " << +cStubBend << " stub row is " << +cRow << RESET;
             cStubVec.emplace_back(cStubAddress, cStubBend, cRow);
         }
-        else
-            LOG(DEBUG) << BOLDRED << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipIdMapped << " [ chip id on hybrid " << +pReadoutChipId << "]"
-                       << RESET;
+        // else
+        //     LOG(DEBUG) << BOLDRED << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipIdMapped << " [ chip id on hybrid " << +pReadoutChipId << "]"
+        //                << RESET;
     }
     return cStubVec;
 }
