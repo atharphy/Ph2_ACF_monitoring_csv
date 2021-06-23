@@ -58,7 +58,9 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
             doWriteClkDataDelay = true;
 
             if(it->first == "CLK_DATA_DELAY_CMD_DELAY")
-            { clk_data_delay_value = it->second.fValue | (clk_data_delay_value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(it->second.fBitSize))); }
+            {
+                clk_data_delay_value = it->second.fValue | (clk_data_delay_value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(it->second.fBitSize)));
+            }
             else if(it->first == "CLK_DATA_DELAY_CLK_DELAY")
             {
                 clk_data_delay_value = (it->second.fValue << pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize) |

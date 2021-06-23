@@ -274,8 +274,7 @@ int main(int argc, char* argv[])
             // if( cLimitTriggers )
             // {
             // try to only readout once I know I have enough events
-            do
-            {
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
                 cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
             } while(!cBreak);
@@ -294,8 +293,7 @@ int main(int argc, char* argv[])
 
                 size_t cCurrentDataSize = 0;
                 size_t cDataSize        = cCompleteData.size();
-                do
-                {
+                do {
                     cCurrentDataSize = cCompleteData.size();
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     std::vector<uint32_t> cData(0);

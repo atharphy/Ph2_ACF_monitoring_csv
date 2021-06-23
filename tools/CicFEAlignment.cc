@@ -694,11 +694,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         size_t cMaxAttempts     = 10;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
         auto cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
+        do {
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Start();
-            do
-            {
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                 // LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;

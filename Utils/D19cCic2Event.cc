@@ -88,8 +88,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     const uint8_t  VALID_STUB_HEADER   = 0x05;
     uint32_t       cNEvents            = 0;
     auto           cEventIterator      = pData.begin();
-    do
-    {
+    do {
         uint32_t cHeader    = (0xFFFF0000 & (*cEventIterator)) >> 16;
         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         // for( size_t cIndx=0; cIndx<4; cIndx++)
@@ -426,8 +425,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
 
     auto cIterator = list.begin() + EVENT_HEADER_SIZE;
     LOG(DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
-    do
-    {
+    do {
         // L1
         size_t   cOffset   = std::distance(list.begin(), cIterator);
         uint32_t cL1Header = *cIterator;

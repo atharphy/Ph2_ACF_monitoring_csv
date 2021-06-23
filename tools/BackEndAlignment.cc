@@ -118,11 +118,17 @@ void BackEndAlignment::Initialise()
                 {
                     auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                    { cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>() = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask()); }
+                    {
+                        cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>() = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    }
                     if(cChip->getFrontEndType() == FrontEndType::SSA)
-                    { cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS>*>() = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask()); }
+                    {
+                        cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS>*>() = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
+                    }
                     if(cChip->getFrontEndType() == FrontEndType::MPA)
-                    { cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS, NMPACOLS>*>() = static_cast<const ChannelGroup<NSSACHANNELS, NMPACOLS>*>(cChip->getChipOriginalMask()); }
+                    {
+                        cMasksThisChip->getSummary<const ChannelGroup<NSSACHANNELS, NMPACOLS>*>() = static_cast<const ChannelGroup<NSSACHANNELS, NMPACOLS>*>(cChip->getChipOriginalMask());
+                    }
                 }
             } // hybrids
         }     // OG
@@ -821,16 +827,16 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
     size_t cNlines = cIsPS ? 6 : 5;
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::CICAlignment ... stub alignment on " << +cNlines << "/6 lines from CIC.." << RESET;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, fStubDebug, cNlines);
-    LOG (INFO) <<  BOLDMAGENTA << "Now looking at output of all hybrids " << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Now looking at output of all hybrids " << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG (INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
-            fBeBoardInterface->WriteBoardReg(pBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId()) ;
+            LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
+            fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
             (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, cNlines);
         } // hybrids
-    }// OG
+    }     // OG
 
     // disable CIC output of pattern on stub + l1 lines
     for(auto cOpticalReadout: *pBoard)
@@ -996,8 +1002,7 @@ bool BackEndAlignment::Align()
             if(!cAligned) return cAligned;
             uint8_t cAttempt           = 0;
             bool    cPackageDelayFound = false;
-            do
-            {
+            do {
                 cPackageDelayFound = this->FindPackageDelay(theBoard);
                 cAttempt++;
             } while(!cPackageDelayFound && cAttempt < 5);

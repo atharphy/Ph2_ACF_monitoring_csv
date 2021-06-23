@@ -313,8 +313,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
     // for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
     double time_taken;
-    do
-    {
+    do {
         // iSecond = rand() % 2;
         // iMilli  = rand() % 1000;
         // LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
@@ -659,8 +658,7 @@ void SEHTester::TestCardVoltages()
 #ifdef __SEH_USB__
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do
-    {
+    do {
         fTCInterface.getInterface().read_supply(c2SSEHMapIterator->second, k);
 #ifdef __USE_ROOT__
         fillSummaryTree(c2SSEHMapIterator->first, k);
@@ -671,8 +669,7 @@ void SEHTester::TestCardVoltages()
     fTCInterface.getInterface().set_SehSupply(fTCInterface.getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do
-    {
+    do {
         fTCInterface.getInterface().read_supply(d2SSEHMapIterator->second, k);
 #ifdef __USE_ROOT__
         fillSummaryTree(d2SSEHMapIterator->first, k);
@@ -1093,8 +1090,7 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
     LOG(INFO) << GREEN << "============================" << RESET;
     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
 
-    do
-    {
+    do {
         cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
         LOG(INFO) << "Waiting for clock test";
         while(!cClkTestDone)

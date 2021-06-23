@@ -19,7 +19,9 @@ DetectorMonitor::~DetectorMonitor()
     LOG(INFO) << BOLDRED << "\t--> Destroying monitoring" << RESET;
     DetectorMonitor::stopRunning();
     while(fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready)
-    { LOG(INFO) << GREEN << "\t-->Waiting for monitoring to be completed..." << RESET; }
+    {
+        LOG(INFO) << GREEN << "\t-->Waiting for monitoring to be completed..." << RESET;
+    }
 #ifdef __USE_ROOT__
     fOutputFile->Write();
     fOutputFile->Close();

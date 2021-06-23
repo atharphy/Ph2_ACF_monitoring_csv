@@ -870,10 +870,10 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     }
     else if(pRegNode == "TriggerLatency")
     {
-        auto cRegValueFirst = ReadChipSingleReg(pCbc,"FeCtrl&TrgLat2"); 
-        auto cRegValueSecond = ReadChipSingleReg(pCbc,"TriggerLatency1"); 
-        uint16_t cLatency = ((cRegValueFirst& 0x1) << 8) | cRegValueSecond; 
-        return cLatency; 
+        auto     cRegValueFirst  = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        auto     cRegValueSecond = ReadChipSingleReg(pCbc, "TriggerLatency1");
+        uint16_t cLatency        = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
+        return cLatency;
     }
     else
     {

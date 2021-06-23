@@ -170,8 +170,7 @@ Level LevelHelper::convertFromString(const char* levelStr)
 void LevelHelper::forEachLevel(base::type::EnumType* startIndex, const std::function<bool(void)>& fn)
 {
     base::type::EnumType lIndexMax = LevelHelper::kMaxValid;
-    do
-    {
+    do {
         if(fn()) { break; }
         *startIndex = static_cast<base::type::EnumType>(*startIndex << 1);
     } while(*startIndex <= lIndexMax);
@@ -225,8 +224,7 @@ ConfigurationType ConfigurationTypeHelper::convertFromString(const char* configS
 void ConfigurationTypeHelper::forEachConfigType(base::type::EnumType* startIndex, const std::function<bool(void)>& fn)
 {
     base::type::EnumType cIndexMax = ConfigurationTypeHelper::kMaxValid;
-    do
-    {
+    do {
         if(fn()) { break; }
         *startIndex = static_cast<base::type::EnumType>(*startIndex << 1);
     } while(*startIndex <= cIndexMax);
@@ -1484,7 +1482,9 @@ void LogFormat::parseFromFormat(const base::type::string_t& userFormat)
     if((dateIndex = formatCopy.find(base::consts::kDateTimeFormatSpecifier)) != std::string::npos)
     {
         while(dateIndex != std::string::npos && dateIndex > 0 && formatCopy[dateIndex - 1] == base::consts::kFormatSpecifierChar)
-        { dateIndex = formatCopy.find(base::consts::kDateTimeFormatSpecifier, dateIndex + 1); }
+        {
+            dateIndex = formatCopy.find(base::consts::kDateTimeFormatSpecifier, dateIndex + 1);
+        }
         if(dateIndex != std::string::npos)
         {
             addFlag(base::FormatFlags::DateTime);
@@ -1989,7 +1989,9 @@ bool VRegistry::allowed(base::type::VerboseLevel vlevel, const char* file)
 void VRegistry::setFromArgs(const base::utils::CommandLineArgs* commandLineArgs)
 {
     if(commandLineArgs->hasParam("-v") || commandLineArgs->hasParam("--verbose") || commandLineArgs->hasParam("-V") || commandLineArgs->hasParam("--VERBOSE"))
-    { setLevel(base::consts::kMaxVerboseLevel); }
+    {
+        setLevel(base::consts::kMaxVerboseLevel);
+    }
     else if(commandLineArgs->hasParamWithValue("--v"))
     {
         setLevel(static_cast<base::type::VerboseLevel>(atoi(commandLineArgs->getParamValue("--v"))));
@@ -2196,7 +2198,9 @@ void DefaultLogDispatchCallback::dispatch(base::type::string_t&& logLine)
                 else
                 {
                     if(ELPP->hasFlag(LoggingFlag::ImmediateFlush) || (m_data->logMessage()->logger()->isFlushNeeded(m_data->logMessage()->level())))
-                    { m_data->logMessage()->logger()->flush(m_data->logMessage()->level(), fs); }
+                    {
+                        m_data->logMessage()->logger()->flush(m_data->logMessage()->level(), fs);
+                    }
                 }
             }
             else
@@ -2569,7 +2573,9 @@ void Writer::initializeLogger(const std::string& loggerId, bool lookup, bool nee
                                      // m_proceed can be changed by lines below
         }
         if(ELPP->hasFlag(LoggingFlag::HierarchicalLogging))
-        { m_proceed = m_level == Level::Verbose ? m_logger->enabled(m_level) : LevelHelper::castToInt(m_level) >= LevelHelper::castToInt(ELPP->m_loggingLevel); }
+        {
+            m_proceed = m_level == Level::Verbose ? m_logger->enabled(m_level) : LevelHelper::castToInt(m_level) >= LevelHelper::castToInt(ELPP->m_loggingLevel);
+        }
         else
         {
             m_proceed = m_logger->enabled(m_level);
@@ -2585,8 +2591,7 @@ void Writer::processDispatch()
         bool                 firstDispatched = false;
         base::type::string_t logMessage;
         std::size_t          i = 0;
-        do
-        {
+        do {
             if(m_proceed)
             {
                 if(firstDispatched) { m_logger->stream() << logMessage; }
@@ -2861,7 +2866,9 @@ static std::string crashReason(int sig)
         {
             ss << "Application has crashed due to [" << base::consts::kCrashSignals[i].name << "] signal";
             if(ELPP->hasFlag(el::LoggingFlag::LogDetailedCrashReason))
-            { ss << std::endl << "    " << base::consts::kCrashSignals[i].brief << std::endl << "    " << base::consts::kCrashSignals[i].detail; }
+            {
+                ss << std::endl << "    " << base::consts::kCrashSignals[i].brief << std::endl << "    " << base::consts::kCrashSignals[i].detail;
+            }
             foundReason = true;
         }
     }

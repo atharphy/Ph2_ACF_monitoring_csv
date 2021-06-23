@@ -432,8 +432,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     bool                     cLinksLocked = true;
     uint8_t                  cMaxAttempts = 3;
     uint8_t                  cAttempCount = 0;
-    do
-    {
+    do {
         cLinksLocked = true;
         LOG(INFO) << BOLDBLUE << "RESET APPLIED" << RESET;
         for(auto cOpticalReadout: *pBoard)
@@ -518,8 +517,7 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     if(fPowerSupplyClient == nullptr)
     {
         LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } while(std::cin.get() != '\n');
     }
@@ -547,8 +545,7 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     if(fPowerSupplyClient == nullptr)
     {
         LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } while(std::cin.get() != '\n');
     }
@@ -1054,8 +1051,7 @@ void D19cFWInterface::CheckChipControl(const BeBoard* pBoard)
                 auto   cRegisterMap = cReadoutChip->getRegMap();
                 auto   cIterator    = cRegisterMap.begin();
                 bool   cZeroDefVal  = ((*cIterator).second.fValue == 0);
-                do
-                {
+                do {
                     cIndex++;
                     cIterator++;
                     cZeroDefVal = ((*cIterator).second.fValue == 0);
@@ -1147,8 +1143,7 @@ void D19cFWInterface::CheckChipControl(const BeBoard* pBoard)
                 size_t cIndex       = 0;
                 auto   cRegisterMap = cCic->getRegMap();
                 auto   cIterator    = cRegisterMap.begin();
-                do
-                {
+                do {
                     cIndex++;
                     if((*cIterator).second.fValue != 0) cIterator++;
                 } while((*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size());
@@ -1490,8 +1485,7 @@ std::vector<std::string> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t
     std::vector<std::string> cLines(0);
     size_t                   cLine = 0;
     // int cStrLength=0;
-    do
-    {
+    do {
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < 5; cIndex++)
         {
@@ -1527,8 +1521,7 @@ std::vector<std::string> D19cFWInterface::ScopeStubLines(bool pWithTestPulse)
     std::vector<std::string> cLines(0);
     size_t                   cLine = 0;
     // int cStrLength=0;
-    do
-    {
+    do {
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < cNlines; cIndex++)
         {
@@ -1792,8 +1785,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
                 {
                     bool   cSuccessThisLine = false;
                     size_t cAttempts        = 0;
-                    do
-                    {
+                    do {
                         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
                         pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
                         cSuccessThisLine = pTuner.fDone && pTuner.fBitslip != 0;
@@ -1849,8 +1841,7 @@ bool D19cFWInterface::PhaseTuning(BeBoard* pBoard, uint8_t pFeId, uint8_t pChipI
 
     bool         cSuccess  = false;
     unsigned int cAttempts = 0;
-    do
-    {
+    do {
         cSuccess = pTuner.TuneLine(this, pFeId, pChipId, pLineId, pPattern, pPatternPeriod, true);
 
         // pTuner.GetLineStatus(this,  pFeId , pChipId , pLineId );
@@ -1908,8 +1899,7 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
     bool   cFoundEmpty    = false;
     size_t cOffset        = 0;
     size_t cCorr          = 0;
-    do
-    {
+    do {
         // check event header
         uint32_t cFirstWord = *cEventIterator;
         uint32_t cHeader    = ((0xFFFF << 16) & cFirstWord) >> 16;
@@ -2567,8 +2557,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         {
             size_t cCounter    = 0;
             auto   cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            do
-            {
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
                 // if(cCounter % 10 == 0) LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
                 cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
@@ -2744,8 +2733,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         // first ... wait to see 'some' triggers
         size_t   cCounter  = 0;
         uint32_t cTrigPrev = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             if((1 + cCounter) % 1000 == 0) LOG(INFO) << BOLDYELLOW << "\t.. after " << +cCounter << " waits have counted " << +cNtriggers << " received by the FC7." << RESET;
@@ -2803,8 +2791,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         if(cNWords == 0) return 0;
 
         uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        do
-        {
+        do {
             cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
         } while(cReadoutReq == 0);
         auto cNewEvents = this->GetData(pBoard, pData);
@@ -3153,8 +3140,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 uint32_t cNtriggersPrev = cNtriggers;
                 size_t   cFoundSame     = 0;
                 size_t   cCounter       = 0;
-                do
-                {
+                do {
                     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
                     cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
@@ -3179,8 +3165,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     uint32_t cNWordsPrev    = cNWords;
                     bool     cStopIncrement = false;
                     cCounter                = 0;
-                    do
-                    {
+                    do {
                         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
                         cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                         cStopIncrement = (cNWords == cNWordsPrev);
@@ -3211,8 +3196,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 uint32_t cAttempt         = 0;
                 // also possible to keep counting until trigger_in_counter has stopped incrementing
                 // try this
-                do
-                {
+                do {
                     std::this_thread::sleep_for(std::chrono::microseconds(cPause));
 
                     cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -3258,8 +3242,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         else
         {
             uint32_t cIterations = 0;
-            do
-            {
+            do {
                 LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
                 std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
                 cIterations++;
@@ -4031,8 +4014,7 @@ bool D19cFWInterface::Bx0Alignment()
     size_t cMaxAttempts = 20;
     size_t cWaitTime    = fWait_us * 100; // was 100
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-    do
-    {
+    do {
         // pause after reset
         if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // send a resync then wait

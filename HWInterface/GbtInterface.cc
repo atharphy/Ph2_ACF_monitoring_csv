@@ -877,8 +877,7 @@ bool GbtInterface::cicWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8
     size_t cMaxAttempts = (cRetry) ? 10 : 0;
     size_t cAttempts    = 0;
     bool   cSuccess     = false;
-    do
-    {
+    do {
         uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 8 * 2) | (pRegisterValue << 8 * 1), 3);
         cSuccess       = (cWrite == 0);
         if(!pReadBack) continue;

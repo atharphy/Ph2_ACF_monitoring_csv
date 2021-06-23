@@ -673,10 +673,20 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
             cSuccess              = fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
         }
 
+        // 2S-FEHs
         // CIC start-up sequence
         if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
         if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
         if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
+        uint8_t cClkTerm = 1;
+        uint8_t cRxTerm  = 1;
+        if(cIs2S && clpGBT != nullptr)
+        {
+            cClkTerm = 0;
+            cRxTerm  = 0;
+        }
+        fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
+
         if(cSuccess)
             LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +cHybrid->getId() % 2 << " connected to link " << +cHybrid->getOpticalId() << RESET;
         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
@@ -950,8 +960,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
-                do
-                {
+                do {
                     uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
                     if(cHeader != 0xFFFF)
                         cEventIterator++;

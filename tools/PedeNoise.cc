@@ -394,8 +394,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
         bool firstlim      = false;
         bool cLimitFound   = false;
         int  cLimitCounter = 0;
-        do
-        {
+        do {
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;

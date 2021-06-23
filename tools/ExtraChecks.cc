@@ -432,7 +432,9 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
                 this->ReadNEvents(theBoard, cNevents);
                 const std::vector<Event*>& cEvents = this->GetEvents();
                 if(cIteration == 0 && cStepCount % 10 == 0)
-                { LOG(INFO) << BOLDBLUE << "Threshold set to " << cVcth << "...\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET; }
+                {
+                    LOG(INFO) << BOLDBLUE << "Threshold set to " << cVcth << "...\tIteration " << +cIteration << " : " << +cEvents.size() << " events read back from fc7." << RESET;
+                }
 
                 cEventHist->Fill(cVcth, (int)cEvents.size());
                 for(auto cOpticalGroup: *cBoard)
@@ -674,8 +676,7 @@ void ExtraChecks::ExternalTriggers(uint16_t pNconsecutive, const std::string& pS
 
         LOG(INFO) << BOLDRED << "Opening shutter ... press any key to close .." << RESET;
         fBeBoardInterface->Start(theBoard);
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         } while(std::cin.get() != '\n');
         fBeBoardInterface->Stop(theBoard);

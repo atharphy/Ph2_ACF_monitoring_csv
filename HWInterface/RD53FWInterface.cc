@@ -629,8 +629,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // # Wait for a stable number of words to read #
     // #############################################
     nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read");
-    do
-    {
+    do {
         nWordsInMemoryOld = nWordsInMemory;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     } while(((nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true));
@@ -655,8 +654,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents;
     RD53FWInterface::ConfigureFastCommands();
 
-    do
-    {
+    do {
         nAttempts++;
         retry = false;
         pData.clear();

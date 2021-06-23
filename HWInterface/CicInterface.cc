@@ -179,8 +179,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                 // keep trying
                 uint8_t cWriteAttempt = 0;
                 LOG(DEBUG) << BOLDRED << "Write error for CIC register 0x" << std::hex << +cReg.first << std::dec << " I2C status is " << +cStatus << RESET;
-                do
-                {
+                do {
                     auto cIter = fReWMap.find(cReg.first);
                     if(cIter == fReWMap.end())
                         fReWMap[cReg.first] = 1;
@@ -226,8 +225,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
                     // keep trying
                     uint8_t cWriteAttempt = 0;
                     LOG(DEBUG) << BOLDRED << "Readback error for CIC register 0x" << std::hex << +cReg.first << std::dec << RESET;
-                    do
-                    {
+                    do {
                         LOG(DEBUG) << BOLDRED << "\t.. attempt#" << +cWriteAttempt << RESET;
                         // cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, cRetry);
                         cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, pVerifLoop);
@@ -381,8 +379,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
             // uint32_t cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegisterAddress);
             // try this N times
             size_t cReadAttempt = 0;
-            do
-            {
+            do {
                 uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
                 cSuccess        = this->runVerification(pChip, cValue, fMap[pRegisterAddress]);
                 cReadAttempt++;
@@ -669,8 +666,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     uint8_t cMaxIterations = (pWait_ms / 100);
     uint8_t cIteration     = 0;
     bool    cStop          = false;
-    do
-    {
+    do {
         // check status
         ChipRegItem cRegItem;
         cRegItem.fPage                      = 0x00;
@@ -1434,6 +1430,16 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
         LOG(INFO) << BOLDBLUE << " Disabling CIC MUX .. so activating CIC logic  " << RESET;
 
     return this->WriteChipReg(pChip, cRegName, cValue);
+}
+bool CicInterface::ConfigureTermination(Chip* pChip, uint8_t pClkTerm, uint8_t pRxTerm)
+{
+    std::string cRegName  = "SLVS_PADS_CONFIG";
+    uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
+    auto        cValue    = (pRxTerm << 4) | (pRxTerm << 3) | (cRegValue & 0x7);
+    LOG(INFO) << BOLDBLUE << "Configuring termination  on CIC CLk + Rx pads . register set to 0x" << std::hex << +cValue << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << "\t\t.. Clk Term set to " << +pClkTerm << RESET;
+    LOG(INFO) << BOLDBLUE << "\t\t.. Rx Term set to " << +pRxTerm << RESET;
+    return this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
 }
 // start-up sequence for CIC [everything that does not require interaction
 // with the BE or the other readout ASICs on the chip
