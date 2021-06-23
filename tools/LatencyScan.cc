@@ -146,7 +146,7 @@ void LatencyScan::ScanLatency()
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
-                auto& cOccBrd = fDetectorDataContainer->at(cBrdIndx);
+                auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
                 float cOccGlblMnl=0;
                 do
                 {   
