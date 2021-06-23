@@ -133,49 +133,26 @@ void LatencyScan::ScanLatency()
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
-            // LOG (INFO) << BOLDMAGENTA << "Lateny Scan.. latency value of " << cLat << " going to fill occupancy plots when I am sending " 
-            //     << +(1+cTriggerMult)
-            //     << " triggers on every one received... have "
-            //     << +cEvents.size() 
-            //     << " events to use"
-            //     << RESET;
+            // loop over triggers in the burst 
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
+                // start at the beginning + trigger id in burst 
                 auto cEventIter = cEvents.begin() + cTriggerId ;
+                // calculate occupancy for each 
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
                 auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
-                //float cOccGlblMnl=0;
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
-                    //LOG (INFO) << BOLDMAGENTA << "\t\t\t\t\t.. counting occupancy for event " << (*cEventIter)->GetEventCount() << RESET;
                     (*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup()); 
-                    // for(auto cOpticalGroup: *cBoard)
-                    // {
-                    //     auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
-                    //     for(auto cHybrid: *cOpticalGroup)
-                    //     {
-                    //         auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
-                    //         for(auto cChip: *cHybrid)
-                    //         {
-                    //             auto& cOccChip = cOccHybrid->at(cChip->getIndex());
-                    //             auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                    //             cOccGlblMnl += (float)cHits.size()/(float)cChip->size() ;
-                    //             for( auto cHit : cHits ) cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
-                    //             // if( cHits.size() > 0 )
-                    //             //     LOG (INFO) << BOLDMAGENTA <<  "\t\t\t\t\t.. Chip#" << +cChip->getId() << " found " 
-                    //             //         << +cHits.size() << " hits in this event.." << RESET;
-                    //         } // chip
-                    //     } // hybrids
-                    // }// optical group
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG (INFO) << BOLDMAGENTA << "\t\t..Trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) 
-                    << ".. on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
+                LOG (INFO) << BOLDMAGENTA << "Latency of " << (cLat+cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) 
+                    << " - on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
                 #ifdef __USE_ROOT__
                     fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
                 #endif
