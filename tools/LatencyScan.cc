@@ -177,7 +177,7 @@ void LatencyScan::ScanLatency()
                 }while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 //fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), fNevents);
-                float cOccGlbl = fDetectorDataContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
+                float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 LOG(INFO) << BOLDMAGENTA << "\t\t\t\t\t .. on average have found " << cOccGlbl * cTotalNChnls/fNevents << " using the container " 
                     << " and " << cOccGlblMnl << " manually.. all are in units of hits per event" << RESET;
                 //#ifdef __USE_ROOT__
