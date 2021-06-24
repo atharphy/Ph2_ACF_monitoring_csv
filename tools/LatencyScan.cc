@@ -138,7 +138,7 @@ void LatencyScan::ScanLatency()
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
                 LOG (INFO) << BOLDMAGENTA << "Latency of " << cLat+cTriggerId << RESET;
-                if(cLat+cTriggerId) continue;
+                if( (cLat+cTriggerId) > fStartLatency + fLatencyRange ) continue;
                 // start at the beginning + trigger id in burst 
                 auto cEventIter = cEvents.begin() + cTriggerId ;
                 // calculate occupancy for each 
