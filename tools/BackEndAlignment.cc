@@ -578,7 +578,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
                             cNHitsThisFE = cEvent->GetHits(cHybrid->getId(), cChip->getId()).size();
-                            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " in CBC" << +cChip->getId() << RESET;
+                            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " in CBC" << +cChip->getId() << RESET;
                         }
                         else
                             cNHitsThisFE = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
