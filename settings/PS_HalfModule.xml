@@ -3,7 +3,7 @@
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR">
     <!-- PS  module CERN-->
-    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- PS half module FNAL-->
     <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- B598 skeleton, direct powering -->
@@ -19,32 +19,38 @@
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
-               <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
+               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="0" configfile="MPA.txt" />  
-            <!-- <MPA Id="1" configfile="MPA.txt" />  
+            <!-- <MPA Id="0" configfile="MPA.txt" /> 
+            <MPA Id="1" configfile="MPA.txt" />  
+            <MPA Id="2" configfile="MPA.txt" />  
+            <MPA Id="3" configfile="MPA.txt" />  
+            <MPA Id="4" configfile="MPA.txt" />  
+             -->
+            <!-- <MPA Id="5" configfile="MPA.txt" />   -->
+            <!-- <MPA Id="6" configfile="MPA.txt" />   -->
+            <!-- <MPA Id="7" configfile="MPA.txt" />   -->
+            
             <MPA Id="2" configfile="MPA.txt" />  
             <MPA Id="3" configfile="MPA.txt" />  
             <MPA Id="4" configfile="MPA.txt" />  
             <MPA Id="5" configfile="MPA.txt" />  
-            <MPA Id="6" configfile="MPA.txt" />  
-            <MPA Id="7" configfile="MPA.txt" />   -->
-
+c
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" /> 
-            <!-- <SSA Id="1" configfile="SSA.txt" /> 
+            <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
             <SSA Id="4" configfile="SSA.txt" /> 
             <SSA Id="5" configfile="SSA.txt" /> 
             <SSA Id="6" configfile="SSA.txt" /> 
-            <SSA Id="7" configfile="SSA.txt" />  -->
+            <SSA Id="7" configfile="SSA.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
     </OpticalGroup>
     

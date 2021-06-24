@@ -16,14 +16,14 @@
         <Hybrid Id="0" Status="1" LinkId="0" >
             <Global>
                 <Settings threshold="100" latency="74"/>
-                <TestPulse enable="0" polarity="0" amplitude="0x3F" channelgroup="0" delay="10" groundothers="0"/>
+                <TestPulse enable="0" polarity="0" amplitude="0x3F" channelgroup="0" delay="0" groundothers="1"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
+                <Misc analogmux="0b00111" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-            <!-- <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run107/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run194/" />
             <CBC Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
             <CBC Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
             <CBC Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
@@ -31,9 +31,9 @@
             <CBC Id="4" configfile="BE0_OG0_FE0_Chip4.txt" />
             <CBC Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
             <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" /> -->
+            <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" />
             
-            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+        <!--     <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
@@ -41,7 +41,7 @@
             <CBC Id="4" configfile="CBC3_default.txt" />
             <CBC Id="5" configfile="CBC3_default.txt" />
             <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" /> -->
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -71,7 +71,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
 		<Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 1 </Register>
+		<Register name="user_trigger_frequency"> 100 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>

@@ -136,6 +136,7 @@ void LatencyScan::ScanLatency()
             // loop over triggers in the burst 
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
+                if(cLat+cTriggerId) continue;
                 // start at the beginning + trigger id in burst 
                 auto cEventIter = cEvents.begin() + cTriggerId ;
                 // calculate occupancy for each 

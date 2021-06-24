@@ -128,7 +128,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedestalEqualization::FindVplus()
 {
-    float cOccupancyAtPedestal = 0.56;
+    float cOccupancyAtPedestal = 0.10;//0.56;
     if(fTestPulse)
     {
         this->enableTestPulse(true);
@@ -255,7 +255,7 @@ void PedestalEqualization::FindVplus()
 
 void PedestalEqualization::FindOffsets()
 {
-    float cOccupancyAtPedestal = 0.56;
+    float cOccupancyAtPedestal = 0.10;//0.56;
     LOG(INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
 

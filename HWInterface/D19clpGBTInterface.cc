@@ -31,7 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     CPBconfig cCPBconfig;
     cCPBconfig.fEnable       = fUseCPB;
     cCPBconfig.fI2CFrequency = 3;
-    cCPBconfig.fWait_us      = 50;   // TO-DO - make configurable from xml
+    cCPBconfig.fWait_us      = 500;   // TO-DO - make configurable from xml
     cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
     cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
     cCPBconfig.fMaxAttempts  = 1000; // TO-DO - make configurable from xml
@@ -180,7 +180,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 10;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9, cRxInvert = 0 ;
     // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
     std::vector<uint8_t> cInvGrpsLeft{1};
     std::vector<uint8_t> cInvChnlsLeft{2};
@@ -189,26 +189,26 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cInvChnlsRight{0};
     for(const auto& cGroup: cRxGroups)
     {
-        bool cFoundInvLeft  = std::find(cInvGrpsLeft.begin(), cInvGrpsLeft.end(), cGroup) != cInvGrpsLeft.end();
-        bool cFoundInvRight = std::find(cInvGrpsRight.begin(), cInvGrpsRight.end(), cGroup) != cInvGrpsRight.end();
+        // bool cFoundInvLeft  = std::find(cInvGrpsLeft.begin(), cInvGrpsLeft.end(), cGroup) != cInvGrpsLeft.end();
+        // bool cFoundInvRight = std::find(cInvGrpsRight.begin(), cInvGrpsRight.end(), cGroup) != cInvGrpsRight.end();
         for(const auto cChannel: cRxChannels)
         {
-            cFoundInvLeft   = cFoundInvLeft && (std::find(cInvChnlsLeft.begin(), cInvChnlsLeft.end(), cChannel) != cInvChnlsLeft.end());
-            cFoundInvRight  = cFoundInvRight && (std::find(cInvChnlsRight.begin(), cInvChnlsRight.end(), cChannel) != cInvChnlsRight.end());
-            uint8_t cInvert = (cFoundInvLeft || cFoundInvRight) ? 1 : 0;
-            // // Right Hybrid
-            // if(cGroup == 0 && cChannel == 0)
-            //     cRxInvert = 1;
-            // else if(cGroup == 4 || cGroup == 5 || cGroup == 6)
-            //     cRxInvert = 0;
-            // // Left Hybrid
-            // else if(cGroup == 1 && cChannel == 0)
-            //     cRxInvert = 1;
-            // else if(cGroup == 3 && cChannel == 2)
-            //     cRxInvert = 1;
-            // else if(cGroup == 2)
-            //     cRxInvert = 0;
-            ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cInvert, cRxPhase);
+            // cFoundInvLeft   = cFoundInvLeft && (std::find(cInvChnlsLeft.begin(), cInvChnlsLeft.end(), cChannel) != cInvChnlsLeft.end());
+            // cFoundInvRight  = cFoundInvRight && (std::find(cInvChnlsRight.begin(), cInvChnlsRight.end(), cChannel) != cInvChnlsRight.end());
+            // uint8_t cInvert = (cFoundInvLeft || cFoundInvRight) ? 1 : 0;
+            // Right Hybrid
+            if(cGroup == 0 && cChannel == 0)
+                cRxInvert = 1;
+            else if(cGroup == 4 || cGroup == 5 || cGroup == 6)
+                cRxInvert = 0;
+            // Left Hybrid
+            else if(cGroup == 1 && cChannel == 0)
+                cRxInvert = 1;
+            else if(cGroup == 3 && cChannel == 2)
+                cRxInvert = 1;
+            else if(cGroup == 2)
+                cRxInvert = 0;
+            ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
     // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);

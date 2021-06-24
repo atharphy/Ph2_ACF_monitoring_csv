@@ -14,7 +14,8 @@
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
-
+bool cBrokenPS=true;
+            
 namespace Ph2_System
 {
 SystemController::SystemController()
@@ -452,10 +453,21 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         // CIC configuration part .. first configure
         for(auto cHybrid: *cOpticalGroup)
         {
-            uint8_t cSide = cHybrid->getId() % 2;
             auto&   cCic  = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
-            if(clpGBT != nullptr) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
+            uint8_t cSide = cHybrid->getId() % 2;
+            //if(clpGBT != nullptr) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
+            if(clpGBT != nullptr)
+            { 
+                if(!cBrokenPS)
+                {
+                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
+                }
+                else
+                {
+                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
+                }
+            }
 
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalId() << " on hybrid " << +cHybrid->getId() << RESET;
             fCicInterface->ConfigureChip(cCic);
@@ -483,7 +495,14 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     if(cType == FrontEndType::MPA)
                     {
                         LOG(INFO) << BOLDBLUE << "Resetting MPA" << RESET;
-                        static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
+                        if( !cBrokenPS )
+                        {
+                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
+                        }
+                        else
+                        {
+                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, 1);
+                        }
                     }
                     if(cType == FrontEndType::CBC3)
                     {
@@ -545,15 +564,29 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
 
             // hold resets
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->ssaReset(clpGBT, true, cSide);
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, cSide);
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, cSide);
+            if(!cBrokenPS)
+            {
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->ssaReset(clpGBT, true, cSide);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, cSide);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, cSide);
+            }
+            else
+            {
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, 1);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, 0);
+            }
 
             // make sure all SSAs on a module are configured to produce a clock
             // regardless of how many are enabled on this hybrid
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide);
-
+            if(!cBrokenPS)
+            {
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide);
+            }
+            else
+            {
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
+            }
             bool     cSkipSSA3            = true; // eventually this needs to be set in the xml somewhere
             uint16_t cRegisterPadStrength = 0x1018;
             uint8_t  cSLVSdriveSSA        = 7;
@@ -605,12 +638,12 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 
             // hold CBC reset
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->cbcReset(clpGBT, true, cSide);
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            if(cCic == NULL) continue;
-            // Configure CICs on this hybrid
-            // release CIC reset
-            LOG(INFO) << BOLDBLUE << "Resetting CIC" << RESET;
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
+            // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            // if(cCic == NULL) continue;
+            // // Configure CICs on this hybrid
+            // // release CIC reset
+            // LOG(INFO) << BOLDBLUE << "Resetting CIC" << RESET;
+            // static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
         }
     } // lpGBT part ... resets + clocks
 }
@@ -678,8 +711,8 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
         if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
         if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
-        uint8_t cClkTerm = 0;
-        uint8_t cRxTerm  = 0;
+        uint8_t cClkTerm = 1;
+        uint8_t cRxTerm  = 1;
         if(cIs2S && clpGBT != nullptr)
         {
             cClkTerm = 0;
