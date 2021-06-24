@@ -131,7 +131,7 @@ void LatencyScan::ScanLatency()
         {
             auto cBrdIndx = cBoard->getIndex();
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-            LOG (INFO) << BOLDRED << "Reading events in scan latency.." << RESET;
+            //LOG (INFO) << BOLDRED << "Reading events in scan latency.." << RESET;
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
             // loop over triggers in the burst 
