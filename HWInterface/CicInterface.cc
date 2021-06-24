@@ -477,7 +477,6 @@ bool CicInterface::CheckReSync(Chip* pChip)
     bool cResyncNeeded = GetResyncRequest(pChip);
     uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAD : 0xA6;
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Checking if CIC requires a ReSync." << RESET;
     ChipRegItem cRegItem;
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;

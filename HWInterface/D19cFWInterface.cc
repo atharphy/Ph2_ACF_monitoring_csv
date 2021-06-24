@@ -4010,7 +4010,7 @@ bool D19cFWInterface::Bx0Alignment()
         this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
     }
     // send a resync and reset readout
-    bool    cWait     = true;
+    bool    cWait     = false;
     uint8_t cAttempts = 0;
     cSuccess          = false;
     // reset decoder
