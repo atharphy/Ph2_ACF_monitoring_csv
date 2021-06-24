@@ -335,7 +335,7 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
                         // LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
                     }
                     cBxIds.push_back(cBx);
-                    LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+                    // LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
                 } // hybrids or CICs
             }     // modules or optical links
