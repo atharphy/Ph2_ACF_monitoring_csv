@@ -535,7 +535,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     bool     cFoundCorrectHitLatency = false;
     uint16_t cHitLatency             = 0;
     int      cExpectedOffset         = -1;
-    for(int cOffset = cExpectedOffset -10 ; cOffset < cExpectedOffset + 10; cOffset++)
+    for(int cOffset = cExpectedOffset ; cOffset < cExpectedOffset + 10; cOffset++)
     {
         if(cFoundCorrectHitLatency) continue;
 
