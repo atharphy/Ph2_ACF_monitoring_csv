@@ -460,11 +460,15 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             //if(clpGBT != nullptr) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
             if(clpGBT != nullptr)
             { 
-                if(!cBrokenPS || cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S )
+                if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S ) 
+                {
+                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
+                }    
+                else if(!cBrokenPS)
                 {
                     static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
                 }
-                else if( cBrokenPS && cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS )
+                else
                 {
                     static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
                 }
@@ -496,11 +500,15 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     if(cType == FrontEndType::MPA)
                     {
                         LOG(INFO) << BOLDBLUE << "Resetting MPA" << RESET;
-                        if(!cBrokenPS || cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S )
+                        if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S ) 
                         {
                             static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
                         }
-                        else if( cBrokenPS && cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS )
+                        else if( !cBrokenPS )
+                        {
+                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
+                        }
+                        else
                         {
                             static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, 1);
                         }
@@ -570,13 +578,13 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
 
             // hold resets
-            if(!cBrokenPS || pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S )
+            if(!cBrokenPS )
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->ssaReset(clpGBT, true, cSide);
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, cSide);
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, cSide);
             }
-            else if(cBrokenPS && pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S )
+            else 
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, 1);
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, 0);
@@ -585,11 +593,11 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             // make sure all SSAs on a module are configured to produce a clock
             // regardless of how many are enabled on this hybrid
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
-            if(!cBrokenPS || pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S )
+            if(!cBrokenPS)
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide);
             }
-            else if(cBrokenPS && pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S )
+            else 
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
