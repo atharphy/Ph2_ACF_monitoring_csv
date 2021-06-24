@@ -5,7 +5,7 @@
 *--------------------------------------------------------------------------------
 FeCtrl&TrgLat2                                  0x00	0x00	0x3C	0x40
 TriggerLatency1                               	0x00	0x01	0xC8	0xC8
-BetaMult&SLVS                                	0x00	0x02	0x18	0x52
+BetaMult&SLVS                                	0x00	0x02	0x18	0x57
 Ipre1                                        	0x00	0x03	0x46	0x2D
 Ipre2                                        	0x00	0x04	0x2E	0x50
 Ipsf                                         	0x00	0x05	0x7A	0x50

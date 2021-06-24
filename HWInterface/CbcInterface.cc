@@ -440,8 +440,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
                 uint16_t cLat2 = (pCbc->getReg("FeCtrl&TrgLat2") & 0xFE) | ((dacValue & 0x0100) >> 8);
                 cRegVec.emplace_back("TriggerLatency1", cLat1);
                 cRegVec.emplace_back("FeCtrl&TrgLat2", cLat2);
-                LOG(INFO) << BOLDBLUE << "Setting latency on " << +pCbc->getId() << " to " << +dacValue << " 0x" << std::hex << +cLat1 << std::dec << " --- 0x" << std::hex << +cLat2 << std::dec
-                           << " for a latency vale of " << dacValue << RESET;
+                // LOG(INFO) << BOLDBLUE << "Setting latency on " << +pCbc->getId() << " to " << +dacValue << " 0x" << std::hex << +cLat1 << std::dec << " --- 0x" << std::hex << +cLat2 << std::dec
+                //            << " for a latency vale of " << dacValue << RESET;
                 return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
             }
         }
