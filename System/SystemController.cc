@@ -369,7 +369,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 // ######################################
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    const uint8_t cCicDriveStrength = 3;
+    const uint8_t cCicDriveStrength = 1;
     // set board sparisification
     // based on what is configured in the fw register
     // read CIC sparsification setting from fW register
@@ -433,6 +433,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
 
     // module start-up
     // depends on module type
+    bool cReSyncNeeded=false;
     for(auto cOpticalGroup: *pBoard)
     {
         uint8_t pCICUseNegEdge = 0;
@@ -474,7 +475,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }                                                                    // CIC part - configure and make sure all FE blocks are disabled
         // then start-up CIC
-        CicStartUp(cOpticalGroup, cCicDriveStrength, pCICUseNegEdge);
+        cReSyncNeeded = cReSyncNeeded || CicStartUp(cOpticalGroup, cCicDriveStrength, pCICUseNegEdge);
 
         // finally
         // configure ROCs on hybrid .. can have SSAs or MPAs
@@ -519,10 +520,15 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         }         // configure all FE types
     }
 
-    LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
-    // send a ReSync to all chips before starting
-    fBeBoardInterface->ChipReSync(pBoard);
-
+    if( cReSyncNeeded )
+    {
+        LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
+        // send a ReSync to all chips before starting
+        fBeBoardInterface->ChipReSync(pBoard);
+    }
+    else 
+        LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
+        
     //
 }
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
@@ -647,13 +653,15 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
         }
     } // lpGBT part ... resets + clocks
 }
-void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDriveStrength, uint8_t pCICUseNegEdge)
+bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDriveStrength, uint8_t pCICUseNegEdge)
 {
     auto cBoardId    = pOpticalGroup->getBeBoardId();
     auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    bool cWith2SFEH = (*cBoardIter)->getEventType() == EventType::VR2S;                
     auto cSparsified = (*cBoardIter)->getSparsification();
 
     auto& clpGBT = pOpticalGroup->flpGBT;
+    bool cReSyncNeeded = false; 
     for(auto cHybrid: *pOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
@@ -708,22 +716,25 @@ void SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
 
         // 2S-FEHs
         // CIC start-up sequence
-        if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
-        if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
-        if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
         uint8_t cClkTerm = 1;
         uint8_t cRxTerm  = 1;
-        if(cIs2S && clpGBT != nullptr)
+        if(cWith2SFEH)
         {
             cClkTerm = 0;
             cRxTerm  = 0;
         }
         fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
-
+        if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
+        if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
+        if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
         if(cSuccess)
+        {
             LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +cHybrid->getId() % 2 << " connected to link " << +cHybrid->getOpticalId() << RESET;
+            cReSyncNeeded = cReSyncNeeded || fCicInterface->GetResyncRequest(cCic);
+        }
         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     } // all hybrids connected to this OG
+    return cReSyncNeeded;
 }
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {

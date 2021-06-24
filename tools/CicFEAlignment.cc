@@ -462,6 +462,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                     fReadoutChipInterface->WriteChipReg(cChip, "SLVSDrive", cSLVSDrive);
                 } // loop over MPAs
 
+                
                 // send a resync
                 fBeBoardInterface->ChipReSync(cBoard);
 

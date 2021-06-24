@@ -453,7 +453,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     size_t cNinjectedHits  = 0;
     size_t cNinjectedStubs = 0;
     int    cReTime         = 0;
-    int    cChipId         = 1;
+    int    cChipId         = 7;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -555,8 +555,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 } // ROC - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
             }     // hybrid
         }         // OG
-        fBeBoardInterface->ChipReSync(pBoard);
-
+        
         ReadNEvents(pBoard, cNevents);
         const std::vector<Event*>& cEvents         = this->GetEvents();
         size_t                     cNEventsMatched = 0;
@@ -1016,7 +1015,7 @@ bool BackEndAlignment::Align()
             } while(!cPackageDelayFound && cAttempt < 5);
             // return cPackageDelayFound;
             cAligned = cPackageDelayFound;
-            //if(!cAligned) return cAligned;
+            if(!cAligned) return cAligned;
             return this->FindStubLatency(theBoard);
             //return cAligned;
         }

@@ -180,7 +180,7 @@ class SystemController
      */
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength = 4, uint8_t pUseNegEdge = 0);
+    bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength = 4, uint8_t pUseNegEdge = 0);
 
     /*!
      * \brief Run Bit Error Rate test

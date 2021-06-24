@@ -3,7 +3,7 @@
     <BeBoard Id="0" boardType="D19C" eventType="VR2S">
       <!-- <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
       <!-- <connection id="board" uri="ipbusudp-2.0://192.168.13.207:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      \ -->
-      <connection id="board" uri="chtcp-2.0://teledaq002.cern.ch:10203?target=192.168.4.102:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+      <connection id="board" uri="chtcp-2.0://teledaq002.cern.ch:10203?target=192.168.4.102:50001" address_table="file://settings/address_tables/uDTC_OT_address_table_old.xml.xml" />
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
       <!-- <connection id="board" uri="chtcp-2.0://sbgat231.in2p3.fr:10203?target=192.168.7.230:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />  -->
       <!-- <connection id="board" uri="chtcp-2.0://jadsdesktop.cern.ch:10203?target=192.168.2.100:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
@@ -20,7 +20,7 @@
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00111" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run194/" />
@@ -33,7 +33,7 @@
             <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
             <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" />
             
-        <!--     <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+           <!--  <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
