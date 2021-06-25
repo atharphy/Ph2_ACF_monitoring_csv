@@ -18,7 +18,7 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="550" latency="199"/>
+                <Settings threshold="550" latency="200"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="3" stublogic="3" or254="0" tpgclock="1" testclock="0" dll="0"/>
@@ -41,7 +41,7 @@
         </Hybrid>
         <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="550" latency="199"/>
+                <Settings threshold="550" latency="200"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="3" stublogic="3" or254="0" tpgclock="1" testclock="0" dll="0"/>
@@ -249,8 +249,8 @@
     <Setting name="TestPulseSeparation">70</Setting>
 
     <!-- Burst Test -->
-    <Setting name="StartLatency">195</Setting>
-    <Setting name="LatencyRange">10</Setting>
+    <Setting name="StartLatency">100</Setting>
+    <Setting name="LatencyRange">100</Setting>
 
 
 </Settings>

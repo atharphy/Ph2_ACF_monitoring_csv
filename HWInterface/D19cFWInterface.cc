@@ -473,6 +473,8 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         else
         {
             LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
+            // No .. because now you are potentially resetting ALL links not just this channel
+            /*
             if(fPowerSupplyClient != nullptr)
             {
                 LOG(INFO) << BOLDRED << "Powercycling the module using the Power supply TCP server ..." << RESET;
@@ -491,7 +493,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
                     throw std::runtime_error(std::string("LV channel 2 did not turned On"));
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 if(fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,MyKeithley:Front") == "Error") throw std::runtime_error(std::string("HV channel did not turned On"));
-            }
+            }*/
             // reset lpGBT core
             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -2607,8 +2609,6 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     {
         pData = ReadBlockRegValue("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
     }
-    // reset readout attempts
-    fReadoutAttempts = 0;
     return cNEvents;
 }
 // uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
@@ -3135,7 +3135,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
 
-            uint32_t cTimeoutValue = 1000;
+            uint32_t cTimeoutValue = 100;
             if(cCountTriggers) // use trigger_in_counter to check state of trigger FSM
             {
                 // wait until all triggers received
@@ -3423,12 +3423,28 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     bool cFailed = WaitForData(pBoard);
     if(!cFailed)
     {
-        this->GetData(pBoard, pData);
+        auto cNevents = this->GetData(pBoard, pData);
+        EventType cEventType = pBoard->getEventType();
+        bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
+        if( cNevents != pNEvents && !cAsync) 
+        {
+            if( fReadoutAttempts < 10 )
+            { 
+                fReadoutAttempts++;
+                LOG (INFO) << BOLDRED << "D19cFWInterface::ReadNEvents Failed to read back correct number of words from FC7" << RESET;
+                this->ReadNEvents(pBoard, pNEvents, pData);
+            }
+            else
+            {
+                LOG(INFO) << BOLDRED << "After " << +fReadoutAttempts << " attempts at reading out data .. I'm giving up! " << RESET;
+                throw Exception("Too many failures when attempting to read data from the FC7..somethign is wrong!");
+            }
+        }
         WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
         // fDDR3Offset = 0;
     }
     // again check if failed to re-run in case
-    else if(fReadoutAttempts < 10e10)
+    else if(fReadoutAttempts < 10)
     {
         LOG(INFO) << BOLDRED << "Failed to readout all events..... Retrying..." << RESET;
 
@@ -3462,6 +3478,8 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         throw Exception("Too many failures when attempting to read data from the FC7..somethign is wrong!");
     }
     if(fSaveToFile) fFileHandler->setData(pData);
+    // reset readout attempts
+    fReadoutAttempts = 0;
 }
 
 /** compute the block size according to the number of CBC's on this board

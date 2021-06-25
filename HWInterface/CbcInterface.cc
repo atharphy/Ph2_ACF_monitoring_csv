@@ -47,17 +47,26 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     }
     struct
     {
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage > b.second.fPage; }
+    } customPageDec;
+
+    struct
+    {
         bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage < b.second.fPage; }
     } customPageInc;
 
+    // sort register map 
+    bool cSortPageInc=true;
+    if( cSortPageInc)
+        std::sort(cRegList.begin(), cRegList.end(), customPageInc);    // all to page0 then page 1
+    else
+        std::sort(cRegList.begin(), cRegList.end(), customPageDec);    // all to page1 then page 0
     struct
     {
         bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fAddress < b.second.fAddress; }
     } customAddressInc;
-    std::sort(cRegList.begin(), cRegList.end(), customPageInc);    // all to page0 then page 1
-    std::sort(cRegList.begin(), cRegList.end(), customAddressInc); // sort by address
-
-    if(!lpGBTFound())
+    std::sort(cRegList.begin(), cRegList.end(), customAddressInc); // sort by address - for convenience later 
+     if(!lpGBTFound())
     {
         // vector to encode all the registers into
         std::vector<uint32_t> cVec;
@@ -694,6 +703,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
     uint8_t cPage = cIter->second;
     if(cPage == 1) std::sort(cRegItems.begin(), cRegItems.end(), customGreaterForPage); // all to page1 then page 0
     if(cPage == 0) std::sort(cRegItems.begin(), cRegItems.end(), customLessForPage);    // all to page0 then page 1
+   
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
     bool cSuccess = false;
@@ -703,6 +713,27 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         std::vector<uint32_t> cVec;
         for(const auto& cRegItem: cRegItems)
         {
+            // update list of 
+            ChipRegItem cItem;
+            // modified registers map
+            uint32_t cChipId = (uint8_t)(pCbc->getFrontEndType() == FrontEndType::MPA || pCbc->getFrontEndType() == FrontEndType::RD53) << 12;
+            cChipId          = cChipId | pCbc->getOpticalId() << 8 | pCbc->getHybridId() << 4 | pCbc->getId();
+            auto cMapIter    = fModifiedRegisters.find(cChipId);
+            if(cMapIter == fModifiedRegisters.end())
+            {
+                ChipRegMap cRegMap;
+                fModifiedRegisters[cChipId] = cRegMap;
+            }
+            cMapIter      = fModifiedRegisters.find(cChipId);
+            auto& cModMap = cMapIter->second;
+            bool cFound   = pCbc->getRegMap().find(cRegItem.first) != pCbc->getRegMap().end();
+            if(cFound)
+            {
+                cItem = pCbc->getRegItem(cRegItem.first);
+                // update map with value before it has been modified
+                if(cModMap.find(cRegItem.first) == cModMap.end()) cModMap[cRegItem.first] = cItem;
+            }
+            
             if(cRegItem.second.fValue > 0xFF)
             {
                 LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << cRegItem.second.fValue << " on register " << cRegItem.first;

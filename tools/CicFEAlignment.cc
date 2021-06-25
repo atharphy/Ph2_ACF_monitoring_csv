@@ -719,20 +719,20 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         }
 
         // re-configure original mask
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
-                    auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                    fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
-                }
-            } // hybrids
-        }     // OG
+        // for(auto cOpticalGroup: *cBoard)
+        // {
+        //     auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
+        //     for(auto cHybrid: *cOpticalGroup)
+        //     {
+        //         auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
+        //         for(auto cChip: *cHybrid)
+        //         {
+        //             auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+        //             auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+        //             fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
+        //         }
+        //     } // hybrids
+        // }// OG
 
         // send a resync
         fBeBoardInterface->ChipReSync(cBoard);

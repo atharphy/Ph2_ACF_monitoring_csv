@@ -332,10 +332,10 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
                         cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
                         cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
                         cBxDifferences.push_back(cBxDifference);
-                        LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
+                        //LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
                     }
                     cBxIds.push_back(cBx);
-                    LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+                    //LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
                 } // hybrids or CICs
             }     // modules or optical links
@@ -391,6 +391,24 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     }                                                   // OG
 
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    // now check for all hybrids 
+    ReadNEvents(pBoard, cNevents);
+    const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
+    for(auto& cEvent: cEventsWithStubs)
+    {
+        for(auto cOpticalGroup: *pBoard)
+        {
+            std::vector<uint16_t> cBxIds(0);
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                if(cHybrid->getIndex() > 0) continue;
+
+                cBxIds.push_back( (int)cEvent->BxId(cHybrid->getId()) );
+                LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBxIds.at(cBxIds.size()-1) << RESET;
+
+            } // hybrids or CICs
+        }// modules or optical links
+    }
     // LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
     // Reconfigure(pBoard);
     return cCorrectDelay;
@@ -425,7 +443,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 cOriginalMask        = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
             }
         } // hybrids
-    }     // OG
+    }// OG
 
     // reconfigure fast commands
     // fast command config
@@ -453,7 +471,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     size_t cNinjectedHits  = 0;
     size_t cNinjectedStubs = 0;
     int    cReTime         = 0;
-    int    cChipId         = 7;
+    //int    cChipId         = 7;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -465,7 +483,8 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
                 bool cWithNoise = false;
                 // inject stubs with TP
-                std::vector<uint8_t> cSeeds{10};
+                uint8_t cSeed = 10;//2 + (uint8_t)(cChip->getId()*2); 
+                std::vector<uint8_t> cSeeds{cSeed};
                 std::vector<int>     cBends{0};
                 // make sure we are within the limits of the CIC
                 // only inject 3 stubs here
@@ -475,30 +494,25 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     cBends.clear();
                 }
 
-                if(cChip->getId() == cChipId )  
+                size_t cNhits = 0;
+                for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
                 {
-                    size_t cNhits = 0;
-                    for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
-                    {
-                        auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                        cNinjectedHits += cHitList.size();
-                        cNhits += cHitList.size();
-                    }
-
-                    cNinjectedStubs += cSeeds.size();
-                    cNinjectedStubsThisHybrid += cSeeds.size();
-                    (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
-                    // enable stub logic
-                    // make sure OR mode is used
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true);
-                    // set PtCut to maximum
-                    fReadoutChipInterface->WriteChipReg(cChip, "PtCut", 14);
-                    // no cluster cut
-                    fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut", 4);
-                    LOG(INFO) << BOLDMAGENTA << "Injecting " << +cNhits << " hits and " << +cSeeds.size() << " stubs in CBC#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
+                    auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                    cNinjectedHits += cHitList.size();
+                    cNhits += cHitList.size();
                 }
-                else
-                    fReadoutChipInterface->WriteChipReg(cChip,"Threshold",100);
+
+                cNinjectedStubs += cSeeds.size();
+                cNinjectedStubsThisHybrid += cSeeds.size();
+                (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
+                // enable stub logic
+                // make sure OR mode is used
+                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true);
+                // set PtCut to maximum
+                fReadoutChipInterface->WriteChipReg(cChip, "PtCut", 14);
+                // no cluster cut
+                fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut", 4);
+                LOG(INFO) << BOLDMAGENTA << "Injecting " << +cNhits << " hits and " << +cSeeds.size() << " stubs in CBC#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
             } // 2S chips  - CBCs
 
             // for PS - do with digital injection in MPA p-p mode
@@ -572,8 +586,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                        if(cChip->getId() != cChipId ) continue; 
-                
+                        
                         size_t cNHitsThisFE = 0;
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
@@ -622,7 +635,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         // // now scan stub latency
         auto cOriginalStubDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
         LOG(INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
-        for(int cOffset = 70; cOffset >= 50; cOffset--)
+        for(int cOffset = 70; cOffset >= 40; cOffset--)
         {
             if(cFoundCorrectStubLatency) continue;
             int cStubLatency = cHitLatency - cOffset;
@@ -639,15 +652,20 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         size_t cNstubsThisHybrd = 0;
+                        size_t cHitsThisHybrid=0; 
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            cHitsThisHybrid += cEvent->GetHits(cHybrid->getId(), cChip->getId()).size(); 
                             cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
                         } // ROCs
-                        // LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << RESET;
+                        // LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd 
+                        //     << " stubs and " << +cHitsThisHybrid
+                        //     << " in CIC#" << +cHybrid->getId() 
+                        //     << RESET;
                     } // hybrids
                 }     // OGs
             }         // events
@@ -676,8 +694,6 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
             fCicInterface->SetSparsification(cCic, cSparsified);
         } // hybrids
     }     // OG
-    // fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
-
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting BeBoards regs back to their original values" << RESET;
@@ -688,9 +704,6 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     }
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-
-    LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindStubLatency] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
-    // Reconfigure(pBoard);
     return cFoundCorrectStubLatency;
 }
 bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
@@ -1010,14 +1023,13 @@ bool BackEndAlignment::Align()
             uint8_t cAttempt           = 0;
             bool    cPackageDelayFound = false;
             do {
-                cPackageDelayFound = this->FindPackageDelay(theBoard);
-                cAttempt++;
+                 cPackageDelayFound = this->FindPackageDelay(theBoard);
+                 cAttempt++;
             } while(!cPackageDelayFound && cAttempt < 5);
-            // return cPackageDelayFound;
             cAligned = cPackageDelayFound;
-            if(!cAligned) return cAligned;
-            return this->FindStubLatency(theBoard);
-            //return cAligned;
+            //if(!cAligned) return cAligned;
+            //return this->FindStubLatency(theBoard);
+            return cAligned;
         }
         else
         {

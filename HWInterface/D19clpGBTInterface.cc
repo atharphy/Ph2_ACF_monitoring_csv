@@ -31,7 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     CPBconfig cCPBconfig;
     cCPBconfig.fEnable       = fUseCPB;
     cCPBconfig.fI2CFrequency = 3;
-    cCPBconfig.fWait_us      = 500;   // TO-DO - make configurable from xml
+    cCPBconfig.fWait_us      = 50;   // TO-DO - make configurable from xml
     cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
     cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
     cCPBconfig.fMaxAttempts  = 1000; // TO-DO - make configurable from xml
@@ -128,7 +128,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // module KIT 
     // uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
     // skeleton KIT 
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 10;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
     // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 12;
     for(const auto& cGroup: cRxGroups)
     {
@@ -183,36 +183,27 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9, cRxInvert = 0 ;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9;// cRxInvert = 0 ;
     // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
-    std::vector<uint8_t> cInvGrpsLeft{1};
-    std::vector<uint8_t> cInvChnlsLeft{2};
-    //
-    std::vector<uint8_t> cInvGrpsRight{0};
-    std::vector<uint8_t> cInvChnlsRight{0};
-    for(const auto& cGroup: cRxGroups)
+    std::vector<uint8_t>  cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
+    std::vector<uint8_t> cChnlsLeft{2, 0, 2, 0, 2, 0, 2};
+    std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
+    for(size_t cIndx=0; cIndx < cInvrtLeft.size(); cIndx++)
     {
-        // bool cFoundInvLeft  = std::find(cInvGrpsLeft.begin(), cInvGrpsLeft.end(), cGroup) != cInvGrpsLeft.end();
-        // bool cFoundInvRight = std::find(cInvGrpsRight.begin(), cInvGrpsRight.end(), cGroup) != cInvGrpsRight.end();
-        for(const auto cChannel: cRxChannels)
-        {
-            // cFoundInvLeft   = cFoundInvLeft && (std::find(cInvChnlsLeft.begin(), cInvChnlsLeft.end(), cChannel) != cInvChnlsLeft.end());
-            // cFoundInvRight  = cFoundInvRight && (std::find(cInvChnlsRight.begin(), cInvChnlsRight.end(), cChannel) != cInvChnlsRight.end());
-            // uint8_t cInvert = (cFoundInvLeft || cFoundInvRight) ? 1 : 0;
-            // Right Hybrid
-            if(cGroup == 0 && cChannel == 0)
-                cRxInvert = 1;
-            else if(cGroup == 4 || cGroup == 5 || cGroup == 6)
-                cRxInvert = 0;
-            // Left Hybrid
-            else if(cGroup == 1 && cChannel == 0)
-                cRxInvert = 1;
-            else if(cGroup == 3 && cChannel == 2)
-                cRxInvert = 1;
-            else if(cGroup == 2)
-                cRxInvert = 0;
-            ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-        }
+        uint8_t cGroup = cGrpsLeft[cIndx];
+        uint8_t cChannel = cChnlsLeft[cIndx];
+        uint8_t cRxInvert = cInvrtLeft[cIndx];
+        ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+    }
+    std::vector<uint8_t>  cGrpsRight{4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
+    std::vector<uint8_t> cInvrtRight{0, 0, 0, 0, 0, 0, 1};
+    for(size_t cIndx=0; cIndx < cInvrtLeft.size(); cIndx++)
+    {
+        uint8_t cGroup = cGrpsRight[cIndx];
+        uint8_t cChannel = cChnlsRight[cIndx];
+        uint8_t cRxInvert = cInvrtRight[cIndx];
+        ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
     }
     // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters

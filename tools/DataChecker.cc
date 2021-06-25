@@ -26,7 +26,6 @@ void DataChecker::Initialise()
     cSetting            = fSettingsMap.find("PulseShapeVCthStep");
     uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 5;
     int      cSteps     = std::ceil((cFinalTh - cInitialTh) / (float)cThStep);
-    LOG(INFO) << BOLDMAGENTA << "pulse shape will be scanned from " << +cInitialTh << " to " << +cFinalTh << " in " << +cThStep << " steps." << RESET;
 
     // this is needed if you're going to use groups anywhere
     fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
@@ -4767,6 +4766,7 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
 void DataChecker::ReadNeventsTest()
 {
     // this->DigitalInjectionTest(true, false);
+    bool                 cWithNoise = false;
     auto     cSetting = fSettingsMap.find("Nevents");
     uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
     LOG(INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
@@ -4776,43 +4776,39 @@ void DataChecker::ReadNeventsTest()
         // auto cEventType = cBoard->getEventType();
         // bool cSparsified = cBoard->getSparsification();
         // fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
-        for(auto cOpticalGroup: *cBoard)
+        bool cSkip= false;
+        if( !cSkip )
         {
-            for(auto cHybrid: *cOpticalGroup)
+            for(auto cOpticalGroup: *cBoard)
             {
-                // matching
-                // uint16_t cTh1 = (cHybrid->getId() % 2 == 0) ? 900 : 1;
-                // uint16_t cTh2 = (cHybrid->getId() % 2 == 0) ? 1 : 900;
-                for(auto cChip: *cHybrid)
+                for(auto cHybrid: *cOpticalGroup)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                    for(auto cChip: *cHybrid)
                     {
-                        // uint16_t cTh = (cChip->getId() % 2 == 0) ? cTh1 : cTh2;
-                        // fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "VCth", cTh);
-                        // fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 560);
-                        bool                 cWithNoise = true;
-                        std::vector<uint8_t> cSeeds{10};
-                        cSeeds[0] = 2 * (cChip->getId() + 1) + 5;
-                        std::vector<int> cBends{0};
-                        for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                        if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
-                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                            LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
-                            for(auto cHit: cHitList) LOG(INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                            std::vector<uint8_t> cSeeds{10};
+                            cSeeds[0] = 2 * (cChip->getId() + 1) + 5;
+                            std::vector<int> cBends{0};
+                            for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                            {
+                                auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                                LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
+                                for(auto cHit: cHitList) LOG(INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                            }
+                            (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
                         }
-                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
-                    }
-                    else if(cChip->getFrontEndType() == FrontEndType::MPA)
-                    {
-                        auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip, "ReadoutMode");
-                        LOG(INFO) << BOLDBLUE << "MPA#" << +cChip->getId() << " : readout mode [" << +cReadoutMode << " ]" << RESET;
+                        else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        {
+                            auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip, "ReadoutMode");
+                            LOG(INFO) << BOLDBLUE << "MPA#" << +cChip->getId() << " : readout mode [" << +cReadoutMode << " ]" << RESET;
+                        }
                     }
                 }
             }
         }
-
         cNevents = 1;
-        LOG(INFO) << BOLDBLUE << "Checking ReadNEvents by reading " << +cNevents << " from BeBoard#" << +cBoard->getIndex() << RESET;
+        LOG(INFO) << BOLDBLUE << "Checking ReadNEvents by reading " << +cNevents << " event from BeBoard#" << +cBoard->getIndex() << RESET;
 
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
         this->ReadNEvents(cBeBoard, cNevents);

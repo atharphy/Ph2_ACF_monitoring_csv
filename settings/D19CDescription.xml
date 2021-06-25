@@ -2,15 +2,15 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
     <!-- <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.79:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.50:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="120"/>
     
     <OpticalGroup Id="0" FMCId="0" >
         <Hybrid Id="0" Status="1">
             <Global>
-                <Settings threshold="500" latency="29"/>
-                <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="4" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Settings threshold="500" latency="199"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xF0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00011" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="11"/>
                 <ChannelMask disable=""/>
             </Global>
@@ -49,7 +49,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 3 </Register>
+            <Register name="trigger_source"> 6 </Register>
 		<Register name="user_trigger_frequency"> 10 </Register>
             <Register name="stubs_mask"> 1 </Register>
                 <!--this is the delay for the stub trigger-->
@@ -67,7 +67,7 @@
         <Register name="antenna_trigger_delay_value"> 200 </Register>
         <Register name="delay_between_two_consecutive"> 0 </Register>
         <Register name="misc">
-            <Register name="backpressure_enable"> 1 </Register>
+            <Register name="backpressure_enable"> 0 </Register>
             <Register name="stubOR"> 1 </Register>
             <Register name="initial_fast_reset_enable"> 0 </Register>
             <Register name="trigger_multiplicity"> 0 </Register>
