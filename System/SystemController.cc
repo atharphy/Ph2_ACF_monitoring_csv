@@ -500,11 +500,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     if(cType == FrontEndType::MPA)
                     {
                         LOG(INFO) << BOLDBLUE << "Resetting MPA" << RESET;
-                        if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S ) 
-                        {
-                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
-                        }
-                        else if( !cBrokenPS )
+                        if( !cBrokenPS ) 
                         {
                             static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
                         }

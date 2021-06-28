@@ -456,10 +456,16 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // expected spacing between TP and L1A
-    auto   cDelay          = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    size_t cNinjectedHits  = 0;
-    size_t cNinjectedStubs = 0;
-    int    cReTime         = 0;
+    auto    cDelay          = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    size_t  cNinjectedHits  = 0;
+    size_t  cNinjectedStubs = 0;
+    int     cReTime         = 0;
+    uint8_t cPSrow          =10; 
+    uint16_t cPSmode        =3; 
+    uint8_t                cStubWindow = 1; // stub window in half pixels (1)
+    uint8_t                cMode       = cPSmode; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+    std::vector<uint32_t>  cPixelIds(0); // these will be used to generate stubs
+    std::vector<uint8_t>   cRows{cPSrow};
     //int    cChipId         = 7;
     for(auto cOpticalReadout: *pBoard)
     {
@@ -504,15 +510,11 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 LOG(INFO) << BOLDMAGENTA << "Injecting " << +cNhits << " hits and " << +cSeeds.size() << " stubs in CBC#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
             } // 2S chips  - CBCs
 
-            // for PS - do with digital injection in MPA p-p mode
+            // for PS - first digital injection in MPAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-                uint8_t                cStubWindow = 1; // stub window in half pixels (1)
-                uint8_t                cMode       = 2; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
-                std::vector<uint32_t>  cPixelIds(0);    // these will be used to generate stubs
-                std::vector<uint8_t>   cRows{10};
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
                 {
@@ -531,14 +533,34 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 cReTime = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix");
                 (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
             } // PS chips  - MPAs
-        }     // Hybrid
-    }         // OG
+
+            if( cPSmode == 2 ) continue;
+            // for PS - digital injection in SSAs
+            for(auto cChip: *cHybrid) // for each chip (makes sense)
+            {
+                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+
+                // uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
+                fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", (0x1 << 0));
+                fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                for(auto cRow: cRows)
+                {
+                    LOG(DEBUG) << BOLDMAGENTA << "\t...Injecting in"
+                               << " strip#" << +cRow << " in SSA#" << +cChip->getId() << RESET;
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cRow), 0x9);
+                }
+                cNinjectedHits += cRows.size();
+            } // PS chips  - MPAs
+
+        }// Hybrid
+    }// OG
 
     // find correct hit latency
     bool     cFoundCorrectHitLatency = false;
     uint16_t cHitLatency             = 0;
     int      cExpectedOffset         = -5;
-    float    cFraction = 0.25; 
+    float    cFraction = (cWithPS) ? 0.9*(1.0/(1+cMult)) : 0.9 ; 
     for(int cOffset = cExpectedOffset ; cOffset < cExpectedOffset + 10; cOffset++)
     {
         if(cFoundCorrectHitLatency) continue;
@@ -554,8 +576,8 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
             {
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency-1);
+                    else  fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
                 } // ROC - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
             }     // hybrid
         }         // OG
@@ -581,13 +603,13 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
                             cNHitsThisFE = cEvent->GetHits(cHybrid->getId(), cChip->getId()).size();
-                            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " in CBC" << +cChip->getId() << RESET;
+                            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " in CBC" << +cChip->getId() << RESET;
                         }
                         else
                         {
                             cNHitsThisFE = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
-                            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " clusters in MPA" << +cChip->getId() << RESET;
-                        
+                            cNHitsThisFE += (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId()).size();
+                            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " clusters in MPA" << +cChip->getId() << RESET;
                         }
                         cNHits += cNHitsThisFE;
                     } // ROCs
@@ -620,7 +642,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         // // now scan stub latency
         auto cOriginalStubDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
         LOG(INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
-        for(int cOffset = 70; cOffset >= 40; cOffset--)
+        for(int cOffset = 100; cOffset >= 20; cOffset--)
         {
             if(cFoundCorrectStubLatency) continue;
             int cStubLatency = cHitLatency - cOffset;
@@ -637,13 +659,12 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         size_t cNstubsThisHybrd = 0;
-                        size_t cHitsThisHybrid=0; 
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-
+                            if( cEvent->GetHits(cHybrid->getId(), cChip->getId()).size() == 0 ) continue; 
+                            
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                            cHitsThisHybrid += cEvent->GetHits(cHybrid->getId(), cChip->getId()).size(); 
                             cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
                         } // ROCs
@@ -665,7 +686,38 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 
     // adding this here in preparation for stub decoding
     // I think this should belong to the board.. need to fix
-    if(cFoundCorrectStubLatency) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime); }
+    if(cFoundCorrectStubLatency) { 
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime); 
+        // verification step 
+        // print to screen for now 
+        ReadNEvents(pBoard, cNevents);
+        const std::vector<Event*>& cEvents      = this->GetEvents();
+        for(auto cEvent: cEvents)
+        {
+            for(auto cOpticalGroup: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+
+                        auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                        auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId()); 
+                        // if( (int)(cHits.size()) > 0 && (int)cStubs.size() > 0 )
+                        // {
+                            LOG (INFO) << BOLDGREEN << "Event#" << +cEvent->GetEventCount() << " ... found "
+                                << cHits.size() << " hits in FE#" << +cChip->getId() 
+                                << " and " 
+                                << +cStubs.size() 
+                                << " stubs."
+                                << RESET;
+                        // }
+                    } // ROCs
+                } // hybrids
+            }// OGs
+        }// events
+    }
 
     // reconfigure sparsification
     // this->enableTestPulse(false);

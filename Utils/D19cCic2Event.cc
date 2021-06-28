@@ -184,20 +184,20 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 
                                     // split stream into s and p clusters
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
-                                    //LOG(DEBUG) << BOLDCYAN << "\t..Found:" << +cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
+                                    // LOG(INFO) << BOLDCYAN << "\t..Found:" << +cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
 
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
                                     for(auto cL1Word: cL1SWords)
                                     {
                                         uint32_t cWord = cL1Word.to_ulong() | (0 << 31);
                                         fEventHitList[cFe->getIndex()].second.push_back(cWord);
-                                        uint16_t cVal  = static_cast<uint16_t>(cL1Word.to_ulong());
-                                        uint16_t cId   = (uint16_t)((cVal & (0x7 << 11)) >> 11);
-                                        uint16_t cAdd  = (uint16_t)((cVal & (0x7F << 4)) >> 4); //( cL1Word.to_ulong() & (0x7F << 4)) << 4;
-                                        uint16_t cWdth = (uint16_t)((cVal & (0x7 << 1)) >> 1);  //( cL1Word.to_ulong() & (0x7 << 1)) << 1;
-                                        uint16_t cMip  = (uint16_t)((cVal & (0x1 << 0)) >> 0);  //( cL1Word.to_ulong() & (0x1 << 0)) << 0;
-                                        LOG(INFO) << BOLDCYAN << "\t..SCluster [ " << std::bitset<S_CLUSTER_WORD_SIZE>(cL1Word) << "] \t... "
-                                                   << std::bitset<16>((uint16_t)((cVal & (0x7 << 11)) >> 11)) << "\t" << +cId << "\t" << +cAdd << "\t" << +cWdth << "\t" << +cMip << RESET;
+                                        // uint16_t cVal  = static_cast<uint16_t>(cL1Word.to_ulong());
+                                        // uint16_t cId   = (uint16_t)((cVal & (0x7 << 11)) >> 11);
+                                        // uint16_t cAdd  = (uint16_t)((cVal & (0x7F << 4)) >> 4); //( cL1Word.to_ulong() & (0x7F << 4)) << 4;
+                                        // uint16_t cWdth = (uint16_t)((cVal & (0x7 << 1)) >> 1);  //( cL1Word.to_ulong() & (0x7 << 1)) << 1;
+                                        // uint16_t cMip  = (uint16_t)((cVal & (0x1 << 0)) >> 0);  //( cL1Word.to_ulong() & (0x1 << 0)) << 0;
+                                        // LOG(INFO) << BOLDCYAN << "\t..SCluster [ " << std::bitset<S_CLUSTER_WORD_SIZE>(cL1Word) << "] \t... "
+                                                   // << std::bitset<16>((uint16_t)((cVal & (0x7 << 11)) >> 11)) << "\t" << +cId << "\t" << +cAdd << "\t" << +cWdth << "\t" << +cMip << RESET;
                                     } // push back s clusters
 
                                     cEOffset += (cNStripClusters * S_CLUSTER_WORD_SIZE) / 32;
@@ -208,14 +208,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     {
                                         uint32_t cWord = cL1Word.to_ulong() | (1 << 31);
                                         fEventHitList[cFe->getIndex()].second.push_back(cWord);
-                                        uint32_t cVal   = static_cast<uint32_t>(cL1Word.to_ulong());
-                                        uint32_t cId    = (uint32_t)((cVal & (0x7 << 14)) >> 14);
-                                        uint32_t cAdd   = (uint32_t)((cVal & (0x7F << 7)) >> 7); //( cL1Word.to_ulong() & (0x7F << 4)) << 4;
-                                        uint32_t cWdth  = (uint32_t)((cVal & (0x7 << 4)) >> 4);  //( cL1Word.to_ulong() & (0x7 << 1)) << 1;
-                                        uint32_t cZInfo = (uint32_t)((cVal & (0xF << 0)) >> 0);  //( cL1Word.to_ulong() & (0x1 << 0)) << 0;
-
-                                        LOG(DEBUG) << BOLDCYAN << "\t...PCluster:" << std::bitset<P_CLUSTER_WORD_SIZE>(cWord) << "] \t... " << std::bitset<32>((uint32_t)((cVal & (0x7 << 14)) >> 14))
-                                                   << "\t" << +cId << "\t" << +cAdd << "\t" << +cWdth << "\t" << +cZInfo << RESET;
+                                        // uint32_t cVal   = static_cast<uint32_t>(cL1Word.to_ulong());
+                                        // uint32_t cId    = (uint32_t)((cVal & (0x7 << 14)) >> 14);
+                                        // uint32_t cAdd   = (uint32_t)((cVal & (0x7F << 7)) >> 7); //( cL1Word.to_ulong() & (0x7F << 4)) << 4;
+                                        // uint32_t cWdth  = (uint32_t)((cVal & (0x7 << 4)) >> 4);  //( cL1Word.to_ulong() & (0x7 << 1)) << 1;
+                                        // uint32_t cZInfo = (uint32_t)((cVal & (0xF << 0)) >> 0);  //( cL1Word.to_ulong() & (0x1 << 0)) << 0;
+                                        // LOG(DEBUG) << BOLDCYAN << "\t...PCluster:" << std::bitset<P_CLUSTER_WORD_SIZE>(cWord) << "] \t... " << std::bitset<32>((uint32_t)((cVal & (0x7 << 14)) >> 14))
+                                                   // << "\t" << +cId << "\t" << +cAdd << "\t" << +cWdth << "\t" << +cZInfo << RESET;
                                     } // push back p clusters
                                 }
                             }
@@ -1065,19 +1064,59 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pFeId, uint8_t pReadoutChip
     std::vector<uint32_t> cHits(0);
     if(fIsSparsified)
     {
-        auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
-        for(uint32_t i = 0; i < NCHANNELS; ++i)
+        if( fIs2S )
         {
-            if(cDataBitset[i] > 0) { cHits.push_back(i); }
+            auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
+            for(uint32_t i = 0; i < NCHANNELS; ++i)
+            {
+                if(cDataBitset[i] > 0) { cHits.push_back(i); }
+            }
+        }
+        else
+        {
+            for(auto cCluster : GetPixelClusters(pFeId,pReadoutChipId) )
+            {
+                for( int cId =0; cId < 1+cCluster.fWidth ; cId++)
+                {
+                    uint32_t cHit = ( (cCluster.fZpos+1) << 24) | (cCluster.fAddress) << 8 | cId << 0 ; 
+                    // LOG (INFO) << BOLDGREEN << "Pixel cluster " << +cCluster.fZpos 
+                    //     << " [z-pos]; " << +cCluster.fAddress 
+                    //     << " [address] " << +cId
+                    //     << " [in cluster]"
+                    //     << RESET;
+                    cHits.push_back(cHit);
+                }
+            }
+            for(auto cCluster : GetStripClusters(pFeId,pReadoutChipId) )
+            {
+                for( int cId =0; cId < 1+cCluster.fWidth ; cId++)
+                {
+                    uint32_t cHit = 0 << 24 | (cCluster.fAddress) << 8 | cId << 0 ;
+                    // LOG (INFO) << BOLDGREEN << "Strip cluster " 
+                    //     << +cCluster.fAddress 
+                    //     << " [address] " << +cId
+                    //     << " [in cluster]"
+                    //     << RESET;
+                    cHits.push_back(cHit);
+                }
+            }
         }
     }
     else
     {
-        size_t cOffset     = 2 + 9 + 9;
-        auto   cDataBitset = this->getRawL1Word(pFeId, pReadoutChipId);
-        for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
+
+        if( fIs2S )
         {
-            if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1) cHits.push_back(cPos);
+            size_t cOffset     = 2 + 9 + 9;
+            auto   cDataBitset = this->getRawL1Word(pFeId, pReadoutChipId);
+            for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
+            {
+                if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1) cHits.push_back(cPos);
+            }
+        }
+        else
+        {
+           //To-DO add here for raw PS data 
         }
     }
     return cHits;
