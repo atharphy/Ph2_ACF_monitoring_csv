@@ -185,7 +185,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     // split stream into s and p clusters
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
 
-                                    LOG(DEBUG) << BOLDCYAN << "\t..Found:" << +cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
+                                    LOG(INFO) << BOLDCYAN << "\t..Found:" << +cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
 
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
                                     for(auto cL1Word: cL1SWords)
@@ -197,7 +197,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                         uint16_t cAdd  = (uint16_t)((cVal & (0x7F << 4)) >> 4); //( cL1Word.to_ulong() & (0x7F << 4)) << 4;
                                         uint16_t cWdth = (uint16_t)((cVal & (0x7 << 1)) >> 1);  //( cL1Word.to_ulong() & (0x7 << 1)) << 1;
                                         uint16_t cMip  = (uint16_t)((cVal & (0x1 << 0)) >> 0);  //( cL1Word.to_ulong() & (0x1 << 0)) << 0;
-                                        LOG(DEBUG) << BOLDCYAN << "\t..SCluster [ " << std::bitset<S_CLUSTER_WORD_SIZE>(cL1Word) << "] \t... "
+                                        LOG(INFO) << BOLDCYAN << "\t..SCluster [ " << std::bitset<S_CLUSTER_WORD_SIZE>(cL1Word) << "] \t... "
                                                    << std::bitset<16>((uint16_t)((cVal & (0x7 << 11)) >> 11)) << "\t" << +cId << "\t" << +cAdd << "\t" << +cWdth << "\t" << +cMip << RESET;
                                     } // push back s clusters
 

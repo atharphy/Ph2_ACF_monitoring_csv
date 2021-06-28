@@ -76,7 +76,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
     set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    #set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=deprecated-declarations -Wno-error=format-overflow -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -181,7 +182,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         MESSAGE(STATUS "    No boost headers found with uHAL (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
     endif(uhal_boost)
 
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
+    #find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
+    find_package(Boost 1.53)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 

@@ -548,7 +548,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // find correct hit latency
     bool     cFoundCorrectHitLatency = false;
     uint16_t cHitLatency             = 0;
-    int      cExpectedOffset         = -1;
+    int      cExpectedOffset         = -5;
     for(int cOffset = cExpectedOffset ; cOffset < cExpectedOffset + 10; cOffset++)
     {
         if(cFoundCorrectHitLatency) continue;
@@ -591,20 +591,15 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
                             cNHitsThisFE = cEvent->GetHits(cHybrid->getId(), cChip->getId()).size();
-                            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " in CBC" << +cChip->getId() << RESET;
+                            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " in CBC" << +cChip->getId() << RESET;
                         }
                         else
+                        {
                             cNHitsThisFE = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
+                            LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " clusters in MPA" << +cChip->getId() << RESET;
+                        
+                        }
                         cNHits += cNHitsThisFE;
-                        // LOG (INFO) << BOLDMAGENTA << "\t..Number of hits in FE#" << +cChip->getId()
-                        //     << " on hybrid#" << +cHybrid->getId()
-                        //     << " is "
-                        //     << +cNHitsThisFE
-                        //     << " - total number of expected hits is "
-                        //     << +cNinjectedHits
-                        //     << " - total number of hits found so far is "
-                        //     << + cNHits
-                        //     << RESET;
                     } // ROCs
                 }     // hybrids
             }         // OGs
