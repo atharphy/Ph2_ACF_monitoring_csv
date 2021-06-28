@@ -415,7 +415,7 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 }
 bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
-    uint32_t cNevents = 100;
+    uint32_t cNevents = 10;
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
     if(cSparsified)
@@ -427,27 +427,16 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
 
     // read back original masks
-    DetectorDataContainer cChipMasks;
-    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, cChipMasks);
-    auto& cMasksThisBrd = cChipMasks.at(pBoard->getIndex());
+    bool cWithPS=false;
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
-            for(auto cChip: *cHybrid)
-            {
-                auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
-                auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
-                cOriginalMask        = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
-            }
-        } // hybrids
-    }// OG
+        cWithPS = cWithPS || (cOpticalGroup->getFrontEndType()==FrontEndType::OuterTrackerPS);
+    }
 
     // reconfigure fast commands
     // fast command config
-    uint8_t                  cMult            = 0;
+    // if PS module want trigger multiplicty to be 3 
+    uint8_t                  cMult            = (cWithPS) ? 3 : 0;
     uint8_t                  cTriggerSource   = 6;
     uint16_t                 cDelayAfterReset = 100;
     uint16_t                 cDelayAfterTP    = 300;
@@ -483,7 +472,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
                 bool cWithNoise = false;
                 // inject stubs with TP
-                uint8_t cSeed = 10;//2 + (uint8_t)(cChip->getId()*2); 
+                uint8_t cSeed = 60;//2 + (uint8_t)(cChip->getId()*2); 
                 std::vector<uint8_t> cSeeds{cSeed};
                 std::vector<int>     cBends{0};
                 // make sure we are within the limits of the CIC
@@ -549,6 +538,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     bool     cFoundCorrectHitLatency = false;
     uint16_t cHitLatency             = 0;
     int      cExpectedOffset         = -5;
+    float    cFraction = 0.25; 
     for(int cOffset = cExpectedOffset ; cOffset < cExpectedOffset + 10; cOffset++)
     {
         if(cFoundCorrectHitLatency) continue;
@@ -609,7 +599,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 
         // check match
         // won't ask for a 100 percent here as I'm not s
-        if(cNEventsMatched > 0.9 * cEvents.size())
+        if(cNEventsMatched > cFraction * cEvents.size())
         {
             cHitLatency             = cLatency;
             cFoundCorrectHitLatency = true;
@@ -664,7 +654,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     } // hybrids
                 }     // OGs
             }         // events
-            cFoundCorrectStubLatency = (cNStubsFound > 0.9 * cNinjectedStubs * cEvents.size());
+            cFoundCorrectStubLatency = (cNStubsFound > cFraction * cNinjectedStubs * cEvents.size());
             if(cFoundCorrectStubLatency)
             {
                 cCorrectOffset = cOffset;

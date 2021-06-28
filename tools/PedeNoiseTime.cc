@@ -748,7 +748,7 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
     int cLatencyRange = findValueInSettings("LatencyRange", 1);
     LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " events per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
-    float    cLimit    = 0;
+    float    cLimit    = 0.05;
     uint16_t cMaxValue = (1 << 10) - 1;
     // uint16_t cMinValue      = 0;
     if(cWithSSA) cMaxValue = (1 << 8) - 1;

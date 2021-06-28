@@ -3423,6 +3423,9 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     bool cFailed = WaitForData(pBoard);
     if(!cFailed)
     {
+        // if trigger multiplicity is not 0 check 
+        auto cMultiplicity  = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        pNEvents = ( cMultiplicity != 0 ) ? pNEvents*(cMultiplicity+1) : pNEvents; 
         auto cNevents = this->GetData(pBoard, pData);
         EventType cEventType = pBoard->getEventType();
         bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);

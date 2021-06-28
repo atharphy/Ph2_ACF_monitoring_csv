@@ -251,7 +251,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         // write registers which enable injection
         this->enableInjection(pCbc, true); // enable injection
         // write register which sets TP amplitude
-        this->setInjectionAmplitude(pCbc, 0xFF - 30); // fix injection amplitude
+        this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
         return this->maskChannelsGroup(pCbc, &cChannelMask);
     }
     else // with noise
