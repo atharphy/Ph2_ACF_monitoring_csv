@@ -59,6 +59,9 @@ class PedeNoise : public Tool
     uint32_t fEventsPerPoint{0};
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
+    float    fMean_Strps{0};
+    float    fMean_Pxls{0};
+        
 
     DetectorDataContainer* fThresholdAndNoiseContainer;
 

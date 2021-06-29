@@ -180,23 +180,17 @@ void PedestalEqualization::FindVplus()
     }
 
     LOG(INFO) << BOLDBLUE << "Identifying optimal Vplus for ROC..." << RESET;
-    if(cWithCBC) setSameDac("VCth", fTargetVcth);
-    if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
-    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
+    setSameDac("Threshold", fTargetVcth);
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
     if(cWithCBC) setSameLocalDac("ChannelOffset", fTargetOffset);
-    if(cWithSSA) setSameLocalDac("ThresholdTrim", fTargetOffset);
-    if(cWithMPA) setSameLocalDac("ThresholdTrim", fTargetOffset);
-
-    if(cWithCBC) this->bitWiseScan("VCth", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
-    if(cWithSSA) this->bitWiseScan("Bias_THDAC", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
-    if(cWithMPA) this->bitWiseScan("ThDAC_ALL", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
+    else setSameLocalDac("ThresholdTrim", fTargetOffset);
+    
+    this->bitWiseScan("Threshold", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
     dumpConfigFiles();
 
     if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    if(cWithSSA) setSameLocalDac("ThresholdTrim", 0x1F);
-    if(cWithMPA) setSameLocalDac("ThresholdTrim", 0x1F);
+    else  setSameLocalDac("ThresholdTrim", 0x1F);
 
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
@@ -247,11 +241,7 @@ void PedestalEqualization::FindVplus()
 #endif
 
     fTargetVcth = uint16_t(cMeanValue / nCbc);
-
-    if(cWithCBC) setSameDac("VCth", fTargetVcth);
-    if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
-    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
-
+    setSameDac("Threshold", fTargetVcth);
     LOG(INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     this->SetTestAllChannels(originalAllChannelFlag);
 }
@@ -266,9 +256,7 @@ void PedestalEqualization::FindOffsets()
     if(cWithSSA) NCH = NSSACHANNELS;
     if(cWithMPA) NCH = NMPACHANNELS;
 
-    if(cWithCBC) setSameDac("VCth", fTargetVcth);
-    if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
-    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
+    setSameDac("Threshold",fTargetVcth);
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;

@@ -240,7 +240,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "Threshold")
     {
-        LOG(DEBUG) << BOLDRED << "Setting threshold to " << +pValue << RESET;
+        LOG (INFO) << BOLDMAGENTA << "Setting threshold on SSA#" << +pSSA->getId() << " to " << pValue << RESET;
         return WriteChipSingleReg(pSSA, "Bias_THDAC", (pValue), pVerifLoop);
     }
     else if(pRegName == "EnableClockOut")
