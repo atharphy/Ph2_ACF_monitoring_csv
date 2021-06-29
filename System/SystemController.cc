@@ -14,7 +14,7 @@
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
-bool cBrokenPS=false;
+bool cBrokenPS=true;
             
 namespace Ph2_System
 {
@@ -564,15 +564,17 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             cClkCnfg.fClkPreEmphWidth = 0;
             cClkCnfg.fClkPreEmphMode  = 0; // 3;
             cClkCnfg.fClkPreEmphStr   = 0; // 7;
+
             LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide << "]" << RESET;
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+           
             // enable clock to CIC
             cClkCnfg.fClkFreq     = (cReadoutRate == 320) ? 4 : 5;
             cClkCnfg.fClkInvert   = 0;
             cClkCnfg.fClkDriveStr = cCicClockDrive;
             LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide << "]" << RESET;
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
-
+           
             // hold resets
             if(!cBrokenPS )
             {
@@ -585,7 +587,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, 1);
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, 0);
             }
-
+           
             // make sure all SSAs on a module are configured to produce a clock
             // regardless of how many are enabled on this hybrid
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
@@ -597,6 +599,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
+             
             bool     cSkipSSA3            = true; // eventually this needs to be set in the xml somewhere
             uint16_t cRegisterPadStrength = 0x1018;
             uint8_t  cSLVSdriveSSA        = 7;
@@ -610,6 +613,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 cSSA->setOptical(cHybrid->isOptical());
                 (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA);
             }
+            
         } // hybrid
     }     // lpGBT part ... resets + clocks
 }
@@ -698,6 +702,8 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << (cIs2S ? "2S" : "PS") << " readout." << RESET;
 
         // configure CIC FE enable register
+        // first make sure it is set to 0x00 
+        fCicInterface->EnableFEs(cCic,{0,1,2,3,4,5,6,7},false);
         // figure out which ROCs are enabled
         std::vector<uint8_t> cFeIds(0);
         for(auto cReadoutChip: *cHybrid)

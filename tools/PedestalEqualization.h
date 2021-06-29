@@ -52,6 +52,7 @@ class PedestalEqualization : public Tool
     bool     fDisableStubLogic{true};
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
+    float    fOccupancyAtPedestal{0.56};
 
     // to hold the original register values
     DetectorDataContainer fStubLogicCointainer;

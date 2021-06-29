@@ -45,10 +45,13 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fTargetOffset                = 0x7F;
-    if(cWithSSA or cWithMPA) fTargetOffset = 0xF;
-
-    fTargetVcth = 0x0;
+    fOccupancyAtPedestal         = findValueInSettings("PedestalEqualizationOccupancy", 0.56) ;
+    uint8_t  cDefTargetOffset    = (cWithSSA || cWithMPA) ? 0xF : 0x7F;
+    fTargetOffset                = findValueInSettings("PedestalEqualizationTargetOffset", cDefTargetOffset) ; //0x7F;
+    LOG (INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal 
+        << " target offset is " << +fTargetOffset 
+        << RESET;
+   fTargetVcth = 0x0;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
 
     if(fTestPulseAmplitude == 0)
@@ -128,7 +131,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedestalEqualization::FindVplus()
 {
-    float cOccupancyAtPedestal = 0.56;//0.56;
+    float cOccupancyAtPedestal = fOccupancyAtPedestal;
     if(fTestPulse)
     {
         this->enableTestPulse(true);
@@ -255,7 +258,7 @@ void PedestalEqualization::FindVplus()
 
 void PedestalEqualization::FindOffsets()
 {
-    float cOccupancyAtPedestal = 0.56;//0.56;
+    float cOccupancyAtPedestal = fOccupancyAtPedestal; 
     LOG(INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
 

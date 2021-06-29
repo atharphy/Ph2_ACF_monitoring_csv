@@ -466,6 +466,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     uint8_t                cMode       = cPSmode; // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
     std::vector<uint32_t>  cPixelIds(0); // these will be used to generate stubs
     std::vector<uint8_t>   cRows{cPSrow};
+    uint8_t cMaxStubs      = 4; 
     //int    cChipId         = 7;
     for(auto cOpticalReadout: *pBoard)
     {
@@ -483,7 +484,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 std::vector<int>     cBends{0};
                 // make sure we are within the limits of the CIC
                 // only inject 3 stubs here
-                if(cNinjectedStubsThisHybrid > 3)
+                if(cNinjectedStubsThisHybrid > cMaxStubs)
                 {
                     cSeeds.clear();
                     cBends.clear();
@@ -560,7 +561,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     bool     cFoundCorrectHitLatency = false;
     uint16_t cHitLatency             = 0;
     int      cExpectedOffset         = -5;
-    float    cFraction = (cWithPS) ? 0.9*(1.0/(1+cMult)) : 0.9 ; 
+    float    cFraction = (cWithPS) ? 0.5*(1.0/(1+cMult)) : 0.5 ; 
     for(int cOffset = cExpectedOffset ; cOffset < cExpectedOffset + 10; cOffset++)
     {
         if(cFoundCorrectHitLatency) continue;
@@ -598,19 +599,8 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                        
-                        size_t cNHitsThisFE = 0;
-                        if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                        {
-                            cNHitsThisFE = cEvent->GetHits(cHybrid->getId(), cChip->getId()).size();
-                            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " in CBC" << +cChip->getId() << RESET;
-                        }
-                        else
-                        {
-                            cNHitsThisFE = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId()).size();
-                            cNHitsThisFE += (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId()).size();
-                            //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " clusters in MPA" << +cChip->getId() << RESET;
-                        }
+                        size_t cNHitsThisFE = cEvent->GetHits(cHybrid->getId(), cChip->getId()).size();
+                        //LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " clusters in MPA" << +cChip->getId() << RESET;
                         cNHits += cNHitsThisFE;
                     } // ROCs
                 }     // hybrids

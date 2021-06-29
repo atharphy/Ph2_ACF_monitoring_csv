@@ -48,7 +48,7 @@ void RegisterTester::RegisterTest()
     // 1, decreasing page order
     // 2, don't sort
     uint8_t cSortOrder    = 0;
-    size_t  cLimitPerPage = 1;
+    size_t  cLimitPerPage = 5;
     for(size_t cAttempt = 0; cAttempt < 10; cAttempt++)
     {
         // first I want to record the register map for this map

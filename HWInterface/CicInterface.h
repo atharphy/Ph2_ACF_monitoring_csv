@@ -167,7 +167,7 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMapping8CBC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};   // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMappingPSL{6, 7, 3, 2, 1, 0, 4, 5};   // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSL{8, 8, 4, 5, 6, 7, 8, 8};   // Index CIC FE Id , Value Hybrid FE Id
 
     void                         UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                         ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
