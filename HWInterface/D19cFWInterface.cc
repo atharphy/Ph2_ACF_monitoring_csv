@@ -14,6 +14,7 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../Utils/D19cSSAEvent.h"
+#include "../Utils/D19cSSA2Event.h"
 #include "D19cFpgaConfig.h"
 #include "GbtInterface.h"
 #include <chrono>
@@ -796,10 +797,11 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                         cBaseAddress = 0x41;
 
                         if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA2) cBaseAddress = 0x20;
                         if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
 
                         cBaseAddress += cChip->getId();
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
+                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
                         if(fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end())
                         {
@@ -824,9 +826,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                     {
                         cBaseAddress = 0x41;
                         if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA2) cBaseAddress = 0x20;
                         if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
                         cBaseAddress += cChip->getId();
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
+                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
                         LOG(INFO) << BOLDBLUE << "Adding slave with I2C address 0x" << std::hex << +cBaseAddress << std::dec << RESET;
 
@@ -1757,14 +1760,14 @@ bool D19cFWInterface::PhaseTuning(BeBoard* pBoard, uint8_t pFeId, uint8_t pChipI
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);
-    if(pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 || fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA))
+    if(pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 || fFirmwareFrontEndType == FrontEndType::SSA2 || fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA))
     {
         uint8_t cEnableL1 = 0;
         LOG(INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
         // force L1A line to match phase tuning result for first stub lines to match
         uint8_t pDelay   = pTuner.fDelay;
         uint8_t cMode    = 2;
-        uint8_t cBitslip = pTuner.fBitslip + (uint8_t)(fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA);
+        uint8_t cBitslip = pTuner.fBitslip + (uint8_t)(fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::SSA2 || fFirmwareFrontEndType == FrontEndType::MPA);
         pTuner.SetLineMode(this, pFeId, pChipId, 0, cMode, pDelay, cBitslip, cEnableL1, 0);
     }
     return cSuccess;
@@ -1953,7 +1956,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
 {
     // get event type
     EventType cEventType = pBoard->getEventType();
-    if(cEventType == EventType::SSAAS)
+    if(cEventType == EventType::SSAAS or cEventType == EventType::SSA2AS)
     {
         pData.clear();
         for(auto cOpticalGroup: *pBoard)
@@ -1973,7 +1976,8 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         // MSB
                         ChipRegItem cReg_Counters_MSB;
                         cReg_Counters_MSB.fPage    = 0x00;
-                        cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+			else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
                         cReg_Counters_MSB.fValue   = 0x00;
                         this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
                         // this->ReadChipBlockReg( cVec );
@@ -1982,7 +1986,8 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         // LSB
                         ChipRegItem cReg_Counters_LSB;
                         cReg_Counters_LSB.fPage    = 0x00;
-                        cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+			else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
                         cReg_Counters_LSB.fValue   = 0x00;
                         this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
                         // this->ReadChipBlockReg( cVec );
@@ -2002,11 +2007,13 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         bool        cRead;
                         ChipRegItem cReg_Counters_MSB;
                         cReg_Counters_MSB.fPage    = 0x00;
-                        cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+			else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
                         cReg_Counters_MSB.fValue   = 0x00;
                         ChipRegItem cReg_Counters_LSB;
                         cReg_Counters_LSB.fPage    = 0x00;
-                        cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+			else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
                         cReg_Counters_LSB.fValue   = 0x00;
                         this->DecodeReg(cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed);
                         this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
@@ -2040,9 +2047,10 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     bool      cWithMPA   = false;
     bool      cWithSSA   = false;
+    bool      cWithSSA2   = false;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cFe: *cOpticalGroup)
@@ -2051,6 +2059,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
             {
                 cWithMPA = cWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA);
                 cWithSSA = cWithSSA || (cChip->getFrontEndType() == FrontEndType::SSA);
+                cWithSSA2 = cWithSSA2 || (cChip->getFrontEndType() == FrontEndType::SSA2);
             } // chips
         }     // hybrids
     }         // opticalGroup
@@ -2073,7 +2082,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         while(pData.size() == 0 and its < 5)
         {
             if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
-            if(cWithSSA)
+            if(cWithSSA  or cWithSSA2)
                 this->ReadSSACounters(pBoard, pData);
             else
                 this->ReadMPACounters(pBoard, pData);
@@ -2095,7 +2104,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     bool      pFailed    = false;
     int       cCounter   = 0;
     EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
 
     while(cNWords == 0 && cCounter < 1000 && !cAsync)
     {
@@ -2211,6 +2220,7 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
         for(auto cHybrid: *cOpticalGroup)
         {
             if(fFirmwareFrontEndType == FrontEndType::SSA) chans += NSSACHANNELS * cHybrid->size();
+            if(fFirmwareFrontEndType == FrontEndType::SSA2) chans += NSSACHANNELS * cHybrid->size();
             if(fFirmwareFrontEndType == FrontEndType::MPA) chans += NMPACHANNELS * cHybrid->size();
         }
     }
@@ -2292,7 +2302,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     auto     cMultiplicity         = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
 
     EventType                                     cEventType = pBoard->getEventType();
-    bool                                          cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool                                          cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents * (cMultiplicity + 1)});
 
@@ -2485,6 +2495,7 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
         if(fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
         if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
         if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
+        if(fFirmwareFrontEndType == FrontEndType::SSA2) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
     }
     if(fIsDDR3Readout)
     {

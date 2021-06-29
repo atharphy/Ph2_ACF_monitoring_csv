@@ -148,6 +148,7 @@ enum class FrontEndType
     CBC3,
     MPA,
     SSA,
+    SSA2,
     RD53,
     CIC,
     CIC2
@@ -165,7 +166,10 @@ enum class EventType
     SSA   = 3,
     MPA   = 4,
     SSAAS = 5,
-    MPAAS = 6
+    MPAAS = 6,
+    SSA2   = 7,
+    SSA2AS = 8,
+    PSAS   = 9
 };
 
 #endif

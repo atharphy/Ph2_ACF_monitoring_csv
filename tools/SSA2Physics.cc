@@ -1,5 +1,5 @@
 /*!
-  \file                  SSAPhysics.cc
+  \file                  SSA2Physics.cc
   \brief                 Implementaion of Physics data taking
   \author                Mauro DINARDO
   \version               1.0
@@ -7,7 +7,7 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "SSAPhysics.h"
+#include "SSA2Physics.h"
 #include "../Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
@@ -18,7 +18,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings<double>("SaveRawData", true);
+    saveRawData = this->findValueInSettings("SaveRawData", true);
     doLocal     = false;
 
     // ###########################################
@@ -27,13 +27,13 @@ void SSAPhysics::ConfigureCalibration()
     this->CreateResultDirectory(RESULTDIR, false, false);
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fOccContainer);
 
-    fChannelGroupHandler = new SSAChannelGroupHandler();
+    fChannelGroupHandler = new SSA2ChannelGroupHandler();
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 }
 
 void SSAPhysics::Running()
 {
-    LOG(INFO) << GREEN << "[SSAPhysics::Start] Starting" << RESET;
+    LOG(INFO) << GREEN << "[SSA2Physics::Start] Starting" << RESET;
 
     if(saveRawData == true)
     {
@@ -58,7 +58,7 @@ void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 
 void SSAPhysics::Stop()
 {
-    LOG(INFO) << GREEN << "[SSAPhysics::Stop] Stopping" << RESET;
+    LOG(INFO) << GREEN << "[SSA2Physics::Stop] Stopping" << RESET;
 
     Tool::Stop();
 
