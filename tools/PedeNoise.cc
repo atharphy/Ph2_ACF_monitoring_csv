@@ -363,8 +363,8 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
             }
         }
     }
-    fMean_Pxls /= cNPxlASICs;
-    fMean_Strps /= cNStrpASICs;
+    fMean_Pxls = ( cNPxlASICs > 0 ) ? fMean_Pxls/cNPxlASICs : 0xFF/2 ;
+    fMean_Strps = ( cNStrpASICs > 0 ) ? fMean_Strps/cNStrpASICs : 0xFF/2 ;
 
     if( cWithCBC || cWithSSA ) LOG(INFO) << BOLDBLUE << "Found Pedestals on Strip ASICs to be around " << fMean_Strps << RESET;
     else LOG(INFO) << BOLDBLUE << "Found Pedestals on Pixel ASICs to be around " << fMean_Pxls << RESET;
@@ -378,7 +378,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     int      cMinBreakCount = 10;
     std::pair<uint16_t,uint16_t> cValues;
     cValues.first = fMean_Strps;
-    cValues.second = fMean_Strps;
+    cValues.second = fMean_Pxls;
     std::pair<uint16_t,uint16_t> cMaxValues;
     cMaxValues.first =  (1 << 10) - 1;
     cMaxValues.second =  (1 << 8) - 1;
@@ -387,6 +387,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     std::vector<float> cLimits{cFirstLimit, 1 - cFirstLimit};
     //(fDetectorContainer[0]->getBoardType() == BoardType::D19C)
 
+    uint16_t cValue=0;
     int cCounter = 0;
     for(auto cSign: cSigns)
     {
@@ -394,10 +395,8 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
         bool cLimitFound   = false;
         int  cLimitCounter = 0;
         do {
-            DetectorDataContainer* theOccupancyContainerPxls = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+            DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
-            // I think I want to create a map for a strip + the pixels 
-            //fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
             for(auto cBoard: *fDetectorContainer)
             {
                 for(auto cOpticalGroup: *cBoard)
@@ -406,31 +405,38 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
                     {
                         for(auto cROC: *cFe)
                         {
-                            if( cROC->getFrontEndType() == FrontEndType::CBC3 || cROC->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cValues.first); 
-                            else fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cValues.second); 
+                            if( cROC->getFrontEndType() == FrontEndType::CBC3 || cROC->getFrontEndType() == FrontEndType::SSA){ 
+                                fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cValues.first); 
+                                cValue = cValues.first;
+                            }
+                            else{
+                                fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cValues.second); 
+                                cValue = cValues.second;
+                            }
                         }
                     }
                 }
             }
+            fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
             this->measureData(fEventsPerPoint, fNEventsPerBurst);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-// #ifdef __USE_ROOT__
-//             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
-// #else
-//             if(fPlotSCurves)
-//             {
-//                 auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
-//                 theSCurveStreamer.setHeaderElement(cValue);
-//                 for(auto board: *theOccupancyContainer)
-//                 {
-//                     if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
-//                 }
-//             }
-// #endif
+#ifdef __USE_ROOT__
+            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
+#else
+            if(fPlotSCurves)
+            {
+                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
+                theSCurveStreamer.setHeaderElement(cValue);
+                for(auto board: *theOccupancyContainer)
+                {
+                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                }
+            }
+#endif
 
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-            LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValues.first << " for the pixels and " 
-                << cValues.second << " for the strips ... "
+            LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValues.first << " for the strips and " 
+                << cValues.second << " for the pixels ... "
                 << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
                       << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;

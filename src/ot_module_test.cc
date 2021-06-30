@@ -347,13 +347,16 @@ int main(int argc, char* argv[])
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
-        cPedeNoise.Inherit(&cTool);
-        // second parameter disables stub logic on CBC3
-        // auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==0);};
-        // auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
-        // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
-        cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        cPedeNoise.measureNoise();
+        std::vector<FrontEndType> cTypes{ FrontEndType::MPA , FrontEndType::SSA };
+        for(auto cType : cTypes )
+        {
+            auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
+            cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+            cPedeNoise.Inherit(&cTool);
+            cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
+            cPedeNoise.measureNoise();
+            cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        }
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();

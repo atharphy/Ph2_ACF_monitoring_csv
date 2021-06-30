@@ -671,9 +671,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second); }
         if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") { cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); }
     }
-    // WriteReg("fc7_daq_cnfg.optical_block.enable.l8", 0x00);
-    WriteReg("fc7_daq_cnfg.optical_block.enable.l12", 0xFF);
-
     // configure CDCE - if needed
     std::pair<std::string, float> cCDCEselect;
     bool                          cSecondaryReference = false;
@@ -799,6 +796,14 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     fI2CVersion = (ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version"));
     fOptical    = pBoard->isOptical();
     fIs2S       = false;
+
+    // LOG (INFO) << BOLDMAGENTA << "Disabling SFPS..." << RESET;
+    // WriteReg("fc7_daq_cnfg.optical_block.enable.l8", 0xFF);
+    // WriteReg("fc7_daq_cnfg.optical_block.enable.l12", 0x00);
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    // LOG (INFO) << BOLDMAGENTA << "Enabling SFPS..." << RESET;
+    // WriteReg("fc7_daq_cnfg.optical_block.enable.l8", 0x00);
+    // WriteReg("fc7_daq_cnfg.optical_block.enable.l12", 0xFF);
 
     bool cWithlpGBT = false;
     for(auto cOpticalGroup: *pBoard)
