@@ -36,10 +36,10 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="200"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
@@ -59,7 +59,7 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
 	 </OpticalGroup>
@@ -96,9 +96,9 @@
     		<Register name="stub_trigger_delay_value"> 0 </Register>
             <Register name="stub_trigger_veto_length"> 0 </Register>
     		<Register name="test_pulse">
-    			<Register name="delay_after_fast_reset"> 200 </Register>
+    			<Register name="delay_after_fast_reset"> 10 </Register>
     			<Register name="delay_after_test_pulse"> 200 </Register>
-    			<Register name="delay_before_next_pulse"> 200 </Register>
+    			<Register name="delay_before_next_pulse"> 10 </Register>
     			<Register name="en_fast_reset"> 0 </Register>
     			<Register name="en_test_pulse"> 1 </Register>
     			<Register name="en_l1a"> 1 </Register>
@@ -151,12 +151,12 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 194 </Register>
+                    <Register name="common_stubdata_delay"> 133 </Register>
             </Register>
     	</Register>
 	<!-- DIO5 Block -->
 	<Register name="dio5_block">
-	    <Register name="dio5_en"> 0 </Register>
+	    <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
@@ -194,7 +194,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">1000</Setting>
+    <Setting name="Nevents">50</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -248,8 +248,8 @@
     <Setting name="TriggerSeparation">500</Setting>
     <Setting name="TestPulseSeparation">70</Setting>
 
-    <Setting name="StartLatency">190</Setting>
-    <Setting name="LatencyRange">20</Setting>
+    <Setting name="StartLatency">100</Setting>
+    <Setting name="LatencyRange">100</Setting>
     <Setting name="UseFcmdBram">0</Setting>
     <Setting name="MeanTriggerSeparation">100</Setting>
         

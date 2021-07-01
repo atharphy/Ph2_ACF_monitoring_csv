@@ -161,7 +161,9 @@ void PedeNoise::reloadStubLogic()
 
 void PedeNoise::sweepSCurves()
 {
-    std::pair<uint16_t, uint16_t> cStartValues; 
+    uint16_t cStartValue = 0;
+    if(cWithSSA) cStartValue = 40;
+    if(cWithMPA) cStartValue = 50;
     bool originalAllChannelFlag = this->fAllChan;
 
     if(fPulseAmplitude != 0 && originalAllChannelFlag && cWithCBC)
@@ -183,18 +185,18 @@ void PedeNoise::sweepSCurves()
         this->enableTestPulse(true);
         setFWTestPulse();
         LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
-        this->findPedestal();
+        cStartValue = this->findPedestal();
     }
     else
     {
         this->enableTestPulse(false);
-        this->findPedestal(true);
+        cStartValue = this->findPedestal(true);
     }
-    cStartValues.first = fMean_Strps;
-    cStartValues.second = fMean_Pxls;
+
     if(fDisableStubLogic) disableStubLogic();
     // LOG (INFO) << BLUE <<  "SV " <<cStartValue<< RESET ;
-    measureSCurves(cStartValues.first);
+
+    measureSCurves(cStartValue);
 
     if(fDisableStubLogic) reloadStubLogic();
 
@@ -337,13 +339,11 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("Threshold", fEventsPerPoint, 0.56, fNEventsPerBurst);
-
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
-    fMean_Strps = 0.;
-    fMean_Pxls = 0.;
-    uint8_t cNStrpASICs=0;
-    uint8_t cNPxlASICs=0;
+    float    cMean = 0.;
+    uint32_t nCbc  = 0;
+
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -353,41 +353,38 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                 for(auto cROC: *cFe)
                 {
                     uint16_t tmpVthr = 0;
-                    if(cROC->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
-                    if(cROC->getFrontEndType() == FrontEndType::SSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
-                    if(cROC->getFrontEndType() == FrontEndType::MPA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("ThDAC0");
+                    if(cWithCBC) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
+                    if(cWithSSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
+                    if(cWithMPA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("ThDAC0");
 
-                    if(cROC->getFrontEndType() == FrontEndType::CBC3 || cROC->getFrontEndType() == FrontEndType::SSA){ fMean_Strps += tmpVthr;cNStrpASICs++;}
-                    if(cROC->getFrontEndType() == FrontEndType::MPA){ fMean_Pxls += tmpVthr;cNPxlASICs++;}
+                    cMean += tmpVthr;
+                    ++nCbc;
                 }
             }
         }
     }
-    fMean_Pxls = ( cNPxlASICs > 0 ) ? fMean_Pxls/cNPxlASICs : 0xFF/2 ;
-    fMean_Strps = ( cNStrpASICs > 0 ) ? fMean_Strps/cNStrpASICs : 0xFF/2 ;
 
-    if( cWithCBC || cWithSSA ) LOG(INFO) << BOLDBLUE << "Found Pedestals on Strip ASICs to be around " << fMean_Strps << RESET;
-    else LOG(INFO) << BOLDBLUE << "Found Pedestals on Pixel ASICs to be around " << fMean_Pxls << RESET;
-    // for now keep.. need to clean up 
-    return 0;
+    cMean /= nCbc;
+
+    LOG(INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << RESET;
+
+    return cMean;
 }
 void PedeNoise::measureSCurves(uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit         = 0.05;
     int      cMinBreakCount = 10;
-    std::pair<uint16_t,uint16_t> cValues;
-    cValues.first = fMean_Strps;
-    cValues.second = fMean_Pxls;
-    std::pair<uint16_t,uint16_t> cMaxValues;
-    cMaxValues.first =  (1 << 10) - 1;
-    cMaxValues.second =  (1 << 8) - 1;
+    uint16_t cValue         = pStartValue;
+    uint16_t cMaxValue      = (1 << 10) - 1;
+    // uint16_t cMinValue      = 0;
+    if(cWithSSA) cMaxValue = (1 << 8) - 1;
+    if(cWithMPA) cMaxValue = (1 << 8) - 1;
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int>   cSigns{-1, 1};
     std::vector<float> cLimits{cFirstLimit, 1 - cFirstLimit};
     //(fDetectorContainer[0]->getBoardType() == BoardType::D19C)
 
-    uint16_t cValue=0;
     int cCounter = 0;
     for(auto cSign: cSigns)
     {
@@ -397,28 +394,9 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
         do {
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
-            for(auto cBoard: *fDetectorContainer)
-            {
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    for(auto cFe: *cOpticalGroup)
-                    {
-                        for(auto cROC: *cFe)
-                        {
-                            if( cROC->getFrontEndType() == FrontEndType::CBC3 || cROC->getFrontEndType() == FrontEndType::SSA){ 
-                                fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cValues.first); 
-                                cValue = cValues.first;
-                            }
-                            else{
-                                fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cValues.second); 
-                                cValue = cValues.second;
-                            }
-                        }
-                    }
-                }
-            }
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
-            this->measureData(fEventsPerPoint, fNEventsPerBurst);
+            this->setDacAndMeasureData("Threshold", cValue, fEventsPerPoint, fNEventsPerBurst);
+            
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
@@ -435,9 +413,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
 #endif
 
             auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
-            LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValues.first << " for the strips and " 
-                << cValues.second << " for the pixels ... "
-                << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
+            LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
                       << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;
             if(cDistanceFromTarget <= cLimit || firstlim) // || globalOccupancy>1.0)
@@ -448,16 +424,13 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
                 cLimitCounter++;
             }
 
-            cValues.first += cSign;
-            cValues.second += cSign; 
-
-            cLimitFound = (cValues.first == 0 || cValues.second == 0 || cValues.first >= cMaxValues.first || cValues.second >= cMaxValues.second ) || (cLimitCounter >= cMinBreakCount);
+            cValue += cSign;
+            cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
             if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
 
         } while(!cLimitFound);
         cCounter++;
-        cValues.first = fMean_Strps + cSigns[cCounter];
-        cValues.second = fMean_Pxls + cSigns[cCounter];
+        cValue = pStartValue + cSigns[cCounter];
     }
     // this->HttpServerProcess();
     LOG(DEBUG) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET;

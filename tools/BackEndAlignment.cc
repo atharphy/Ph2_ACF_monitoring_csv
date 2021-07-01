@@ -264,17 +264,29 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     else
         LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Sparsification off " << RESET;
 
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            // disable all FEs. . not needed here 
+            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+        }
+    }
+
     // check trigger source
     // and reload
     uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
     uint16_t cOriginalTriggerSrc = cTriggerSrc;
     uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
     cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0x0});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // now try and find correct package delay
@@ -366,29 +378,20 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // reconfigure sparsification + FEs enabled in this CIC
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-    auto& cEnabledFEs = fEnabledFEs.at(pBoard->getIndex());
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SetSparsification(cCic, cSparsified);
-            auto&                cEnabledFEsCIC = cEnabledFEsOG->at(cHybrid->getIndex());
-            auto                 cEnableMsk     = cEnabledFEsCIC->getSummary<uint8_t>();
-            std::vector<uint8_t> cIds(0);
-            for(size_t cIndx = 0; cIndx < 8; cIndx++)
-            {
-                if(((cEnableMsk & (0x1 << cIndx)) >> cIndx) == 1) cIds.push_back(cIndx);
-            }
-            fCicInterface->EnableFEs(cCic, cIds, true); // make sure all FEs are disabled by default
-        }                                               // hybrids
-    }                                                   // OG
+        }
+    }// OG
 
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
     // now check for all hybrids 
@@ -409,6 +412,26 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             } // hybrids or CICs
         }// modules or optical links
     }
+
+    //re-enable FEs
+    auto& cEnabledFEs = fEnabledFEs.at(pBoard->getIndex());
+    for(auto cOpticalGroup: *pBoard)
+    {
+        auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getIndex());
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            auto&                cEnabledFEsCIC = cEnabledFEsOG->at(cHybrid->getIndex());
+            auto                 cEnableMsk     = cEnabledFEsCIC->getSummary<uint8_t>();
+            std::vector<uint8_t> cIds(0);
+            for(size_t cIndx = 0; cIndx < 8; cIndx++)
+            {
+                if(((cEnableMsk & (0x1 << cIndx)) >> cIndx) == 1) cIds.push_back(cIndx);
+            }
+            fCicInterface->EnableFEs(cCic, cIds, true); // make sure all FEs are disabled by default
+        }                                               // hybrids
+    }
+    
     // LOG(INFO) << BOLDMAGENTA << "[BackEndAlignment::FindPackageDelay] Reconfigure ROCs on BeBoard#" << +pBoard->getId() << RESET;
     // Reconfigure(pBoard);
     return cCorrectDelay;
@@ -454,6 +477,9 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     }
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled" , 0 );
+
 
     // expected spacing between TP and L1A
     auto    cDelay          = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
@@ -731,6 +757,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     }
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled" , cOriginalTLUconfig );
     return cFoundCorrectStubLatency;
 }
 bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
@@ -812,23 +839,6 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 
     // force CIC to output repeating 101010 pattern on L1 line
     // needed for phase alignment in back-end
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SelectOutput(cCic, true);
-        }
-    }
-    bool cAligned = true;
-    fL1Debug      = true;
-    if(!pBoard->isOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning(pBoard, fL1Debug);
-    if(!cAligned)
-    {
-        LOG(INFO) << BOLDBLUE << "L1A phase alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
-        return false;
-    }
-
     // force CIC to output empty L1A frames [by disabling all FEs]
     // needed for word alingment in the back-end
     for(auto cOpticalReadout: *pBoard)
@@ -842,6 +852,15 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
     }
+    bool cAligned = true;
+    fL1Debug      = true;
+    if(!pBoard->isOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning(pBoard, fL1Debug);
+    if(!cAligned)
+    {
+        LOG(INFO) << BOLDBLUE << "L1A phase alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
+        return false;
+    }
+
     // fL1Debug = false;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1WordAlignment(pBoard, fL1Debug);
     if(!cAligned)
@@ -849,7 +868,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "L1A word alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
         return false;
     }
-
+    
     // enable CIC output of alignmnent pattern on stub lines
     // .. and enable all FEs again
     bool cIsPS = false;
@@ -1054,8 +1073,6 @@ bool BackEndAlignment::Align()
                  cAttempt++;
             } while(!cPackageDelayFound && cAttempt < 5);
             cAligned = cPackageDelayFound;
-            //if(!cAligned) return cAligned;
-            //return this->FindStubLatency(theBoard);
             return cAligned;
         }
         else

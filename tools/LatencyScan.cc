@@ -213,7 +213,7 @@ void LatencyScan::StubLatencyScan()
                         if(cChip->getIndex() > 0) break;
 
                         auto     cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
-                        uint16_t cRange          = 8;
+                        uint16_t cRange          = 6;
                         cLowerLimit              = cTriggerLatency - cStubOffset - cRange / 2;
                         cUpperLimit              = cTriggerLatency - cStubOffset + cRange / 2;
                         LOG(INFO) << BOLDMAGENTA << "Using latency value programmed in Chp#" << +cChip->getId() << " : modifying range of scan .. to start looking for stubs at " << cLowerLimit
@@ -341,8 +341,6 @@ void LatencyScan::StubLatencyScan()
                                     // only count stubs where the match is perfect
                                     cNStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
                                 }
-
-                                //
                                 // if(cStubs.size() > 0)
                                 //     LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
                                 //               << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
@@ -364,14 +362,14 @@ void LatencyScan::StubLatencyScan()
                         } // chip
                         theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] +=
                             cNStubs;
-                        if(cEventCount % cDebugOut == 0)
-                            LOG(INFO) << BOLDBLUE << "Event#" << +cEventCount << "\t\t.. found "
-                                      << theStubContainer.at(cBoard->getIndex())
-                                             ->at(cOpticalGroup->getIndex())
-                                             ->at(cHybrid->getIndex())
-                                             ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
-                                      << " stubs on hybrid" << +cHybrid->getId() 
-                                      << " that match hit information in the readout.." << RESET;
+                        // if(cEventCount % cDebugOut == 0)
+                        //     LOG(INFO) << BOLDBLUE << "Event#" << +cEventCount << "\t\t.. found "
+                        //               << theStubContainer.at(cBoard->getIndex())
+                        //                      ->at(cOpticalGroup->getIndex())
+                        //                      ->at(cHybrid->getIndex())
+                        //                      ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+                        //               << " stubs on hybrid" << +cHybrid->getId() 
+                        //               << " that match hit information in the readout.." << RESET;
                     } // hybrids
                 }     // optical group
             }         // events
@@ -379,10 +377,19 @@ void LatencyScan::StubLatencyScan()
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    LOG(INFO)
-                        << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << " found "
-                        << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
-                        << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
+                    float cMatchingFraction = (float)theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]; 
+                    cMatchingFraction/= cEvents.size();
+                    if( cMatchingFraction < 0.5 )
+                        LOG(INFO)
+                            << BOLDRED << "Hybrid#" << +cHybrid->getId() << " found "
+                            << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+                            << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
+                    else
+                        LOG(INFO)
+                            << BOLDGREEN << "Hybrid#" << +cHybrid->getId() << " found "
+                            << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+                            << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
+                        
                 } // hybrid
             }     // hybrid
 

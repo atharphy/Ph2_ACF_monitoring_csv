@@ -186,6 +186,10 @@ int main(int argc, char* argv[])
     {
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cBackEndAligner.FindStubLatency(cBoard);
+        // }
         cBackEndAligner.Reset();
     }
 
@@ -211,6 +215,31 @@ int main(int argc, char* argv[])
             }
         }
     }
+
+    // check for TP
+    for(auto cBoard: *cTool.fDetectorContainer)
+    {
+        uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        if(cTriggerSource == 6)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getIndex() > 0)
+                        {
+                            LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
+                                      << " by disabling injection on Chip#" << +cChip->getId() << RESET;
+                            cTool.fReadoutChipInterface->enableInjection(cChip, false);
+
+                        }
+                    }
+                }
+            } //
+        }     //
+    }         //
 
     uint32_t numberOfResyncs = 0;
     if(cmd.foundOption("sendResync"))
@@ -274,9 +303,15 @@ int main(int argc, char* argv[])
             // if( cLimitTriggers )
             // {
             // try to only readout once I know I have enough events
+            size_t cCounter=0;
             do {
-                std::this_thread::sleep_for(std::chrono::microseconds(100));
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
+                if( cCounter%100 == 0 ) LOG (INFO) << BOLDMAGENTA << "\t\t.. " 
+                    << cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") 
+                    << " ... triggers received... "
+                    << RESET;
+                cCounter++;
             } while(!cBreak);
             cTool.fBeBoardInterface->Stop(cBeBoard);
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -345,6 +380,21 @@ int main(int argc, char* argv[])
             //{
             auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(0, 0);
             LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << RESET;
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto cHits = cEvent->GetHits( cHybrid->getId() , cChip->getId() );
+                        auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId()); 
+                        if( cHits.size() > 0 )
+                        {
+                            LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size() << " stubs." << RESET;
+                        }
+                    }
+                } // hybrid
+            }     // optical group
             // outp.str("");
             // outp << *cEvent;
             // LOG(INFO) << outp.str() << RESET;

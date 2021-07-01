@@ -26,9 +26,9 @@ BX0_ALIGNMENT_LINE                              0x00    0xA8    0x00    0x00
 *--------------------------------------------------------------------------------
 * Hit data packing configuration 
 *--------------------------------------------------------------------------------
-L1_INPUT_TIMEOUT_VALUE0                         0x00    0x7F    0xE0    0xFF
+L1_INPUT_TIMEOUT_VALUE0                         0x00    0x7F    0xE0    0xF0
 L1_INPUT_TIMEOUT_VALUE1                         0x00    0x80    0x01    0x00
-L1_OUTPUT_TIMEOUT_VALUE0                        0x00    0x81    0x00    0xFF
+L1_OUTPUT_TIMEOUT_VALUE0                        0x00    0x81    0x00    0xF0
 L1_OUTPUT_TIMEOUT_VALUE1                        0x00    0x82    0x04    0x00
 *--------------------------------------------------------------------------------
 * Word-aligner configuration 
@@ -70,9 +70,9 @@ scTrackMode                                     0x00    0x11    0x00    0x01
 scDllCurrentSet0                                0x00    0x02    0x00    0x55
 scDllCurrentSet1                                0x00    0x03    0x00    0x55
 scDllCurrentSet2                                0x00    0x04    0x00    0x55
-scDllConfirmCountSelect0                        0x00    0x05    0x55    0x55
-scDllConfirmCountSelect1                        0x00    0x06    0x55    0x55
-scDllConfirmCountSelect2                        0x00    0x07    0x55    0x55
+scDllConfirmCountSelect0                        0x00    0x05    0x55    0xFF
+scDllConfirmCountSelect1                        0x00    0x06    0x55    0xFF
+scDllConfirmCountSelect2                        0x00    0x07    0x55    0xFF
 scDllResetReq0                                  0x00    0x08    0x00    0x00
 scDllResetReq1                                  0x00    0x09    0x00    0x00
 scDllCoarseLockDetection0                       0x00    0x0A    0x00    0xFF

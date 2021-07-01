@@ -180,17 +180,23 @@ void PedestalEqualization::FindVplus()
     }
 
     LOG(INFO) << BOLDBLUE << "Identifying optimal Vplus for ROC..." << RESET;
-    setSameDac("Threshold", fTargetVcth);
+    if(cWithCBC) setSameDac("VCth", fTargetVcth);
+    if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
+    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
     bool originalAllChannelFlag = this->fAllChan;
     this->SetTestAllChannels(true);
     if(cWithCBC) setSameLocalDac("ChannelOffset", fTargetOffset);
-    else setSameLocalDac("ThresholdTrim", fTargetOffset);
-    
-    this->bitWiseScan("Threshold", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
+    if(cWithSSA) setSameLocalDac("ThresholdTrim", fTargetOffset);
+    if(cWithMPA) setSameLocalDac("ThresholdTrim", fTargetOffset);
+
+    if(cWithCBC) this->bitWiseScan("VCth", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
+    if(cWithSSA) this->bitWiseScan("Bias_THDAC", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
+    if(cWithMPA) this->bitWiseScan("ThDAC_ALL", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
     dumpConfigFiles();
 
     if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    else  setSameLocalDac("ThresholdTrim", 0x1F);
+    if(cWithSSA) setSameLocalDac("ThresholdTrim", 0x1F);
+    if(cWithMPA) setSameLocalDac("ThresholdTrim", 0x1F);
 
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
@@ -209,9 +215,9 @@ void PedestalEqualization::FindVplus()
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t     tmpVthr = 0;
-                    if(theChip->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
-                    if(theChip->getFrontEndType() == FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
-                    if(theChip->getFrontEndType() == FrontEndType::MPA)
+                    if(cWithCBC) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
+                    if(cWithSSA) tmpVthr = theChip->getReg("Bias_THDAC");
+                    if(cWithMPA)
                     {
                         tmpVthr = theChip->getReg("ThDAC0");
                         LOG(INFO) << GREEN << "tmpVthr " << tmpVthr << RESET;
@@ -241,7 +247,11 @@ void PedestalEqualization::FindVplus()
 #endif
 
     fTargetVcth = uint16_t(cMeanValue / nCbc);
-    setSameDac("Threshold", fTargetVcth);
+
+    if(cWithCBC) setSameDac("VCth", fTargetVcth);
+    if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
+    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
+
     LOG(INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     this->SetTestAllChannels(originalAllChannelFlag);
 }
@@ -256,7 +266,9 @@ void PedestalEqualization::FindOffsets()
     if(cWithSSA) NCH = NSSACHANNELS;
     if(cWithMPA) NCH = NMPACHANNELS;
 
-    setSameDac("Threshold",fTargetVcth);
+    if(cWithCBC) setSameDac("VCth", fTargetVcth);
+    if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
+    if(cWithMPA) setSameDac("ThDAC_ALL", fTargetVcth);
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;

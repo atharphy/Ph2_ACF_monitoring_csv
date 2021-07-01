@@ -447,7 +447,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTrackerPS module " << RESET;
             ModuleStartUpPS(cOpticalGroup);
-            pCICUseNegEdge = 1;
+            pCICUseNegEdge = 0;
         }
 
         auto& clpGBT = cOpticalGroup->flpGBT;
@@ -731,7 +731,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         if(cWith2SFEH)
         {
             cClkTerm = 0;
-            cRxTerm  = 0;
+            cRxTerm  = 1;
         }
         fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
         if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);

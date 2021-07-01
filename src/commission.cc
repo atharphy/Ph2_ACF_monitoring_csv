@@ -169,6 +169,11 @@ int main(int argc, char* argv[])
     {
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            cBackEndAligner.FindStubLatency(cBoard);
+        }
+        cBackEndAligner.Reset();
     }
 
     // align back-end .. if this moves to firmware then we can get rid of this step

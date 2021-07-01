@@ -309,10 +309,10 @@ int main(int argc, char* argv[])
     {
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
-        for(const auto cBoard: *cTool.fDetectorContainer)
-        {
-            cBackEndAligner.FindStubLatency(cBoard);
-        }
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cBackEndAligner.FindStubLatency(cBoard);
+        // }
         cBackEndAligner.Reset();
     }
 
@@ -347,7 +347,7 @@ int main(int argc, char* argv[])
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
-        std::vector<FrontEndType> cTypes{ FrontEndType::MPA , FrontEndType::SSA };
+        std::vector<FrontEndType> cTypes{ FrontEndType::MPA };
         for(auto cType : cTypes )
         {
             auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };

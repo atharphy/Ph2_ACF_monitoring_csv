@@ -1567,10 +1567,11 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // configure trigger
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
     this->ReconfigureTriggerFSM(cVecReg);
+    this->Start(); 
 
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     PhaseTuner pTuner;
@@ -1607,7 +1608,8 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
             }
         }
     }
-
+    this->Stop(); 
+    
     if(pScope) this->L1ADebug();
 
     // reconfigure original trigger configu
@@ -1958,6 +1960,7 @@ void D19cFWInterface::FastAsyncRead(BeBoard* pBoard, std::vector<uint32_t>& pDat
 {
     // for now hardcode, can be option, can be taken out
     pData.clear();
+
     // FIX ME
     // // set the counter readout mode : raw --> firmware just forwards
     // // otherwise decoded data
@@ -3130,7 +3133,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             this->PS_Open_shutter(fFastCommandDuration);
         }
         // start triggering machine which will collect N events
-        // LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
+        LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
         this->Start();
         if(!cAsync)
         {
@@ -3289,131 +3292,59 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         fFastCommandDuration = 0;
         LOG(DEBUG) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
         this->ReconfigureTriggerFSM(cVecReg);
-
-        bool stagger = false;
-        bool manual  = true;
-        this->PS_Clear_counters(fFastCommandDuration);
-        this->PS_Clear_counters(fFastCommandDuration);
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
-        if(stagger)
+        // 
+        this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
+        LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
+        // start triggers 
+        this->Start();
+        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
+        uint32_t cIteration=0;
+        do 
         {
-            // LOG(INFO) << BOLDBLUE << "stagger" << RESET;
-            std::vector<uint8_t> curvals;
-            for(auto cOpticalGroup: *pBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            curvals.push_back(ReadFERegister(cChip, 0x801));
-                            WriteFERegister(cChip, 0x0, 0, 0);
-                        }
-                        else
-                        {
-                            curvals.push_back(ReadFERegister(cChip, 0x0101));
-                            WriteFERegister(cChip, 0x0100, 0, 0);
-                        }
-                    }
-                }
-            }
-            std::this_thread::sleep_for(std::chrono::microseconds(2));
-            uint32_t icurval = 0;
-            for(auto cOpticalGroup: *pBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            for(uint32_t iRow = 1; iRow < 17; iRow++)
-                            {
-                                uint32_t pEnRowRegAddr = (iRow << 11);
-                                WriteFERegister(cChip, pEnRowRegAddr, curvals[icurval], 0);
+            // LOG (INFO) << "D19cFWInterface::WaitForData TriggerSource 10 Trigger State: " << BOLDGREEN << "Running.. .Iteration#" 
+            //     << +cIteration
+            //     << RESET;
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+            cIteration++;
+        }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIteration < 10 );
+        cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIteration == 10 ); 
+        this->PS_Close_shutter(fFastCommandDuration);
+        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
+        this->Stop();   
+        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
+        cVecReg.clear();    
 
-                                this->PS_Open_shutter(fFastCommandDuration);
-                                Send_pulses(cNevents, manual);
-                                this->PS_Close_shutter(fFastCommandDuration);
 
-                                /*
-                                this->PS_Open_shutter(fFastCommandDuration);
-                                this->Start();
-                                uint32_t cTotIterations = 100;
-                                uint32_t cIterations = 0;
-                                do
-                                {
-                                    LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
-
-                                    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                                    cIterations++;
-                                } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < cTotIterations);
-                                cFailed = cFailed||(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == cTotIterations);
-                                this->PS_Close_shutter(fFastCommandDuration);
-                                this->Stop();*/
-                                WriteFERegister(cChip, pEnRowRegAddr, 0x0, 0);
-                                // WriteFERegister(cChip, 0x0, 0, 0);
-                            }
-                            icurval++;
-                        }
-                        if(cChip->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            WriteFERegister(cChip, 0x0100, curvals[icurval], 0);
-
-                            this->PS_Open_shutter(fFastCommandDuration);
-                            Send_pulses(cNevents, manual);
-                            this->PS_Close_shutter(fFastCommandDuration);
-                            WriteFERegister(cChip, 0x0100, 0, 0);
-                            icurval++;
-                        }
-                    }
-                }
-            }
-            icurval = 0;
-            for(auto cOpticalGroup: *pBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            WriteFERegister(cChip, 0x0, curvals[icurval], 0);
-                            icurval++;
-                        }
-                        if(cChip->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            WriteFERegister(cChip, 0x0100, curvals[icurval], 0);
-                            icurval++;
-                        }
-                    }
-                }
-            }
-        }
-        else
+        cIteration=0;
+        this->PS_Start_counters_read();
+        do 
         {
-            // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-            this->PS_Open_shutter(fFastCommandDuration);
-            // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-            Send_pulses(cNevents, manual);
-            // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-            this->PS_Close_shutter(fFastCommandDuration);
-            // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            LOG (INFO) << "D19cFWInterface::WaitForData Checking PS counters ready flag .. " << BOLDGREEN << "Running.. .Iteration#" 
+                << +cIteration
+                << RESET;
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+            cIteration++;
+        }while( this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready")==0 && cIteration < 10 );
+        LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
+        
+        for( size_t cIndx=0; cIndx < 20000; cIndx++ )
+        {
+            auto     cFifoWrd1  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
+            auto     cFifoWrd2  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
+            uint8_t line0 = (cFifoWrd1 & 0x0000FF) >> 0;  // to_number(fifo1_word,8,0)
+            uint8_t line1 = (cFifoWrd1 & 0x00FF00) >> 8;  // to_number(fifo1_word,16,8)
+            uint8_t line2 = (cFifoWrd1 & 0xFF0000) >> 16; //  to_number(fifo1_word,24,16)
 
-            /*this->PS_Open_shutter(fFastCommandDuration);
-            this->Start();
-            uint32_t cIterations = 0;
-            do
-            {
-                LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
-                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                cIterations++;
-            } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);
-            cFailed = cFailed||(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10);
-            this->PS_Close_shutter(fFastCommandDuration);
-            this->Stop();*/
+            uint8_t line3 = (cFifoWrd2 & 0x0000FF) >> 0; // to_number(fifo2_word,8,0)
+            uint8_t line4 = (cFifoWrd2 & 0x00FF00) >> 8; // to_number(fifo2_word,16,8)
+            LOG (INFO) << BOLDMAGENTA << "Line0 " << std::bitset<8>(line0) << RESET; 
+            LOG (INFO) << BOLDMAGENTA << "Line1 " << std::bitset<8>(line1) << RESET; 
+            LOG (INFO) << BOLDMAGENTA << "Line2 " << std::bitset<8>(line2) << RESET; 
+            LOG (INFO) << BOLDMAGENTA << "Line3 " << std::bitset<8>(line3) << RESET; 
+            LOG (INFO) << BOLDMAGENTA << "Line4 " << std::bitset<8>(line4) << RESET; 
+
         }
+        LOG (INFO) << BOLDMAGENTA << "All counters have been read back " << RESET;
     }
     return cFailed;
 }

@@ -408,7 +408,6 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     {
         // readout mode 1 -- ASYNC counter
         bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x01);
-
         uint8_t cPixelMask = 1;
         uint8_t cPolarity  = 1;
         uint8_t cEnEdgeBR  = 1;
