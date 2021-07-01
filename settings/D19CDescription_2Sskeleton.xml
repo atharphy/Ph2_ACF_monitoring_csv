@@ -39,7 +39,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="0" LinkId="0">
+        <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="200"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
@@ -151,7 +151,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 133 </Register>
+                    <Register name="common_stubdata_delay"> 136 </Register>
             </Register>
     	</Register>
 	<!-- DIO5 Block -->

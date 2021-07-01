@@ -837,12 +837,20 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
     if(pBoard->isOptical() && cWithlpGBT)
     {
-        LOG(INFO) << BOLDBLUE << "Configuring optical link with lpGBT" << RESET;
-        bool clpGBTlock = LinkLock(pBoard);
-        if(!clpGBTlock)
+        bool cSkip=true;
+        if( !cSkip )
         {
-            LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
-            exit(0);
+            LOG(INFO) << BOLDBLUE << "Configuring optical link with lpGBT" << RESET;
+            bool clpGBTlock = LinkLock(pBoard);
+            if(!clpGBTlock)
+            {
+                LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+                exit(0);
+            }
+        }
+        else 
+        {
+            LOG (INFO) << BOLDBLUE << "Skipping lpGBT link reset.." << RESET;
         }
         ResetCPB();
     }
