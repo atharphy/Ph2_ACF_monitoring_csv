@@ -323,10 +323,18 @@ int main(int argc, char* argv[])
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
         cPedestalEqualization.Inherit(&cTool);
-        // second parameter disables stub logic on CBC3
-        cPedestalEqualization.Initialise(cAllChan, true);
-        cPedestalEqualization.FindVplus();
-        cPedestalEqualization.FindOffsets();
+        std::vector<FrontEndType> cTypes{ FrontEndType::SSA };
+        for(auto cType : cTypes )
+        {
+            auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
+            cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+            cPedestalEqualization.Inherit(&cTool);
+            cPedestalEqualization.Initialise(cAllChan, true);
+            cPedestalEqualization.FindVplus();
+            cPedestalEqualization.FindOffsets();
+            cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        }
+        // // second parameter disables stub logic on CBC3
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
@@ -343,7 +351,7 @@ int main(int argc, char* argv[])
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
-        std::vector<FrontEndType> cTypes{ FrontEndType::MPA };
+        std::vector<FrontEndType> cTypes{ FrontEndType::SSA };
         for(auto cType : cTypes )
         {
             auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };

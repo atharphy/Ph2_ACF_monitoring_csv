@@ -26,14 +26,14 @@
             </Global>
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="0" configfile="MPA.txt" /> 
+            <MPA Id="1" configfile="MPA.txt" /> 
             <!-- <MPA Id="1" configfile="MPA.txt" /> 
             <MPA Id="2" configfile="MPA.txt" /> 
             <MPA Id="4" configfile="MPA.txt" /> 
              -->
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" /> 
+            <SSA Id="1" configfile="SSA.txt" /> 
            <!--  <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
             <SSA Id="4" configfile="SSA.txt" /> 
@@ -195,8 +195,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">120</Setting>
-    <Setting name="PedeNoisePulseAmplitude">20</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">77</Setting>
+    <Setting name="PedeNoisePulseAmplitude">77</Setting>
     <Setting name="TriggerRate">10</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>

@@ -3326,15 +3326,15 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         cVecReg.clear();    
         cIteration=0;
         this->PS_Start_counters_read();
-        // do 
-        // {
-        //     LOG (INFO) << "D19cFWInterface::WaitForData Checking PS counters ready flag .. " << BOLDGREEN << "Running.. .Iteration#" 
-        //         << +cIteration
-        //         << RESET;
-        //     std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
-        //     cIteration++;
-        // }while( this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready")==0 && cIteration < 10 );
-        // LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
+        do 
+        {
+            LOG (INFO) << "D19cFWInterface::WaitForData Checking PS counters ready flag .. " << BOLDGREEN << "Running.. .Iteration#" 
+                << +cIteration
+                << RESET;
+            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+            cIteration++;
+        }while( this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready")==0 && cIteration < 10 );
+        LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
         
         // for( size_t cIndx=0; cIndx < 20000; cIndx++ )
         // {
