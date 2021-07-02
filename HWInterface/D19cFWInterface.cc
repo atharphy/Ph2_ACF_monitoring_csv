@@ -837,7 +837,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
     if(pBoard->isOptical() && cWithlpGBT)
     {
-        bool cSkip=true;
+        bool cSkip= (pBoard->getLinkReset() == 0);
         if( !cSkip )
         {
             LOG(INFO) << BOLDBLUE << "Configuring optical link with lpGBT" << RESET;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR2S">
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="0">
     <!-- B598 skeleton -->
     <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- B14 skeleton -->
@@ -36,10 +36,10 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run849/" />
+            <CIC2 Id="8" configfile="BE0_OG0_FE0.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="200"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
@@ -185,9 +185,9 @@
 	</Register>
 	<!-- TLU Block -->
 	<Register name="tlu_block">
-                <Register name="tlu_enabled"> 0 </Register>
-                <Register name="handshake_mode"> 2 </Register>
-                <Register name="trigger_id_delay"> 1 </Register>
+        <Register name="tlu_enabled"> 0 </Register>
+        <Register name="handshake_mode"> 2 </Register>
+        <Register name="trigger_id_delay"> 1 </Register>
 	</Register>
     </Register>
   </BeBoard>

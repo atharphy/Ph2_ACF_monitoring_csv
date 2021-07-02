@@ -151,6 +151,9 @@ class BeBoard : public BoardContainer
 
     bool getSparsification() const { return fSparsifed; }
 
+    void setLinkReset(uint8_t pReset){fResetLink=pReset;}
+    uint8_t getLinkReset() const { return fResetLink;}
+
     int dummyValue_ = 1989;
 
   protected:
@@ -164,6 +167,7 @@ class BeBoard : public BoardContainer
     bool              fConfigureCDCE;
     bool              fSparsifed;
     uint32_t          fClockRateCDCE;
+    uint8_t           fResetLink;
 
   private:
     /*!

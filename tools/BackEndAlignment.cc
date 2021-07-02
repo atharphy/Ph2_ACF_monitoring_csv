@@ -527,13 +527,13 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 cNinjectedStubs += cSeeds.size();
                 cNinjectedStubsThisHybrid += cSeeds.size();
                 (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
-                // enable stub logic
-                // make sure OR mode is used
-                static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true);
-                // set PtCut to maximum
-                fReadoutChipInterface->WriteChipReg(cChip, "PtCut", 14);
-                // no cluster cut
-                fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut", 4);
+                // // enable stub logic
+                // // make sure OR mode is used
+                // static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true);
+                // // set PtCut to maximum
+                // fReadoutChipInterface->WriteChipReg(cChip, "PtCut", 14);
+                // // no cluster cut
+                // fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut", 4);
                 LOG(INFO) << BOLDMAGENTA << "Injecting " << +cNhits << " hits and " << +cSeeds.size() << " stubs in CBC#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
             } // 2S chips  - CBCs
 
