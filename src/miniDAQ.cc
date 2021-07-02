@@ -103,7 +103,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkData", "Check data..", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
-
+    cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
+    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
     std::string  cDAQFileName;
     FileHandler* cDAQFileHandler = nullptr;
     bool         cDAQFile        = cmd.foundOption("daq");
-
+    int cReadoutPause = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
     if(cDAQFile)
     {
         cDAQFileName    = cmd.optionValue("daq");
@@ -241,31 +242,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    // // check for TP
-    // for(auto cBoard: *cTool.fDetectorContainer)
-    // {
-    //     uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    //     if(cTriggerSource == 6)
-    //     {
-    //         for(auto cOpticalGroup: *cBoard)
-    //         {
-    //             for(auto cHybrid: *cOpticalGroup)
-    //             {
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     if(cChip->getIndex() > 0)
-    //                     {
-    //                         LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
-    //                                   << " by disabling injection on Chip#" << +cChip->getId() << RESET;
-    //                         cTool.fReadoutChipInterface->enableInjection(cChip, false);
-
-    //                     }
-    //                 }
-    //             }
-    //         } //
-    //     }     //
-    // }         //
-
     uint32_t numberOfResyncs = 0;
     if(cmd.foundOption("sendResync"))
     {
@@ -294,79 +270,205 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    for(auto cBoard: *cTool.fDetectorContainer)
+    bool cLimitTriggers = cmd.foundOption("limitTriggers");
+    if( cmd.foundOption("continuousReadout") )
     {
-        BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-        // make sure triggers have stopped
-        // and that the readout has been reset
-        dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Stop();
-        auto cStubLatency = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
-        LOG (INFO) << BOLDMAGENTA << "Common stub data delay set to " << cStubLatency << RESET;
-        bool cLimitTriggers = cmd.foundOption("limitTriggers");
-        if(cLimitTriggers)
-            cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
-        else
-            cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
+        for(auto cBoard: *cTool.fDetectorContainer)
+        {
+            BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+            if(cLimitTriggers)
+                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
+            else
+                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
 
-        // if readNevents is used
-        if(cmd.foundOption("useReadNEvents"))
-        {
-            // collect events
-            std::vector<Event*> cPh2Events;
-            cTool.ReadNEvents(cBeBoard, pEventsperVcth);
-        }
-        // default is to use ReadData
-        else
-        {
-            LOG(INFO) << BOLDBLUE << "MiniDAQ running using ReadData" << RESET;
-            uint32_t              cNevents = 0;
             std::vector<uint32_t> cCompleteData(0);
             cTool.fBeBoardInterface->Start(cBeBoard);
-            bool cBreak = false;
-            // if( cLimitTriggers )
-            // {
-            // try to only readout once I know I have enough events
             size_t cCounter=0;
-            do {
-                std::this_thread::sleep_for(std::chrono::microseconds(10));
-                cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
-                if( cCounter%100 == 0 ) LOG (INFO) << BOLDMAGENTA << "\t\t.. " 
-                    << cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") 
-                    << " ... triggers received... "
-                    << RESET;
+            uint32_t              cNevents = 0;
+            bool cBreak = false;
+            bool cWait=false;
+            do 
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(cReadoutPause));
+                std::vector<uint32_t> cData(0);
+                cNevents += cTool.ReadData(cBeBoard, cData, cWait);
+                auto cTriggerCounter = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+                LOG (INFO) << BOLDMAGENTA << "miniDAQ continuousReadout loop ... "
+                        << +cTriggerCounter << " triggers received and "
+                        << +cNevents << " events readout so far... "
+                        << RESET;
                 cCounter++;
+                cBreak = (cNevents >= pEventsperVcth);
             } while(!cBreak);
             cTool.fBeBoardInterface->Stop(cBeBoard);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(cReadoutPause));
             std::vector<uint32_t> cData(0);
             cNevents += cTool.ReadData(cBeBoard, cData, false);
             if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-
-            LOG(INFO) << BOLDBLUE << "Data size after stop is " << cCompleteData.size() << " total number of events I expect is " << +cNevents << RESET;
-
-            // until number of events have stopped increasing
-            for(size_t cAttempt = 0; cAttempt < 1; cAttempt++)
-            {
-                if(cLimitTriggers) continue;
-
-                size_t cCurrentDataSize = 0;
-                size_t cDataSize        = cCompleteData.size();
-                do {
-                    cCurrentDataSize = cCompleteData.size();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                    std::vector<uint32_t> cData(0);
-                    cNevents += cTool.ReadData(cBeBoard, cData, false);
-                    if(cData.size() == 0) continue;
-                    std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-                    cDataSize = cCompleteData.size();
-                } while(cCurrentDataSize != cDataSize);
-            }
-            LOG(INFO) << BOLDBLUE << "Data size before starting to decode is " << cCompleteData.size() << " total number of events I expect is " << +cNevents << RESET;
-            // decoding data
             cTool.DecodeData(cBeBoard, cCompleteData, cNevents, cTool.fBeBoardInterface->getBoardType(cBeBoard));
         }
+    }
+    else
+    {
+        for(auto cBoard: *cTool.fDetectorContainer)
+        {
+            BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+            // make sure triggers have stopped
+            // and that the readout has been reset
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Stop();
+            auto cStubLatency = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
+            LOG (INFO) << BOLDMAGENTA << "Common stub data delay set to " << cStubLatency << RESET;
+            if(cLimitTriggers)
+                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
+            else
+                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
 
-        // process collected events
+            // if readNevents is used
+            if(cmd.foundOption("useReadNEvents"))
+            {
+                // collect events
+                std::vector<Event*> cPh2Events;
+                cTool.ReadNEvents(cBeBoard, pEventsperVcth);
+            }
+            // default is to use ReadData
+            else
+            {
+                LOG(INFO) << BOLDBLUE << "MiniDAQ running using ReadData" << RESET;
+                uint32_t              cNevents = 0;
+                std::vector<uint32_t> cCompleteData(0);
+                cTool.fBeBoardInterface->Start(cBeBoard);
+                bool cBreak = false;
+                if(cLimitTriggers)
+                    cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
+                else
+                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
+
+                // try to only readout once I know I have enough events
+                size_t cCounter=0;
+                do {
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+                    cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
+                    if( cCounter%1000 == 0 ) LOG (INFO) << BOLDMAGENTA << "\t\t.. " 
+                        << cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") 
+                        << " ... triggers received... "
+                        << RESET;
+                    cCounter++;
+                } while(!cBreak);
+                cTool.fBeBoardInterface->Stop(cBeBoard);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::vector<uint32_t> cData(0);
+                cNevents += cTool.ReadData(cBeBoard, cData, false);
+                if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+
+                LOG(INFO) << BOLDBLUE << "Data size after stop is " << cCompleteData.size() << " total number of events I expect is " << +cNevents << RESET;
+
+                // until number of events have stopped increasing
+                for(size_t cAttempt = 0; cAttempt < 1; cAttempt++)
+                {
+                    if(cLimitTriggers) continue;
+
+                    size_t cCurrentDataSize = 0;
+                    size_t cDataSize        = cCompleteData.size();
+                    do {
+                        cCurrentDataSize = cCompleteData.size();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        std::vector<uint32_t> cData(0);
+                        cNevents += cTool.ReadData(cBeBoard, cData, false);
+                        if(cData.size() == 0) continue;
+                        std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+                        cDataSize = cCompleteData.size();
+                    } while(cCurrentDataSize != cDataSize);
+                }
+                LOG(INFO) << BOLDBLUE << "Data size before starting to decode is " << cCompleteData.size() << " total number of events I expect is " << +cNevents << RESET;
+                // decoding data
+                cTool.DecodeData(cBeBoard, cCompleteData, cNevents, cTool.fBeBoardInterface->getBoardType(cBeBoard));
+            }
+
+            // // process collected events
+            // bool                       cPostscale   = cmd.foundOption("postscale");
+            // int                        cScaleFactor = cPostscale ? atoi(cmd.optionValue("postscale").c_str()) : 1;
+            // const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
+            // uint32_t                   cNtriggers   = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+            // LOG(INFO) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from this board." << RESET;
+            // LOG(INFO) << BOLDBLUE << "Number of triggers received is " << +cNtriggers << "." << RESET;
+            // uint32_t               cEventCounter = 0;
+            // std::vector<DQMEvent*> cDQMEvents;
+            // uint32_t               cEventId, cTriggerId;
+            // for(auto& cEvent: cPh2Events)
+            // {
+            //     // if(cEventCounter >= pEventsperVcth) continue;
+            //     cEventId   = cEvent->GetEventCount();
+            //     cTriggerId = cEvent->GetExternalTriggerId();
+            //     // if we write a DAQ file or want to run the DQM, get the SLink format
+            //     if(cDAQFile || cDQM)
+            //     {
+            //         SLinkEvent cSLev = cEvent->GetSLinkEvent(cBeBoard);
+            //         if(cDAQFile)
+            //         {
+            //             auto data = cSLev.getData<uint32_t>();
+            //             cDAQFileHandler->setData(data);
+            //         }
+
+            //         if(cDQM && cEventCounter == 0)
+            //         {
+            //             DQMEvent* cDQMEv = new DQMEvent(&cSLev);
+            //             dqmH->bookHistograms(cDQMEv->trkPayload().feReadoutMapping());
+            //         }
+            //         if(cDQM && cEventCounter % cScaleFactor == 0) { cDQMEvents.emplace_back(new DQMEvent(&cSLev)); }
+            //     }
+
+            //     // if(cEventCounter % 1000 == 0)
+            //     //{
+            //     auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(0, 0);
+            //     LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << RESET;
+            //     for(auto cOpticalGroup: *cBoard)
+            //     {
+            //         for(auto cHybrid: *cOpticalGroup)
+            //         {
+            //             for(auto cChip: *cHybrid)
+            //             {
+            //                 auto cHits = cEvent->GetHits( cHybrid->getId() , cChip->getId() );
+            //                 auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId()); 
+            //                 if( cHits.size() > 0 )
+            //                 {
+            //                     LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size() << " stubs." << RESET;
+            //                 }
+            //             }
+            //         } // hybrid
+            //     }     // optical group
+            //     // outp.str("");
+            //     // outp << *cEvent;
+            //     // LOG(INFO) << outp.str() << RESET;
+            //     //}
+            //     cEventCounter++;
+            // }
+
+            // // finished  processing the events from this acquisition
+            // // thus now fill the histograms for the DQM
+            // if(cDQM)
+            // {
+            //     dqmH->fillHistograms(cDQMEvents);
+            //     cDQMEvents.clear();
+            // }
+            // cNtriggers = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+            // // LOG(INFO) << BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
+
+            // LOG(INFO) << "Number of triggers received         = " << cNtriggers << RESET;
+            // LOG(INFO) << "Number of events recorded           = " << cPh2Events.size() << RESET;
+            // if(cPh2Events.size() != 0)
+            // {
+            //     LOG(INFO) << "Last event GetEventCount            = " << +cPh2Events.back()->GetEventCount() << RESET;
+            //     LOG(INFO) << "Last event GetExternalTriggerId     = " << +cPh2Events.back()->GetExternalTriggerId() << RESET;
+            //     LOG(INFO) << "Number or resyncs                   = " << numberOfResyncs << RESET;
+            //     LOG(INFO) << "Number or resyncs + events recorded = " << numberOfResyncs + cPh2Events.size() << RESET;
+            // }
+        }
+    }
+
+    //process 
+    for(auto cBeBoard: *cTool.fDetectorContainer)
+    {
         bool                       cPostscale   = cmd.foundOption("postscale");
         int                        cScaleFactor = cPostscale ? atoi(cmd.optionValue("postscale").c_str()) : 1;
         const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
@@ -403,7 +505,7 @@ int main(int argc, char* argv[])
             //{
             auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(0, 0);
             LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << RESET;
-            for(auto cOpticalGroup: *cBoard)
+            for(auto cOpticalGroup: *cBeBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {

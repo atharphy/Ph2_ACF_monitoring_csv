@@ -3324,38 +3324,36 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->Stop();   
         std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
         cVecReg.clear();    
-
-
         cIteration=0;
         this->PS_Start_counters_read();
-        do 
-        {
-            LOG (INFO) << "D19cFWInterface::WaitForData Checking PS counters ready flag .. " << BOLDGREEN << "Running.. .Iteration#" 
-                << +cIteration
-                << RESET;
-            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
-            cIteration++;
-        }while( this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready")==0 && cIteration < 10 );
-        LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
+        // do 
+        // {
+        //     LOG (INFO) << "D19cFWInterface::WaitForData Checking PS counters ready flag .. " << BOLDGREEN << "Running.. .Iteration#" 
+        //         << +cIteration
+        //         << RESET;
+        //     std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+        //     cIteration++;
+        // }while( this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready")==0 && cIteration < 10 );
+        // LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
         
-        for( size_t cIndx=0; cIndx < 20000; cIndx++ )
-        {
-            auto     cFifoWrd1  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
-            auto     cFifoWrd2  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
-            uint8_t line0 = (cFifoWrd1 & 0x0000FF) >> 0;  // to_number(fifo1_word,8,0)
-            uint8_t line1 = (cFifoWrd1 & 0x00FF00) >> 8;  // to_number(fifo1_word,16,8)
-            uint8_t line2 = (cFifoWrd1 & 0xFF0000) >> 16; //  to_number(fifo1_word,24,16)
+        // for( size_t cIndx=0; cIndx < 20000; cIndx++ )
+        // {
+        //     auto     cFifoWrd1  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
+        //     auto     cFifoWrd2  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
+        //     uint8_t line0 = (cFifoWrd1 & 0x0000FF) >> 0;  // to_number(fifo1_word,8,0)
+        //     uint8_t line1 = (cFifoWrd1 & 0x00FF00) >> 8;  // to_number(fifo1_word,16,8)
+        //     uint8_t line2 = (cFifoWrd1 & 0xFF0000) >> 16; //  to_number(fifo1_word,24,16)
 
-            uint8_t line3 = (cFifoWrd2 & 0x0000FF) >> 0; // to_number(fifo2_word,8,0)
-            uint8_t line4 = (cFifoWrd2 & 0x00FF00) >> 8; // to_number(fifo2_word,16,8)
-            LOG (INFO) << BOLDMAGENTA << "Line0 " << std::bitset<8>(line0) << RESET; 
-            LOG (INFO) << BOLDMAGENTA << "Line1 " << std::bitset<8>(line1) << RESET; 
-            LOG (INFO) << BOLDMAGENTA << "Line2 " << std::bitset<8>(line2) << RESET; 
-            LOG (INFO) << BOLDMAGENTA << "Line3 " << std::bitset<8>(line3) << RESET; 
-            LOG (INFO) << BOLDMAGENTA << "Line4 " << std::bitset<8>(line4) << RESET; 
+        //     uint8_t line3 = (cFifoWrd2 & 0x0000FF) >> 0; // to_number(fifo2_word,8,0)
+        //     uint8_t line4 = (cFifoWrd2 & 0x00FF00) >> 8; // to_number(fifo2_word,16,8)
+        //     LOG (INFO) << BOLDMAGENTA << "Line0 " << std::bitset<8>(line0) << RESET; 
+        //     LOG (INFO) << BOLDMAGENTA << "Line1 " << std::bitset<8>(line1) << RESET; 
+        //     LOG (INFO) << BOLDMAGENTA << "Line2 " << std::bitset<8>(line2) << RESET; 
+        //     LOG (INFO) << BOLDMAGENTA << "Line3 " << std::bitset<8>(line3) << RESET; 
+        //     LOG (INFO) << BOLDMAGENTA << "Line4 " << std::bitset<8>(line4) << RESET; 
 
-        }
-        LOG (INFO) << BOLDMAGENTA << "All counters have been read back " << RESET;
+        // }
+        // LOG (INFO) << BOLDMAGENTA << "All counters have been read back " << RESET;
     }
     return cFailed;
 }
