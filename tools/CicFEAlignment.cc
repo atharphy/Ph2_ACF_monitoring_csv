@@ -680,15 +680,16 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(pNTriggers, 100, 3);
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
         uint16_t cSrc        = 3;
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
         if(cTriggerSrc != cSrc)
         {
             LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source is set to " << +cSrc << RESET;
-            std::vector<std::pair<std::string, uint32_t>> cRegVec;
             cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSrc});
-            cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-            fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
         }
-
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNTriggers});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        
         // count triggers sent to the CIC
         bool   cAllTriggersSent = false;
         size_t cAttempt         = 0;
@@ -700,7 +701,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
             do {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                // LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
+                //LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
                 cAllTriggersSent = (cNTriggersSent >= pNTriggers);
             } while(!cAllTriggersSent);
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Stop();

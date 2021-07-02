@@ -309,10 +309,6 @@ int main(int argc, char* argv[])
     {
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
-        // for(const auto cBoard: *cTool.fDetectorContainer)
-        // {
-        //     cBackEndAligner.FindStubLatency(cBoard);
-        // }
         cBackEndAligner.Reset();
     }
 

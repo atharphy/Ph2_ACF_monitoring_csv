@@ -166,11 +166,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setEventType(EventType::VR);
     }
 
-    auto cResetLink = pBeBordNode.attribute("linkReset");
-    uint8_t cReset = (cResetLink == nullptr) ? 0 : pBeBordNode.attribute("linkReset").value();
+    uint8_t cReset = convertAnyInt( pBeBordNode.attribute("linkReset").value() );
     cBeBoard->setLinkReset(cReset);
     
-
     os << BOLDBLUE << "|"
        << "----" << pBeBordNode.name() << " --> " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute("Id").value() << BOLDBLUE << ", BoardType: " << BOLDYELLOW
        << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std::endl;

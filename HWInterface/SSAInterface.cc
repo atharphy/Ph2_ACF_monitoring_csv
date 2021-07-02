@@ -760,6 +760,12 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
     {
         return this->ReadChipReg(pSSA, "Bias_THDAC");
     }
+    else if(pRegNode == "TriggerLatency" )
+    {
+        uint8_t    cLatencyReg1  = this->ReadReg(pSSA, pSSA->getRegItem("L1-Latency_LSB").fAddress);
+        uint8_t    cLatencyReg2  = this->ReadReg(pSSA, pSSA->getRegItem("L1-Latency_MSB").fAddress);
+        return (cLatencyReg2 << 8) | cLatencyReg1;
+    }
     else
     {
         cRegItem = pSSA->getRegItem(pRegNode);

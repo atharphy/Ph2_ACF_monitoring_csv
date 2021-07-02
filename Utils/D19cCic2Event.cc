@@ -115,9 +115,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             cEvntCntTag = (*(cEventIterator + 3));
             // LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint16_t cFc7BxId   = (cEvntCntTag & (0xFFFF));
-            uint16_t cFc7TrigId = (cEvntCntTag & (0xFFFF << 16)) >> 16;
+            //uint16_t cFc7TrigId = (cEvntCntTag & (0xFFFF << 16)) >> 16;
             // LOG (INFO) << BOLDMAGENTA << "\t... BxId is " << cFc7BxId << " trigger Id is " << cFc7TrigId << RESET;
-
             //fExternalTriggerID = cFc7TrigId; //(*(cEventIterator + 1) >> 16) & 0x7FFF;
             fEventCount        = cFc7EvtId;  // 0x00FFFFFF & *(cEventIterator + 2);
             fBunch             = cFc7BxId;   // 0xFFFFFFFF & *(cEventIterator + 3);

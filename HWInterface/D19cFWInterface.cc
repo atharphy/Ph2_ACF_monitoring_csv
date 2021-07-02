@@ -840,7 +840,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         bool cSkip= (pBoard->getLinkReset() == 0);
         if( !cSkip )
         {
-            LOG(INFO) << BOLDBLUE << "Configuring optical link with lpGBT" << RESET;
+            LOG(INFO) << BOLDMAGENTA << "Configuring optical link with lpGBT" << RESET;
             bool clpGBTlock = LinkLock(pBoard);
             if(!clpGBTlock)
             {
@@ -850,7 +850,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
         else 
         {
-            LOG (INFO) << BOLDBLUE << "Skipping lpGBT link reset.." << RESET;
+            LOG (INFO) << BOLDMAGENTA << "Skipping lpGBT link reset.." << RESET;
         }
         ResetCPB();
     }
@@ -1311,18 +1311,18 @@ void D19cFWInterface::TriggerConfiguration()
 }
 void D19cFWInterface::Start()
 {
-    this->Stop();
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-
-    ChipReSync();
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-    ResetTriggerFSM();
+    //LOG (INFO) << BOLDBLUE << "D19cFWInterface::Start" << RESET;
+    // this stops triggers  + resets 
+    this->ResetTriggerFSM();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // reset the readout
     this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    // prints to debug and also checks that things are ok 
     this->TriggerConfiguration();
 
+    ChipReSync();
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
     // clear the register manually)
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
@@ -1332,12 +1332,11 @@ void D19cFWInterface::Start()
     WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    // print out config
-    this->TriggerConfiguration();
 }
 
 void D19cFWInterface::Stop()
 {
+    //LOG (INFO) << BOLDBLUE << "D19cFWInterface::Stop" << RESET;
     // here close the shutter for the stub counter block
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x1);
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x0);
@@ -1349,6 +1348,7 @@ void D19cFWInterface::Stop()
 // reconfigure trigger
 void D19cFWInterface::ResetTriggerFSM()
 {
+    //LOG (INFO) << BOLDBLUE << "D19cFWInterface::ResetTriggerFSM" << RESET;
     // stop trigger
     this->Stop();
 
@@ -1362,7 +1362,7 @@ void D19cFWInterface::ResetTriggerFSM()
     // // check trigger source and rate
     // // print out config
     // LOG (DEBUG) << BOLDMAGENTA << "Verifying trigger configuration after reset..." << RESET;
-    // this->TriggerConfiguration();
+    this->TriggerConfiguration();
 }
 void D19cFWInterface::Pause()
 {
@@ -1642,15 +1642,19 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     PhaseTuner    pTuner;
     bool          cSuccess = true;
 
+
     // configure triggers
     // make sure you're only sending one trigger at a time
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    // configure trigger
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1});
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;cVecReg.clear();
+    std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency","trigger_source","misc.backpressure_enable","triggers_to_accept"};
+    std::vector<uint16_t>    cFcmdRegVals{0,10,3,0,1};
+    std::vector<uint8_t> cFcmdRegOrigVals(0);
+    for( size_t cIndx=0; cIndx < cFcmdRegs.size(); cIndx++)
+    {
+        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+        cFcmdRegOrigVals.push_back( this->ReadReg(cRegName) );
+        cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
+    }
     this->ReconfigureTriggerFSM(cVecReg);
     if(pScope) this->L1ADebug();
 
@@ -1742,13 +1746,12 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     }
 
     // reconfigure original trigger configu
-    cVecReg.clear();
     for(auto const& it: cRegisterMap)
     {
         auto cRegName = it.first;
         if(cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos)
         {
-            // LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
+            LOG (INFO) << BOLDBLUE << "Setting " << cRegName << " back to original value of  " << it.second << RESET;
             cVecReg.push_back({it.first, it.second});
         }
     }
@@ -3362,8 +3365,8 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // in the handshake mode offset is cleared after each handshake
     // fDDR3Offset = 0;
     auto cHandshakeMode = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+    auto cNtriggersToAccept = ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
-
     bool cFailed = WaitForData(pBoard);
     if(!cFailed)
     {
@@ -3388,6 +3391,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
             }
         }
         WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
+        WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNtriggersToAccept);
         // fDDR3Offset = 0;
     }
     // again check if failed to re-run in case

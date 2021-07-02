@@ -586,7 +586,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // find correct hit latency
     bool     cFoundCorrectHitLatency = false;
     uint16_t cHitLatency             = 0;
-    int      cExpectedOffset         = -5;
+    int      cExpectedOffset         = -1;
     float    cFraction = (cWithPS) ? 0.5*(1.0/(1+cMult)) : 0.5 ; 
     for(int cOffset = cExpectedOffset ; cOffset < cExpectedOffset + 10; cOffset++)
     {
@@ -658,7 +658,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         // // now scan stub latency
         auto cOriginalStubDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
         LOG(INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
-        for(int cOffset = 100; cOffset >= 20; cOffset--)
+        for(int cOffset = 70; cOffset >= 20; cOffset--)
         {
             if(cFoundCorrectStubLatency) continue;
             int cStubLatency = cHitLatency - cOffset;
@@ -703,36 +703,42 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // adding this here in preparation for stub decoding
     // I think this should belong to the board.. need to fix
     if(cFoundCorrectStubLatency) { 
+        pBoard->setStubOffset(cCorrectOffset - cReTime);
+        // TO-DO .. remove this
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime); 
         // verification step 
         // print to screen for now 
-        ReadNEvents(pBoard, cNevents);
-        const std::vector<Event*>& cEvents      = this->GetEvents();
-        for(auto cEvent: cEvents)
+        bool cConfirm=false;
+        if( cConfirm )
         {
-            for(auto cOpticalGroup: *pBoard)
+            ReadNEvents(pBoard, cNevents);
+            const std::vector<Event*>& cEvents      = this->GetEvents();
+            for(auto cEvent: cEvents)
             {
-                for(auto cHybrid: *cOpticalGroup)
+                for(auto cOpticalGroup: *pBoard)
                 {
-                    for(auto cChip: *cHybrid)
+                    for(auto cHybrid: *cOpticalGroup)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                        for(auto cChip: *cHybrid)
+                        {
+                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                        auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                        auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId()); 
-                        // if( (int)(cHits.size()) > 0 && (int)cStubs.size() > 0 )
-                        // {
-                            LOG (INFO) << BOLDGREEN << "Event#" << +cEvent->GetEventCount() << " ... found "
-                                << cHits.size() << " hits in FE#" << +cChip->getId() 
-                                << " and " 
-                                << +cStubs.size() 
-                                << " stubs."
-                                << RESET;
-                        // }
-                    } // ROCs
-                } // hybrids
-            }// OGs
-        }// events
+                            auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId()); 
+                            if( (int)(cHits.size()) > 0 && (int)cStubs.size() > 0 )
+                            {
+                                LOG (INFO) << BOLDGREEN << "Event#" << +cEvent->GetEventCount() << " ... found "
+                                    << cHits.size() << " hits in FE#" << +cChip->getId() 
+                                    << " and " 
+                                    << +cStubs.size() 
+                                    << " stubs."
+                                    << RESET;
+                            }
+                        } // ROCs
+                    } // hybrids
+                }// OGs
+            }// events
+        }
     }
 
     // reconfigure sparsification
@@ -1064,16 +1070,7 @@ bool BackEndAlignment::Align()
         }         // OGs
         if(cWithCIC)
         {
-            cAligned = this->CICAlignment(theBoard);
-            if(!cAligned) return cAligned;
-            uint8_t cAttempt           = 0;
-            bool    cPackageDelayFound = false;
-            do {
-                 cPackageDelayFound = this->FindPackageDelay(theBoard);
-                 cAttempt++;
-            } while(!cPackageDelayFound && cAttempt < 5);
-            cAligned = cPackageDelayFound;
-            return cAligned;
+            cAligned = this->FindStubLatency(theBoard);
         }
         else
         {
@@ -1116,7 +1113,6 @@ void BackEndAlignment::Running()
 void BackEndAlignment::Stop()
 {
     dumpConfigFiles();
-
     // Destroy();
 }
 

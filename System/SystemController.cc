@@ -392,19 +392,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
             continue;
         }
-        // uint8_t cRetryI2C=1;
-        // uint8_t cI2CFrequency=3;
-        // uint8_t cSCLmode=0;
-        // for( uint8_t cMasterId=0; cMasterId < 3;  cMasterId++)
-        // {
-        //     i2cConfig cI2Cconfig;
-        //     cI2Cconfig.fMasterId = cMasterId;
-        //     cI2Cconfig.fI2CFrequency = cI2CFrequency;
-        //     cI2Cconfig.fSCLmode = cSCLmode;
-        //     cI2Cconfig.fRetry = cRetryI2C;
-        //     clpGBTInterface->SetI2Cconfig(cI2Cconfig);
-        // }
-
+        
         bool cWithPSmodule = false;
         bool cWith2Smodule = false;
         for(auto cHybrid: *cOpticalGroup)
@@ -480,9 +468,61 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         }                                                                    // CIC part - configure and make sure all FE blocks are disabled
         // then start-up CIC
         cReSyncNeeded = cReSyncNeeded || CicStartUp(cOpticalGroup, cCicDriveStrength, pCICUseNegEdge);
+    }
+    if( cReSyncNeeded )
+    {
+        LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
+        // send a ReSync to all chips before starting
+        fBeBoardInterface->ChipReSync(pBoard);
+    }
+    else 
+        LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
 
-        // finally
-        // configure ROCs on hybrid .. can have SSAs or MPAs
+    // align BE for CIC 
+    bool cSuccess = true;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        bool cBeAlignSuccess =  CicBeAlignment( cOpticalGroup );      
+        if (cBeAlignSuccess) 
+        {
+                LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC data [hits+stubs]..." << RESET;
+        }
+        else
+            LOG(INFO) << BOLDRED << "FAILED  BE alignment for CIC data [hits+stubs]..." << RESET;
+        cSuccess = cSuccess && cBeAlignSuccess;
+    }
+    if( cSuccess )
+    {
+        uint16_t cOriginalTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+        fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+        for(auto cOpticalGroup: *pBoard)
+        {
+            bool cDelayFoundSuccess =  CicPackageDelay( cOpticalGroup );   
+            if (cDelayFoundSuccess) 
+            {
+                    LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC stub pkg..." << RESET;
+            }
+            else
+                LOG(INFO) << BOLDRED << "FAILED  BE alignment CIC stub pkg..." << RESET;
+            cSuccess = cSuccess && cDelayFoundSuccess;
+        }
+        cRegVec.clear();
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
+        fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    }
+    // finally
+    // configure ROCs on hybrid .. can have SSAs or MPAs
+    for(auto cOpticalGroup: *pBoard)
+    {
+        auto& clpGBT = cOpticalGroup->flpGBT;
+           
         std::vector<FrontEndType> cFrontEndTypesAll{FrontEndType::SSA, FrontEndType::MPA, FrontEndType::CBC3};
         std::vector<FrontEndType> cFrontEndTypesPS{FrontEndType::SSA, FrontEndType::MPA};
         std::vector<FrontEndType> cFrontEndTypes2S{FrontEndType::CBC3};
@@ -523,17 +563,6 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             }     // hybrid
         }         // configure all FE types
     }
-
-    if( cReSyncNeeded )
-    {
-        LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
-        // send a ReSync to all chips before starting
-        fBeBoardInterface->ChipReSync(pBoard);
-    }
-    else 
-        LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
-        
-    //
 }
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {
@@ -692,6 +721,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         bool cIs2S       = cHybridIter != cHybrid->end();
         // 0 --> CBC , 1 --> MPA
         uint8_t cModeSelect = (cIs2S) ? 0 : 1;
+        uint8_t cBx0Delay   = (cIs2S) ? 8 : 22; 
         // select CIC mode
         bool cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
         if(!cSuccess)
@@ -737,6 +767,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
         if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
         if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
+        if(cSuccess) cSuccess = fCicInterface->ManualBx0Alignment(cCic, cBx0Delay);
         if(cSuccess)
         {
             LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +cHybrid->getId() % 2 << " connected to link " << +cHybrid->getOpticalId() << RESET;
@@ -744,7 +775,237 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         }
         LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     } // all hybrids connected to this OG
+
     return cReSyncNeeded;
+}
+bool SystemController::CicBeAlignment(const OpticalGroup* pOpticalGroup )
+{
+    // make sure you're only sending one trigger at a time here
+    auto cBoardId    = pOpticalGroup->getBeBoardId();
+    auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto cTriggerMultiplicity = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+
+    std::vector<uint8_t> cFeEnableRegs(0);
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        cFeEnableRegs.push_back( fCicInterface->ReadChipReg(cCic,"FE_ENABLE") );
+    }
+
+    // force CIC to output repeating 101010 pattern on L1 line
+    // needed for phase alignment in back-end
+    // force CIC to output empty L1A frames [by disabling all FEs]
+    // needed for word alingment in the back-end
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, false);
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+    }
+    bool cAligned = true;
+    bool cL1Debug      = true;
+    if(!(*cBoardIter)->isOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning((*cBoardIter), cL1Debug);
+    if(!cAligned)
+    {
+        LOG(INFO) << BOLDBLUE << "L1A phase alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
+        return false;
+    }
+    
+    // fL1Debug = false;
+    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1WordAlignment((*cBoardIter), cL1Debug);
+    if(!cAligned)
+    {
+        LOG(INFO) << BOLDBLUE << "L1A word alignment in the back-end " << BOLDRED << " FAILED ..." << RESET;
+        return false;
+    }
+    
+    // enable CIC output of alignmnent pattern on stub lines
+    // .. and enable all FEs again
+    bool cIsPS = false;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // enable alignment output for stubs
+        fCicInterface->SelectOutput(cCic, true);
+        // check for an MPA
+        auto cType     = FrontEndType::MPA;
+        auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+        cIsPS          = cIsPS || cMPAfound;
+        // check for an SSA
+        cType          = FrontEndType::SSA;
+        auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+        cIsPS          = cIsPS || cSSAfound;
+    }
+    bool cStubDebug     = true;
+    size_t cNlines = cIsPS ? 6 : 5;
+    LOG(INFO) << BOLDMAGENTA << "SystemController::CicBeAlignment ... stub alignment on " << +cNlines << "/6 lines from CIC.." << RESET;
+    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning((*cBoardIter), cStubDebug, cNlines);
+    LOG(INFO) << BOLDMAGENTA << "Now looking at output of all hybrids " << RESET;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
+        fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, cNlines);
+    } // hybrids
+    
+    // disable CIC output of pattern on stub + l1 lines
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        fCicInterface->SelectOutput(cCic, false);
+    } // hybrids [CICs]
+    
+    // reconfigure FEs enabled in this CIC
+    LOG(INFO) << BOLDMAGENTA << "SystemController::CicBeAlignment Resetting FE_ENABLE" << RESET;
+    size_t cIndx=0;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto&                cCic           = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        fCicInterface->WriteChipReg(cCic,"FE_ENABLE", cFeEnableRegs[cIndx]);
+        cIndx++;    
+    } // hybrids
+    
+    // re-load configuration of fast command block from register map loaded from xml file
+    LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock((*cBoardIter));
+    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMultiplicity);
+    return cAligned;
+}
+bool SystemController::CicPackageDelay(const OpticalGroup* pOpticalGroup )
+{
+    // only perform for first link 
+    if(pOpticalGroup->getIndex() > 0) return true;
+
+    // make sure you're only sending one trigger at a time here
+    auto cBoardId    = pOpticalGroup->getBeBoardId();
+    auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    
+    LOG(INFO) << GREEN << "Trying CIC un-packer alignment in the back-end" << RESET;
+    uint32_t cNevents      = 10;
+    uint16_t cMaxBxCounter = 3564;
+
+    // sparsification of
+    bool cSparsified = (*cBoardIter)->getSparsification();
+    if(cSparsified)
+        LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Sparsification on " << RESET;
+    else
+        LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Sparsification off " << RESET;
+
+    std::vector<uint8_t> cFeEnableRegs(0);
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        cFeEnableRegs.push_back( fCicInterface->ReadChipReg(cCic,"FE_ENABLE") );
+        // disable all FEs. . not needed here 
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+    }
+    
+    // check trigger source
+    // and reload
+    uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
+    uint16_t cOriginalTriggerSrc = cTriggerSrc;
+    uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.tlu_block.tlu_enabled");
+    cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0x0});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    fBeBoardInterface->WriteBoardMultReg((*cBoardIter), cRegVec);
+
+    // now try and find correct package delay
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
+    bool    cCorrectDelay = false;
+    uint8_t cPackageDelay = 7;
+    uint8_t cFinalDelay   = cPackageDelay;
+
+    for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+    {
+        if(cCorrectDelay) continue;
+
+        LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
+        fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
+
+        // check stubs
+        // 2 events should be enough
+        // LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+        ReadNEvents((*cBoardIter), cNevents);
+        const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
+        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+
+        // now ... check for incrementing BxIds
+        int              cNRollOvers = 0;
+        std::vector<int> cBxIds(0);
+        std::vector<int> cBxDifferences(0); // I think by injecting this way this number should always be the same ..
+        for(auto& cEvent: cEventsWithStubs)
+        {
+            for(auto cHybrid: *pOpticalGroup)
+            {
+                if(cHybrid->getIndex() > 0) continue;
+
+                auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                if(cBxIds.size() > 0)
+                {
+                    int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
+                    cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
+                    cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
+                    cBxDifferences.push_back(cBxDifference);
+                    //LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
+                }
+                cBxIds.push_back(cBx);
+                //LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+
+            } // hybrids or CICs
+        }         // events
+        // figure out the differences between the bxIds
+        auto cFirstDifference = cBxDifferences[0];
+        std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
+        cBxDifferences.erase(cBxDifferences.begin()); // erase the first element
+        for(auto cDifference: cBxDifferences) LOG(DEBUG) << BOLDBLUE << "\t..." << +cDifference << RESET;
+        // all elements are equal
+        if(cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()))
+        {
+            LOG(INFO) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
+            LOG(INFO) << BOLDGREEN << "Going to fix the manual package delay to " << +cPackageDelay << RESET;
+            cFinalDelay   = cPackageDelay;
+            cCorrectDelay = true;
+        }
+        else
+            LOG(INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
+
+    } // pkg delay
+    if(!cCorrectDelay) return cCorrectDelay;
+
+    // set everything back to original values .. like I wasn't here
+    // reset fast command registers
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
+    cRegVec.clear();
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
+    fBeBoardInterface->WriteBoardMultReg((*cBoardIter), cRegVec);
+
+    // reconfigure sparsification + FEs enabled in this CIC
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
+    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    size_t cIndx=0;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        fCicInterface->SetSparsification(cCic, cSparsified);
+        fCicInterface->WriteChipReg(cCic,"FE_ENABLE", cFeEnableRegs[cIndx]);
+        cIndx++;    
+    }
+
+    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    return cCorrectDelay;
 }
 void SystemController::ConfigureHw(bool bIgnoreI2c)
 {

@@ -186,12 +186,37 @@ int main(int argc, char* argv[])
     {
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
-        for(const auto cBoard: *cTool.fDetectorContainer)
-        {
-            cBackEndAligner.FindStubLatency(cBoard);
-        }
         cBackEndAligner.Reset();
+        // when I get here .. I want to update the common_stub_data_delay 
+        // then I am sure that I should see stubs as long as the 
+        // correct hit latency is set 
+        for(auto cBoard: *cBackEndAligner.fDetectorContainer)
+        {
+            auto cStubOffset    = cBoard->getStubOffset();
+            uint16_t cTriggerLatency=0; 
+            uint8_t  cReTimePix=0;
+            for(auto cOpticalReadout: *cBoard)
+            {
+                if(cOpticalReadout->getIndex() > 0) break;
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    if(cHybrid->getIndex() > 0) break;
+                    for(auto cReadoutChip: *cHybrid)
+                    {
+                        if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                        if( cTriggerLatency != 0 ) continue; 
+                        cTriggerLatency = cBackEndAligner.fReadoutChipInterface->ReadChipReg(cReadoutChip, "TriggerLatency");
+                        if( cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cBackEndAligner.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
+                    }
+                }
+            }
+            uint32_t cStubDataDelay = cTriggerLatency - (cStubOffset + cReTimePix);
+            LOG (INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
+            LOG (INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
+            cBackEndAligner.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDelay);
+        }
     }
+
 
     for(auto board: *cTool.fDetectorContainer)
     {
@@ -216,30 +241,30 @@ int main(int argc, char* argv[])
         }
     }
 
-    // check for TP
-    for(auto cBoard: *cTool.fDetectorContainer)
-    {
-        uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        if(cTriggerSource == 6)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getIndex() > 0)
-                        {
-                            LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
-                                      << " by disabling injection on Chip#" << +cChip->getId() << RESET;
-                            cTool.fReadoutChipInterface->enableInjection(cChip, false);
+    // // check for TP
+    // for(auto cBoard: *cTool.fDetectorContainer)
+    // {
+    //     uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    //     if(cTriggerSource == 6)
+    //     {
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 for(auto cChip: *cHybrid)
+    //                 {
+    //                     if(cChip->getIndex() > 0)
+    //                     {
+    //                         LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
+    //                                   << " by disabling injection on Chip#" << +cChip->getId() << RESET;
+    //                         cTool.fReadoutChipInterface->enableInjection(cChip, false);
 
-                        }
-                    }
-                }
-            } //
-        }     //
-    }         //
+    //                     }
+    //                 }
+    //             }
+    //         } //
+    //     }     //
+    // }         //
 
     uint32_t numberOfResyncs = 0;
     if(cmd.foundOption("sendResync"))
@@ -272,13 +297,11 @@ int main(int argc, char* argv[])
     for(auto cBoard: *cTool.fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-
         // make sure triggers have stopped
         // and that the readout has been reset
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Stop();
-        //
-        // cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.timeout", 0x1);
-        //
+        auto cStubLatency = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
+        LOG (INFO) << BOLDMAGENTA << "Common stub data delay set to " << cStubLatency << RESET;
         bool cLimitTriggers = cmd.foundOption("limitTriggers");
         if(cLimitTriggers)
             cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);

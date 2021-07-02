@@ -154,6 +154,9 @@ class BeBoard : public BoardContainer
     void setLinkReset(uint8_t pReset){fResetLink=pReset;}
     uint8_t getLinkReset() const { return fResetLink;}
 
+    void setStubOffset(uint16_t pOffset){fStubOffset=pOffset;}
+    uint8_t getStubOffset() const { return fStubOffset;}
+
     int dummyValue_ = 1989;
 
   protected:
@@ -168,6 +171,7 @@ class BeBoard : public BoardContainer
     bool              fSparsifed;
     uint32_t          fClockRateCDCE;
     uint8_t           fResetLink;
+    uint16_t          fStubOffset;
 
   private:
     /*!

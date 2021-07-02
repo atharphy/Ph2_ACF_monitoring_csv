@@ -64,6 +64,13 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
     {
         return this->ReadChipReg(pMPA, "ThDAC0");
     }
+
+    else if(pRegNode == "TriggerLatency" )
+    {
+        uint8_t    cLatencyReg1  = this->ReadReg(pMPA,pMPA->getRegItem("L1Offset_1").fAddress);
+        uint8_t    cLatencyReg2  = this->ReadReg(pMPA,pMPA->getRegItem("L1Offset_2").fAddress);
+        return (cLatencyReg2 << 8) | cLatencyReg1;
+    }
     else
     {
         cRegItem = pMPA->getRegItem(pRegNode);
