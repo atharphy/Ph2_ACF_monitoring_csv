@@ -70,8 +70,8 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
-		<Register name="trigger_source"> 5 </Register>
-		<Register name="user_trigger_frequency"> 1 </Register>
+		<Register name="trigger_source"> 3 </Register>
+		<Register name="user_trigger_frequency"> 100 </Register>
 		<Register name="stubs_mask"> 0 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 10 </Register>
@@ -152,7 +152,7 @@
 	</Register>
 	<!-- TLU Block -->
 	<Register name="tlu_block">
-		<Register name="tlu_enabled"> 1 </Register>
+		<Register name="tlu_enabled"> 0 </Register>
         <Register name="handshake_mode"> 2 </Register>
 		<Register name="trigger_id_delay"> 1 </Register>
 	</Register>
