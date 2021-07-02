@@ -409,7 +409,7 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
     std::lock_guard<std::mutex> theGuard(fMutex);
-    if(dacName == "VCth")
+    if(dacName == "VCth" || dacName == "Threshold")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
         {

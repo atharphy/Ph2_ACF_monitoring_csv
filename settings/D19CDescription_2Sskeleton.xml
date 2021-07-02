@@ -21,9 +21,9 @@
                 <Settings threshold="550" latency="200"/>
                 <TestPulse enable="0" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="3" stublogic="3" or254="0" tpgclock="1" testclock="0" dll="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
@@ -36,17 +36,20 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run849/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <!-- <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run849/" />
             <CIC2 Id="8" configfile="BE0_OG0_FE0.txt" />
+             -->
         </Hybrid>
-        <Hybrid Id="1" Status="0" LinkId="0">
+        <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="200"/>
-                <TestPulse enable="1" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
+                <TestPulse enable="0" polarity="0" amplitude="0x10" channelgroup="0" delay="5" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="3" stublogic="3" or254="0" tpgclock="1" testclock="0" dll="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="0"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
             
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
@@ -89,8 +92,8 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 4 </Register>
-    		<Register name="user_trigger_frequency"> 10 </Register>
+    		<Register name="trigger_source"> 3 </Register>
+    		<Register name="user_trigger_frequency"> 100 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -185,7 +188,7 @@
 	</Register>
 	<!-- TLU Block -->
 	<Register name="tlu_block">
-        <Register name="tlu_enabled"> 1 </Register>
+        <Register name="tlu_enabled"> 0 </Register>
         <Register name="handshake_mode"> 2 </Register>
         <Register name="trigger_id_delay"> 2 </Register>
 	</Register>
@@ -194,7 +197,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">50</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
