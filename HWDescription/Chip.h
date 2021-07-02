@@ -105,6 +105,8 @@ class Chip : public FrontEndDescription
 
     const ChipRegMap& getRegMap() const { return fRegMap; }
 
+    void appendToRegMap(std::string pRegName, ChipRegItem pItem) { fRegMap[pRegName] = pItem; }
+
     /*!
      * \brief Get the Chip Id
      * \return The Chip ID

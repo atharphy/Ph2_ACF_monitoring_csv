@@ -67,8 +67,8 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
 
     else if(pRegNode == "TriggerLatency" )
     {
-        uint8_t    cLatencyReg1  = this->ReadReg(pMPA,pMPA->getRegItem("L1Offset_1").fAddress);
-        uint8_t    cLatencyReg2  = this->ReadReg(pMPA,pMPA->getRegItem("L1Offset_2").fAddress);
+        uint8_t    cLatencyReg1  = pMPA->getRegItem("L1Offset_1").fValue; 
+        uint8_t    cLatencyReg2  = pMPA->getRegItem("L1Offset_2").fValue; 
         return (cLatencyReg2 << 8) | cLatencyReg1;
     }
     else
@@ -217,6 +217,20 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pV
     //     << cReg
     //     << " on MPA#"<< +pChip->getId() << " : " << cReg << " writing " << +pValue << RESET;
     uint8_t cRegAddress = ROW_CONFIG_TABLE.find(cReg)->second;
+    if(cReg.find("L1Offset") != std::string::npos  ) 
+    {
+      bool cFound = pChip->getRegMap().find(cReg) != pChip->getRegMap().end(); 
+      if( !cFound )
+      {
+        ChipRegItem cRegItem; 
+        cRegItem.fStatusReg = 1; 
+        cRegItem.fAddress = cRegAddress;
+        cRegItem.fValue = pValue; 
+        pChip->appendToRegMap(cReg, cRegItem);
+      }
+      
+    }
+    
     // if global register don't readback
     pVerifLoop        = (pRow == 0) ? false : pVerifLoop;
     uint16_t cAddress = this->regRow(pChip, cRegAddress, pRow);

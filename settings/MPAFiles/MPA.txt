@@ -53,7 +53,6 @@ OutSetting_5	0x0  	0x8813 	0x0	0x0
 * Row Registers - Global 
 *--------------------------------------------------------------------------------
 * RegName                                    	Page	Addr	Defval	Value
-
 L1Offset_1_ALL			0x0	0xf9		0x0	0x0
 L1Offset_2_ALL			0x0	0x179		0x0	0x0
 ClrRst_ALL			    0x0	0x1f9		0xef	0xef
