@@ -34,6 +34,11 @@ Eudaq2Producer::Eudaq2Producer(const std::string& name, const std::string& runco
 {
     fPh2FileHandler   = nullptr;
     fSLinkFileHandler = nullptr;
+    fLastThreshold=-1;
+    fLastExtTriggerID = -1;
+    fFirstEvent = true;
+    fDifference = 1;
+    fLastTrigId = 0;
 }
 
 Eudaq2Producer::~Eudaq2Producer() {}
@@ -69,11 +74,9 @@ void Eudaq2Producer::DoInitialise()
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.Reset();
     }
-    
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(this);
-    //cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
@@ -105,10 +108,31 @@ void Eudaq2Producer::DoInitialise()
         LOG (INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
         cBackEndAligner.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDelay);
     }
-    
+
     fInitialised = true;
-    // LOG (INFO) << "  INITIALIZE ID: " << ini->Get("initid", 0) << std::endl;
-    // EUDAQ_INFO("TLU INITIALIZE ID: " + std::to_string(ini->Get("initid", 0)));
+    LOG (INFO) << "  INITIALIZE ID: " << ini->Get("initid", 0) << std::endl;
+    EUDAQ_INFO("TLU INITIALIZE ID: " + std::to_string(ini->Get("initid", 0)));
+    LOG (INFO) << " READBACK configuration : "<<std::endl;
+
+    auto cReadbackHandshakeMode      = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.tlu_block.handshake_mode");
+    auto cReadbackTluEnable          = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
+    auto cReadbackTriggerSource      = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    auto cReadbackHitLatencyFeh0     = this->fReadoutChipInterface->ReadChipReg( static_cast<ReadoutChip*>(theFirstBoard->front()->at(0)->front()), "TriggerLatency");
+    auto cReadbackHitLatencyFeh1     = this->fReadoutChipInterface->ReadChipReg( static_cast<ReadoutChip*>(theFirstBoard->front()->at(1)->front()), "TriggerLatency");
+    auto cReadbackCommonStubDataDely = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
+    auto cReadbackPackageDelay       = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+
+    LOG (INFO) << "  HANDSHAKE        : " << cReadbackHandshakeMode << std::endl;
+    LOG (INFO) << "  TLU ENABLE       : " << cReadbackTluEnable << std::endl;
+    LOG (INFO) << "  TRIGGER SOURCE   : " << cReadbackTriggerSource << std::endl;
+    LOG (INFO) << "  HIT LATENCY FEH0 : " << cReadbackHitLatencyFeh0 << std::endl;
+    LOG (INFO) << "  HIT LATENCY FEH1 : " << cReadbackHitLatencyFeh1 << std::endl;
+    LOG (INFO) << "  COM STUB DELAY   : " << cReadbackCommonStubDataDely << std::endl;
+    LOG (INFO) << "  PACKAGE DELAY    : " << cReadbackPackageDelay << std::endl;
+    EUDAQ_INFO("BEB PACKAGE DELAY : " + std::to_string(cReadbackPackageDelay) );
+    EUDAQ_INFO("HIT LATENCY FEH 0 : " + std::to_string(cReadbackHitLatencyFeh0) );
+    EUDAQ_INFO("HIT LATENCY FEH 1 : " + std::to_string(cReadbackHitLatencyFeh1) );
+    EUDAQ_INFO("COM STUBDATA DELAY: " + std::to_string(cReadbackCommonStubDataDely) );
 }
 
 void Eudaq2Producer::DoConfigure()
@@ -244,6 +268,7 @@ void Eudaq2Producer::DoStopRun()
         LOG(INFO) << BOLDBLUE << "Closing file handler for .raw " << RESET;
         fPh2FileHandler->closeFile();
     }
+    fDifference = 1, fLastTrigId = 0;
     // delete fPh2FileHandler;
 
     // check if file handler is open
@@ -292,6 +317,13 @@ void Eudaq2Producer::ReadoutLoop()
         for(auto cBoard: *fDetectorContainer)
         {
             BeBoard*              theBoard = static_cast<BeBoard*>(cBoard);
+            int cRunState = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.general.fsm_state") ;
+            if (cRunState!=1)
+                LOG(INFO) << BOLDRED << cRunState << RESET;
+            else 
+                LOG(INFO) << BOLDBLUE << cRunState << RESET;
+            
+
             std::vector<uint32_t> cRawData(0);
             this->ReadData(theBoard, cRawData);
             // empty data - wait and pass
@@ -308,10 +340,11 @@ void Eudaq2Producer::ReadoutLoop()
                 LOG(INFO) << BOLDBLUE << "Decoded 0 valid events.. not going to send anything ... " << RESET;
                 continue;
             }
+	    
             //{
             LOG(INFO) << BOLDBLUE << +cPh2Events.size() << " events read back from FC7 with ReadData" << RESET;
             std::time_t cTimestamp = std::time(nullptr);
-            for (auto cPh2Event : cPh2Events) 
+            for (auto cPh2Event : cPh2Events)
             {
                 eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
                 cEudaqEvent->SetTimestamp(cTimestamp, cTimestamp);
@@ -321,7 +354,17 @@ void Eudaq2Producer::ReadoutLoop()
                 // SLinkEvent            cSLev = cPh2Event->GetSLinkEvent(cBoard);
                 // std::vector<uint32_t> tmp   = cSLev.getData<uint32_t>();
                 // fSLinkFileHandler->setData(tmp);
-
+		
+		/// christian's fix, some call it awesome (florian at least) of trying 
+		/// to align the ref+telescope with the du data, as we have seen that 
+		/// the trigger id for the telescope was advanced by one comp. to the dut, 
+		/// as well as the du had started with a"bonus" event to begin with
+		if (cPh2Event->GetEventCount() < 1) {
+		    LOG(INFO) << BOLDRED << "Skip first event with ID : "<< cPh2Event->GetEventCount()  << RESET; 
+		    continue;
+	    	}
+		/// end of awesoness
+		
                 eudaq::EventSP cEudaqSubEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
                 this->ConvertToSubEvent(cBoard, cPh2Event, cEudaqSubEvent);
                 cEudaqSubEvent->SetTimestamp(cTimestamp, cTimestamp);
@@ -334,11 +377,39 @@ void Eudaq2Producer::ReadoutLoop()
 
 void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2Event, eudaq::EventSP pEudaqSubEvent)
 {
+
+	/// roland's fix for missing consequtive trigger ids
+    // Try to fix correlation loss at rates higher than 450 Hz 
+    int cTrigNDiff = pPh2Event->GetExternalTriggerId() - (pPh2Event->GetEventCount()&0x7FFF);
+    // int cTrigNDiffHalf = pPh2Event->GetExternalTriggerId()/2 - pPh2Event->GetEventCount();
+    // LOG(INFO) << cTrigNDiff << "\t" << fDifference << RESET;
+    // if (cTrigNDiffHalf > 0) {
+    //   cTrigNDiff = uint32_t(cTrigNDiffHalf);
+    // }
+    // if (fLastTrigId != 0 && fLastTrigId > pPh2Event->GetExternalTriggerId() && cTrigNDiffHalf <= 0) {
+    //   // Don't send out anything
+    //   LOG(WARNING) << "Found strange combination " << pPh2Event->GetExternalTriggerId() << "\t" << pPh2Event->GetEventCount() << "\t" << fLastTrigId << RESET;
+    // }
+
+    if ( cTrigNDiff == fDifference + 1 && cTrigNDiff > 0) {
+        eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
+        cEudaqEvent->SetTag("INVALID", 1);
+        SendEvent(cEudaqEvent);
+        LOG(WARNING) << "Sending out invalid event " << pPh2Event->GetExternalTriggerId() << "\t" << pPh2Event->GetEventCount() << RESET;
+        fDifference++;
+    }
+    pEudaqSubEvent->SetTag("INVALID", 0);
+    fLastTrigId = pPh2Event->GetExternalTriggerId();
+	/// end of roland's fix
+
     pEudaqSubEvent->SetTag("L1_COUNTER_BOARD", pPh2Event->GetEventCount());
     pEudaqSubEvent->SetTag("TDC", pPh2Event->GetTDC());
     pEudaqSubEvent->SetTag("BX_COUNTER", pPh2Event->GetBunch());
     pEudaqSubEvent->SetTriggerN(pPh2Event->GetExternalTriggerId());
     pEudaqSubEvent->SetTag("TLU_TRIGGER_ID", pPh2Event->GetExternalTriggerId());
+
+    auto cL1Id = (static_cast<const D19cCic2Event*>(pPh2Event))->L1Id(0, 0);
+    LOG(INFO) << "Event " << pPh2Event->GetEventCount() << " with TriggerNr " << pPh2Event->GetExternalTriggerId() << " and L1Id " << cL1Id << RESET;
 
     // in order to get proper data alignment always 8
     uint32_t cMaxChipNumber = 8;

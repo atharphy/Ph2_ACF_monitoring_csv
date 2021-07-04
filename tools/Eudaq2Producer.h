@@ -80,11 +80,20 @@ class Eudaq2Producer
   protected:
   private:
     // settings
-    bool        fHandshakeEnabled;
-    uint32_t    fTriggerMultiplicity;
-    uint32_t    fHitsCounter;
+    bool fHandshakeEnabled;
+    uint32_t fTriggerMultiplicity; 
+    uint32_t fHitsCounter;    
     std::string fHWFile;
     std::string fRawPh2ACF;
+    std::vector <int> fThresholdList;
+    int fLastThreshold;
+    int fDifference;
+    uint32_t fLastTrigId;
+    uint8_t fOffset;
+
+    int fLastExtTriggerID;
+    bool fFirstEvent;
+
 
     // status variables
     bool        fInitialised, fConfigured, fStarted, fStopped, fTerminated;
