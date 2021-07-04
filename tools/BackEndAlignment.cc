@@ -439,6 +439,8 @@ bool BackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
     uint32_t cNevents = 10;
+    auto     cSetting      = fSettingsMap.find("StubAlignmentThreshold");
+    uint32_t cThreshold      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 530;
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
     if(cSparsified)
@@ -527,6 +529,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 cNinjectedStubs += cSeeds.size();
                 cNinjectedStubsThisHybrid += cSeeds.size();
                 (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
+                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
                 // // enable stub logic
                 // // make sure OR mode is used
                 // static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "OR", true, true);
