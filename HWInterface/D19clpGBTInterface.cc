@@ -31,7 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     CPBconfig cCPBconfig;
     cCPBconfig.fEnable       = fUseCPB;
     cCPBconfig.fI2CFrequency = 3;
-    cCPBconfig.fWait_us      = 50;   // TO-DO - make configurable from xml
+    cCPBconfig.fWait_us      = 500;   // TO-DO - make configurable from xml
     cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
     cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
     cCPBconfig.fMaxAttempts  = 1000; // TO-DO - make configurable from xml
@@ -128,7 +128,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // module KIT 
     // uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
     // skeleton KIT 
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 8;
     // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 12;
     for(const auto& cGroup: cRxGroups)
     {
