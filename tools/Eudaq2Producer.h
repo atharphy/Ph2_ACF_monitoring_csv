@@ -21,6 +21,8 @@
 #include <map>
 #include <memory>
 #include <stdlib.h>
+#include "Visitor.h"
+#include "CommonVisitors.h"
 
 #ifdef __USE_ROOT__
 #include "TCanvas.h"
