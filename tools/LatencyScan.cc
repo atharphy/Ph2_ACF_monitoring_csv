@@ -163,16 +163,6 @@ void LatencyScan::ScanLatency()
             if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
         }//board
         cLat += cOffset; 
-        // DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-        // fDetectorDataContainer                       = theOccupancyContainer;
-        // fSCurveOccupancyMap[cLat]                    = theOccupancyContainer;
-        // set trigger latency 
-        //this->setDacAndMeasureData("TriggerLatency", cLat, fNevents);
-//         float cOccGlbl = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-//         LOG(INFO) << BOLDMAGENTA << "Latency of " << cLat << " .. on average have found " << cOccGlbl * cTotalNChnls << " hits per event" << RESET;
-// #ifdef __USE_ROOT__
-//         fDQMHistogramLatencyScan.fillLatencyPlots(cLat, *theOccupancyContainer);
-// #endif
     }while( cLat < fStartLatency + fLatencyRange );
     /*#ifdef __USE_ROOT__
         fDQMHistogramLatencyScan.fillLatencyPlots(*theLatencyContainer);
@@ -190,39 +180,40 @@ void LatencyScan::StubLatencyScan()
     DetectorDataContainer theStubContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theStubContainer);
 
-    auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
     // means that at some point the stub latency was scanned and the correct value was identified
     uint16_t cLowerLimit = fStartLatency;
     uint16_t cUpperLimit = fStartLatency + fLatencyRange;
-    if(cStubOffset != 0xFFFF)
+    for(auto cBoard: *fDetectorContainer)
     {
+        size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        auto cStubOffset    = cBoard->getStubOffset();
+        if( cStubOffset == 0 ) continue; 
+
         LOG(INFO) << BOLDMAGENTA << "Since stub latency offset was already found to be " << +cStubOffset << " clock cycles modifying range of scan .. to start  at "
-                  << " a value close to the hit latency " << RESET;
-        for(auto cBoard: *fDetectorContainer)
+              << " a value close to the hit latency " << RESET;
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cOpticalGroup: *cBoard)
+            if(cOpticalGroup->getIndex() > 0) break;
+
+            for(auto cHybrid: *cOpticalGroup)
             {
-                if(cOpticalGroup->getIndex() > 0) break;
+                if(cHybrid->getIndex() > 0) break;
 
-                for(auto cHybrid: *cOpticalGroup)
+                for(auto cChip: *cHybrid)
                 {
-                    if(cHybrid->getIndex() > 0) break;
+                    if(cChip->getIndex() > 0) break;
 
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getIndex() > 0) break;
-
-                        auto     cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
-                        uint16_t cRange          = 6;
-                        cLowerLimit              = cTriggerLatency - cStubOffset - cRange / 2;
-                        cUpperLimit              = cTriggerLatency - cStubOffset + cRange / 2;
-                        LOG(INFO) << BOLDMAGENTA << "Using latency value programmed in Chp#" << +cChip->getId() << " : modifying range of scan .. to start looking for stubs at " << cLowerLimit
-                                  << " clock cycles - trigger latency is set to " << cTriggerLatency << " clock cycles." << RESET;
-                    } // chips
-                }     // hybrids
-            }         // OGs
-        }             // brds
-    }
+                    auto     cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
+                    uint16_t cRange          = (1+cTriggerMult)*2*3;
+                    cLowerLimit              = cTriggerLatency - cStubOffset - cRange / 2;
+                    cUpperLimit              = cTriggerLatency - cStubOffset + cRange / 2;
+                    LOG(INFO) << BOLDMAGENTA << "Using latency value programmed in Chp#" << +cChip->getId() << " : modifying range of scan .. to start looking for stubs at " << cLowerLimit
+                              << " clock cycles - trigger latency is set to " << cTriggerLatency << " clock cycles." << RESET;
+                } // chips
+            }     // hybrids
+        }         // OGs
+    }             // brds
+    
 
     // check for TP
     for(auto cBoard: *fDetectorContainer)
@@ -247,154 +238,276 @@ void LatencyScan::StubLatencyScan()
                 }
             } //
         }     //
-    }         //
+    }//
 
-    int cDebugOut = 5;
-    for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
+    //int cDebugOut = 5; 
+    uint16_t cLat = cLowerLimit;
+    do
     {
-        // container to hold scan result
-        // DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
-        // ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cMatchedEvents);
+        uint16_t cOffset=0; 
         for(auto cBoard: *fDetectorContainer)
         {
-            // zero stub container
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = 0;
-                } // hybrid
-            }     //
-
-            if(!(cLat >= cLowerLimit && cLat < cUpperLimit)) continue;
-
-            // auto&    cMatchesThisBoard = cMatchedEvents->at(cBoard->getIndex());
-            // Take Data for all Hybrids
-            // here set the stub latency
-
             for(auto cReg: getStubLatencyName(cBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBoard, cReg, cLat);
+            size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+            //LOG (INFO) << BOLDRED << "Reading events in scan latency.." << RESET;
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
-            // Loop over Events from this Acquisition
-            LOG(INFO) << BOLDMAGENTA << "BeBoard#" << +cBoard->getIndex() << " ..searching for a match between stub and hit data for a stub latency of  " << +cLat << RESET;
-            for(auto& cEvent: cEvents)
+            // loop over triggers in the burst 
+            LOG (INFO) << BOLDMAGENTA << "Common stub data delay set to " << +cLat << RESET;
+            for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
-                auto cEventCount = cEvent->GetEventCount();
-                LOG(DEBUG) << BOLDBLUE << "\tEvent " << +cEventCount << RESET;
+                if( (cLat+cTriggerId) >= cUpperLimit ) continue;
+
+                // zero stub container
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    // auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        // auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
-                        auto& cCic = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
-                        if(cCic != NULL)
-                        {
-                            auto cBx = cEvent->BxId(cHybrid->getId());
-                            if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDBLUE << "\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
-                        }
+                        theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[(cLat+cTriggerId) - fStartLatency] = 0;
+                    } // hybrid
+                } //
 
-                        size_t cNStubs = 0;
-                        for(auto cChip: *cHybrid)
+                // start at the beginning + trigger id in burst 
+                auto cEventIter = cEvents.begin() + cTriggerId ;
+                size_t cMatchedStubs=0; 
+                size_t cAnyStubs=0;
+                size_t cAnyHits=0;
+                LOG (INFO) << BOLDMAGENTA << "\t..Looking at trigger#" << +cTriggerId << " in burst of " << (cTriggerMult+1) << RESET;
+                do
+                {   
+                    if( cEventIter >= cEvents.end() ) break; 
+                    //auto cEventCount = (*cEventIter)->GetEventCount();             
+                    for(auto cOpticalGroup: *cBoard)
+                    {
+                        for(auto cHybrid: *cOpticalGroup)
                         {
-                            // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
-                            if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                            // auto& cCic = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
+                            // if(cCic != NULL)
+                            // {
+                            //     auto cBx = (*cEventIter)->BxId(cHybrid->getId());
+                            //     if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDBLUE << "\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+                            // }
+
+                            size_t cNStubs = 0;
+                            size_t cNStubsThisCIC=0; 
+                            for(auto cChip: *cHybrid)
                             {
-                                // first check for hits
-                                auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                                if(cHits.size() == 0) continue;
-
-                                // for(auto cHit : cHits )
-                                // {
-                                //     if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
-                                //             << " chip#" << +cChip->getId() 
-                                //             << " hit found in channel " 
-                                //             << +cHit
-                                //             << RESET;
-                                // }
-                                auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                                std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
-                                auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                                int                  cMatchedHits          = 0;
-                                for(auto cStub: cStubs)
+                                // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
+                                if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
-                                    // each bend code is stored in this vector - bend encoding start at -7 strips,
-                                    // increments by 0.5 strips
-                                    // uint8_t cBendCode = cBendLUT[ (cStub.getBend()/2. - (-7.0))/0.5 ];
-                                    // find bend code
-                                    auto     cIter         = std::find(cBendLUT.begin(), cBendLUT.end(), cStub.getBend());
-                                    uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
-                                    int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
-                                    auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
-                                    // if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
-                                    //         << " chip#" << +cChip->getId() 
-                                    //         << " stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
-                                    //         << RESET;
-                                    // check that the hits from these stubs
-                                    // match the hits in the event
-                                    for(auto cHit: cExpectedHits)
-                                    {
-                                        auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
-                                        // cMatchesThisROC->getChannel<Occupancy>(cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
-                                        cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
-                                    }
-                                    // only count stubs where the match is perfect
-                                    cNStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
-                                }
-                                if(cStubs.size() > 0 && cEventCount % cDebugOut == 0)
-                                    LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
-                                              << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
-                                else if (cEventCount % cDebugOut == 0)
-                                    LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
-                                              << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
-                            }
-                            else if(cChip->getFrontEndType() == FrontEndType::SSA)
-                            {
-                                auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                                cNStubs     = cStubs.size();
-                            }
-                            else if(cChip->getFrontEndType() == FrontEndType::MPA)
-                            {
-                                auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                                auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                                cNStubs += cStubs.size();
-                            }
-                        } // chip
-                        theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] +=
-                            cNStubs;
-                        // if(cEventCount % cDebugOut == 0)
-                        //     LOG(INFO) << BOLDBLUE << "Event#" << +cEventCount << "\t\t.. found "
-                        //               << theStubContainer.at(cBoard->getIndex())
-                        //                      ->at(cOpticalGroup->getIndex())
-                        //                      ->at(cHybrid->getIndex())
-                        //                      ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
-                        //               << " stubs on hybrid" << +cHybrid->getId() 
-                        //               << " that match hit information in the readout.." << RESET;
-                    } // hybrids
-                }     // optical group
-            }         // events
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    float cMatchingFraction = (float)theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]; 
-                    cMatchingFraction/= cEvents.size();
-                    if( cMatchingFraction < 0.5 )
-                        LOG(INFO)
-                            << BOLDRED << "Hybrid#" << +cHybrid->getId() << " found "
-                            << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
-                            << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
-                    else
-                        LOG(INFO)
-                            << BOLDGREEN << "Hybrid#" << +cHybrid->getId() << " found "
-                            << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
-                            << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
-                        
-                } // hybrid
-            }     // hybrid
+                                    // first check for hits
+                                    auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    if(cHits.size() == 0) continue;
 
-        } // board
-    }     // latency
+                                    auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                                    std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
+                                    auto                 cStubs                = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                                    int                  cMatchedHits          = 0;
+                                    cNStubsThisCIC += cStubs.size(); 
+                                    cAnyStubs += cStubs.size();
+                                    cAnyHits += cHits.size();
+                                    for(auto cStub: cStubs)
+                                    {
+                                        // each bend code is stored in this vector - bend encoding start at -7 strips,
+                                        // increments by 0.5 strips
+                                        // uint8_t cBendCode = cBendLUT[ (cStub.getBend()/2. - (-7.0))/0.5 ];
+                                        // find bend code
+                                        auto     cIter         = std::find(cBendLUT.begin(), cBendLUT.end(), cStub.getBend());
+                                        uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
+                                        int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
+                                        auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
+                                        // if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
+                                        //         << " chip#" << +cChip->getId() 
+                                        //         << " stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
+                                        //         << RESET;
+                                        // check that the hits from these stubs
+                                        // match the hits in the event
+                                        for(auto cHit: cExpectedHits)
+                                        {
+                                            auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
+                                            cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
+                                        }
+                                        // only count stubs where the match is perfect
+                                        cNStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
+                                        cMatchedStubs += cNStubs; 
+                                    }
+                                    // if(cStubs.size() > 0 && cEventCount % cDebugOut == 0)
+                                    //     LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
+                                    //               << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
+                                    // else if (cEventCount % cDebugOut == 0)
+                                    //     LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
+                                    //               << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
+                                }
+                                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                {
+                                    auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                                    cNStubs     = cStubs.size();
+                                }
+                                else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                                {
+                                    auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                                    cNStubs += cStubs.size();
+                                }
+                            } // chip
+                            //LOG (INFO) << BOLDMAGENTA << "\t\t.. Event#" << +cEventCount << " found " << +cNStubsThisCIC << " in CIC#" << +cHybrid->getIndex() << RESET;
+                            theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId - fStartLatency] += cNStubs;
+                        } // hybrid
+                    }//
+                    cEventIter += (1+cTriggerMult);
+                }while(cEventIter < cEvents.end());
+                LOG (INFO) << BOLDMAGENTA << "\t\t..Found " << cAnyStubs << " stubs [ of which " << cMatchedStubs << " match the hits] and " << cAnyHits << " hits in " << +fNevents << " events.." << RESET;
+            }
+            if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
+        }//board
+        cLat += cOffset; 
+    }while( cLat < cUpperLimit );
+
+    // for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
+    // {
+    //     // container to hold scan result
+    //     // DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
+    //     // ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *cMatchedEvents);
+    //     for(auto cBoard: *fDetectorContainer)
+    //     {
+    //         // zero stub container
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = 0;
+    //             } // hybrid
+    //         }     //
+
+    //         if(!(cLat >= cLowerLimit && cLat < cUpperLimit)) continue;
+
+    //         // auto&    cMatchesThisBoard = cMatchedEvents->at(cBoard->getIndex());
+    //         // Take Data for all Hybrids
+    //         // here set the stub latency
+
+    //         for(auto cReg: getStubLatencyName(cBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBoard, cReg, cLat);
+    //         this->ReadNEvents(cBoard, fNevents);
+    //         const std::vector<Event*>& cEvents = this->GetEvents();
+    //         // Loop over Events from this Acquisition
+    //         LOG(INFO) << BOLDMAGENTA << "BeBoard#" << +cBoard->getIndex() << " ..searching for a match between stub and hit data for a stub latency of  " << +cLat << RESET;
+    //         for(auto& cEvent: cEvents)
+    //         {
+    //             auto cEventCount = cEvent->GetEventCount();
+    //             LOG(DEBUG) << BOLDBLUE << "\tEvent " << +cEventCount << RESET;
+    //             for(auto cOpticalGroup: *cBoard)
+    //             {
+    //                 // auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
+    //                 for(auto cHybrid: *cOpticalGroup)
+    //                 {
+    //                     // auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
+    //                     auto& cCic = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
+    //                     if(cCic != NULL)
+    //                     {
+    //                         auto cBx = cEvent->BxId(cHybrid->getId());
+    //                         if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDBLUE << "\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+    //                     }
+
+    //                     size_t cNStubs = 0;
+    //                     for(auto cChip: *cHybrid)
+    //                     {
+    //                         // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
+    //                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
+    //                         {
+    //                             // first check for hits
+    //                             auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+    //                             if(cHits.size() == 0) continue;
+
+    //                             // for(auto cHit : cHits )
+    //                             // {
+    //                             //     if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
+    //                             //             << " chip#" << +cChip->getId() 
+    //                             //             << " hit found in channel " 
+    //                             //             << +cHit
+    //                             //             << RESET;
+    //                             // }
+    //                             auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+    //                             std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
+    //                             auto                 cStubs                = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+    //                             int                  cMatchedHits          = 0;
+    //                             for(auto cStub: cStubs)
+    //                             {
+    //                                 // each bend code is stored in this vector - bend encoding start at -7 strips,
+    //                                 // increments by 0.5 strips
+    //                                 // uint8_t cBendCode = cBendLUT[ (cStub.getBend()/2. - (-7.0))/0.5 ];
+    //                                 // find bend code
+    //                                 auto     cIter         = std::find(cBendLUT.begin(), cBendLUT.end(), cStub.getBend());
+    //                                 uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
+    //                                 int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
+    //                                 auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
+    //                                 // if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
+    //                                 //         << " chip#" << +cChip->getId() 
+    //                                 //         << " stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
+    //                                 //         << RESET;
+    //                                 // check that the hits from these stubs
+    //                                 // match the hits in the event
+    //                                 for(auto cHit: cExpectedHits)
+    //                                 {
+    //                                     auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
+    //                                     // cMatchesThisROC->getChannel<Occupancy>(cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
+    //                                     cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
+    //                                 }
+    //                                 // only count stubs where the match is perfect
+    //                                 cNStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
+    //                             }
+    //                             if(cStubs.size() > 0 && cEventCount % cDebugOut == 0)
+    //                                 LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
+    //                                           << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
+    //                             else if (cEventCount % cDebugOut == 0)
+    //                                 LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
+    //                                           << " and " << +cHits.size() << " hits of which .. " << +cMatchedHits << " match the stubs!" << RESET;
+    //                         }
+    //                         else if(cChip->getFrontEndType() == FrontEndType::SSA)
+    //                         {
+    //                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+    //                             cNStubs     = cStubs.size();
+    //                         }
+    //                         else if(cChip->getFrontEndType() == FrontEndType::MPA)
+    //                         {
+    //                             auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+    //                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+    //                             cNStubs += cStubs.size();
+    //                         }
+    //                     } // chip
+    //                     theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] +=
+    //                         cNStubs;
+    //                     // if(cEventCount % cDebugOut == 0)
+    //                     //     LOG(INFO) << BOLDBLUE << "Event#" << +cEventCount << "\t\t.. found "
+    //                     //               << theStubContainer.at(cBoard->getIndex())
+    //                     //                      ->at(cOpticalGroup->getIndex())
+    //                     //                      ->at(cHybrid->getIndex())
+    //                     //                      ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+    //                     //               << " stubs on hybrid" << +cHybrid->getId() 
+    //                     //               << " that match hit information in the readout.." << RESET;
+    //                 } // hybrids
+    //             }     // optical group
+    //         }         // events
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 float cMatchingFraction = (float)theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]; 
+    //                 cMatchingFraction/= cEvents.size();
+    //                 if( cMatchingFraction < 0.5 )
+    //                     LOG(INFO)
+    //                         << BOLDRED << "Hybrid#" << +cHybrid->getId() << " found "
+    //                         << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+    //                         << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
+    //                 else
+    //                     LOG(INFO)
+    //                         << BOLDGREEN << "Hybrid#" << +cHybrid->getId() << " found "
+    //                         << theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+    //                         << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
+                        
+    //             } // hybrid
+    //         }     // hybrid
+
+    //     } // board
+    // }     // latency
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillStubLatencyPlots(theStubContainer);

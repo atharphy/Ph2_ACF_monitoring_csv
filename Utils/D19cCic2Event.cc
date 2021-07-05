@@ -25,7 +25,7 @@ const unsigned N2SHYBRIDS = 12;
 namespace Ph2_HwInterface
 {
 // Event implementation
-D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3)
+D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3, bool pWithTLU)
 {
     fIsSparsified = pBoard->getSparsification();
     fEventHitList.clear();
@@ -35,6 +35,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     fROCIds.clear();
     fNCbc    = 0;
     fIs8CBC3 = pWith8CBC3;
+    fTLUenabled  = (uint8_t)pWithTLU;
     // assuming that FEIds aren't shared between links
     fIs2S = false;
     for(auto cOpticalGroup: *pBoard)
@@ -115,9 +116,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             cEvntCntTag = (*(cEventIterator + 3));
             // LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint16_t cFc7BxId   = (cEvntCntTag & (0xFFFF));
-            //uint16_t cFc7TrigId = (cEvntCntTag & (0xFFFF << 16)) >> 16;
             // LOG (INFO) << BOLDMAGENTA << "\t... BxId is " << cFc7BxId << " trigger Id is " << cFc7TrigId << RESET;
-            //fExternalTriggerID = cFc7TrigId; //(*(cEventIterator + 1) >> 16) & 0x7FFF;
+            if( fTLUenabled == 0 )
+            {
+                fExternalTriggerID = (cEvntCntTag & (0xFFFF << 16)) >> 16;
+            }
             fEventCount        = cFc7EvtId;  // 0x00FFFFFF & *(cEventIterator + 2);
             fBunch             = cFc7BxId;   // 0xFFFFFFFF & *(cEventIterator + 3);
 

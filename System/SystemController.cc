@@ -1229,6 +1229,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     else if(pType == BoardType::D19C)
     {
+        bool  cTLUconfig  = (fBeBoardInterface->ReadBoardReg( fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1 );
         // for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
@@ -1302,7 +1303,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                                     LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 8CBC3 " << RESET;
                                 else
                                     LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
-                                fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3));
+                                fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3,cTLUconfig));
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                             {

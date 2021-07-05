@@ -26,14 +26,14 @@
             </Global>
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="1" configfile="MPA.txt" /> 
+            <MPA Id="0" configfile="MPA.txt" /> 
             <!-- <MPA Id="1" configfile="MPA.txt" /> 
             <MPA Id="2" configfile="MPA.txt" /> 
             <MPA Id="4" configfile="MPA.txt" /> 
              -->
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="1" configfile="SSA.txt" /> 
+            <SSA Id="0" configfile="SSA.txt" /> 
            <!--  <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
             <SSA Id="4" configfile="SSA.txt" /> 
@@ -118,7 +118,7 @@
                     <Register name="stubOR"> 1 </Register>
                     <Register name="initial_fast_reset_enable"> 0 </Register>
                     <Register name="trigger_timeout_enable"> 0 </Register>
-                   <Register name="trigger_multiplicity"> 0 </Register>
+                   <Register name="trigger_multiplicity"> 4 </Register>
             </Register>
         </Register>
     <!-- I2C manager -->
@@ -187,6 +187,7 @@
   </BeBoard>
 
 <Settings>
+    <Setting name="StubAlignmentScanStart">95</Setting>
     <Setting name="SaveRawData">1</Setting>
     <!--PedestalEqualization-->
     <Setting name="Nevents">100</Setting>

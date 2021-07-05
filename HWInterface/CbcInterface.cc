@@ -183,19 +183,19 @@ std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pS
 {
     std::vector<uint8_t> cChannelList(0);
     uint32_t             cSeedStrip = std::floor(pSeed / 2.0); // counting from 1
-    LOG(DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
+    //LOG(DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
     size_t cNumberOfChannels = 1 + (pSeed % 2 != 0);
     for(size_t cIndex = 0; cIndex < cNumberOfChannels; cIndex++)
     {
         uint32_t cSeedChannel = 2 * (cSeedStrip - 1) + !pSeedLayer + 2 * cIndex;
-        LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
+        //LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
         cChannelList.push_back(static_cast<uint32_t>(cSeedChannel));
     }
     return cChannelList;
 }
 std::vector<uint8_t> CbcInterface::stubInjectionPattern(uint8_t pStubAddress, int pStubBend, bool pLayerSwap)
 {
-    LOG(DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
+    //LOG(DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
     std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress, !pLayerSwap);
     // correlation layer
     uint8_t              cCorrelated     = pStubAddress + pStubBend; // start counting strips from 0
@@ -236,13 +236,13 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
     {
         uint16_t               cFirstHit = 0;
         std::bitset<NCHANNELS> cBitset   = std::bitset<NCHANNELS>(cChannelMask.getBitset());
-        LOG(DEBUG) << BOLDMAGENTA << "Bitset for this mask is " << cBitset << RESET;
+        //LOG(DEBUG) << BOLDMAGENTA << "Bitset for this mask is " << cBitset << RESET;
         for(cFirstHit = 0; cFirstHit < NCHANNELS; cFirstHit++)
         {
             if(cBitset[cFirstHit] != 0) break;
         }
         uint8_t cGroupId = std::floor((cFirstHit % 16) / 2);
-        LOG(DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
+        //LOG(DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
         if(cGroupId > 7)
             throw Exception("bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, "
                             "bool pVerifLoop): CBC is not able to inject the channel pattern");
@@ -251,7 +251,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         // write registers which enable injection
         this->enableInjection(pCbc, true); // enable injection
         // write register which sets TP amplitude
-        this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
+        //this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
         return this->maskChannelsGroup(pCbc, &cChannelMask);
     }
     else // with noise
@@ -299,7 +299,7 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc)
         char         cBuffer[20];
         sprintf(cBuffer, "Bend%d", static_cast<int>(cIndex));
         std::string cRegName(cBuffer, cLength);
-        LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
+        //LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
         uint16_t cValue            = this->ReadChipReg(pCbc, cRegName);
         cBendCodes[cIndex * 2]     = (cValue & 0x0F);
         cBendCodes[cIndex * 2 + 1] = (cValue & 0xF0) >> 4;
@@ -467,8 +467,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<5> cTestPulseDelay(cSelect);
         uint8_t        cRegValue = (cGroup | (static_cast<uint8_t>(cTestPulseDelay.to_ulong()) << 3));
-        LOG(DEBUG) << BOLDBLUE << "Setting test pulse delay for goup [rev.] " << std::bitset<3>(cGroup) << " to " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
-                   << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting test pulse delay for goup [rev.] " << std::bitset<3>(cGroup) << " to " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
+        //            << RESET;
         return WriteChipSingleReg(pCbc, "TestPulseDel&ChanGroup", cRegValue, pVerifLoop);
     }
     else if(dacName == "TestPulseGroup")
@@ -481,8 +481,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<3> cTestPulseGroup(cSelect);
         uint8_t        cRegValue = (cDelay | (static_cast<uint8_t>(cTestPulseGroup.to_ulong())));
-        LOG(DEBUG) << BOLDBLUE << "Setting test pulse register on CBC" << +pCbc->getId() << " to select group " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
-                   << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting test pulse register on CBC" << +pCbc->getId() << " to select group " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
+        //            << RESET;
         return WriteChipSingleReg(pCbc, "TestPulseDel&ChanGroup", cRegValue, pVerifLoop);
     }
     else if(dacName == "AmuxOutput")
@@ -504,8 +504,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
     {
         uint8_t cValue    = pCbc->getReg("40MhzClk&Or254");
         uint8_t cRegValue = (cValue & 0xBf) | (dacValue << 6);
-        LOG(DEBUG) << BOLDBLUE << "Setting HITOr on Chip" << +pCbc->getId() << " from 0x" << std::hex << +cValue << std::dec << " to " << +dacValue << " - register set to : 0x" << std::hex
-                   << +cRegValue << std::dec << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting HITOr on Chip" << +pCbc->getId() << " from 0x" << std::hex << +cValue << std::dec << " to " << +dacValue << " - register set to : 0x" << std::hex
+        //            << +cRegValue << std::dec << RESET;
         return WriteChipSingleReg(pCbc, "40MhzClk&Or254", cRegValue, pVerifLoop);
     }
     else if(dacName == "DLL")
@@ -517,7 +517,7 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<5> cClockDelay(cSelect);
         uint8_t        cNewRegValue = ((cOriginalValue & 0xE0) | static_cast<uint8_t>(cClockDelay.to_ulong()));
-        LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec << RESET;
+        //LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec << RESET;
         return WriteChipSingleReg(pCbc, "40MhzClk&Or254", cNewRegValue, pVerifLoop);
     }
     else if(dacName == "PtCut")
@@ -530,10 +530,10 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
     {
         uint8_t cValue    = pCbc->getReg("HIP&TestMode");
         uint8_t cRegValue = (cValue & 0xFE) | !dacValue;
-        if(dacValue == 1)
-            LOG(DEBUG) << BOLDBLUE << "Enabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
-        else
-            LOG(DEBUG) << BOLDBLUE << "Disabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
+        // if(dacValue == 1)
+        //     LOG(DEBUG) << BOLDBLUE << "Enabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
+        // else
+        //     LOG(DEBUG) << BOLDBLUE << "Disabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
         return WriteChipSingleReg(pCbc, "HIP&TestMode", cRegValue, pVerifLoop);
     }
     else

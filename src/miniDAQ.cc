@@ -218,6 +218,30 @@ int main(int argc, char* argv[])
         }
     }
 
+    // check for TP
+    for(auto cBoard: *cTool.fDetectorContainer)
+    {
+        uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        if(cTriggerSource == 6)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getIndex() > 2)
+                        {
+                            LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
+                                      << " by disabling injection on Chip#" << +cChip->getId() << RESET;
+                            cTool.fReadoutChipInterface->enableInjection(cChip, false);
+
+                        }
+                    }
+                }
+            } //
+        }     //
+    }//
 
     for(auto board: *cTool.fDetectorContainer)
     {
@@ -513,7 +537,7 @@ int main(int argc, char* argv[])
                     {
                         auto cHits = cEvent->GetHits( cHybrid->getId() , cChip->getId() );
                         auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId()); 
-                        if( cHits.size() > 0 )
+                        if( cHits.size() > 1 )
                         {
                             LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size() << " stubs." << RESET;
                         }

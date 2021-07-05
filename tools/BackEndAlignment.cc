@@ -441,6 +441,9 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     uint32_t cNevents = 10;
     auto     cSetting      = fSettingsMap.find("StubAlignmentThreshold");
     uint32_t cThreshold      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 530;
+    cSetting      = fSettingsMap.find("StubAlignmentScanStart");
+    uint32_t cScanStart      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
     if(cSparsified)
@@ -661,7 +664,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
         // // now scan stub latency
         auto cOriginalStubDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
         LOG(INFO) << BOLDMAGENTA << "Original stub delay set to " << +cOriginalStubDelay << RESET;
-        for(int cOffset = 100; cOffset >= 20; cOffset--)
+        for(int cOffset = cScanStart; cOffset >= 20; cOffset--)
         {
             if(cFoundCorrectStubLatency) continue;
             int cStubLatency = cHitLatency - cOffset;

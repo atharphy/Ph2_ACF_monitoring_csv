@@ -51,7 +51,7 @@ class D19cCic2Event : public Event
      * \param pNbCbc
      * \param pEventBuf : the pointer to the raw Event buffer of this Event
      */
-    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3);
+    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3, bool pWithTLU=false);
     /*!
      * \brief Copy Constructor of the Event Class
      */
@@ -245,6 +245,7 @@ class D19cCic2Event : public Event
     std::vector<uint8_t>              fNStripClusters;
     std::vector<uint8_t>              fNPxlClusters;
 
+    uint8_t      fTLUenabled   = 0;
     bool         fIs2S         = true;
     bool         fIs8CBC3      = false;
     bool         fIsSparsified = true;
