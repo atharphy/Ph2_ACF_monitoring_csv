@@ -329,7 +329,7 @@ void LatencyScan::StubLatencyScan()
                                         }
                                         // only count stubs where the match is perfect
                                         cNStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
-                                        cMatchedStubs += cNStubs; 
+                                        cMatchedStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
                                     }
                                     // if(cStubs.size() > 0 && cEventCount % cDebugOut == 0)
                                     //     LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout."
