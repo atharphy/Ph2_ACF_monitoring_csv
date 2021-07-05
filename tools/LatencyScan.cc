@@ -274,14 +274,14 @@ void LatencyScan::StubLatencyScan()
 
                 // start at the beginning + trigger id in burst 
                 auto cEventIter = cEvents.begin() + cTriggerId ;
-                size_t cMatchedStubs=0; 
                 size_t cAnyStubs=0;
                 size_t cAnyHits=0;
                 LOG (INFO) << BOLDMAGENTA << "\t..Looking at trigger#" << +cTriggerId << " in burst of " << (cTriggerMult+1) << RESET;
+                size_t cMatchedStubs=0;
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
-                    //auto cEventCount = (*cEventIter)->GetEventCount();             
+                    auto cEventCount = (*cEventIter)->GetEventCount();             
                     for(auto cOpticalGroup: *cBoard)
                     {
                         for(auto cHybrid: *cOpticalGroup)
@@ -294,7 +294,6 @@ void LatencyScan::StubLatencyScan()
                             // }
 
                             size_t cNStubs = 0;
-                            size_t cNStubsThisCIC=0; 
                             for(auto cChip: *cHybrid)
                             {
                                 // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
@@ -315,9 +314,10 @@ void LatencyScan::StubLatencyScan()
                                     auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                     std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
                                     auto                 cStubs                = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-                                    cNStubsThisCIC += cStubs.size(); 
+                                    if(cStubs.size() == 0 ) continue; 
                                     cAnyStubs += cStubs.size();
                                     cAnyHits += cHits.size();
+                                    size_t cNStubsThisChip=0; 
                                     for(auto cStub: cStubs)
                                     {
                                         // each bend code is stored in this vector - bend encoding start at -7 strips,
@@ -342,16 +342,17 @@ void LatencyScan::StubLatencyScan()
                                             cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
                                         }
                                         // only count stubs where the match is perfect
-                                        cNStubs += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
+                                        cNStubsThisChip += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
                                     }
-                                    cMatchedStubs += cNStubs;
-                                    if(cStubs.size() > 0 && cMatchedStubs > 0)
-                                        LOG(INFO) << BOLDGREEN << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
-                                            << " of which " << cNStubs << " stubs match the hits.."
+                                    cNStubs = cNStubsThisChip;
+                                    cMatchedStubs += cNStubsThisChip;
+                                    if(cStubs.size() > 0 && cNStubsThisChip > 0)
+                                        LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
+                                            << " of which " << cNStubsThisChip << " stubs match the hits.."
                                              << RESET;
                                     else 
-                                        LOG(INFO) << BOLDRED << "\t\t\tCBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
-                                            << " of which " << cNStubs << " stubs match the hits.."
+                                        LOG(INFO) << BOLDRED << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
+                                            << " of which " << cNStubsThisChip << " stubs match the hits.."
                                              << RESET;
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
