@@ -215,6 +215,20 @@ void LatencyScan::StubLatencyScan()
     }             // brds
     
 
+    // zero stub container
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for( uint16_t cIndx=0; cIndx< fLatencyRange; cIndx++)
+                {
+                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                } 
+            }// hybrid
+        } //
+    }
     // check for TP
     for(auto cBoard: *fDetectorContainer)
     {
@@ -257,15 +271,6 @@ void LatencyScan::StubLatencyScan()
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
                 if( (cLat+cTriggerId) >= cUpperLimit ) continue;
-
-                // zero stub container
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[(cLat+cTriggerId)] = 0;
-                    } // hybrid
-                } //
 
                 // start at the beginning + trigger id in burst 
                 auto cEventIter = cEvents.begin() + cTriggerId ;
@@ -362,7 +367,7 @@ void LatencyScan::StubLatencyScan()
                                 }
                             } // chip
                             //LOG (INFO) << BOLDMAGENTA << "\t\t.. Event#" << +cEventCount << " found " << +cNStubsThisCIC << " in CIC#" << +cHybrid->getIndex() << RESET;
-                            theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId] += cNStubs;
+                            theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId - fStartLatency] += cNStubs;
                         } // hybrid
                     }//
                     cEventIter += (1+cTriggerMult);
