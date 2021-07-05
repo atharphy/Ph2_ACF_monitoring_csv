@@ -12,7 +12,7 @@ logs/*
 *.raw
 Results/
 Results/**
-Results
+ResultsGUI/*
 tags
 # just for G. Auzingers sanity
 Calibrations
