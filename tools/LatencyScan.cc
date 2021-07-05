@@ -349,10 +349,12 @@ void LatencyScan::StubLatencyScan()
                                     if(cStubs.size() > 0 && cNStubsThisChip > 0)
                                         LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
+                                            << " there are " << cHits.size() << " hits in this event... "
                                              << RESET;
                                     else 
                                         LOG(INFO) << BOLDRED << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
+                                            << " there are " << cHits.size() << " hits in this event... "
                                              << RESET;
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
