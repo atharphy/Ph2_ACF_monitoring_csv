@@ -597,14 +597,15 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
     // this->SSAOutputsPogoDebug(pBoard, true);
     this->SSAOutputsPogoScope(pBoard, true);
 }
-void PSHybridTester::SetHybridVoltage()
+void PSHybridTester::SetHybridVoltage( uint32_t pUsbBus, uint8_t pUsbDev )
 {
 #ifdef __TCUSB__
     LOG(INFO) << "Setting hybrid voltage..." << RESET;
+    // TC_PSFE cTC_PSFE( pUsbBus, pUsbDev );
     TC_PSFE cTC_PSFE;
     // cTC_PSFE.set_voltage(cTC_PSFE._1100mV,cTC_PSFE._1250mV);
     cTC_PSFE.set_voltage(cTC_PSFE._1150mV, cTC_PSFE._1250mV);
-    LOG(INFO) <<BOLDGREEN << "Set" << RESET;
+    // LOG(INFO) <<BOLDGREEN << "Set" << RESET;
 #endif
 }
 

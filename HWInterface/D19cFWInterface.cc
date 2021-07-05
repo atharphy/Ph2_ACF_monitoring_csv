@@ -955,7 +955,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             for(auto cChip: *cFe)
             {
                 auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                LOG(DEBUG) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getChipId() << " on FE" << +cFe->getId() << RESET;
+                LOG(INFO) << BOLDBLUE << "Trying to perform an I2C write to " << +cReadoutChip->getChipId() << " on FE" << +cFe->getId() << RESET;
                 cVec.clear();
                 cReplies.clear();
                 // find first non-zero register in the map

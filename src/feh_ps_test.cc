@@ -85,6 +85,8 @@ int main(int argc, char* argv[])
 
     // GUI support    
     cmd.defineOption ( "USB", "USB iProduct string to identify the test card when using the USB functionalities.", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "USBBus", "USB device bus number", ArgvParser::OptionRequiresValue );
+    cmd.defineOption ( "USBDev", "USB device device number", ArgvParser::OptionRequiresValue );
     cmd.defineOption ( "useGui", "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false", ArgvParser::NoOptionAttribute );
 
     cmd.defineOption ( "output", "Output directory. Default: Results/", ArgvParser::OptionRequiresValue );
@@ -112,6 +114,8 @@ int main(int argc, char* argv[])
     cDirectory += Form("FEH_PS_%s",cHybridId.c_str());
 
     std::string cUsbId = ( cmd.foundOption ("USB") ) ? cmd.optionValue ( "USB" ) : ""; //Default option?
+    uint32_t cUsbBus = ( cmd.foundOption ("USBBus") ) ? (uint32_t)(std::stoi(cmd.optionValue ( "USBBus" ))) : 0; //Default option?
+    uint8_t cUsbDev = ( cmd.foundOption ("USBDev") ) ? (uint32_t)(std::stoi(cmd.optionValue ( "USBDev" ))) : 0; //Default option?
     bool cGui = ( cmd.foundOption ( "useGui" ) ) ;
     
     TApplication cApp ( "Root Application", &argc, argv );
@@ -160,7 +164,10 @@ int main(int argc, char* argv[])
         gui::data("ResultsDirectory", cHybridTester.getDirectoryName());
     }
 
-    cHybridTester.SetHybridVoltage();
+    if(cmd.foundOption( "USBBus" ) && cmd.foundOption( "USBDev" ))
+        TC_PSFE cTC_PSFE( cUsbBus, cUsbDev );
+
+    cHybridTester.SetHybridVoltage( cUsbBus, cUsbDev );
     //LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
     //check voltage on PS FEH 

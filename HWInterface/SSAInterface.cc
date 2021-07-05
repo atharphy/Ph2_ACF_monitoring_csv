@@ -50,6 +50,8 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
         uint16_t cIndx = 0;
         for(auto& cRegInMap: cSSARegMap)
         {
+            LOG(INFO) << "Checking data written to " << cRegInMap.first << RESET;
+            
             uint8_t     cSSAId;
             bool        cFailed = false;
             bool        cRead;
@@ -57,6 +59,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
             fBoardFW->DecodeReg(cRegItem, cSSAId, cVec[cIndx], cRead, cFailed);
             if(cRegInMap.second.fValue != cRegItem.fValue)
             {
+                LOG(INFO) << " " << cRegInMap.second.fValue << " " << cRegItem.fValue << RESET; 
                 throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
                 /*if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
                 {
@@ -69,6 +72,10 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
                 }
                 else
                 throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);*/
+            }
+            else 
+            {
+                LOG(INFO) << "Successfully written to " << cRegInMap.first << RESET;
             }
             cIndx++;
         }

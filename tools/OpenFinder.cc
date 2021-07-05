@@ -520,8 +520,8 @@ void OpenFinder::FindOpensPS()
                         // TH2F* fOccupancyHistOdd =
                         //     new TH2F(cHistName.c_str(), cHistTitle.c_str(), (antennaPullupHighEnd - antennaPullupLowEnd), antennaPullupLowEnd-0.5, antennaPullupHighEnd+0.5, 120, -0.5, 120+0.5);
 
-                        fOccupancyHistVect.push_back(fOccupancyHistEven);
-                        fOccupancyHistVect.push_back(fOccupancyHistOdd);
+                        // fOccupancyHistVect.push_back(fOccupancyHistEven);
+                        // fOccupancyHistVect.push_back(fOccupancyHistOdd);
 
                         finalAntennaEven.push_back(0);
                         finalAntennaOdd.push_back(0);

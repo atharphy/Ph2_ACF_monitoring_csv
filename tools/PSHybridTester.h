@@ -41,7 +41,7 @@ class PSHybridTester : public Tool
     void SetTrim(std::string pTrimRegister, uint16_t pTrimValue);
     void SSATestStubOutput(const std::string& cSSAPairSel );
     void SSATestL1Output( const std::string& cSSAPairSel );
-    void SetHybridVoltage();
+    void SetHybridVoltage( uint32_t pUsbBus, uint8_t pUsbDev );
     void MPATest(uint32_t pPattern);
     void SelectCIC(bool pSelect);
     void SelectAntennaPosition(const std::string& pPosition, uint16_t pPotentiometer);
