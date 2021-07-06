@@ -1313,7 +1313,7 @@ void D19cFWInterface::Start()
 {
     //LOG (INFO) << BOLDBLUE << "D19cFWInterface::Start" << RESET;
     ChipReSync();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     // this stops triggers  + resets 
     this->ResetTriggerFSM();
