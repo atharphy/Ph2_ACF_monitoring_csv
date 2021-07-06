@@ -328,18 +328,19 @@ void LatencyScan::StubLatencyScan()
                                                 << RESET;
                                         // check that the hits from these stubs
                                         // match the hits in the event
-                                        int cMatchedHits = 0;
-                                        for(auto cHit: cExpectedHits)
+                                        bool cMatched=true;
+                                        for(auto cHit: cHits)
                                         {
-                                            LOG(INFO) << BOLDYELLOW << "\t\t\t\t.. expect a hit in position " << +cHit << RESET;
-                                            auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
-                                            cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
+                                            //LOG(INFO) << BOLDYELLOW << "\t\t\t\t.. expect a hit in position " << +cHit << RESET;
+                                            auto cFound = std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit);
+                                            cMatched = cMatched && (cFound != cExpectedHits.end() );
+                                            //cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
                                         }
                                         // only count stubs where the match is perfect
-                                        cNStubsThisChip += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
+                                        cNStubsThisChip += (cMatched) ? 1 : 0;
                                     }
                                     // for now .. need to fix matching
-                                    cNStubsThisChip = cStubs.size();
+                                    cNStubsThisChip = cNStubsThisChip;
                                     cNStubs = cNStubsThisChip;
                                     cMatchedStubs += cNStubsThisChip;
                                     if(cStubs.size() > 0 && cNStubsThisChip > 0)
