@@ -301,6 +301,10 @@ void LatencyScan::StubLatencyScan()
                                 {
                                     // first check for hits
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    for(auto cHit : cHits)
+                                    {
+                                        LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << " hit in channel " << +cHit << RESET;
+                                    }
                                     auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                     std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
                                     auto                 cStubs                = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
@@ -319,10 +323,9 @@ void LatencyScan::StubLatencyScan()
                                         uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
                                         int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
                                         auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
-                                        // LOG(INFO) << BOLDYELLOW << "\t\t\t...Hybrid#" << +cHybrid->getId() 
-                                        //         << " chip#" << +cChip->getId() 
-                                        //         << " stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
-                                        //         << RESET;
+                                        LOG(INFO) << BOLDCYAN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() 
+                                                << " stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
+                                                << RESET;
                                         // check that the hits from these stubs
                                         // match the hits in the event
                                         int cMatchedHits = 0;
