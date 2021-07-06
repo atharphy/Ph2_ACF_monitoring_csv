@@ -373,7 +373,7 @@ void lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
 
     // Configure Rx Phase Shifter
-    uint16_t cDelay = 15;
+    uint16_t cDelay = 0;
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 3; // 4 --> 320 MHz || 5 --> 640 MHz
     lpGBTInterface::ConfigurePhShifter(pChip, {0, 2}, cFreq, cDriveStr, cEnFTune, cDelay);
 
@@ -448,7 +448,7 @@ void lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
             {
                 cCountThisPhase += ( cThisPhase == cUniquePhases[cIndx2] ) ;
             }
-            LOG (INFO) << BOLDGREEN << "\t..Phase of " << +cUniquePhases[cIndx2] << " appears " << cCountThisPhase << " times." << RESET;
+            LOG (INFO) << BOLDGREEN << "\t..Phase of " << +cUniquePhases[cIndx2] << " appears " << +cCountThisPhase << " times." << RESET;
             if( cCountThisPhase >= cCntBstPhase ){ cCntBstPhase=cCountThisPhase; cIndxBstPhase=cIndx2; }
         }
         LOG (INFO) << BOLDYELLOW << "Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;

@@ -502,6 +502,23 @@ int main(int argc, char* argv[])
         uint32_t               cEventCounter = 0;
         std::vector<DQMEvent*> cDQMEvents;
         uint32_t               cEventId, cTriggerId;
+
+        uint8_t cFirstHybridId=0; 
+        uint8_t cFirstChipId=0;
+        for(auto cOpticalGroup: *cBeBoard)
+        {
+            if( cOpticalGroup->getIndex() > 0 ) continue;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                if( cHybrid->getIndex() > 0 ) continue;
+                cFirstHybridId = cHybrid->getId();
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getIndex() > 0 ) continue;
+                    cFirstChipId = cChip->getId();
+                }
+            }
+        }
         for(auto& cEvent: cPh2Events)
         {
             // if(cEventCounter >= pEventsperVcth) continue;
@@ -525,9 +542,7 @@ int main(int argc, char* argv[])
                 if(cDQM && cEventCounter % cScaleFactor == 0) { cDQMEvents.emplace_back(new DQMEvent(&cSLev)); }
             }
 
-            // if(cEventCounter % 1000 == 0)
-            //{
-            auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(0, 0);
+            auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cFirstHybridId, cFirstChipId);
             LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << RESET;
             for(auto cOpticalGroup: *cBeBoard)
             {
