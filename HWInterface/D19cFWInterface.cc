@@ -1313,7 +1313,6 @@ void D19cFWInterface::Start()
 {
     //LOG (INFO) << BOLDBLUE << "D19cFWInterface::Start" << RESET;
     ChipReSync();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     // this stops triggers  + resets 
     this->ResetTriggerFSM();
@@ -3932,7 +3931,7 @@ void D19cFWInterface::ChipReset()
         cVecReg.push_back({"fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1});
         cVecReg.push_back({"fc7_daq_ctrl.physical_interface_block.control.cic_hard_reset", 0x1});
         this->WriteStackReg(cVecReg);
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
     }
 }
 void D19cFWInterface::Compose_fast_command(uint32_t duration, uint32_t resync_en, uint32_t l1a_en, uint32_t cal_pulse_en, uint32_t bc0_en)
