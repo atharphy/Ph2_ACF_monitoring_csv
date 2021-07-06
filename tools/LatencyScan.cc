@@ -331,7 +331,7 @@ void LatencyScan::StubLatencyScan()
                                         int cMatchedHits = 0;
                                         for(auto cHit: cExpectedHits)
                                         {
-                                            //LOG(INFO) << BOLDYELLOW << "\t\t\t\t.. expect a hit in position " << +cHit << RESET;
+                                            LOG(INFO) << BOLDYELLOW << "\t\t\t\t.. expect a hit in position " << +cHit << RESET;
                                             auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
                                             cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
                                         }
