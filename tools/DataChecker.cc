@@ -745,6 +745,8 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     int cMinNsClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
     cSetting         = fSettingsMap.find("MaxSclusters");
     int cMaxNsClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    cSetting         = fSettingsMap.find("MaxStubs");
+    int cMaxNstubs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
     // cluster distributions
     std::uniform_int_distribution<int> cFlatDistPxlCltrs(cMinNpClstrs, cMaxNpClstrs);
     std::uniform_int_distribution<int> cFlatDistStrpCltrs(cMinNsClstrs, cMaxNsClstrs);
@@ -883,7 +885,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             
                             for(auto cId : cIds )
                             {
-                                cInjs.clear();cInjs = this->GeneratePSInjections(4);
+                                cInjs.clear();cInjs = this->GeneratePSInjections(cMaxNstubs);
                                 for(auto cChip: *cHybrid)
                                 {
                                     if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
@@ -1027,6 +1029,8 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 fPSevent.fPackageDelay   = cPackageDelay;
                 fPSevent.fStubOffset     = cStubOffset;
                 fPSevent.fLatencyOffset  = cLatencyOffset;
+                int cTotalStubsFound = 0;
+                int cTotalStubsExpected = 0;
                 for(auto& cEvent: cPh2Events)
                 {
                     // auto& cInjectedEvent = cInjectedPSevents[cEventCounter];
@@ -1066,8 +1070,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 fPSevent.fNPclusters = cPclstrs.size();
                                 fPSevent.fNSclusters = cSclstrs.size();
                                 fPSevent.fStubSize   = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId()).size();
+                                if( cPclstrs.size() > 0 ) cTotalStubsExpected += cMaxNstubs;
                                 if(fPSevent.fStubSize > 0 && cChip->getIndex() < cLastMPA)
+                                {
                                     LOG(INFO) << BOLDGREEN << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
+                                    cTotalStubsFound += fPSevent.fStubSize;
+                                    
+                                }
                                 else if(cChip->getIndex() < cLastMPA)
                                     LOG(INFO) << BOLDRED << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
                                 std::sort(std::begin(cSclstrs), std::end(cSclstrs), [](SCluster a, SCluster b) { return a.fAddress < b.fAddress; });
@@ -1077,12 +1086,14 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 // }
                                 std::sort(std::begin(cPclstrs), std::end(cPclstrs), [](PCluster a, PCluster b) { return a.fAddress < b.fAddress; });
                                 std::sort(std::begin(cPclstrs), std::end(cPclstrs), [](PCluster a, PCluster b) { return a.fZpos < b.fZpos; });
+                                 
                             }
                         } // hybrid
                     }     // optical group
                     cEventCounter++;
                 }
-            }
+                LOG (INFO) << BOLDMAGENTA << "Found " << cTotalStubsFound << " when " << cTotalStubsExpected << " were expected." << RESET;
+             }
             // reset readout
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
         } // stub sel

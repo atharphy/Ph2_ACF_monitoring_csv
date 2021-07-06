@@ -817,6 +817,19 @@ bool SystemController::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup )
                 cChannels ={2, 0, 2, 0, 2, 2};
             }
         }
+        else
+        {
+            if( cHybrid->getId()%2 == 0 ) 
+            {
+                cGroups  ={4, 4, 5, 5, 6, 6, 0};
+                cChannels={2, 0, 2, 0, 2, 0, 0};
+            }
+            else
+            {
+                cGroups  ={0, 1, 1, 2, 2, 3, 3};
+                cChannels ={2, 0, 2, 0, 2, 0, 2};
+            }  
+        }
         flpGBTInterface->AutoPhaseAlignRx(clpGBT,cGroups, cChannels);
     }
     // configure CICs to NOT output alignment pattern on stub lines
