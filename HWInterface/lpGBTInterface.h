@@ -191,7 +191,8 @@ class lpGBTInterface : public ChipInterface
     // i2cConfig GetI2Cconfig(uint8_t pMasterId){
     //     return fI2Cconfigs[pMasterId];
     // }
-
+    void AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    
   protected:
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
 
@@ -227,7 +228,7 @@ class lpGBTInterface : public ChipInterface
     // ####################################
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain);
     void InternalPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
-
+    
     // ################################
     // # LpGBT block status functions #
     // ################################

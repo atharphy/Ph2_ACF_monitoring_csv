@@ -3378,8 +3378,15 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         {
             if( fReadoutAttempts < 10 )
             { 
+                this->Stop();
+                ResetTriggerFSM();
+                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+                // reset the readout
+                this->ResetReadout();
+                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+                this->TriggerConfiguration();
                 fReadoutAttempts++;
-                LOG (INFO) << BOLDRED << "D19cFWInterface::ReadNEvents Failed to read back correct number of words from FC7" << RESET;
+                LOG (INFO) << BOLDRED << "D19cFWInterface::ReadNEvents Failed to read back correct number of words from FC7.. Will try again" << RESET;
                 this->ReadNEvents(pBoard, pNEvents, pData);
             }
             else

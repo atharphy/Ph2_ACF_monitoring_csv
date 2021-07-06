@@ -478,8 +478,14 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     else 
         LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
 
-    // align BE for CIC 
+    // align lines between lpGBT + CIC 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        CicLpGbtAlignment(cOpticalGroup);
+    }
+
     bool cSuccess = true;
+    // align BE for CIC 
     for(auto cOpticalGroup: *pBoard)
     {
         bool cBeAlignSuccess =  CicBeAlignment( cOpticalGroup );      
@@ -777,6 +783,50 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
     } // all hybrids connected to this OG
 
     return cReSyncNeeded;
+}
+bool SystemController::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup )
+{
+    auto cBoardId    = pOpticalGroup->getBeBoardId();
+    auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    LOG (INFO) << BOLDMAGENTA << "Aligning CIC-lpGBT data on OpticalGroup#" << +pOpticalGroup->getId() << RESET;
+    auto& clpGBT = pOpticalGroup->flpGBT;
+    // configure CICs to output alignment pattern on stub lines
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, true);
+    }
+    // stop triggers to make sure that there are no L1 packets from the CIC 
+    fBeBoardInterface->Stop((*cBoardIter));
+
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        std::vector<uint8_t> cGroups;
+        std::vector<uint8_t> cChannels;
+        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+        {
+            if( cHybrid->getId()%2 == 0 ) 
+            {
+                cGroups  ={0, 4, 4, 5, 5, 6};
+                cChannels={0, 0, 2, 0, 2, 0};
+            }
+            else
+            {
+                cGroups  ={0, 1, 1, 2, 2, 3};
+                cChannels ={2, 0, 2, 0, 2, 2};
+            }
+        }
+        flpGBTInterface->AutoPhaseAlignRx(clpGBT,cGroups, cChannels);
+    }
+    // configure CICs to NOT output alignment pattern on stub lines
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, false);
+    }
+    return true;
 }
 bool SystemController::CicBeAlignment(const OpticalGroup* pOpticalGroup )
 {

@@ -759,9 +759,9 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     int     cL1MaxOffset       = (cScanL1Latency == 1) ? cOptimalOffset + cTriggerMult + 2 : cL1MinOffset + 1;
     cSetting                   = fSettingsMap.find("ScanStubLatency");
     uint8_t cScanStubLatency   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
-    uint8_t cOptimalStubOffset = 70;
-    int     cStubMinOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset : cOptimalStubOffset;
-    int     cStubMaxOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset + 25 : cOptimalStubOffset + 1;
+    int cOptimalStubOffset = 0;
+    int     cStubMinOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset - 5 : cOptimalStubOffset;
+    int     cStubMaxOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset + 5 : cOptimalStubOffset + 1;
     LOG(INFO) << BOLDMAGENTA << "DataChecker::InjectionTestPS TestMode is " << +cMode << RESET;
     for(int cLatencyOffset = cL1MinOffset; cLatencyOffset < cL1MaxOffset; cLatencyOffset++)
     {
@@ -785,6 +785,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 auto&    cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
                 auto&    cPackageDelay = cBrdDelay->getSummary<uint16_t>();
                 cPackageDelay          = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+                auto cInitStubOffset   = cBoard->getStubOffset();
                 for(auto cOpticalReadout: *cBoard)
                 {
                     auto& cFeLatencyOG = cFeLatency->at(cOpticalReadout->getIndex());
@@ -812,14 +813,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 if(cWStubs)
                 {
                     auto& cStubLatency = cBrdLatency->getSummary<uint16_t>();
-                    cStubLatency       = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue);
+                    cStubLatency       = cDelay + cLatencyOffset - (cInitStubOffset + cStubOffset + cReTimeValue);
                     // cStubLatency       = cStubOffset;
                     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
                     LOG(INFO) << BOLDMAGENTA << "\t\t.. Package delay set to " << +cPackageDelay << "... stub latency set to " << +cStubLatency << RESET;
                 }
             } // boards
 
-            size_t cInjectedEvent = 0;
             size_t cAttempt       = 0;
             bool   cFinished      = false;
             // uint32_t cMaxTriggers=pMaxTriggersToAccept;
@@ -836,9 +836,9 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
             // and zero trigger id
             fPSevent.fEventId   = 0;
             fPSevent.fTriggerId = 0;
-            // int cSeedSclstr = cFlatDistPxlCltrs(cGen);
-            // int cSeedPclstr = cFlatDistStrpCltrs(cGen);
-            do {
+            size_t cInjectedEvents = 0; 
+            do 
+            {
                 uint8_t cMaxClustersPerMPA = cFlatDistPxlCltrs(cGen);
                 uint8_t cMaxClustersPerSSA = cFlatDistStrpCltrs(cGen);
                 if(cAttempt % 10 == 0)
@@ -874,142 +874,113 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                         {
                             auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
                             auto& cInjs             = cInjectionsHybrid->getSummary<std::vector<Injection>>();
-                            cInjs.clear();
-                            // configure SSAs
-                            for(auto cChip: *cHybrid)
-                            {
-                                if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
-                                if(cMode == 2) continue; // if in pixel-pixel mode then don't inject in the SSAs
-
-                                // quick test
-                                auto cStrpClstrs = GeneratePSstrpClusters(cMaxClustersPerSSA);
-                                // make sure all channels are masked
-                                fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                                if(cChip->getIndex() >= cLastMPA) continue;
-                                if(cStrpClstrs.size() == 0) continue;
-
-                                uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
-                                fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", cPattern);
-                                fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
-                                // LOG (INFO) << BOLDGREEN << "List of " <<  cStrpClstrs.size() << " strip clusters for SSA#" << +cChip->getId() << RESET;
-                                std::sort(cStrpClstrs.begin(), cStrpClstrs.end());
-                                for(auto cRow: cStrpClstrs)
-                                {
-                                    Injection cInj;
-                                    cInj.fRow    = cRow;
-                                    cInj.fColumn = 0;
-                                    cInj.fFeId   = cChip->getId();
-                                    cInjs.push_back(cInj);
-                                    // LOG(INFO) << BOLDMAGENTA << "\t...Injecting in"
-                                    //            << " strip#" << +cRow << " in SSA#" << +cChip->getId() << RESET;
-                                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cRow), 0x9);
-                                } // configure digi injection in strips
-                            }
-                            // configure MPAs
+                            std::vector<uint8_t> cIds(0);
                             for(auto cChip: *cHybrid)
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                                // if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
-
-                                auto cPxlInjections = GeneratePSpxlClusters(cMaxClustersPerMPA);
-                                // activate stub mode
-                                fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
-                                fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
-                                // mask all pixels first
-                                (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
-                                if(cChip->getIndex() >= cLastMPA) continue;
-                                if(cPxlInjections.size() == 0) continue;
-
-                                // LOG (INFO) << BOLDGREEN << "List of " <<  cPxlInjections.size() << " pxl clusters for MPA#" << +cChip->getId() << RESET;
-                                uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
-                                (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cPxlInjections, cPattern);
-                                std::sort(std::begin(cPxlInjections), std::end(cPxlInjections), [](Injection a, Injection b) { return a.fRow < b.fRow; });
-                                std::sort(std::begin(cPxlInjections), std::end(cPxlInjections), [](Injection a, Injection b) { return a.fColumn < b.fColumn; });
-
-                                for(auto cInjection: cPxlInjections)
+                                cIds.push_back(cChip->getId());
+                            }
+                            
+                            for(auto cId : cIds )
+                            {
+                                cInjs.clear();cInjs = this->GeneratePSInjections(4);
+                                for(auto cChip: *cHybrid)
                                 {
-                                    Injection cInj;
-                                    cInj.fRow    = cInjection.fRow;
-                                    cInj.fColumn = cInjection.fColumn;
-                                    cInj.fFeId   = 8 + cChip->getId();
-                                    cInjs.push_back(cInj);
-                                    // LOG(INFO) << BOLDMAGENTA << "\t...Injecting in"
-                                    //            << " col#" << +cInjection.fRow
-                                    //            << " row#" << +cInjection.fColumn
-                                    //            << " in MPA#" << +cChip->getId() << RESET;
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                                    if( cChip->getId() != cId ) continue; 
+                                    
+                                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                                    fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                                    for(auto cInjection: cInjs)
+                                    {
+                                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9);
+                                    }
+                                }
+                                for(auto cChip: *cHybrid)
+                                {
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                    if( cChip->getId() != cId ) continue; 
+                                    
+                                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
+                                    fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
+                                    (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
+                                    uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
+                                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjs, cPattern);
                                 }
                             }
+
+                            // for(auto cChip: *cHybrid)
+                            // {
+                            //     if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                            //     if(cMode == 2) continue; // if in pixel-pixel mode then don't inject in the SSAs
+
+                            //     // quick test
+                            //     auto cStrpClstrs = GeneratePSstrpClusters(cMaxClustersPerSSA);
+                            //     // make sure all channels are masked
+                            //     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                            //     if(cChip->getIndex() >= cLastMPA) continue;
+                            //     if(cStrpClstrs.size() == 0) continue;
+
+                            //     uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
+                            //     fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", cPattern);
+                            //     fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                            //     // LOG (INFO) << BOLDGREEN << "List of " <<  cStrpClstrs.size() << " strip clusters for SSA#" << +cChip->getId() << RESET;
+                            //     std::sort(cStrpClstrs.begin(), cStrpClstrs.end());
+                            //     for(auto cRow: cStrpClstrs)
+                            //     {
+                            //         Injection cInj;
+                            //         cInj.fRow    = cRow;
+                            //         cInj.fColumn = 0;
+                            //         cInj.fFeId   = cChip->getId();
+                            //         cInjs.push_back(cInj);
+                            //         // LOG(INFO) << BOLDMAGENTA << "\t...Injecting in"
+                            //         //            << " strip#" << +cRow << " in SSA#" << +cChip->getId() << RESET;
+                            //         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cRow), 0x9);
+                            //     } // configure digi injection in strips
+                            // }
+                            // // configure MPAs
+                            // for(auto cChip: *cHybrid)
+                            // {
+                            //     if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            //     // if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
+
+                            //     auto cPxlInjections = GeneratePSpxlClusters(cMaxClustersPerMPA);
+                            //     // activate stub mode
+                            //     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
+                            //     fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
+                            //     // mask all pixels first
+                            //     (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
+                            //     if(cChip->getIndex() >= cLastMPA) continue;
+                            //     if(cPxlInjections.size() == 0) continue;
+
+                            //     // LOG (INFO) << BOLDGREEN << "List of " <<  cPxlInjections.size() << " pxl clusters for MPA#" << +cChip->getId() << RESET;
+                            //     uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
+                            //     (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cPxlInjections, cPattern);
+                            //     std::sort(std::begin(cPxlInjections), std::end(cPxlInjections), [](Injection a, Injection b) { return a.fRow < b.fRow; });
+                            //     std::sort(std::begin(cPxlInjections), std::end(cPxlInjections), [](Injection a, Injection b) { return a.fColumn < b.fColumn; });
+
+                            //     for(auto cInjection: cPxlInjections)
+                            //     {
+                            //         Injection cInj;
+                            //         cInj.fRow    = cInjection.fRow;
+                            //         cInj.fColumn = cInjection.fColumn;
+                            //         cInj.fFeId   = 8 + cChip->getId();
+                            //         cInjs.push_back(cInj);
+                            //         // LOG(INFO) << BOLDMAGENTA << "\t...Injecting in"
+                            //         //            << " col#" << +cInjection.fRow
+                            //         //            << " row#" << +cInjection.fColumn
+                            //         //            << " in MPA#" << +cChip->getId() << RESET;
+                            //     }
+                            // }
                         } // hybrid
                     }     // module
                 }         // boards - injections
-                size_t cIndx        = 0;
-                fPSevent.fAttemptId = cAttempt;
-                for(auto cTriggeredBx: fTriggeredBxs)
-                {
-                    fPSevent.fBurstId     = fBurstIds[cIndx];
-                    fPSevent.fBxId        = cTriggeredBx;
-                    fPSevent.fInjectionId = (int)(fPSevent.fTriggerId / (float)cTriggerMult);
-                    for(auto cBoard: *fDetectorContainer)
-                    {
-                        //
-                        auto& cBrdLatency       = cStubLatencyPerBoard.at(cBoard->getIndex());
-                        fPSevent.fStubLatency   = cBrdLatency->getSummary<uint16_t>();
-                        fPSevent.fStubOffset    = cStubOffset;
-                        fPSevent.fLatencyOffset = cLatencyOffset;
-                        //
-                        auto& cInjectionsBrd = cInjections.at(cBoard->getIndex());
-                        for(auto cOpticalReadout: *cBoard)
-                        {
-                            auto& cInjectionsOG = cInjectionsBrd->at(cOpticalReadout->getIndex());
-                            for(auto cHybrid: *cOpticalReadout)
-                            {
-                                auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
-                                auto& cInjs             = cInjectionsHybrid->getSummary<std::vector<Injection>>();
-                                fPSevent.fHybridId      = cHybrid->getId();
-                                for(auto cChip: *cHybrid)
-                                {
-                                    if(cMode == 2 && cChip->getFrontEndType() == FrontEndType::SSA) continue;
-
-                                    size_t cClusters = 0;
-                                    fPSevent.fChipId = (cChip->getFrontEndType() == FrontEndType::SSA) ? cChip->getId() : cChip->getId() + 8;
-                                    for(auto cInj: cInjs) { cClusters += (cInj.fFeId == fPSevent.fChipId); }
-                                    if((cChip->getFrontEndType() == FrontEndType::SSA))
-                                    {
-                                        fPSevent.fNSclusters = (cIndx % cTriggerMult == 0) ? cClusters : 0;
-                                        fPSevent.fNPclusters = 0;
-                                    }
-                                    if((cChip->getFrontEndType() == FrontEndType::MPA))
-                                    {
-                                        fPSevent.fNPclusters = (cIndx % cTriggerMult == 0) ? cClusters : 0;
-                                        fPSevent.fNSclusters = 0;
-                                    }
-// LOG (INFO) << BOLDMAGENTA << "Attempt#" << +fPSevent.fAttemptId
-//     << " injection#" << +fPSevent.fInjectionId
-//     << " trigger id#" << fPSevent.fTriggerId
-//     << " event#" << fPSevent.fEventId
-//     << " expect " << fPSevent.fNSclusters
-//     << " s clusters and "
-//     << fPSevent.fNPclusters
-//     << " p clusters."
-//     << RESET;
-#ifdef __USE_ROOT__
-                                    TTree* cTree = static_cast<TTree*>(getHist(cBoard, "InjectedData"));
-                                    cTree->Fill();
-#endif
-                                }
-                            } // hyrbid
-                        }     // OG
-                    }         // board
-                    cInjectedPSevents.push_back(fPSevent);
-                    fPSevent.fEventId++;
-                    fPSevent.fTriggerId++;
-                    cIndx++;
-                }
-                cInjectedEvent += fTriggeredBxs.size();
-
+                
+                
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
+                LOG (INFO) << BOLDMAGENTA << "Fast command block used to send " << +fTriggeredBxs.size() << " triggers." << RESET;
+                cInjectedEvents += fTriggeredBxs.size();
                 cFinished = true;
-                // LOG (INFO) << BOLDMAGENTA << "Fast command block used to send " << +fTriggeredBxs.size() << " triggers." << RESET;
                 for(auto cBoard: *fDetectorContainer)
                 {
                     // start generic  - ctrl signal high
@@ -1025,15 +996,11 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                         // auto cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                         cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                        LOG(DEBUG) << BOLDMAGENTA << "\t\t.. Iter#" << +cIter << " trigger in counter is " << cNtriggers << " .. expect to see " << +fTriggeredBxs.size() << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "\t\t.. Iter#" << +cIter << " trigger in counter is " << cNtriggers << " .. expect to see " << +fTriggeredBxs.size() << RESET;
                         cIter++;
                     } while((cNtriggers - cNtriggersInit) < fTriggeredBxs.size());
                 }
-                // if( cAttempt%1 == 0 ) LOG(INFO) << BOLDMAGENTA << "\t\t.. After sending GFCMDs.... " << +cNtriggers << " triggers in the trigger_in counter " << RESET;
-                // LOG (INFO) << BOLDMAGENTA << "\t\t... Attempt#" << +cAttempt << " injected " << cInjectedPSevents.size() << " events." << RESET;
-                cFinished = (cInjectedPSevents.size() >= pMaxTriggersToAccept);
-                // if( cAttempt%1 == 0 ) LOG(INFO) << BOLDMAGENTA << "\t\t.. After sending GFCMDs " << +cNWords << " words in the readout and " << +cNtriggers << " triggers in the trigger_in counter "
-                // << RESET;
+                cFinished = (cInjectedEvents >= pMaxTriggersToAccept);
                 cAttempt++;
             } while(!cFinished); // inject N clusters for M triggers
 
@@ -1053,8 +1020,8 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
                 const std::vector<Event*>& cPh2Events     = GetEvents();
                 size_t                     cEventsReadout = cPh2Events.size();
-                LOG(INFO) << BOLDMAGENTA << "Readout " << cEventsReadout << " events from uDTC.. injected " << cInjectedPSevents.size() << RESET;
-                fPSevent.fReadoutSuccess = cPh2Events.size() == cInjectedPSevents.size();
+                LOG(INFO) << BOLDMAGENTA << "Readout " << cEventsReadout << " events from uDTC.. injected " << cInjectedEvents << RESET;
+                //fPSevent.fReadoutSuccess = cPh2Events.size() == cInjectedPSevents.size();
                 size_t cEventCounter     = 0;
                 fPSevent.fStubLatency    = cStubLatency;
                 fPSevent.fPackageDelay   = cPackageDelay;
@@ -1062,14 +1029,14 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 fPSevent.fLatencyOffset  = cLatencyOffset;
                 for(auto& cEvent: cPh2Events)
                 {
-                    auto& cInjectedEvent = cInjectedPSevents[cEventCounter];
-                    if(cEventCounter % 1 == 0)
-                        LOG(INFO) << BOLDYELLOW << "Injected Event#" << +cInjectedEvent.fEventId << " trigger Id " << +cInjectedEvent.fTriggerId << " BurstId is " << +cInjectedEvent.fBurstId
-                                  << " expect to see " << cInjectedEvent.fPClusterSize << " p clusters [total] and "
-                                  << " " << cInjectedEvent.fSClusterSize << " s clusters [total]" << RESET;
+                    // auto& cInjectedEvent = cInjectedPSevents[cEventCounter];
+                    // if(cEventCounter % 1 == 0)
+                    //     LOG(INFO) << BOLDYELLOW << "Injected Event#" << +cInjectedEvent.fEventId << " trigger Id " << +cInjectedEvent.fTriggerId << " BurstId is " << +cInjectedEvent.fBurstId
+                    //               << " expect to see " << cInjectedEvent.fPClusterSize << " p clusters [total] and "
+                    //               << " " << cInjectedEvent.fSClusterSize << " s clusters [total]" << RESET;
                     fPSevent.fEventId   = cEvent->GetEventCount();
                     fPSevent.fTriggerId = cEvent->GetExternalTriggerId();
-                    // if( cEventCounter%1 == 0 ) LOG (INFO) << BOLDGREEN << "Processing event#" << +cEventCounter << RESET;
+                    LOG (INFO) << BOLDGREEN << "Processing event#" << +cEventCounter << RESET;
                     for(auto cOpticalGroup: *cBoard)
                     {
                         auto& cFeLatencyOG = cFeLatency->at(cOpticalGroup->getIndex());
@@ -1110,14 +1077,6 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 // }
                                 std::sort(std::begin(cPclstrs), std::end(cPclstrs), [](PCluster a, PCluster b) { return a.fAddress < b.fAddress; });
                                 std::sort(std::begin(cPclstrs), std::end(cPclstrs), [](PCluster a, PCluster b) { return a.fZpos < b.fZpos; });
-// for( auto cPCluster : cPclstrs)
-// {
-//     LOG (INFO) << BOLDYELLOW << "\t\t... Row#" << +cPCluster.fAddress << " Col#" << +cPCluster.fZpos << RESET;
-// }
-#ifdef __USE_ROOT__
-                                TTree* cTree = static_cast<TTree*>(getHist(cBoard, "ReadbackData"));
-                                cTree->Fill();
-#endif
                             }
                         } // hybrid
                     }     // optical group
@@ -2203,7 +2162,7 @@ std::vector<Injection> DataChecker::GenerateInjections(int pMaxClusters, int pMa
 // strip-pixel mode
 std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
 {
-    int                    cClosestColAllowed = 2;
+    int                    cClosestColAllowed = 1;
     std::vector<Injection> cInjections(0);
 
     // random c++
@@ -2218,7 +2177,9 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
 
     std::vector<uint8_t>  cColumns(0); // 5 , 10 };
     std::vector<uint8_t>  cRows(0);    // 20 , 30};
-    size_t                cStubs              = cNStubDist(cGen);
+    auto   cSetting       = fSettingsMap.find("RandomizeInjections");
+    uint8_t cRandom = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    size_t                cStubs              =  cRandom ? cNStubDist(cGen) : pMaxNstubs;
     int                   cTotalNumberOfStubs = 0;
     std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
     // LOG (DEBUG) << BOLDMAGENTA << "\t...Injecting "
@@ -2244,18 +2205,31 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
                 std::transform(cRows.begin(), cRows.end(), cTmpR.begin(), [&](float el) { return std::fabs(el - cInjection.fRow); });
                 std::sort(cTmpR.begin(), cTmpR.end());
                 cTmpR.erase(unique(cTmpR.begin(), cTmpR.end()), cTmpR.end());
-                cInject = (cTmpR[0] > 1);
+                cInject = (cTmpR[0] > cClosestColAllowed);
 
+                if(!cInject) continue;
+
+                if( cColumns.size() > 0 )
+                {
+                    // check that you're at least one column away from anything 
+                    std::vector<float> cTmpC(cColumns.size(), 0);
+                    std::transform(cColumns.begin(), cColumns.end(), cTmpC.begin(), [&](float el) { return std::fabs(el - cInjection.fColumn); });
+                    std::sort(cTmpC.begin(), cTmpC.end());
+                    cTmpC.erase(unique(cTmpC.begin(), cTmpC.end()), cTmpC.end());
+                    cInject = (cTmpC[0] > cClosestColAllowed);
+                }
+                
                 if(!cInject) continue;
 
                 // ok .. have not so this is good
                 // figure out how far away I an noq
-                std::vector<float> cTmp(cPixelIds.size(), 0);
-                std::transform(cPixelIds.begin(), cPixelIds.end(), cTmp.begin(), [&](float el) { return std::fabs(el - ((uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow)); });
-                std::sort(cTmp.begin(), cTmp.end());
-                cTmp.erase(unique(cTmp.begin(), cTmp.end()), cTmp.end());
-                // if the smallest distance is < x .. don't inject
-                cInject = (cTmp[0] >= cClosestColAllowed);
+                // std::vector<float> cTmp(cPixelIds.size(), 0);
+                // std::transform(cPixelIds.begin(), cPixelIds.end(), cTmp.begin(), [&](float el) { return std::fabs(el - ((uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow)); });
+                // std::sort(cTmp.begin(), cTmp.end());
+                // cTmp.erase(unique(cTmp.begin(), cTmp.end()), cTmp.end());
+                // // if the smallest distance is < x .. don't inject
+                // cInject = (cTmp[0] >= cClosestColAllowed);
+
                 // if( cInject )
                 //     LOG (DEBUG) << BOLDGREEN << "\t\t\t Closest injection is " << cTmp[0]
                 //         << " pixels away [ "
@@ -2273,11 +2247,11 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
             }
             if(cInject && cTotalNumberOfStubs < pMaxNstubs)
             {
-                // LOG (DEBUG) << BOLDMAGENTA << "\t\t.. injecting in row "
-                //     << +cInjection.fRow
-                //     << " columnn "
-                //     << +cInjection.fColumn
-                //     << RESET;
+                LOG (INFO) << BOLDMAGENTA << "\t\t.. injecting in row "
+                    << +cInjection.fRow
+                    << " columnn "
+                    << +cInjection.fColumn
+                    << RESET;
                 cPixelIds.push_back(cPixelId);
                 cInjections.push_back(cInjection);
                 cColumns.push_back(cInjection.fColumn);

@@ -119,6 +119,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkClusters", "Check CIC2 sparsification... ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("psDataTest","....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSLink", "Check S-link ... data saved to file ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("checkStubs", "Check Stubs... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkReadData", "Check ReadData method... ", ArgvParser::NoOptionAttribute);
@@ -418,6 +419,16 @@ int main(int argc, char* argv[])
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cTool);
         cDataChecker.Initialise();
+        if(cmd.foundOption("psDataTest")){
+            // auto cInjections = cDataChecker.GeneratePSInjections(4);
+            // for(auto cInjection : cInjections )
+            // {
+            //     LOG (INFO) << BOLDMAGENTA << "injection in pixel " << +cInjection.fColumn 
+            //         << " and row " << +cInjection.fRow
+            //         << RESET;
+            // }
+            cDataChecker.InjectionTestPS(100);
+        }
         if(cmd.foundOption("checkClusters")) cDataChecker.ClusterCheck(cArgs);
         if(cmd.foundOption("checkSLink")) cDataChecker.WriteSlinkTest(cmd.optionValue("checkSLink"));
         if(cmd.foundOption("checkStubs")) cDataChecker.StubCheck(cArgs);

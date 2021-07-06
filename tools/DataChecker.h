@@ -122,7 +122,8 @@ class DataChecker : public Tool
     void Pause() override;
     void Resume() override;
     void writeObjects();
-
+    std::vector<Ph2_HwInterface::Injection> GeneratePSInjections(int pMaxNstubs);
+    
     class TPconfig
     {
       public:
@@ -183,7 +184,6 @@ class DataChecker : public Tool
     void                                    PreparePSInjection(DetectorDataContainer& pInjectionScheme);
     std::vector<uint8_t>                    GeneratePSstrpClusters(int pMaxNSclusters);
     std::vector<Ph2_HwInterface::Injection> GeneratePSpxlClusters(int pMaxNPclusters);
-    std::vector<Ph2_HwInterface::Injection> GeneratePSInjections(int pMaxNstubs);
     std::vector<Ph2_HwInterface::Injection> GenerateInjections(int pMaxClusters = 1, int pMaxNstubs = 17);
     void                                    PSTriggerTest();
     uint32_t                                GenericTriggerConfig(Ph2_HwDescription::BeBoard* pBoard, int cNrepetitions = 1);
