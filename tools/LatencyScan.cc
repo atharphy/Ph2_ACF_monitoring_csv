@@ -338,6 +338,8 @@ void LatencyScan::StubLatencyScan()
                                         // only count stubs where the match is perfect
                                         cNStubsThisChip += (cMatchedHits == (int)cExpectedHits.size()) ? 1 : 0;
                                     }
+                                    // for now .. need to fix matching
+                                    cNStubsThisChip = cStubs.size();
                                     cNStubs = cNStubsThisChip;
                                     cMatchedStubs += cNStubsThisChip;
                                     if(cStubs.size() > 0 && cNStubsThisChip > 0)
