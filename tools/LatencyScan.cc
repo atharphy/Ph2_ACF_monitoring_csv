@@ -281,7 +281,7 @@ void LatencyScan::StubLatencyScan()
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
-                    //auto cEventCount = (*cEventIter)->GetEventCount();             
+                    auto cEventCount = (*cEventIter)->GetEventCount();             
                     for(auto cOpticalGroup: *cBoard)
                     {
                         for(auto cHybrid: *cOpticalGroup)
