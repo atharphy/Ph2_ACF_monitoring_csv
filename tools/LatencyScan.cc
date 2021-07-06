@@ -323,7 +323,7 @@ void LatencyScan::StubLatencyScan()
                                         uint16_t cIndex        = std::distance(cBendLUT.begin(), cIter);
                                         int      cBend         = (0.5 * cIndex + (-7.0)) * 2.0;
                                         auto     cExpectedHits = cReadoutChipInterface->stubInjectionPattern(cChip, cStub.getPosition(), cBend);
-                                        LOG(INFO) << BOLDCYAN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() 
+                                        LOG(INFO) << BOLDCYAN << "\t\t\tEvent#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId() 
                                                 << " stub with seed " << +cStub.getPosition() << " and bendCode " << +cStub.getBend() << " which is bend " << +cBend << " half-strips"
                                                 << RESET;
                                         // check that the hits from these stubs
@@ -344,12 +344,12 @@ void LatencyScan::StubLatencyScan()
                                     cNStubs = cNStubsThisChip;
                                     cMatchedStubs += cNStubsThisChip;
                                     if(cStubs.size() > 0 && cNStubsThisChip > 0)
-                                        LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
+                                        LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId()  << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
                                             << " there are " << cHits.size() << " hits in this event... "
                                              << RESET;
                                     else 
-                                        LOG(INFO) << BOLDRED << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << "...Found " << +cStubs.size() << " stubs in the readout..."
+                                        LOG(INFO) << BOLDRED << "\t\t\tEvent#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId()  << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
                                             << " there are " << cHits.size() << " hits in this event... "
                                              << RESET;
@@ -372,7 +372,7 @@ void LatencyScan::StubLatencyScan()
                     }//
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
-                LOG (INFO) << BOLDMAGENTA << "\t\t..Found " << cAnyStubs << " stubs [ of which " << cMatchedStubs << " match the hits] and " << cAnyHits << " hits in " << +fNevents << " events.." << RESET;
+                //LOG (INFO) << BOLDMAGENTA << "\t\t..Found " << cAnyStubs << " stubs [ of which " << cMatchedStubs << " match the hits] and " << cAnyHits << " hits in " << +fNevents << " events.." << RESET;
             }
             if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
         }//board
