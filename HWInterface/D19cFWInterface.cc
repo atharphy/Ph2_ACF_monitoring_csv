@@ -1312,6 +1312,9 @@ void D19cFWInterface::TriggerConfiguration()
 void D19cFWInterface::Start()
 {
     //LOG (INFO) << BOLDBLUE << "D19cFWInterface::Start" << RESET;
+    ChipReSync();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100);
+    
     // this stops triggers  + resets 
     this->ResetTriggerFSM();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
@@ -1321,8 +1324,6 @@ void D19cFWInterface::Start()
     // prints to debug and also checks that things are ok 
     this->TriggerConfiguration();
 
-    ChipReSync();
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
     // clear the register manually)
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);

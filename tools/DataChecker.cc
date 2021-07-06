@@ -750,8 +750,8 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     // cluster distributions
     std::uniform_int_distribution<int> cFlatDistPxlCltrs(cMinNpClstrs, cMaxNpClstrs);
     std::uniform_int_distribution<int> cFlatDistStrpCltrs(cMinNsClstrs, cMaxNsClstrs);
-    LOG(INFO) << BOLDMAGENTA << "P-cluster distribution : " << cMinNpClstrs << " to " << cMaxNpClstrs << RESET;
-    LOG(INFO) << BOLDMAGENTA << "S-cluster distribution : " << cMinNsClstrs << " to " << cMaxNsClstrs << RESET;
+    // LOG(INFO) << BOLDMAGENTA << "P-cluster distribution : " << cMinNpClstrs << " to " << cMaxNpClstrs << RESET;
+    // LOG(INFO) << BOLDMAGENTA << "S-cluster distribution : " << cMinNsClstrs << " to " << cMaxNsClstrs << RESET;
     // int  cMaxStubSel    = (cDistributeInj) ? 8 : 1;
     // auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
     cSetting                   = fSettingsMap.find("ScanL1Latency");
@@ -841,12 +841,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
             size_t cInjectedEvents = 0; 
             do 
             {
-                uint8_t cMaxClustersPerMPA = cFlatDistPxlCltrs(cGen);
-                uint8_t cMaxClustersPerSSA = cFlatDistStrpCltrs(cGen);
-                if(cAttempt % 10 == 0)
-                    LOG(INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << " -- injecting " << +cMaxClustersPerMPA << " pixel clusters "
-                              << " and " << +cMaxClustersPerSSA << " strip clusters." << RESET;
-                if(cMaxClustersPerSSA == 20) LOG(INFO) << BOLDRED << "\t\t... Attempt#" << +cAttempt << " 20 S-clusters ... " << RESET;
+                 LOG(INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << RESET;
+                //uint8_t cMaxClustersPerMPA = cFlatDistPxlCltrs(cGen);
+                //uint8_t cMaxClustersPerSSA = cFlatDistStrpCltrs(cGen);
+                // if(cAttempt % 10 == 0)
+                //     LOG(INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << " -- injecting " << +cMaxClustersPerMPA << " pixel clusters "
+                //               << " and " << +cMaxClustersPerSSA << " strip clusters." << RESET;
+                // if(cMaxClustersPerSSA == 20) LOG(INFO) << BOLDRED << "\t\t... Attempt#" << +cAttempt << " 20 S-clusters ... " << RESET;
                 std::this_thread::sleep_for(std::chrono::microseconds(500));
                 for(auto cBoard: *fDetectorContainer) { fBeBoardInterface->ChipReSync(cBoard); }
                 std::this_thread::sleep_for(std::chrono::microseconds(500));
@@ -1071,7 +1072,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 fPSevent.fNSclusters = cSclstrs.size();
                                 fPSevent.fStubSize   = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId()).size();
                                 if( cPclstrs.size() > 0 ) cTotalStubsExpected += cMaxNstubs;
-                                if(fPSevent.fStubSize > 0 && cChip->getIndex() < cLastMPA)
+                                if(fPSevent.fStubSize > 0 )// && cChip->getIndex() < cLastMPA)
                                 {
                                     LOG(INFO) << BOLDGREEN << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
                                     cTotalStubsFound += fPSevent.fStubSize;
@@ -2258,11 +2259,11 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
             }
             if(cInject && cTotalNumberOfStubs < pMaxNstubs)
             {
-                LOG (INFO) << BOLDMAGENTA << "\t\t.. injecting in row "
-                    << +cInjection.fRow
-                    << " columnn "
-                    << +cInjection.fColumn
-                    << RESET;
+                // LOG (INFO) << BOLDMAGENTA << "\t\t.. injecting in row "
+                //     << +cInjection.fRow
+                //     << " columnn "
+                //     << +cInjection.fColumn
+                //     << RESET;
                 cPixelIds.push_back(cPixelId);
                 cInjections.push_back(cInjection);
                 cColumns.push_back(cInjection.fColumn);

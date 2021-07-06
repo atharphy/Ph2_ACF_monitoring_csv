@@ -301,22 +301,14 @@ void LatencyScan::StubLatencyScan()
                                 {
                                     // first check for hits
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                    // for( auto cHit : cHits )
-                                    // {
-                                    //     LOG(INFO) << BOLDCYAN << "\t\t\t...Hybrid#" << +cHybrid->getId() 
-                                    //             << " chip#" << +cChip->getId() 
-                                    //             << " hit in channel " 
-                                    //             << +cHit
-                                    //             << RESET;
-                                    // }
-                                    if(cHits.size() == 0) continue;
-
                                     auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                     std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
                                     auto                 cStubs                = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                                     if(cStubs.size() == 0 ) continue; 
                                     cAnyStubs += cStubs.size();
                                     cAnyHits += cHits.size();
+                                    if(cHits.size() == 0) continue;
+
                                     size_t cNStubsThisChip=0; 
                                     for(auto cStub: cStubs)
                                     {
