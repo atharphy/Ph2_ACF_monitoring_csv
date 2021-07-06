@@ -303,7 +303,7 @@ void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>&
 // # LpGBT specific routine functions #
 // ####################################
 
-void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain)
+void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups)
 {
     for(const auto& cGroup: pGroups)
     {
@@ -313,17 +313,26 @@ void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGrou
         else if(cGroup == 2 || cGroup == 3)
             cTrainRxReg = "EPRXTrain32";
         else if(cGroup == 4 || cGroup == 5)
-            cTrainRxReg = "EPRXTrain32";
+            cTrainRxReg = "EPRXTrain54";
         else if(cGroup == 6)
-            cTrainRxReg = "EPRXTrain32";
+            cTrainRxReg = "EPRXTrainEc6";
 
-        if(pTrain == true)
-            WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-        else
-            WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
+        WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
+        WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
-
+void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups)
+{
+    std::string cRegName = "RST1";
+    uint8_t cValue = 0x00; 
+    for( auto cGroup : pGroups )
+    {
+        cValue = cValue | (1 << cGroup);
+    }
+    this->WriteChipReg(pChip, "RST1", cValue);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    this->WriteChipReg(pChip, "RST1", 0x00);
+}
 void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
@@ -338,7 +347,7 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
     uint16_t cDelay = 0x0;
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 7; // 4 --> 320 MHz || 5 --> 640 MHz
     lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
-    lpGBTInterface::PhaseTrainRx(pChip, pGroups, true);
+    lpGBTInterface::PhaseTrainRx(pChip, pGroups);
     for(const auto& cGroup: pGroups)
     {
         
@@ -357,8 +366,6 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
         }
     }
-    lpGBTInterface::PhaseTrainRx(pChip, pGroups, false);
-
     // Set back Rx groups to Fixed Phase tracking mode
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 3, 0);
 
@@ -405,9 +412,10 @@ void lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
         LOG (INFO) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
         for( size_t cAttempt=0; cAttempt < 5; cAttempt++)
         { 
-            this->WriteChipReg(pChip, "RST1", 0x7F);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            this->WriteChipReg(pChip, "RST1", 0x00);
+            ResetRxDll(pChip,{cGroup});
+            // this->WriteChipReg(pChip, "RST1", 0x7F);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            // this->WriteChipReg(pChip, "RST1", 0x00);
             
             //enable training 
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2); 
@@ -430,7 +438,7 @@ void lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
                 cContinue = cLock == 0 ;
             }while( cContinue); 
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG (DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+            //LOG (DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
             cUniquePhases.push_back( cCurrPhase); 
         }
@@ -448,10 +456,14 @@ void lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
             {
                 cCountThisPhase += ( cThisPhase == cUniquePhases[cIndx2] ) ;
             }
-            LOG (INFO) << BOLDGREEN << "\t..Phase of " << +cUniquePhases[cIndx2] << " appears " << +cCountThisPhase << " times." << RESET;
+            //LOG (INFO) << BOLDGREEN << "\t..Phase of " << +cUniquePhases[cIndx2] << " appears " << +cCountThisPhase << " times." << RESET;
             if( cCountThisPhase >= cCntBstPhase ){ cCntBstPhase=cCountThisPhase; cIndxBstPhase=cIndx2; }
         }
-        LOG (INFO) << BOLDYELLOW << "Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+        if( cUniquePhases[cIndxBstPhase] != 15) 
+            LOG (INFO) << BOLDGREEN << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+        else
+            LOG (INFO) << BOLDRED << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+            
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 0);    

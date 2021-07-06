@@ -307,7 +307,6 @@ void LatencyScan::StubLatencyScan()
                                     cAnyStubs += cStubs.size();
                                     cAnyHits += cHits.size();
                                     if(cHits.size() == 0) continue;
-                                    //if(cStubs.size() == 0 ) continue; 
                                     
                                     size_t cNStubsThisChip=0; 
                                     for(auto cStub: cStubs)
