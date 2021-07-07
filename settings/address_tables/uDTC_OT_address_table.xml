@@ -14,10 +14,9 @@
     </node>
 
     <node id="fc7_daq_cnfg" address="0x40010000" permission="rw" > 
-        <node id="ddr3_block"			address="0x0008000">
-    	    <node id="enable_stub_debug"	mask="0x00000001"/>
-            <node id="enable_counter_debug"    mask="0x00000002"/>
-    	</node>
+    <node id="stub_debug"			address="0x0008000">
+	    <node id="enable"			mask="0x00000001"/>
+	</node>
 
 	<node id="clock"			address="0x0001">
 	    <node id="ext_clk_en"			mask="0x00000001"/>
@@ -27,7 +26,7 @@
             <node id="ttc_enable"			mask="0x00000001"/>
         </node>
 
-	   <node id="amc13"                        address="0x0003">
+	<node id="amc13"                        address="0x0003">
             <node id="sw_tts_state_valid"               mask="0x00000002"/>
             <node id="sw_tts_state"                     mask="0x000000f0"/>
         </node>
@@ -195,55 +194,73 @@
             </node>
         </node>
 	
-        <node id="optical_block"            address="0xD000">
-                <node id="enable"                              address="0x000">
-                    <node id="l8"                           mask="0x000000FF" description=""/>
-                    <node id="l12"                          mask="0x0FFF0000" description=""/>
-                </node>
-                <node id="sca">
-                    <node id="address"                    address = "0x001" mask="0x000000FF"/>
-                    <node id="id"                         address = "0x001" mask="0x0000FF00"/>
-                    <node id="channel"                    address = "0x001" mask="0x00FF0000"/>
-                    <node id="cmd"                        address = "0x001" mask="0xFF000000"/>
-                    <node id="data"                       address = "0x003" mask="0xFFFFFFFF"/>
-                </node>
-                <node id="ic"                              address="0x002">
-                    <node id="register"                       mask="0x0000FFFF"/>
-                    <node id="nwords"                         mask="0xFFFF0000"/>
-                </node>
-                <node id="gbtx"                              address="0x004">
-                    <node id="address"                       mask="0x000000FF"/>
-                    <node id="data"                          mask="0x0000FF00"/>
-                </node>
-                <node id="mux"                               address = "0x005" mask="0x0000000F"/>
-                <node id="tx_polarity"                              address="0x006">
-                    <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
-                    <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
-                </node>
-                <node id="rx_polarity"                              address="0x007">
-                    <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
-                    <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
-                </node>
-        </node>
-        
-        <node id="sync_block"            address="0xC000">
-            <node id="enable"            address="0x000" mask="0x00000001"/>
-            <node id="is_bc0_enable"     address="0x000" mask="0x00000002"/>
-            <node id="is_resync_enable"  address="0x000" mask="0x00000004"/>
-            <node id="delay"             address="0x000" mask="0x000FFFF0"/>
-            <node id="num_triggers"      address="0x000" mask="0x1FF00000"/>
+	<!-- <node id="optical_block"			address="0xD000">
+            <node id="sca">
+                <node id="address"                    address = "0x001" mask="0x000000FF"/>
+                <node id="id"                         address = "0x001" mask="0x0000FF00"/>
+                <node id="channel"                    address = "0x001" mask="0x00FF0000"/>
+                <node id="cmd"                        address = "0x001" mask="0xFF000000"/>
+            	<node id="data"                       address = "0x003" mask="0xFFFFFFFF"/>
+            </node>
+            <node id="ic"                              address="0x002">
+                <node id="register"                       mask="0x0000FFFF"/>
+                <node id="nwords"                         mask="0xFFFF0000"/>
+            </node>
+            <node id="gbtx"                              address="0x004">
+                <node id="address"                       mask="0x000000FF"/>
+                <node id="data"                          mask="0x0000FF00"/>
+            </node>
+            <node id="mux"                               address = "0x005" mask="0x0000000F"/>
+    </node> -->
+    <node id="optical_block"            address="0xD000">
+            <node id="enable"                              address="0x000">
+                <node id="l8"                           mask="0x000000FF" description=""/>
+                <node id="l12"                          mask="0x0FFF0000" description=""/>
+            </node>
+            <node id="sca">
+                <node id="address"                    address = "0x001" mask="0x000000FF"/>
+                <node id="id"                         address = "0x001" mask="0x0000FF00"/>
+                <node id="channel"                    address = "0x001" mask="0x00FF0000"/>
+                <node id="cmd"                        address = "0x001" mask="0xFF000000"/>
+                <node id="data"                       address = "0x003" mask="0xFFFFFFFF"/>
+            </node>
+            <node id="ic"                              address="0x002">
+                <node id="register"                       mask="0x0000FFFF"/>
+                <node id="nwords"                         mask="0xFFFF0000"/>
+            </node>
+            <node id="gbtx"                              address="0x004">
+                <node id="address"                       mask="0x000000FF"/>
+                <node id="data"                          mask="0x0000FF00"/>
+            </node>
+            <node id="mux"                               address = "0x005" mask="0x0000000F"/>
+            <node id="tx_polarity"                              address="0x006">
+                <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
+                <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
+            </node>
+            <node id="rx_polarity"                              address="0x007">
+                <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
+                <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
+            </node>
+    </node>
+    
+    <node id="sync_block"            address="0xC000">
+        <node id="enable"            address="0x000" mask="0x00000001"/>
+        <node id="is_bc0_enable"     address="0x000" mask="0x00000002"/>
+        <node id="is_resync_enable"  address="0x000" mask="0x00000004"/>
+        <node id="delay"             address="0x000" mask="0x000FFFF0"/>
+        <node id="num_triggers"      address="0x000" mask="0x1FF00000"/>
+    </node>
+
+	<node id="tlu_block"			address="0x7000">
+		<node id="handshake_mode"		address="0x000" mask="0x00000003"/>
+                <node id="tlu_enabled"                  address="0x000" mask="0x00000010"/>
+                <node id="trigger_id_delay"             address="0x000" mask="0x00000f00"/>
         </node>
 
-    	<node id="tlu_block"			address="0x7000">
-    		<node id="handshake_mode"		address="0x000" mask="0x00000003"/>
-                    <node id="tlu_enabled"                  address="0x000" mask="0x00000010"/>
-                    <node id="trigger_id_delay"             address="0x000" mask="0x00000f00"/>
-            </node>
-
-            <node id="calibration_2s_block"         address="0xE000">
-                <node id="enable_hybrids"                   address="0x000" mask="0xffffffff"/>
-            </node>
+        <node id="calibration_2s_block"         address="0xE000">
+            <node id="enable_hybrids"                   address="0x000" mask="0xffffffff"/>
         </node>
+    </node>
 
     <node id="fc7_daq_ctrl" address="0x40020000" permission="rw" >
 
@@ -522,7 +539,7 @@
                 <node id="cic_r"                  mask="0xFFFFFFFF"/>
             </node>
 
-	        <node id="slvs_debug"               address="0x00F">
+	    <node id="slvs_debug"               address="0x00F">
             	<node id="ps_counters_ready"        mask="0x00000004"/>
             	<node id="ps_counters_fsm_state"    mask="0x000000f0"/>
             </node>
@@ -548,11 +565,8 @@
                 <node id="fe_for_ps_roh_fcmd_CIC_r_check"                  mask="0xff000000"/>
             </node>
 
-             <node id="cic_async_cntr"            address="0x0FF">
-                <node id="cntr_ready"                mask="0x00000001"/>
-                <node id="cntr_fsm_state"            mask="0x00000030"/>
-            </node>
             <node id="mpa_to_cic_cntr"            address="0x0F9" mask="0xFFFFFFFF"/>
+            
             <node id="ps_return"                address="0x00E">
                 <node id="clock_from_ssa1_test_done"            mask="0x00000001" description="test of the return clock from SSA1 done           "/>
                 <node id="clock_from_ssa2_test_done"            mask="0x00000002" description="test of the return clock from SSA2 done           "/>
