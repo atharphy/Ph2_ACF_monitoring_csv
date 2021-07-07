@@ -206,20 +206,26 @@ void LatencyScan::ScanLatency()
                 
                 // for now don't normalize 
                 // //normalize and average TDC summary 
-                // for( uint16_t cIndx=0; cIndx< fTDCBins; cIndx++)
-                // {
-                //     for(auto cOpticalGroup: *cBoard)
-                //     {
-                //         for(auto cHybrid: *cOpticalGroup)
-                //         {
-                //             for( auto cChip : * cHybrid) 
-                //             {
-                //                 auto& cOccThisPhase = cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx];
-                //                 cOccThisPhase = (cOccThisPhase/(float)fNevents); 
-                //             } //chip
-                //         }// hybrid
-                //     } //optical group
-                // }//TDC bins
+                for( uint16_t cIndx=0; cIndx< fTDCBins; cIndx++)
+                {
+                    LOG (INFO) << BOLDMAGENTA << "TDC Phase of " << +cIndx << RESET;
+                    for(auto cOpticalGroup: *cBoard)
+                    {
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            for( auto cChip : * cHybrid) 
+                            {
+                                auto& cOccThisPhase = cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx];
+                                LOG (INFO) << BOLDMAGENTA << "\t\t.. OG" << +cOpticalGroup->getId() 
+                                    << " Hybrid" << +cHybrid->getId() 
+                                    << " Chip" << +cChip->getId() 
+                                    << " - on average have found " << cOccThisPhase 
+                                    << " channels with a hit [per chip per event]." 
+                                    << RESET;
+                            } //chip
+                        }// hybrid
+                    } //optical group
+                }//TDC bins
                 #ifdef __USE_ROOT__
                     fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer, cHitContainer);
                 #endif
