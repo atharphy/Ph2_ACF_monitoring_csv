@@ -1,5 +1,7 @@
 #includes
 include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+include_directories(${UHAL_LOG_INCLUDE_PREFIX})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${UHAL_AMC13_INCLUDE_PREFIX})

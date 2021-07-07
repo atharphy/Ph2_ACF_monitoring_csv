@@ -10,7 +10,6 @@
 #include "CicInterface.h"
 #include "BeBoardFWInterface.h"
 #include "D19cFWInterface.h"
-#include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
 
 #define DEV_FLAG 0
@@ -22,126 +21,57 @@ namespace Ph2_HwInterface
 {
 CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap)
 {
-    fPhaseValues.clear();
     fFeStates.clear(); // 8 FEs
     for(size_t cIndex = 0; cIndex < 8; cIndex++) fFeStates.push_back(0);
-    for(size_t cIndex = 0; cIndex < 8; cIndex++) fPhaseValues.push_back(0);
 
     fPortStates.clear(); // 12 ports
-
     for(size_t cIndex = 0; cIndex < 12; cIndex++) fPortStates.push_back(0);
-
-    for(size_t cInput = 0; cInput < 4; cInput++)
-    {
-        std::vector<uint8_t> cPhyPorts(12, 0);
-        fPhaseTaps.push_back(cPhyPorts);
-    }
 }
 
 CicInterface::~CicInterface() {}
 
-//#FIXME temporary fix to use 1/2 PS skeleton
-void CicInterface::LinkLpGBT(D19clpGBTInterface* pLpGBTInterface, lpGBT* pLpGBT)
-{
-    flpGBTInterface = pLpGBTInterface;
-    flpGBT          = pLpGBT;
-}
-
-bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
-{
-    bool cSuccess = false;
-    setBoard(pChip->getBeBoardId());
-    // write
-    if(flpGBTInterface == nullptr)
-    {
-        std::vector<uint32_t> cVec;
-        ChipRegItem           cRegItem;
-        cRegItem.fPage    = 0x00;
-        cRegItem.fAddress = pRegisterAddress;
-        cRegItem.fValue   = pRegisterValue & 0xFF;
-        fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
-        uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-    }
-    else
-    {
-        //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, pVerifLoop);
-        cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue);
-    }
-    return cSuccess;
-}
-
-bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop)
-{
-    setBoard(pChip->getBeBoardId());
-    bool cSuccess = true;
-    if(flpGBTInterface == nullptr)
-    {
-        std::vector<uint32_t> cVec;
-        cVec.clear();
-        for(const auto& cReg: pRegs)
-        {
-            ChipRegItem cRegItem;
-            cRegItem.fPage    = 0x00;
-            cRegItem.fAddress = cReg.first;
-            cRegItem.fValue   = cReg.second & 0xFF;
-            fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
-        }
-        uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-#ifdef COUNT_FLAG
-        fTransactionCount++;
-#endif
-    }
-    else
-    {
-        for(const auto& cReg: pRegs)
-        {
-            LOG(DEBUG) << BOLDBLUE << "Writing CIC register with address " << std::hex << +cReg.first << std::dec << RESET;
-            //cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), cReg.first, cReg.second, pVerifLoop);
-            cSuccess = fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second);
-            if(!cSuccess) continue;
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
-        }
-    }
-    return cSuccess;
-}
-
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
 {
+    LOG(INFO) << BOLDBLUE << "Configuring CIC" << +pCic->getId() << " on FE" << +pCic->getHybridId() << RESET;
+    // first, identify the correct BeBoardFWInterface
     setBoard(pCic->getBeBoardId());
-    std::vector<uint32_t> cVec;
-    ChipRegMap            cCicRegMap = pCic->getRegMap();
-    // for some reason this makes block write work
-    // otherwise need to configure one by one which
-    // takes forever
-    std::map<uint8_t, ChipRegItem> cMap;
-    cMap.clear();
-    for(auto& cRegInMap: cCicRegMap) { cMap[cRegInMap.second.fAddress] = cRegInMap.second; }
-    std::vector<std::pair<uint8_t, uint8_t>> cRegs;
-    for(auto& cRegItem: cMap)
-    {
-        LOG(DEBUG) << BOLDBLUE << "Register map for CIC contains a register with address " << std::hex << +cRegItem.second.fAddress << std::dec << RESET;
-        std::pair<uint8_t, uint8_t> cReg;
-        cReg.first  = cRegItem.second.fAddress;
-        cReg.second = cRegItem.second.fValue;
-        cRegs.push_back(cReg);
-    } // loop over map
-    return this->WriteRegs(pCic, cRegs, pVerifLoop);
-}
 
+    // vector to encode all the registers into
+    std::vector<uint32_t> cVec;
+
+    // Deal with the RegItems and encode them
+    ChipRegMap cCicRegMap = pCic->getRegMap();
+
+    // encode the FW registers
+    for(auto& cRegItem: cCicRegMap)
+    {
+        LOG(DEBUG) << BOLDBLUE << cRegItem.first << " , Value: 0x" << std::hex << +cRegItem.second.fValue << std::dec << RESET;
+        fBoardFW->EncodeReg(cRegItem.second, pCic->getHybridId(), pCic->getId(), cVec, pVerifLoop, true);
+#ifdef COUNT_FLAG
+        fRegisterCount++;
+#endif
+    }
+    // now write the registers
+    uint8_t cWriteAttempts = 0;
+    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+
+#ifdef COUNT_FLAG
+    fTransactionCount++;
+#endif
+    LOG(INFO) << BOLDGREEN << "--- Done configuring one CIC " << RESET;
+    return cSuccess;
+}
 bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
     std::vector<uint32_t> cVec;
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
     cRegItem.fValue                = pValue;
-    bool cSuccess                  = this->WriteReg(pChip, cRegItem.fAddress, cRegItem.fValue, pVerifLoop);
+    LOG(DEBUG) << BOLDBLUE << pRegNode << " , Value: 0x" << std::hex << cRegItem.fValue << std::dec << RESET;
+    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+    // now write the registers
+    uint8_t cWriteAttempts = 0;
+    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     return cSuccess;
 }
 
@@ -150,29 +80,33 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-    return this->ReadChipReg(pChip, cRegItem).second;
+
+    std::vector<uint32_t> cVecReq;
+
+    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
+    fBoardFW->ReadChipBlockReg(cVecReq);
+
+    // bools to find the values of failed and read
+    bool    cFailed = false;
+    bool    cRead;
+    uint8_t cChipId;
+    fBoardFW->DecodeReg(cRegItem, cChipId, cVecReq[0], cRead, cFailed);
+    if(!cFailed) pChip->setReg(pRegNode, cRegItem.fValue);
+
+    return cRegItem.fValue & 0xFF;
 }
 std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRegItem)
 {
     setBoard(pChip->getBeBoardId());
-    if(flpGBTInterface == nullptr)
-    {
-        std::vector<uint32_t> cVecReq;
-        fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        // bools to find the values of failed and read
-        bool    cFailed = false;
-        bool    cRead;
-        uint8_t cChipId;
-        fBoardFW->DecodeReg(pRegItem, cChipId, cVecReq[0], cRead, cFailed);
-        return std::make_pair(!cFailed, pRegItem.fValue);
-    }
-    else
-    {
-        //auto cValue = flpGBTInterface->cicRead(flpGBT, pChip->getHybridId(), pRegItem.fAddress);
-        auto cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
-        return std::make_pair(true, cValue);
-    }
+    std::vector<uint32_t> cVecReq;
+    fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
+    fBoardFW->ReadChipBlockReg(cVecReq);
+    // bools to find the values of failed and read
+    bool    cFailed = false;
+    bool    cRead;
+    uint8_t cChipId;
+    fBoardFW->DecodeReg(pRegItem, cChipId, cVecReq[0], cRead, cFailed);
+    return std::make_pair(!cFailed, pRegItem.fValue);
 }
 bool CicInterface::CheckReSync(Chip* pChip)
 {
@@ -545,124 +479,74 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
     }
     return cSuccess;
 }
-// FIX ME
-// bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, uint8_t pReadoutChipId, uint8_t pLineId, uint8_t pPhase)
-// {
-//     std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
-//     auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
-//     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
-//     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-//     if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-
-//     bool    cL1Selected = (pLineId == 0);
-//     uint8_t cPort       = 0;
-//     uint8_t cInput      = 0;
-//     if(cL1Selected)
-//     {
-//         // uint8_t cChipId_onyHybrid = std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), cFeCounter));
-//         uint8_t cChipId_forCic = cFeMapping[pReadoutChipId]; // std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
-//         LOG(DEBUG) << BOLDBLUE << "Modifying phase alignment value for readout chip " << +pReadoutChipId << " [ in CIC mapping this is FE" << +cChipId_forCic << " ]" << RESET;
-//         cInput = cChipId_forCic & 0x3;
-//         cPort  = 10 + ((cChipId_forCic & 0x4) >> 2);
-//         LOG(DEBUG) << BOLDBLUE << "Will modifiy phase aligner value for phy port " << +cPort << " input " << +cInput << RESET;
-//     }
-//     // I assume this has already been done
-//     // bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
-//     bool cSuccess = true;
-//     setBoard(pChip->getBeBoardId());
-//     if(cSuccess)
-//     {
-//         ChipRegItem cRegItem;
-//         uint8_t     cIndex = std::floor(cPort / 2.);
-//         char        cBuffer[17];
-//         sprintf(cBuffer, "scPhaseSelectB%di%d", cInput, cIndex);
-//         std::string cRegName(cBuffer, sizeof(cBuffer));
-//         uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-//         uint8_t     cMask     = ~(0xF << ((cPort & 0x1))) & 0xFF;
-//         uint16_t    cValue    = (cRegValue & cMask) | pPhase;
-//         LOG(DEBUG) << BOLDBLUE << "Will modifiy register " << cBuffer << " which was set to " << std::bitset<8>(cRegValue) << " -- new value is " << std::bitset<8>(cValue) << RESET;
-//         cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
-//     }
-//     if(!cSuccess)
-//     {
-//         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-//         exit(0);
-//     }
-//     return cSuccess;
-// }
-// FIX ME
-bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
+bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, uint8_t pReadoutChipId, uint8_t pLineId, uint8_t pPhase)
+{
+    std::vector<uint8_t> cFeMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
+    bool                 cL1Selected = (pLineId == 0);
+    uint8_t              cPort       = 0;
+    uint8_t              cInput      = 0;
+    if(cL1Selected)
+    {
+        uint8_t cChipId_forCic = std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
+        LOG(DEBUG) << BOLDBLUE << "Modifying phase alignment value for readout chip " << +pReadoutChipId << " [ in CIC mapping this is FE" << +cChipId_forCic << " ]" << RESET;
+        cInput = cChipId_forCic & 0x3;
+        cPort  = 10 + ((cChipId_forCic & 0x4) >> 2);
+        LOG(DEBUG) << BOLDBLUE << "Will modifiy phase aligner value for phy port " << +cPort << " input " << +cInput << RESET;
+    }
+    // I assume this has already been done
+    // bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
+    bool cSuccess = true;
+    setBoard(pChip->getBeBoardId());
+    if(cSuccess)
+    {
+        ChipRegItem cRegItem;
+        uint8_t     cIndex = std::floor(cPort / 2.);
+        char        cBuffer[17];
+        sprintf(cBuffer, "scPhaseSelectB%di%d", cInput, cIndex);
+        std::string cRegName(cBuffer, sizeof(cBuffer));
+        uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
+        uint8_t     cMask     = ~(0xF << ((cPort & 0x1))) & 0xFF;
+        uint16_t    cValue    = (cRegValue & cMask) | pPhase;
+        LOG(DEBUG) << BOLDBLUE << "Will modifiy register " << cBuffer << " which was set to " << std::bitset<8>(cRegValue) << " -- new value is " << std::bitset<8>(cValue) << RESET;
+        cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
+    }
+    if(!cSuccess)
+    {
+        LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
+        exit(0);
+    }
+    return cSuccess;
+}
+bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, std::vector<std::vector<uint8_t>> pPhaseTaps)
 {
     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
-    return cSuccess; // && this->SetOptimalTaps(pChip);
-    // setBoard(pChip->getBeBoardId());
-    // if(cSuccess)
-    // {
-    //     ChipRegItem cRegItem;
-    //     for(uint8_t cInput = 0; cInput < 4; cInput += 1)
-    //     {
-    //         uint8_t cPhyPort = 0;
-    //         for(uint8_t cIndex = 0; cIndex < 6; cIndex += 1)
-    //         {
-    //             char cBuffer[17];
-    //             sprintf(cBuffer, "scPhaseSelectB%di%d", cInput, cIndex);
-    //             uint8_t     cValue = (pPhaseTaps[cInput][cPhyPort + 1] << 4) | (pPhaseTaps[cInput][cPhyPort]);
-    //             std::string cRegName(cBuffer, sizeof(cBuffer));
-    //             LOG(DEBUG) << BOLDBLUE << "Input" << +cInput << " : " << +pPhaseTaps[cInput][cPhyPort + 1] << " " << +pPhaseTaps[cInput][cPhyPort] << " " << cRegName << "  ---> "
-    //                        << std::bitset<8>(cValue) << RESET;
-    //             cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
-    //             cPhyPort += 2;
-    //         }
-    //     }
-    // }
-    // if(!cSuccess)
-    // {
-    //     LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-    //     exit(0);
-    // }
-    // return cSuccess;
+    setBoard(pChip->getBeBoardId());
+    if(cSuccess)
+    {
+        ChipRegItem cRegItem;
+        for(uint8_t cInput = 0; cInput < 4; cInput += 1)
+        {
+            uint8_t cPhyPort = 0;
+            for(uint8_t cIndex = 0; cIndex < 6; cIndex += 1)
+            {
+                char cBuffer[17];
+                sprintf(cBuffer, "scPhaseSelectB%di%d", cInput, cIndex);
+                uint8_t     cValue = (pPhaseTaps[cInput][cPhyPort + 1] << 4) | (pPhaseTaps[cInput][cPhyPort]);
+                std::string cRegName(cBuffer, sizeof(cBuffer));
+                LOG(DEBUG) << BOLDBLUE << "Input" << +cInput << " : " << +pPhaseTaps[cInput][cPhyPort + 1] << " " << +pPhaseTaps[cInput][cPhyPort] << " " << cRegName << "  ---> "
+                           << std::bitset<8>(cValue) << RESET;
+                cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
+                cPhyPort += 2;
+            }
+        }
+    }
+    if(!cSuccess)
+    {
+        LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
+        exit(0);
+    }
+    return cSuccess;
 }
-//
-// bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
-// {
-//     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
-//     setBoard(pChip->getBeBoardId());
-//     if(cSuccess)
-//     {
-//         ChipRegItem cRegItem;
-//         bool        cSuccess     = true;
-//         uint16_t    cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x40 : 0x80;
-//         for( int cPhyPortChannel=0; cPhyPortChannel < 4 ; cPhyPortChannel++)
-//         {
-//             uint16_t    cBaseReg     = cBaseAddress + pPhyPortChannel * 6;
-//             cRegItem.fPage                      = 0x00;
-//             cRegItem.fAddress                   = cBaseReg + cRegOffset;
-//             std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-//             if(cReadBack.first)
-//             {
-//                 cSuccess = cSuccess && cReadBack.first;
-//                 for( int cPhyPort=0; cPhyPort< 12 ; cPhyPort++)
-//                 {
-//                     // 4 bits per phyPorts --> 12 phy ports --> 48 bits --> 6 registers
-//                     uint8_t     cRegOffset       = (cPhyPort*4/8);
-//                     uint8_t     cBitOffset       = (cPhyPort%2);
-//                     uint8_t cPhaseTap = (cReadBack.second & (0xF << (cBitOffset * 4))) >> (cBitOffset * 4);
-//                     LOG (DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +cPhyPort
-//                         << " PhyPortChannel " << +cPhyPortChannel
-//                         << " Register 0x" << std::hex << +(cBaseReg + cRegOffset )  << std::dec
-//                         << " BitOffset " << +cBitOffset
-//                         << RESET;
-//                 }
-//             }
-//         }
-//     }
-//     else
-//     {
-//         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-//         exit(0);
-//     }
-//     return cSuccess;
-// }
 bool CicInterface::SetStaticWordAlignment(Chip* pChip, uint8_t pValue)
 {
     LOG(INFO) << BOLDBLUE << "Setting word alignment value of CIC on FE" << +pChip->getHybridId() << " to " << +pValue << RESET;
@@ -719,80 +603,31 @@ std::vector<std::vector<uint8_t>> CicInterface::ReadWordAlignmentValues(Chip* pC
     }
     return cWordAlignmentValues;
 }
-
-bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset)
+bool CicInterface::ReadOptimalTap(Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps)
 {
     setBoard(pChip->getBeBoardId());
-    ChipRegItem cRegItem;
-    uint16_t    cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x20 : 0x25;
-    uint16_t    cBaseReg     = cBaseAddress + pPhyPortChannel * 6;
-
-    bool cVerifloop = true;
-    // 4 bits per phyPorts --> 12 phy ports --> 48 bits --> 6 registers
-    uint8_t cRegOffset = (pPhyPort * 4 / 8);
-    uint8_t cBitShift  = (pPhyPort % 2) * 4;
-
-    cRegItem.fPage     = 0x00;
-    cRegItem.fAddress  = cBaseReg + cRegOffset;
-    uint8_t cRegMask   = (0xF << cBitShift); //
-    cRegMask           = ~(cRegMask);
-    uint16_t cRegValue = this->ReadChipReg(pChip, cRegItem).second;
-    int      cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]) + pOffset;
-    if(cPhaseTap < 0 || cPhaseTap > 0xF) return false;
-    uint8_t cValue = (cRegValue & cRegMask) | (cPhaseTap << cBitShift);
-
-    LOG(DEBUG) << BOLDBLUE << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
-               << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of "
-               << +(fPhaseTaps[pPhyPortChannel][pPhyPort]) << RESET;
-    return WriteReg(pChip, cRegItem.fAddress, cValue, cVerifloop);
-}
-bool CicInterface::SetOptimalTaps(Chip* pChip, int pOffset)
-{
-    bool cSuccess = true;
-    for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel++)
-    {
-        LOG(DEBUG) << BOLDBLUE << "Phy port input channel " << +cPhyPortChannel << RESET;
-        for(uint8_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
-        {
-            LOG(DEBUG) << BOLDBLUE << "\t.. phy port " << +cPhyPort << RESET;
-            cSuccess = cSuccess && this->SetOptimalTap(pChip, cPhyPort, cPhyPortChannel, pOffset);
-        }
-    }
-    return cSuccess;
-}
-uint8_t CicInterface::GetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel)
-{
-    uint8_t cPhaseTap = 0;
-    setBoard(pChip->getBeBoardId());
+    LOG(DEBUG) << BOLDBLUE << "Reading optimal tap found by Auto phase aligner lock in CIC for channel number " << +pPhyPortChannel << RESET;
     ChipRegItem cRegItem;
     bool        cSuccess     = true;
     uint16_t    cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x40 : 0x80;
-    uint16_t    cBaseReg     = cBaseAddress + pPhyPortChannel * 6;
-    // 4 bits per phyPorts --> 12 phy ports --> 48 bits --> 6 registers
-    uint8_t cRegOffset = (pPhyPort * 4 / 8);
-    uint8_t cBitOffset = (pPhyPort % 2);
-
-    cRegItem.fPage                      = 0x00;
-    cRegItem.fAddress                   = cBaseReg + cRegOffset;
-    std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-    LOG(DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register 0x" << std::hex << +(cBaseReg + cRegOffset) << std::dec
-               << " BitOffset " << +cBitOffset << RESET;
-    if(cReadBack.first)
+    for(int cIndex = 0; cIndex < 6; cIndex++)
     {
-        cSuccess                              = cSuccess && cReadBack.first;
-        cPhaseTap                             = (cReadBack.second & (0xF << (cBitOffset * 4))) >> (cBitOffset * 4);
-        fPhaseTaps[pPhyPortChannel][pPhyPort] = cPhaseTap;
-        LOG(DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Optimal tap " << +cPhaseTap << RESET;
+        cRegItem.fPage                      = 0x00;
+        cRegItem.fAddress                   = cBaseAddress + pPhyPortChannel * 6 + cIndex;
+        std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
+        if(cReadBack.first)
+        {
+            cSuccess = cSuccess && cReadBack.first;
+            LOG(DEBUG) << BOLDBLUE << "Phy-port channel " << +pPhyPortChannel << " : [ " << cIndex << " ]: " << std::bitset<8>(cReadBack.second) << RESET;
+            for(uint8_t cChannelIndex = 0; cChannelIndex < 2; cChannelIndex += 1)
+            {
+                uint8_t cInput = cChannelIndex + cIndex * 2;
+                uint8_t cPhase = (cReadBack.second & (0xF << (cChannelIndex * 4))) >> (cChannelIndex * 4);
+                LOG(DEBUG) << BOLDBLUE << "Input " << +cInput << " -- phase found to be " << +(cPhase) << RESET;
+                pPhaseTaps[pPhyPortChannel][cInput] = cPhase;
+            }
+        }
     }
-    return cPhaseTap;
-}
-bool CicInterface::ReadOptimalTap(Chip* pChip, uint8_t pPhyPortChannel, std::vector<std::vector<uint8_t>>& pPhaseTaps)
-{
-    bool cSuccess = true;
-    LOG(DEBUG) << BOLDBLUE << "Reading optimal tap found by Auto phase aligner lock in CIC for channel number " << +pPhyPortChannel << RESET;
-    // 12 phy ports
-    // 4 inputs per phy port
-    for(int cPhyPort = 0; cPhyPort < 12; cPhyPort++) { pPhaseTaps[pPhyPortChannel][cPhyPort] = this->GetOptimalTap(pChip, cPhyPort, pPhyPortChannel); }
     return cSuccess;
 }
 std::vector<std::vector<uint8_t>> CicInterface::GetOptimalTaps(Chip* pChip)
@@ -802,112 +637,50 @@ std::vector<std::vector<uint8_t>> CicInterface::GetOptimalTaps(Chip* pChip)
     for(uint8_t cPhyPortChannel = 0; cPhyPortChannel < 4; cPhyPortChannel += 1) { this->ReadOptimalTap(pChip, cPhyPortChannel, cPhaseTaps); }
     return cPhaseTaps;
 }
-std::vector<uint8_t> CicInterface::GetOptimalTaps(Chip* pChip, uint8_t pFeId)
-{
-    std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
-    auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
-    bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
-    std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-
-    // 6 outputs fer FE
-    uint32_t cPhaseTapsThisFe = (uint32_t)(std::bitset<24>(fPhaseValues[cFeMapping[pFeId]]).to_ulong());
-    LOG(DEBUG) << BOLDBLUE << "Optimal Taps for FE [ internal counter : " << +cFeMapping[pFeId] << " position on hybrid : " << +pFeId << " ] "
-               << " is " << std::bitset<24>(cPhaseTapsThisFe) << RESET;
-
-    std::vector<uint8_t> cPhaseTaps(6, 0);
-    for(size_t cIndx = 0; cIndx < cPhaseTaps.size(); cIndx++)
-    {
-        cPhaseTaps[cIndx] = (cPhaseTapsThisFe & (0xF << cIndx * 4)) >> (cIndx * 4);
-        LOG(DEBUG) << BOLDBLUE << "Optimal Tap for FE [ internal counter : " << +cFeMapping[pFeId] << " position on hybrid : " << +pFeId << " ] , line# " << +cIndx << " is " << +cPhaseTaps[cIndx]
-                   << " taps." << RESET;
-    }
-    return cPhaseTaps;
-}
 bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
 {
-    // first .. get enabled FEs
-    setBoard(pChip->getBeBoardId());
-    std::string cRegName    = "FE_ENABLE";
-    uint8_t     cEnabledFEs = this->ReadChipReg(pChip, cRegName);
-    LOG(DEBUG) << BOLDMAGENTA << "FE_Enable Register set to " << +cEnabledFEs << RESET;
-
     uint16_t cRegBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5C : 0xA0;
+    setBoard(pChip->getBeBoardId());
     LOG(DEBUG) << BOLDBLUE << "Checking Auto phase aligner lock in CIC." << RESET;
     ChipRegItem cRegItem;
     bool        cLocked = true;
 
-    size_t cPortCounter       = 0;
-    size_t cInputCounter      = 0;
-    size_t cFeCounter         = 0;
-    size_t cInputLineCounter  = 0;
-    size_t cCounter           = 0;
-    size_t cNStubLines        = 5;
-    size_t cL1Line            = 5;
-    bool   cLastStubLineFound = false;
-
-    cRegName                        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
-    auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
-    bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
-    std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-
+    // std::vector<std::bitset<4>> cPortStates(12);
+    size_t cPortCounter = 0;
     // read back phase alignment on stub lines
     for(int cIndex = 0; cIndex < 6; cIndex++)
     {
         cRegItem.fPage                      = 0x00;
         cRegItem.fAddress                   = cRegBaseAddress + cIndex;
         std::pair<bool, uint16_t> cReadBack = this->ReadChipReg(pChip, cRegItem);
-        LOG(INFO) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
-
+        if(cReadBack.first) cLocked = cLocked & (cReadBack.second == pCheckValue);
+        LOG(DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
-            auto cAligned            = (cReadBack.second & (0x1 << cBitIndex)) >> cBitIndex;
-            cInputCounter            = (cBitIndex & 0x3);
-            cInputLineCounter        = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
-            cLastStubLineFound       = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
-            cFeCounter               = (cLastStubLineFound) ? cBitIndex : cFeCounter;
-            auto     cPhaseTap       = this->GetOptimalTap(pChip, cPortCounter, cInputCounter);
-            uint32_t cPhaseValue     = (cInputLineCounter == 0) ? cPhaseTap : (fPhaseValues[cFeCounter].to_ulong() | (cPhaseTap << cInputLineCounter * 4));
-            fPhaseValues[cFeCounter] = std::bitset<24>(cPhaseValue);
-
-            LOG(DEBUG) << BOLDBLUE << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
-                       << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
-
-            fPhaseTaps[cInputCounter][cPortCounter] = cPhaseTap;
-            // and save to register
-            if(cAligned == 0x1) this->SetOptimalTap(pChip, cPortCounter, cInputCounter);
-            fPortStates[cPortCounter][cInputCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
-            fFeStates[cFeCounter][cInputLineCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
-
+            fPortStates[cPortCounter][cBitIndex & 0x3] = std::bitset<8>(cReadBack.second)[cBitIndex];
             cPortCounter += (cBitIndex == 3) || (cBitIndex == 7);
-            cFeCounter = (!cLastStubLineFound) ? (cFeCounter + (((1 + cCounter) % cNStubLines == 0) ? 1 : 0)) : cBitIndex;
-            cCounter++;
         }
-    } // each register stores information from 4 phyport inputs
-    // 1 bit for each of the 4 channels of the 12 PHYPorts
+    }
 
+    size_t cInputLineCounter = 0;
+    // std::vector<std::bitset<6>> cFeStates(8,0);
     cPortCounter = 0;
-    for(cFeCounter = 0; cFeCounter < 8; cFeCounter++)
+    for(size_t cFeCounter = 0; cFeCounter < 8; cFeCounter++)
     {
-        auto cEnableBit = (cEnabledFEs & (0x1 << cFeCounter)) >> cFeCounter;
-        // only check enabled FEs
-        if(cEnableBit != 1) continue;
-
-        uint8_t cChipId_onyHybrid = std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), cFeCounter));
-        auto    cCheckValue       = (pCheckValue & (0x1 << cFeCounter)) >> cFeCounter;
-        for(cInputLineCounter = 0; cInputLineCounter < (1 + cNStubLines); cInputLineCounter++)
+        for(size_t cStubLineCounter = 0; cStubLineCounter < 5; cStubLineCounter++)
         {
-            LOG(DEBUG) << BOLDYELLOW << "FE [CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << " Line#" << +cInputLineCounter << " alignment value "
-                       << +fFeStates[cFeCounter][cInputLineCounter] << RESET;
-            cLocked = cLocked & (fFeStates[cFeCounter][cInputLineCounter] == cCheckValue);
+            fFeStates[cFeCounter][cStubLineCounter] = fPortStates[cPortCounter][cInputLineCounter];
+            cInputLineCounter++;
+            if(cInputLineCounter > 3)
+            {
+                cPortCounter++;
+                cInputLineCounter = 0;
+            }
         }
-        if(cLocked)
-            LOG(INFO) << BOLDGREEN << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
-                      << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDGREEN << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
-        else
-            LOG(INFO) << BOLDRED << "PhyPort lock FE[ CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << "] : " << BOLDMAGENTA
-                      << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDRED << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
+        // L1 line
+        fFeStates[cFeCounter][5] = fPortStates[(10 + (cFeCounter > 4))][(cFeCounter & 0x3)];
+        LOG(INFO) << BOLDBLUE << "PhyPort lock FE" << +cFeCounter << " : " << BOLDYELLOW << +fFeStates[cFeCounter][5] << " [L1 lines] " << BOLDMAGENTA
+                  << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
     }
     if(cLocked)
         LOG(INFO) << BOLDGREEN << "SUCCESSFULL " << BOLDBLUE << " lock on all phase aligner lines.." << RESET;
@@ -939,7 +712,7 @@ bool CicInterface::SelectOutput(Chip* pChip, bool pFixedPattern)
     if(pFixedPattern)
         LOG(INFO) << BOLDBLUE << "Want to configure CIC to output fixed pattern on all lines... " << RESET;
     else
-        LOG(INFO) << BOLDBLUE << "Want to configure CIC to output data from readout chips... " << RESET;
+        LOG(INFO) << BOLDBLUE << "Want to configure CIC to output patterns from readout chips... " << RESET;
 
     // enable output pattern from CIC
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "OUTPUT_PATTERN_ENABLE" : "MISC_CTRL";
@@ -959,26 +732,15 @@ bool CicInterface::SetSparsification(Chip* pChip, uint8_t pEnable)
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0x2F) | (pEnable << 4);
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
-bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEnable)
+bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFEs, bool pEnable)
 {
     setBoard(pChip->getBeBoardId());
-
-    //  read type of CIC to figure out which mapping to use
-    std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
-    auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
-    bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
-    std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-
-    // read enable register
-    cRegName        = "FE_ENABLE";
-    uint16_t cValue = this->ReadChipReg(pChip, cRegName);
-    for(auto pFeId: pFeIds)
+    std::string cRegName = "FE_ENABLE";
+    uint16_t    cValue   = this->ReadChipReg(pChip, cRegName);
+    for(auto pFe: pFEs)
     {
-        uint8_t cChipId_forCic = cFeMapping[pFeId]; // std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pFeId));
-        uint8_t cMask          = ~(0x1 << cChipId_forCic) & 0xFF;
-        LOG(INFO) << BOLDMAGENTA << "For ROC [Hybrid Id " << +pFeId << "] CIC FE#" << +cChipId_forCic << " mask is " << std::bitset<8>(cMask) << RESET;
-        cValue = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << cChipId_forCic);
+        uint8_t cMask = ~(0x1 << pFe) & 0xFF;
+        cValue        = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << pFe);
     }
     if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
@@ -1047,10 +809,10 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
 
     // then select phy port
     setBoard(pChip->getBeBoardId());
+    LOG(INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pPhyPort : (cRegValue & 0x10) | pPhyPort;
-    LOG(INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << " by setting register to 0x" << std::hex << +cValue << std::dec << RESET;
+    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pPhyPort : (cRegValue & 0x8) | pPhyPort;
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
 bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
@@ -1058,7 +820,7 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
     setBoard(pChip->getBeBoardId());
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "enableMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0xF) | (pEnable << 4);
+    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0x7) | (pEnable << 3);
     if(pEnable == 1)
         LOG(INFO) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " << RESET;
     else
@@ -1128,21 +890,9 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
         exit(0);
     }
-
-    // figure out which FEs have been enabled
-    // so we can return to this state after
-    // the reset
-    cRegName            = "FE_ENABLE";
-    uint16_t cEnableReg = this->ReadChipReg(pChip, cRegName);
-    LOG(INFO) << BOLDMAGENTA << "Enable chip register, before phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
-    // disable all FEs
-    this->WriteChipReg(pChip, cRegName, 0x00);
-    // reset
+    this->EnableFEs(pChip, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     this->ResetPhaseAligner(pChip, 200);
-    // enable original FEs
-    this->WriteChipReg(pChip, cRegName, cEnableReg);
-    cEnableReg = this->ReadChipReg(pChip, cRegName);
-    LOG(INFO) << BOLDMAGENTA << "Enable chip register, after phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
+    this->EnableFEs(pChip, {0, 1, 2, 3, 4, 5, 6, 7}, true);
 
     // select fast command edge
     bool cNegEdge = true;

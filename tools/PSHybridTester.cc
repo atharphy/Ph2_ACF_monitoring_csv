@@ -24,7 +24,7 @@ void PSHybridTester::MPATest(uint32_t pPattern)
 }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else
@@ -62,7 +62,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 
 void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else

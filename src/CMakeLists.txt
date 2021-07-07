@@ -7,6 +7,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
@@ -17,10 +19,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils Ph2_NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils Ph2_RootUtils NetworkUtils)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -55,14 +59,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
-    # Check for PowerSupply
-    if(${PH2_POWERSUPPLY_FOUND})
-      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
-      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
-      #set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
-    endif()
-
     # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
@@ -81,6 +77,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(LIBS ${LIBS} ${Boost_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
     endif()
+
 
     # Find root and link against it
     if(${ROOT_FOUND})
@@ -118,7 +115,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
         file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc fpgaconfig.cc)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     else()
         list(REMOVE_ITEM BINARIES supervisor.cc)
     endif()
@@ -135,6 +131,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           target_link_libraries(${name} ${LIBS})
         endif()
         #check for PowerSupply
+        if ("${name}" STREQUAL "SEHTest")
+            if(${PH2_POWERSUPPLY_FOUND})
+                target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
+            endif()
+        endif()
+        if ("${name}" STREQUAL "powersupply")
+            if(${PH2_POWERSUPPLY_FOUND})
+                target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
+            endif()
+        endif()
+
         if ("${name}" STREQUAL "powersupply")
             if(${PH2_POWERSUPPLY_FOUND})
                 target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")

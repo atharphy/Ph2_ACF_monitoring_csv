@@ -29,12 +29,12 @@ dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 23/02/2021
++ Last change made to this section: 10/05/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `master` / `IT-v3.9.10`
-- Firmware tag: `3.6`
+- Software git branch / tag : `Dev` / `v4-01`
+- Firmware tag: `4.1`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
@@ -55,13 +55,13 @@ More details on the hardware needed to setup the system can be bound here: https
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `IT-DAQ setup and run` before running this command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
-A golden firmware can be downloaded from here: https://cernbox.cern.ch/index.php/s/5tUCio08PEfTf0a <br />
+A golden firmware can be downloaded from here: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img <br />
 A detailed manual about the firmware can be found here: https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf
 
 **IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone --recursive https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
@@ -93,8 +93,11 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 9. Threshold adjustment
 10. Injection delay scan
 11. Clock delay scan
-12. Physics
-13. Bit Error Rate test
+12. Bit Error Rate test
+13. Data read back optimisation
+14. Chip internal voltage tuning
+15. Generic DAC-DAC scan
+16. Physics
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
@@ -214,14 +217,39 @@ For more information on the firmware, please check the doc directory of https://
 
     ii. click the `Allow shared Runners` button
 
-3. Enable specific Runners (if not enabled)
 
-    i. from `settings > CI/CD` expand the `Runners` section
 
-    ii. in the section `Available specific runners` click button `Enable for this project` for the Ph2_ACF runner with the `FNAL`
+### Setup on CentOs8
 
+The following procedure will install (in order):
+1. the `boost` and `pugixml` libraries
+2. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+3. `root` with all its needed libraries
+4. `cmake`, tools for clang, including `clang-format` and `git-extras`
+
+```bash
+# Libraries needed by Ph2_ACF
+sudo yum install -y boost-devel pugixml-devel
+
+# uHAL libraries (cactus)
+sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
+  -o /etc/yum.repos.d/ipbus-sw.repo
+sudo yum-config-manager --enable powertools
+sudo yum clean all
+sudo yum groupinstall uhal
+
+# ROOT
+sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
+  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+
+# Build tools and some nice git extras
+sudo yum install -y cmake
+sudo yum install -y clang-tools-extra
+sudo yum install -y git-extras
+```
 
 ### clang-format (required to submit merge requests!!!)
+
 1. install 7.0 llvm toolset:
 
         $> yum install centos-release-scl
@@ -314,9 +342,10 @@ Follow these instructions to install and compile the libraries:
 
 1. Clone the GitHub repo and run cmake
   
-        $> git clone https://:@gitlab.cern.ch:8443/fravera/Ph2_ACF.git
+        $> git clone --recursive https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
         $> cd Ph2_ACF
         $> source setup.sh
+        $> mkdir build 
         $> cd build 
         $> cmake ..
 

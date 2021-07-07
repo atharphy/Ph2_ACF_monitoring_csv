@@ -33,12 +33,12 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, const DetectorContainer&
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
 
-    fInitialVcth  = findValueInSettings(pSettingsMap, "PulseShapeInitialVcth", 250);
-    fFinalVcth    = findValueInSettings(pSettingsMap, "PulseShapeFinalVcth", 600);
-    fVcthStep     = findValueInSettings(pSettingsMap, "PulseShapeVCthStep", 10);
-    fInitialDelay = findValueInSettings(pSettingsMap, "PulseShapeInitialDelay", 0);
-    fFinalDelay   = findValueInSettings(pSettingsMap, "PulseShapeFinalDelay", 25);
-    fDelayStep    = findValueInSettings(pSettingsMap, "PulseShapeDelayStep", 1);
+    fInitialVcth  = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialVcth", 250);
+    fFinalVcth    = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalVcth", 600);
+    fVcthStep     = findValueInSettings<double>(pSettingsMap, "PulseShapeVCthStep", 10);
+    fInitialDelay = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialDelay", 0);
+    fFinalDelay   = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalDelay", 25);
+    fDelayStep    = findValueInSettings<double>(pSettingsMap, "PulseShapeDelayStep", 1);
 
     int delayNbins       = (fFinalDelay - fInitialDelay) / fDelayStep + 1;
     fEffectiveFinalDelay = (delayNbins - 1) * fDelayStep + fInitialDelay;

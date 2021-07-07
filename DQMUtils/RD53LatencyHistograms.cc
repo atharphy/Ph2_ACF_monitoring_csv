@@ -19,9 +19,9 @@ void LatencyHistograms::book(TFile* theOutputFile, const DetectorContainer& theD
     // #######################
     // # Retrieve parameters #
     // #######################
-    nTRIGxEvent = this->findValueInSettings(settingsMap, "nTRIGxEvent");
-    startValue  = this->findValueInSettings(settingsMap, "LatencyStart");
-    stopValue   = this->findValueInSettings(settingsMap, "LatencyStop");
+    nTRIGxEvent = this->findValueInSettings<double>(settingsMap, "nTRIGxEvent");
+    startValue  = this->findValueInSettings<double>(settingsMap, "LatencyStart");
+    stopValue   = this->findValueInSettings<double>(settingsMap, "LatencyStop");
 
     auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
     bookImplementer(theOutputFile, theDetectorStructure, Latency, hLatency, "Latency (n.bx)", "Entries");
@@ -66,8 +66,12 @@ void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyCont
                 {
                     if(cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
 
-                    auto* Occupancy1DHist =
-                        Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getIndex())
+                                                ->getObject(cOpticalGroup->getIndex())
+                                                ->getObject(cHybrid->getIndex())
+                                                ->getObject(cChip->getIndex())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
 
                     for(size_t i = startValue; i <= stopValue; i += nTRIGxEvent)
                         Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i - startValue) / nTRIGxEvent]);
@@ -83,8 +87,12 @@ void LatencyHistograms::fillLatency(const DetectorDataContainer& LatencyContaine
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* LatencyHist =
-                        Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* LatencyHist = Latency.getObject(cBoard->getIndex())
+                                            ->getObject(cOpticalGroup->getIndex())
+                                            ->getObject(cHybrid->getIndex())
+                                            ->getObject(cChip->getIndex())
+                                            ->getSummary<CanvasContainer<TH1F>>()
+                                            .fTheHistogram;
 
                     for(auto i = 0u; i < nTRIGxEvent; i++) LatencyHist->Fill(cChip->getSummary<uint16_t>() - i);
                 }

@@ -19,12 +19,12 @@
 #include "../HWInterface/CicInterface.h"
 #include "../HWInterface/D19clpGBTInterface.h"
 #include "../HWInterface/MPAInterface.h"
-#include "../HWInterface/PSInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
+#include "../NetworkUtils/TCPClient.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
@@ -34,7 +34,6 @@
 #include "../Utils/D19cCicEvent.h"
 #include "../Utils/D19cMPAEvent.h"
 #include "../Utils/D19cMPAEventAS.h"
-#include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
 #include "../Utils/DetectorMonitorConfig.h"
@@ -44,6 +43,7 @@
 #include "../Utils/easylogging++.h"
 #include "FileParser.h"
 
+#include <boost/any.hpp>
 #include <future>
 #include <iostream>
 #include <stdlib.h>
@@ -58,7 +58,7 @@ class DetectorMonitor;
  */
 namespace Ph2_System
 {
-using SettingsMap = std::unordered_map<std::string, double>; /*!< Maps the settings */
+using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 
 /*!
  * \class SystemController
@@ -82,6 +82,7 @@ class SystemController
     bool               fStreamerEnabled;
     TCPPublishServer*  fNetworkStreamer;
     DetectorMonitor*   fDetectorMonitor;
+    TCPClient*         fPowerSupplyClient{nullptr};
 
     /*!
      * \brief Constructor of the SystemController class
@@ -152,15 +153,6 @@ class SystemController
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureHw(bool bIgnoreI2c = false);
-
-    /*!
-     * \brief Run Bit Error Rate test
-     * \param chain2test     : which part of the chain to be tested
-     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
-     * \param frames_or_time : time [s] or number of frames
-     * \return: none
-     */
-    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!
      * \brief Read Monitor Data from pBoard
@@ -236,8 +228,14 @@ class SystemController
         return fEventList;
     }
 
-    void   DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
-    double findValueInSettings(const std::string name, double defaultValue = 0.) const;
+    void DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
+
+    template <typename T>
+    T findValueInSettings(const std::string name, T defaultValue = T()) const
+    {
+        auto setting = fSettingsMap.find(name);
+        return (setting != std::end(fSettingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
+    }
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
@@ -248,6 +246,7 @@ class SystemController
     uint32_t                             fNCbc;
     FileParser                           fParser;
 };
+
 } // namespace Ph2_System
 
 #endif

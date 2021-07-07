@@ -64,31 +64,23 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
             // loop over chips
             for(auto cChip: *cFe)
             {
-                // data is packed SSAs then all MPAs
-                // so if MPA just continue and do nothing
-                if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
-
-                auto& cChipCounterData = cHybridCounterData[cRocIndex];
-                for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    if(cChnl % 2 == 0)
+                    auto& cChipCounterData = cHybridCounterData[cRocIndex];
+                    for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
-                        if(cDataIterator != pData.end())
+                        if(cChnl % 2 != 0)
                         {
-                            auto cWord     = *(cDataIterator);
-                            int  cFrstStrp = cChnl;
-                            int  cNxtStrp  = cChnl + 1;
+                            auto cWord = *(cDataIterator);
                             cChipCounterData.push_back((cWord & 0xFFFF));
                             cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
-                            if(cFrstStrp % 25 == 0)
-                                LOG(INFO) << BOLDBLUE << "ROC#" << +cRocIndex << " [Strip#" << +cFrstStrp << " ,Strip#" << cNxtStrp << " ]"
-                                          << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
+                            LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                             cDataIterator++;
-                        }
-                    } // every 2 channels are packed into one 32 bit word
-                }     // chnl loop
-                cRocIndex++;
-            } // chips
+                        } //
+                    }     // chnl loop
+                    cRocIndex++;
+                } //[if SSA]
+            }     // chips
             cFeIndex++;
         } // hybrids
     }     // opticalGroup

@@ -12,7 +12,6 @@
 #define __SSAINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
-#include "D19clpGBTInterface.h"
 #include "ReadoutChipInterface.h"
 #include <vector>
 
@@ -24,8 +23,6 @@ class SSAInterface : public ReadoutChipInterface
   public:
     SSAInterface(const BeBoardFWMap& pBoardMap);
     ~SSAInterface();
-    // FIXME temporary fix to use 1/2 PS skeleton
-    void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;
@@ -42,18 +39,12 @@ class SSAInterface : public ReadoutChipInterface
     void     StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
     void     ReadASEvent(Ph2_HwDescription::ReadoutChip* pSSA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA, uint32_t n_pulse);
-    void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
-    void     Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
 
   private:
-    D19clpGBTInterface*            flpGBTInterface = nullptr;
-    Ph2_HwDescription::lpGBT*      flpGBT          = nullptr;
-    uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pSSA);
-    bool                           WriteReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
-    bool                           WriteRegs(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
-    uint16_t                       ReadReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, bool pVerifLoop = true);
-    bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
-    bool                           ConfigureAmux(Ph2_HwDescription::Chip* pSSA, const std::string& pRegister);
+    uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pChip);
+    bool                           WriteReg(Ph2_HwDescription::Chip* pCbc, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
+    bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
+    bool                           ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister);
     std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},
                                                {"PreampBias", 1},
                                                {"Trim", 2},

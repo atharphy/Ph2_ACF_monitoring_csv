@@ -47,11 +47,6 @@ D19cMPAEventAS::D19cMPAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
             fROCIds.push_back(cROCIds);
         } // hybrids
     }     // opticalGroup
-    // // first check if there are also SSAs here
-    // // if there are then data will come SSAs then MPAs
-    // // because of the order of the configuration
-    // // so reverse the list
-    // std::reverse(list.begin(),list.end());
     this->Set(pBoard, list);
 }
 void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
@@ -66,41 +61,21 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
             auto&   cHybridCounterData = fCounterData[cFeIndex];
             uint8_t cRocIndex          = 0;
             // loop over chips
-            // data is filled all SSAs then all MPAs
-            // so if an SSA increment the vector
-            // by the number of SSAs * number of strips per SSA  /2
             for(auto cChip: *cFe)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
+                    auto& cChipCounterData = cHybridCounterData[cRocIndex];
                     for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
-                        if(cChnl % 2 == 0) { cDataIterator++; } //
-                    }                                           // chnl loop
-                }
-            }
-            for(auto cChip: *cFe)
-            {
-                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-
-                auto& cChipCounterData = cHybridCounterData[cRocIndex];
-                for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
-                {
-                    if(cChnl % 2 == 0)
-                    {
-                        auto cWord    = *(cDataIterator);
-                        int  cFrstPxl = cChnl;
-                        int  cNxtPxl  = cChnl + 1;
-                        cChipCounterData.push_back((cWord & 0xFFFF));
-                        cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
-                        if(cFrstPxl % 250 == 0)
-                            LOG(INFO) << BOLDBLUE << "ROC#" << +cRocIndex << " [Pxl#" << +cFrstPxl << " ,Pxl#" << cNxtPxl << " ]"
-                                      << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
+                        auto cWord = *(cDataIterator);
+                        cChipCounterData.push_back(cWord);
+                        LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                         cDataIterator++;
-                    } // every 2 channels are packed into one 32 bit word
-                }     // chnl loop
-                cRocIndex++;
-            } // chips
+                    }
+                    cRocIndex++;
+                } //[if MPA]
+            }     // chips
             cFeIndex++;
         } // hybrids
     }     // opticalGroup
@@ -119,7 +94,7 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
 
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += hVec[i]; }
+                    if(cTestChannelGroup->isChannelEnabled(i)) channel->fOccupancy += hVec[i];
                 }
             }
         }

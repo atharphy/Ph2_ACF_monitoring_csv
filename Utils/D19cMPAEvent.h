@@ -169,10 +169,6 @@ class D19cMPAEvent : public Event
 
     uint8_t GetMPAError(uint8_t pFeId, uint8_t pMPAId) const;
 
-    bool MPAStubHeader(uint8_t pFeId, uint8_t pMPAId) const;
-
-    bool MPAHitHeader(uint8_t pFeId, uint8_t pMPAId) const;
-
     // uint32_t GetSync1( uint8_t pFeId, uint8_t pMPAId) const;
 
     // uint32_t GetSync2( uint8_t pFeId, uint8_t pMPAId) const;

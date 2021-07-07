@@ -62,13 +62,13 @@ void BiasSweep::Initialize()
 {
     // now read the settings from the map
     auto cSetting = fSettingsMap.find("SweepTimeout");
-    fSweepTimeout = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fSweepTimeout = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     cSetting      = fSettingsMap.find("KePort");
-    fKePort       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8083;
+    fKePort       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 8083;
     cSetting      = fSettingsMap.find("HMPPort");
-    fHMPPort      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8082;
+    fHMPPort      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 8082;
     cSetting      = fSettingsMap.find("StepSize");
-    fStepSize     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    fStepSize     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 1;
 
     LOG(INFO) << "\tSettings for BiasSweep parsed:";
     LOG(INFO) << "\t\tSweepTimeout: " << fSweepTimeout;

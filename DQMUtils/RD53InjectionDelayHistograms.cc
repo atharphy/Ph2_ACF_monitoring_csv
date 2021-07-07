@@ -65,8 +65,12 @@ void InjectionDelayHistograms::fillOccupancy(const DetectorDataContainer& Occupa
                 {
                     if(cChip->getSummaryContainer<GenericDataArray<InjDelaySize>>() == nullptr) continue;
 
-                    auto* Occupancy1DHist =
-                        Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
 
                     for(size_t i = startValue; i <= stopValue; i++)
                         Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<InjDelaySize>>().data[i - startValue]);
@@ -82,8 +86,12 @@ void InjectionDelayHistograms::fillInjectionDelay(const DetectorDataContainer& I
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* InjectionDelayHist =
-                        InjectionDelay.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* InjectionDelayHist = InjectionDelay.getObject(cBoard->getId())
+                                                   ->getObject(cOpticalGroup->getId())
+                                                   ->getObject(cHybrid->getId())
+                                                   ->getObject(cChip->getId())
+                                                   ->getSummary<CanvasContainer<TH1F>>()
+                                                   .fTheHistogram;
 
                     InjectionDelayHist->Fill(cChip->getSummary<uint16_t>());
                 }

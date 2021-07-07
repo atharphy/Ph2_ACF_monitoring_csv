@@ -22,13 +22,21 @@
 class ClockDelay : public PixelAlive
 {
   public:
+    ~ClockDelay()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void   run();
     void   draw();
     void   analyze();
@@ -61,7 +69,7 @@ class ClockDelay : public PixelAlive
 
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
-    void chipErrorReport();
+    void chipErrorReport() const;
     void writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay);
 
   protected:

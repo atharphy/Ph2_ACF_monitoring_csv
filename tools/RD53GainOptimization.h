@@ -19,7 +19,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NSTDEV 1.5 // Number of standard deviations for gain tolerance
+#define NSTDEV 4. // Number of standard deviations for gain tolerance
 
 // ################################
 // # Gain optimization test suite #
@@ -27,13 +27,21 @@
 class GainOptimization : public Gain
 {
   public:
+    ~GainOptimization()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void   run();
     void   analyze();
     void   draw();
@@ -68,7 +76,7 @@ class GainOptimization : public Gain
 
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-    void chipErrorReport();
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

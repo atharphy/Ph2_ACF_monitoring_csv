@@ -56,12 +56,12 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
     fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fPlotSCurves                 = findValueInSettings("PlotSCurves", 0);
-    fFitSCurves                  = findValueInSettings("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
+    fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
+    fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
 
     LOG(INFO) << "Parsed settings:";
@@ -69,25 +69,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
-
-    // for now.. force to use async mode here
-    for(auto cBoard: *fDetectorContainer)
-    {
-        bool cAsyncEvent = cBoard->getEventType() == EventType::PSAS;
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cROC: *cHybrid)
-                {
-                    if(!cAsyncEvent) continue;
-
-                    if(cROC->getFrontEndType() == FrontEndType::MPA || cROC->getFrontEndType() == FrontEndType::SSA) // force this to work in async mode for now
-                        fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
-                }
-            }
-        }
-    }
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -169,7 +150,7 @@ void PedeNoise::sweepSCurves()
     // configure TP amplitude
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cWithSSA || cWithMPA)
+        if(cWithSSA)
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
         else if(cWithMPA)
         {
@@ -209,7 +190,7 @@ void PedeNoise::sweepSCurves()
     {
         this->enableTestPulse(false);
         if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
-        else if(cWithMPA)
+        if(cWithMPA)
         {
             setSameGlobalDac("CalDAC0", 0);
             setSameGlobalDac("CalDAC1", 0);
@@ -268,7 +249,6 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
-
     LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
@@ -305,13 +285,13 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                                 sprintf(cRegName, "Channel%03d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0xFF});
                             }
-                            if(cROC->getFrontEndType() == FrontEndType::SSA)
+                            if(cWithSSA)
                             {
                                 char cRegName[17];
                                 sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
-                            if((cROC->getFrontEndType() == FrontEndType::MPA))
+                            if(cWithMPA)
                             {
                                 char cRegName[12];
                                 sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
@@ -431,7 +411,8 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
 
             cValue += cSign;
-            cLimitFound = (cValue == 0 || cValue == cMaxValue) || (cLimitCounter >= cMinBreakCount);
+            cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
+            if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
             if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
 
         } while(!cLimitFound);

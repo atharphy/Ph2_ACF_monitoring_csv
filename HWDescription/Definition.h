@@ -130,6 +130,10 @@
 #define WIDTH_GLIBFLAG_CBC3 12
 #define OFFSET_CBCSTUBDATA_CBC3 264 + 23 // LAST BIT
 #define WIDTH_CBCSTUBDATA 12
+
+// Latency Scan
+#define TDCBINS 10
+#define VECSIZE 1000
 //------------------------------------------------------------------------------
 
 enum class BoardType
@@ -161,8 +165,7 @@ enum class EventType
     SSA   = 3,
     MPA   = 4,
     SSAAS = 5,
-    MPAAS = 6,
-    PSAS  = 7
+    MPAAS = 6
 };
 
 #endif

@@ -19,11 +19,11 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, const DetectorContain
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents         = this->findValueInSettings(settingsMap, "nEvents");
+    nEvents         = this->findValueInSettings<double>(settingsMap, "nEvents");
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
 
-    const size_t colStart = this->findValueInSettings(settingsMap, "COLstart");
-    const size_t colStop  = this->findValueInSettings(settingsMap, "COLstop");
+    const size_t colStart = this->findValueInSettings<double>(settingsMap, "COLstart");
+    const size_t colStop  = this->findValueInSettings<double>(settingsMap, "COLstop");
     frontEnd              = RD53::getMajorityFE(colStart, colStop);
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
 
@@ -66,8 +66,12 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
                 {
                     if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
-                    auto* hThrEqualization =
-                        ThrEqualization.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hThrEqualization = ThrEqualization.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getSummary<CanvasContainer<TH1F>>()
+                                                 .fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
@@ -88,7 +92,8 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
                 {
                     if(cChip->getChannelContainer<uint16_t>() == nullptr) continue;
 
-                    auto* hTDAC = TDAC.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hTDAC =
+                        TDAC.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)

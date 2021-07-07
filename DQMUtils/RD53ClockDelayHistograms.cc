@@ -64,8 +64,12 @@ void ClockDelayHistograms::fillOccupancy(const DetectorDataContainer& OccupancyC
                 {
                     if(cChip->getSummaryContainer<GenericDataArray<ClkDelaySize>>() == nullptr) continue;
 
-                    auto* Occupancy1DHist =
-                        Occupancy1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
 
                     for(size_t i = startValue; i <= stopValue; i++)
                         Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<ClkDelaySize>>().data[i - startValue]);
@@ -81,8 +85,12 @@ void ClockDelayHistograms::fillClockDelay(const DetectorDataContainer& ClockDela
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* ClockDelayHist =
-                        ClockDelay.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* ClockDelayHist = ClockDelay.getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
+                                               ->getSummary<CanvasContainer<TH1F>>()
+                                               .fTheHistogram;
 
                     ClockDelayHist->Fill(cChip->getSummary<uint16_t>());
                 }

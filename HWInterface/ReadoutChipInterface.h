@@ -152,6 +152,12 @@ class ReadoutChipInterface : public ChipInterface
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
     }
+
+    virtual int CheckChipID(Ph2_HwDescription::Chip* pChip, const int chipIDfromDB)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
 };
 } // namespace Ph2_HwInterface
 

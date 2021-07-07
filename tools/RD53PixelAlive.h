@@ -14,7 +14,6 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -28,15 +27,23 @@
 class PixelAlive : public Tool
 {
   public:
+    ~PixelAlive()
+    {
+#ifdef __USE_ROOT__
+        if(saveData == true) this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string fileRes_, int currentRun);
-    void                                   initializeFiles(const std::string fileRes_, int currentRun);
+    void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void                                   run();
-    void                                   draw(bool saveData = true);
+    void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations()
     {
@@ -73,7 +80,7 @@ class PixelAlive : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport();
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;
@@ -82,6 +89,7 @@ class PixelAlive : public Tool
     bool        doDisplay;
     bool        doFast;
     bool        saveBinaryData;
+    bool        saveData;
 };
 
 #endif

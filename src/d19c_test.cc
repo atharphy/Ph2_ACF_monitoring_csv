@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         if(cTestPulse)
         {
             auto    cSetting            = cTool.fSettingsMap.find("TestPulsePotentiometer");
-            uint8_t cTestPulseAmplitude = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0x7F;
+            uint8_t cTestPulseAmplitude = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0x7F;
 
             uint32_t cNGroups = 8;
             uint32_t cN       = 0;

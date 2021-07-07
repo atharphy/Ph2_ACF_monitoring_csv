@@ -25,6 +25,7 @@ Tool::Tool()
     fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
+    , fSummaryTree(nullptr)
     ,
 #endif
     fType()
@@ -115,6 +116,7 @@ void Tool::Inherit(const Tool* pTool)
     fType          = pTool->fType;
     fDirectoryName = pTool->fDirectoryName;
 #ifdef __USE_ROOT__
+    fSummaryTree    = pTool->fSummaryTree;
     fCanvasMap      = pTool->fCanvasMap;
     fChipHistMap    = pTool->fChipHistMap;
     fHybridHistMap  = pTool->fHybridHistMap;
@@ -214,6 +216,37 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
+TString  Tool::fSummaryTreeParameter = ""; // Is this ok here?
+Double_t Tool::fSummaryTreeValue     = 0.0;
+
+/*!
+ * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+ */
+void Tool::bookSummaryTree() // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter = "";
+    fSummaryTreeValue     = 0;
+    fSummaryTree          = new TTree("summaryTree", "Most relevant results");
+    fSummaryTree->Branch("Parameter", &fSummaryTreeParameter);
+    fSummaryTree->Branch("Value", &fSummaryTreeValue);
+}
+
+/*!
+ * \brief Insert data into the summary tree
+ * \param cParameter : Name of the measurement to be stored
+ * \param cValue: Value of the measurement to be stored
+ */
+void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter.Clear();
+    fSummaryTreeParameter = cParameter;
+    fSummaryTreeValue     = cValue;
+    if(fSummaryTree) fSummaryTree->Fill();
+}
+
+TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
 
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
@@ -371,7 +404,10 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
     }
 }
 
-void Tool::WriteRootFile() { fResultFile->Write(); }
+void Tool::WriteRootFile()
+{
+    if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->Write();
+}
 #endif
 
 void Tool::SaveResults()
@@ -427,6 +463,9 @@ void Tool::SaveResults()
         std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
+    // Save summary TTree
+    // fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+
 #endif
 
     // fResultFile->Write();
@@ -445,7 +484,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     if(cSetting != std::end(fSettingsMap))
     {
         cCheck    = true;
-        cHoleMode = (cSetting->second == 1) ? true : false;
+        cHoleMode = (boost::any_cast<double>(cSetting->second) == 1) ? true : false;
     }
 
     std::string cMode;
@@ -507,10 +546,9 @@ void Tool::InitResultFile(const std::string& pFilename)
 
 void Tool::CloseResultFile()
 {
-    LOG(INFO) << GREEN << "Closing result file" << RESET;
-
     if(fResultFile != nullptr)
     {
+        LOG(INFO) << GREEN << "Closing result file" << RESET;
         fResultFile->Close();
         delete fResultFile;
         fResultFile = nullptr;
@@ -707,7 +745,7 @@ void Tool::setFWTestPulse()
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
+            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
 
             if(!cAsync)
             {
@@ -717,9 +755,8 @@ void Tool::setFWTestPulse()
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                //#FIXME WHAT SHOULD I DO ??? 6 or 10 ? 
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -743,6 +780,7 @@ void Tool::CreateReport()
     report.open(fDirectoryName + "/TestReport.txt", std::ofstream::out | std::ofstream::app);
     report.close();
 }
+
 void Tool::AmmendReport(std::string pString)
 {
     std::ofstream report;
@@ -759,6 +797,7 @@ std::pair<float, float> Tool::getStats(std::vector<float> pData)
     float cStandardDeviation = std::sqrt(std::accumulate(cTmp.begin(), cTmp.end(), 0.) / (cTmp.size() - 1.));
     return std::make_pair(cMean, cStandardDeviation);
 }
+
 std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vector<float> pData, std::vector<float> pValues, bool pIgnoreNegative)
 {
     std::vector<float> cWeights(pData.size());
@@ -769,6 +808,7 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
 }
+
 std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<float> pValues, bool pIgnoreNegative)
 {
     std::vector<float> cWeights(pData.size());
@@ -1375,10 +1415,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
                 else
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
     else
-    {
-        LOG(INFO) << BOLDBLUE << "Broadcasting to chips on board.." << RESET;
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
-    }
 }
 
 // set same local dac for all BeBoard

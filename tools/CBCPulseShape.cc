@@ -19,13 +19,13 @@ CBCPulseShape::~CBCPulseShape() { delete fChannelGroupHandler; }
 
 void CBCPulseShape::Initialise(void)
 {
-    fEventsPerPoint = findValueInSettings("PulseShapeNevents", 10);
-    fInitialLatency = findValueInSettings("PulseShapeInitialLatency", 200);
-    fInitialDelay   = findValueInSettings("PulseShapeInitialDelay", 0);
-    fFinalDelay     = findValueInSettings("PulseShapeFinalDelay", 25);
-    fDelayStep      = findValueInSettings("PulseShapeDelayStep", 1);
-    fPulseAmplitude = findValueInSettings("PulseShapePulseAmplitude", 150);
-    fChannelGroup   = findValueInSettings("PulseShapeChannelGroup", -1);
+    fEventsPerPoint = findValueInSettings<double>("PulseShapeNevents", 10);
+    fInitialLatency = findValueInSettings<double>("PulseShapeInitialLatency", 200);
+    fInitialDelay   = findValueInSettings<double>("PulseShapeInitialDelay", 0);
+    fFinalDelay     = findValueInSettings<double>("PulseShapeFinalDelay", 25);
+    fDelayStep      = findValueInSettings<double>("PulseShapeDelayStep", 1);
+    fPulseAmplitude = findValueInSettings<double>("PulseShapePulseAmplitude", 150);
+    fChannelGroup   = findValueInSettings<double>("PulseShapeChannelGroup", -1);
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;

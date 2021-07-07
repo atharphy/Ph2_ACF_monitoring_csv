@@ -10,7 +10,7 @@ SLVS_PADS_CONFIG                                0x02    0x45    0x18    0x07
 * Front-end configuration 
 *--------------------------------------------------------------------------------
 FE_CONFIG                                       0x02    0x40    0xFF    0x0F
-FE_ENABLE                                       0x02    0x41    0xFF    0x0
+FE_ENABLE                                       0x02    0x41    0xFF    0xFF
 *--------------------------------------------------------------------------------
 * Stub packing configuration 
 *--------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ EXT_BX0_DELAY                                   0x02    0x43    0x16    0x16
 * Hit data packing configuration 
 *--------------------------------------------------------------------------------
 L1_DATA_TIMEOUT_VALUE0                          0x02    0x46    0x00    0xFF
-L1_DATA_TIMEOUT_VALUE1                          0x02    0x47    0x04    0x0F
+L1_DATA_TIMEOUT_VALUE1                          0x02    0x47    0x04    0xFF
 *--------------------------------------------------------------------------------
 * Word-aligner configuration 
 *--------------------------------------------------------------------------------
@@ -61,8 +61,8 @@ scDllConfirmCountSelect1                        0x00    0x05    0x55    0xFF
 scDllConfirmCountSelect2                        0x00    0x06    0x55    0xFF
 scDllResetReq0                                  0x00    0x07    0x00    0x00
 scDllResetReq1                                  0x00    0x08    0x00    0x00
-scDllCoarseLockDetection0                       0x00    0x09    0x00    0x00
-scDllCoarseLockDetection1                       0x00    0x0A    0x00    0x00
+scDllCoarseLockDetection0                       0x00    0x09    0x00    0xFF
+scDllCoarseLockDetection1                       0x00    0x0A    0x00    0xFF
 scDllnitSMForceClockEnable0                     0x00    0x0B    0x00    0x00
 scDllnitSMForceClockEnable1                     0x00    0x0C    0x00    0x00
 scEnableLine0                                   0x00    0x0E    0xFF    0xFF

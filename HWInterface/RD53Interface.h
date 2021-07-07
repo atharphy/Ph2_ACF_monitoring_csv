@@ -18,8 +18,6 @@
 // # CONSTANTS #
 // #############
 #define VCALSLEEP 50000 // [microseconds]
-#define MONITORSLEEP 10 // [seconds]
-#define NPIXCMD 100     // Number of possible pixel commands to stack
 
 namespace Ph2_HwInterface
 {
@@ -31,7 +29,7 @@ class RD53Interface : public ReadoutChipInterface
     // #############################
     // # Override member functions #
     // #############################
-    int      CheckChipID(Ph2_HwDescription::Chip* pChip, int chipIDfromDB);
+    int      CheckChipID(Ph2_HwDescription::Chip* pChip, const int chipIDfromDB) override;
     bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, bool pVerifLoop = true) override;
     void     WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data) override;
@@ -48,6 +46,9 @@ class RD53Interface : public ReadoutChipInterface
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     // #############################
 
+    void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType);
+    void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
+
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);
     void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);
 
@@ -58,10 +59,9 @@ class RD53Interface : public ReadoutChipInterface
     void SendHybridCommandsPack(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
   private:
-    void InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
-
+    void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
-    void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault, bool pVerifLoop = false);
+    void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault);
 
     template <typename T>
     void sendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)

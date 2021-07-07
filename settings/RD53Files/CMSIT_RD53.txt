@@ -204,10 +204,13 @@ CLK_DATA_DELAY_CLK_DELAY  0xA5          0b0000                  0b0000          
 CLK_DATA_DELAY_2INV_DELAY 0xA6          0b0                     0b0                                 1
 MONITOR_CONFIG_ADC        0xA7          0d5                     0d5                                 6
 MONITOR_CONFIG_BG         0xA8          0d12                    0d12                                5
+CML_CONFIG_SER_INV_TAP    0xA9          0b00                    0b00                                2
+CML_CONFIG_SER_EN_TAP     0xAA          0b00                    0b00                                2
+CML_CONFIG_EN_LANE        0xAB          0b1111                  0b1111                              4
 
-ADC_OFFSET_VOLT           0xA9          0d63                    0d63                               16
-ADC_MAXIMUM_VOLT          0xAA          0d839                   0d839                              16
-TEMPSENS_IDEAL_FACTOR     0xAB          0d1225                  0d1225                             16
+ADC_OFFSET_VOLT           0xAC          0d63                    0d63                               16
+ADC_MAXIMUM_VOLT          0xAD          0d839                   0d839                              16
+TEMPSENS_IDEAL_FACTOR     0xAE          0d1225                  0d1225                             16
 
 *-------------------------------------------------------------------------------------------------------
 PIXELCONFIGURATION

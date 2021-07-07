@@ -87,7 +87,6 @@ namespace Ph2_HwInterface
 {
 class D19cFpgaConfig;
 class D19cSSAEvent;
-class D19clpGBTInterface;
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -124,17 +123,14 @@ class D19cFWInterface : public BeBoardFWInterface
     bool                       fConfigureCDCE  = false;
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;
-    // 2S or PS readout
-    bool           fIs2S = true;
-    uint32_t       fGBTphase;
+
+    uint32_t fGBTphase;
+
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
-    // I'm going to add a variable to hold the stub offset
-    uint32_t fStubOffset = 0;
 
     // some useful stuff
-    int fResetAttempts;
-
-    D19clpGBTInterface* fLocalLpGBTInterface;
+    int  fResetAttempts;
+    void Align_out();
 
   public:
     /*!
@@ -143,7 +139,7 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param puHalConfigFileName : path of the uHal Config File
      * \param pBoardId
      */
-    void Align_out();
+
     D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
     /*!
@@ -261,26 +257,20 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint32_t> GetHitData(uint8_t pIndex) { return fD19cFWEvts.fBoardHitData[pIndex]; }
     // vector of 32 bit words for ROC#pIndex [stubs]
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
-    // check chips connected to board can be read from
-    void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
-    // set stub offset
-    void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
-    uint32_t getStubOffset() { return fStubOffset; };
 
   private:
     uint8_t  fFastCommandDuration = 0;
-    uint32_t fReadoutAttempts     = 0;
     uint16_t fWait_us             = 10000; // 10 ms
     uint8_t  fResetMinPeriod_ms   = 100;   // was 100
     // get data from FC7
-
+    uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // wait for events from FC7
     bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
     // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
-    void FastAsyncRead(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pRawMode);
-    void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pFast = false, bool pRawMode = false);
+    void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast);
 
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
@@ -367,8 +357,6 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pCbcId : Id of the Chip to work with
      * \param pVecReq : Vector to stack the encoded words
      */
-    // for testing, move back
-    uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     void
          EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
     void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
@@ -413,13 +401,12 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    void                     L1ADebug(uint8_t pWait_ms = 1);
-    void                     StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
-    std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
-    bool                     L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool                     L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool                     L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool                     StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    void L1ADebug(uint8_t pWait_ms = 1);
+    void StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
+    bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     // bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
 
     // Optical readout specific functions - d19c [temporary]
@@ -430,7 +417,6 @@ class D19cFWInterface : public BeBoardFWInterface
     std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
     void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
-    void                       LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface);
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);
@@ -722,7 +708,7 @@ class D19cFWInterface : public BeBoardFWInterface
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////
-    void selectLink(uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
+    void selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
 
     ///////////////////////////////////////////////////////
     //      Multiplexing crate                          //
@@ -749,7 +735,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    bool     RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return true; };
+    double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return 0; };
 
     // ############################
     // # Read/Write Optical Group #
@@ -760,8 +746,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override;
-    bool     WriteOptoLinkRegister(uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(uint32_t pAddress) override;
+    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################

@@ -100,7 +100,7 @@ bool FileHandler::openFile()
             if(fHeader.fValid == false)
             {
                 fHeaderPresent = false;
-                LOG(WARNING) << BOLDRED << "No valid header found in binary file: " << BOLDYELLOW << fBinaryFileName << BOLDRED << " - resetting to 0 and treating as normal data" << RESET;
+                LOG(WARNING) << BOLDRED << "No valid header found in binary file: " << BOLDYELLOW << fBinaryFileName << BOLDRED << " - resetting to begin of file and treating as normal data" << RESET;
                 fBinaryFile.clear();
                 fBinaryFile.seekg(0, std::ios::beg);
             }
@@ -124,20 +124,25 @@ void FileHandler::closeFile()
         fFileIsOpened = false;
         if((fOption == 'w') && (fThread.joinable() == true)) fThread.join();
         fBinaryFile.close();
-        LOG(INFO) << GREEN << "Closing binary file: " << BOLDYELLOW << fBinaryFileName << RESET;
+        LOG(INFO) << GREEN << "Closed binary file: " << BOLDYELLOW << fBinaryFileName << RESET;
     }
 }
 
 std::vector<uint32_t> FileHandler::readFile()
 {
     std::vector<uint32_t> cVector;
+    uint32_t              word;
+
+    fBinaryFile.seekg(0, std::ios::end);
+    double fileSize = fBinaryFile.tellg();
+    cVector.reserve(fileSize * sizeof(char) / sizeof(uint32_t));
+    fBinaryFile.seekg(0, std::ios::beg);
 
     while(true)
     {
-        uint32_t word;
         fBinaryFile.read((char*)&word, sizeof(uint32_t));
         if(fBinaryFile.eof() == true) break;
-        cVector.push_back(word);
+        cVector.emplace_back(word);
     }
 
     closeFile();
@@ -147,11 +152,11 @@ std::vector<uint32_t> FileHandler::readFile()
 std::vector<uint32_t> FileHandler::readFileChunks(uint32_t pNWords)
 {
     std::vector<uint32_t> cVector;
+    uint32_t              word;
 
     for(auto i = 0u; i < pNWords; i++)
     {
-        uint32_t cBuf;
-        fBinaryFile.read((char*)&cBuf, sizeof(uint32_t));
+        fBinaryFile.read((char*)&word, sizeof(uint32_t));
 
         if(fBinaryFile.eof() == true)
         {
@@ -160,7 +165,7 @@ std::vector<uint32_t> FileHandler::readFileChunks(uint32_t pNWords)
             break;
         }
 
-        cVector.push_back(cBuf);
+        cVector.emplace_back(word);
     }
 
     return cVector;

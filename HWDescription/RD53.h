@@ -29,7 +29,7 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t  BROADCAST_CHIPID  = 0x8;  // Broadcast chip ID used to send the command to multiple chips
+const uint8_t  BROADCAST_CHIPID  = 0x08; // Broadcast chip ID used to send the command to multiple chips
 const uint8_t  NREGIONS_LONGCMD  = 6;    // Number of regions to program with long write commands
 const uint8_t  FIELDS_SHORTCMD   = 8;    // Number of fields for the short write command
 const uint8_t  FIELDS_LONGCMD    = 24;   // Number of fields for the long write command
@@ -38,13 +38,14 @@ const uint8_t  NBIT_MAXREG       = 16;   // Maximum number of bits for a chip re
 const uint8_t  NPIX_REGION       = 4;    // Number of pixels in a region (1x4)
 const uint8_t  NROW_CORE         = 8;    // Number of rows in a core
 const uint8_t  NBIT_ADDR         = 9;    // Number of address bits
-const uint8_t  NSYNC_WORS        = 128;  // Number of Sync words for synchronization
-const uint8_t  CDRCONFIG_ADDR    = 0x40; // Address of CDR_CONFIG register
+const uint8_t  NSYNC_WORS        = 64;   // Number of Sync words for synchronization
 const uint16_t CDRCONFIG_1Gbit   = 1048; // Value for 1.28 Gbit/s
 const uint16_t CDRCONFIG_640Mbit = 1049; // Value for 640 Mbit/s
-const uint8_t  PATTERN_PRBS      = 0x2;  // Start PRBS pattern
-const uint8_t  PATTERN_AURORA    = 0x1;  // Start AURORA pattern
-const uint8_t  PATTERN_CLOCK     = 0x0;  // Start clock pattern
+const uint8_t  PATTERN_PRBS      = 0x02; // Start PRBS pattern
+const uint8_t  PATTERN_AURORA    = 0x01; // Start AURORA pattern
+const uint8_t  PATTERN_CLOCK     = 0x00; // Start clock pattern
+const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
+const uint16_t SET_SEL_OUT_ADDR  = 0x44; // SET_SEL_OUT regiser address
 } // namespace RD53Constants
 
 // ############
@@ -97,7 +98,7 @@ constexpr float cap    = 8.5;    // [fF]
 constexpr float ele    = 1.6;    // [e-19]
 constexpr float offset = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
 
-constexpr float VCAl2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
+constexpr float VCal2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
 
 constexpr float Charge2VCal(float Charge) { return (Charge - offset) / (cap * 1e4) * ele / (par0 / par1); }
 } // namespace RD53chargeConverter
@@ -202,13 +203,31 @@ class RD53 : public ReadoutChip
         uint8_t cal_aux_delay;
     };
 
+    // #################
+    // # LpGBT mapping #
+    // #################
+    void    setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void    setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
+    void    setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
+    void    setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
+    uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
+    uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
+    uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
+
   private:
+    struct LpGBTmap
+    {
+        uint8_t RxGroup;
+        uint8_t RxChannel;
+        uint8_t TxGroup;
+        uint8_t TxChannel;
+    } fLpGBTmap;
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string                     configFileName;
     uint8_t                         myChipLane;
 };
-
 } // namespace Ph2_HwDescription
 
 // ###############################

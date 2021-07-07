@@ -323,7 +323,7 @@ void GbtInterface::gbtxSetPhase(BeBoardFWInterface* pInterface, uint8_t pPhase)
 void GbtInterface::gbtxSetDriveStrength(BeBoardFWInterface* pInterface, uint8_t pStrength)
 {
     std::vector<uint16_t> cRegs{327, 328, 329, 330, 331};
-    for(auto cReg: cRegs) { icWrite(pInterface, cReg, (pStrength << 4) || pStrength); }
+    for(auto cReg: cRegs) { icWrite(pInterface, cReg, (pStrength << 4) | pStrength); }
 }
 void GbtInterface::gbtxConfigureChargePumps(BeBoardFWInterface* pInterface, uint8_t pStrength)
 {

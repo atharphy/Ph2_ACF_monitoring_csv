@@ -27,13 +27,21 @@
 class ThrEqualization : public PixelAlive
 {
   public:
+    ~ThrEqualization()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void   run();
     void   draw();
     void   analyze();
@@ -74,7 +82,7 @@ class ThrEqualization : public PixelAlive
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
-    void chipErrorReport();
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

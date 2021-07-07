@@ -121,7 +121,7 @@ void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const Chan
 
                     for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
                     {
-                        cChip->getChannel<OccupancyAndPh>(hit.row + RD53::nRows * (hit.col)).fOccupancy++;
+                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fOccupancy++;
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
                         cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
                         if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
@@ -222,10 +222,8 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
             LOG(INFO) << BOLDYELLOW << "--- Hit Data (" << frame_event.second.hit_data.size() << " hits) ---" << RESET;
 
             for(const auto& hit: frame_event.second.hit_data)
-            {
                 LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
                           << std::setw(-1) << RESET;
-            }
         }
     }
 }
@@ -404,6 +402,12 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     // #####################
     // # Consistency check #
     // #####################
+    if(RD53Event::decodingThreads.size() == 0)
+    {
+        LOG(ERROR) << BOLDRED << "Threads for data decoding haven't been forked: use " << BOLDYELLOW << "RD53Event::ForkDecodingThreads()" << BOLDRED << " first" << RESET;
+        eventStatus = RD53FWEvtEncoder::EMPTY;
+        return;
+    }
     if(data.size() == 0)
     {
         eventStatus = RD53FWEvtEncoder::EMPTY;

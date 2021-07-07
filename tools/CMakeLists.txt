@@ -7,6 +7,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
@@ -17,6 +19,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
     # Find source files
     file(GLOB HEADERS *.h)
@@ -67,7 +71,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
     endif(${PH2_TCUSB_FOUND})
-    
+
     #last but not least, find root and link against it
     if(NoDataShipping)
         if(${ROOT_FOUND})

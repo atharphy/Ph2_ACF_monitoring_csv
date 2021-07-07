@@ -19,9 +19,6 @@ class RD53Monitor : public DetectorMonitor
 
   protected:
     void runMonitor() override;
-
-  private:
-    bool allVariables;
 };
 
 #endif

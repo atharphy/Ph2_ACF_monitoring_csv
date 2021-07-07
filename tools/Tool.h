@@ -21,6 +21,7 @@
 #include "TObject.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TTree.h"
 #endif
 
 class DetectorContainer;
@@ -70,6 +71,20 @@ class Tool : public Ph2_System::SystemController
     void SoftDestroy();
 
 #ifdef __USE_ROOT__
+    /*!
+     * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+     */
+    void bookSummaryTree();
+
+    /*!
+     * \brief Insert data into the summary tree
+     * \param cParameter : Name of the measurement to be stored
+     * \param cValue: Value of the measurement to be stored
+     */
+    void fillSummaryTree(TString cParameter, Double_t cValue);
+
+    TString getDirectoryName();
+
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
     void bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject);
     void bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject);
@@ -310,6 +325,10 @@ class Tool : public Ph2_System::SystemController
     ChipHistogramMap    fChipHistMap;
     HybridHistogramMap  fHybridHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
+    TTree*              fSummaryTree; /*< TTree for summary of results*/
+    static TString      fSummaryTreeParameter;
+    static Double_t     fSummaryTreeValue;
+
 #endif
 
     FrontEndType        fType;

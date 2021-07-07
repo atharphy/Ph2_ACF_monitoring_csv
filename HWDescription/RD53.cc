@@ -237,7 +237,7 @@ void RD53::loadfRegMap(const std::string& fileName)
 
 void RD53::saveRegMap(const std::string& fName2Add)
 {
-    const int Nspaces = 26;
+    const int Nspaces = 26; // @CONST@
 
     std::string   output = RD53::getFileName(fName2Add);
     std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);

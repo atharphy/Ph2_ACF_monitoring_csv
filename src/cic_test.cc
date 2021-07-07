@@ -174,9 +174,10 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
 
         // manual alignment
-        bool cBxAligned = cCicAligner.SetBx0Delay(8);
+        // bool cBxAligned = cCicAligner.SetBx0Delay(8);
+
         // automatic alignment
-        // bool cBxAligned = cCicAligner.Bx0Alignment(0, 4, 1, 100);
+        bool cBxAligned = cCicAligner.Bx0Alignment(0, 4, 1, 100);
         if(!cBxAligned)
         {
             LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " bx0 alignment step in CIC ... " << RESET;
