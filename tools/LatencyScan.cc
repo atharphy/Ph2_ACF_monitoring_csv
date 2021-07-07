@@ -139,6 +139,25 @@ void LatencyScan::ScanLatency()
             {
                 // LOG (INFO) << BOLDMAGENTA << "Latency of " << cLat+cTriggerId << RESET;
                 if( (cLat+cTriggerId) >= (fStartLatency + fLatencyRange) ) continue;
+                
+                // prepare container to hold hit information per chip 
+                DetectorDataContainer cHitContainer;
+                ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, cHitContainer);
+                // zero stub container
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        for( auto cChip : * cHybrid) 
+                        {
+                            for( uint16_t cIndx=0; cIndx< fTDCBins; cIndx++)
+                            {
+                                cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                            }
+                        } //chip
+                    }// hybrid
+                } //optical group
+                
                 // start at the beginning + trigger id in burst 
                 auto cEventIter = cEvents.begin() + cTriggerId ;
                 // calculate occupancy for each 
@@ -149,15 +168,60 @@ void LatencyScan::ScanLatency()
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
-                    (*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup()); 
+                    // get TDC phase - why isn't this in the event decoder? 
+                    uint8_t cTDCVal = (*cEventIter)->GetTDC();
+                    uint8_t cTDCShiftValue = 1;
+                    if(cTDCVal < cTDCShiftValue)
+                        cTDCVal += (fTDCBins - cTDCShiftValue);
+                    else
+                        cTDCVal -= cTDCShiftValue;
+                    //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup()); 
+                    for(auto cOpticalGroup: *cBoard)
+                    {
+                        auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
+                            for(auto cChip: *cHybrid)
+                            {
+                                auto& cOccChip = cOccHybrid->at(cChip->getIndex());
+                                auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                for(auto cHit: cHits)
+                                {
+                                    if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
+                                    { 
+                                        cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                        cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
+                                    }
+                                }// hit vector
+                            }// chip vector 
+                        }// hybrid vector 
+                    }// optical group vector 
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 LOG (INFO) << BOLDMAGENTA << "Latency of " << (cLat+cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) 
                     << " - on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
+                
+                // for now don't normalize 
+                // //normalize and average TDC summary 
+                // for( uint16_t cIndx=0; cIndx< fTDCBins; cIndx++)
+                // {
+                //     for(auto cOpticalGroup: *cBoard)
+                //     {
+                //         for(auto cHybrid: *cOpticalGroup)
+                //         {
+                //             for( auto cChip : * cHybrid) 
+                //             {
+                //                 auto& cOccThisPhase = cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx];
+                //                 cOccThisPhase = (cOccThisPhase/(float)fNevents); 
+                //             } //chip
+                //         }// hybrid
+                //     } //optical group
+                // }//TDC bins
                 #ifdef __USE_ROOT__
-                    fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer);
+                    fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer, cHitContainer);
                 #endif
             }
             if( cOffset < (1+cTriggerMult) ) cOffset = (1+cTriggerMult); 
@@ -299,6 +363,11 @@ void LatencyScan::StubLatencyScan()
                                 // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
+                                    uint32_t cPipeline =  (*cEventIter)->PipelineAddress(cHybrid->getId(), cChip->getId());
+                                    LOG(INFO) << BOLDCYAN << "\t\t Event#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId() 
+                                        << " pipeline address is " << +cPipeline << RESET;
+                                    continue;
+
                                     // first check for hits
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     for(auto cHit : cHits)
@@ -343,15 +412,18 @@ void LatencyScan::StubLatencyScan()
                                     cNStubsThisChip = cNStubsThisChip;
                                     cNStubs = cNStubsThisChip;
                                     cMatchedStubs += cNStubsThisChip;
+
                                     if(cStubs.size() > 0 && cNStubsThisChip > 0)
                                         LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId()  << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
                                             << " there are " << cHits.size() << " hits in this event... "
+                                            <<  " pipeline address " << +cPipeline 
                                              << RESET;
                                     else 
                                         LOG(INFO) << BOLDRED << "\t\t\tEvent#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId()  << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
                                             << " there are " << cHits.size() << " hits in this event... "
+                                            <<  " pipeline address " << +cPipeline 
                                              << RESET;
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::SSA)

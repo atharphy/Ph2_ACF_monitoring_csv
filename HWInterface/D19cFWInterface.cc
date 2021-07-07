@@ -974,7 +974,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
                 // disable stub debug
-                cVecReg.push_back({"fc7_daq_cnfg.stub_debug.enable", 0});
+                cVecReg.push_back({"fc7_daq_cnfg.ddr3_block.enable_stub_debug", 0});
                 std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
                 std::string cRegName   = (cCic->getFrontEndType() == FrontEndType::CIC) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
                 ChipRegItem cRegItem   = static_cast<OuterTrackerHybrid*>(pBoard->at(0)->at(0))->fCic->getRegItem(cRegName);
@@ -3307,6 +3307,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
         LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
         // start triggers 
+        this->PS_Clear_counters();
         this->Start();
         std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
         uint32_t cIteration=0;
@@ -3319,40 +3320,35 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             cIteration++;
         }while( this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIteration < 10 );
         cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIteration == 10 ); 
-        this->PS_Close_shutter(fFastCommandDuration);
-        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
         this->Stop();   
         std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
         cVecReg.clear();    
         cIteration=0;
-        this->PS_Start_counters_read();
-        do 
-        {
-            LOG (INFO) << "D19cFWInterface::WaitForData Checking PS counters ready flag .. " << BOLDGREEN << "Running.. .Iteration#" 
-                << +cIteration
-                << RESET;
-            std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
-            cIteration++;
-        }while( this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready")==0 && cIteration < 10 );
-        LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
         
-        // for( size_t cIndx=0; cIndx < 20000; cIndx++ )
+        // // start counter readout 
+        // this->ResetReadout();
+        // this->WriteReg("fc7_daq_cnfg.ddr3_block.enable_counter_debug",1);
+        // this->PS_Start_counters_read();//BC0+ReSync
+        // do 
         // {
-        //     auto     cFifoWrd1  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
-        //     auto     cFifoWrd2  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo2_data");
-        //     uint8_t line0 = (cFifoWrd1 & 0x0000FF) >> 0;  // to_number(fifo1_word,8,0)
-        //     uint8_t line1 = (cFifoWrd1 & 0x00FF00) >> 8;  // to_number(fifo1_word,16,8)
-        //     uint8_t line2 = (cFifoWrd1 & 0xFF0000) >> 16; //  to_number(fifo1_word,24,16)
-
-        //     uint8_t line3 = (cFifoWrd2 & 0x0000FF) >> 0; // to_number(fifo2_word,8,0)
-        //     uint8_t line4 = (cFifoWrd2 & 0x00FF00) >> 8; // to_number(fifo2_word,16,8)
-        //     LOG (INFO) << BOLDMAGENTA << "Line0 " << std::bitset<8>(line0) << RESET; 
-        //     LOG (INFO) << BOLDMAGENTA << "Line1 " << std::bitset<8>(line1) << RESET; 
-        //     LOG (INFO) << BOLDMAGENTA << "Line2 " << std::bitset<8>(line2) << RESET; 
-        //     LOG (INFO) << BOLDMAGENTA << "Line3 " << std::bitset<8>(line3) << RESET; 
-        //     LOG (INFO) << BOLDMAGENTA << "Line4 " << std::bitset<8>(line4) << RESET; 
-
-        // }
+        //     //0 - Idle, 1 -GettingDataRAW, 2 - GettingDataParsedMPA, 3 - Done , 4-ResetFIFO, 5-WaitFIFO
+        //     auto cState = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_async_cntr.cntr_fsm_state");
+        //     LOG (INFO) << BOLDGREEN << "D19cFWInterface::WaitForData Checking PS counters ready flag ..waiting.. .Iteration#" 
+        //         << +cIteration
+        //         << " FSM state "
+        //         << +cState
+        //         << RESET;
+        //     std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+        //     cIteration++;
+        // }while( this->ReadReg("fc7_daq_stat.physical_interface_block.cic_async_cntr.cntr_ready")==0 && cIteration < 100 );
+        // LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.cic_async_cntr.cntr_ready") << RESET;
+        // auto cCntrData = ReadBlockRegOffsetValue("fc7_daq_ddr3", 1000, fDDR3Offset);
+        // // for( auto cWrd : cCntrData )
+        // // {
+        // //     LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWrd) << RESET;
+        // // }
+        // this->WriteReg("fc7_daq_cnfg.ddr3_block.enable_counter_debug",0);
+        
         // LOG (INFO) << BOLDMAGENTA << "All counters have been read back " << RESET;
     }
     return cFailed;
@@ -3977,11 +3973,11 @@ bool D19cFWInterface::Bx0Alignment()
 {
     // auto     cStubPackageDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
     bool     cSuccess   = false;
-    uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.stub_debug.enable");
+    uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_block.enable_stub_debug");
     if(cStubDebug)
     {
         LOG(INFO) << BOLDBLUE << "Stub debug enable set to " << cStubDebug << "..... so disabling it!!." << RESET;
-        this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
+        this->WriteReg("fc7_daq_cnfg.ddr3_block.enable_stub_debug", 0x00);
     }
     // send a resync and reset readout
     bool    cWait     = false;

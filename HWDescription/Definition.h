@@ -133,7 +133,7 @@
 #define WIDTH_CBCSTUBDATA 12
 
 // Latency Scan
-#define TDCBINS 10
+#define TDCBINS 8
 #define VECSIZE 1000
 //------------------------------------------------------------------------------
 

@@ -79,7 +79,7 @@ class LatencyScan : public Tool
     uint8_t  fTestPulseAmplitude;
     uint32_t trigSource;
 
-    const uint32_t fTDCBins = 8;
+    const uint32_t fTDCBins = TDCBINS;
 
     int convertLatencyPhase(uint32_t pStartLatency, uint32_t cLatency, uint32_t cPhase)
     {
