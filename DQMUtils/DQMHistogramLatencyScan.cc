@@ -230,7 +230,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                                 << " - on average have found " << cNhits << " channels with a hit [per chip per event]." 
                                 << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
-                        cLatencyTDC->SetBinError(cBin, 0);//for now 
+                        cLatencyTDC->SetBinError(cBin, std::sqrt((float)cNhits));//for now 
                     }
                 }
                 // float cError = 0;
