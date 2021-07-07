@@ -384,7 +384,7 @@ int main(int argc, char* argv[])
         {
             std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
-            cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
+            cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
             // find correct stub latency with TP
             for(auto cBoard: *cMemoryChecker.fDetectorContainer)

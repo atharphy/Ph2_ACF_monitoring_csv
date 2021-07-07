@@ -248,7 +248,7 @@
     <Setting name="ScanStubLatency">0</Setting>
     <!-- injection configuration, fast commands -->
     <Setting name="DistributeInjections">0</Setting>
-    <Setting name="TestMode">0</Setting>
+    <Setting name="TestMode">1</Setting>
     <Setting name="TriggerMultiplicity">5</Setting>
     <Setting name="TriggerSeparation">80</Setting>
     <Setting name="DelayAfterInjection">100</Setting>

@@ -886,14 +886,17 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             
                             for(auto cId : cIds )
                             {
+                                LOG (INFO) << BOLDMAGENTA << "Injection in MPA-SSA pair " << +cId << RESET;
                                 cInjs.clear();cInjs = this->GeneratePSInjections(cMaxNstubs);
                                 for(auto cChip: *cHybrid)
                                 {
                                     if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
-                                    if( cChip->getId() != cId ) continue; 
+                                    if(cChip->getId() != cId ) continue; 
                                     
                                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                     fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                                    // p-p mode. . don't inject 
+                                    if(cMode == 2 ) continue;
                                     for(auto cInjection: cInjs)
                                     {
                                         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9);
@@ -907,6 +910,9 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                                     (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
+                                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                                    // s-s mode .. don't inject 
+                                    if(cMode == 1 ) continue;
                                     uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
                                     (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjs, cPattern);
                                 }
@@ -1075,6 +1081,10 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 if(fPSevent.fStubSize > 0 )// && cChip->getIndex() < cLastMPA)
                                 {
                                     LOG(INFO) << BOLDGREEN << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
+                                    for( auto cStub : static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId()) )
+                                    {
+                                        LOG (INFO) << BOLDMAGENTA << "Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
+                                    }
                                     cTotalStubsFound += fPSevent.fStubSize;
                                     
                                 }
@@ -2259,11 +2269,11 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
             }
             if(cInject && cTotalNumberOfStubs < pMaxNstubs)
             {
-                // LOG (INFO) << BOLDMAGENTA << "\t\t.. injecting in row "
-                //     << +cInjection.fRow
-                //     << " columnn "
-                //     << +cInjection.fColumn
-                //     << RESET;
+                LOG (INFO) << BOLDMAGENTA << "\t\t.. injecting in row "
+                    << +cInjection.fRow
+                    << " columnn "
+                    << +cInjection.fColumn
+                    << RESET;
                 cPixelIds.push_back(cPixelId);
                 cInjections.push_back(cInjection);
                 cColumns.push_back(cInjection.fColumn);
@@ -2539,9 +2549,9 @@ void DataChecker::PSTriggerTest()
 
                     if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
 
-                    // LOG (DEBUG) << BOLDMAGENTA << "Injecting in SSA-MPA pair#"
-                    //     << +cChip->getId()
-                    //     << RESET;
+                    LOG (INFO) << BOLDMAGENTA << "Injecting in SSA-MPA pair#"
+                        << +cChip->getId()
+                        << RESET;
                     auto cInjections = GeneratePSInjections(cMaxClustersPerMPA);
                     // auto cInjections = GenerateInjections(cMaxClustersPerMPA);
                     auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
