@@ -204,9 +204,9 @@ void LatencyScan::ScanLatency()
                             {
                                 if (cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
 
-                                auto& cOccChip = cOccHybrid->at(cChip->getIndex());
                                 auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 cTotalHits += cHits.size();
+                                //auto& cOccChip = cOccHybrid->at(cChip->getIndex());
                                 //for(auto cHit: cHits)
                                 //{
                                     //uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
