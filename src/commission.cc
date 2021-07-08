@@ -172,6 +172,23 @@ int main(int argc, char* argv[])
         cBackEndAligner.Reset();
     }
 
+    // hack 
+    // make sure MPAs and SSAs have all pixels enabled 
+    for(auto cBoard: *cTool.fDetectorContainer)
+    {
+        for(auto cOpticalReadout: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                for(auto cReadoutChip: *cHybrid)
+                {
+                    if( cReadoutChip->getFrontEndType() == FrontEndType::CBC3 ) continue;
+                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x1);
+                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA ) cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x5F);
+                }
+            }
+        }
+    }
     // align back-end .. if this moves to firmware then we can get rid of this step
 
 #ifdef __ANTENNA__
