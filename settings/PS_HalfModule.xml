@@ -25,17 +25,18 @@
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
-            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="0" configfile="MPA.txt" /> 
-            <MPA Id="1" configfile="MPA.txt" /> 
-            <MPA Id="2" configfile="MPA.txt" /> 
-            
-            
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" /> 
             <SSA Id="1" configfile="SSA.txt" /> 
+            <!-- <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
-           
+            -->
+            
+            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <MPA Id="9" configfile="MPA.txt" /> 
+            <!-- <MPA Id="1" configfile="MPA.txt" /> 
+            <MPA Id="2" configfile="MPA.txt" /> 
+             -->
+            
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
@@ -45,10 +46,10 @@
             </Global>
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="2" configfile="MPA.txt" /> 
+            <MPA Id="4" configfile="MPA.txt" /> 
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="2" configfile="SSA.txt" /> 
+            <SSA Id="4" configfile="SSA.txt" /> 
             
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
@@ -248,7 +249,7 @@
     <Setting name="ScanStubLatency">0</Setting>
     <!-- injection configuration, fast commands -->
     <Setting name="DistributeInjections">0</Setting>
-    <Setting name="TestMode">1</Setting>
+    <Setting name="TestMode">0</Setting>
     <Setting name="TriggerMultiplicity">5</Setting>
     <Setting name="TriggerSeparation">80</Setting>
     <Setting name="DelayAfterInjection">100</Setting>

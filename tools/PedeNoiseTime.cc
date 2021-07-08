@@ -265,13 +265,14 @@ void PedeNoiseTime::sweepSCurves()
 
 void PedeNoiseTime::measureNoise()
 {
-    LOG(INFO) << BOLDBLUE << "sweepSCurves" << RESET;
-    sweepSCurves();
-    LOG(INFO) << BOLDBLUE << "extractPedeNoiseTime" << RESET;
-    extractPedeNoiseTime();
-    LOG(INFO) << BOLDBLUE << "producePedeNoiseTimePlots" << RESET;
-    producePedeNoiseTimePlots();
-    LOG(INFO) << BOLDBLUE << "Done" << RESET;
+    findPedestal(true);   
+    // LOG(INFO) << BOLDBLUE << "sweepSCurves" << RESET;
+    // sweepSCurves();
+    // LOG(INFO) << BOLDBLUE << "extractPedeNoiseTime" << RESET;
+    // extractPedeNoiseTime();
+    // LOG(INFO) << BOLDBLUE << "producePedeNoiseTimePlots" << RESET;
+    // producePedeNoiseTimePlots();
+    // LOG(INFO) << BOLDBLUE << "Done" << RESET;
 }
 
 void PedeNoiseTime::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)

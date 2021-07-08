@@ -369,11 +369,6 @@ void LatencyScan::StubLatencyScan()
                                 // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
-                                    uint32_t cPipeline =  (*cEventIter)->PipelineAddress(cHybrid->getId(), cChip->getId());
-                                    LOG(INFO) << BOLDCYAN << "\t\t Event#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId() 
-                                        << " pipeline address is " << +cPipeline << RESET;
-                                    continue;
-
                                     // first check for hits
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     for(auto cHit : cHits)
@@ -415,7 +410,7 @@ void LatencyScan::StubLatencyScan()
                                         cNStubsThisChip += (cMatched) ? 1 : 0;
                                     }
                                     // for now .. need to fix matching
-                                    cNStubsThisChip = cNStubsThisChip;
+                                    cNStubsThisChip = cAnyStubs;//cNStubsThisChip;
                                     cNStubs = cNStubsThisChip;
                                     cMatchedStubs += cNStubsThisChip;
 
@@ -423,14 +418,12 @@ void LatencyScan::StubLatencyScan()
                                         LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId()  << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
                                             << " there are " << cHits.size() << " hits in this event... "
-                                            <<  " pipeline address " << +cPipeline 
-                                             << RESET;
+                                            << RESET;
                                     else 
                                         LOG(INFO) << BOLDRED << "\t\t\tEvent#" << cEventCount << "Hybrid#" << +cHybrid->getId() << " CBC#" << +cChip->getId()  << "...Found " << +cStubs.size() << " stubs in the readout..."
                                             << " of which " << cNStubsThisChip << " stubs match the hits.."
                                             << " there are " << cHits.size() << " hits in this event... "
-                                            <<  " pipeline address " << +cPipeline 
-                                             << RESET;
+                                            << RESET;
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                                 {

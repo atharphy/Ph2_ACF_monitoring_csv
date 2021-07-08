@@ -552,7 +552,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
                 {
                     Injection cInjection;
-                    cInjection.fColumn = 2 * (int)cChip->getId() + 1;
+                    cInjection.fColumn = 2 * (int)cChip->getId()%8 + 1;
                     cInjection.fRow    = cRows[cIndx];
                     cInjections.push_back(cInjection);
                     uint32_t cPixelId = (uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow;

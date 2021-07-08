@@ -257,6 +257,7 @@ class D19cCic2Event : public Event
     // returns chip id in the CIC
     uint8_t getChipIdMapped(uint8_t pFeId, uint8_t pReadoutChipId) const
     {
+        pReadoutChipId = pReadoutChipId%8;
         // assign front-end mapping
         std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
         if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;

@@ -374,8 +374,8 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                         cCounter++;
                     }
                     // then the L1 line
-                    size_t cPhyPortL1                           = (cChip->getId() > 3) ? 11 : 10;
-                    size_t cPhyPortChnlL1                       = (cChip->getId() % 4);
+                    size_t cPhyPortL1                           = (cChip->getId()%8 > 3) ? 11 : 10;
+                    size_t cPhyPortChnlL1                       = (cChip->getId()%8 % 4);
                     cPhaseAlignment[cPhyPortChnlL1][cPhyPortL1] = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnlL1][cPhyPortL1]);
                     cOutput += cBuffer;
@@ -871,9 +871,9 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                         std::string cOutput;
                         for(size_t cLine = 0; cLine < 5; cLine++)
                         {
-                            cWordAlignmentVals[cChip->getId()][cLine] = cWordAlignmentValues[cChip->getId()][cLine];
+                            cWordAlignmentVals[cChip->getId()%8][cLine] = cWordAlignmentValues[cChip->getId()%8][cLine];
                             char cBuffer[80];
-                            sprintf(cBuffer, "%.2d ", cWordAlignmentVals[cChip->getId()][cLine]);
+                            sprintf(cBuffer, "%.2d ", cWordAlignmentVals[cChip->getId()%8][cLine]);
                             cOutput += cBuffer;
                         }
                         LOG(INFO) << BOLDBLUE << "Word alignment values for FE#" << +cChip->getId() << " : " << cOutput << RESET;

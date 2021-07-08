@@ -57,7 +57,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
                 // only count MPAs
                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                cROCIds.push_back(cChip->getId());
+                cROCIds.push_back(cChip->getId()%8);
                 fIs2S = fIs2S || cChip->getFrontEndType() == FrontEndType::CBC3;
             }
             fROCIds.push_back(cROCIds);
@@ -728,23 +728,6 @@ std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pRead
     auto   cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
     size_t cIndx         = 7 - cChipIdMapped;
     auto&  cDataBitset   = fEventRawList[getFeIndex(pFeId)].second[cIndx];
-    // size_t cIndx = 0;
-    // if there are some FEs diabled.. what happens?
-    // std::vector<uint8_t> cIds(0);
-    // for(auto cRocId: fROCIds[pFeId]) { cIds.push_back(getChipIdMapped(pFeId, cRocId)); }
-    // auto cIter = std::find(cIds.begin(), cIds.end(), pReadoutChipId);
-    // if(cIter == cIds.end())
-    //     LOG(INFO) << BOLDRED << "Wrong Id .. .not in list.. check" << RESET;
-    // else
-    // {
-    //     cIndx = std::distance(cIds.begin(), cIter);
-    //     if(cIds.size() != 0) cIndx = cIds.size() - 1 - cIndx;
-    // }
-    // auto cChipIndex   =  getFeIndex(pFeId);
-    // LOG (INFO) << BOLDMAGENTA << "D19cCic2Event::getRawL1Word Hybrid ChipId# " << +pReadoutChipId
-    //         << " Index in local vector is " << +cChipIndex
-    //         << " Index in data vector from CIC is " << +cIndx << RESET;
-    // auto& cDataBitset = fEventRawList[getFeIndex(pFeId)].second[cIndx];
     return cDataBitset;
 }
 
@@ -768,6 +751,7 @@ std::string D19cCic2Event::HexString() const
 
 std::string D19cCic2Event::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
 {
+    pCbcId = pCbcId%8;
     std::stringbuf tmp;
     std::ostream   os(&tmp);
     std::ios       oldState(nullptr);

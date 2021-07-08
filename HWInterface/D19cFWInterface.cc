@@ -5641,9 +5641,11 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
     // LOG (INFO) << BOLDGREEN << "Writing FE register on link " << +cLinkId << RESET;
     LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint8_t cChipId      = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
+    if( pChip->getFrontEndType() == FrontEndType::MPA ) cChipId = cChipId%8;
     uint8_t cChipAddress = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
     // +1 for CBC address
     cChipAddress += (pChip->getFrontEndType() == FrontEndType::CBC3) ? 1 : 0;
+    //LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::WriteFERegister ChipAddress " << std::hex << +cChipAddress << std::dec << " on link" << +cLinkId << RESET;
     // CBC addresses are only 8 bits
     uint32_t cSlaveData = 0x00;
     uint8_t  cNbytes    = 3;
@@ -5673,7 +5675,6 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
             if(cSuccess)
             {
                 cReadBack = ReadFERegister(pChip, pRegisterAddress);
-                ;
             }
             cIter++;
         }
@@ -5689,6 +5690,7 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
     auto cLinkId = pChip->getOpticalId();
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId      = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
+    if( pChip->getFrontEndType() == FrontEndType::MPA ) cChipId = cChipId%8;
     uint8_t cChipAddress = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
     // +1 for CBC address
     cChipAddress += (pChip->getFrontEndType() == FrontEndType::CBC3) ? 1 : 0;

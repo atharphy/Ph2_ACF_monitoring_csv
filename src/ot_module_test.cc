@@ -351,7 +351,7 @@ int main(int argc, char* argv[])
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoise cPedeNoise;
+        PedeNoiseTime cPedeNoise;
         std::vector<FrontEndType> cTypes{ FrontEndType::SSA };
         for(auto cType : cTypes )
         {

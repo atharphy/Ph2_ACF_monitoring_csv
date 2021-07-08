@@ -746,7 +746,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         {
             // only consider MPAs and CBCs
             if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
-            cFeIds.push_back(cReadoutChip->getId());
+            cFeIds.push_back(cReadoutChip->getId()%8);
         }
         fCicInterface->EnableFEs(cCic, cFeIds, true);
 
