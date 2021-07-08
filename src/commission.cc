@@ -183,8 +183,14 @@ int main(int argc, char* argv[])
                 for(auto cReadoutChip: *cHybrid)
                 {
                     if( cReadoutChip->getFrontEndType() == FrontEndType::CBC3 ) continue;
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x1);
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA ) cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x5F);
+                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ){ 
+                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 50);
+                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x1);
+                    }
+                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA ){ 
+                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 50);
+                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x5F);
+                    }
                 }
             }
         }

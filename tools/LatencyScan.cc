@@ -140,7 +140,6 @@ void LatencyScan::ScanLatency()
     }
 
     uint16_t cLat = fStartLatency; 
-    //for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     do
     {
         setSameDac("TriggerLatency", cLat);
