@@ -213,8 +213,8 @@ void LatencyScan::ScanLatency()
                                     if( cChip->getId() > 7 ) cColumn = cColumn -1; 
                                     uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
                                     uint16_t cSize  =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 1 : (cHit & 0xF) ; 
-                                    for( uint16_t cIndx=0; cIndx < cSize; cIndx++)
-                                    {
+                                    //for( uint16_t cIndx=0; cIndx < 1+cSize; cIndx++)
+                                    //{
                                         // temporary remove 
                                         //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
                                         //{ 
@@ -224,7 +224,7 @@ void LatencyScan::ScanLatency()
                                             cTotalHits++;
                                             //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
                                         //}
-                                    }
+                                    //}
                                 }// hit vector
                             }// chip vector 
                         }// hybrid vector 

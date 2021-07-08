@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x1);
                     }
                     if( cReadoutChip->getFrontEndType() == FrontEndType::MPA ){ 
-                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 50);
+                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 190);
                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x5F);
                     }
                 }
