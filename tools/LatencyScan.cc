@@ -196,10 +196,10 @@ void LatencyScan::ScanLatency()
                     //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup()); 
                     for(auto cOpticalGroup: *cBoard)
                     {
-                        auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
+                        //auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
+                            //auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
                             for(auto cChip: *cHybrid)
                             {
                                 if (cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
