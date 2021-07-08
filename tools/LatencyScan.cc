@@ -206,8 +206,9 @@ void LatencyScan::ScanLatency()
 
                                 auto& cOccChip = cOccHybrid->at(cChip->getIndex());
                                 auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                for(auto cHit: cHits)
-                                {
+                                cTotalHits += cHits.size();
+                                //for(auto cHit: cHits)
+                                //{
                                     //uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
                                     //uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
                                     //if( cChip->getId() > 7 ) cColumn = cColumn -1; 
@@ -217,10 +218,9 @@ void LatencyScan::ScanLatency()
                                         //cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
                                         //theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
                                         //cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
-                                        cTotalHits++;
                                         //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
                                     //}
-                                }// hit vector
+                                //}// hit vector
                             }// chip vector 
                         }// hybrid vector 
                     }// optical group vector 
