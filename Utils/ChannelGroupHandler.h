@@ -28,6 +28,8 @@ class ChannelGroupBase
     virtual ~ChannelGroupBase() { ; }
     virtual void
     makeTestGroup(ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const = 0;
+    uint32_t         getNumberOfRows(void) const { return numberOfRows_; }
+    uint32_t         getNumberOfCols(void) const { return numberOfCols_; }
     uint32_t         getNumberOfEnabledChannels(void) const { return numberOfEnabledChannels_; }
     virtual uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const = 0;
     virtual bool     isChannelEnabled(uint16_t row, uint16_t col = 0) const         = 0;

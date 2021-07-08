@@ -165,6 +165,7 @@ void LatencyScan::ScanLatency()
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
                 auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
+                int cTotalHits=0;
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
@@ -184,14 +185,27 @@ void LatencyScan::ScanLatency()
                             auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
                             for(auto cChip: *cHybrid)
                             {
+                                if (cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
+
                                 auto& cOccChip = cOccHybrid->at(cChip->getIndex());
                                 auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 for(auto cHit: cHits)
                                 {
-                                    if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
-                                    { 
-                                        cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
-                                        cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
+                                    //uint32_t cHit = ( (cCluster.fZpos+1) << 24) | (cCluster.fAddress) << 8 | cId << 0 ; 
+                                    uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
+                                    if( cChip->getId() > 7 ) cColumn = cColumn -1; 
+                                    uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
+                                    uint16_t cSize  =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 1 : (cHit & 0xF) ; 
+                                    for( uint16_t cIndx=0; cIndx < cSize; cIndx++)
+                                    {
+                                        // temporary remove 
+                                        //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
+                                        //{ 
+                                            cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                            cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
+                                            cTotalHits++;
+                                            //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
+                                        //}
                                     }
                                 }// hit vector
                             }// chip vector 
@@ -199,10 +213,11 @@ void LatencyScan::ScanLatency()
                     }// optical group vector 
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
-                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
-                float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
+                //cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
+                //float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 LOG (INFO) << BOLDMAGENTA << "Latency of " << (cLat+cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) 
-                    << " - on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
+                    << " - on average have found " << cTotalHits/(float)fNevents << " hits per event." << RESET;
+                //    << " - on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
                 
                 // for now don't normalize 
                 // //normalize and average TDC summary 
