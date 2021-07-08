@@ -208,16 +208,15 @@ void LatencyScan::ScanLatency()
                                 auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 for(auto cHit: cHits)
                                 {
-                                    //uint32_t cHit = ( (cCluster.fZpos+1) << 24) | (cCluster.fAddress) << 8 | cId << 0 ; 
+                                    uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
                                     uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
                                     if( cChip->getId() > 7 ) cColumn = cColumn -1; 
-                                    uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
                                     // temporary remove does not seem to be set for MPAs/SSAs
                                     //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
                                     //{ 
-                                        cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
-                                        theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
-                                        cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
+                                        //cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                        //theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
+                                        //cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
                                         cTotalHits++;
                                         //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
                                     //}
