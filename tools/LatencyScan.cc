@@ -208,9 +208,9 @@ void LatencyScan::ScanLatency()
                                 auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 for(auto cHit: cHits)
                                 {
-                                    uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
-                                    uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
-                                    if( cChip->getId() > 7 ) cColumn = cColumn -1; 
+                                    //uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
+                                    //uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
+                                    //if( cChip->getId() > 7 ) cColumn = cColumn -1; 
                                     // temporary remove does not seem to be set for MPAs/SSAs
                                     //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
                                     //{ 
