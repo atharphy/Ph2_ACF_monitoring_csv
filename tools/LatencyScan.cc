@@ -146,7 +146,7 @@ void LatencyScan::ScanLatency()
         uint16_t cOffset=0; 
         for(auto cBoard: *fDetectorContainer)
         {
-            auto cBrdIndx = cBoard->getIndex();
+            //auto cBrdIndx = cBoard->getIndex();
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             //LOG (INFO) << BOLDRED << "Reading events in scan latency.." << RESET;
             this->ReadNEvents(cBoard, fNevents);
@@ -181,7 +181,7 @@ void LatencyScan::ScanLatency()
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
-                auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
+                //auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
                 int cTotalHits=0;
                 do
                 {   
