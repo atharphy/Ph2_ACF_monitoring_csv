@@ -121,6 +121,24 @@ void LatencyScan::ScanLatency()
         }                                                                 // OG
     }                                                                     // board
 
+    // zero container 
+    // latency per hybrid
+    DetectorDataContainer theLatencyContainer;
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for( uint16_t cIndx=0; cIndx< fLatencyRange; cIndx++)
+                {
+                    theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                }
+            }// hybrid
+        } //optical group
+    }
+
     uint16_t cLat = fStartLatency; 
     //for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     do
@@ -202,6 +220,7 @@ void LatencyScan::ScanLatency()
                                         //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
                                         //{ 
                                             cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                            theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
                                             cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
                                             cTotalHits++;
                                             //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
@@ -249,15 +268,15 @@ void LatencyScan::ScanLatency()
         }//board
         cLat += cOffset; 
     }while( cLat < fStartLatency + fLatencyRange );
-    /*#ifdef __USE_ROOT__
-        fDQMHistogramLatencyScan.fillLatencyPlots(*theLatencyContainer);
+    #ifdef __USE_ROOT__
+        fDQMHistogramLatencyScan.fillLatencyPlots(theLatencyContainer);
     #else
         auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
         for(auto board: theLatencyContainer)
         {
             if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
         }
-    #endif*/
+    #endif
 }
 
 void LatencyScan::StubLatencyScan()
