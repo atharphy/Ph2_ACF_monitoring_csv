@@ -131,6 +131,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("manualScan", "Manual scan of threshold", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -351,7 +352,7 @@ int main(int argc, char* argv[])
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoiseTime cPedeNoise;
+        PedeNoise cPedeNoise;
         std::vector<FrontEndType> cTypes{ FrontEndType::SSA };
         for(auto cType : cTypes )
         {

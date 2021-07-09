@@ -9,14 +9,14 @@
     <CDCE configure="0" clockRate="320"/>
     
 
-    <OpticalGroup Id="1" FMCId="0">
+    <OpticalGroup Id="0" FMCId="0">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="2" Status="1" LinkId="0">
+        <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="201"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="5" groundothers="0"/>
@@ -26,7 +26,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
-           <!--  <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
@@ -38,8 +38,8 @@
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-             -->
-            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run871/" />
+            
+          <!--   <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run871/" />
             <CBC Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
             <CBC Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
             <CBC Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
@@ -49,10 +49,10 @@
             <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
             <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" />
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run871/" />
-            <CIC2 Id="8" configfile="BE0_OG0_FE0.txt" />
+            <CIC2 Id="8" configfile="BE0_OG0_FE0.txt" /> -->
             
         </Hybrid>
-        <Hybrid Id="3" Status="0" LinkId="0">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="201"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="5" groundothers="0"/>
