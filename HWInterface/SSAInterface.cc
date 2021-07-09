@@ -35,7 +35,7 @@ SSAInterface::~SSAInterface() {}
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
     // for now ..
-    bool              cSkipLocalRegs = false;
+    bool              cSkipLocalRegs = true;
     std::stringstream cOutput;
     setBoard(pSSA->getBeBoardId());
     pSSA->printChipType(cOutput);

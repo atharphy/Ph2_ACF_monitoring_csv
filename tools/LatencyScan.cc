@@ -252,7 +252,7 @@ void LatencyScan::ScanLatency()
                                     {
                                         cColumn = cColumn -1;
                                         theLatencyContainerS0.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
-                                        LOG (INFO) << BOLDYELLOW << "\t\t.. Hit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
+                                        LOG (INFO) << BOLDCYAN << "\t\t.. Hit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
                                     }
 
                                     // temporary remove does not seem to be set for MPAs/SSAs

@@ -253,13 +253,15 @@ int main(int argc, char* argv[])
                 {
                     if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
-                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 100);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 25);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 180);
                     }
                     if(chip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x7);
-                        static_cast<PSInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 90);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 90);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 180);
                     }
                 }
             }
