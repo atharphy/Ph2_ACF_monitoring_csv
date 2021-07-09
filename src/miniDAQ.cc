@@ -198,6 +198,8 @@ int main(int argc, char* argv[])
     int  cPSmoduleMPAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
     cSetting    = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
     int  cPSmoduleLat = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting    = cTool.fSettingsMap.find("StubWindow");
+    int  cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
             
     for(auto board: *cTool.fDetectorContainer)
     {
@@ -218,6 +220,7 @@ int main(int argc, char* argv[])
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "StubWindow", cPSmoduleWindow);
                     }
                 }
             }
