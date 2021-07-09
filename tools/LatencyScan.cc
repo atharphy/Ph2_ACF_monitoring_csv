@@ -183,6 +183,7 @@ void LatencyScan::ScanLatency()
                 fSCurveOccupancyMap[cLat+cTriggerId]         = theOccupancyContainer;
                 //auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
                 int cTotalHits=0;
+                LOG (INFO) << BOLDMAGENTA << "Latency of " << (cLat+cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult)  << RESET;
                 do
                 {   
                     if( cEventIter >= cEvents.end() ) break; 
@@ -207,11 +208,17 @@ void LatencyScan::ScanLatency()
                                 auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 cTotalHits += cHits.size();
                                 //auto& cOccChip = cOccHybrid->at(cChip->getIndex());
-                                //for(auto cHit: cHits)
-                                //{
-                                    //uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
-                                    //uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
-                                    //if( cChip->getId() > 7 ) cColumn = cColumn -1; 
+                                for(auto cHit: cHits)
+                                {
+                                    uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
+                                    uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
+                                    if( cColumn == 0 ) LOG (INFO) << BOLDYELLOW << "\t\t..Event#" <<  (*cEventIter)->GetEventCount() << " Hit in SSA" << +cChip->getId()%8 << " row " << +cRow << RESET;
+                                    else
+                                    {
+                                        cColumn = cColumn -1;
+                                        LOG (INFO) << BOLDYELLOW << "\t\t..Event#" <<  (*cEventIter)->GetEventCount() << " Hit in MPA" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
+                                    }
+
                                     // temporary remove does not seem to be set for MPAs/SSAs
                                     //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
                                     //{ 
@@ -220,7 +227,7 @@ void LatencyScan::ScanLatency()
                                         //cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
                                         //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
                                     //}
-                                //}// hit vector
+                                }// hit vector
                             }// chip vector 
                         }// hybrid vector 
                     }// optical group vector 
@@ -228,10 +235,10 @@ void LatencyScan::ScanLatency()
                 }while(cEventIter < cEvents.end());
                 //cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 //float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG (INFO) << BOLDMAGENTA << "Latency of " << (cLat+cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1+cTriggerMult) 
-                    << " - on average have found " << cTotalHits/(float)fNevents << " hits per event." << RESET;
+                LOG (INFO) << BOLDMAGENTA << "... on average have found " << cTotalHits/(float)fNevents << " hits per event." << RESET;
                 //    << " - on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
                 
+                /*
                 // for now don't normalize 
                 // //normalize and average TDC summary 
                 for( uint16_t cIndx=0; cIndx< fTDCBins; cIndx++)
@@ -254,6 +261,7 @@ void LatencyScan::ScanLatency()
                         }// hybrid
                     } //optical group
                 }//TDC bins
+                */
                 #ifdef __USE_ROOT__
                     fDQMHistogramLatencyScan.fillLatencyPlots(cLat+cTriggerId, *theOccupancyContainer, cHitContainer);
                 #endif
