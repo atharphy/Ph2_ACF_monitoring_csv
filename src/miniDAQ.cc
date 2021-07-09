@@ -566,6 +566,8 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
+                        if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                        
                         auto cHits = cEvent->GetHits( cHybrid->getId() , cChip->getId() );
                         auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId()); 
                         if( cHits.size() > 1 )
