@@ -55,6 +55,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
 
     // Histogram Fillers
     void fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary);
+    void fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1);
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
@@ -67,6 +68,8 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     DetectorDataContainer fLatencyHitMaps;
     DetectorDataContainer fLatencyTDCHistograms;
     DetectorDataContainer fLatencyHistograms;
+    DetectorDataContainer fLatencyHistogramsS0;
+    DetectorDataContainer fLatencyHistogramsS1;
     DetectorDataContainer fStubHistograms;
     DetectorDataContainer fLatencyScan2DHistograms;
     DetectorDataContainer fTriggerTDCHistograms;

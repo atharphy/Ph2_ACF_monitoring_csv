@@ -124,7 +124,10 @@ void LatencyScan::ScanLatency()
     // zero container 
     // latency per hybrid
     DetectorDataContainer theLatencyContainer;
+    DetectorDataContainer theLatencyContainerS0, theLatencyContainerS1;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainerS0);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainerS1);
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -134,6 +137,8 @@ void LatencyScan::ScanLatency()
                 for( uint16_t cIndx=0; cIndx< fLatencyRange; cIndx++)
                 {
                     theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                    theLatencyContainerS0.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                    theLatencyContainerS1.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
                 }
             }// hybrid
         } //optical group
@@ -215,18 +220,29 @@ void LatencyScan::ScanLatency()
                                     uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
                                     uint16_t cId     = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : (cHit & 0x7);
                                     cRow += cId;
-                                    if( cColumn == 0 ) LOG (INFO) << BOLDYELLOW << "\t\t Hit in SSA" << +cChip->getId()%8 << " row " << +cRow << RESET;
+                                    if( cColumn == 0 )
+                                    { 
+                                        LOG (INFO) << BOLDYELLOW << "\t\t Hit in Strip ASIC" << +cChip->getId()%8 << " row " << +cRow << RESET;
+                                        if(cChip->getFrontEndType() == FrontEndType::CBC3 )
+                                        {
+                                            if( cHit%2 == 0 ) theLatencyContainerS0.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
+                                            else theLatencyContainerS1.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
+                                        }
+                                        else theLatencyContainerS1.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
+                                            
+                                    }
                                     else
                                     {
                                         cColumn = cColumn -1;
-                                        LOG (INFO) << BOLDYELLOW << "\t\t.. Hit in MPA" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
+                                        theLatencyContainerS0.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
+                                        LOG (INFO) << BOLDYELLOW << "\t\t.. Hit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
                                     }
 
                                     // temporary remove does not seem to be set for MPAs/SSAs
                                     //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit)) 
                                     //{ 
-                                        //cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
-                                        //theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
+                                        cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                        theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId- fStartLatency] +=1;
                                         //cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
                                         //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; 
                                     //}
@@ -274,7 +290,7 @@ void LatencyScan::ScanLatency()
         cLat += cOffset; 
     }while( cLat < fStartLatency + fLatencyRange );
     #ifdef __USE_ROOT__
-        fDQMHistogramLatencyScan.fillLatencyPlots(theLatencyContainer);
+        fDQMHistogramLatencyScan.fillLatencyPlots(theLatencyContainerS0, theLatencyContainerS1);
     #else
         auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
         for(auto board: theLatencyContainer)
