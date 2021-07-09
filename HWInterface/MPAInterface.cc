@@ -228,6 +228,10 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pV
         cRegItem.fValue = pValue; 
         pChip->appendToRegMap(cReg, cRegItem);
       }
+      else
+      {
+        pChip->getRegMap().find(cReg)->second.fValue = pValue;
+      }
       
     }
     
@@ -342,6 +346,8 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t cLatencyReg2 = (0x0100 & pValue) >> 8;
         bool    cConfigReg1  = this->configRow(pMPA, "L1Offset_1", 0, cLatencyReg1);
         bool    cConfigReg2  = this->configRow(pMPA, "L1Offset_2", 0, cLatencyReg2);
+        LOG (INFO) << BOLDMAGENTA << "Setting TriggerLatency on MPA to " << pValue << RESET;
+        
         return cConfigReg1 && cConfigReg2;
     }
 
