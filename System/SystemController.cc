@@ -14,7 +14,7 @@
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
-bool cBrokenPS=true;
+bool cBrokenPS=false;
             
 namespace Ph2_System
 {
