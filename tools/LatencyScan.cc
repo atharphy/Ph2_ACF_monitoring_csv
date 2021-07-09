@@ -333,18 +333,19 @@ void LatencyScan::StubLatencyScan()
 
         LOG(INFO) << BOLDMAGENTA << "Since stub latency offset was already found to be " << +cStubOffset << " clock cycles modifying range of scan .. to start  at "
               << " a value close to the hit latency " << RESET;
+        bool cSet=false;
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->getIndex() > 0) break;
-
+            if( cSet ) continue;
             for(auto cHybrid: *cOpticalGroup)
             {
-                if(cHybrid->getIndex() > 0) break;
-
+                
+                if( cSet ) continue;
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getIndex() > 0) break;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
+                    cSet = true;
                     auto     cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
                     uint16_t cRange          = (1+cTriggerMult)*2*3;
                     cLowerLimit              = cTriggerLatency - cStubOffset - cRange / 2;
