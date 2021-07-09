@@ -192,6 +192,13 @@ int main(int argc, char* argv[])
         cBackEndAligner.Reset();
     }
 
+    auto cSetting    = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
+    int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting    = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
+    int  cPSmoduleMPAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting    = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
+    int  cPSmoduleLat = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+            
     for(auto board: *cTool.fDetectorContainer)
     {
         for(auto opticalGroup: *board)
@@ -203,14 +210,14 @@ int main(int argc, char* argv[])
                     if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 25);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 180);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat);
                     }
                     if(chip->getFrontEndType() == FrontEndType::MPA)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 90);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 181);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat);
                     }
                 }
             }
