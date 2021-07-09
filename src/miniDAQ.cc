@@ -180,6 +180,8 @@ int main(int argc, char* argv[])
         // cCicAligner.dumpConfigFiles();
     }
 
+    
+
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
@@ -188,34 +190,59 @@ int main(int argc, char* argv[])
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
         cBackEndAligner.Reset();
-        // when I get here .. I want to update the common_stub_data_delay 
-        // then I am sure that I should see stubs as long as the 
-        // correct hit latency is set 
-        for(auto cBoard: *cBackEndAligner.fDetectorContainer)
+    }
+
+    for(auto board: *cTool.fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
         {
-            auto cStubOffset    = cBoard->getStubOffset();
-            uint16_t cTriggerLatency=0; 
-            uint8_t  cReTimePix=0;
-            for(auto cOpticalReadout: *cBoard)
+            for(auto hybrid: *opticalGroup)
             {
-                if(cOpticalReadout->getIndex() > 0) break;
-                for(auto cHybrid: *cOpticalReadout)
+                for(auto chip: *hybrid)
                 {
-                    if(cHybrid->getIndex() > 0) break;
-                    for(auto cReadoutChip: *cHybrid)
+                    if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) continue;
-                        if( cTriggerLatency != 0 ) continue; 
-                        cTriggerLatency = cBackEndAligner.fReadoutChipInterface->ReadChipReg(cReadoutChip, "TriggerLatency");
-                        if( cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cBackEndAligner.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 25);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 180);
+                    }
+                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 90);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 181);
                     }
                 }
             }
-            uint32_t cStubDataDelay = cTriggerLatency - (cStubOffset + cReTimePix);
-            LOG (INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
-            LOG (INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
-            cBackEndAligner.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDelay);
         }
+    }
+    // when I get here .. I want to update the common_stub_data_delay 
+    // then I am sure that I should see stubs as long as the 
+    // correct hit latency is set 
+    for(auto cBoard: *cTool.fDetectorContainer)
+    {
+        auto cStubOffset    = cBoard->getStubOffset();
+        uint16_t cTriggerLatency=0; 
+        uint8_t  cReTimePix=0;
+        for(auto cOpticalReadout: *cBoard)
+        {
+            if(cOpticalReadout->getIndex() > 0) break;
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                if(cHybrid->getIndex() > 0) break;
+                for(auto cReadoutChip: *cHybrid)
+                {
+                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                    if( cTriggerLatency != 0 ) continue; 
+                    cTriggerLatency = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "TriggerLatency");
+                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
+                }
+            }
+        }
+        uint32_t cStubDataDelay = cTriggerLatency - (cStubOffset + cReTimePix);
+        LOG (INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
+        LOG (INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
+        cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDelay);
     }
 
     // check for TP
@@ -243,30 +270,7 @@ int main(int argc, char* argv[])
         }     //
     }//
 
-    for(auto board: *cTool.fDetectorContainer)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                for(auto chip: *hybrid)
-                {
-                    if(chip->getFrontEndType() == FrontEndType::SSA)
-                    {
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 25);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 180);
-                    }
-                    if(chip->getFrontEndType() == FrontEndType::MPA)
-                    {
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", 90);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", 180);
-                    }
-                }
-            }
-        }
-    }
+
 
     uint32_t numberOfResyncs = 0;
     if(cmd.foundOption("sendResync"))
