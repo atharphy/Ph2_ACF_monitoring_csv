@@ -147,7 +147,24 @@ void LatencyScan::ScanLatency()
     uint16_t cLat = fStartLatency; 
     do
     {
-        setSameDac("TriggerLatency", cLat);
+        //setSameDac("TriggerLatency", cLat);
+        // SSA latency -1 all other chips
+        for(auto cBoard: *fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for( auto cChip : * cHybrid) 
+                    {
+                        if( cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cLat-1);
+                        else fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency",cLat);
+                    }
+                }
+            }
+        }
+
+        
         uint16_t cOffset=0; 
         for(auto cBoard: *fDetectorContainer)
         {

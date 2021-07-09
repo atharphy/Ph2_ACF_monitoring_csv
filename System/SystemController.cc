@@ -14,7 +14,7 @@
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
-bool cBrokenPS=true;
+bool cBrokenPS=false;
             
 namespace Ph2_System
 {
@@ -868,7 +868,7 @@ bool SystemController::CicBeAlignment(const OpticalGroup* pOpticalGroup )
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
     bool cAligned = true;
-    bool cL1Debug      = true;
+    bool cL1Debug      = false;
     if(!(*cBoardIter)->isOptical()) cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1PhaseTuning((*cBoardIter), cL1Debug);
     if(!cAligned)
     {
@@ -901,7 +901,7 @@ bool SystemController::CicBeAlignment(const OpticalGroup* pOpticalGroup )
         auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
         cIsPS          = cIsPS || cSSAfound;
     }
-    bool cStubDebug     = true;
+    bool cStubDebug     = false;
     size_t cNlines = cIsPS ? 6 : 5;
     LOG(INFO) << BOLDMAGENTA << "SystemController::CicBeAlignment ... stub alignment on " << +cNlines << "/6 lines from CIC.." << RESET;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning((*cBoardIter), cStubDebug, cNlines);

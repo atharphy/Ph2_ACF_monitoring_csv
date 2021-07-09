@@ -1751,7 +1751,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
         auto cRegName = it.first;
         if(cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos)
         {
-            LOG (INFO) << BOLDBLUE << "Setting " << cRegName << " back to original value of  " << it.second << RESET;
+            //LOG (INFO) << BOLDBLUE << "Setting " << cRegName << " back to original value of  " << it.second << RESET;
             cVecReg.push_back({it.first, it.second});
         }
     }
