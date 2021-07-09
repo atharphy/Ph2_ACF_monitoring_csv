@@ -174,22 +174,34 @@ int main(int argc, char* argv[])
 
     // hack 
     // make sure MPAs and SSAs have all pixels enabled 
-    for(auto cBoard: *cTool.fDetectorContainer)
+    auto cSetting    = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
+    int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting    = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
+    int  cPSmoduleMPAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting    = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
+    int  cPSmoduleLat = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting    = cTool.fSettingsMap.find("PSmoduleStubWindow");
+    int  cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    for(auto board: *cTool.fDetectorContainer)
     {
-        for(auto cOpticalReadout: *cBoard)
+        for(auto opticalGroup: *board)
         {
-            for(auto cHybrid: *cOpticalReadout)
+            for(auto hybrid: *opticalGroup)
             {
-                for(auto cReadoutChip: *cHybrid)
+                for(auto chip: *hybrid)
                 {
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::CBC3 ) continue;
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ){ 
-                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 25);
-                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x1);
+                    if(chip->getFrontEndType() == FrontEndType::SSA)
+                    {
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat-1);
                     }
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA ){ 
-                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 140);
-                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x5F);
+                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "StubWindow", cPSmoduleWindow);
                     }
                 }
             }
