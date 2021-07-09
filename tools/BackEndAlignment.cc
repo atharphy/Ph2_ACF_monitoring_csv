@@ -576,6 +576,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 // uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
                 fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                 fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", (0x1 << 0));
+                fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", (0x0 << 0));
                 fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
                 for(auto cRow: cRows)
                 {

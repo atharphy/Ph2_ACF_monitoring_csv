@@ -39,8 +39,10 @@ class PedestalEqualization : public Tool
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
+    void Reset();
 
   private:
+    std::vector<EventType> fEventTypes;
     // Settings
     bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};

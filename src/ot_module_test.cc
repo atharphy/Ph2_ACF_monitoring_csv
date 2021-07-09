@@ -336,7 +336,8 @@ int main(int argc, char* argv[])
             cPedestalEqualization.FindOffsets();
             cTool.fDetectorContainer->resetReadoutChipQueryFunction();
         }
-        // // second parameter disables stub logic on CBC3
+        cPedestalEqualization.Reset();
+        // second parameter disables stub logic on CBC3
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
@@ -363,6 +364,7 @@ int main(int argc, char* argv[])
             cPedeNoise.measureNoise();
             cTool.fDetectorContainer->resetReadoutChipQueryFunction();
         }
+        cPedeNoise.Reset();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();

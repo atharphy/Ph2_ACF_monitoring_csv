@@ -45,7 +45,7 @@ class PedeNoise : public Tool
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
-
+    void Reset();
   protected:
     uint16_t findPedestal(bool forceAllChannels = false);
     void     measureSCurves(uint16_t pStartValue = 0);
@@ -67,6 +67,7 @@ class PedeNoise : public Tool
 
   private:
     // to hold the original register values
+    std::vector<EventType> fEventTypes;
     DetectorDataContainer* fStubLogicValue;
     DetectorDataContainer* fHIPCountValue;
     bool                   cWithCBC = true;

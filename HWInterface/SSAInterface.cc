@@ -35,7 +35,7 @@ SSAInterface::~SSAInterface() {}
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
     // for now ..
-    bool              cSkipLocalRegs = true;
+    bool              cSkipLocalRegs = false;
     std::stringstream cOutput;
     setBoard(pSSA->getBeBoardId());
     pSSA->printChipType(cOutput);
@@ -72,7 +72,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     if(cSkipLocalRegs)
         LOG(INFO) << BOLDBLUE << "Configuring SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual strips]" << RESET;
     else
-        LOG(INFO) << BOLDBLUE << "Complete configuration of SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual strips]" << RESET;
+        LOG(INFO) << BOLDBLUE << "Complete configuration of SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [configuring registers for individual strips]" << RESET;
     return this->WriteRegs(pSSA, cRegs, pVerifLoop);
 }
 

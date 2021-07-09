@@ -71,8 +71,12 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     // for now.. force to use async mode here
     bool cForcePSasync = true;
+    // event types 
+
+    fEventTypes.clear();
     for(auto cBoard: *fDetectorContainer)
     {
+        fEventTypes.push_back(cBoard->getEventType());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -100,6 +104,31 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 #endif
 }
 
+void PedeNoise::Reset()
+{
+    size_t cIndx=0;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(fEventTypes[cIndx]== EventType::PSAS) continue;
+        cBoard->setEventType(fEventTypes[cIndx]);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto cType    = FrontEndType::SSA;
+                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType         = FrontEndType::MPA;
+                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                if(!cWithSSA && !cWithMPA) continue;
+
+                for(auto cROC: *cHybrid)
+                {
+                    fReadoutChipInterface->WriteChipReg(cROC, "ReadoutMode", 0);
+                }
+            }
+        }    
+    }
+}
 void PedeNoise::disableStubLogic()
 {
     fStubLogicValue = new DetectorDataContainer();

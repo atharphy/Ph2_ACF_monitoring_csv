@@ -66,8 +66,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     // for now.. force to use async mode here
     bool cForcePSasync = true;
+    fEventTypes.clear();
     for(auto cBoard: *fDetectorContainer)
     {
+        fEventTypes.push_back(cBoard->getEventType());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -128,7 +130,31 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     LOG(INFO) << "  Target Vcth determined algorithmically for ROC";
     LOG(INFO) << "  Target Offset fixed to half range (0x80) for ROC";
 }
+void PedestalEqualization::Reset()
+{
+    size_t cIndx=0;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(fEventTypes[cIndx]== EventType::PSAS) continue;
+        cBoard->setEventType(fEventTypes[cIndx]);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto cType    = FrontEndType::SSA;
+                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType         = FrontEndType::MPA;
+                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                if(!cWithSSA && !cWithMPA) continue;
 
+                for(auto cROC: *cHybrid)
+                {
+                    fReadoutChipInterface->WriteChipReg(cROC, "ReadoutMode", 0);
+                }
+            }
+        }    
+    }
+}
 void PedestalEqualization::FindVplus()
 {
     float cOccupancyAtPedestal = fOccupancyAtPedestal;
