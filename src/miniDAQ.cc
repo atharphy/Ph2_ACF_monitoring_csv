@@ -567,13 +567,26 @@ int main(int argc, char* argv[])
                     for(auto cChip: *cHybrid)
                     {
                         if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-                        
+
                         auto cHits = cEvent->GetHits( cHybrid->getId() , cChip->getId() );
                         auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId()); 
-                        if( cHits.size() > 1 )
+                        LOG (INFO) << BOLDBLUE << "\t\t.. found " << +cHits.size() << " and " << +cStubVector.size() << " stubs." << RESET;
+                        for(auto cHit: cHits)
                         {
-                            LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size() << " stubs." << RESET;
-                        }
+                            uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
+                            uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
+                            uint16_t cId     = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : (cHit & 0x7);
+                            cRow += cId;
+                            if( cColumn == 0 )
+                            { 
+                                LOG (INFO) << BOLDYELLOW << "\t\t\t Hit in Strip ASIC" << +cChip->getId()%8 << " row " << +cRow << RESET;
+                            }
+                            else
+                            {
+                                cColumn = cColumn -1;
+                                LOG (INFO) << BOLDCYAN << "\t\t\t.. Hit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
+                            }
+                        }// hit vector
                     }
                 } // hybrid
             }     // optical group
