@@ -195,6 +195,7 @@ void LatencyScan::ScanLatency()
                     else
                         cTDCVal -= cTDCShiftValue;
                     //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup()); 
+                    //LOG (INFO) << BOLDYELLOW << "\t Event#" <<  (*cEventIter)->GetEventCount() << RESET;
                     for(auto cOpticalGroup: *cBoard)
                     {
                         //auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
@@ -212,11 +213,13 @@ void LatencyScan::ScanLatency()
                                 {
                                     uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
                                     uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
-                                    if( cColumn == 0 ) LOG (INFO) << BOLDYELLOW << "\t\t..Event#" <<  (*cEventIter)->GetEventCount() << " Hit in SSA" << +cChip->getId()%8 << " row " << +cRow << RESET;
+                                    uint16_t cId     = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : (cHit & 0x7);
+                                    cRow += cId;
+                                    if( cColumn == 0 ) LOG (INFO) << BOLDYELLOW << "\t\t Hit in SSA" << +cChip->getId()%8 << " row " << +cRow << RESET;
                                     else
                                     {
                                         cColumn = cColumn -1;
-                                        LOG (INFO) << BOLDYELLOW << "\t\t..Event#" <<  (*cEventIter)->GetEventCount() << " Hit in MPA" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
+                                        LOG (INFO) << BOLDYELLOW << "\t\t.. Hit in MPA" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
                                     }
 
                                     // temporary remove does not seem to be set for MPAs/SSAs
