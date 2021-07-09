@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
     int  cPSmoduleMPAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
     cSetting    = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
     int  cPSmoduleLat = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting    = cTool.fSettingsMap.find("StubWindow");
+    cSetting    = cTool.fSettingsMap.find("PSmoduleStubWindow");
     int  cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
             
     for(auto board: *cTool.fDetectorContainer)

@@ -191,6 +191,7 @@
     <Setting name="PSmoduleSSAthreshold">120</Setting>
     <Setting name="PSmoduleMPAthreshold">120</Setting>
     <Setting name="PSmoduleTriggerLatency">180</Setting>
+    <Setting name="PSmoduleStubWindow">32</Setting>
 
     <Setting name="StubAlignmentScanStart">85</Setting>
     <Setting name="SaveRawData">1</Setting>
