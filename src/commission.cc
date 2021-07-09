@@ -185,11 +185,11 @@ int main(int argc, char* argv[])
                     if( cReadoutChip->getFrontEndType() == FrontEndType::CBC3 ) continue;
                     if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ){ 
                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 25);
-                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x1);
+                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x0);
                     }
                     if( cReadoutChip->getFrontEndType() == FrontEndType::MPA ){ 
                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 140);
-                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x00);//0x5F);
+                        cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "ENFLAGS_ALL", 0x5F);
                     }
                 }
             }
