@@ -889,7 +889,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             for(auto cChip: *cHybrid)
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                                cIds.push_back(cChip->getId());
+                                cIds.push_back(cChip->getId()%8);
                             }
                             
                             for(auto cId : cIds )
@@ -897,12 +897,10 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 for(auto cChip: *cHybrid)
                                 {
                                     if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
-                                    if(cChip->getId() != cId ) continue; 
+                                    if(cChip->getId()%8 != cId ) continue; 
                                     
                                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                     fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
-                                    // p-p mode. . don't inject 
-                                    if(cMode == 2 ) continue;
                                     for(auto cInjection: cInjectionScheme[cAttempt])
                                     {
                                         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9);
@@ -911,84 +909,19 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 for(auto cChip: *cHybrid)
                                 {
                                     if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                                    if( cChip->getId() != cId ) continue; 
+                                    if( cChip->getId()%8 != cId ) continue; 
                                     
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                                     (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
                                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                                    // s-s mode .. don't inject 
-                                    if(cMode == 1 ) continue;
                                     uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
                                     (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjectionScheme[cAttempt], cPattern);
                                 }
                             }
-                            // for(auto cChip: *cHybrid)
-                            // {
-                            //     if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
-                            //     if(cMode == 2) continue; // if in pixel-pixel mode then don't inject in the SSAs
-
-                            //     // quick test
-                            //     auto cStrpClstrs = GeneratePSstrpClusters(cMaxClustersPerSSA);
-                            //     // make sure all channels are masked
-                            //     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                            //     if(cChip->getIndex() >= cLastMPA) continue;
-                            //     if(cStrpClstrs.size() == 0) continue;
-
-                            //     uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
-                            //     fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", cPattern);
-                            //     fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
-                            //     // LOG (INFO) << BOLDGREEN << "List of " <<  cStrpClstrs.size() << " strip clusters for SSA#" << +cChip->getId() << RESET;
-                            //     std::sort(cStrpClstrs.begin(), cStrpClstrs.end());
-                            //     for(auto cRow: cStrpClstrs)
-                            //     {
-                            //         Injection cInj;
-                            //         cInj.fRow    = cRow;
-                            //         cInj.fColumn = 0;
-                            //         cInj.fFeId   = cChip->getId();
-                            //         cInjs.push_back(cInj);
-                            //         // LOG(INFO) << BOLDMAGENTA << "\t...Injecting in"
-                            //         //            << " strip#" << +cRow << " in SSA#" << +cChip->getId() << RESET;
-                            //         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cRow), 0x9);
-                            //     } // configure digi injection in strips
-                            // }
-                            // // configure MPAs
-                            // for(auto cChip: *cHybrid)
-                            // {
-                            //     if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                            //     // if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
-
-                            //     auto cPxlInjections = GeneratePSpxlClusters(cMaxClustersPerMPA);
-                            //     // activate stub mode
-                            //     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
-                            //     fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
-                            //     // mask all pixels first
-                            //     (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
-                            //     if(cChip->getIndex() >= cLastMPA) continue;
-                            //     if(cPxlInjections.size() == 0) continue;
-
-                            //     // LOG (INFO) << BOLDGREEN << "List of " <<  cPxlInjections.size() << " pxl clusters for MPA#" << +cChip->getId() << RESET;
-                            //     uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
-                            //     (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cPxlInjections, cPattern);
-                            //     std::sort(std::begin(cPxlInjections), std::end(cPxlInjections), [](Injection a, Injection b) { return a.fRow < b.fRow; });
-                            //     std::sort(std::begin(cPxlInjections), std::end(cPxlInjections), [](Injection a, Injection b) { return a.fColumn < b.fColumn; });
-
-                            //     for(auto cInjection: cPxlInjections)
-                            //     {
-                            //         Injection cInj;
-                            //         cInj.fRow    = cInjection.fRow;
-                            //         cInj.fColumn = cInjection.fColumn;
-                            //         cInj.fFeId   = 8 + cChip->getId();
-                            //         cInjs.push_back(cInj);
-                            //         // LOG(INFO) << BOLDMAGENTA << "\t...Injecting in"
-                            //         //            << " col#" << +cInjection.fRow
-                            //         //            << " row#" << +cInjection.fColumn
-                            //         //            << " in MPA#" << +cChip->getId() << RESET;
-                            //     }
-                            // }
                         } // hybrid
-                    }     // module
-                }         // boards - injections
+                    }// module
+                }// boards - injections
                 
                 
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFCMDBram(fFastCommands);
@@ -1094,6 +1027,18 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                             << fPSevent.fStubSize 
                                             << " stubs"
                                             << RESET;
+                                        for(auto cCluster : cPclstrs )
+                                        {
+                                            LOG (INFO) << BOLDYELLOW << "P-cluster in row " << +cCluster.fAddress
+                                                << " column " << +cCluster.fZpos << " width is " << +cCluster.fWidth
+                                                << RESET;
+                                        }
+                                        for(auto cCluster : cSclstrs )
+                                        {
+                                            LOG (INFO) << BOLDCYAN << "S-cluster in row " << +cCluster.fAddress
+                                                << " column " << (0) << " width is " << +cCluster.fWidth
+                                                << RESET;
+                                        }
                                         if( fPSevent.fStubSize != 0 )
                                         {
                                             std::sort(std::begin(cStubs), std::end(cStubs), [](Stub a, Stub b) { return a.getRow() < b.getRow(); });

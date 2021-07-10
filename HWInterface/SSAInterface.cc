@@ -175,7 +175,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         bool        cReadoutMode = WriteChipSingleReg(pSSA, "ReadoutMode", 0x00, pVerifLoop);
         std::string cRegName;
-        if(pRegName.find("R") != std::string::npos) // global
+        if(pRegName.find("S") != std::string::npos) // global
         {
             cRegName = "ENFLAGS_ALL";
         }

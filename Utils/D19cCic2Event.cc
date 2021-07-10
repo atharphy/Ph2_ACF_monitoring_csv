@@ -185,11 +185,10 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 
                                     fNPxlClusters[cFe->getIndex()]   = cNPxlClusters;
                                     fNStripClusters[cFe->getIndex()] = cNStripClusters;
+                                    //LOG(INFO) << BOLDCYAN << "\t..Found:" << +cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
 
                                     // split stream into s and p clusters
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
-                                    //LOG(INFO) << BOLDCYAN << "\t..Found:" << +cNStripClusters << " s-clusters and " << +cNPxlClusters << " p-clusters in this event " << RESET;
-
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
                                     for(auto cL1Word: cL1SWords)
                                     {
