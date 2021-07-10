@@ -328,7 +328,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     // scan phase and check L1
     std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinations; 
     cGoodCombinations.clear();
-    for( uint8_t cPhase = 1; cPhase < 4; cPhase++) 
+    for( uint8_t cPhase = 0; cPhase < 8; cPhase++) 
     {
         for(uint8_t cWord = 0; cWord < 16; cWord++)
         {
@@ -350,7 +350,6 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
             if( cEvents.size() == 0 ) continue;
 
             LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
-            LOG(INFO) << BOLDBLUE << "Checking phase by looking at " << +cEvents.size() << " events read-back from the FC7 ..." << RESET;
             // start at the beginning + trigger id in burst 
             size_t cMatchedEvents=0;
             for( size_t cTriggerId=1; cTriggerId < 2 ; cTriggerId++)
@@ -370,16 +369,16 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                 if (cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
                                 auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                 auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                                << " MPA" << +cChip->getId() << " found " << cSclus.size()
+                                                << " S clusters and " 
+                                                << cPclus.size() 
+                                                << " P clusters in L1 data from MPA#" << +cChip->getId()
+                                                << RESET;
                                 cNmatch = cNmatch && ( cSclus.size() == cInjections.size() && cPclus.size() == cInjections.size() ) ;
                                 cFmatch = cNmatch; 
                                 if( cNmatch ) 
                                 {
-                                    // LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
-                                    //             << " MPA" << +cChip->getId() << " found " << cSclus.size()
-                                    //             << " S clusters and " 
-                                    //             << cPclus.size() 
-                                    //             << " P clusters in L1 data from MPA#" << +cChip->getId()
-                                    //             << RESET;
                                     for( size_t cIndx=0; cIndx < cInjections.size(); cIndx++)
                                     {
                                         cFmatch = cFmatch && ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress); 
