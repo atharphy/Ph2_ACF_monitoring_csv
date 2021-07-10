@@ -452,7 +452,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
         uint8_t cEndPhase = cComb.first+2;
         std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinationsStubs; 
         cGoodCombinationsStubs.clear();
-        for(int cStubAddDelay = -5; cStubAddDelay <= 5 ; cStubAddDelay++)
+        int cGoodStubDelay=0;
+        for(int cStubAddDelay = 0; cStubAddDelay <= 5 ; cStubAddDelay++)
         { 
             LOG (INFO) << BOLDMAGENTA << "Additional stub data delay of " << cStubAddDelay << RESET;
             for(uint8_t cPhase = cStartPhase; cPhase < cEndPhase; cPhase++)
@@ -474,6 +475,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                             }
                         }
                     }
+
                     //LOG (INFO) << BOLDYELLOW  << "Writing common_stubdata_delay " << cStubDelay << " [ReTime pix is set to " << +cRetime << " ]" << std::endl;
                     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDelay);
                     ReadNEvents(pBoard, cNevents);
@@ -498,7 +500,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                         auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                         auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
                                         auto cStubs = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-                                        cNmatch = cNmatch && (cStubs.size() == cInjections.size());
+                                        cNmatch = cNmatch && (cStubs.size() == cInjections.size() && cPclus.size() == cInjections.size() && cSclus.size() == cInjections.size() );
                                         if( cStubs.size() != 0 ) 
                                             LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
                                                                 << " MPA" << +cChip->getId() << " found " << cSclus.size()
@@ -524,7 +526,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                             cMatchedEvents += (cNmatch) ? 1 : 0; 
                         }while(cEventIter < cEvents.end());
                         if( cMatchedEvents == cNevents*cFraction ) 
-                        { 
+                        {
+                            cGoodStubDelay = cStubAddDelay; 
                             std::pair<uint8_t, uint8_t> cComb; 
                             cComb.first = cPhase;
                             cComb.second = cRetime;
@@ -538,6 +541,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                 } 
             }
         }
+        pBoard->setStubOffset(pBoard->getStubOffset() + cGoodStubDelay);
 
         LOG (INFO) << BOLDMAGENTA << "Summary of SSA-MPA data alignment" << RESET;
         LOG (INFO) << BOLDMAGENTA << "LatencyRx320 of " << +cComb.first << " , LatencyRx40 " << +cComb.second << " full matching of S-clusters in MPA data" << RESET;
