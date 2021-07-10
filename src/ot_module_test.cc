@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
     }
     // 
     cPSAlignment.Align();
-
+    cPSAlignment.dumpConfigFiles();
 
     // equalize thresholds on readout chips
     if(cTune)
