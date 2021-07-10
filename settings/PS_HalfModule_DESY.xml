@@ -2,16 +2,8 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1">
-    <!-- PS  module CERN-->
-    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
-    <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <!-- PS half module FNAL-->
-    <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <!-- B598 skeleton, direct powering -->
-    <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <!-- B14 skeleton, POH -->
-    <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
-     <CDCE configure="0" clockRate="320"/>
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.21.200:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
@@ -25,29 +17,11 @@
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
-           <!--  <SSA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run44/" />
-            <SSA Id="2" configfile="BE0_OG0_FE0_Chip2SSA.txt" /> 
-            
-            --> 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="1" configfile="SSA.txt" /> 
             
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA Id="9" configfile="MPA.txt" /> 
-            
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
-        </Hybrid>
-        <Hybrid Id="1" Status="0" LinkId="0">
-            <Global>
-               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
-            </Global>
-
-            <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="4" configfile="SSA.txt" /> 
-            
-            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="11" configfile="MPA.txt" /> 
             
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
