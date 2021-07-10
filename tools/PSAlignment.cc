@@ -425,8 +425,10 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
         }
     }
 
+    size_t cL1CombIndx=0;
     for(auto cComb : cGoodCombinations)
     {
+        if( cL1CombIndx > 0 ) continue;
         // now run stub alignment procedure 
         LOG (INFO) << BOLDYELLOW << "Scanning Stub alignment parameters for L1 alignmnet parameters.." << RESET;
         for(auto cOpticalReadout: *pBoard)
@@ -561,7 +563,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                     }
                 }
             }
-        }    
+        }
+        cL1CombIndx++;    
     }
 
     // for(uint8_t cChipId = 0+8; cChipId < 8+8; cChipId++)
