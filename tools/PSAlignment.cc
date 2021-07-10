@@ -276,14 +276,15 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
     auto cTriggerMult = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t cNevents = 10;
 
-    uint8_t cStartPhaseL1 = 0; //3 
-    uint8_t cStopPhaseL1 = 8; // 5 
+    uint8_t cStartPhaseL1 = 2; //3 
+    uint8_t cStopPhaseL1 = 5; // 5 
+    bool cOnlyFirst = true;
     for( uint8_t cPhase = cStartPhaseL1; cPhase < cStopPhaseL1; cPhase++) 
     {
-        if( cGoodCombinations.size() > 0 ) continue; //for now .. only the first one 
+        if( cOnlyFirst && cGoodCombinations.size() > 0 ) continue; //for now .. only the first one 
         for(uint8_t cWord = 0; cWord < 16; cWord++)
         {
-            if( cGoodCombinations.size() > 0 ) continue; //for now .. only the first one
+            if( cOnlyFirst &&  cGoodCombinations.size() > 0 ) continue; //for now .. only the first one
             fReadoutChipInterface->WriteChipReg(pChip, "L1InputPhase", cPhase);
             fReadoutChipInterface->WriteChipReg(pChip, "LatencyRx40", cWord); 
 
