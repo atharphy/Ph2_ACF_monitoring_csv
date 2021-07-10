@@ -27,14 +27,14 @@
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" /> 
-            <!-- <SSA Id="1" configfile="SSA.txt" /> 
+            <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
-             -->
+            
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA Id="8" configfile="MPA.txt" /> 
-            <!-- <MPA Id="9" configfile="MPA.txt" /> 
+            <MPA Id="9" configfile="MPA.txt" /> 
             <MPA Id="10" configfile="MPA.txt" /> 
- -->
+
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
@@ -265,7 +265,7 @@
     <Setting name="MaxPclusters">3</Setting>
     <Setting name="MinSclusters">1</Setting>
     <Setting name="MaxSclusters">1</Setting>
-    <Setting name="MaxStubs">4</Setting>
+    <Setting name="MaxStubs">8</Setting>
     <!-- L1 eye, SLVS drive strength --> 
     <Setting name="SLVSDrive">3</Setting>
     <Setting name="MaxOffset">0</Setting>

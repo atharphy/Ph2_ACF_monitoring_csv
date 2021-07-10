@@ -916,7 +916,12 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                     (static_cast<PSInterface*>(fReadoutChipInterface))->WriteChipReg(cChip, "DigitalSync", 0x00);
                                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                     uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
-                                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjectionScheme[cAttempt], cPattern);
+                                    std::vector<Injection> cMPAInj; cMPAInj.clear();
+                                    for( size_t cInjIndx=0; cInjIndx < cInjectionScheme[cAttempt].size(); cInjIndx++)
+                                    {
+                                        if( cInjIndx == cInjectionScheme[cAttempt].size() - (1+cAttempt%cMaxNstubs) ) cMPAInj.push_back( cInjectionScheme[cAttempt].at(cInjIndx) );
+                                    }
+                                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cMPAInj, cPattern);
                                 }
                             }
                         } // hybrid
@@ -2206,7 +2211,7 @@ std::vector<Injection> DataChecker::GenerateInjections(int pMaxClusters, int pMa
 // strip-pixel mode
 std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
 {
-    int                    cClosestColAllowed = 1;
+    //int                    cClosestColAllowed = 1;
     std::vector<Injection> cInjections(0);
 
     // random c++
@@ -2215,8 +2220,8 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
     std::mt19937       cGen{cRndm()};
 
     // generate injections in this MPA
-    std::uniform_int_distribution<int> cFlatDistSeeds(2, 13);
-    std::uniform_int_distribution<int> cFlatDistStrips(5, 110);
+    //std::uniform_int_distribution<int> cFlatDistSeeds(2, 13);
+    //std::uniform_int_distribution<int> cFlatDistStrips(5, 110);
     std::uniform_int_distribution<int> cNStubDist(1, pMaxNstubs);
 
     std::vector<uint8_t>  cColumns(0); // 5 , 10 };
@@ -2233,71 +2238,77 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
     do {
         // Seed
         Injection cInjection;
-        cInjection.fColumn = (cFlatDistSeeds(cGen));
-        cInjection.fRow    = (cFlatDistStrips(cGen));
+        cInjection.fColumn = 1 + cPixelIds.size();//(cFlatDistSeeds(cGen));
+        cInjection.fRow    = (1 + cPixelIds.size())*10;//(cFlatDistStrips(cGen));
         uint32_t cPixelId  = (uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow;
-        if(std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) == cPixelIds.end())
-        {
-            // never inject in the same row more than once
-            // confusing when it comes to checking SSA data
-            // check if you've already injected in this row
-            bool cInject = (cColumns.size() == 0);
-            if(std::find(cRows.begin(), cRows.end(), cInjection.fRow) == cRows.end() && !cInject)
-            {
-                // check that you're at least one row away
-                std::vector<float> cTmpR(cRows.size(), 0);
-                std::transform(cRows.begin(), cRows.end(), cTmpR.begin(), [&](float el) { return std::fabs(el - cInjection.fRow); });
-                std::sort(cTmpR.begin(), cTmpR.end());
-                cTmpR.erase(unique(cTmpR.begin(), cTmpR.end()), cTmpR.end());
-                cInject = (cTmpR[0] > cClosestColAllowed);
+        cPixelIds.push_back(cPixelId);
+        cInjections.push_back(cInjection);
+        cColumns.push_back(cInjection.fColumn);
+        cRows.push_back(cInjection.fRow);
+        cTotalNumberOfStubs += 1;
 
-                if(!cInject) continue;
+        // if(std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) == cPixelIds.end())
+        // {
+        //     // never inject in the same row more than once
+        //     // confusing when it comes to checking SSA data
+        //     // check if you've already injected in this row
+        //     bool cInject = (cColumns.size() == 0);
+        //     if(std::find(cRows.begin(), cRows.end(), cInjection.fRow) == cRows.end() && !cInject)
+        //     {
+        //         // check that you're at least one row away
+        //         std::vector<float> cTmpR(cRows.size(), 0);
+        //         std::transform(cRows.begin(), cRows.end(), cTmpR.begin(), [&](float el) { return std::fabs(el - cInjection.fRow); });
+        //         std::sort(cTmpR.begin(), cTmpR.end());
+        //         cTmpR.erase(unique(cTmpR.begin(), cTmpR.end()), cTmpR.end());
+        //         cInject = (cTmpR[0] > cClosestColAllowed);
 
-                if( cColumns.size() > 0 )
-                {
-                    // check that you're at least one column away from anything 
-                    std::vector<float> cTmpC(cColumns.size(), 0);
-                    std::transform(cColumns.begin(), cColumns.end(), cTmpC.begin(), [&](float el) { return std::fabs(el - cInjection.fColumn); });
-                    std::sort(cTmpC.begin(), cTmpC.end());
-                    cTmpC.erase(unique(cTmpC.begin(), cTmpC.end()), cTmpC.end());
-                    cInject = (cTmpC[0] > cClosestColAllowed);
-                }
+        //         if(!cInject) continue;
+
+        //         if( cColumns.size() > 0 )
+        //         {
+        //             // check that you're at least one column away from anything 
+        //             std::vector<float> cTmpC(cColumns.size(), 0);
+        //             std::transform(cColumns.begin(), cColumns.end(), cTmpC.begin(), [&](float el) { return std::fabs(el - cInjection.fColumn); });
+        //             std::sort(cTmpC.begin(), cTmpC.end());
+        //             cTmpC.erase(unique(cTmpC.begin(), cTmpC.end()), cTmpC.end());
+        //             cInject = (cTmpC[0] > cClosestColAllowed);
+        //         }
                 
-                if(!cInject) continue;
+        //         if(!cInject) continue;
 
-                // ok .. have not so this is good
-                // figure out how far away I an noq
-                // std::vector<float> cTmp(cPixelIds.size(), 0);
-                // std::transform(cPixelIds.begin(), cPixelIds.end(), cTmp.begin(), [&](float el) { return std::fabs(el - ((uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow)); });
-                // std::sort(cTmp.begin(), cTmp.end());
-                // cTmp.erase(unique(cTmp.begin(), cTmp.end()), cTmp.end());
-                // // if the smallest distance is < x .. don't inject
-                // cInject = (cTmp[0] >= cClosestColAllowed);
+        //         // ok .. have not so this is good
+        //         // figure out how far away I an noq
+        //         // std::vector<float> cTmp(cPixelIds.size(), 0);
+        //         // std::transform(cPixelIds.begin(), cPixelIds.end(), cTmp.begin(), [&](float el) { return std::fabs(el - ((uint32_t)(cInjection.fColumn) * 120 + (uint32_t)cInjection.fRow)); });
+        //         // std::sort(cTmp.begin(), cTmp.end());
+        //         // cTmp.erase(unique(cTmp.begin(), cTmp.end()), cTmp.end());
+        //         // // if the smallest distance is < x .. don't inject
+        //         // cInject = (cTmp[0] >= cClosestColAllowed);
 
-                // if( cInject )
-                //     LOG (DEBUG) << BOLDGREEN << "\t\t\t Closest injection is " << cTmp[0]
-                //         << " pixels away [ "
-                //         << +cInjection.fColumn
-                //         << "] closest allowed is "
-                //         << +cClosestColAllowed
-                //         << RESET;
-                // else
-                //     LOG (DEBUG) << BOLDRED << "\t\t\t Closest injection is " << cTmp[0]
-                //         << " pixels away [ "
-                //         << +cInjection.fColumn
-                //         << "] closest allowed is "
-                //         << +cClosestColAllowed
-                //         << RESET;
-            }
-            if(cInject && cTotalNumberOfStubs < pMaxNstubs)
-            {
-                cPixelIds.push_back(cPixelId);
-                cInjections.push_back(cInjection);
-                cColumns.push_back(cInjection.fColumn);
-                cRows.push_back(cInjection.fRow);
-                cTotalNumberOfStubs += 1;
-            }
-        }
+        //         // if( cInject )
+        //         //     LOG (DEBUG) << BOLDGREEN << "\t\t\t Closest injection is " << cTmp[0]
+        //         //         << " pixels away [ "
+        //         //         << +cInjection.fColumn
+        //         //         << "] closest allowed is "
+        //         //         << +cClosestColAllowed
+        //         //         << RESET;
+        //         // else
+        //         //     LOG (DEBUG) << BOLDRED << "\t\t\t Closest injection is " << cTmp[0]
+        //         //         << " pixels away [ "
+        //         //         << +cInjection.fColumn
+        //         //         << "] closest allowed is "
+        //         //         << +cClosestColAllowed
+        //         //         << RESET;
+        //     }
+        //     if(cInject && cTotalNumberOfStubs < pMaxNstubs)
+        //     {
+        //         cPixelIds.push_back(cPixelId);
+        //         cInjections.push_back(cInjection);
+        //         cColumns.push_back(cInjection.fColumn);
+        //         cRows.push_back(cInjection.fRow);
+        //         cTotalNumberOfStubs += 1;
+        //     }
+        // }
     } while(cPixelIds.size() < cStubs && cTotalNumberOfStubs < pMaxNstubs); // create injection patterns
     return cInjections;
 }
