@@ -295,6 +295,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     auto cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    float cFraction = 1.0/(cTriggerMult+1);
     uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
     int     cOptimalOffset     = -1 + (cTriggerMult > 1);
     uint16_t cLatency = cDelay + cOptimalOffset;
@@ -410,7 +411,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                     cMatchedEvents += (cFmatch&&cNmatch) ? 1 : 0;
                     cEventIter += (1+cTriggerMult);
                 }while(cEventIter < cEvents.end());
-                if( cMatchedEvents == cNevents ){ 
+                if( cMatchedEvents == cNevents*cFraction ){ 
                     std::pair<uint8_t, uint8_t> cComb; 
                     cComb.first = cPhase;
                     cComb.second = cWord;
@@ -478,7 +479,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                 const std::vector<Event*>& cEvents = this->GetEvents();
 
                 size_t cMatchedEvents=0;
-                for( size_t cTriggerId=1; cTriggerId < 2 ; cTriggerId++)
+                for( size_t cTriggerId=0; cTriggerId < (1+cTriggerMult) ; cTriggerId++)
                 {
                     auto cEventIter = cEvents.begin() + cTriggerId ;
                     do
@@ -519,7 +520,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                         cEventIter += (1+cTriggerMult);
                         cMatchedEvents += (cNmatch) ? 1 : 0; 
                     }while(cEventIter < cEvents.end());
-                    if( cMatchedEvents == cNevents ) 
+                    if( cMatchedEvents == cNevents*cFraction ) 
                     { 
                         std::pair<uint8_t, uint8_t> cComb; 
                         cComb.first = cPhase;
