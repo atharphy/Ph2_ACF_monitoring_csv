@@ -1788,7 +1788,7 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
             if(cCic == NULL) continue;
 
             // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
-            this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getIndex());
+            this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
             this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
             if(pScope) this->StubDebug(true, cNlines);
 
