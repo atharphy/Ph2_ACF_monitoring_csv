@@ -352,9 +352,9 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
 
             LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
             // start at the beginning + trigger id in burst 
-            size_t cMatchedEvents=0;
             for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
+                size_t cMatchedEvents=0;
                 auto cEventIter = cEvents.begin() + cTriggerId ;
                 do
                 {   
@@ -374,7 +374,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                 cFmatch = cNmatch; 
                                 if( cNmatch ) 
                                 {
-                                    LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                    LOG (DEBUG) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
                                                 << " MPA" << +cChip->getId() << " found " << cSclus.size()
                                                 << " S clusters and " 
                                                 << cPclus.size() 
@@ -384,14 +384,14 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                     {
                                         cFmatch = cFmatch && ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress); 
                                         if( ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress) )
-                                            LOG (INFO) << BOLDGREEN << "Exact match found " 
+                                            LOG (DEBUG) << BOLDGREEN << "Exact match found " 
                                                     << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
                                                     << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
                                                     << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
                                                     << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
                                                     << RESET;
                                         else
-                                            LOG (INFO) << BOLDRED << "Exact match not found " 
+                                            LOG (DEBUG) << BOLDRED << "Exact match not found " 
                                                     << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
                                                     << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
                                                     << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
@@ -478,9 +478,9 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                 ReadNEvents(pBoard, cNevents);
                 const std::vector<Event*>& cEvents = this->GetEvents();
 
-                size_t cMatchedEvents=0;
                 for( size_t cTriggerId=0; cTriggerId < (1+cTriggerMult) ; cTriggerId++)
                 {
+                    size_t cMatchedEvents=0;
                     auto cEventIter = cEvents.begin() + cTriggerId ;
                     do
                     {   
