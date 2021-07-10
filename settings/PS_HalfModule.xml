@@ -113,7 +113,7 @@
                     <Register name="stubOR"> 1 </Register>
                     <Register name="initial_fast_reset_enable"> 0 </Register>
                     <Register name="trigger_timeout_enable"> 0 </Register>
-                   <Register name="trigger_multiplicity"> 5 </Register>
+                   <Register name="trigger_multiplicity"> 3 </Register>
             </Register>
         </Register>
     <!-- I2C manager -->

@@ -370,7 +370,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                 if (cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
                                 auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                 auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                                cNmatch = cNmatch && ( cSclus.size() == cInjections.size() ) ;
+                                cNmatch = cNmatch && ( cSclus.size() == cInjections.size() && cPclus.size() == cInjections.size() ) ;
                                 cFmatch = cNmatch; 
                                 if( cNmatch ) 
                                 {
