@@ -499,20 +499,20 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                     cNmatch = cNmatch && cStubs.size() == cInjections.size();
                                     if( cStubs.size() == cInjections.size() )
                                     {
-                                        // LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
-                                        //                 << " MPA" << +cChip->getId() << " found " << cSclus.size()
-                                        //                 << " S clusters and " 
-                                        //                 << cPclus.size() 
-                                        //                 << " P clusters in L1 data from MPA#" << +cChip->getId()
-                                        //                 << " also have " << +cStubs.size() << " stbs."
-                                        //                 << RESET;
-                                        // size_t cStubCntr=0;
-                                        // for( auto cStub : cStubs)
-                                        // {
-                                        //     LOG (INFO) << BOLDCYAN << "\t\tStub#" << +cStubCntr 
-                                        //         << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
-                                        //     cStubCntr++;
-                                        // }
+                                        LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                                        << " MPA" << +cChip->getId() << " found " << cSclus.size()
+                                                        << " S clusters and " 
+                                                        << cPclus.size() 
+                                                        << " P clusters in L1 data from MPA#" << +cChip->getId()
+                                                        << " also have " << +cStubs.size() << " stbs."
+                                                        << RESET;
+                                        size_t cStubCntr=0;
+                                        for( auto cStub : cStubs)
+                                        {
+                                            LOG (INFO) << BOLDCYAN << "\t\tStub#" << +cStubCntr 
+                                                << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
+                                            cStubCntr++;
+                                        }
                                     }
                                 }// chip vector 
                             }// hybrid vector 
