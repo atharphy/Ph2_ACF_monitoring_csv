@@ -308,14 +308,14 @@ int main(int argc, char* argv[])
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    cBackEndAligner.Reset();
     if(!cmd.foundOption("skipAlignment"))
     {
-        cBackEndAligner.Start(0);
-        cBackEndAligner.waitForRunToBeCompleted();
-        cBackEndAligner.Reset();
+        // 
+        cPSAlignment.Align();
     }
-    // 
-    cPSAlignment.Align();
     cPSAlignment.dumpConfigFiles();
 
     // equalize thresholds on readout chips

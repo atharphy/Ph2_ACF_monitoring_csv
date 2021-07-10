@@ -30,11 +30,20 @@
             
             --> 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
+            <SSA Id="0" configfile="SSA.txt" /> 
             <SSA Id="1" configfile="SSA.txt" /> 
+            <SSA Id="2" configfile="SSA.txt" /> 
             
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <MPA Id="8" configfile="MPA.txt" /> 
             <MPA Id="9" configfile="MPA.txt" /> 
-            
+            <MPA Id="10" configfile="MPA.txt" /> 
+
+          <!--   <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run253/" />
+            <MPA Id="8" configfile="BE0_OG0_FE0_Chip8.txt" /> 
+            <MPA Id="9" configfile="BE0_OG0_FE0_Chip9.txt" /> 
+            <MPA Id="10" configfile="BE0_OG0_FE0_Chip10.txt" /> 
+             -->
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>

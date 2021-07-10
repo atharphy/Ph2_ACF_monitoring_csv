@@ -157,15 +157,12 @@ int main(int argc, char* argv[])
 
     cTool.addFileHandler(cOutputFile, 'w');
 
-    if(cmd.foundOption("alignPS"))
-    {
-        // align ASICs on PS module
-        PSAlignment cPSAlignment;
-        cPSAlignment.Inherit(&cTool);
-        cPSAlignment.Initialise();
-        // map MPA outputs for PS module
-        cPSAlignment.MapMPAOutputs();
-    }
+    // align ASICs on PS module
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
 
     // if CIC is enabled then align CIC first
     if(cmd.foundOption("alignCIC"))
@@ -191,6 +188,8 @@ int main(int argc, char* argv[])
         cBackEndAligner.waitForRunToBeCompleted();
         cBackEndAligner.Reset();
     }
+    cPSAlignment.Align();
+    cPSAlignment.dumpConfigFiles();
 
     auto cSetting    = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
     int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
