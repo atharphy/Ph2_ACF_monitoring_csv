@@ -492,7 +492,7 @@ bool BackEndAlignment::FindStubLatency(BeBoard* pBoard)
     size_t  cNinjectedStubs = 0;
     int     cReTime         = 0;
     uint8_t cPSrow          =10; 
-    uint16_t cPSmode        =0;  // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+    uint16_t cPSmode        =2;  // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
     uint8_t                cStubWindow = 1; // stub window in half pixels (1)
     uint8_t                cMode       = cPSmode;
     std::vector<uint32_t>  cPixelIds(0); // these will be used to generate stubs

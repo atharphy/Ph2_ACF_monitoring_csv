@@ -461,7 +461,36 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             LOG(INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
         return cEnableAnalogue && cReadoutMode;
     }
-
+    else if(pRegName == "AnalogueSync")
+    {
+        // readout mode 1 -- ASYNC counter
+        bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
+        uint8_t cPixelMask = 1;
+        uint8_t cPolarity  = 1;
+        uint8_t cEnEdgeBR  = 1;
+        uint8_t cEnLvlBr   = 0;
+        uint8_t cEnCount   = pValue;
+        uint8_t cDigCal    = 0;
+        uint8_t cAnaCal    = pValue;
+        uint8_t cBrClk     = 0;
+        uint8_t cRegValue  = (cEnEdgeBR << 2) | (cPolarity << 1) | cPixelMask;
+        cRegValue          = cRegValue | ((cDigCal << 5) | (cEnCount << 4) | (cEnLvlBr << 3));
+        cRegValue          = cRegValue | ((cBrClk << 7) | (cAnaCal << 6));
+        if(pValue == 1)
+            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
+        else
+            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
+        bool cEnableAnalogue = this->configPixel(pMPA, "PixelEnable", 0, cRegValue, pVerifLoop);
+        // mask pixel 1
+        {
+            this->maskPixel(pMPA, 1, 1, pVerifLoop);
+        }
+        if(pValue == 1)
+            LOG(INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
+        else
+            LOG(INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
+        return cEnableAnalogue && cReadoutMode;
+    }
     else if(pRegName == "Threshold" or pRegName == "Bias_THDAC")
     {
         LOG(DEBUG) << BOLDBLUE << "Setting "

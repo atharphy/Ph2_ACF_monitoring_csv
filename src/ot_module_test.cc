@@ -297,6 +297,7 @@ int main(int argc, char* argv[])
     cPSAlignment.Initialise();
     // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
+
     
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
@@ -313,6 +314,9 @@ int main(int argc, char* argv[])
         cBackEndAligner.waitForRunToBeCompleted();
         cBackEndAligner.Reset();
     }
+    // 
+    //cPSAlignment.Align();
+
 
     // equalize thresholds on readout chips
     if(cTune)

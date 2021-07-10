@@ -132,6 +132,16 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool cReadoutMode       = WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
         return cEnableAnalogue && cEnableFECal && cReadoutMode;
     }
+    else if(pRegName == "AnalogueSync")
+    {
+        uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
+        bool    cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
+        bool    cEnableFECal    = WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
+        cRegValue               = ReadChipReg(pSSA, "ReadoutMode");
+        cRegValue               = (cRegValue & 0x4) | (0);
+        bool cReadoutMode       = WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
+        return cEnableAnalogue && cEnableFECal && cReadoutMode;
+    }
     else if(pRegName == "TriggerLatency")
     {
         //   LOG(INFO) << " pValue " << +pValue;
