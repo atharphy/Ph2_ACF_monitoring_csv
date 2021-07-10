@@ -287,13 +287,13 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     //uint8_t  cRow        = 9; // random pixel to activate -- could be configurable
     //uint8_t  cCol        = 45;
     uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-
+    
+    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     auto cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
     int     cOptimalOffset     = -1 + (cTriggerMult > 1);
@@ -345,10 +345,12 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                     }
                 }
             }
-            //LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
             ReadNEvents(pBoard, cNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
-            //LOG(INFO) << BOLDBLUE << "Checking phase by reading back " << +cEvents.size() << " events from the FC7 ..." << RESET;
+            if( cEvents.size() == 0 ) continue;
+
+            LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
+            LOG(INFO) << BOLDBLUE << "Checking phase by looking at " << +cEvents.size() << " events read-back from the FC7 ..." << RESET;
             // start at the beginning + trigger id in burst 
             size_t cMatchedEvents=0;
             for( size_t cTriggerId=1; cTriggerId < 2 ; cTriggerId++)
