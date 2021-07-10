@@ -352,7 +352,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
             // start at the beginning + trigger id in burst 
             size_t cMatchedEvents=0;
-            for( size_t cTriggerId=1; cTriggerId < 2 ; cTriggerId++)
+            for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
             {
                 auto cEventIter = cEvents.begin() + cTriggerId ;
                 do
