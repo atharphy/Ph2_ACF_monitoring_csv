@@ -855,7 +855,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         ResetCPB();
     }
 
-    if(fI2CVersion >= 1 || cWithGBTx)
+    if( (fI2CVersion >= 1 || cWithGBTx) && !cWithlpGBT )
     {
         fI2CSlaveMap.clear();
         fSlaveMap.clear();
@@ -879,12 +879,12 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                         if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
                         if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
 
-                        cBaseAddress += cChip->getId();
+                        cBaseAddress += cChip->getId()%8;
                         cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
                         if(fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end())
                         {
-                            std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue, cChip->getId()};
+                            std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue, (uint32_t)(cChip->getId()%8) };
                             std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue};
 
                             LOG(INFO) << BOLDBLUE << "Adding chip with address " << +cChip->getId() << " to I2C slave map.." << RESET;
@@ -907,12 +907,12 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                         cBaseAddress = 0x41;
                         if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
                         if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
-                        cBaseAddress += cChip->getId();
+                        cBaseAddress += cChip->getId()%8;
                         cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
                         LOG(INFO) << BOLDBLUE << "Adding slave with I2C address 0x" << std::hex << +cBaseAddress << std::dec << RESET;
 
-                        std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue, cChip->getId()};
+                        std::vector<uint32_t> cOldI2CSlaveDescription = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue, (uint32_t)(cChip->getId()%8) };
                         std::vector<uint32_t> cI2CSlaveDescription    = {cBaseAddress, cNBytes, 1, 1, 1, cLastValue};
                         fI2CSlaveMap[cChip->getId()]                  = cI2CSlaveDescription;
                         fSlaveMap.push_back(cOldI2CSlaveDescription);

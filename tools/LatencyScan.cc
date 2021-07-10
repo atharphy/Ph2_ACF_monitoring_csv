@@ -512,7 +512,7 @@ void LatencyScan::StubLatencyScan()
                                 }
                             } // chip
                             //LOG (INFO) << BOLDMAGENTA << "\t\t.. Event#" << +cEventCount << " found " << +cNStubsThisCIC << " in CIC#" << +cHybrid->getIndex() << RESET;
-                            theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId - fStartLatency] += cNStubs;
+                            //theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat+cTriggerId - fStartLatency] += cNStubs;
                         } // hybrid
                     }//
                     cEventIter += (1+cTriggerMult);
