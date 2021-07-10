@@ -295,7 +295,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     auto cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    float cFraction = 1.0/(cTriggerMult+1);
+    float cFraction = 1.0;
     uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
     int     cOptimalOffset     = -1 + (cTriggerMult > 1);
     uint16_t cLatency = cDelay + cOptimalOffset;
@@ -329,7 +329,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     // scan phase and check L1
     std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinations; 
     cGoodCombinations.clear();
-    for( uint8_t cPhase = 0; cPhase < 8; cPhase++) 
+    for( uint8_t cPhase = 2; cPhase < 4; cPhase++) 
     {
         for(uint8_t cWord = 0; cWord < 16; cWord++)
         {
@@ -370,33 +370,33 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                 if (cChip->getFrontEndType() == FrontEndType::SSA ) continue; 
                                 auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                 auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                                LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                cNmatch = cNmatch && ( cSclus.size() == cInjections.size() && cPclus.size() == cInjections.size() ) ;
+                                cFmatch = cNmatch; 
+                                if( cNmatch ) 
+                                {
+                                    LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
                                                 << " MPA" << +cChip->getId() << " found " << cSclus.size()
                                                 << " S clusters and " 
                                                 << cPclus.size() 
                                                 << " P clusters in L1 data from MPA#" << +cChip->getId()
                                                 << RESET;
-                                cNmatch = cNmatch && ( cSclus.size() == cInjections.size() && cPclus.size() == cInjections.size() ) ;
-                                cFmatch = cNmatch; 
-                                if( cNmatch ) 
-                                {
                                     for( size_t cIndx=0; cIndx < cInjections.size(); cIndx++)
                                     {
                                         cFmatch = cFmatch && ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress); 
-                                        // if( ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress) )
-                                        //     LOG (INFO) << BOLDGREEN << "Exact match found " 
-                                        //             << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
-                                        //             << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
-                                        //             << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
-                                        //             << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
-                                        //             << RESET;
-                                        // else
-                                        //     LOG (INFO) << BOLDRED << "Exact match not found " 
-                                        //             << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
-                                        //             << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
-                                        //             << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
-                                        //             << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
-                                        //             << RESET;
+                                        if( ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress) )
+                                            LOG (INFO) << BOLDGREEN << "Exact match found " 
+                                                    << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
+                                                    << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
+                                                    << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
+                                                    << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
+                                                    << RESET;
+                                        else
+                                            LOG (INFO) << BOLDRED << "Exact match not found " 
+                                                    << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
+                                                    << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
+                                                    << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
+                                                    << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
+                                                    << RESET;
                                     }
                                 }
                             }// chip vector 
