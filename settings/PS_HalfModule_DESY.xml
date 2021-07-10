@@ -14,7 +14,7 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
+               <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -24,7 +24,7 @@
             <MPA Id="9" configfile="MPA.txt" /> 
             
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
     </OpticalGroup>
     
