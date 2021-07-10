@@ -496,13 +496,14 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                     auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
                                     auto cStubs = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                                     cNmatch = cNmatch && (cStubs.size() == cInjections.size());
-                                    LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
-                                                        << " MPA" << +cChip->getId() << " found " << cSclus.size()
-                                                        << " S clusters and " 
-                                                        << cPclus.size() 
-                                                        << " P clusters in L1 data from MPA#" << +cChip->getId()
-                                                        << " also have " << +cStubs.size() << " stbs."
-                                                        << RESET;
+                                    if( cStubs.size() != 0 ) 
+                                        LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                                            << " MPA" << +cChip->getId() << " found " << cSclus.size()
+                                                            << " S clusters and " 
+                                                            << cPclus.size() 
+                                                            << " P clusters in L1 data from MPA#" << +cChip->getId()
+                                                            << " also have " << +cStubs.size() << " stbs."
+                                                            << RESET;
                                     if( cStubs.size() == cInjections.size() )
                                     {
                                         size_t cStubCntr=0;
