@@ -276,7 +276,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
     auto cTriggerMult = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t cNevents = 10;
 
-    for( uint8_t cPhase = 3; cPhase < 5; cPhase++) 
+    for( uint8_t cPhase = 2; cPhase < 5; cPhase++) 
     {
         if( cGoodCombinations.size() > 0 ) continue; //for now .. only the first one 
         for(uint8_t cWord = 0; cWord < 16; cWord++)
@@ -382,7 +382,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
             {
 
                 if( cGoodCombinationsStubs.size() > 0 ) continue;
-                for(uint8_t cRetime = 4; cRetime < 6; cRetime++)
+                for(uint8_t cRetime = 0; cRetime < 8; cRetime++)
                 {
 
                     if( cGoodCombinationsStubs.size() > 0 ) continue;

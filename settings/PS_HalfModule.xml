@@ -25,25 +25,16 @@
                <CIC enableBend="0" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
-           <!--  <SSA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run44/" />
-            <SSA Id="2" configfile="BE0_OG0_FE0_Chip2SSA.txt" /> 
-            
-            --> 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" /> 
-            <SSA Id="1" configfile="SSA.txt" /> 
+            <!-- <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
-            
+             -->
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA Id="8" configfile="MPA.txt" /> 
-            <MPA Id="9" configfile="MPA.txt" /> 
+            <!-- <MPA Id="9" configfile="MPA.txt" /> 
             <MPA Id="10" configfile="MPA.txt" /> 
-
-          <!--   <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run253/" />
-            <MPA Id="8" configfile="BE0_OG0_FE0_Chip8.txt" /> 
-            <MPA Id="9" configfile="BE0_OG0_FE0_Chip9.txt" /> 
-            <MPA Id="10" configfile="BE0_OG0_FE0_Chip10.txt" /> 
-             -->
+ -->
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
@@ -88,7 +79,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 3 </Register>
+            <Register name="trigger_source"> 6 </Register>
             <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
