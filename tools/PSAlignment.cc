@@ -284,14 +284,25 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     cInjection.fColumn = 7;
     cInjections.push_back( cInjection );
     
-    //uint8_t  cRow        = 9; // random pixel to activate -- could be configurable
-    //uint8_t  cCol        = 45;
-    uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    // check trigger source
+    // and reload
+    uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    uint16_t cOriginalTriggerSrc = cTriggerSrc;
+    uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
+    cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    
+    // uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    // cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    // std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    // fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     auto cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -566,6 +577,16 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
         }
         cL1CombIndx++;    
     }
+
+    // set everything back to original values .. like I wasn't here
+    // reset fast command registers
+    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
+    cRegVec.clear();
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+
 
     // for(uint8_t cChipId = 0+8; cChipId < 8+8; cChipId++)
     // {

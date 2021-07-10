@@ -142,15 +142,12 @@ int main(int argc, char* argv[])
     cTool.StartHttpServer();
     cTool.ConfigureHw();
 
-    if(cmd.foundOption("alignPS"))
-    {
-        // align ASICs on PS module
-        PSAlignment cPSAlignment;
-        cPSAlignment.Inherit(&cTool);
-        cPSAlignment.Initialise();
-        // map MPA outputs for PS module
-        cPSAlignment.MapMPAOutputs();
-    }
+    // align ASICs on PS module
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
 
     // if CIC is enabled then align CIC first
     if(cWithCIC)
@@ -171,7 +168,8 @@ int main(int argc, char* argv[])
         cBackEndAligner.waitForRunToBeCompleted();
         cBackEndAligner.Reset();
     }
-
+    cPSAlignment.Align();
+    
     // hack 
     // make sure MPAs and SSAs have all pixels enabled 
     auto cSetting    = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
@@ -190,7 +188,7 @@ int main(int argc, char* argv[])
             {
                 for(auto chip: *hybrid)
                 {
-                    cTool.fReadoutChipInterface->WriteChipReg(chip, "InjectedCharge", 77);
+                    //cTool.fReadoutChipInterface->WriteChipReg(chip, "InjectedCharge", 77);
                     if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 1);
