@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
         cBackEndAligner.Reset();
     }
     // 
-    //cPSAlignment.Align();
+    cPSAlignment.Align();
 
 
     // equalize thresholds on readout chips

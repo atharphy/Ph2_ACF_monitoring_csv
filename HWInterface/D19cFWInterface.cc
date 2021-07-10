@@ -3144,7 +3144,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             this->PS_Open_shutter(fFastCommandDuration);
         }
         // start triggering machine which will collect N events
-        LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
+        //LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
         this->Start();
         if(!cAsync)
         {
