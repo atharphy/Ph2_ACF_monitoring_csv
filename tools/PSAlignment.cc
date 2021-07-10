@@ -428,7 +428,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     for(auto cComb : cGoodCombinations)
     {
         // now run stub alignment procedure 
-        LOG (INFO) << BOLDGREEN << "Scanning Stub alignment parameters for L1 alignmnet parameters.." << RESET;
+        LOG (INFO) << BOLDYELLOW << "Scanning Stub alignment parameters for L1 alignmnet parameters.." << RESET;
         for(auto cOpticalReadout: *pBoard)
         {
             for(auto cHybrid: *cOpticalReadout)
@@ -448,15 +448,14 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
         // as the L1 line 
         // if the lines between SSAs and MPAs on the hybrid are matched
         // and I think they are
-        uint8_t cStartPhase = (cComb.first == 0 ) ? cComb.first : cComb.first-1; 
-        uint8_t cEndPhase = cComb.first+2;
-
+        //uint8_t cStartPhase = (cComb.first == 0 ) ? cComb.first : cComb.first-1; 
+        //uint8_t cEndPhase = cComb.first+2;
         std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinationsStubs; 
         cGoodCombinationsStubs.clear();
-        for(uint8_t cPhase = cStartPhase; cPhase <= cEndPhase; cPhase++)
+        for(uint8_t cPhase = 0; cPhase < 8; cPhase++)
         {
             //LOG (INFO) << BOLDMAGENTA << "LatencyRx320 for stubs of " << +cPhase << RESET;
-            for(uint8_t cRetime = 4; cRetime < 6; cRetime++)
+            for(uint8_t cRetime = 0; cRetime < 8; cRetime++)
             {
                 auto    cStubOffset = pBoard->getStubOffset();
                 size_t cStubDelay = cLatency - cStubOffset - cRetime; // stub latency
@@ -496,16 +495,16 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                     auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
                                     auto cStubs = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-                                    cNmatch = cNmatch && cStubs.size() == cInjections.size();
-                                    if( cStubs.size() == cInjections.size() )
-                                    {
-                                        LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                    cNmatch = cNmatch && (cStubs.size() == cInjections.size());
+                                    LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
                                                         << " MPA" << +cChip->getId() << " found " << cSclus.size()
                                                         << " S clusters and " 
                                                         << cPclus.size() 
                                                         << " P clusters in L1 data from MPA#" << +cChip->getId()
                                                         << " also have " << +cStubs.size() << " stbs."
                                                         << RESET;
+                                    if( cStubs.size() == cInjections.size() )
+                                    {
                                         size_t cStubCntr=0;
                                         for( auto cStub : cStubs)
                                         {
