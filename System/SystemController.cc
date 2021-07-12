@@ -369,8 +369,8 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 // ######################################
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    const uint8_t cCicDriveStrength = 2;
-    // set board sparisification
+    const uint8_t cCicDriveStrength = 4;
+    // set board sparisificatio
     // based on what is configured in the fw register
     // read CIC sparsification setting from fW register
     // make sure board is also set to the same thing

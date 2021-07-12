@@ -91,6 +91,7 @@ class DataChecker : public Tool
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
 
+    void AnaInjectionTestPS(uint32_t pMaxTriggersToAccept=1000);
     void InjectionTestPS(uint32_t pMaxTriggersToAccept = 1000);
     void ReadDataTestPS(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNevents = 10000);
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
