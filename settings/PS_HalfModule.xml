@@ -22,7 +22,7 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-               <CIC enableBend="0" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
+               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -38,7 +38,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
