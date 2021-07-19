@@ -22,17 +22,6 @@
                 <ChannelMask disable=""/>
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
             </Global>
-
-          <!--   <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run395/" />
-            <CBC Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG0_FE0_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG0_FE0_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" /> -->
-            
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
@@ -173,7 +162,7 @@
     <Setting name="PedestalEqualizationTargetOffset">120</Setting>
     <Setting name="TriggerRate">10</Setting>
     <Setting name="StubAlignmentThreshold">550</Setting>
-    <Setting name="StubAlignmentScanStart">55</Setting>
+    <Setting name="StubAlignmentScanStart">90</Setting>
 
     <!--Signal Scan Fit-->
     <Setting name="InitialVcth">600</Setting>

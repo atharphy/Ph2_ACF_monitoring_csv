@@ -481,6 +481,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     // align lines between lpGBT + CIC 
     for(auto cOpticalGroup: *pBoard)
     {
+        auto& clpGBT = cOpticalGroup->flpGBT;
+        if(clpGBT == nullptr) continue;
         CicLpGbtAlignment(cOpticalGroup);
     }
 

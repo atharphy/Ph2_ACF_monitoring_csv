@@ -278,7 +278,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
 
     uint8_t cStartPhaseL1 = 2; //3 
     uint8_t cStopPhaseL1 = 5; // 5 
-    bool cOnlyFirst = false;
+    bool cOnlyFirst = true;
     for( uint8_t cPhase = cStartPhaseL1; cPhase < cStopPhaseL1; cPhase++) 
     {
         if( cOnlyFirst && cGoodCombinations.size() > 0 ) continue; //for now .. only the first one 
