@@ -490,9 +490,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     {
         bool cBeAlignSuccess =  CicBeAlignment( cOpticalGroup );      
         if (cBeAlignSuccess) 
-        {
                 LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC data [hits+stubs]..." << RESET;
-        }
         else
             LOG(INFO) << BOLDRED << "FAILED  BE alignment for CIC data [hits+stubs]..." << RESET;
         cSuccess = cSuccess && cBeAlignSuccess;
@@ -514,7 +512,10 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC stub pkg..." << RESET;
             }
             else
+            {
                 LOG(INFO) << BOLDRED << "FAILED  BE alignment CIC stub pkg..." << RESET;
+                throw std::runtime_error(std::string("FAILED to align BE... could not find CIC stub pkg... .. STOPPING"));
+            }
             cSuccess = cSuccess && cDelayFoundSuccess;
         }
         cRegVec.clear();
@@ -522,6 +523,11 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
         fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to align BE .." << RESET;
+        throw std::runtime_error(std::string("FAILED to align BE... something is wrong... .. STOPPING"));
     }
     // finally
     // configure ROCs on hybrid .. can have SSAs or MPAs
