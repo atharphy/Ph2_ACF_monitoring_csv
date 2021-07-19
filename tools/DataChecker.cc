@@ -913,8 +913,8 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 fPSevent.fPackageDelay   = cPackageDelay;
                 fPSevent.fStubOffset     = cStubOffset;
                 fPSevent.fLatencyOffset  = cLatencyOffset;
-                int cTotalStubsFound = 0;
-                int cTotalStubsExpected = 0;
+                //int cTotalStubsFound = 0;
+                //int cTotalStubsExpected = 0;
                 //
                 cSetting                 = fSettingsMap.find("TriggerMultiplicity");
                 size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
@@ -946,9 +946,9 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 fPSevent.fHybridId     = cHybrid->getId();
                                 fPSevent.fPClusterSize = static_cast<D19cCic2Event*>(*cEventIter)->GetNPixelClusters(cHybrid->getId());
                                 fPSevent.fSClusterSize = static_cast<D19cCic2Event*>(*cEventIter)->GetNStripClusters(cHybrid->getId());
-                                size_t cNStubsExpected = 1*cHybrid->size(); 
-                                size_t cNPclustersExpected = 1*cHybrid->size(); 
-                                size_t cNSclustersExpected = cInjections.size()*cHybrid->size(); 
+                                //size_t cNStubsExpected = 1*cHybrid->size(); 
+                                //size_t cNPclustersExpected = 1*cHybrid->size(); 
+                                //size_t cNSclustersExpected = cInjections.size()*cHybrid->size(); 
                                 size_t cNStubs=0;
                                 for(auto cChip: *cHybrid)
                                 {
@@ -996,12 +996,12 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                         }
                                     }
                                 }//chip 
-                                LOG (INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
-                                            << " CIC " << +cHybrid->getId() 
-                                            << " found " << +cNStubs  << " stubs when " << cNStubsExpected << " were expected "
-                                            << " found " << +fPSevent.fPClusterSize  << " P-clusters when " << cNPclustersExpected << " were expected "
-                                            << " found " << +fPSevent.fSClusterSize  << " S-clusters when " << cNSclustersExpected << " were expected "
-                                            << RESET;
+                                // LOG (INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                //             << " CIC " << +cHybrid->getId() 
+                                //             << " found " << +cNStubs  << " stubs when " << cNStubsExpected << " were expected "
+                                //             << " found " << +fPSevent.fPClusterSize  << " P-clusters when " << cNPclustersExpected << " were expected "
+                                //             << " found " << +fPSevent.fSClusterSize  << " S-clusters when " << cNSclustersExpected << " were expected "
+                                //             << RESET;
                             }//hybrid
                         }//OG
                         cEventIter++;
@@ -1009,7 +1009,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                     }//trigger loop 
                     cInjectionCounter++;
                 }while( cEventIter < cPh2Events.end() );
-                LOG (INFO) << BOLDMAGENTA << "Found " << cTotalStubsFound << " when " << cTotalStubsExpected << " were expected." << RESET;
+                //LOG (INFO) << BOLDMAGENTA << "Found " << cTotalStubsFound << " when " << cTotalStubsExpected << " were expected." << RESET;
              }
             // reset readout
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
@@ -1389,25 +1389,25 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 fPSevent.fPackageDelay   = cPackageDelay;
                 fPSevent.fStubOffset     = cStubOffset;
                 fPSevent.fLatencyOffset  = cLatencyOffset;
-                int cTotalStubsFound = 0;
-                int cTotalStubsExpected = 0;
                 //
                 cSetting                 = fSettingsMap.find("TriggerMultiplicity");
                 size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
                 size_t cInjectionCounter = 0; 
                 auto cEventIter = cPh2Events.begin(); 
+                size_t cMatchCounter = 0; 
                 do
                 {
                     auto cInjections = cInjectionScheme[cInjectionCounter];
                     LOG (INFO) << BOLDMAGENTA << "Checking result for injection#" << cInjectionCounter << RESET;
-                    for( auto cInj : cInjections)
-                    {
-                        LOG (INFO) << BOLDYELLOW << "\t\t.. injecting in row "
-                            << +cInj.fRow
-                            << " columnn "
-                            << +cInj.fColumn
-                            << RESET;
-                    }
+                    // for( auto cInj : cInjections)
+                    // {
+                    //     LOG (INFO) << BOLDYELLOW << "\t\t.. injecting in row "
+                    //         << +cInj.fRow
+                    //         << " columnn "
+                    //         << +cInj.fColumn
+                    //         << RESET;
+                    // }
+                    std::vector<uint8_t> cFullMatches( cTriggerMult,0 ); 
                     for( size_t cTriggerId=0; cTriggerId < cTriggerMult ; cTriggerId++)
                     {
                         if( cEventIter >= cPh2Events.end() ) continue;
@@ -1422,14 +1422,15 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 fPSevent.fHybridId     = cHybrid->getId();
                                 fPSevent.fPClusterSize = static_cast<D19cCic2Event*>(*cEventIter)->GetNPixelClusters(cHybrid->getId());
                                 fPSevent.fSClusterSize = static_cast<D19cCic2Event*>(*cEventIter)->GetNStripClusters(cHybrid->getId());
-                                size_t cNStubsExpected = 1*cHybrid->size(); 
-                                size_t cNPclustersExpected = 1*cHybrid->size(); 
-                                size_t cNSclustersExpected = cInjections.size()*cHybrid->size(); 
+                                //size_t cNStubsExpected = 1*cHybrid->size(); 
+                                //size_t cNPclustersExpected = 1*cHybrid->size(); 
+                                //size_t cNSclustersExpected = cInjections.size()*cHybrid->size(); 
                                 size_t cNStubs=0;
+                                size_t cNmatches=0; 
+                                size_t cNmpas=0;
                                 for(auto cChip: *cHybrid)
                                 {
                                     if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
-
                                     fPSevent.fChipL1Id   = static_cast<D19cCic2Event*>(*cEventIter)->L1Id(cHybrid->getId(), cChip->getId());
                                     auto cPclstrs        = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     auto cSclstrs        = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
@@ -1438,119 +1439,67 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                     fPSevent.fNSclusters = cSclstrs.size();
                                     fPSevent.fStubSize   = cStubs.size();
                                     cNStubs += cStubs.size();
+                                    bool cMatched=false; 
                                     if( fPSevent.fNPclusters >0 || fPSevent.fNSclusters > 0 ) 
                                     {
-                                        LOG (INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
-                                            << " MPA" << +cChip->getId() << " found " << fPSevent.fNPclusters << " P clusters, " << fPSevent.fNSclusters 
-                                            << " S clusters, and "
-                                            << fPSevent.fStubSize 
-                                            << " stubs"
-                                            << RESET;
-                                        for(auto cCluster : cPclstrs )
-                                        {
-                                            LOG (INFO) << BOLDYELLOW << "P-cluster in row " << +cCluster.fAddress
-                                                << " column " << +cCluster.fZpos << " width is " << +cCluster.fWidth
-                                                << RESET;
-                                        }
-                                        for(auto cCluster : cSclstrs )
-                                        {
-                                            LOG (INFO) << BOLDCYAN << "S-cluster in row " << +cCluster.fAddress
-                                                << " column " << (0) << " width is " << +cCluster.fWidth
-                                                << RESET;
-                                        }
+                                        cMatched = ( fPSevent.fNPclusters == 1 && fPSevent.fNSclusters == cInjections.size() && cStubs.size() == fPSevent.fNPclusters ); 
+                                        // if( cMatched )
+                                        //     LOG (INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                        //         << " MPA" << +cChip->getId() << " found " << fPSevent.fNPclusters << " P clusters, " << fPSevent.fNSclusters 
+                                        //         << " S clusters, and "
+                                        //         << fPSevent.fStubSize 
+                                        //         << " stubs"
+                                        //         << RESET;
+                                        // else
+                                        //     LOG (INFO) << BOLDRED << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
+                                        //         << " MPA" << +cChip->getId() << " found " << fPSevent.fNPclusters << " P clusters, " << fPSevent.fNSclusters 
+                                        //         << " S clusters, and "
+                                        //         << fPSevent.fStubSize 
+                                        //         << " stubs"
+                                        //         << RESET;
+                                            
+                                        // for(auto cCluster : cPclstrs )
+                                        // {
+                                        //     LOG (INFO) << BOLDYELLOW << "P-cluster in row " << +cCluster.fAddress
+                                        //         << " column " << +cCluster.fZpos << " width is " << +cCluster.fWidth
+                                        //         << RESET;
+                                        // }
+                                        // for(auto cCluster : cSclstrs )
+                                        // {
+                                        //     LOG (INFO) << BOLDCYAN << "S-cluster in row " << +cCluster.fAddress
+                                        //         << " column " << (0) << " width is " << +cCluster.fWidth
+                                        //         << RESET;
+                                        // }
                                         if( fPSevent.fStubSize != 0 )
                                         {
                                             std::sort(std::begin(cStubs), std::end(cStubs), [](Stub a, Stub b) { return a.getRow() < b.getRow(); });
-                                            //std::sort(std::begin(cStubs), std::end(cStubs), [](Stub a, Stub b) { return a.getPosition() < b.getPosition(); });
                                             size_t cStubCntr=0;
                                             for( auto cStub : cStubs)
                                             {
-                                                LOG (INFO) << BOLDCYAN << "\t\tStub#" << +cStubCntr 
-                                                    << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
+                                                cMatched =  ( cStub.getPosition() == cPclstrs[0].fAddress*2 && cStub.getRow() == cPclstrs[0].fZpos );
+                                                // if( cMatched )
+                                                //     LOG (INFO) << BOLDGREEN << "\t\tStub#" << +cStubCntr 
+                                                //         << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
+                                                // else
+                                                //     LOG (INFO) << BOLDRED << "\t\tStub#" << +cStubCntr 
+                                                //         << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
                                                 cStubCntr++;
                                             }
                                         }
                                     }
+                                    cNmpas++;
+                                    cNmatches += (cMatched) ? 1 : 0; 
                                 }//chip 
-                                LOG (INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult) 
-                                            << " CIC " << +cHybrid->getId() 
-                                            << " found " << +cNStubs  << " stubs when " << cNStubsExpected << " were expected "
-                                            << " found " << +fPSevent.fPClusterSize  << " P-clusters when " << cNPclustersExpected << " were expected "
-                                            << " found " << +fPSevent.fSClusterSize  << " S-clusters when " << cNSclustersExpected << " were expected "
-                                            << RESET;
+                                cFullMatches.at(cTriggerId) = ( cNmatches == cNmpas ) ? 1 : 0 ; 
                             }//hybrid
                         }//OG
                         cEventIter++;
                         cEventCounter++;
                     }//trigger loop 
+                    cMatchCounter += std::accumulate( cFullMatches.begin(), cFullMatches.end(), 0); 
                     cInjectionCounter++;
                 }while( cEventIter < cPh2Events.end() );
-                // for(auto& cEvent: cPh2Events)
-                // {
-                //     //auto& cInjectedEvent = cInjectionScheme[cInjectionCounter];
-                //     // LOG(INFO) << BOLDYELLOW << "Injected Event#" << +cInjectedEvent.fEventId << " trigger Id " << +cInjectedEvent.fTriggerId << " BurstId is " << +cInjectedEvent.fBurstId
-                //     //           << " expect to see " << cInjectedEvent.fPClusterSize << " p clusters [total] and "
-                //     //           << " " << cInjectedEvent.fSClusterSize << " s clusters [total]" << RESET;
-                //     fPSevent.fEventId   = cEvent->GetEventCount();
-                //     fPSevent.fTriggerId = cEvent->GetExternalTriggerId();
-                //     LOG (INFO) << BOLDGREEN << "Processing event#" << +cEventCounter << RESET;
-                //     for(auto cOpticalGroup: *cBoard)
-                //     {
-                //         auto& cFeLatencyOG = cFeLatency->at(cOpticalGroup->getIndex());
-                //         for(auto cHybrid: *cOpticalGroup)
-                //         {
-                //             auto& cFeLatencyHybrid = cFeLatencyOG->at(cHybrid->getIndex());
-                //             fPSevent.fL1IdCic      = static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), 42);
-                //             fPSevent.fL1Status     = static_cast<D19cCic2Event*>(cEvent)->L1Status(cHybrid->getId());
-                //             fPSevent.fBxId         = cEvent->BxId(cHybrid->getId());
-                //             fPSevent.fHybridId     = cHybrid->getId();
-                //             fPSevent.fPClusterSize = static_cast<D19cCic2Event*>(cEvent)->GetNPixelClusters(cHybrid->getId());
-                //             fPSevent.fSClusterSize = static_cast<D19cCic2Event*>(cEvent)->GetNStripClusters(cHybrid->getId());
-                //             // printPSevent();
-                //             // for(auto cChip: *cHybrid)
-                //             // {
-                //             //     auto& cFeLatencyChip = cFeLatencyHybrid->at(cChip->getIndex());
-                //             //     auto& cFeLatencySmry = cFeLatencyChip->getSummary<uint16_t>();
-                //             //     if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
-
-                //             //     fPSevent.fMPALatency = cFeLatencySmry;
-                //             //     fPSevent.fSSALatency = cFeLatencySmry - 1;
-                //             //     fPSevent.fChipId     = cChip->getId();
-                //             //     // LOG (INFO) << BOLDYELLOW << "\t\t\t... Latency MPA " << fPSevent.fMPALatency << " latency SSA " << fPSevent.fSSALatency << RESET;
-                //             //     fPSevent.fChipL1Id   = static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), cChip->getId());
-                //             //     auto cPclstrs        = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                //             //     auto cSclstrs        = static_cast<D19cCic2Event*>(cEvent)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                //             //     fPSevent.fNPclusters = cPclstrs.size();
-                //             //     fPSevent.fNSclusters = cSclstrs.size();
-                //             //     fPSevent.fStubSize   = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId()).size();
-                //             //     if( cPclstrs.size() > 0 ) cTotalStubsExpected += cMaxNstubs;
-                //             //     if(fPSevent.fStubSize > 0 )// && cChip->getIndex() < cLastMPA)
-                //             //     {
-                //             //         LOG(INFO) << BOLDGREEN << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
-                //             //         for( auto cStub : static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId()) )
-                //             //         {
-                //             //             LOG (INFO) << BOLDMAGENTA << "Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
-                //             //         }
-                //             //         cTotalStubsFound += fPSevent.fStubSize;
-                                    
-                //             //     }
-                //             //     else if(cChip->getIndex() < cLastMPA)
-                //             //         LOG(INFO) << BOLDRED << "\t\t... found " << +fPSevent.fStubSize << " stubs in MPA#" << +cChip->getId() << " in this event.." << RESET;
-                //             //     std::sort(std::begin(cSclstrs), std::end(cSclstrs), [](SCluster a, SCluster b) { return a.fAddress < b.fAddress; });
-                //             //     // for( auto cScluster : cSclstrs)
-                //             //     // {
-                //             //     //     LOG (INFO) << BOLDYELLOW << "\t\t... Strip#" << +cScluster.fAddress << RESET;
-                //             //     // }
-                //             //     std::sort(std::begin(cPclstrs), std::end(cPclstrs), [](PCluster a, PCluster b) { return a.fAddress < b.fAddress; });
-                //             //     std::sort(std::begin(cPclstrs), std::end(cPclstrs), [](PCluster a, PCluster b) { return a.fZpos < b.fZpos; });
-                                 
-                //             // }
-                //         } // hybrid
-                //     }// optical group
-                //     if( cEventCounter%(1+cTriggerMult) == 0 ) cInjectionCounter++;
-                //     cEventCounter++;
-                // }
-                LOG (INFO) << BOLDMAGENTA << "Found " << cTotalStubsFound << " when " << cTotalStubsExpected << " were expected." << RESET;
+                LOG (INFO) << BOLDMAGENTA << cMatchCounter << " out of " << cInjectionCounter << " injections match... " << RESET;
              }
             // reset readout
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();

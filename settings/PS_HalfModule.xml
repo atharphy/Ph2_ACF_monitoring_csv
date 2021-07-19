@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="0">
     <!-- PS  module CERN-->
     <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
