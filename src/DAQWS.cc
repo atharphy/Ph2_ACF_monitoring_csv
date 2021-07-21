@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
-    cBackEndAligner.Reset();
+    //cBackEndAligner.Reset();
 
     // inject 
     for(auto board: *cTool.fDetectorContainer)
