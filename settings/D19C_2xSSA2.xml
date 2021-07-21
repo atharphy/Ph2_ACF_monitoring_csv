@@ -31,7 +31,7 @@
                     <Register name="stub_trigger_veto_length"> 0 </Register>
     		<Register name="test_pulse">
     			<Register name="delay_after_fast_reset"> 50 </Register>
-    			<Register name="delay_after_test_pulse"> 200 </Register>
+    			<Register name="delay_after_test_pulse"> 50 </Register>
     			<Register name="delay_before_next_pulse"> 1000 </Register>
     			<Register name="en_fast_reset"> 0 </Register>
     			<Register name="en_test_pulse"> 1 </Register>

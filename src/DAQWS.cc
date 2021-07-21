@@ -87,70 +87,93 @@ int main(int argc, char* argv[])
     //IB->L1ADebug();
     // collect events
     size_t cNevents=100;
-    for( uint16_t cDelayBeforeNext=90; cDelayBeforeNext< 100; cDelayBeforeNext+=10 )
-    {    
-        for(auto cBeBoard: *cTool.fDetectorContainer)
+    // for( uint16_t cDelayAfterTP=300; cDelayAfterTP > 150; cDelayAfterTP-=10 )
+    // {
+        // uint16_t cTriggerLat = cDelayAfterTP-2; 
+        // //set latency 
+        // for(auto cBeBoard: *cTool.fDetectorContainer)
+        // {
+        //     for(auto opticalGroup: *cBeBoard)
+        //     {
+        //         for(auto hybrid: *opticalGroup)
+        //         {
+        //             for(auto chip: *hybrid)
+        //             {
+        //                 if(chip->getFrontEndType() == FrontEndType::SSA2)
+        //                 {
+        //                     cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
+        //                 }
+        //             }//chip
+        //         }//hybrid
+        //     }//board
+        // }
+        for( uint16_t cDelayBeforeNext=1000; cDelayBeforeNext > 10; cDelayBeforeNext-= 10 )
         {
-            std::vector<std::pair<std::string, uint32_t>> cRegVec;
-            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", cDelayBeforeNext});
-            cTool.fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
-            uint16_t cDelayBfrNxt = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse"); 
-            uint16_t cDelayAftrTP = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse"); 
-            uint16_t cNclks = cDelayBfrNxt+cDelayAftrTP;
-            float cRate = 1.0e-3/(cNclks*25e-9);
-            size_t cTriggerMult = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-            cTool.ReadNEvents(cBeBoard, cNevents);
-            const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
-            LOG (INFO) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from the FC7.." << RESET;
-            cTool.ReadNEvents(cBeBoard, cNevents);
-            const std::vector<Event*>& cEvents = cTool.GetEvents();
-            // loop over triggers in the burst 
-            std::vector<uint16_t> cExpectedHits(1+cTriggerMult, 120);
-            cExpectedHits[cTriggerMult]=0; 
-            std::vector<uint8_t> cMatches(0);
-            for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
+            for(auto cBeBoard: *cTool.fDetectorContainer)
             {
-                auto cEventIter = cEvents.begin() + cTriggerId ;
-                bool cEventMatch = true;
-                do
+                std::vector<std::pair<std::string, uint32_t>> cRegVec;
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", cDelayBeforeNext});
+                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cDelayAfterTP});
+                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+                cTool.fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
+                uint16_t cDelayBfrNxt = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse"); 
+                uint16_t cDelayAftrTP = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse"); 
+                uint16_t cNclks = cDelayBfrNxt+cDelayAftrTP;
+                float cRate = 1.0e-3/(cNclks*25e-9);
+                size_t cTriggerMult = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+                cTool.ReadNEvents(cBeBoard, cNevents);
+                const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
+                LOG (DEBUG) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from the FC7.." << RESET;
+                cTool.ReadNEvents(cBeBoard, cNevents);
+                const std::vector<Event*>& cEvents = cTool.GetEvents();
+                // loop over triggers in the burst 
+                std::vector<uint16_t> cExpectedHits(1+cTriggerMult, 120);
+                cExpectedHits[cTriggerMult]=0; 
+                std::vector<uint8_t> cMatches(0);
+                for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
                 {
-                    for(auto opticalGroup: *cBeBoard)
+                    auto cEventIter = cEvents.begin() + cTriggerId ;
+                    bool cEventMatch = true;
+                    do
                     {
-                        for(auto hybrid: *opticalGroup)
+                        for(auto opticalGroup: *cBeBoard)
                         {
-                            for(auto chip: *hybrid)
+                            for(auto hybrid: *opticalGroup)
                             {
-                                auto cNhits = (*cEventIter)->GetNHits(chip->getHybridId(), chip->getId());
-                                cEventMatch = cEventMatch && (cExpectedHits[cTriggerId] == cNhits);
-                                LOG (DEBUG) << "SS#" << +chip->getId() << " found " << +cNhits << " hits in Trigger#" 
-                                    << +cTriggerId << " of a burst of " << (cTriggerMult+1)
-                                    << " I expected to see " << cExpectedHits[cTriggerId]
-                                    << " hits."
-                                    << RESET;
-                            }//chip
-                        }//hybrid
-                    }//OG
-                    if( cEventMatch ) cMatches.push_back(1);
-                    else  cMatches.push_back(0);
-                    cEventIter += (1+cTriggerMult);
-                } while( cEventIter < cEvents.end() );
-            }//trigger id
-            float cEventsMatched = std::accumulate( cMatches.begin(), cMatches.end(), 0.);
-            float cMatchingFraction = cEventsMatched/cEvents.size();
-            if( cMatchingFraction == 1.)
-                LOG (INFO) << BOLDGREEN << "For "  << 1+cTriggerMult 
-                    << " triggers in a burst and " << cNclks << " clock cycles between the start of a burst .. found "
-                    << cEventsMatched << " events with the expected number of hits out of " << cEvents.size() << " readout events [ " 
-                    << cRate
-                    << " ]" << RESET;
-            else
-                LOG (INFO) << BOLDRED << "For "  << 1+cTriggerMult  
-                    << " triggers in a burst and " << cNclks << " clock cycles between the start of a burst .. found "
-                    << cEventsMatched << " events with the expected number of hits out of " << cEvents.size() << " readout events [ " 
-                    << cRate
-                    << " ]" << RESET;
-        }//board
-    }//loop over delays
+                                for(auto chip: *hybrid)
+                                {
+                                    auto cNhits = (*cEventIter)->GetNHits(chip->getHybridId(), chip->getId());
+                                    cEventMatch = cEventMatch && (cExpectedHits[cTriggerId] == cNhits);
+                                    LOG (DEBUG) << "SS#" << +chip->getId() << " found " << +cNhits << " hits in Trigger#" 
+                                        << +cTriggerId << " of a burst of " << (cTriggerMult+1)
+                                        << " I expected to see " << cExpectedHits[cTriggerId]
+                                        << " hits."
+                                        << RESET;
+                                }//chip
+                            }//hybrid
+                        }//OG
+                        if( cEventMatch ) cMatches.push_back(1);
+                        else  cMatches.push_back(0);
+                        cEventIter += (1+cTriggerMult);
+                    } while( cEventIter < cEvents.end() );
+                }//trigger id
+                float cEventsMatched = std::accumulate( cMatches.begin(), cMatches.end(), 0.);
+                float cMatchingFraction = cEventsMatched/cEvents.size();
+                if( cMatchingFraction == 1.)
+                    LOG (INFO) << BOLDGREEN << "For "  << 1+cTriggerMult 
+                        << " triggers in a burst and " << cNclks << " clock cycles between the start of a burst .. found "
+                        << cEventsMatched << " events with the expected number of hits out of " << cEvents.size() << " readout events [ " 
+                        << cRate
+                        << " ]" << RESET;
+                else
+                    LOG (INFO) << BOLDRED << "For "  << 1+cTriggerMult  
+                        << " triggers in a burst and " << cNclks << " clock cycles between the start of a burst .. found "
+                        << cEventsMatched << " events with the expected number of hits out of " << cEvents.size() << " readout events [ " 
+                        << cRate
+                        << " ]" << RESET;
+            }//board
+        }//loop over delays
+    //}
     // BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     // HybridContainer* ChipVec = pBoard->at(0)->at(0);
     // cTool.setFWTestPulse();
