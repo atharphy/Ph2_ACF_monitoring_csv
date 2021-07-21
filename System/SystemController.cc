@@ -171,6 +171,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     bool cWithCBC = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType         = FrontEndType::SSA;
                     bool cWithSSA = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
+                    cType         = FrontEndType::SSA2;
+                    bool cWithSSA2 = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType         = FrontEndType::MPA;
                     bool cWithMPA = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
 
@@ -183,6 +185,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                         fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                    }
+                    if(cWithSSA2 && !cWithMPA)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+                        fReadoutChipInterface = new SSA2Interface(fBeBoardFWMap);
                     }
                     if(cWithMPA && !cWithSSA)
                     {
@@ -490,6 +497,15 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     // align BE for CIC 
     for(auto cOpticalGroup: *pBoard)
     {
+        bool cWithCIC=false;
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto&   cCic  = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            if(cCic == NULL) continue;
+            cWithCIC=true;
+        }
+        if( !cWithCIC ) continue;
+        
         bool cBeAlignSuccess =  CicBeAlignment( cOpticalGroup );      
         if (cBeAlignSuccess) 
                 LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC data [hits+stubs]..." << RESET;
@@ -508,6 +524,16 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
         for(auto cOpticalGroup: *pBoard)
         {
+            bool cWithCIC=false;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto&   cCic  = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                if(cCic == NULL) continue;
+                cWithCIC=true;
+            }
+            if( !cWithCIC ) continue;
+        
+
             bool cDelayFoundSuccess =  CicPackageDelay( cOpticalGroup );   
             if (cDelayFoundSuccess) 
             {
@@ -851,6 +877,7 @@ bool SystemController::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup )
 }
 bool SystemController::CicBeAlignment(const OpticalGroup* pOpticalGroup )
 {
+    LOG (INFO) << BOLDMAGENTA << "SystemController::CicBeAlignment OG" << +pOpticalGroup->getId() << RESET;
     // make sure you're only sending one trigger at a time here
     auto cBoardId    = pOpticalGroup->getBeBoardId();
     auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });

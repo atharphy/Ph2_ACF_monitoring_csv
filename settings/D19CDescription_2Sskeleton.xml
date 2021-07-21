@@ -61,7 +61,9 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-	 </OpticalGroup>
+     </OpticalGroup>
+
+   
     
     <!--CONFIG-->
     <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->

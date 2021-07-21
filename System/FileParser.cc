@@ -1,5 +1,6 @@
 #include "FileParser.h"
 #include "../HWDescription/Cbc.h"
+#include "../HWDescription/SSA2.h"
 #include "../HWDescription/Cic.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
@@ -550,6 +551,41 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
     // FrontEndType cType = pSSA->getFrontEndType();
 }
 
+void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
+{
+    os << BOLDCYAN << "|"
+       << "  "
+       << "|"
+       << "   "
+       << "|"
+       << "----" << pSSAnode.name() << "  " << pSSAnode.first_attribute().name() << " :" << pSSAnode.attribute("Id").value()
+       << ", File: " << expandEnvironmentVariables(pSSAnode.attribute("configfile").value()) << RESET << std::endl;
+
+    // Get ID of SSA then add to the Hybrid!
+    uint32_t    cChipId    = pSSAnode.attribute("Id").as_int();
+    uint32_t    cPartnerId = pSSAnode.attribute("partid").as_int();
+    std::string cFileName;
+    if(!cFilePrefix.empty())
+    {
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
+
+        cFileName = cFilePrefix + expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
+    }
+    else
+        cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
+    ReadoutChip* cSSA2 = pHybrid->addChipContainer(cChipId, new SSA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
+    cSSA2->setOptical(pHybrid->isOptical());
+    cSSA2->setOpticalId(pHybrid->getOpticalId());
+    cSSA2->setNumberOfChannels(120);
+    cSSA2->setClockFrequency(320);
+    this->parseSSASettings(pSSAnode, cSSA2);
+}
+
+void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
+{
+    // FrontEndType cType = pSSA->getFrontEndType();
+}
+
 void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::string cFilePrefix)
 { // Get ID of MPA then add to the Hybrid!
     uint32_t    cChipId    = pHybridNode.attribute("Id").as_int();
@@ -711,6 +747,11 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     {
                         pBoard->setFrontEndType(FrontEndType::SSA);
                         this->parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
+                    }
+                    else if(cName == "SSA2")
+                    {
+                        pBoard->setFrontEndType(FrontEndType::SSA2);
+                        this->parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                     }
                     else if(cName == "MPA")
                     {

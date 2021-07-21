@@ -14,6 +14,7 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/CalibrationExample.h"
+#include "../tools/BackEndAlignment.h"
 #include "../tools/Tool.h"
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -36,73 +37,128 @@ int main(int argc, char* argv[])
 {
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
-    std::string       cHWFile = "settings/D19C_2xSSA_onechip.xml";
+    std::string       cHWFile = "settings/D19C_2xSSA2.xml";
     std::stringstream outp;
     Tool              cTool;
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
-    D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
-    IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.25, 1.25, 0.3, 0.0, 145);
-    IB->ReadPower_SSA();
     cTool.ConfigureHw();
+    D19cFWInterface* IB = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); // There has to be a better way!
+    //IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.0, 1.25, 0.3, 0.0, 145);
+    //IB->ReadPower_SSA();
+    
+    // align back-end
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    cBackEndAligner.Reset();
 
-    BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    HybridContainer* ChipVec = pBoard->at(0)->at(0);
-    cTool.setFWTestPulse();
-    TH1I* h1 = new TH1I("h1", "S-CURVE", 256, 0, 256);
-    for(int thd = 0; thd <= 256; thd++)
+    // inject 
+    for(auto board: *cTool.fDetectorContainer)
     {
-        for(auto cSSA: *ChipVec)
+        uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+        for(auto opticalGroup: *board)
         {
-            ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
-            cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_CALDAC", 30);
-            cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ReadoutMode", 0x1); // sync mode = 0
-            cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", thd);
-            cTool.fReadoutChipInterface->WriteChipReg(theSSA, "FE_Calibration", 1);
-            for(int i = 1; i <= 120; i++) // loop over all strips
+            for(auto hybrid: *opticalGroup)
             {
-                // cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 31);
-                cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S" + std::to_string(i), 5); // 17 = 10001 (enable strobe)
-            }
-            cTool.fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_LSB", 0x44);
-            cTool.fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_MSB", 0x0);
-        }
-
-        cTool.SystemController::Start(0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.SystemController::Stop();
-        for(auto cSSA: *ChipVec)
-        {
-            ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
-            uint8_t      cRP1   = cTool.fReadoutChipInterface->ReadChipReg(theSSA, "ReadCounter_LSB_S18");
-            uint8_t      cRP2   = cTool.fReadoutChipInterface->ReadChipReg(theSSA, "ReadCounter_MSB_S18");
-            uint16_t     cRP    = (cRP2 * 256) + cRP1;
-
-            LOG(INFO) << BOLDRED << "THDAC = " << thd << ", HITS = " << cRP << RESET;
-            h1->Fill(thd, cRP);
-        }
-        /*
-        cTool.ReadNEvents(pBoard, 200);
-        const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
-
-        for ( auto &event : eventVector ) //for on events - begin
-        {
-            for(auto hybrid: *pBoard) // for on hybrid - begin
-            {
-                for(auto chip: *hybrid) // for on chip - begin
+                for(auto chip: *hybrid)
                 {
-                    unsigned int channelNumber = 0;
-                    for (int i = 1; i<=120;i++ ) // loop over all strips
+                    if(chip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        h1->Fill(thd, event->DataBit ( hybrid->getId(), chip->getId(), channelNumber));
-                        LOG (INFO) << BOLDBLUE << "hits on channel "<<channelNumber<< " = " << event->DataBit (
-        hybrid->getId(), chip->getId(), channelNumber) <<RESET; channelNumber++; } // for on channel - end } // for on
-        chip - end } // for on hybrid - end } // for on events - end*/
+                        LOG (INFO) << BOLDBLUE << "Enabling injection for SSA2" << RESET;
+                        cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerDelay - 2 , false);
+                        LOG (INFO) << BOLDBLUE << "Trigger latency set to " << (cTriggerDelay - 2)  << RESET;
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "DigitalSync", 0x1, false);
+                        LOG (INFO) << BOLDBLUE << "DigiSync enabled " << RESET;
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "DigCalibPattern_L",0xFF,true);
+                        auto cValue = cTool.fReadoutChipInterface->ReadChipReg(chip,"DigCalibPattern_L_S9");
+                        LOG (INFO) << BOLDBLUE << "DigCalibPattern_L_S9 is " << +cValue << RESET;
+                    }
+                }
+            }
+        }
     }
-    TCanvas* c1 = new TCanvas("c", "c", 600, 600);
-    c1->cd();
-    h1->Draw("hist");
-    c1->Print("INJ.png");
+    // look at L1 debug 
+    //IB->L1ADebug();
+    // collect events
+    for(auto cBeBoard: *cTool.fDetectorContainer)
+    {
+        cTool.ReadNEvents(cBeBoard, 100);
+        const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
+        LOG (INFO) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from the FC7.." << RESET;
+        for(auto cEvent : cPh2Events)
+        {
+            LOG(INFO) << BOLDBLUE << "L1N: " << static_cast<D19cSSAEvent*>(cEvent)->GetL1Number() << RESET;
+            for(auto opticalGroup: *cBeBoard)
+            {
+                for(auto hybrid: *opticalGroup)
+                {
+                    for(auto chip: *hybrid)
+                    {
+                        LOG (INFO) << "SS#" << +chip->getId() << " found " << +cEvent->GetNHits(chip->getHybridId(), chip->getId()) << " hits in this event.." << RESET;
+                    }
+                }
+            }
+        }
+    }
+    // BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+    // HybridContainer* ChipVec = pBoard->at(0)->at(0);
+    // cTool.setFWTestPulse();
+    // TH1I* h1 = new TH1I("h1", "S-CURVE", 256, 0, 256);
+    // for(int thd = 0; thd <= 256; thd++)
+    // {
+    //     for(auto cSSA: *ChipVec)
+    //     {
+    //         ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
+    //         cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_CALDAC", 30);
+    //         cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ReadoutMode", 0x1); // sync mode = 0
+    //         cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", thd);
+    //         cTool.fReadoutChipInterface->WriteChipReg(theSSA, "FE_Calibration", 1);
+    //         for(int i = 1; i <= 120; i++) // loop over all strips
+    //         {
+    //             // cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 31);
+    //             cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS_S" + std::to_string(i), 5); // 17 = 10001 (enable strobe)
+    //         }
+    //         cTool.fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_LSB", 0x44);
+    //         cTool.fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_MSB", 0x0);
+    //     }
+
+    //     cTool.SystemController::Start(0);
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    //     cTool.SystemController::Stop();
+    //     for(auto cSSA: *ChipVec)
+    //     {
+    //         ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
+    //         uint8_t      cRP1   = cTool.fReadoutChipInterface->ReadChipReg(theSSA, "ReadCounter_LSB_S18");
+    //         uint8_t      cRP2   = cTool.fReadoutChipInterface->ReadChipReg(theSSA, "ReadCounter_MSB_S18");
+    //         uint16_t     cRP    = (cRP2 * 256) + cRP1;
+
+    //         LOG(INFO) << BOLDRED << "THDAC = " << thd << ", HITS = " << cRP << RESET;
+    //         h1->Fill(thd, cRP);
+    //     }
+    //     /*
+    //     cTool.ReadNEvents(pBoard, 200);
+    //     const std::vector<Event*> &eventVector = cTool.GetEvents(pBoard);
+
+    //     for ( auto &event : eventVector ) //for on events - begin
+    //     {
+    //         for(auto hybrid: *pBoard) // for on hybrid - begin
+    //         {
+    //             for(auto chip: *hybrid) // for on chip - begin
+    //             {
+    //                 unsigned int channelNumber = 0;
+    //                 for (int i = 1; i<=120;i++ ) // loop over all strips
+    //                 {
+    //                     h1->Fill(thd, event->DataBit ( hybrid->getId(), chip->getId(), channelNumber));
+    //                     LOG (INFO) << BOLDBLUE << "hits on channel "<<channelNumber<< " = " << event->DataBit (
+    //     hybrid->getId(), chip->getId(), channelNumber) <<RESET; channelNumber++; } // for on channel - end } // for on
+    //     chip - end } // for on hybrid - end } // for on events - end*/
+    // }
+    // TCanvas* c1 = new TCanvas("c", "c", 600, 600);
+    // c1->cd();
+    // h1->Draw("hist");
+    // c1->Print("INJ.png");
 
     IB->PSInterfaceBoard_PowerOff_SSA();
 }

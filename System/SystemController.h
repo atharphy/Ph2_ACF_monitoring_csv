@@ -24,6 +24,7 @@
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSAInterface.h"
+#include "../HWInterface/SSA2Interface.h"
 #include "../HWInterface/lpGBTInterface.h"
 #include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../NetworkUtils/TCPClient.h"

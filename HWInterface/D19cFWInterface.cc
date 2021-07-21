@@ -19,7 +19,7 @@
 #include <chrono>
 #include <time.h>
 #include <uhal/uhal.hpp>
-
+uint8_t  cLpGBTI2CHack=false;
 // #pragma GCC diagnostic ignored "-Wpedantic"
 
 using namespace Ph2_HwDescription;
@@ -877,10 +877,11 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                         // auto cReadoutChip = static_cast<ReadoutChip*>( cChip);
                         cBaseAddress = 0x41;
                         if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA2) cBaseAddress = 0x20;
                         if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
 
                         cBaseAddress += cChip->getId()%8;
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
+                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
                         if(fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end())
                         {
@@ -906,9 +907,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                     {
                         cBaseAddress = 0x41;
                         if(cChip->getFrontEndType() == FrontEndType::SSA) cBaseAddress = 0x20;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA2) cBaseAddress = 0x20;
                         if(cChip->getFrontEndType() == FrontEndType::MPA) cBaseAddress = 0x40;
                         cBaseAddress += cChip->getId()%8;
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
+                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
                         LOG(INFO) << BOLDBLUE << "Adding slave with I2C address 0x" << std::hex << +cBaseAddress << std::dec << RESET;
 
@@ -958,6 +960,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         this->ReadoutChipReset();
     }
 
+    
     // modifying FC7 configuration based on CIC
     cVecReg.clear();
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
@@ -1194,6 +1197,7 @@ void D19cFWInterface::InitFMCPower()
 
     std::string cFMC1name = fFMCMap[fmc1_card_type];
     std::string cFMC2name = fFMCMap[fmc2_card_type];
+    bool        cWithIB   = (cFMC1name == "MPA_SSA");
     bool        cWithDIO5 = (cFMC1name == "DIO5" || cFMC2name == "DIO5");       // DIO5 in either slot
     bool        cPSMux    = (cFMC1name == "PS_FMC1" && cFMC2name == "PS_FMC2"); // PS Mux Crate
     cPSMux                = cPSMux || (cFMC1name == "PS_FMC2" && cFMC2name == "PS_FMC1");
@@ -1229,6 +1233,12 @@ void D19cFWInterface::InitFMCPower()
     }
 
     if(!(cWithDIO5 || cPSMux || c2SMux)) LOG(ERROR) << "Enabling of FMC power for this setup is not required, check configuration file..";
+    if( cWithIB ) 
+    {
+        LOG (INFO) << BOLDBLUE << "Enabling Interface board for MPA-SSA communication" << RESET;
+        this->PSInterfaceBoard_PowerOn_SSA(1.25, 1.0, 1.25, 0.3, 0.0, 145);
+        this->ReadPower_SSA();
+    }
 }
 
 void D19cFWInterface::PowerOnDIO5(uint8_t pFMCId)
@@ -4298,7 +4308,7 @@ bool D19cFWInterface::cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWor
 
 void D19cFWInterface::PSInterfaceBoard_PowerOn_SSA(float VDDPST, float DVDD, float AVDD, float VBF, float BG, uint8_t ENABLE)
 {
-    this->getBoardInfo();
+    //this->getBoardInfo();
     this->PSInterfaceBoard_PowerOn(0, 0);
 
     uint32_t write   = 0;
@@ -5638,6 +5648,9 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
 bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
 {
     auto cLinkId = pChip->getOpticalId();
+    uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
+    if( cLpGBTI2CHack && cMasterId == 0 ) cMasterId = 1; 
+    
     // LOG (INFO) << BOLDGREEN << "Writing FE register on link " << +cLinkId << RESET;
     LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
     uint8_t cChipId      = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
@@ -5659,7 +5672,7 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
         cNbytes    = 2;
         cSlaveData = (pRegisterValue << 8) | (pRegisterAddress & 0xFF);
     }
-    bool cSuccess = I2CWrite(cLinkId, ((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cSlaveData, cNbytes);
+    bool cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
     if(pVerify && cSuccess)
     {
         uint8_t cReadBack = ReadFERegister(pChip, pRegisterAddress);
@@ -5671,7 +5684,7 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
                 LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec
                           << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
             }
-            cSuccess = I2CWrite(cLinkId, ((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cSlaveData, cNbytes);
+            cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
             if(cSuccess)
             {
                 cReadBack = ReadFERegister(pChip, pRegisterAddress);
@@ -5688,6 +5701,9 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
 uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
     auto cLinkId = pChip->getOpticalId();
+    uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
+    if( cLpGBTI2CHack && cMasterId == 0 ) cMasterId = 1; 
+    
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId      = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if( pChip->getFrontEndType() == FrontEndType::MPA ) cChipId = cChipId%8;
@@ -5704,8 +5720,8 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
         cSlaveData = (pRegisterAddress & 0xFF);
     }
 
-    I2CWrite(cLinkId, ((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, cSlaveData, cNbytes);
-    uint32_t cReadBack = I2CRead(cLinkId, ((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, 1);
+    I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
+    uint32_t cReadBack = I2CRead(cLinkId, cMasterId, cChipAddress, 1);
     return cReadBack;
 }
 
