@@ -777,7 +777,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
     bool cTuned = true;
     LOG(INFO) << GREEN << "Trying Phase Tuning for PS Chip(s)" << RESET;
-
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -790,69 +790,34 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                 if (cChip->getFrontEndType() == FrontEndType::SSA2)
     		    {
         		    LOG(INFO) << GREEN << "SSA2 Alignment" << RESET;
-        			// Set SLVS currents to max, set OutPatterns (now called Shift_pattern) to 0x80
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_0_1", 0x9);
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_2_3", 0x9);
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_4_5", 0x9);
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_6_7", 0x9);
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_L1", 0x1);
+        			// configure SSA2 to output data in pattern mode 
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x2);
-                    std::vector<uint8_t> cPhaseAlPatterns(8,0xEA);
+                    // Configure SLVS current
+                    uint8_t cSLVScurrent=0x3;
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_0_1", (cSLVScurrent << 3) | cSLVScurrent );
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_2_3", (cSLVScurrent << 3) | cSLVScurrent );
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_4_5", (cSLVScurrent << 3) | cSLVScurrent );
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_6_7", (cSLVScurrent << 3) | cSLVScurrent );
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_L1", cSLVScurrent);
                     D19cFWInterface::PhaseTuner cTuner;
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", cPhaseAlPatterns[0]);
-                    uint8_t cLineId=0;
-                    cTuner.TuneLine((static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())), cHybrid->getId(), cChip->getId(), cLineId, cPhaseAlPatterns[0], 8, true);
-                    // uint8_t cDelay=cTuner.fDelay;
-                    // fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", 0xEA);
-                    // for( uint8_t cShift=0; cShift < 8; cShift++)
-                    // {
-                    //     LOG (INFO) << BOLDMAGENTA << "Shift of " << +cShift << " "
-                    //     cTuner.SetLineMode(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()), cChip->getHybridId(), cChip->getId(), cLineId, 2, cDelay, cShift, 0, 0);
-                    //     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
-                    // } 
-               //      for(auto cPattern : cPatterns )
-               //      {
-            			// fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", cPattern);
-            			// fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_0", cPattern);
-            			// fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_1", cPattern);
-            			// fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_2", cPattern);
-            			// fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_3", cPattern);
-            			// fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_4_st_5", cPattern);
-            			// fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_6_st_7", cPattern);
-               //          for( uint8_t cShift=0; cShift < 8; cShift++)
-               //          {
-               //  			for( uint8_t cLineId=0; cLineId < 1 ; cLineId++)
-               //              {
-               //                cTuner.PhaseAlign((static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())), cHybrid->getId(), cChip->getId(), cLineId );
-               //                LOG (INFO) << BOLDMAGENTA << "Delay of " << +cTuner.fDelay << RESET;
-               //                //cTuner.TuneLine((static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())), cHybrid->getId(), cChip->getId(), cLineId, cPattern, 8, true);
-               //                cTuner.SetLineMode(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()), cChip->getHybridId(), cChip->getId(), cLineId, 2, cTuner.fDelay, cShift, 0, 0);
-               //              }
-               //              //static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8);
-               //  		}
-               //       }
-                    // std::vector<uint8_t> cPatternsWordAlign{0xF0};
-                    // for(auto cPattern : cPatternsWordAlign )
-                    // {
-                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", cPattern);
-                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_0", cPattern);
-                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_1", cPattern);
-                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_2", cPattern);
-                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_3", cPattern);
-                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_4_st_5", cPattern);
-                    //     fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_6_st_7", cPattern);
-                    //     for( uint8_t cLineId=0; cLineId < 9 ; cLineId++)
-                    //     {
-                    //         cTuner.SetLineMode(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()), cHybrid->getId(), cChip->getId(), cLineId, 2, 31, 1, 0, 0);
-                    //         cTuner.SetLineMode(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()), cHybrid->getId(), cChip->getId(), cLineId, 0);
-                    //         cTuner.SendControl(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()), cHybrid->getId(), cChip->getId(), cLineId, "WordAlignment");
-                    //         uint8_t cLineStatus = cTuner.GetLineStatus(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()), cHybrid->getId(), cChip->getId(), cLineId);
-                    //         LOG (DEBUG) << +cLineStatus << RESET;
-                    //         //cTuner.WordAlign((static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())), cHybrid->getId(), cChip->getId(), cLineId, cPattern, 16, true);
-                    //     }
-                    //     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8);
-                    //     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
-                    // }
+                    uint8_t cPhaseAlignmentPattern=0xAA; 
+                    uint8_t cWordAlignmentPattern=0xEA; 
+                    std::vector<std::string> cRegNames{ "Shift_pattern_L1" , "Shift_pattern_st_0", "Shift_pattern_st_1", "Shift_pattern_st_2" , "Shift_pattern_st_3", "Shift_pattern_st_4_st_5", "Shift_pattern_st_4_st_5", "Shift_pattern_st_6_st_7", "Shift_pattern_st_6_st_7"};
+                    std::vector<uint8_t> cAlVals(8,0);
+                    for(uint8_t cLineId=0; cLineId < 8; cLineId++)
+                    {
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cLineId], cPhaseAlignmentPattern);
+                        cTuner.TunePhase(cInterface, cChip->getHybridId(), cChip->getId(), cLineId);
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cLineId], cWordAlignmentPattern);
+                        cTuner.AlignWord(cInterface, cChip->getHybridId(), cChip->getId(), cLineId, cWordAlignmentPattern, 8, true);
+                        cAlVals[cLineId] = cTuner.GetLineStatus(cInterface, cHybrid->getHybridId(), cChip->getId(), cLineId);
+                        LOG (DEBUG) << +cAlVals[cLineId] << RESET;
+                    }
+                    // back to readout mode 0 to look at the L1 data 
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x0);
+                    cInterface->L1ADebug();
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x2);
+                    cInterface->StubDebug(true, 8);
                     // Reset to original values
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x0);
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", 0x0);
@@ -863,8 +828,6 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_4_st_5", 0x0);
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_6_st_7", 0x0);
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "DigCalibPattern_L", 0xff);
-        			//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8);
-        			//static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
     		    } 
 
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
@@ -1217,25 +1180,16 @@ bool BackEndAlignment::Align()
                 {
                     cWithCBC = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;
                     cWithSSA = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA;
+                    cWithSSA = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2;
                     cWithMPA = cWithMPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA;
                 } // ROcs
             }     // Hybrids
         }         // OGs
-        if(cWithCIC)
-        {
-            cAligned = this->FindStubLatency(theBoard);
-        }
-        else
-        {
-            if(cWithCBC) { this->CBCAlignment(theBoard); }
-            else if(cWithMPA or cWithSSA)
-            {
-                this->PSAlignment(theBoard);
-            }
-            else
-            {
-            }
-        }
+        if(cWithCIC) continue;
+
+        if(cWithCBC) { this->CBCAlignment(theBoard); }
+        else if(cWithMPA or cWithSSA) this->PSAlignment(theBoard);
+        
         // re-load configuration of fast command block from register map loaded from xml file
         LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(theBoard);

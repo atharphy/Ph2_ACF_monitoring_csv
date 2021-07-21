@@ -1407,6 +1407,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                             {
                                 fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
                             }
+                            else if(pBoard->getFrontEndType() == FrontEndType::SSA2)
+                            {
+                                fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNFe, cEvent));
+                            }
                             else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                             {
                                 fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));

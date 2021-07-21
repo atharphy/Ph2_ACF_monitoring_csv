@@ -754,32 +754,36 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // this->WriteReg("clock_source_u8", 3);
 
     // check status of clocks
-    bool c40MhzLocked    = false;
-    bool cRefClockLocked = false;
-    int  cLockAttempts   = 0;
-    while(cLockAttempts < 10)
+    bool cCheckLock=false;
+    if( cCheckLock )
     {
-        c40MhzLocked = this->ReadReg("fc7_daq_stat.general.clock_generator.clk_40_locked") == 1;
-        if(c40MhzLocked)
-            LOG(INFO) << BOLDBLUE << "40 MHz clock in FC7 " << BOLDGREEN << " LOCKED!" << RESET;
-        else
-            LOG(INFO) << BOLDBLUE << "40 MHz clock in FC7 " << BOLDRED << " FAILED TO LOCK!" << RESET;
+        bool c40MhzLocked    = false;
+        bool cRefClockLocked = false;
+        int  cLockAttempts   = 0;
+        while(cLockAttempts < 10)
+        {
+            c40MhzLocked = this->ReadReg("fc7_daq_stat.general.clock_generator.clk_40_locked") == 1;
+            if(c40MhzLocked)
+                LOG(INFO) << BOLDBLUE << "40 MHz clock in FC7 " << BOLDGREEN << " LOCKED!" << RESET;
+            else
+                LOG(INFO) << BOLDBLUE << "40 MHz clock in FC7 " << BOLDRED << " FAILED TO LOCK!" << RESET;
 
-        cRefClockLocked = this->ReadReg("fc7_daq_stat.general.clock_generator.ref_clk_locked") == 1;
-        if(cRefClockLocked)
-            LOG(INFO) << BOLDBLUE << "Ref clock in FC7 " << BOLDGREEN << " LOCKED!" << RESET;
-        else
-            LOG(INFO) << BOLDBLUE << "Ref clock in FC7 " << BOLDRED << " FAILED TO LOCK!" << RESET;
+            cRefClockLocked = this->ReadReg("fc7_daq_stat.general.clock_generator.ref_clk_locked") == 1;
+            if(cRefClockLocked)
+                LOG(INFO) << BOLDBLUE << "Ref clock in FC7 " << BOLDGREEN << " LOCKED!" << RESET;
+            else
+                LOG(INFO) << BOLDBLUE << "Ref clock in FC7 " << BOLDRED << " FAILED TO LOCK!" << RESET;
 
-        if(c40MhzLocked && cRefClockLocked) break;
+            if(c40MhzLocked && cRefClockLocked) break;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        cLockAttempts++;
-    };
-    if(!c40MhzLocked || !cRefClockLocked)
-    {
-        LOG(ERROR) << BOLDRED << "One of the clocks failed to LOCK!" << RESET;
-        exit(0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            cLockAttempts++;
+        };
+        if(!c40MhzLocked || !cRefClockLocked)
+        {
+            LOG(ERROR) << BOLDRED << "One of the clocks failed to LOCK!" << RESET;
+            exit(0);
+        }
     }
     this->syncCDCE();
 

@@ -38,6 +38,7 @@
 #include "../Utils/D19cMPAEventAS.h"
 #include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSAEvent.h"
+#include "../Utils/D19cSSA2Event.h"
 #include "../Utils/D19cSSAEventAS.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"

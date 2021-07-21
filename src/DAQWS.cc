@@ -44,8 +44,6 @@ int main(int argc, char* argv[])
     cTool.InitializeSettings(cHWFile, outp);
     cTool.ConfigureHw();
     D19cFWInterface* IB = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); // There has to be a better way!
-    //IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.0, 1.25, 0.3, 0.0, 145);
-    //IB->ReadPower_SSA();
     
     // align back-end
     BackEndAlignment cBackEndAligner;
@@ -57,7 +55,10 @@ int main(int argc, char* argv[])
     // inject 
     for(auto board: *cTool.fDetectorContainer)
     {
+        uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        LOG (INFO) << BOLDMAGENTA << "Trigger source is " << +cTriggerSource << RESET;
         uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+        uint16_t cTriggerLat = cTriggerDelay-3; 
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
@@ -67,8 +68,8 @@ int main(int argc, char* argv[])
                     if(chip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         LOG (INFO) << BOLDBLUE << "Enabling injection for SSA2" << RESET;
-                        cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerDelay - 2 , false);
-                        LOG (INFO) << BOLDBLUE << "Trigger latency set to " << (cTriggerDelay - 2)  << RESET;
+                        cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
+                        LOG (INFO) << BOLDBLUE << "Trigger latency set to " << cTriggerLat  << RESET;
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "DigitalSync", 0x1, false);
                         LOG (INFO) << BOLDBLUE << "DigiSync enabled " << RESET;
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "DigCalibPattern_L",0xFF,true);
@@ -80,16 +81,15 @@ int main(int argc, char* argv[])
         }
     }
     // look at L1 debug 
-    //IB->L1ADebug();
+    IB->L1ADebug();
     // collect events
     for(auto cBeBoard: *cTool.fDetectorContainer)
     {
-        cTool.ReadNEvents(cBeBoard, 100);
+        cTool.ReadNEvents(cBeBoard, 4);
         const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
         LOG (INFO) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from the FC7.." << RESET;
         for(auto cEvent : cPh2Events)
         {
-            LOG(INFO) << BOLDBLUE << "L1N: " << static_cast<D19cSSAEvent*>(cEvent)->GetL1Number() << RESET;
             for(auto opticalGroup: *cBeBoard)
             {
                 for(auto hybrid: *opticalGroup)

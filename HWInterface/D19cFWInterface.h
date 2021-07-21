@@ -463,11 +463,16 @@ class D19cFWInterface : public BeBoardFWInterface
             }
             else if(fType == 1)
             {
-                fDelay                  = (pReply & 0x00F80000) >> 19;
-                fBitslip                = (pReply & 0x00070000) >> 16;
-                fDone                   = (pReply & 0x00008000) >> 15;
-                fWordAlignmentFSMstate  = (pReply & 0x00000F00) >> 8;
-                fPhaseAlignmentFSMstate = (pReply & 0x0000000F) >> 0;
+                fDelay                  = (pReply & (0x1F<<19)) >> 19;
+                fBitslip                = (pReply & (0xF<<15)) >> 15;
+                fDone                   = (pReply & (0x1<<14)) >> 14;
+                fWordAlignmentFSMstate  = (pReply & (0xF<<7)) >> 7;
+                fPhaseAlignmentFSMstate = (pReply & (0xF<<0)) >> 0;
+                // fDelay                  = (pReply & 0x00F80000) >> 19;
+                // fBitslip                = (pReply & 0x00070000) >> 16;
+                // fDone                   = (pReply & 0x00008000) >> 15;
+                // fWordAlignmentFSMstate  = (pReply & 0x00000F00) >> 8;
+                // fPhaseAlignmentFSMstate = (pReply & 0x0000000F) >> 0;
             }
             else if(fType == 6)
             {
@@ -602,6 +607,25 @@ class D19cFWInterface : public BeBoardFWInterface
             cStatus = ParseStatus(pInterface);
             return cStatus;
         };
+        void TunePhase(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
+        {
+            SetLineMode(pInterface, pHybrid, pChip, pLine);
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
+        }
+        void AlignWord(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
+        {
+            if(pChangePattern)
+            {
+                SetLineMode(pInterface, pHybrid, pChip, pLine);
+                SetLinePattern(pInterface, pHybrid, pChip, pLine, pPattern, pPatternPeriod);
+            }
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
+        }
+
         bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
             LOG(INFO) << BOLDBLUE << "Tuning line " << +pLine << RESET;
