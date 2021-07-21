@@ -1236,10 +1236,13 @@ void D19cFWInterface::InitFMCPower()
         if(cFMC1name == "DIO5" || cFMC2name == "DIO5") this->PowerOnDIO5(cFMCIds[cIndx]);
     }
 
-    if(!(cWithDIO5 || cPSMux || c2SMux)) LOG(ERROR) << "Enabling of FMC power for this setup is not required, check configuration file..";
+    if(!(cWithDIO5 || cPSMux || c2SMux || cWithIB)) LOG(ERROR) << "Enabling of FMC power for this setup is not required, check configuration file..";
     if( cWithIB ) 
     {
         LOG (INFO) << BOLDBLUE << "Enabling Interface board for MPA-SSA communication" << RESET;
+        // power cycle board - jic 
+        this->PSInterfaceBoard_PowerOff_SSA();
+        this->ReadPower_SSA();
         this->PSInterfaceBoard_PowerOn_SSA(1.25, 1.0, 1.25, 0.3, 0.0, 145);
         this->ReadPower_SSA();
     }

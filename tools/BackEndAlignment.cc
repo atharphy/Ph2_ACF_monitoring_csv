@@ -791,14 +791,16 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     		    {
         		    LOG(INFO) << GREEN << "SSA2 Alignment" << RESET;
         			// configure SSA2 to output data in pattern mode 
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x2);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x2,false);
+                    /*
                     // Configure SLVS current
-                    uint8_t cSLVScurrent=0x3;
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_0_1", (cSLVScurrent << 3) | cSLVScurrent );
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_2_3", (cSLVScurrent << 3) | cSLVScurrent );
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_4_5", (cSLVScurrent << 3) | cSLVScurrent );
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_6_7", (cSLVScurrent << 3) | cSLVScurrent );
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_L1", cSLVScurrent);
+                    uint8_t cSLVScurrent=0x7;
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_0_1", (cSLVScurrent << 3) | cSLVScurrent ,false);
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_2_3", (cSLVScurrent << 3) | cSLVScurrent ,false);
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_4_5", (cSLVScurrent << 3) | cSLVScurrent ,false);
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_6_7", (cSLVScurrent << 3) | cSLVScurrent ,false);
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_L1", cSLVScurrent,false);
+                    */
                     D19cFWInterface::PhaseTuner cTuner;
                     uint8_t cPhaseAlignmentPattern=0xAA; 
                     uint8_t cWordAlignmentPattern=0xEA; 
@@ -814,12 +816,12 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                         LOG (DEBUG) << +cAlVals[cLineId] << RESET;
                     }
                     // back to readout mode 0 to look at the L1 data 
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x0);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x0,false);
                     cInterface->L1ADebug();
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x2);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x2,false);
                     cInterface->StubDebug(true, 8);
                     // Reset to original values
-        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x0);
+        			fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x0,false);
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", 0x0);
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_0", 0x0);
         			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_1", 0x0);

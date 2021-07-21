@@ -369,9 +369,9 @@ SSA2Interface::~SSA2Interface() {}
 	    }
 		else if(pRegName == "TriggerLatency")
 		{
-			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, false);
 			bool cReadoutMode       = WriteChipSingleReg(pSSA2, "control_3", pValue&0xFF, pVerifLoop);
-			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x10, pVerifLoop);
+			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x10, false);
 			cReadoutMode       &= WriteChipSingleReg(pSSA2, "control_1", (pValue&0x100 >> 8), pVerifLoop);
 			return cReadoutMode;
 		}
@@ -413,13 +413,18 @@ SSA2Interface::~SSA2Interface() {}
 	    else if(pRegName == "DigitalSync")
 	    {
 			uint8_t cRegValue = (pValue << 3) | (1 << 2) | (1 << 0);
-			bool cEnFlags = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
+			WriteChipReg(pSSA2, "mask_strip", 0xff,false);
+            bool cEnFlags = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
 			bool cMode = WriteChipReg(pSSA2, "ReadoutMode", 0x0,pVerifLoop);
-			this->WriteChipSingleReg(pSSA2, "mask_peri_D",  (0xF << 4) , pVerifLoop);
-			bool cCalDuration       = WriteChipSingleReg(pSSA2, "control_2", (0xF << 4) , pVerifLoop);
-			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
-			return cEnFlags && cMode && cCalDuration;
+			return cEnFlags && cMode ;
         }
+		else if(pRegName == "DigitalDuration")
+		{
+			this->WriteChipSingleReg(pSSA2, "mask_peri_D",  (0xF << 4) , false);
+			bool cCalDuration       = WriteChipSingleReg(pSSA2, "control_2", (0xF << 4), false);
+			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
+			return cCalDuration;
+		}		
 	    else if(pRegName == "EnableSLVSTestOutput")
 	    {
 		LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
