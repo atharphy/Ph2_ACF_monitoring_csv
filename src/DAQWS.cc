@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
         LOG (INFO) << BOLDMAGENTA << "Trigger source is " << +cTriggerSource << RESET;
         uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
         uint16_t cTriggerLat = cTriggerDelay-3; 
+        LOG (INFO) << BOLDBLUE << "Trigger latency will be set to " << cTriggerLat  << "... and also enabling digitalSync for all strips" << RESET;
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
@@ -69,7 +70,6 @@ int main(int argc, char* argv[])
                     {
                         LOG (INFO) << BOLDBLUE << "Enabling injection for SSA2" << RESET;
                         cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
-                        LOG (INFO) << BOLDBLUE << "Trigger latency set to " << cTriggerLat  << RESET;
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "DigitalSync", 0x1, false);
                         LOG (INFO) << BOLDBLUE << "DigiSync enabled " << RESET;
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "DigCalibPattern_L",0xFF,true);
@@ -159,6 +159,5 @@ int main(int argc, char* argv[])
     // c1->cd();
     // h1->Draw("hist");
     // c1->Print("INJ.png");
-
-    IB->PSInterfaceBoard_PowerOff_SSA();
+    // IB->PSInterfaceBoard_PowerOff_SSA();
 }
