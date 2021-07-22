@@ -15,6 +15,8 @@ class D19cSSA2Event : public Event
   public:
     D19cSSA2Event(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA2, uint32_t pNFe, const std::vector<uint32_t>& list);
     ~D19cSSA2Event() {}
+    // temporary 
+    uint32_t          L1Id(uint8_t pFeId, uint8_t pReadoutChipId) const;
     void              SetEvent(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA2, const std::vector<uint32_t>& list) override;
     uint32_t          GetEventCountCBC() const override { return fEventCountCBC; }
     std::string       HexString() const override;
@@ -53,6 +55,7 @@ class D19cSSA2Event : public Event
     }
   private:
     uint8_t fNSSA2=1;
+    uint16_t fL1Id=0;
     EventDataVector           fEventDataVector;
     EventHeader               fEventHeader;
     static constexpr size_t   encodeVectorIndex(const uint8_t pFeId, const uint8_t pSSA2Id, const uint8_t numberOfSSA2s) { return pSSA2Id + pFeId * numberOfSSA2s; }

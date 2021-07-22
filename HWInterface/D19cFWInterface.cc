@@ -5624,12 +5624,18 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     size_t                cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     uint16_t              cI2CReadByteRegAddr = 0;
     // pick correct register address to check
+    // fix me
+    if(pMasterId == 2)
+        cI2CReadByteRegAddr = 0x018d;
     if(pMasterId == 2)
         cI2CReadByteRegAddr = 0x018d;
     else if(pMasterId == 0)
         cI2CReadByteRegAddr = 0x0163;
     // check reply
-    while(cReadBackRegAddr != cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry)
+    bool cCheckReadByte = false;
+    bool cFail = cCheckReadByte ? (cReadBackRegAddr != cI2CReadByteRegAddr) : false; 
+    cFail = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
+    while(cFail)
     {
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
@@ -5641,6 +5647,8 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
         // std::this_thread::sleep_for(std::chrono::microseconds(10));
         cReadBack        = cReplyVector[7] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        cFail = cCheckReadByte ? (cReadBackRegAddr != cI2CReadByteRegAddr) : false; 
+        cFail = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
         cIter++;
     };

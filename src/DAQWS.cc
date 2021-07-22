@@ -53,74 +53,81 @@ int main(int argc, char* argv[])
     //cBackEndAligner.Reset();
 
     // inject 
-    for(auto board: *cTool.fDetectorContainer)
-    {
-        uint16_t cTriggerMult = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        uint8_t cPattern=0x00; 
-        for( uint8_t cId=0; cId < cTriggerMult; cId++)
-        {
-            cPattern = cPattern | ( 1 << cId);
-        }
-        uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        LOG (INFO) << BOLDMAGENTA << "Trigger source is " << +cTriggerSource << RESET;
-        uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        uint16_t cTriggerLat = cTriggerDelay-2; 
-        LOG (INFO) << BOLDBLUE << "Trigger latency will be set to " << cTriggerLat  << "... and also enabling digitalSync for all strips" << RESET;
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                for(auto chip: *hybrid)
-                {
-                    if(chip->getFrontEndType() == FrontEndType::SSA2)
-                    {
-                        cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "DigitalSync", 0x1, false);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip,"DigitalDuration", 1);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "DigCalibPattern_L",cPattern,true);
-                    }
-                }
-            }
-        }
-    }
+    // for(auto board: *cTool.fDetectorContainer)
+    // {
+    //     uint16_t cTriggerMult = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    //     uint8_t cPattern=0x00; 
+    //     for( uint8_t cId=0; cId < cTriggerMult; cId++)
+    //     {
+    //         cPattern = cPattern | ( 1 << cId);
+    //     }
+    //     uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    //     LOG (INFO) << BOLDMAGENTA << "Trigger source is " << +cTriggerSource << RESET;
+    //     uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    //     uint16_t cTriggerLat = cTriggerDelay-2; 
+    //     LOG (INFO) << BOLDBLUE << "Trigger latency will be set to " << cTriggerLat  << "... and also enabling digitalSync for all strips" << RESET;
+    //     for(auto opticalGroup: *board)
+    //     {
+    //         for(auto hybrid: *opticalGroup)
+    //         {
+    //             for(auto chip: *hybrid)
+    //             {
+    //                 if(chip->getFrontEndType() == FrontEndType::SSA2)
+    //                 {
+    //                     cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
+    //                     cTool.fReadoutChipInterface->WriteChipReg(chip, "DigitalSync", 0x1, false);
+    //                     cTool.fReadoutChipInterface->WriteChipReg(chip,"DigitalDuration", 1);
+    //                     cTool.fReadoutChipInterface->WriteChipReg(chip, "DigCalibPattern_L",cPattern,true);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     // look at L1 debug 
     //IB->L1ADebug();
     // collect events
-    size_t cNevents=100;
-    // for( uint16_t cDelayAfterTP=300; cDelayAfterTP > 150; cDelayAfterTP-=10 )
-    // {
-        // uint16_t cTriggerLat = cDelayAfterTP-2; 
-        // //set latency 
-        // for(auto cBeBoard: *cTool.fDetectorContainer)
-        // {
-        //     for(auto opticalGroup: *cBeBoard)
-        //     {
-        //         for(auto hybrid: *opticalGroup)
-        //         {
-        //             for(auto chip: *hybrid)
-        //             {
-        //                 if(chip->getFrontEndType() == FrontEndType::SSA2)
-        //                 {
-        //                     cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
-        //                 }
-        //             }//chip
-        //         }//hybrid
-        //     }//board
-        // }
-        for( uint16_t cDelayBeforeNext=1000; cDelayBeforeNext > 10; cDelayBeforeNext-= 10 )
+    size_t cNevents=10;
+    for( uint16_t cDelayAfterTP=300; cDelayAfterTP > 290; cDelayAfterTP-=10 )
+    {
+        for( uint16_t cDelayBeforeNext=200; cDelayBeforeNext > 10; cDelayBeforeNext-= 10 )
         {
             for(auto cBeBoard: *cTool.fDetectorContainer)
             {
-                std::vector<std::pair<std::string, uint32_t>> cRegVec;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", cDelayBeforeNext});
-                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cDelayAfterTP});
-                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-                cTool.fBeBoardInterface->WriteBoardMultReg(cBeBoard, cRegVec);
-                uint16_t cDelayBfrNxt = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse"); 
-                uint16_t cDelayAftrTP = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse"); 
-                uint16_t cNclks = cDelayBfrNxt+cDelayAftrTP;
+                //IB->ConfigureTestPulseFSM(100, cDelayAfterTP, cDelayBeforeNext, 0, 1, 1);
+                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse",cDelayBeforeNext);
+                //cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse",cDelayAfterTP);
+                //uint16_t cDelayBfrNxt = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse"); 
+                //uint16_t cDelayAftrTP = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse"); 
+                uint16_t cNclks = cDelayBeforeNext+cDelayAfterTP;
                 float cRate = 1.0e-3/(cNclks*25e-9);
                 size_t cTriggerMult = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+                uint8_t cPattern=0x00; 
+                for( uint8_t cId=0; cId < cTriggerMult; cId++)
+                {
+                    cPattern = cPattern | ( 1 << cId);
+                }
+                uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+                LOG (INFO) << BOLDMAGENTA << "Trigger source is " << +cTriggerSource << RESET;
+                uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+                uint16_t cTriggerLat = cTriggerDelay-2; 
+                LOG (INFO) << BOLDBLUE << "Trigger latency will be set to " << cTriggerLat  << "... and also enabling digitalSync for all strips" << RESET;
+                for(auto opticalGroup: *cBeBoard)
+                {
+                    for(auto hybrid: *opticalGroup)
+                    {
+                        for(auto chip: *hybrid)
+                        {
+                            if(chip->getFrontEndType() == FrontEndType::SSA2)
+                            {
+                                cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "DigitalSync", 0x1, false);
+                                cTool.fReadoutChipInterface->WriteChipReg(chip,"DigitalDuration", 1);
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "DigCalibPattern_L",cPattern,true);
+                            }
+                        }
+                    }
+                }
+
                 cTool.ReadNEvents(cBeBoard, cNevents);
                 const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
                 LOG (DEBUG) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from the FC7.." << RESET;
@@ -142,13 +149,29 @@ int main(int argc, char* argv[])
                             {
                                 for(auto chip: *hybrid)
                                 {
-                                    auto cNhits = (*cEventIter)->GetNHits(chip->getHybridId(), chip->getId());
-                                    cEventMatch = cEventMatch && (cExpectedHits[cTriggerId] == cNhits);
-                                    LOG (DEBUG) << "SS#" << +chip->getId() << " found " << +cNhits << " hits in Trigger#" 
-                                        << +cTriggerId << " of a burst of " << (cTriggerMult+1)
-                                        << " I expected to see " << cExpectedHits[cTriggerId]
-                                        << " hits."
-                                        << RESET;
+                                    auto cL1Id = (static_cast<D19cSSA2Event*>(*cEventIter))->L1Id( chip->getHybridId(), chip->getId());
+                                    auto cHits = (*cEventIter)->GetHits(chip->getHybridId(), chip->getId());
+                                    cEventMatch = cEventMatch && (cExpectedHits[cTriggerId] == cHits.size());
+                                    if( cExpectedHits[cTriggerId] != cHits.size() ) 
+                                    {
+                                        LOG (INFO) << BOLDRED << "SSA#" << +chip->getId() << " L1Id " << +cL1Id << " found " << +cHits.size() << " hits in Trigger#" 
+                                            << +cTriggerId << " of a burst of " << (cTriggerMult+1)
+                                            << " I expected to see " << cExpectedHits[cTriggerId]
+                                            << " hits."
+                                            << RESET;
+                                        for( auto cHit : cHits )
+                                        {
+                                            LOG (DEBUG) << BOLDMAGENTA << "Hit in strip " << +cHit << RESET;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        LOG (INFO) << BOLDGREEN << "SSA#" << +chip->getId() << " L1Id " << +cL1Id << " found " << +cHits.size() << " hits in Trigger#" 
+                                            << +cTriggerId << " of a burst of " << (cTriggerMult+1)
+                                            << " I expected to see " << cExpectedHits[cTriggerId]
+                                            << " hits."
+                                            << RESET;
+                                    }
                                 }//chip
                             }//hybrid
                         }//OG
@@ -173,7 +196,7 @@ int main(int argc, char* argv[])
                         << " ]" << RESET;
             }//board
         }//loop over delays
-    //}
+    }
     // BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     // HybridContainer* ChipVec = pBoard->at(0)->at(0);
     // cTool.setFWTestPulse();

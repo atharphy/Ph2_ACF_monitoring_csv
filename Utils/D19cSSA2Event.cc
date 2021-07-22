@@ -39,23 +39,23 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
     // LOG(INFO) << BOLDBLUE << "NEW"<< RESET;
     //for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
 
-    // start reading here for first SSA2
-    // auto cIter = list.begin() + 4;
-    // size_t cIndx=0;
-    // do
-    // {
-    //     if( cIndx == 2 ) 
-    //     {
-    //         auto cL1Id = ((*cIter) >> 16) & 0x1FF;
-    //         LOG (INFO) << BOLDGREEN << std::bitset<32>(*cIter) << ".....L1 Id is " << +cL1Id << RESET;
-    //     }
-    //     if( cIndx >= 4 && cIndx <= 7 )
-    //     {
-    //         LOG (INFO) << BOLDBLUE << "Hit data is " <<  std::bitset<32>(*cIter)  << RESET;   
-    //     }
-    //     cIter++;
-    //     cIndx++;
-    // }while( cIter < list.end() );
+    //start reading here for first SSA2
+    auto cIter = list.begin() + 4;
+    size_t cIndx=0;
+    do
+    {
+        if( cIndx == 2 ) 
+        {
+            fL1Id = ((*cIter) >> 16) & 0x1FF;
+            LOG (DEBUG) << BOLDGREEN << std::bitset<32>(*cIter) << ".....L1 Id is " << +fL1Id << RESET;
+        }
+        // if( cIndx >= 4 && cIndx <= 7 )
+        // {
+        //     LOG (INFO) << BOLDBLUE << "Hit data is " <<  std::bitset<32>(*cIter)  << RESET;   
+        // }
+        cIter++;
+        cIndx++;
+    }while( cIter < list.end() );
 
     std::vector<uint32_t> head;
     head.push_back(list.at(0));
@@ -79,7 +79,7 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
         lvec.push_back(list.at(14 + (chip * 12)));
         lvec.push_back(list.at(6 + (chip * 12)));
 
-	// errors
+	    // errors
         lvec.push_back(list.at(4 + (chip * 12)));
 
         uint32_t cSSA2Id = (list.at(4 + (chip * 12)) & 0xF000) >> 12;
@@ -94,6 +94,10 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
         // LOG(INFO) << BOLDBLUE <<"SETTING "<<encodeVectorIndex(cFeId, cSSA2Id, pNSSA2)<< " " << cFeId<< " " <<cSSA2Id<< "
         // " <<pNSSA2<< RESET;
     }
+}
+uint32_t D19cSSA2Event::L1Id(uint8_t pFeId, uint8_t pCbcId) const
+{
+   return fL1Id;
 }
 std::string D19cSSA2Event::HexString() const { return ""; }
 std::string D19cSSA2Event::DataHexString(uint8_t pFeId, uint8_t pSSA2Id) const { return ""; }
