@@ -62,7 +62,7 @@ uint16_t returnRunNumber(std::string cFileName)
         {
             std::istringstream cIStream(cLine);
             cIStream >> cRunNumber;
-            LOG(INFO) << BOLDMAGENTA << cRunNumber << RESET;
+            LOG(DEBUG) << BOLDMAGENTA << cRunNumber << RESET;
         }
     }
     return (uint16_t)(cRunNumber + 1);
