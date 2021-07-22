@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="0">
     <!-- PS  module CERN-->
     <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
@@ -58,10 +57,9 @@
         </Hybrid>
     </OpticalGroup>
     
-    <!--CONFIG
-    <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <!--CONFIG-->
+    <Register name="clock_source">3</Register> 
     <Register name="fc7_daq_cnfg">
-
     <Register name="sync_block">
         <Register name="enable"          >1</Register>
         <Register name="is_bc0_enable"   >0</Register>

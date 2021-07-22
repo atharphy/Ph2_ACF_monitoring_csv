@@ -33,6 +33,25 @@ using namespace CommandLineProcessing;
 using namespace std;
 INITIALIZE_EASYLOGGINGPP
 
+
+#ifndef InjectionEvent
+struct InjectionEvent
+{
+    // 
+    uint8_t  fChipId        = 0; 
+    // event information
+    uint32_t fEventId       = 0;
+    uint32_t fTriggerId     = 0;
+    uint32_t fL1Id          = 0;
+    // 
+    uint32_t fExpectedL1Id = 0 ; 
+    //
+    uint32_t fExpectedHits  = 0;
+    uint32_t fDetectedHits = 0;  
+    uint8_t  fMatch =0; 
+};
+typedef std::vector<InjectionEvent> InjectionEvents;
+#endif
 int main(int argc, char* argv[])
 {
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
@@ -50,54 +69,20 @@ int main(int argc, char* argv[])
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
-    //cBackEndAligner.Reset();
+    cBackEndAligner.Reset();
 
-    // inject 
-    // for(auto board: *cTool.fDetectorContainer)
-    // {
-    //     uint16_t cTriggerMult = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    //     uint8_t cPattern=0x00; 
-    //     for( uint8_t cId=0; cId < cTriggerMult; cId++)
-    //     {
-    //         cPattern = cPattern | ( 1 << cId);
-    //     }
-    //     uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    //     LOG (INFO) << BOLDMAGENTA << "Trigger source is " << +cTriggerSource << RESET;
-    //     uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    //     uint16_t cTriggerLat = cTriggerDelay-2; 
-    //     LOG (INFO) << BOLDBLUE << "Trigger latency will be set to " << cTriggerLat  << "... and also enabling digitalSync for all strips" << RESET;
-    //     for(auto opticalGroup: *board)
-    //     {
-    //         for(auto hybrid: *opticalGroup)
-    //         {
-    //             for(auto chip: *hybrid)
-    //             {
-    //                 if(chip->getFrontEndType() == FrontEndType::SSA2)
-    //                 {
-    //                     cTool.fReadoutChipInterface->WriteChipReg(chip,"TriggerLatency", cTriggerLat , false);
-    //                     cTool.fReadoutChipInterface->WriteChipReg(chip, "DigitalSync", 0x1, false);
-    //                     cTool.fReadoutChipInterface->WriteChipReg(chip,"DigitalDuration", 1);
-    //                     cTool.fReadoutChipInterface->WriteChipReg(chip, "DigCalibPattern_L",cPattern,true);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
     // look at L1 debug 
     //IB->L1ADebug();
     // collect events
     size_t cNevents=10;
-    for( uint16_t cDelayAfterTP=300; cDelayAfterTP > 290; cDelayAfterTP-=10 )
+    for( uint16_t cDelayBeforeNext=150; cDelayBeforeNext > 10; cDelayBeforeNext-= 10 )
     {
-        for( uint16_t cDelayBeforeNext=200; cDelayBeforeNext > 10; cDelayBeforeNext-= 10 )
+        for( uint16_t cDelayAfterTP=100; cDelayAfterTP > 10; cDelayAfterTP -=10 )
         {
             for(auto cBeBoard: *cTool.fDetectorContainer)
             {
-                //IB->ConfigureTestPulseFSM(100, cDelayAfterTP, cDelayBeforeNext, 0, 1, 1);
                 cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse",cDelayBeforeNext);
-                //cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse",cDelayAfterTP);
-                //uint16_t cDelayBfrNxt = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse"); 
-                //uint16_t cDelayAftrTP = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse"); 
+                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse",cDelayAfterTP  );
                 uint16_t cNclks = cDelayBeforeNext+cDelayAfterTP;
                 float cRate = 1.0e-3/(cNclks*25e-9);
                 size_t cTriggerMult = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -106,11 +91,9 @@ int main(int argc, char* argv[])
                 {
                     cPattern = cPattern | ( 1 << cId);
                 }
-                uint16_t cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-                LOG (INFO) << BOLDMAGENTA << "Trigger source is " << +cTriggerSource << RESET;
                 uint16_t cTriggerDelay = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
                 uint16_t cTriggerLat = cTriggerDelay-2; 
-                LOG (INFO) << BOLDBLUE << "Trigger latency will be set to " << cTriggerLat  << "... and also enabling digitalSync for all strips" << RESET;
+                LOG (DEBUG) << BOLDBLUE << "Trigger latency will be set to " << cTriggerLat  << "... and also enabling digitalSync for all strips" << RESET;
                 for(auto opticalGroup: *cBeBoard)
                 {
                     for(auto hybrid: *opticalGroup)
@@ -130,17 +113,21 @@ int main(int argc, char* argv[])
 
                 cTool.ReadNEvents(cBeBoard, cNevents);
                 const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
-                LOG (DEBUG) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from the FC7.." << RESET;
+                LOG (INFO) << BOLDBLUE << "Read-back " << +cPh2Events.size() << " events from the FC7.. Time btwn bursts is " 
+                    << cNclks << " clocks [ " << 1e-3/(cNclks*25e-9) << " kHz ]" 
+                    << RESET;
                 cTool.ReadNEvents(cBeBoard, cNevents);
                 const std::vector<Event*>& cEvents = cTool.GetEvents();
                 // loop over triggers in the burst 
                 std::vector<uint16_t> cExpectedHits(1+cTriggerMult, 120);
                 cExpectedHits[cTriggerMult]=0; 
                 std::vector<uint8_t> cMatches(0);
+                InjectionEvents cInjectionEvents; cInjectionEvents.clear();
                 for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
                 {
                     auto cEventIter = cEvents.begin() + cTriggerId ;
                     bool cEventMatch = true;
+                    size_t cTriggerNmbr=0; 
                     do
                     {
                         for(auto opticalGroup: *cBeBoard)
@@ -149,34 +136,33 @@ int main(int argc, char* argv[])
                             {
                                 for(auto chip: *hybrid)
                                 {
-                                    auto cL1Id = (static_cast<D19cSSA2Event*>(*cEventIter))->L1Id( chip->getHybridId(), chip->getId());
+                                    InjectionEvent cInjectionEvent; 
+                                    cInjectionEvent.fChipId = chip->getId();
+                                    cInjectionEvent.fL1Id = (static_cast<D19cSSA2Event*>(*cEventIter))->L1Id( chip->getHybridId(), chip->getId());
+                                    cInjectionEvent.fTriggerId = (static_cast<D19cSSA2Event*>(*cEventIter))->GetTrigID(); 
+                                    cInjectionEvent.fEventId = (static_cast<D19cSSA2Event*>(*cEventIter))->GetL1Number();
+                                    cInjectionEvent.fExpectedL1Id = cInjectionEvent.fEventId + 1;
                                     auto cHits = (*cEventIter)->GetHits(chip->getHybridId(), chip->getId());
-                                    cEventMatch = cEventMatch && (cExpectedHits[cTriggerId] == cHits.size());
-                                    if( cExpectedHits[cTriggerId] != cHits.size() ) 
-                                    {
-                                        LOG (INFO) << BOLDRED << "SSA#" << +chip->getId() << " L1Id " << +cL1Id << " found " << +cHits.size() << " hits in Trigger#" 
+                                    cInjectionEvent.fExpectedHits = cExpectedHits[cTriggerId];
+                                    cInjectionEvent.fDetectedHits = cHits.size(); 
+                                    cEventMatch = cEventMatch && (cExpectedHits[cTriggerId] == cHits.size()) && (cInjectionEvent.fExpectedL1Id == cInjectionEvent.fL1Id);
+                                    cInjectionEvent.fMatch = cEventMatch ? 1 : 0;
+                                    cInjectionEvents.push_back( cInjectionEvent );
+                                    LOG (INFO) << BOLDBLUE << "\t..SSA#" << +chip->getId() << " trigger#" << cInjectionEvent.fTriggerId
+                                            << " L1 FW Counter" <<  cInjectionEvent.fEventId
+                                            << "  L1I FE Counter " << cInjectionEvent.fL1Id
+                                            << " [ " << cInjectionEvent.fExpectedL1Id << " ] "
+                                            << " found " << +cHits.size() << " hits in Trigger#" 
                                             << +cTriggerId << " of a burst of " << (cTriggerMult+1)
                                             << " I expected to see " << cExpectedHits[cTriggerId]
                                             << " hits."
                                             << RESET;
-                                        for( auto cHit : cHits )
-                                        {
-                                            LOG (DEBUG) << BOLDMAGENTA << "Hit in strip " << +cHit << RESET;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        LOG (INFO) << BOLDGREEN << "SSA#" << +chip->getId() << " L1Id " << +cL1Id << " found " << +cHits.size() << " hits in Trigger#" 
-                                            << +cTriggerId << " of a burst of " << (cTriggerMult+1)
-                                            << " I expected to see " << cExpectedHits[cTriggerId]
-                                            << " hits."
-                                            << RESET;
-                                    }
                                 }//chip
                             }//hybrid
                         }//OG
                         if( cEventMatch ) cMatches.push_back(1);
                         else  cMatches.push_back(0);
+                        cTriggerNmbr++;
                         cEventIter += (1+cTriggerMult);
                     } while( cEventIter < cEvents.end() );
                 }//trigger id
@@ -194,6 +180,31 @@ int main(int argc, char* argv[])
                         << cEventsMatched << " events with the expected number of hits out of " << cEvents.size() << " readout events [ " 
                         << cRate
                         << " ]" << RESET;
+                std::sort(std::begin(cInjectionEvents), std::end(cInjectionEvents), [](InjectionEvent a, InjectionEvent b) { return a.fEventId < b.fEventId; });
+                std::sort(std::begin(cInjectionEvents), std::end(cInjectionEvents), [](InjectionEvent a, InjectionEvent b) { return a.fL1Id < b.fL1Id; });
+                for(auto cInjectionEvent : cInjectionEvents)
+                {
+                    if( cInjectionEvent.fMatch == 1 ) 
+                        LOG (INFO) << BOLDGREEN << "\t..SSA#" << cInjectionEvent.fChipId << " trigger#" << cInjectionEvent.fTriggerId
+                                                << " L1 FW Counter" <<  cInjectionEvent.fEventId
+                                                << "  L1I FE Counter " << cInjectionEvent.fL1Id
+                                                << " [ " << cInjectionEvent.fExpectedL1Id << " ] "
+                                                << " found " << cInjectionEvent.fDetectedHits 
+                                                << " I expected to see " << cInjectionEvent.fExpectedHits
+                                                << " hits."
+                                                << RESET;
+                    else
+                        LOG (INFO) << BOLDRED << "\t..SSA#" << cInjectionEvent.fChipId << " trigger#" << cInjectionEvent.fTriggerId
+                                                << " L1 FW Counter" <<  cInjectionEvent.fEventId
+                                                << "  L1I FE Counter " << cInjectionEvent.fL1Id
+                                                << " [ " << cInjectionEvent.fExpectedL1Id << " ] "
+                                                << " found " << cInjectionEvent.fDetectedHits 
+                                                << " I expected to see " << cInjectionEvent.fExpectedHits
+                                                << " hits."
+                                                << RESET;
+                    
+                }
+                
             }//board
         }//loop over delays
     }

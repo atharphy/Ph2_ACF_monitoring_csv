@@ -396,7 +396,7 @@ SSA2Interface::~SSA2Interface() {}
 			uint8_t pStripEnable    = 1;
 			uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
 			cRegValue               = cRegValue | (pStripEnable << 0);
-			LOG(INFO) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
+			LOG(DEBUG) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
 			bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
 			this->WriteChipSingleReg(pSSA2, "mask_strip", 1, pVerifLoop);
 			bool cReadoutMode    = WriteChipSingleReg(pSSA2, "control_1", (1 - pValue), pVerifLoop);
@@ -455,7 +455,7 @@ SSA2Interface::~SSA2Interface() {}
 		int cChannel;
 		std::sscanf(pRegName.c_str(), "CalibrationPatternS%d", &cChannel);
 		uint16_t cAddress = 0x0300 + cChannel;
-		LOG(INFO) << BOLDBLUE << "Configuring register 0x" << std::hex << cAddress << std::dec << " to 0x" << std::hex << pValue << std::dec << " for channel " << +cChannel << RESET;
+		LOG(DEBUG) << BOLDBLUE << "Configuring register 0x" << std::hex << cAddress << std::dec << " to 0x" << std::hex << pValue << std::dec << " for channel " << +cChannel << RESET;
 
 		uint8_t pAnalogueCalib  = 0;
 		uint8_t pDigitalCalib   = 1;
@@ -472,7 +472,7 @@ SSA2Interface::~SSA2Interface() {}
 	    }
 	    else if(pRegName == "InjectedCharge")
 	    {
-		LOG(INFO) << BOLDBLUE << "Setting "
+		LOG(DEBUG) << BOLDBLUE << "Setting "
 		          << " bias calDac to " << +pValue << " on SSA2" << +pSSA2->getId() << RESET;
 		return WriteChipSingleReg(pSSA2, "Bias_CALDAC", pValue, pVerifLoop);
 	    }
@@ -483,7 +483,7 @@ SSA2Interface::~SSA2Interface() {}
 	    }
 	    else
 	    {
-			LOG (INFO) << RED << pRegName << " set to " << pValue << RESET;
+			LOG (DEBUG) << RED << pRegName << " set to " << pValue << RESET;
 			return this->WriteChipSingleReg(pSSA2, pRegName, pValue, pVerifLoop);
 	    }
 	}

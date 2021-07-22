@@ -1187,10 +1187,9 @@ bool BackEndAlignment::Align()
                 } // ROcs
             }     // Hybrids
         }         // OGs
-        if(cWithCIC) continue;
-
-        if(cWithCBC) { this->CBCAlignment(theBoard); }
-        else if(cWithMPA or cWithSSA) this->PSAlignment(theBoard);
+        if(cWithCIC) cAligned = this->FindStubLatency(theBoard);    
+        else if(cWithCBC) { cAligned = this->CBCAlignment(theBoard); }
+        else if(cWithMPA or cWithSSA) cAligned = this->PSAlignment(theBoard);
         
         // re-load configuration of fast command block from register map loaded from xml file
         LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;

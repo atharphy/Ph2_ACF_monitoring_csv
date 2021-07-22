@@ -5624,15 +5624,14 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     size_t                cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     uint16_t              cI2CReadByteRegAddr = 0;
     // pick correct register address to check
-    // fix me
     if(pMasterId == 2)
         cI2CReadByteRegAddr = 0x018d;
-    if(pMasterId == 2)
-        cI2CReadByteRegAddr = 0x018d;
-    else if(pMasterId == 0)
+    if(pMasterId == 1)
+        cI2CReadByteRegAddr = 0x178;
+    if(pMasterId == 0)
         cI2CReadByteRegAddr = 0x0163;
     // check reply
-    bool cCheckReadByte = false;
+    bool cCheckReadByte = true;
     bool cFail = cCheckReadByte ? (cReadBackRegAddr != cI2CReadByteRegAddr) : false; 
     cFail = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
     while(cFail)

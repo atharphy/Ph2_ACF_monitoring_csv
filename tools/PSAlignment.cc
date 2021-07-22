@@ -547,21 +547,21 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                 // make sure L1 latency is configured
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
-                    std::vector<uint8_t> cEdgeSelsT1{1};
-                    std::vector<uint8_t> cEdgeSelsRaw{1};
-                    for( auto cEdgeSelT1 : cEdgeSelsT1) 
-                    {
-                        LOG (INFO) << BOLDMAGENTA << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;
-                        for( auto cEdgeSelRaw : cEdgeSelsRaw) 
-                        {
-                            uint8_t cCnfg = (cEdgeSelT1 << 1 ) | cEdgeSelRaw; 
-                            LOG (INFO) << BOLDMAGENTA << "Edge-select for Raw strip input is : " << +cEdgeSelRaw << RESET;
-                            fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", cCnfg);
+                    //std::vector<uint8_t> cEdgeSelsT1{1};
+                    //std::vector<uint8_t> cEdgeSelsRaw{1};
+                    //for( auto cEdgeSelT1 : cEdgeSelsT1) 
+                    //{
+                        //LOG (INFO) << BOLDMAGENTA << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;
+                        //for( auto cEdgeSelRaw : cEdgeSelsRaw) 
+                        //{
+                            //uint8_t cCnfg = (cEdgeSelT1 << 1 ) | cEdgeSelRaw; 
+                            //LOG (INFO) << BOLDMAGENTA << "Edge-select for Raw strip input is : " << +cEdgeSelRaw << RESET;
+                            //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", cCnfg);
                             auto cStbOffset = pBoard->getStubOffset();
                             auto cCombinations = AlignChip(cChip, cInjections, cLatency);
                             pBoard->setStubOffset(cStbOffset);
-                        }
-                    }
+                        //}
+                    //}
                 }
             } // chip
         } // hybrid
