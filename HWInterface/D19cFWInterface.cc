@@ -981,7 +981,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
                 // disable stub debug
-                cVecReg.push_back({"fc7_daq_cnfg.stub_debug.enable", 0});
+                cVecReg.push_back({"fc7_daq_cnfg.ddr3_debug.stub_enable", 0});
                 std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
                 std::string cRegName   = (cCic->getFrontEndType() == FrontEndType::CIC) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
                 ChipRegItem cRegItem   = static_cast<OuterTrackerHybrid*>(pBoard->at(0)->at(0))->fCic->getRegItem(cRegName);
@@ -3340,8 +3340,54 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->Stop();   
         std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );  
         cVecReg.clear();    
-        /*cIteration=0;
+        /*
+        // enable DDR3 dump of counters
+        this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x1);
         this->PS_Start_counters_read();
+        std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) ); 
+        size_t cNWords = 100; // number of 32-bit words to read from DDR3
+        auto cData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, 0);
+        for( auto cWord : cData ) 
+        {
+            LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
+        }
+        this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);*/
+        
+        /*
+        auto cWordsFIFO1 = ReadBlockReg("fc7_daq_ctrl.physical_interface_block.fifo1_data", 20000);
+        auto cWordsFIFO2 = ReadBlockReg("fc7_daq_ctrl.physical_interface_block.fifo2_data", 20000);
+        std::string cData="";
+        for( size_t cIndx=0; cIndx < cWordsFIFO1.size(); cIndx++)
+        {
+            std::bitset<40> cWord = std::bitset<40>( ((cWordsFIFO2[cIndx] && 0xFFFF) << 24) | (cWordsFIFO1[cIndx] && 0xFFFFFF) );
+            cData += cWord.to_string();
+            LOG (DEBUG) << BOLDMAGENTA << cWord <<  RESET;//" : " << std::bitset<32>(cWordsFIFO1[cIndx] && 0xFFFFFF) << "\t\t" << std::bitset<32>(cWordsFIFO2[cIndx] && 0xFFFF);
+        }
+        std::vector<std::bitset<6>> cDataLines; cDataLines.clear();
+        for( size_t cCycle=0; cCycle < 1 + cData.length()/6 ; cCycle++)
+        {
+            if( cCycle*6 >= cData.length() ) continue;
+            auto cSubStr = cData.substr(cCycle*6, 6);
+            cDataLines.push_back( std::bitset<6>(cSubStr) );
+        }
+        std::reverse(cDataLines.begin(), cDataLines.end());
+        auto cIter = cDataLines.begin();
+        for( size_t cCycle = 0; cCycle < cDataLines.size()/8; cCycle++ ) 
+        {
+            if( cIter >= cDataLines.end() ) continue;
+            for( size_t cIndx =0 ; cIndx < 8 ; cIndx++ )
+            {
+                if( cIter < cDataLines.end() ) {
+                    LOG (INFO) << BOLDMAGENTA << *cIter << RESET;
+                    cIter++;
+                }
+            }
+            do {
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            } while(std::cin.get() != '\n');
+        }
+        */
+        /*cIteration=0;
         LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;
         do 
         {
@@ -3352,7 +3398,6 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             cIteration++;
         }while( this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready")==0 && cIteration < 10 );
         LOG (INFO) << BOLDMAGENTA << +this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready") << RESET;*/
-        
         // for( size_t cIndx=0; cIndx < 20000; cIndx++ )
         // {
         //     auto     cFifoWrd1  = this->ReadReg("fc7_daq_ctrl.physical_interface_block.fifo1_data");
@@ -3994,11 +4039,11 @@ bool D19cFWInterface::Bx0Alignment()
 {
     // auto     cStubPackageDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
     bool     cSuccess   = false;
-    uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.stub_debug.enable");
+    uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
     {
         LOG(INFO) << BOLDBLUE << "Stub debug enable set to " << cStubDebug << "..... so disabling it!!." << RESET;
-        this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
+        this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x00);
     }
     // send a resync and reset readout
     bool    cWait     = false;

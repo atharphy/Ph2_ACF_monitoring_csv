@@ -549,19 +549,10 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
-    // #ifdef __ANTENNA__
-    //     Antenna cAntenna2;
-    //     cAntenna2.ConfigureSlaveADC(CHIPSLAVE);
-    //     cTemp    = cAntenna2.GetHybridTemperature(CHIPSLAVE);
-    //     cCurrent = cAntenna2.GetHybridCurrent(CHIPSLAVE);
-    //     sprintf(cBuffer, "Hybrid %s [after calibration]: temperature reading %.2f °C, current reading %.2f mA", cHybridId.c_str(), cTemp, cCurrent);
-    //     LOG(INFO) << BOLDBLUE << cBuffer << RESET;
-    //     cAntenna2.close();
-    // #endif
-
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
+        LOG (INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose

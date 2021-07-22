@@ -490,9 +490,16 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     {
         auto& clpGBT = cOpticalGroup->flpGBT;
         if(clpGBT == nullptr) continue;
+        bool cWithCIC=false;
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto&   cCic  = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            if(cCic == NULL) continue;
+            cWithCIC=true;
+        }
+        if( !cWithCIC ) continue;
         CicLpGbtAlignment(cOpticalGroup);
     }
-
     bool cSuccess = true;
     // align BE for CIC 
     for(auto cOpticalGroup: *pBoard)
@@ -603,6 +610,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             }     // hybrid
         }         // configure all FE types
     }
+    LOG (INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {

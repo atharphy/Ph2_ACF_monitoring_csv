@@ -304,6 +304,10 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
+    // else if(pRegName.find("SelectEdge") != std::string::npos)
+    // {
+
+    // }
     else if(pRegName.find("SLVSDrive") != std::string::npos)
     {
         uint8_t cBitShift = 0;
