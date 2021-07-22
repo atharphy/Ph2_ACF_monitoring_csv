@@ -304,10 +304,19 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
-    // else if(pRegName.find("SelectEdge") != std::string::npos)
-    // {
-
-    // }
+    else if(pRegName.find("SelectEdgeL") != std::string::npos)
+    {
+        std::string cToken = "SelectEdgeL";
+        auto cLineId = std::atoi(pRegName.substr( pRegName.find(cToken)+cToken.length(), 1).c_str());
+        std::string cRegName = (cLineId==0) ? "EdgeSelT1Raw" : "EdgeSelTrig";
+        uint8_t cBitShift = (cLineId == 0 ) ? cLineId : cLineId-1; 
+        auto cRegValue = this->ReadChipReg( pMPA, cRegName ); 
+        uint8_t cRegMask  = (0x1 << cBitShift); //
+        cRegMask          = ~(cRegMask);
+        uint8_t cValue    = (cRegValue & cRegMask) | (pValue << cBitShift);
+        LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
+        return this->WriteChipReg(pMPA, cRegName, cValue);
+    }
     else if(pRegName.find("SLVSDrive") != std::string::npos)
     {
         uint8_t cBitShift = 0;
