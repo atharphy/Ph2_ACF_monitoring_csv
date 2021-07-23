@@ -57,12 +57,12 @@ class ReadoutChipInterface : public ChipInterface
         auto cIter                            = fModifiedRegisters.find(cChipId);
         if(cIter != fModifiedRegisters.end())
         {
-            //std::cout << "GetModifiedRegisterMap interface --- " << +cChipId << " contains " << cIter->second.size() << " items.\n";
+            // std::cout << "GetModifiedRegisterMap interface --- " << +cChipId << " contains " << cIter->second.size() << " items.\n";
             return cIter->second;
         }
         else
         {
-            //std::cout << "GetModifiedRegisterMap interface --- " << +cChipId << " contains " << 0 << " items.\n";
+            // std::cout << "GetModifiedRegisterMap interface --- " << +cChipId << " contains " << 0 << " items.\n";
             return cMap;
         }
     }
@@ -72,9 +72,9 @@ class ReadoutChipInterface : public ChipInterface
         cChipId          = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId();
         auto cIter       = fModifiedRegisters.find(cChipId);
         if(cIter != fModifiedRegisters.end()) fModifiedRegisters.erase(cChipId);
-        //std::cout << "Overwriting map with an item that has " << pRegMap.size() << " entries.\n";
+        // std::cout << "Overwriting map with an item that has " << pRegMap.size() << " entries.\n";
         fModifiedRegisters[cChipId] = pRegMap;
-        //std::cout << "OverwriteModifiedRegisterMap interface --- " << +cChipId << " contains " << fModifiedRegisters[cChipId].size() << " items.\n";
+        // std::cout << "OverwriteModifiedRegisterMap interface --- " << +cChipId << " contains " << fModifiedRegisters[cChipId].size() << " items.\n";
     }
     /*!
      * \brief setChannels fo be injected

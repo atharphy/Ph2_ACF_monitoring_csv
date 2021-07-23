@@ -45,13 +45,11 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fOccupancyAtPedestal         = findValueInSettings("PedestalEqualizationOccupancy", 0.56) ;
-    uint8_t  cDefTargetOffset    = (cWithSSA || cWithMPA) ? 0xF : 0x7F;
-    fTargetOffset                = findValueInSettings("PedestalEqualizationTargetOffset", cDefTargetOffset) ; //0x7F;
-    LOG (INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal 
-        << " target offset is " << +fTargetOffset 
-        << RESET;
-   fTargetVcth = 0x0;
+    fOccupancyAtPedestal         = findValueInSettings("PedestalEqualizationOccupancy", 0.56);
+    uint8_t cDefTargetOffset     = (cWithSSA || cWithMPA) ? 0xF : 0x7F;
+    fTargetOffset                = findValueInSettings("PedestalEqualizationTargetOffset", cDefTargetOffset); // 0x7F;
+    LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
+    fTargetVcth = 0x0;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
 
     if(fTestPulseAmplitude == 0)
@@ -132,10 +130,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 }
 void PedestalEqualization::Reset()
 {
-    size_t cIndx=0;
+    size_t cIndx = 0;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(fEventTypes[cIndx]== EventType::PSAS) continue;
+        if(fEventTypes[cIndx] == EventType::PSAS) continue;
         cBoard->setEventType(fEventTypes[cIndx]);
         for(auto cOpticalGroup: *cBoard)
         {
@@ -147,12 +145,9 @@ void PedestalEqualization::Reset()
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 if(!cWithSSA && !cWithMPA) continue;
 
-                for(auto cROC: *cHybrid)
-                {
-                    fReadoutChipInterface->WriteChipReg(cROC, "ReadoutMode", 0);
-                }
+                for(auto cROC: *cHybrid) { fReadoutChipInterface->WriteChipReg(cROC, "ReadoutMode", 0); }
             }
-        }    
+        }
     }
 }
 void PedestalEqualization::FindVplus()
@@ -284,7 +279,7 @@ void PedestalEqualization::FindVplus()
 
 void PedestalEqualization::FindOffsets()
 {
-    float cOccupancyAtPedestal = fOccupancyAtPedestal; 
+    float cOccupancyAtPedestal = fOccupancyAtPedestal;
     LOG(INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
 

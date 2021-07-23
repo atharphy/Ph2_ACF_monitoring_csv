@@ -15,25 +15,25 @@ class D19cSSA2Event : public Event
   public:
     D19cSSA2Event(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA2, uint32_t pNFe, const std::vector<uint32_t>& list);
     ~D19cSSA2Event() {}
-    // temporary 
-    uint32_t          L1Id(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    void              SetEvent(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA2, const std::vector<uint32_t>& list) override;
-    uint32_t          GetEventCountCBC() const override { return fEventCountCBC; }
-    std::string       HexString() const override;
-    std::string       DataHexString(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    bool              Error(uint8_t pFeId, uint8_t pSSA2Id, uint32_t i) const override;
-    uint32_t          Error(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    uint32_t          PipelineAddress(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    std::string       DataBitString(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    std::vector<bool> DataBitVector(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    std::vector<bool> DataBitVector(uint8_t pFeId, uint8_t pSSA2Id, const std::vector<uint8_t>& channelList) const override;
-    std::string       GlibFlagString(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    std::string       StubBitString(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    bool              StubBit(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    std::vector<Stub> StubVector(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    uint32_t          GetNHits(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    uint32_t          GetL1Number() const;
-    uint32_t          GetTrigID() const;
+    // temporary
+    uint32_t              L1Id(uint8_t pFeId, uint8_t pReadoutChipId) const;
+    void                  SetEvent(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA2, const std::vector<uint32_t>& list) override;
+    uint32_t              GetEventCountCBC() const override { return fEventCountCBC; }
+    std::string           HexString() const override;
+    std::string           DataHexString(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    bool                  Error(uint8_t pFeId, uint8_t pSSA2Id, uint32_t i) const override;
+    uint32_t              Error(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    uint32_t              PipelineAddress(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    std::string           DataBitString(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    std::vector<bool>     DataBitVector(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    std::vector<bool>     DataBitVector(uint8_t pFeId, uint8_t pSSA2Id, const std::vector<uint8_t>& channelList) const override;
+    std::string           GlibFlagString(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    std::string           StubBitString(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    bool                  StubBit(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    std::vector<Stub>     StubVector(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    uint32_t              GetNHits(uint8_t pFeId, uint8_t pSSA2Id) const override;
+    uint32_t              GetL1Number() const;
+    uint32_t              GetTrigID() const;
     uint32_t              GetSSA2L1Counter(uint8_t pFeId, uint8_t pSSA2Id) const;
     std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pSSA2Id) const override;
     std::vector<Cluster>  getClusters(uint8_t pFeId, uint8_t pSSA2Id) const override;
@@ -53,9 +53,10 @@ class D19cSSA2Event : public Event
             return false;
         }
     }
+
   private:
-    uint8_t fNSSA2=1;
-    uint16_t fL1Id=0;
+    uint8_t                   fNSSA2 = 1;
+    uint16_t                  fL1Id  = 0;
     EventDataVector           fEventDataVector;
     EventHeader               fEventHeader;
     static constexpr size_t   encodeVectorIndex(const uint8_t pFeId, const uint8_t pSSA2Id, const uint8_t numberOfSSA2s) { return pSSA2Id + pFeId * numberOfSSA2s; }

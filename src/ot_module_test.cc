@@ -60,7 +60,7 @@ uint16_t returnRunNumber(std::string cFileName)
         {
             std::istringstream cIStream(cLine);
             cIStream >> cRunNumber;
-            //LOG(INFO) << BOLDMAGENTA << cRunNumber << RESET;
+            // LOG(INFO) << BOLDMAGENTA << cRunNumber << RESET;
         }
     }
     return (uint16_t)(cRunNumber + 1);
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkClusters", "Check CIC2 sparsification... ", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("psDataTest","....", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("psDataTest", "....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSLink", "Check S-link ... data saved to file ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("checkStubs", "Check Stubs... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkReadData", "Check ReadData method... ", ArgvParser::NoOptionAttribute);
@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
     bool        batchMode         = (cmd.foundOption("batch")) ? true : false;
     bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
     bool        cCheckData        = (cmd.foundOption("checkData"));
-    
+
     bool cSaveToFile = cmd.foundOption("save");
 
     std::string   cModuleId  = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
@@ -298,7 +298,6 @@ int main(int argc, char* argv[])
     // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
 
-    
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
     cCicAligner.Start(0);
@@ -313,7 +312,7 @@ int main(int argc, char* argv[])
     cBackEndAligner.Reset();
     if(!cmd.foundOption("skipAlignment"))
     {
-        // 
+        //
         cPSAlignment.Align();
     }
     cPSAlignment.dumpConfigFiles();
@@ -329,8 +328,8 @@ int main(int argc, char* argv[])
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
         cPedestalEqualization.Inherit(&cTool);
-        std::vector<FrontEndType> cTypes{ FrontEndType::SSA };
-        for(auto cType : cTypes )
+        std::vector<FrontEndType> cTypes{FrontEndType::SSA};
+        for(auto cType: cTypes)
         {
             auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
             cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
@@ -350,16 +349,15 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
-    
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoise cPedeNoise;
-        std::vector<FrontEndType> cTypes{ FrontEndType::SSA };
-        for(auto cType : cTypes )
+        PedeNoise                 cPedeNoise;
+        std::vector<FrontEndType> cTypes{FrontEndType::SSA};
+        for(auto cType: cTypes)
         {
             auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
             cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
@@ -392,7 +390,7 @@ int main(int argc, char* argv[])
             std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
-            cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
+            cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
             // find correct stub latency with TP
             for(auto cBoard: *cMemoryChecker.fDetectorContainer)
             {
@@ -426,11 +424,12 @@ int main(int argc, char* argv[])
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cTool);
         cDataChecker.Initialise();
-        if(cmd.foundOption("psDataTest")){
+        if(cmd.foundOption("psDataTest"))
+        {
             // auto cInjections = cDataChecker.GeneratePSInjections(4);
             // for(auto cInjection : cInjections )
             // {
-            //     LOG (INFO) << BOLDMAGENTA << "injection in pixel " << +cInjection.fColumn 
+            //     LOG (INFO) << BOLDMAGENTA << "injection in pixel " << +cInjection.fColumn
             //         << " and row " << +cInjection.fRow
             //         << RESET;
             // }

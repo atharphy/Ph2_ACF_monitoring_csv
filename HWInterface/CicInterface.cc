@@ -470,17 +470,17 @@ bool CicInterface::GetResyncRequest(Chip* pChip)
 
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     if(!cReadBack.first) return false;
-    return  (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
+    return (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
 }
 bool CicInterface::CheckReSync(Chip* pChip)
 {
-    bool cResyncNeeded = GetResyncRequest(pChip);
-    uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAD : 0xA6;
+    bool     cResyncNeeded = GetResyncRequest(pChip);
+    uint16_t cRegAddress   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAD : 0xA6;
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem;
-    cRegItem.fPage                      = 0x00;
-    cRegItem.fAddress                   = cRegAddress;
-    cRegItem.fStatusReg                 = 0x01;
+    cRegItem.fPage      = 0x00;
+    cRegItem.fAddress   = cRegAddress;
+    cRegItem.fStatusReg = 0x01;
     // std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
 
     // LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
@@ -1475,8 +1475,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     // }
     // bool cSuccess = this->SoftReset(pChip);
 
-    //bool cClkTermination = false;
-    //bool cRxTermination  = false;
+    // bool cClkTermination = false;
+    // bool cRxTermination  = false;
     //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the
     // crate set-up .. how to fix this?!?!
     std::string cRegName  = "SLVS_PADS_CONFIG";
@@ -1484,7 +1484,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     auto        cIterator = fTxDriveStrength.find(pDriveStrength);
     if(cIterator != fTxDriveStrength.end())
     {
-        auto cValue = (cRegValue & 0xFE) | cIterator->second;//(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
+        auto cValue = (cRegValue & 0xFE) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
         cSuccess    = this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
         LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
         if(!cSuccess)
@@ -1561,8 +1561,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured fast command block in CIC." << RESET;
 
-    //cSuccess = this->CheckReSync(pChip);
-    //LOG(INFO) << BOLDGREEN << ".... Completed CIC start-up ........ " << RESET;
+    // cSuccess = this->CheckReSync(pChip);
+    // LOG(INFO) << BOLDGREEN << ".... Completed CIC start-up ........ " << RESET;
     return cSuccess;
 }
 } // namespace Ph2_HwInterface

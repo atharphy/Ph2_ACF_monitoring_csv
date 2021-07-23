@@ -150,7 +150,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool    cConfigReg1  = this->WriteChipSingleReg(pSSA, "L1-Latency_LSB", cLatencyReg1);
         bool    cConfigReg2  = this->WriteChipSingleReg(pSSA, "L1-Latency_MSB", cLatencyReg2);
 
-        LOG (INFO) << BOLDMAGENTA << "Setting TriggerLatency on SSA to " << pValue << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Setting TriggerLatency on SSA to " << pValue << RESET;
         return cConfigReg1 && cConfigReg2;
     }
     else if(pRegName == "Sync")
@@ -252,7 +252,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "Threshold")
     {
-        LOG (INFO) << BOLDMAGENTA << "Setting threshold on SSA#" << +pSSA->getId() << " to " << pValue << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on SSA#" << +pSSA->getId() << " to " << pValue << RESET;
         return WriteChipSingleReg(pSSA, "Bias_THDAC", (pValue), pVerifLoop);
     }
     else if(pRegName == "EnableClockOut")
@@ -772,10 +772,10 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
     {
         return this->ReadChipReg(pSSA, "Bias_THDAC");
     }
-    else if(pRegNode == "TriggerLatency" )
+    else if(pRegNode == "TriggerLatency")
     {
-        uint8_t    cLatencyReg1  = this->ReadReg(pSSA, pSSA->getRegItem("L1-Latency_LSB").fAddress);
-        uint8_t    cLatencyReg2  = this->ReadReg(pSSA, pSSA->getRegItem("L1-Latency_MSB").fAddress);
+        uint8_t cLatencyReg1 = this->ReadReg(pSSA, pSSA->getRegItem("L1-Latency_LSB").fAddress);
+        uint8_t cLatencyReg2 = this->ReadReg(pSSA, pSSA->getRegItem("L1-Latency_MSB").fAddress);
         return (cLatencyReg2 << 8) | cLatencyReg1;
     }
     else

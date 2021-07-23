@@ -25,10 +25,11 @@ void D19cSSA2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
                 unsigned int i = 0;
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i)) {
+                    if(cTestChannelGroup->isChannelEnabled(i))
+                    {
                         channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i);
-                        //if (privateDataBit(hybrid->getId(), chip->getId(), i)) LOG (INFO) << "!";
-                        }
+                        // if (privateDataBit(hybrid->getId(), chip->getId(), i)) LOG (INFO) << "!";
+                    }
                 }
             }
         }
@@ -37,25 +38,24 @@ void D19cSSA2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
 void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::vector<uint32_t>& list)
 {
     // LOG(INFO) << BOLDBLUE << "NEW"<< RESET;
-    //for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
+    // for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
 
-    //start reading here for first SSA2
-    auto cIter = list.begin() + 4;
-    size_t cIndx=0;
-    do
-    {
-        if( cIndx == 2 ) 
+    // start reading here for first SSA2
+    auto   cIter = list.begin() + 4;
+    size_t cIndx = 0;
+    do {
+        if(cIndx == 2)
         {
             fL1Id = ((*cIter) >> 16) & 0x1FF;
-            LOG (DEBUG) << BOLDGREEN << std::bitset<32>(*cIter) << ".....L1 Id is " << +fL1Id << RESET;
+            LOG(DEBUG) << BOLDGREEN << std::bitset<32>(*cIter) << ".....L1 Id is " << +fL1Id << RESET;
         }
         // if( cIndx >= 4 && cIndx <= 7 )
         // {
-        //     LOG (INFO) << BOLDBLUE << "Hit data is " <<  std::bitset<32>(*cIter)  << RESET;   
+        //     LOG (INFO) << BOLDBLUE << "Hit data is " <<  std::bitset<32>(*cIter)  << RESET;
         // }
         cIter++;
         cIndx++;
-    }while( cIter < list.end() );
+    } while(cIter < list.end());
 
     std::vector<uint32_t> head;
     head.push_back(list.at(0));
@@ -79,7 +79,7 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
         lvec.push_back(list.at(14 + (chip * 12)));
         lvec.push_back(list.at(6 + (chip * 12)));
 
-	    // errors
+        // errors
         lvec.push_back(list.at(4 + (chip * 12)));
 
         uint32_t cSSA2Id = (list.at(4 + (chip * 12)) & 0xF000) >> 12;
@@ -95,10 +95,7 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
         // " <<pNSSA2<< RESET;
     }
 }
-uint32_t D19cSSA2Event::L1Id(uint8_t pFeId, uint8_t pCbcId) const
-{
-   return fL1Id;
-}
+uint32_t    D19cSSA2Event::L1Id(uint8_t pFeId, uint8_t pCbcId) const { return fL1Id; }
 std::string D19cSSA2Event::HexString() const { return ""; }
 std::string D19cSSA2Event::DataHexString(uint8_t pFeId, uint8_t pSSA2Id) const { return ""; }
 bool        D19cSSA2Event::Error(uint8_t pFeId, uint8_t pSSA2Id, uint32_t i) const // FIXME NOT WORKING?!
@@ -111,7 +108,7 @@ uint32_t D19cSSA2Event::Error(uint8_t pFeId, uint8_t pSSA2Id) const
     {
         const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pSSA2Id, fNCbc));
         uint32_t                     cError    = ((hitVector.at(7) & 0xF000000) >> 24);
-	LOG (INFO) << BOLDBLUE << std::bitset<32>(hitVector.at(7)) << RESET;
+        LOG(INFO) << BOLDBLUE << std::bitset<32>(hitVector.at(7)) << RESET;
         return cError;
     }
     catch(const std::out_of_range& outOfRange)
@@ -163,7 +160,7 @@ bool D19cSSA2Event::StubBit(uint8_t pFeId, uint8_t pSSA2Id) const
 std::vector<Stub> D19cSSA2Event::StubVector(uint8_t pFeId, uint8_t pSSA2Id) const
 {
     std::vector<uint32_t> CA(8);
-    std::vector<Stub> stubs;
+    std::vector<Stub>     stubs;
     std::vector<uint32_t> lvec = fEventDataVector[encodeVectorIndex(pFeId, pSSA2Id, fNSSA2)];
 
     CA.at(0) = (lvec.at(4) & 0xFF);
@@ -176,7 +173,7 @@ std::vector<Stub> D19cSSA2Event::StubVector(uint8_t pFeId, uint8_t pSSA2Id) cons
     CA.at(7) = (lvec.at(5) & 0xFF000000) >> 24;
     for(auto ca: CA)
     {
-        if(ca != 0) { stubs.push_back(Stub(ca,0)); }
+        if(ca != 0) { stubs.push_back(Stub(ca, 0)); }
     }
     return stubs;
 }
@@ -209,9 +206,9 @@ uint32_t D19cSSA2Event::GetSSA2L1Counter(uint8_t pFeId, uint8_t pSSA2Id) const
 std::vector<uint32_t> D19cSSA2Event::GetHits(uint8_t pFeId, uint8_t pSSA2Id) const
 {
     std::vector<uint32_t> cHits;
-    for ( uint32_t i = 0; i < NSSACHANNELS; ++i )
+    for(uint32_t i = 0; i < NSSACHANNELS; ++i)
     {
-        if (privateDataBit(pFeId, pSSA2Id, i) > 0) cHits.push_back(i);
+        if(privateDataBit(pFeId, pSSA2Id, i) > 0) cHits.push_back(i);
     }
     return cHits;
 }
@@ -221,7 +218,7 @@ void D19cSSA2Event::print(std::ostream& os) const // TODO add info here as neede
     size_t vectorIndex = 0;
     for(__attribute__((unused)) auto const& hitVector: fEventDataVector)
     {
-        uint8_t cFeId  = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
+        uint8_t cFeId   = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
         uint8_t cSSA2Id = getSSA2IdFromVectorIndex(vectorIndex++, fNCbc);
         os << GREEN << "SSA2 Header:" << std::endl;
         os << " FeId: " << +cFeId << " SSA2Id: " << +cSSA2Id << RESET << std::endl;

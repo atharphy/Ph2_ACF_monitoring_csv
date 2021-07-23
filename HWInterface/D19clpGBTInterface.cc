@@ -125,10 +125,10 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    // module/skeleton  
+    // module/skeleton
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 13;
     // module Aachen
-    //uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 8; 
+    // uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 8;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -169,7 +169,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 2, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
@@ -182,25 +182,25 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9;// cRxInvert = 0 ;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9; // cRxInvert = 0 ;
     // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
-    std::vector<uint8_t>  cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
+    std::vector<uint8_t> cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
     std::vector<uint8_t> cChnlsLeft{2, 0, 2, 0, 2, 0, 2};
     std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
-    for(size_t cIndx=0; cIndx < cInvrtLeft.size(); cIndx++)
+    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
     {
-        uint8_t cGroup = cGrpsLeft[cIndx];
-        uint8_t cChannel = cChnlsLeft[cIndx];
+        uint8_t cGroup    = cGrpsLeft[cIndx];
+        uint8_t cChannel  = cChnlsLeft[cIndx];
         uint8_t cRxInvert = cInvrtLeft[cIndx];
         ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
     }
-    std::vector<uint8_t>  cGrpsRight{4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
     std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
     std::vector<uint8_t> cInvrtRight{0, 0, 0, 0, 0, 0, 1};
-    for(size_t cIndx=0; cIndx < cInvrtLeft.size(); cIndx++)
+    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
     {
-        uint8_t cGroup = cGrpsRight[cIndx];
-        uint8_t cChannel = cChnlsRight[cIndx];
+        uint8_t cGroup    = cGrpsRight[cIndx];
+        uint8_t cChannel  = cChnlsRight[cIndx];
         uint8_t cRxInvert = cInvrtRight[cIndx];
         ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
     }

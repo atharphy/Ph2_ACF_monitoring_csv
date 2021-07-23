@@ -374,8 +374,8 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                         cCounter++;
                     }
                     // then the L1 line
-                    size_t cPhyPortL1                           = (cChip->getId()%8 > 3) ? 11 : 10;
-                    size_t cPhyPortChnlL1                       = (cChip->getId()%8 % 4);
+                    size_t cPhyPortL1                           = (cChip->getId() % 8 > 3) ? 11 : 10;
+                    size_t cPhyPortChnlL1                       = (cChip->getId() % 8 % 4);
                     cPhaseAlignment[cPhyPortChnlL1][cPhyPortL1] = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", cOptimalTaps[cPhyPortChnlL1][cPhyPortL1]);
                     cOutput += cBuffer;
@@ -462,7 +462,6 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                     fReadoutChipInterface->WriteChipReg(cChip, "SLVSDrive", cSLVSDrive);
                 } // loop over MPAs
 
-                
                 // send a resync
                 fBeBoardInterface->ChipReSync(cBoard);
 
@@ -678,8 +677,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         // l1 lines
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.stub_debug.enable", 0x00);
         // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(pNTriggers, 100, 3);
-        uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        uint16_t cSrc        = 3;
+        uint16_t                                      cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        uint16_t                                      cSrc        = 3;
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         if(cTriggerSrc != cSrc)
         {
@@ -689,7 +688,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNTriggers});
         cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
-        
+
         // count triggers sent to the CIC
         bool   cAllTriggersSent = false;
         size_t cAttempt         = 0;
@@ -701,7 +700,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms, uint32_t pNTriggers)
             do {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNTriggersSent = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                //LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
+                // LOG(INFO) << BOLDBLUE << "\t... during CIC phase alignment of L1 lines from CBC " << +cNTriggersSent << " triggers sent." << RESET;
                 cAllTriggersSent = (cNTriggersSent >= pNTriggers);
             } while(!cAllTriggersSent);
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Stop();
@@ -871,9 +870,9 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
                         std::string cOutput;
                         for(size_t cLine = 0; cLine < 5; cLine++)
                         {
-                            cWordAlignmentVals[cChip->getId()%8][cLine] = cWordAlignmentValues[cChip->getId()%8][cLine];
+                            cWordAlignmentVals[cChip->getId() % 8][cLine] = cWordAlignmentValues[cChip->getId() % 8][cLine];
                             char cBuffer[80];
-                            sprintf(cBuffer, "%.2d ", cWordAlignmentVals[cChip->getId()%8][cLine]);
+                            sprintf(cBuffer, "%.2d ", cWordAlignmentVals[cChip->getId() % 8][cLine]);
                             cOutput += cBuffer;
                         }
                         LOG(INFO) << BOLDBLUE << "Word alignment values for FE#" << +cChip->getId() << " : " << cOutput << RESET;

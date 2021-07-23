@@ -71,7 +71,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     // for now.. force to use async mode here
     bool cForcePSasync = true;
-    // event types 
+    // event types
 
     fEventTypes.clear();
     for(auto cBoard: *fDetectorContainer)
@@ -106,10 +106,10 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::Reset()
 {
-    size_t cIndx=0;
+    size_t cIndx = 0;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(fEventTypes[cIndx]== EventType::PSAS) continue;
+        if(fEventTypes[cIndx] == EventType::PSAS) continue;
         cBoard->setEventType(fEventTypes[cIndx]);
         for(auto cOpticalGroup: *cBoard)
         {
@@ -121,12 +121,9 @@ void PedeNoise::Reset()
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 if(!cWithSSA && !cWithMPA) continue;
 
-                for(auto cROC: *cHybrid)
-                {
-                    fReadoutChipInterface->WriteChipReg(cROC, "ReadoutMode", 0);
-                }
+                for(auto cROC: *cHybrid) { fReadoutChipInterface->WriteChipReg(cROC, "ReadoutMode", 0); }
             }
-        }    
+        }
     }
 }
 void PedeNoise::disableStubLogic()
@@ -425,7 +422,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
             this->setDacAndMeasureData("Threshold", cValue, fEventsPerPoint, fNEventsPerBurst);
-            
+
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);

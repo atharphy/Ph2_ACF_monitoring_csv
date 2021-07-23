@@ -1,10 +1,10 @@
 #include "FileParser.h"
 #include "../HWDescription/Cbc.h"
-#include "../HWDescription/SSA2.h"
 #include "../HWDescription/Cic.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/SSA2.h"
 #include "../HWDescription/lpGBT.h"
 #include "../Utils/Utilities.h"
 
@@ -167,9 +167,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setEventType(EventType::VR);
     }
 
-    uint8_t cReset = convertAnyInt( pBeBordNode.attribute("linkReset").value() );
+    uint8_t cReset = convertAnyInt(pBeBordNode.attribute("linkReset").value());
     cBeBoard->setLinkReset(cReset);
-    
+
     os << BOLDBLUE << "|"
        << "----" << pBeBordNode.name() << " --> " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute("Id").value() << BOLDBLUE << ", BoardType: " << BOLDYELLOW
        << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << RESET << std::endl;

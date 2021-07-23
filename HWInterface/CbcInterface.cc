@@ -55,18 +55,18 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
         bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage < b.second.fPage; }
     } customPageInc;
 
-    // sort register map 
-    bool cSortPageInc=true;
-    if( cSortPageInc)
-        std::sort(cRegList.begin(), cRegList.end(), customPageInc);    // all to page0 then page 1
+    // sort register map
+    bool cSortPageInc = true;
+    if(cSortPageInc)
+        std::sort(cRegList.begin(), cRegList.end(), customPageInc); // all to page0 then page 1
     else
-        std::sort(cRegList.begin(), cRegList.end(), customPageDec);    // all to page1 then page 0
+        std::sort(cRegList.begin(), cRegList.end(), customPageDec); // all to page1 then page 0
     struct
     {
         bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fAddress < b.second.fAddress; }
     } customAddressInc;
-    std::sort(cRegList.begin(), cRegList.end(), customAddressInc); // sort by address - for convenience later 
-     if(!lpGBTFound())
+    std::sort(cRegList.begin(), cRegList.end(), customAddressInc); // sort by address - for convenience later
+    if(!lpGBTFound())
     {
         // vector to encode all the registers into
         std::vector<uint32_t> cVec;
@@ -183,19 +183,19 @@ std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pS
 {
     std::vector<uint8_t> cChannelList(0);
     uint32_t             cSeedStrip = std::floor(pSeed / 2.0); // counting from 1
-    //LOG(DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
     size_t cNumberOfChannels = 1 + (pSeed % 2 != 0);
     for(size_t cIndex = 0; cIndex < cNumberOfChannels; cIndex++)
     {
         uint32_t cSeedChannel = 2 * (cSeedStrip - 1) + !pSeedLayer + 2 * cIndex;
-        //LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
         cChannelList.push_back(static_cast<uint32_t>(cSeedChannel));
     }
     return cChannelList;
 }
 std::vector<uint8_t> CbcInterface::stubInjectionPattern(uint8_t pStubAddress, int pStubBend, bool pLayerSwap)
 {
-    //LOG(DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
     std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress, !pLayerSwap);
     // correlation layer
     uint8_t              cCorrelated     = pStubAddress + pStubBend; // start counting strips from 0
@@ -236,13 +236,13 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
     {
         uint16_t               cFirstHit = 0;
         std::bitset<NCHANNELS> cBitset   = std::bitset<NCHANNELS>(cChannelMask.getBitset());
-        //LOG(DEBUG) << BOLDMAGENTA << "Bitset for this mask is " << cBitset << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << "Bitset for this mask is " << cBitset << RESET;
         for(cFirstHit = 0; cFirstHit < NCHANNELS; cFirstHit++)
         {
             if(cBitset[cFirstHit] != 0) break;
         }
         uint8_t cGroupId = std::floor((cFirstHit % 16) / 2);
-        //LOG(DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
         if(cGroupId > 7)
             throw Exception("bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, "
                             "bool pVerifLoop): CBC is not able to inject the channel pattern");
@@ -251,7 +251,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         // write registers which enable injection
         this->enableInjection(pCbc, true); // enable injection
         // write register which sets TP amplitude
-        //this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
+        // this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
         return this->maskChannelsGroup(pCbc, &cChannelMask);
     }
     else // with noise
@@ -299,7 +299,7 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc)
         char         cBuffer[20];
         sprintf(cBuffer, "Bend%d", static_cast<int>(cIndex));
         std::string cRegName(cBuffer, cLength);
-        //LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
         uint16_t cValue            = this->ReadChipReg(pCbc, cRegName);
         cBendCodes[cIndex * 2]     = (cValue & 0x0F);
         cBendCodes[cIndex * 2 + 1] = (cValue & 0xF0) >> 4;
@@ -517,7 +517,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<5> cClockDelay(cSelect);
         uint8_t        cNewRegValue = ((cOriginalValue & 0xE0) | static_cast<uint8_t>(cClockDelay.to_ulong()));
-        //LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec <<
+        // RESET;
         return WriteChipSingleReg(pCbc, "40MhzClk&Or254", cNewRegValue, pVerifLoop);
     }
     else if(dacName == "PtCut")
@@ -703,7 +704,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
     uint8_t cPage = cIter->second;
     if(cPage == 1) std::sort(cRegItems.begin(), cRegItems.end(), customGreaterForPage); // all to page1 then page 0
     if(cPage == 0) std::sort(cRegItems.begin(), cRegItems.end(), customLessForPage);    // all to page0 then page 1
-   
+
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
     bool cSuccess = false;
@@ -713,7 +714,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         std::vector<uint32_t> cVec;
         for(const auto& cRegItem: cRegItems)
         {
-            // update list of 
+            // update list of
             ChipRegItem cItem;
             // modified registers map
             uint32_t cChipId = (uint8_t)(pCbc->getFrontEndType() == FrontEndType::MPA || pCbc->getFrontEndType() == FrontEndType::RD53) << 12;
@@ -726,14 +727,14 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
             }
             cMapIter      = fModifiedRegisters.find(cChipId);
             auto& cModMap = cMapIter->second;
-            bool cFound   = pCbc->getRegMap().find(cRegItem.first) != pCbc->getRegMap().end();
+            bool  cFound  = pCbc->getRegMap().find(cRegItem.first) != pCbc->getRegMap().end();
             if(cFound)
             {
                 cItem = pCbc->getRegItem(cRegItem.first);
                 // update map with value before it has been modified
                 if(cModMap.find(cRegItem.first) == cModMap.end()) cModMap[cRegItem.first] = cItem;
             }
-            
+
             if(cRegItem.second.fValue > 0xFF)
             {
                 LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << cRegItem.second.fValue << " on register " << cRegItem.first;

@@ -265,7 +265,7 @@ void PedeNoiseTime::sweepSCurves()
 
 void PedeNoiseTime::measureNoise()
 {
-    findPedestal(true);   
+    findPedestal(true);
     // LOG(INFO) << BOLDBLUE << "sweepSCurves" << RESET;
     // sweepSCurves();
     // LOG(INFO) << BOLDBLUE << "extractPedeNoiseTime" << RESET;

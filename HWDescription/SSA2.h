@@ -38,13 +38,13 @@ class SSA2 : public ReadoutChip
     SSA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
     // C'tors with object FE Description
     SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
-    uint8_t fPartnerId;
-    uint8_t getPartid() {return fPartnerId;}
+    uint8_t      fPartnerId;
+    uint8_t      getPartid() { return fPartnerId; }
     virtual void accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }
     void         loadfRegMap(const std::string& filename) override;
     void         saveRegMap(const std::string& filename) override;
     uint32_t     getNumberOfChannels() const override { return NSSACHANNELS; }
-    bool         isDACLocal(const std::string& dacName) override //FIXME: what does thsi do? Ask Kevin.
+    bool         isDACLocal(const std::string& dacName) override // FIXME: what does thsi do? Ask Kevin.
     {
         if(dacName.find("THTRIMMING_S", 0, 12) != std::string::npos)
             return true;

@@ -165,21 +165,18 @@ int main(int argc, char* argv[])
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
-    if(!cmd.foundOption("skipAlignment"))
-    {
-        cPSAlignment.Align();
-    }
-    
-    // hack 
-    // make sure MPAs and SSAs have all pixels enabled 
-    auto cSetting    = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
+    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
+
+    // hack
+    // make sure MPAs and SSAs have all pixels enabled
+    auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
     int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting    = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
-    int  cPSmoduleMPAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting    = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
-    int  cPSmoduleLat = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting    = cTool.fSettingsMap.find("PSmoduleStubWindow");
-    int  cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
+    int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting            = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
+    int cPSmoduleLat    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting            = cTool.fSettingsMap.find("PSmoduleStubWindow");
+    int cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
     for(auto board: *cTool.fDetectorContainer)
     {
         for(auto opticalGroup: *board)
@@ -191,14 +188,14 @@ int main(int argc, char* argv[])
                     cTool.fReadoutChipInterface->WriteChipReg(chip, "InjectedCharge", 77);
                     if(chip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        cTool.fReadoutChipInterface->WriteChipReg(chip,"AnalogueSync",1);
-                        //cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 1);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "AnalogueSync", 1);
+                        // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 1);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat-1);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat - 1);
                     }
                     if(chip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        //cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
+                        // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "StubWindow", cPSmoduleWindow);

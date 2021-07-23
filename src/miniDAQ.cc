@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkData", "Check data..", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
-    
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
     std::string  cDAQFileName;
     FileHandler* cDAQFileHandler = nullptr;
     bool         cDAQFile        = cmd.foundOption("daq");
-    int cReadoutPause = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+    int          cReadoutPause   = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
     if(cDAQFile)
     {
         cDAQFileName    = cmd.optionValue("daq");
@@ -177,8 +177,6 @@ int main(int argc, char* argv[])
         // cCicAligner.dumpConfigFiles();
     }
 
-    
-
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
@@ -191,15 +189,15 @@ int main(int argc, char* argv[])
     cPSAlignment.Align();
     cPSAlignment.dumpConfigFiles();
 
-    auto cSetting    = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
+    auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
     int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting    = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
-    int  cPSmoduleMPAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting    = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
-    int  cPSmoduleLat = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting    = cTool.fSettingsMap.find("PSmoduleStubWindow");
-    int  cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-            
+    cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
+    int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting            = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
+    int cPSmoduleLat    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    cSetting            = cTool.fSettingsMap.find("PSmoduleStubWindow");
+    int cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+
     for(auto board: *cTool.fDetectorContainer)
     {
         for(auto opticalGroup: *board)
@@ -212,7 +210,7 @@ int main(int argc, char* argv[])
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
-                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat-1);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat - 1);
                     }
                     if(chip->getFrontEndType() == FrontEndType::MPA)
                     {
@@ -225,14 +223,14 @@ int main(int argc, char* argv[])
             }
         }
     }
-    // when I get here .. I want to update the common_stub_data_delay 
-    // then I am sure that I should see stubs as long as the 
-    // correct hit latency is set 
+    // when I get here .. I want to update the common_stub_data_delay
+    // then I am sure that I should see stubs as long as the
+    // correct hit latency is set
     for(auto cBoard: *cTool.fDetectorContainer)
     {
-        auto cStubOffset    = cBoard->getStubOffset();
-        uint16_t cTriggerLatency=0; 
-        uint8_t  cReTimePix=0;
+        auto     cStubOffset     = cBoard->getStubOffset();
+        uint16_t cTriggerLatency = 0;
+        uint8_t  cReTimePix      = 0;
         for(auto cOpticalReadout: *cBoard)
         {
             if(cOpticalReadout->getIndex() > 0) break;
@@ -241,16 +239,16 @@ int main(int argc, char* argv[])
                 if(cHybrid->getIndex() > 0) break;
                 for(auto cReadoutChip: *cHybrid)
                 {
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) continue;
-                    if( cTriggerLatency != 0 ) continue; 
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cTriggerLatency != 0) continue;
                     cTriggerLatency = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "TriggerLatency");
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
                 }
             }
         }
         uint32_t cStubDataDelay = cTriggerLatency - (cStubOffset + cReTimePix);
-        LOG (INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
-        LOG (INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
         cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDelay);
     }
 
@@ -271,15 +269,12 @@ int main(int argc, char* argv[])
                             LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
                                       << " by disabling injection on Chip#" << +cChip->getId() << RESET;
                             cTool.fReadoutChipInterface->enableInjection(cChip, false);
-
                         }
                     }
                 }
             } //
         }     //
-    }//
-
-
+    }         //
 
     uint32_t numberOfResyncs = 0;
     if(cmd.foundOption("sendResync"))
@@ -310,7 +305,7 @@ int main(int argc, char* argv[])
     }
 
     bool cLimitTriggers = cmd.foundOption("limitTriggers");
-    if( cmd.foundOption("continuousReadout") )
+    if(cmd.foundOption("continuousReadout"))
     {
         for(auto cBoard: *cTool.fDetectorContainer)
         {
@@ -322,21 +317,17 @@ int main(int argc, char* argv[])
 
             std::vector<uint32_t> cCompleteData(0);
             cTool.fBeBoardInterface->Start(cBeBoard);
-            size_t cCounter=0;
-            uint32_t              cNevents = 0;
-            bool cBreak = false;
-            bool cWait=false;
-            do 
-            {
+            size_t   cCounter = 0;
+            uint32_t cNevents = 0;
+            bool     cBreak   = false;
+            bool     cWait    = false;
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(cReadoutPause));
                 std::vector<uint32_t> cData(0);
                 cNevents += cTool.ReadData(cBeBoard, cData, cWait);
                 auto cTriggerCounter = cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                 if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-                LOG (INFO) << BOLDMAGENTA << "miniDAQ continuousReadout loop ... "
-                        << +cTriggerCounter << " triggers received and "
-                        << +cNevents << " events readout so far... "
-                        << RESET;
+                LOG(INFO) << BOLDMAGENTA << "miniDAQ continuousReadout loop ... " << +cTriggerCounter << " triggers received and " << +cNevents << " events readout so far... " << RESET;
                 cCounter++;
                 cBreak = (cNevents >= pEventsperVcth);
             } while(!cBreak);
@@ -357,7 +348,7 @@ int main(int argc, char* argv[])
             // and that the readout has been reset
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Stop();
             auto cStubLatency = cTool.fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
-            LOG (INFO) << BOLDMAGENTA << "Common stub data delay set to " << cStubLatency << RESET;
+            LOG(INFO) << BOLDMAGENTA << "Common stub data delay set to " << cStubLatency << RESET;
             if(cLimitTriggers)
                 cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
             else
@@ -381,17 +372,16 @@ int main(int argc, char* argv[])
                 if(cLimitTriggers)
                     cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pEventsperVcth);
                 else
-                cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
+                    cTool.fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0);
 
                 // try to only readout once I know I have enough events
-                size_t cCounter=0;
+                size_t cCounter = 0;
                 do {
                     std::this_thread::sleep_for(std::chrono::microseconds(10));
                     cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
-                    if( cCounter%1000 == 0 ) LOG (INFO) << BOLDMAGENTA << "\t\t.. " 
-                        << cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") 
-                        << " ... triggers received... "
-                        << RESET;
+                    if(cCounter % 1000 == 0)
+                        LOG(INFO) << BOLDMAGENTA << "\t\t.. " << cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter")
+                                  << " ... triggers received... " << RESET;
                     cCounter++;
                 } while(!cBreak);
                 cTool.fBeBoardInterface->Stop(cBeBoard);
@@ -468,10 +458,11 @@ int main(int argc, char* argv[])
             //             for(auto cChip: *cHybrid)
             //             {
             //                 auto cHits = cEvent->GetHits( cHybrid->getId() , cChip->getId() );
-            //                 auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId()); 
+            //                 auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId());
             //                 if( cHits.size() > 0 )
             //                 {
-            //                     LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size() << " stubs." << RESET;
+            //                     LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size() << "
+            //                     stubs." << RESET;
             //                 }
             //             }
             //         } // hybrid
@@ -505,7 +496,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    //process 
+    // process
     for(auto cBeBoard: *cTool.fDetectorContainer)
     {
         bool                       cPostscale   = cmd.foundOption("postscale");
@@ -518,18 +509,18 @@ int main(int argc, char* argv[])
         std::vector<DQMEvent*> cDQMEvents;
         uint32_t               cEventId, cTriggerId;
 
-        uint8_t cFirstHybridId=0; 
-        uint8_t cFirstChipId=0;
+        uint8_t cFirstHybridId = 0;
+        uint8_t cFirstChipId   = 0;
         for(auto cOpticalGroup: *cBeBoard)
         {
-            if( cOpticalGroup->getIndex() > 0 ) continue;
+            if(cOpticalGroup->getIndex() > 0) continue;
             for(auto cHybrid: *cOpticalGroup)
             {
-                if( cHybrid->getIndex() > 0 ) continue;
+                if(cHybrid->getIndex() > 0) continue;
                 cFirstHybridId = cHybrid->getId();
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getIndex() > 0 ) continue;
+                    if(cChip->getIndex() > 0) continue;
                     cFirstChipId = cChip->getId();
                 }
             }
@@ -565,27 +556,24 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                        auto cHits = cEvent->GetHits( cHybrid->getId() , cChip->getId() );
-                        auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId()); 
-                        LOG (INFO) << BOLDBLUE << "\t\t.. found " << +cHits.size() << " and " << +cStubVector.size() << " stubs." << RESET;
+                        auto cHits       = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                        auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                        LOG(INFO) << BOLDBLUE << "\t\t.. found " << +cHits.size() << " and " << +cStubVector.size() << " stubs." << RESET;
                         for(auto cHit: cHits)
                         {
-                            uint16_t cRow   =  (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? cHit : ((cHit >> 8) & 0x7F); 
-                            uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : ((cHit >> 24) & 0x7);
-                            uint16_t cId     = (cChip->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : (cHit & 0x7);
+                            uint16_t cRow    = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : ((cHit >> 8) & 0x7F);
+                            uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : ((cHit >> 24) & 0x7);
+                            uint16_t cId     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : (cHit & 0x7);
                             cRow += cId;
-                            if( cColumn == 0 )
-                            { 
-                                LOG (INFO) << BOLDYELLOW << "\t\t\t Hit in Strip ASIC" << +cChip->getId()%8 << " row " << +cRow << RESET;
-                            }
+                            if(cColumn == 0) { LOG(INFO) << BOLDYELLOW << "\t\t\t Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << RESET; }
                             else
                             {
-                                cColumn = cColumn -1;
-                                LOG (INFO) << BOLDCYAN << "\t\t\t.. Hit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cRow << " column " << +cColumn << RESET;
+                                cColumn = cColumn - 1;
+                                LOG(INFO) << BOLDCYAN << "\t\t\t.. Hit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cRow << " column " << +cColumn << RESET;
                             }
-                        }// hit vector
+                        } // hit vector
                     }
                 } // hybrid
             }     // optical group

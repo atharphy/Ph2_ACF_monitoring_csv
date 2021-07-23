@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
-        LOG (INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose

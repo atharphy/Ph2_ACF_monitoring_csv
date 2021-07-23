@@ -13,12 +13,12 @@
  *
 */
 
+#include "BackEndAlignment.h"
 #include "CBCChannelGroupHandler.h"
 #include "Channel.h"
 #include "CicFEAlignment.h"
 #include "ContainerFactory.h"
 #include "Occupancy.h"
-#include "BackEndAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -34,11 +34,11 @@ Eudaq2Producer::Eudaq2Producer(const std::string& name, const std::string& runco
 {
     fPh2FileHandler   = nullptr;
     fSLinkFileHandler = nullptr;
-    fLastThreshold=-1;
+    fLastThreshold    = -1;
     fLastExtTriggerID = -1;
-    fFirstEvent = true;
-    fDifference = 1;
-    fLastTrigId = 0;
+    fFirstEvent       = true;
+    fDifference       = 1;
+    fLastTrigId       = 0;
 }
 
 Eudaq2Producer::~Eudaq2Producer() {}
@@ -48,8 +48,8 @@ void Eudaq2Producer::Initialise() {}
 void Eudaq2Producer::DoInitialise()
 {
     LOG(INFO) << "Initialising producer..." << RESET;
-    auto ini     = GetInitConfiguration();
-    fHWFile = ini->Get("HWFile", "./settings/D19CDescription.xml");
+    auto ini = GetInitConfiguration();
+    fHWFile  = ini->Get("HWFile", "./settings/D19CDescription.xml");
 
     std::stringstream outp;
     // initialisng ph2acf
@@ -80,14 +80,14 @@ void Eudaq2Producer::DoInitialise()
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
-    // when I get here .. I want to update the common_stub_data_delay 
-    // then I am sure that I should see stubs as long as the 
-    // correct hit latency is set 
+    // when I get here .. I want to update the common_stub_data_delay
+    // then I am sure that I should see stubs as long as the
+    // correct hit latency is set
     for(auto cBoard: *cBackEndAligner.fDetectorContainer)
     {
-        auto cStubOffset    = cBoard->getStubOffset();
-        uint16_t cTriggerLatency=0; 
-        uint8_t  cReTimePix=0;
+        auto     cStubOffset     = cBoard->getStubOffset();
+        uint16_t cTriggerLatency = 0;
+        uint8_t  cReTimePix      = 0;
         for(auto cOpticalReadout: *cBoard)
         {
             if(cOpticalReadout->getIndex() > 0) break;
@@ -96,43 +96,43 @@ void Eudaq2Producer::DoInitialise()
                 if(cHybrid->getIndex() > 0) break;
                 for(auto cReadoutChip: *cHybrid)
                 {
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) continue;
-                    if( cTriggerLatency != 0 ) continue; 
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cTriggerLatency != 0) continue;
                     cTriggerLatency = cBackEndAligner.fReadoutChipInterface->ReadChipReg(cReadoutChip, "TriggerLatency");
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cBackEndAligner.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cBackEndAligner.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
                 }
             }
         }
         uint32_t cStubDataDelay = cTriggerLatency - (cStubOffset + cReTimePix);
-        LOG (INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
-        LOG (INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
         cBackEndAligner.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDelay);
     }
 
     fInitialised = true;
-    LOG (INFO) << "  INITIALIZE ID: " << ini->Get("initid", 0) << std::endl;
+    LOG(INFO) << "  INITIALIZE ID: " << ini->Get("initid", 0) << std::endl;
     EUDAQ_INFO("TLU INITIALIZE ID: " + std::to_string(ini->Get("initid", 0)));
-    LOG (INFO) << " READBACK configuration : "<<std::endl;
+    LOG(INFO) << " READBACK configuration : " << std::endl;
 
     auto cReadbackHandshakeMode      = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.tlu_block.handshake_mode");
     auto cReadbackTluEnable          = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
     auto cReadbackTriggerSource      = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    auto cReadbackHitLatencyFeh0     = this->fReadoutChipInterface->ReadChipReg( static_cast<ReadoutChip*>(theFirstBoard->front()->at(0)->front()), "TriggerLatency");
-    auto cReadbackHitLatencyFeh1     = this->fReadoutChipInterface->ReadChipReg( static_cast<ReadoutChip*>(theFirstBoard->front()->at(1)->front()), "TriggerLatency");
+    auto cReadbackHitLatencyFeh0     = this->fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(theFirstBoard->front()->at(0)->front()), "TriggerLatency");
+    auto cReadbackHitLatencyFeh1     = this->fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(theFirstBoard->front()->at(1)->front()), "TriggerLatency");
     auto cReadbackCommonStubDataDely = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
     auto cReadbackPackageDelay       = this->fBeBoardInterface->ReadBoardReg(theFirstBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
 
-    LOG (INFO) << "  HANDSHAKE        : " << cReadbackHandshakeMode << std::endl;
-    LOG (INFO) << "  TLU ENABLE       : " << cReadbackTluEnable << std::endl;
-    LOG (INFO) << "  TRIGGER SOURCE   : " << cReadbackTriggerSource << std::endl;
-    LOG (INFO) << "  HIT LATENCY FEH0 : " << cReadbackHitLatencyFeh0 << std::endl;
-    LOG (INFO) << "  HIT LATENCY FEH1 : " << cReadbackHitLatencyFeh1 << std::endl;
-    LOG (INFO) << "  COM STUB DELAY   : " << cReadbackCommonStubDataDely << std::endl;
-    LOG (INFO) << "  PACKAGE DELAY    : " << cReadbackPackageDelay << std::endl;
-    EUDAQ_INFO("BEB PACKAGE DELAY : " + std::to_string(cReadbackPackageDelay) );
-    EUDAQ_INFO("HIT LATENCY FEH 0 : " + std::to_string(cReadbackHitLatencyFeh0) );
-    EUDAQ_INFO("HIT LATENCY FEH 1 : " + std::to_string(cReadbackHitLatencyFeh1) );
-    EUDAQ_INFO("COM STUBDATA DELAY: " + std::to_string(cReadbackCommonStubDataDely) );
+    LOG(INFO) << "  HANDSHAKE        : " << cReadbackHandshakeMode << std::endl;
+    LOG(INFO) << "  TLU ENABLE       : " << cReadbackTluEnable << std::endl;
+    LOG(INFO) << "  TRIGGER SOURCE   : " << cReadbackTriggerSource << std::endl;
+    LOG(INFO) << "  HIT LATENCY FEH0 : " << cReadbackHitLatencyFeh0 << std::endl;
+    LOG(INFO) << "  HIT LATENCY FEH1 : " << cReadbackHitLatencyFeh1 << std::endl;
+    LOG(INFO) << "  COM STUB DELAY   : " << cReadbackCommonStubDataDely << std::endl;
+    LOG(INFO) << "  PACKAGE DELAY    : " << cReadbackPackageDelay << std::endl;
+    EUDAQ_INFO("BEB PACKAGE DELAY : " + std::to_string(cReadbackPackageDelay));
+    EUDAQ_INFO("HIT LATENCY FEH 0 : " + std::to_string(cReadbackHitLatencyFeh0));
+    EUDAQ_INFO("HIT LATENCY FEH 1 : " + std::to_string(cReadbackHitLatencyFeh1));
+    EUDAQ_INFO("COM STUBDATA DELAY: " + std::to_string(cReadbackCommonStubDataDely));
 }
 
 void Eudaq2Producer::DoConfigure()
@@ -142,20 +142,25 @@ void Eudaq2Producer::DoConfigure()
     // only thing I don't understand is where the run number goes
     // getting the configuration
     // auto              cRunNumber = GetRunNumber();
-    auto              conf = GetConfiguration();
-    int threshold = conf->Get("threshold", 550);
-    if (threshold >= 0){
+    auto conf      = GetConfiguration();
+    int  threshold = conf->Get("threshold", 550);
+    if(threshold >= 0)
+    {
         LOG(INFO) << RED << "Set Threshold on all CBCs to " << threshold << RESET;
-        for (auto cBoard : *fDetectorContainer) {
-          for (auto cOpticalGroup : *cBoard) {
-            for (auto cHybrid : *cOpticalGroup) {
-              for (auto cChip : *cHybrid) {
-                // ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
-                ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, threshold);
-                static_cast<ReadoutChip*>(cChip)->accept(cThresholdVisitor);
-              }
+        for(auto cBoard: *fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        // ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+                        ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, threshold);
+                        static_cast<ReadoutChip*>(cChip)->accept(cThresholdVisitor);
+                    }
+                }
             }
-          }
         }
     }
     // Insert Thresholdvisitor
@@ -170,33 +175,38 @@ void Eudaq2Producer::DoStartRun()
 
     // Send BORE event at beginning of run with all register information from CBCs
     eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
-    std::time_t cTimestamp = std::time(nullptr);
+    std::time_t    cTimestamp  = std::time(nullptr);
     cEudaqEvent->SetTimestamp(cTimestamp, cTimestamp);
     cEudaqEvent->SetBORE();
-    //Readout the CBCs register data and store them as Tags in a BORE event
+    // Readout the CBCs register data and store them as Tags in a BORE event
     char name[150];
     char name2[150];
     LOG(INFO) << "Downloading the register configuration of the CBCs" << RESET;
-    for(auto cBoard : *fDetectorContainer){
-        for(auto cOpticalGroup : *cBoard) {
-        for (auto cHybrid : *cOpticalGroup) {
-            for (auto cChip : *cHybrid) {
-            int cCbcId = int(cChip->getId());
-            uint32_t cHybridId = cHybrid->getId();
-            auto cRegMap = cChip->getRegMap();
-            ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
-            static_cast<ReadoutChip*>(cChip)->accept (cThresholdVisitor);
-            uint16_t cOriginalThreshold = cThresholdVisitor.getThreshold();
-            std::sprintf (name2, "Threshold_%02d_%02d", int(cHybridId), int(cCbcId));
-            cEudaqEvent->SetTag(name2, (uint32_t)cOriginalThreshold);
-            LOG(INFO) << "Threshold FE" << int(cHybridId) << "CBC" << int(cCbcId) << ": " << cOriginalThreshold << RESET;
-            for(auto& ireg : cRegMap){
-                std::sprintf (name, "%s_%02d_%02d", ireg.first.c_str(), int(cHybridId), int(cCbcId));
-                cEudaqEvent->SetTag(name, (uint32_t)ireg.second.fValue);
-                LOG(DEBUG) << "Register " << ireg.first.c_str() << "\t" << ireg.second.fValue << RESET;
-            }//end of ireg loop
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    int              cCbcId    = int(cChip->getId());
+                    uint32_t         cHybridId = cHybrid->getId();
+                    auto             cRegMap   = cChip->getRegMap();
+                    ThresholdVisitor cThresholdVisitor(fReadoutChipInterface);
+                    static_cast<ReadoutChip*>(cChip)->accept(cThresholdVisitor);
+                    uint16_t cOriginalThreshold = cThresholdVisitor.getThreshold();
+                    std::sprintf(name2, "Threshold_%02d_%02d", int(cHybridId), int(cCbcId));
+                    cEudaqEvent->SetTag(name2, (uint32_t)cOriginalThreshold);
+                    LOG(INFO) << "Threshold FE" << int(cHybridId) << "CBC" << int(cCbcId) << ": " << cOriginalThreshold << RESET;
+                    for(auto& ireg: cRegMap)
+                    {
+                        std::sprintf(name, "%s_%02d_%02d", ireg.first.c_str(), int(cHybridId), int(cCbcId));
+                        cEudaqEvent->SetTag(name, (uint32_t)ireg.second.fValue);
+                        LOG(DEBUG) << "Register " << ireg.first.c_str() << "\t" << ireg.second.fValue << RESET;
+                    } // end of ireg loop
+                }
             }
-        }
         }
     }
     SendEvent(cEudaqEvent);
@@ -282,7 +292,8 @@ void Eudaq2Producer::DoStopRun()
 
 void Eudaq2Producer::DoReset()
 {
-    if (fInitialised) {
+    if(fInitialised)
+    {
         // just in case close the shutter
         for(auto cBoard: *fDetectorContainer) { this->fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard)); }
     }
@@ -316,13 +327,12 @@ void Eudaq2Producer::ReadoutLoop()
         if(!EventsPending()) { continue; }
         for(auto cBoard: *fDetectorContainer)
         {
-            BeBoard*              theBoard = static_cast<BeBoard*>(cBoard);
-            int cRunState = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.general.fsm_state") ;
-            if (cRunState!=1)
+            BeBoard* theBoard  = static_cast<BeBoard*>(cBoard);
+            int      cRunState = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.general.fsm_state");
+            if(cRunState != 1)
                 LOG(INFO) << BOLDRED << cRunState << RESET;
-            else 
+            else
                 LOG(INFO) << BOLDBLUE << cRunState << RESET;
-            
 
             std::vector<uint32_t> cRawData(0);
             this->ReadData(theBoard, cRawData);
@@ -340,11 +350,11 @@ void Eudaq2Producer::ReadoutLoop()
                 LOG(INFO) << BOLDBLUE << "Decoded 0 valid events.. not going to send anything ... " << RESET;
                 continue;
             }
-	    
+
             //{
             LOG(INFO) << BOLDBLUE << +cPh2Events.size() << " events read back from FC7 with ReadData" << RESET;
             std::time_t cTimestamp = std::time(nullptr);
-            for (auto cPh2Event : cPh2Events)
+            for(auto cPh2Event: cPh2Events)
             {
                 eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
                 cEudaqEvent->SetTimestamp(cTimestamp, cTimestamp);
@@ -354,33 +364,33 @@ void Eudaq2Producer::ReadoutLoop()
                 // SLinkEvent            cSLev = cPh2Event->GetSLinkEvent(cBoard);
                 // std::vector<uint32_t> tmp   = cSLev.getData<uint32_t>();
                 // fSLinkFileHandler->setData(tmp);
-		
-		/// christian's fix, some call it awesome (florian at least) of trying 
-		/// to align the ref+telescope with the du data, as we have seen that 
-		/// the trigger id for the telescope was advanced by one comp. to the dut, 
-		/// as well as the du had started with a"bonus" event to begin with
-		if (cPh2Event->GetEventCount() < 1) {
-		    LOG(INFO) << BOLDRED << "Skip first event with ID : "<< cPh2Event->GetEventCount()  << RESET; 
-		    continue;
-	    	}
-		/// end of awesoness
-		
+
+                /// christian's fix, some call it awesome (florian at least) of trying
+                /// to align the ref+telescope with the du data, as we have seen that
+                /// the trigger id for the telescope was advanced by one comp. to the dut,
+                /// as well as the du had started with a"bonus" event to begin with
+                if(cPh2Event->GetEventCount() < 1)
+                {
+                    LOG(INFO) << BOLDRED << "Skip first event with ID : " << cPh2Event->GetEventCount() << RESET;
+                    continue;
+                }
+                /// end of awesoness
+
                 eudaq::EventSP cEudaqSubEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
                 this->ConvertToSubEvent(cBoard, cPh2Event, cEudaqSubEvent);
                 cEudaqSubEvent->SetTimestamp(cTimestamp, cTimestamp);
                 cEudaqEvent->AddSubEvent(cEudaqSubEvent);
                 SendEvent(cEudaqEvent);
-            } //end of Ph2Events.size()
-        } // end of cBoard loop
-    }     // end of !fStopped loop
+            } // end of Ph2Events.size()
+        }     // end of cBoard loop
+    }         // end of !fStopped loop
 }
 
 void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2Event, eudaq::EventSP pEudaqSubEvent)
 {
-
-	/// roland's fix for missing consequtive trigger ids
-    // Try to fix correlation loss at rates higher than 450 Hz 
-    int cTrigNDiff = pPh2Event->GetExternalTriggerId() - (pPh2Event->GetEventCount()&0x7FFF);
+    /// roland's fix for missing consequtive trigger ids
+    // Try to fix correlation loss at rates higher than 450 Hz
+    int cTrigNDiff = pPh2Event->GetExternalTriggerId() - (pPh2Event->GetEventCount() & 0x7FFF);
     // int cTrigNDiffHalf = pPh2Event->GetExternalTriggerId()/2 - pPh2Event->GetEventCount();
     // LOG(INFO) << cTrigNDiff << "\t" << fDifference << RESET;
     // if (cTrigNDiffHalf > 0) {
@@ -391,7 +401,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
     //   LOG(WARNING) << "Found strange combination " << pPh2Event->GetExternalTriggerId() << "\t" << pPh2Event->GetEventCount() << "\t" << fLastTrigId << RESET;
     // }
 
-    if ( cTrigNDiff == fDifference + 1 && cTrigNDiff > 0) {
+    if(cTrigNDiff == fDifference + 1 && cTrigNDiff > 0)
+    {
         eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
         cEudaqEvent->SetTag("INVALID", 1);
         SendEvent(cEudaqEvent);
@@ -400,7 +411,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
     }
     pEudaqSubEvent->SetTag("INVALID", 0);
     fLastTrigId = pPh2Event->GetExternalTriggerId();
-	/// end of roland's fix
+    /// end of roland's fix
 
     pEudaqSubEvent->SetTag("L1_COUNTER_BOARD", pPh2Event->GetEventCount());
     pEudaqSubEvent->SetTag("TDC", pPh2Event->GetTDC());

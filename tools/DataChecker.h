@@ -91,7 +91,7 @@ class DataChecker : public Tool
     void ClusterCheck(std::vector<uint8_t> pChannels);
     void StubCheckWNoise(std::vector<uint8_t> pChipIds);
 
-    void AnaInjectionTestPS(uint32_t pMaxTriggersToAccept=1000);
+    void AnaInjectionTestPS(uint32_t pMaxTriggersToAccept = 1000);
     void InjectionTestPS(uint32_t pMaxTriggersToAccept = 1000);
     void ReadDataTestPS(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNevents = 10000);
     void CheckPSData(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections);
@@ -114,17 +114,17 @@ class DataChecker : public Tool
     void MaskForStubs(Ph2_HwDescription::BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer);
     void CollectEvents();
 
-    void HitCheck2S(Ph2_HwDescription::BeBoard* pBoard);
-    void HitCheck();
-    void zeroContainers();
-    void print(std::vector<uint8_t> pChipIds);
-    void Running() override;
-    void Stop() override;
-    void Pause() override;
-    void Resume() override;
-    void writeObjects();
+    void                                    HitCheck2S(Ph2_HwDescription::BeBoard* pBoard);
+    void                                    HitCheck();
+    void                                    zeroContainers();
+    void                                    print(std::vector<uint8_t> pChipIds);
+    void                                    Running() override;
+    void                                    Stop() override;
+    void                                    Pause() override;
+    void                                    Resume() override;
+    void                                    writeObjects();
     std::vector<Ph2_HwInterface::Injection> GeneratePSInjections(int pMaxNstubs);
-    
+
     class TPconfig
     {
       public:

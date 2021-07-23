@@ -23,8 +23,8 @@
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
-#include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/SSA2Interface.h"
+#include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
 #include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../NetworkUtils/TCPClient.h"
@@ -37,8 +37,8 @@
 #include "../Utils/D19cMPAEvent.h"
 #include "../Utils/D19cMPAEventAS.h"
 #include "../Utils/D19cPSEventAS.h"
-#include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSA2Event.h"
+#include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSAEventAS.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"
@@ -183,9 +183,9 @@ class SystemController
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength = 4, uint8_t pUseNegEdge = 0);
-    bool CicBeAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup );
-    bool CicPackageDelay(const Ph2_HwDescription::OpticalGroup* pOpticalGroup );
-    bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup );
+    bool CicBeAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool CicPackageDelay(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested

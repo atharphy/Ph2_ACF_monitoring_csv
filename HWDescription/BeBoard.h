@@ -151,11 +151,11 @@ class BeBoard : public BoardContainer
 
     bool getSparsification() const { return fSparsifed; }
 
-    void setLinkReset(uint8_t pReset){fResetLink=pReset;}
-    uint8_t getLinkReset() const { return fResetLink;}
+    void    setLinkReset(uint8_t pReset) { fResetLink = pReset; }
+    uint8_t getLinkReset() const { return fResetLink; }
 
-    void setStubOffset(uint16_t pOffset){fStubOffset=pOffset;}
-    uint8_t getStubOffset() const { return fStubOffset;}
+    void    setStubOffset(uint16_t pOffset) { fStubOffset = pOffset; }
+    uint8_t getStubOffset() const { return fStubOffset; }
 
     int dummyValue_ = 1989;
 

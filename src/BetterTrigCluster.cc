@@ -31,7 +31,7 @@
 #include <fstream>
 #include <inttypes.h>
 #include <iostream>
-#include<unistd.h>
+#include <unistd.h>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -43,81 +43,77 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
+    LOG(INFO) << BOLDRED << "=============" << RESET;
+    el::Configurations conf("settings/logger.conf");
+    el::Loggers::reconfigureAllLoggers(conf);
+    std::string       cHWFile = "settings/D19C_2xSSA2.xml";
+    std::stringstream outp;
+    Tool              cTool;
+    cTool.InitializeHw(cHWFile, outp);
+    cTool.InitializeSettings(cHWFile, outp);
+    cTool.ConfigureHw();
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    cBackEndAligner.Initialise();
+    cBackEndAligner.Align();
+    cBackEndAligner.Reset();
+    cBackEndAligner.resetPointers();
 
-        LOG(INFO) << BOLDRED << "=============" << RESET;
-        el::Configurations conf("settings/logger.conf");
-        el::Loggers::reconfigureAllLoggers(conf);
-        std::string       cHWFile = "settings/D19C_2xSSA2.xml";
-        std::stringstream outp;
-        Tool              cTool;
-        cTool.InitializeHw(cHWFile, outp);
-        cTool.InitializeSettings(cHWFile, outp);
-        cTool.ConfigureHw();
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cTool);
-        cBackEndAligner.Initialise();
-        cBackEndAligner.Align();
-        cBackEndAligner.Reset();
-        cBackEndAligner.resetPointers();
-
-
-        BeBoard*         pBoard           = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-        HybridContainer* ChipVec          = pBoard->at(0)->at(0);
-        for(auto cSSA: *ChipVec)
+    BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+    HybridContainer* ChipVec = pBoard->at(0)->at(0);
+    for(auto cSSA: *ChipVec)
+    {
+        ReadoutChip* iSSA = static_cast<ReadoutChip*>(cSSA);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "control_1", 0x0);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "control_2", 0xf0);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "mask_strip", 0xff);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS", 0x0);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "THTRIMMING", 0x15);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "Bias_THDAC", 50);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "Bias_CALDAC", 100);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS_S38", 0x9);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS_S50", 0x9);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS_S72", 0x9);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "DigCalibPattern_L", 0xff);
+        cTool.fReadoutChipInterface->WriteChipReg(iSSA, "SLVS_pad_current_L1", 0x7);
+    }
+    std::ofstream myfile;
+    myfile.open("Output_M8.csv");
+    int DELAY = 400;
+    while(DELAY > 19)
+    {
+        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(100, 10, DELAY - 10);
+        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        int nGoodBest = 0;
+        for(int lat = 5; lat < 6; lat++)
         {
+            int n3Good = 0;
+            for(auto cSSA: *ChipVec)
+            {
                 ReadoutChip* iSSA = static_cast<ReadoutChip*>(cSSA);
-                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "control_1", 0x0);
-                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "control_2", 0xf0);
-        		cTool.fReadoutChipInterface->WriteChipReg(iSSA, "mask_strip", 0xff);
-                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS", 0x0);
-                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "THTRIMMING", 0x15);
-                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "Bias_THDAC", 50);
-                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "Bias_CALDAC", 100);
-              	cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS_S38", 0x9);
-              	cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS_S50", 0x9);
-              	cTool.fReadoutChipInterface->WriteChipReg(iSSA, "ENFLAGS_S72", 0x9);
-                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "DigCalibPattern_L", 0xff);
-		cTool.fReadoutChipInterface->WriteChipReg(iSSA, "SLVS_pad_current_L1", 0x7);
+                cTool.fReadoutChipInterface->WriteChipReg(iSSA, "control_3", lat);
+            }
+            cTool.ReadNEvents(pBoard, 4);
+            const std::vector<Event*>& cPh2Events = cTool.GetEvents();
+            for(auto& event: cPh2Events) // for on events - begin
+            {
+                for(auto opt: *pBoard) // for on hybrid - begin
+                {
+                    for(auto hybrid: *opt) // for on hybrid - begin
+                    {
+                        for(auto chip: *hybrid) // for on chip - begin
+                        {
+                            if(event->GetHits(hybrid->getId(), chip->getId()).size() == 3) { n3Good++; }
+                        }
+                    }
+                    if(n3Good > nGoodBest) { nGoodBest = n3Good; }
+                }
+            }
+            usleep(50000); // sleeps for 1/16 second
         }
-	std::ofstream myfile;
-      	myfile.open ("Output_M8.csv");
-	int DELAY = 400;
-	while (DELAY > 19)
-	{
-		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(100, 10, DELAY-10);
-		static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ResetReadout();
-		int nGoodBest = 0;
-		for (int lat = 5; lat<6; lat++)
-		{
-			int n3Good = 0;
-			for(auto cSSA: *ChipVec)
-			{
-				ReadoutChip* iSSA = static_cast<ReadoutChip*>(cSSA);
-				cTool.fReadoutChipInterface->WriteChipReg(iSSA, "control_3", lat);
-			}
-			cTool.ReadNEvents(pBoard, 4);
-        	const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
-        	for(auto& event: cPh2Events) // for on events - begin
-			{for(auto opt: *pBoard) // for on hybrid - begin
-			{for(auto hybrid: *opt) // for on hybrid - begin
-			{
-				for(auto chip: *hybrid) // for on chip - begin
-				{
-					if (event->GetHits(hybrid->getId(), chip->getId()).size() == 3)
-					{
-						n3Good++;
-					}
-				}
-			}
-			if (n3Good > nGoodBest){ nGoodBest = n3Good;}
-		}}
-		usleep(50000);//sleeps for 1/16 second
-		}
-		LOG (INFO) << BOLDBLUE << "\n\n\n" << nGoodBest << " successes at a delay of " << DELAY  << RESET;
-		myfile << nGoodBest << ", " << DELAY << "\n";
-		DELAY = DELAY - 1;
-		
-	}
-	cTool.Destroy();
-
+        LOG(INFO) << BOLDBLUE << "\n\n\n" << nGoodBest << " successes at a delay of " << DELAY << RESET;
+        myfile << nGoodBest << ", " << DELAY << "\n";
+        DELAY = DELAY - 1;
+    }
+    cTool.Destroy();
 }

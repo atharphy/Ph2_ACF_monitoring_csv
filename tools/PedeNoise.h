@@ -46,6 +46,7 @@ class PedeNoise : public Tool
     void Pause() override;
     void Resume() override;
     void Reset();
+
   protected:
     uint16_t findPedestal(bool forceAllChannels = false);
     void     measureSCurves(uint16_t pStartValue = 0);
@@ -61,7 +62,6 @@ class PedeNoise : public Tool
     int      fNEventsPerBurst{-1};
     float    fMean_Strps{0};
     float    fMean_Pxls{0};
-        
 
     DetectorDataContainer* fThresholdAndNoiseContainer;
 
