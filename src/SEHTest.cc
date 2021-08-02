@@ -179,6 +179,7 @@ int main(int argc, char* argv[])
 
     cSEHTester.FindUSBHandler();
     cSEHTester.TurnOn();
+// establishes an optical link and configures the lpgbt over the optical cable
     cTool.ConfigureHw();
 
     // Initialize BackEnd & Control LpGBT Tester
@@ -206,7 +207,19 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDYELLOW << "You are using the default parameter set stored in fDefaultParameters" << RESET;
     }
-
+	
+	/****************************/
+    /*  Test VTRx+ slow control */
+    /****************************/
+    if(cmd.foundOption("testVTRxplus"))
+    {
+        bool cStatus = cSEHTester.LpGBTTestVTRx();
+		//cStatus = cSEHTester.LpGBTTestVTRx();
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
+    }
     /*******************/
     /*   TEST UPLINK   */
     /* E-links CIC_OUT */
@@ -235,7 +248,6 @@ int main(int argc, char* argv[])
             }
         }
     }
-
     /****************************/
     /* TEST RESET LINES (GPIOs) */
     /*     And test GPIs        */
@@ -256,18 +268,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    /****************************/
-    /*  Test VTRx+ slow control */
-    /****************************/
-    if(cmd.foundOption("testVTRxplus"))
-    {
-        bool cStatus = cSEHTester.LpGBTTestVTRx();
-
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
-        else
-            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
-    }
+    
 
     /****************************/
     /*  Test LpGBT I2C Masters */

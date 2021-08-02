@@ -644,7 +644,7 @@ bool OTHybridTester::LpGBTTestGPILines()
 
 bool OTHybridTester::LpGBTTestVTRx()
 {
-    bool                cSuccess = true;
+    bool                cSuccess 		= true;
     bool                cRecent;
     uint32_t            cResult         = 0;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -658,13 +658,18 @@ bool OTHybridTester::LpGBTTestVTRx()
             do
             {
                 cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1);
+            	for (int i = 0; i < 5 && !(cRecent); i++){
+                	cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1); 
+                }
                 cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
                 if(cRecent && (cResult == cMapIterator->second))
                 { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }
                 else
                 {
-                    LOG(INFO) << BOLDRED << "Error in VTRx+ register " << cMapIterator->first << " ." << RESET;
+                    LOG(INFO) << BOLDRED << "Error in VTRx+ register " << +(cMapIterator->first) << " ." << RESET;
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));

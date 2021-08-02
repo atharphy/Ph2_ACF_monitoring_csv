@@ -192,6 +192,8 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8); */
     //----------------------------------------------------
     fTC_USB->set_HV(false, true, true, 0);
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
@@ -277,9 +279,32 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 }
 void SEHTester::TurnOn()
 {
+	// workaround to turn on the bPOL2V5 propertly
+	float T ;
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
+	// check if the critical temperature of -35C has been reached
+	fTC_USB->read_temperature(fTC_USB->Temp1,T);
+	if (T < -35.0){
+		// if so add additional load to the lpGBT side of the hybrid to
+		// ensure larger currents and stop the negative over-current prottection
+		// of the bPOL
+		// 0x090 correcponds to 91mA a translates to 7mA of current draw 
+		// before turning on the service hybrid
+		fTC_USB->set_load2(true,false, 0x090); // 1 step = 635uA 0xfff = 2.6A
+    	// waiting 7 seconds before turnin on the hybrid ensures propper 
+    	// discharge of the side and lets the current rise so that the negative 
+    	// over-current protection does not activate
+    	std::this_thread::sleep_for (std::chrono::milliseconds (7000) );
+	}
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+    if (T < -35.0){
+    	// wait 4 seconds
+    	std::this_thread::sleep_for (std::chrono::milliseconds (4000) );
+		// to prevent indroducing a sistematic current draw at -35C we turn 
+		// the load off 
+		fTC_USB->set_load2(false,false, 0x090); // 1 step = 635uA 0xfff = 2.6A
+	}
 #endif
 #endif
 }
@@ -379,7 +404,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cMonCanvas->Write();
 
     fTC_USB->set_HV(false, false, false, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     fillSummaryTree("LeakDone", 1);
 #endif
 #endif
