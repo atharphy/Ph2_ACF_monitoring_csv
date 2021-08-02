@@ -172,7 +172,7 @@ void D19clpGBTInterface::ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const
     {
         // Enable Rx Groups Channels and set Data Rate and Phase Tracking mode
         uint8_t cValueEnableRx = 0;
-        for(const auto cChannel: pChannels) cValueEnableRx += (1 << cChannel);
+        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
         std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
         WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
@@ -399,6 +399,15 @@ void D19clpGBTInterface::PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std:
             WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
+
+
+void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+    // Configure Rx Phase Shifter
+
+    D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
+}
+
 
 void D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
@@ -1072,7 +1081,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
             if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    PhaseAlignRx(pChip, cRxGroups, cRxChannels);
+
+    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Resets are high

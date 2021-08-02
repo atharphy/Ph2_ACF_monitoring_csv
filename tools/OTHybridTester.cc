@@ -70,21 +70,27 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
         {
             LOG(INFO) << BOLDGREEN << "Electrical FC7 pattern generation" << RESET;
             // Check if Emulator is running
-            if(cDPInterfacer.IsRunning(pInterface, 1))
+            for(int i = 0; i < 5; i++)
             {
-                LOG(INFO) << BOLDYELLOW << " STATUS : Data Player is running and will be stopped " << RESET;
-                cDPInterfacer.Stop(pInterface);
+                if(cDPInterfacer.IsRunning(pInterface, 1))
+                {
+                    LOG(INFO) << BOLDYELLOW << " STATUS : Data Player is running and will be stopped " << RESET;
+                    cDPInterfacer.Stop(pInterface);
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                // Configure and Start DataPlayer
+                cDPInterfacer.Configure(pInterface, pPattern);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cDPInterfacer.Start(pInterface, 1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                if(cDPInterfacer.IsRunning(pInterface, 1))
+                {
+                    LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+                    break;
+                }
+                else
+                    LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            // Configure and Start DataPlayer
-            cDPInterfacer.Configure(pInterface, pPattern);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            cDPInterfacer.Start(pInterface, 1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            if(cDPInterfacer.IsRunning(pInterface, 1))
-                LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-            else
-                LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
         }
         else
         {
@@ -294,7 +300,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 uint8_t cSlaveAddress = 0x60;
 
                 uint8_t cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
-                cSuccess      = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
+                cSuccess         = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
                 if(cSuccess)
                     LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
                 else
@@ -576,7 +582,7 @@ bool OTHybridTester::LpGBTTestResetLines()
             // std::this_thread::sleep_for(std::chrono::milliseconds(10000));
             fTC_USB->read_reset(cMapIterator->second, cMeasurement);
 
-            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.);//1300
+            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
 
             cStatus = cStatus && (cDifference_mV <= 100);

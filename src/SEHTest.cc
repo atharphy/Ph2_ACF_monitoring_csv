@@ -180,8 +180,9 @@ int main(int argc, char* argv[])
     cSEHTester.FindUSBHandler();
     cSEHTester.TurnOn();
 // establishes an optical link and configures the lpgbt over the optical cable
+    uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
+    cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
     cTool.ConfigureHw();
-
     // Initialize BackEnd & Control LpGBT Tester
     // cSEHTester.exampleFit();
     // cSEHTester.DCDCOutputEvaluation();
@@ -237,9 +238,8 @@ int main(int argc, char* argv[])
         /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
-            uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
-            cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            bool cStatus = cSEHTester.LpGBTCheckULPattern(true);
+            // cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+            bool cStatus = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
             cSEHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
             if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
             else
@@ -409,6 +409,9 @@ int main(int argc, char* argv[])
         cFWInterface->L1ADebug();
     */
     // Save Result File
+    cSEHTester.TurnOff();
+    cSEHTester.LpGBTInjectULExternalPattern(false, 170);
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
