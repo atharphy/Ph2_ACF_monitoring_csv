@@ -28,6 +28,8 @@ class PSAlignment : public Tool
     bool                                     AlignL1Inputs(Ph2_HwDescription::BeBoard* pBoard);
     void                                     MapMPAOutputs(std::string pSetupType = "PSModule");
     bool                                     Align();
+    std::vector<std::pair<uint8_t, uint8_t>> AlignL1(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections);
+    std::vector<std::pair<uint8_t, uint8_t>> AlignStubs(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections, uint16_t pLatency);
     std::vector<std::pair<uint8_t, uint8_t>> AlignChip(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections, uint16_t pLatency);
     void                                     Running() override;
     void                                     Stop() override;

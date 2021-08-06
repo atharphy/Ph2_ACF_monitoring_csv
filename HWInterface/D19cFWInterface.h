@@ -279,6 +279,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
+    bool PSAsyncCounterData(uint8_t pRawMode=1);
     void FastAsyncRead(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pRawMode);
     void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pFast = false, bool pRawMode = false);
 

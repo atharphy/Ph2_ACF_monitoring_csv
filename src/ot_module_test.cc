@@ -101,13 +101,12 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
     cmd.defineOptionAlternative("tuneOffsets", "t");
-
+    cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
-
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -148,9 +147,8 @@ int main(int argc, char* argv[])
     bool        batchMode         = (cmd.foundOption("batch")) ? true : false;
     bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
     bool        cCheckData        = (cmd.foundOption("checkData"));
-
     bool cSaveToFile = cmd.foundOption("save");
-
+    std::string   cSrcLnkTst  = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string   cModuleId  = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string   cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     auto          cRunNumber = returnRunNumber("RunNumbers.dat");
@@ -349,29 +347,148 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
+    if( cmd.foundOption("linkTest"))
+    {
+        auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        for(auto cBoard: *cTool.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                if( cSrcLnkTst == "lpGBT" ) 
+                {
+                    auto& clpGBT = cOpticalGroup->flpGBT;
+                    // configure lpGBT to produce constant pattern 
+                    cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0,1,2,3,4,5,6}, 4);
+                    cTool.flpGBTInterface->ConfigureDPPattern(clpGBT,0xE0E0E0E0);
+                    D19cFWInterface::PhaseTuner cTuner;
+                    for(size_t cLineId=1; cLineId<=6;cLineId++)
+                    {
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true);
+                        }
+                    }
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+                        cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                        for(size_t cAttempt=0; cAttempt<100; cAttempt++)
+                        {
+                            (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6);
+                        }
+                    }
+                    continue;
+                }
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+                    cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    if( cSrcLnkTst == "CIC" ) 
+                    {
+                        // CIC alignment pattern 
+                        cTool.fCicInterface->SelectOutput(cCic, true);
+                    }
+                    else
+                    {
+                        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
+                        // MPA shift pattern 
+                        // enable MPA alignment pattern
+                        LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
+                        std::vector<uint8_t>     cOriginalValues;
+                        std::vector<std::string> cRegs;
+                        uint8_t                  cAlignmentPattern = 0xE0;
+                        std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
+                        std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
+                        for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
+                        {
+                            for(auto cChip: *cHybrid)
+                            {
+                                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+
+                                cOriginalValues.push_back(cTool.fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
+                                cRegs.push_back(cRegNames[cIndex]);
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
+                            } // loop over MPAs
+                        }// loop over registers
+                        for( uint8_t cPhyPort=8; cPhyPort<9; cPhyPort++)
+                        {
+                            LOG (INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
+                            cTool.fCicInterface->SelectMux(cCic, cPhyPort);
+                            // align line
+                            D19cFWInterface::PhaseTuner cTuner;
+                            for(size_t cLineId=1; cLineId<=3;cLineId++)
+                            {
+                                cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId,cAlignmentPattern , 8, true);
+                            }
+                            for(size_t cAttempt=0; cAttempt<100; cAttempt++)
+                            {
+                                (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 3);
+                            }
+                        }
+                    }
+                    if( cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT" )
+                    {
+                        for(size_t cAttempt=0; cAttempt<100; cAttempt++)
+                        {
+                            (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6);
+                        }
+                    }
+                }//hybrid 
+            }//OG
+        }//board
+    }
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
-        t.start();
-        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoise                 cPedeNoise;
-        std::vector<FrontEndType> cTypes{FrontEndType::SSA};
-        for(auto cType: cTypes)
+        // figure out what I want to do 
+        bool cForcePSasync = true;
+        for(auto cBoard: *cTool.fDetectorContainer)
         {
-            auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
-            cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
-            cPedeNoise.Inherit(&cTool);
-            cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-            cPedeNoise.measureNoise();
-            cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+            if(cForcePSasync) cBoard->setEventType(EventType::PSAS);
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    // cTool.fCicInterface->SelectOutput(cCic, true);
+                    // cTool.fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+                    //set all SSAs + MPAs to output data in async mode
+                    for(auto cROC: *cHybrid)
+                    {
+                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "Threshold", 0xFF);
+                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "InjectedCharge", 0xFF);
+                    }
+                }
+            }
+            cTool.enableTestPulse(true);
+            cTool.setFWTestPulse();
+            cTool.ReadNEvents(cBoard, 100);
+            //const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
+            //LOG (DEBUG) << +cPh2Events.size() << RESET;
         }
-        cPedeNoise.Reset();
-        cPedeNoise.writeObjects();
-        cPedeNoise.dumpConfigFiles();
-        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
-        t.stop();
-        t.show("Time to Scan Pedestals and Noise");
+        //(static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->GetCounterData(cRawMode);
+        // t.start();
+        // // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        // // tool provides an Inherit(Tool* pTool) for this purpose
+        // PedeNoise                 cPedeNoise;
+        // std::vector<FrontEndType> cTypes{FrontEndType::SSA};
+        // for(auto cType: cTypes)
+        // {
+        //     auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
+        //     cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+        //     cPedeNoise.Inherit(&cTool);
+        //     cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
+        //     cPedeNoise.measureNoise();
+        //     cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        // }
+        // cPedeNoise.Reset();
+        // cPedeNoise.writeObjects();
+        // cPedeNoise.dumpConfigFiles();
+        // // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        // t.stop();
+        // t.show("Time to Scan Pedestals and Noise");
     }
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck"))

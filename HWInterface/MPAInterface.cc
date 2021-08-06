@@ -303,6 +303,17 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
+    else if(pRegName.find("SelectEdgeT1") != std::string::npos)
+    {
+        std::string cRegName  = "EdgeSelT1Raw";
+        uint8_t     cBitShift = 1;
+        auto        cRegValue = this->ReadChipReg(pMPA, cRegName);
+        uint8_t     cRegMask  = (0x1 << cBitShift); //
+        cRegMask              = ~(cRegMask);
+        uint8_t cValue        = (cRegValue & cRegMask) | (pValue << cBitShift);
+        //LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for T1 to 0x" << std::hex << +cValue << std::dec << RESET;
+        return this->WriteChipReg(pMPA, cRegName, cValue);
+    }
     else if(pRegName.find("SelectEdgeL") != std::string::npos)
     {
         std::string cToken    = "SelectEdgeL";
@@ -313,7 +324,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t     cRegMask  = (0x1 << cBitShift); //
         cRegMask              = ~(cRegMask);
         uint8_t cValue        = (cRegValue & cRegMask) | (pValue << cBitShift);
-        LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
+        //LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
         return this->WriteChipReg(pMPA, cRegName, cValue);
     }
     else if(pRegName.find("SLVSDrive") != std::string::npos)
@@ -449,7 +460,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         bool    cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x01);
         uint8_t cPixelMask   = 1;
         uint8_t cPolarity    = 1;
-        uint8_t cEnEdgeBR    = 1;
+        uint8_t cEnEdgeBR    = 0;
         uint8_t cEnLvlBr     = 0;
         uint8_t cEnCount     = pValue;
         uint8_t cDigCal      = 0;
