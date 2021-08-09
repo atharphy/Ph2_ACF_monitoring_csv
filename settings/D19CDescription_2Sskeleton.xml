@@ -2,7 +2,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- B14 skeleton -->
     <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
@@ -38,7 +38,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
             </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="201"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="5" groundothers="0"/>
@@ -90,7 +90,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 3 </Register>
+    		<Register name="trigger_source"> 4 </Register>
     		<Register name="user_trigger_frequency"> 10 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
@@ -165,28 +165,28 @@
             </Register>
 	    <Register name="ch2">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch3">
                 <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
 	    <Register name="ch4">
                 <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch5">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
 	</Register>
 	<!-- TLU Block -->
 	<Register name="tlu_block">
-        <Register name="tlu_enabled"> 0 </Register>
+        <Register name="tlu_enabled"> 1 </Register>
         <Register name="handshake_mode"> 2 </Register>
         <Register name="trigger_id_delay"> 2 </Register>
 	</Register>

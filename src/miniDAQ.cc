@@ -185,8 +185,8 @@ int main(int argc, char* argv[])
         cBackEndAligner.Start(0);
         cBackEndAligner.waitForRunToBeCompleted();
         cBackEndAligner.Reset();
+        cPSAlignment.Align();
     }
-    cPSAlignment.Align();
     cPSAlignment.dumpConfigFiles();
 
     auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
@@ -550,33 +550,33 @@ int main(int argc, char* argv[])
 
             auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cFirstHybridId, cFirstChipId);
             LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << RESET;
-            for(auto cOpticalGroup: *cBeBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+            // for(auto cOpticalGroup: *cBeBoard)
+            // {
+            //     for(auto cHybrid: *cOpticalGroup)
+            //     {
+            //         for(auto cChip: *cHybrid)
+            //         {
+            //             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                        auto cHits       = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                        auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                        LOG(INFO) << BOLDBLUE << "\t\t.. found " << +cHits.size() << " and " << +cStubVector.size() << " stubs." << RESET;
-                        for(auto cHit: cHits)
-                        {
-                            uint16_t cRow    = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : ((cHit >> 8) & 0x7F);
-                            uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : ((cHit >> 24) & 0x7);
-                            uint16_t cId     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : (cHit & 0x7);
-                            cRow += cId;
-                            if(cColumn == 0) { LOG(INFO) << BOLDYELLOW << "\t\t\t Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << RESET; }
-                            else
-                            {
-                                cColumn = cColumn - 1;
-                                LOG(INFO) << BOLDCYAN << "\t\t\t.. Hit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cRow << " column " << +cColumn << RESET;
-                            }
-                        } // hit vector
-                    }
-                } // hybrid
-            }     // optical group
+            //             auto cHits       = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+            //             auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+            //             LOG(INFO) << BOLDBLUE << "\t\t.. found " << +cHits.size() << " and " << +cStubVector.size() << " stubs." << RESET;
+            //             for(auto cHit: cHits)
+            //             {
+            //                 uint16_t cRow    = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : ((cHit >> 8) & 0x7F);
+            //                 uint16_t cColumn = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : ((cHit >> 24) & 0x7);
+            //                 uint16_t cId     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : (cHit & 0x7);
+            //                 cRow += cId;
+            //                 if(cColumn == 0) { LOG(INFO) << BOLDYELLOW << "\t\t\t Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << RESET; }
+            //                 else
+            //                 {
+            //                     cColumn = cColumn - 1;
+            //                     LOG(INFO) << BOLDCYAN << "\t\t\t.. Hit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cRow << " column " << +cColumn << RESET;
+            //                 }
+            //             } // hit vector
+            //         }
+            //     } // hybrid
+            // }     // optical group
             // outp.str("");
             // outp << *cEvent;
             // LOG(INFO) << outp.str() << RESET;

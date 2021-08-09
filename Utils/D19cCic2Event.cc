@@ -92,10 +92,6 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     do {
         uint32_t cHeader    = (0xFFFF0000 & (*cEventIterator)) >> 16;
         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-        // for( size_t cIndx=0; cIndx<4; cIndx++)
-        // {
-        //     LOG (INFO) << BOLDMAGENTA << "Event Header L#" << +cIndx << " " << std::bitset<32>(*(cEventIterator+cIndx)) << RESET;
-        // }
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
@@ -222,11 +218,12 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             }
                             else
                             {
+                                LOG (INFO) << BOLDBLUE << "Un-sparsified CIC data.." << RESET;
                                 fEventRawList[cFe->getIndex()].first = cL1Information;
                                 fEventRawList[cFe->getIndex()].second.clear();
+                                size_t                                  cFullSize = 8;// going to assume that I will always readout 8*275 block of data
                                 if(cWithCIC2)
                                 {
-                                    size_t                                  cFullSize = 8;                                      // going to assume that I will always readout 8*275 block of data
                                     const size_t                            cNblocks  = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                                     std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                                     this->splitStream(pData, cL1Words, cL1Offset,
@@ -254,29 +251,33 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                                 cPosition++;
                                             }
                                         }
-                                        // LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                                        //LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
                                         fEventRawList[cFe->getIndex()].second.push_back(cBitset);
                                     }
-                                    // for( auto cChip : * cFe )
-                                    // {
-                                    //     if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                    for( auto cChip : * cFe )
+                                    {
+                                        if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                                    //     auto cHits = GetHits(cFe->getId(), cChip->getId() );
-                                    //     LOG (INFO) << BOLDGREEN << "\t.. Chip#" << +cChip->getId() << " found " << +cHits.size() << " hits." << RESET;
-                                    // }
+                                        auto cHits = GetHits(cFe->getId(), cChip->getId() );
+                                        //LOG (INFO) << BOLDGREEN << "\t.. Chip#" << +cChip->getId() << " found " << +cHits.size() << " hits." << RESET;
+                                    }
                                 }
                                 else
                                 {
-                                    const size_t                     cNblocks = cFe->fullSize(); // 274 bits per chip ..
-                                    const size_t                     cRawL1   = RAW_L1_CBC - 1;
-                                    std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
-                                    this->splitStream(pData, cL1Words, cL1Offset,
-                                                      cNblocks); // split 32 bit words in  blocks of 274 bits
-                                    for(int cIndex = 0; cIndex < (int)(cFe->fullSize()); cIndex++)
+                                    for( size_t cOffst=2; cOffst < 2 + cHitInfoSize ; cOffst ++ )
                                     {
-                                        LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
-                                        fEventRawList[cFe->getIndex()].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
+                                        LOG (INFO) << BOLDMAGENTA << "Word#" << (cOffst-2) << " : " << std::bitset<32>(*(cIterator+cOffst)) << RESET; 
                                     }
+                                    // const size_t                     cNblocks = cFullSize; // 274 bits per chip ..
+                                    // const size_t                     cRawL1   = RAW_L1_CBC - 1;
+                                    // std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
+                                    // this->splitStream(pData, cL1Words, cL1Offset,
+                                    //                   cNblocks); // split 32 bit words in  blocks of 274 bits
+                                    // for(size_t cIndex = 0; cIndex < cFullSize; cIndex++)
+                                    // {
+                                    //     LOG(INFO) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
+                                    //     fEventRawList[cFe->getIndex()].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
+                                    // }
                                 }
                             }
                         }

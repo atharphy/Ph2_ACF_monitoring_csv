@@ -2,7 +2,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
     <!-- <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.79:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="120"/>
     
     <OpticalGroup Id="0" FMCId="0" >
@@ -12,7 +12,7 @@
                 <TestPulse enable="1" polarity="0" amplitude="0xF0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00011" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="11"/>
-                <ChannelMask disable=""/>
+                <MaskedStrips CBCId="0"   Rows="50" />
             </Global>
 
             <CBC_Files path="./settings/CbcFiles/" />

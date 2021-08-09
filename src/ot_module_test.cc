@@ -313,6 +313,7 @@ int main(int argc, char* argv[])
         //
         cPSAlignment.Align();
     }
+    cPSAlignment.Reset();
     cPSAlignment.dumpConfigFiles();
 
     // equalize thresholds on readout chips
@@ -441,27 +442,80 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
-        // figure out what I want to do 
+        Injection              cInjection;
+        std::vector<Injection> cInjections;
+        cInjection.fRow    = 70;
+        cInjection.fColumn = 12;
+        cInjections.push_back(cInjection);
+        bool cSparsified = false;
+        for(auto cBoard: *cTool.fDetectorContainer)
+        {
+            uint16_t cDelay   = cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+            uint16_t cLatency = cDelay - 1;
+            cBoard->setSparsification(cSparsified);
+            cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+            for(auto cOpticalReadout: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    // CBC mode 
+                    if( !cSparsified ) cTool.fCicInterface->SelectMode(cCic,0);
+                    cTool.fCicInterface->SetSparsification(cCic, cSparsified);
+                    cTool.fCicInterface->WriteChipReg(cCic,"L1_INPUT_TIMEOUT_VALUE0",0xFF);
+                    cTool.fCicInterface->WriteChipReg(cCic,"L1_INPUT_TIMEOUT_VALUE1",0xFF);
+                    cTool.fCicInterface->WriteChipReg(cCic,"L1_OUTPUT_TIMEOUT_VALUE0",0x00);
+                    cTool.fCicInterface->WriteChipReg(cCic,"L1_OUTPUT_TIMEOUT_VALUE1",0x00);
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() != FrontEndType::SSA) cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                        else  cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency-1);
+                        
+                        if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        {
+                            cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                            (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections);
+                        }
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                        {
+                            cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
+                            cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                            cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                            for(auto cInjection: cInjections) { cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
+                        }
+                    } // chip
+                }     // hybrid
+            }//
+        } 
+
+        // // figure out what I want to do 
         bool cForcePSasync = true;
         for(auto cBoard: *cTool.fDetectorContainer)
         {
             if(cForcePSasync) cBoard->setEventType(EventType::PSAS);
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    // cTool.fCicInterface->SelectOutput(cCic, true);
-                    // cTool.fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-                    //set all SSAs + MPAs to output data in async mode
-                    for(auto cROC: *cHybrid)
-                    {
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "Threshold", 0xFF);
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "InjectedCharge", 0xFF);
-                    }
-                }
-            }
+            // for(auto cOpticalGroup: *cBoard)
+            // {
+            //     for(auto cHybrid: *cOpticalGroup)
+            //     {
+            //         //auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            //         // cTool.fCicInterface->SelectOutput(cCic, true);
+            //         // cTool.fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+            //         //set all SSAs + MPAs to output data in async mode
+            //         for(auto cROC: *cHybrid)
+            //         {
+            //             cTool.fReadoutChipInterface->WriteChipReg(cROC, "ENFLAGS_ALL", 0x0);
+            //             cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+            //             cTool.fReadoutChipInterface->WriteChipReg(cROC, "Threshold", 0xFF);
+            //             cTool.fReadoutChipInterface->WriteChipReg(cROC, "InjectedCharge", 0xFF);
+            //         }
+            //     }
+            // }
+        }
+
+        // TP set + readout 
+        for(auto cBoard: *cTool.fDetectorContainer)
+        {
+            cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
             cTool.enableTestPulse(true);
             cTool.setFWTestPulse();
             cTool.ReadNEvents(cBoard, 100);

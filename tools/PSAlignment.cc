@@ -13,6 +13,7 @@ PSAlignment::~PSAlignment() {}
 void PSAlignment::Reset()
 {
     // set everything back to original values .. like I wasn't here
+    bool cWithPS = false;
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
@@ -22,7 +23,45 @@ void PSAlignment::Reset()
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-        // comment out for now
+
+        std::vector<std::string> cRegsMod{"OutSetting","LatencyRx320","LatencyRx40","RetimePix","EdgeSelTrig","EdgeSelT1Raw"};
+        for(auto cOpticalGroup: *cBoard)
+        {
+            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto cType    = FrontEndType::SSA;
+                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType         = FrontEndType::MPA;
+                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
+                cWithPS       = cWithPS || cIsPS;
+                LOG(INFO) << BOLDBLUE << "BackEndAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+                for(auto cChip: *cHybrid)
+                {
+                    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
+                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
+                    LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    for(auto cMapItem: cModMap)
+                    {
+                        auto cValueInMemory = cChip->getReg(cMapItem.first);
+                        bool cLeaveReg=false;
+                        for(auto cReg : cRegsMod)
+                        {
+                            cLeaveReg = cLeaveReg || (cMapItem.first.find(cReg) != std::string::npos );
+                        }
+                        if( !cLeaveReg ) 
+                        {
+                            LOG(DEBUG) << BOLDBLUE << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                                       << cMapItem.second.fValue << RESET;
+                            fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        // // comment out for now
         // auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
         // for(auto cOpticalGroup: *cBoard)
         // {
@@ -40,9 +79,11 @@ void PSAlignment::Reset()
         //             {
         //                 if(cChip->getFrontEndType() == FrontEndType::MPA)
         //                 {
+        //                     LOG (INFO) << BOLDMAGENTA << "Register " << cReg.first << " changed on MPA#" << +cChip->getId()%8 << RESET;
         //                     if(cReg.first.find("OutSetting") != std::string::npos || cReg.first.find("LatencyRx320") != std::string::npos || cReg.first.find("LatencyRx40") != std::string::npos ||
-        //                        cReg.first.find("RetimePix") != std::string::npos)
-        //                     { LOG(DEBUG) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
+        //                        cReg.first.find("RetimePix") != std::string::npos ||
+        //                        cReg.first.find("EdgeSelTrig") != std::string::npos || cReg.first.find("EdgeSelT1Raw") != std::string::npos )
+        //                     { LOG(INFO) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
         //                 }
         //                 else
         //                 {
@@ -53,6 +94,11 @@ void PSAlignment::Reset()
         //         }
         //     }
         // }
+    }
+    if(fReadoutChipInterface != nullptr)
+    {
+        fReadoutChipInterface->ClearModifiedRegisterMap();
+        if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
     }
     resetPointers();
 }

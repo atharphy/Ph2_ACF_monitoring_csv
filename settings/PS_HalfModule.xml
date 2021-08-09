@@ -2,7 +2,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="0">
     <!-- PS  module CERN-->
-    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- PS half module FNAL-->
     <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
@@ -10,7 +10,7 @@
     <!-- <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- B14 skeleton, POH -->
     <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
-     <CDCE configure="0" clockRate="320"/>
+    <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
@@ -21,35 +21,37 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-               <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
+                <MaskedStrips/> <!-- SSAId="0"   Rows="13" />-->
+                <MaskedPixels/> <!-- MPAId="8" Rows="0,100" Columns="1,1"/> -->
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" /> 
-            <SSA Id="1" configfile="SSA.txt" /> 
-            <SSA Id="2" configfile="SSA.txt" /> 
+            <!-- <SSA Id="1" configfile="SSA.txt" />  -->
+            <!-- <SSA Id="2" configfile="SSA.txt" />  -->
             
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA Id="8" configfile="MPA.txt" /> 
-            <MPA Id="9" configfile="MPA.txt" /> 
-            <MPA Id="10" configfile="MPA.txt" /> 
+            <!-- <MPA Id="9" configfile="MPA.txt" />  -->
+            <!-- <MPA Id="10" configfile="MPA.txt" />  -->
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="0">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="2" configfile="SSA.txt" /> 
-            <!-- <SSA Id="4" configfile="SSA.txt" />  -->
+            <SSA Id="4" configfile="SSA.txt" /> 
             <!-- <SSA Id="5" configfile="SSA.txt" />  -->
             
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA Id="10" configfile="MPA.txt" /> 
-            <!-- <MPA Id="12" configfile="MPA.txt" />  -->
+            <MPA Id="12" configfile="MPA.txt" /> 
             <!-- <MPA Id="13" configfile="MPA.txt" />  -->
             
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
@@ -61,7 +63,7 @@
     <Register name="clock_source">3</Register> 
     <Register name="fc7_daq_cnfg">
     <Register name="sync_block">
-        <Register name="enable"          >1</Register>
+        <Register name="enable"          >0</Register>
         <Register name="is_bc0_enable"   >0</Register>
         <Register name="is_resync_enable">1</Register>
         <Register name="delay">10000</Register>
@@ -79,7 +81,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 6 </Register>
+            <Register name="trigger_source"> 3 </Register>
             <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
@@ -101,11 +103,12 @@
                 <Register name="after_stop_antenna"> 200 </Register>
             </Register>
             <Register name="ps_async_en">
-                <Register name="open_shutter"> 1 </Register>
+                <Register name="open_shutter"> 0 </Register>
                 <Register name="close_shutter"> 1 </Register>
                 <Register name="cal_pulse"> 1 </Register>
                 <Register name="antenna"> 0 </Register>
-                <Register name="clear_counters"> 0 </Register>
+                <Register name="clear_counters"> 1 </Register>
+                <Register name="cic_veto"> 0 </Register>
             </Register>
             <Register name="ext_trigger_delay_value"> 100 </Register>
             <Register name="antenna_trigger_delay_value"> 1 </Register>
@@ -177,7 +180,7 @@
     <!-- TLU Block -->
     <Register name="tlu_block">
                 <Register name="tlu_enabled"> 0 </Register>
-                <Register name="handshake_mode"> 2 </Register>
+                <Register name="handshake_mode"> 0 </Register>
                 <Register name="trigger_id_delay"> 1 </Register>
     </Register>
     </Register>

@@ -41,7 +41,7 @@ const std::map<std::string, uint8_t> PERI_CONFIG_TABLE = {{"ReadoutMode", 0},
 const std::map<std::string, uint8_t> ROW_CONFIG_TABLE = {{"L1Offset_1", 1}, {"L1Offset_2", 2}, {"ClrRst", 3}};
 // pixel config register map
 const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE =
-    {{"PixelEnable", 0}, {"ModelSel", 1}, {"TrimDAC", 2}, {"ClusterCut", 3}, {"HipCut", 4}, {"DigiPattern", 5}, {"ACCounter_LSB", 9}, {"ACCounter_MSB", 10}, {"SEUCounter", 11}};
+    {{"ENFLAGS", 0}, {"ModelSel", 1}, {"TrimDAC", 2}, {"ClusterCut", 3}, {"HipCut", 4}, {"DigiPattern", 5}, {"ACCounter_LSB", 9}, {"ACCounter_MSB", 10}, {"SEUCounter", 11}};
 
 /*!
  * \namespace Ph2_HwInterface
@@ -159,7 +159,6 @@ class MPAInterface : public ReadoutChipInterface
     bool                 configRow(Ph2_HwDescription::Chip* pChip, std::string cReg, int pRowNum, uint8_t pValue, bool pVerifLoop = true);
     bool                 configPeri(Ph2_HwDescription::Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop = true);
     uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
-
   private:
     std::map<uint16_t, std::string> fMap;
 

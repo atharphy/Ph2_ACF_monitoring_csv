@@ -183,7 +183,20 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uin
                << " register 0x" << std::hex << cAddress << std::dec << " value to write is 0x" << std::hex << +pValue << std::dec << RESET;
 
     // if global register don't readback
-    if(cRow == 0 || cColumn == 0) LOG(DEBUG) << BOLDMAGENTA << "GLOBAL PXL REG" << RESET;
+    // if(cRow == 0 || cColumn == 0) {
+    //     LOG(INFO) << BOLDMAGENTA << "GLOBAL PXL REG - making sure that I set all registers in the map to the same value.. " << RESET;
+    //     // also make sure that you've updated all the values of this register in memory 
+    //     for( uint8_t cColumn=0 ; cColumn < 16; cColumn++)
+    //     {
+    //         for(uint8_t cRow=0; cRow < 120; cRow++)
+    //         {
+    //             uint32_t cPixelId = 1 + cColumn*120 + cRow; 
+    //             std::stringstream cRegName; 
+    //             cRegName << PIXEL_CONFIG_TABLE.find(cReg)->first << "_P" << cPixelId; 
+    //             pChip->setReg(cRegName.str(), pValue);
+    //         }
+    //     }
+    // }
     pVerifLoop = (cRow == 0 || cColumn == 0) ? false : pVerifLoop;
     return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
 }
@@ -200,10 +213,10 @@ uint16_t MPAInterface::readPixel(Chip* pChip, std::string cReg, int pPixelNum)
 bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerifLoop)
 {
     // pixel num starts from 1 [0 == global]
-    auto    cRegValue = this->readPixel(pChip, "PixelEnable", pPixelNum);
+    auto    cRegValue = this->readPixel(pChip, "ENFLAGS", pPixelNum);
     uint8_t cNewValue = (cRegValue & 0xFE) | (1 - pMask);
     LOG(DEBUG) << BOLDBLUE << "Setting pixel mask to 0x" << std::hex << +cNewValue << std::dec << RESET;
-    return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop);
+    return this->configPixel(pChip, "ENFLAGS", pPixelNum, cNewValue, pVerifLoop);
 }
 bool MPAInterface::maskRowCol(Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerifLoop)
 {
@@ -440,7 +453,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         if(pRegName.find("P") != std::string::npos) // single pixel
         {
             cPixelNumber = std::stoi(pRegName.substr(pRegName.find("P") + 1, pRegName.length()));
-            cRegValue    = this->readPixel(pMPA, "PixelEnable", cPixelNumber);
+            cRegValue    = this->readPixel(pMPA, "ENFLAGS", cPixelNumber);
             cRegValue    = (cRegValue & cRegMask) | cValue;
         }
 
@@ -449,7 +462,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             std::vector<uint8_t> cBits = {1, 1, 1, 0, 0, cEnable, 0, 0};
             for(auto cBit: cBits) cRegValue = cRegValue | (1 << cBit);
         }
-        bool cEnableDigital = this->configPixel(pMPA, "PixelEnable", cPixelNumber, cRegValue, pVerifLoop);
+        bool cEnableDigital = this->configPixel(pMPA, "ENFLAGS", cPixelNumber, cRegValue, pVerifLoop);
         // configure pattern
         bool cConfigPattern = this->configPixel(pMPA, "DigiPattern", cPixelNumber, pValue, pVerifLoop);
         return cReadoutMode && cEnableDigital && cConfigPattern;
@@ -473,7 +486,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
         else
             LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        bool cEnableAnalogue = this->configPixel(pMPA, "PixelEnable", 0, cRegValue, pVerifLoop);
+        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, cRegValue, pVerifLoop);
         // mask pixel 1
         {
             this->maskPixel(pMPA, 1, 1, pVerifLoop);
@@ -491,7 +504,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t cPixelMask   = 1;
         uint8_t cPolarity    = 1;
         uint8_t cEnEdgeBR    = 1;
-        uint8_t cEnLvlBr     = 0;
+        uint8_t cEnLvlBr     = 1;
         uint8_t cEnCount     = pValue;
         uint8_t cDigCal      = 0;
         uint8_t cAnaCal      = pValue;
@@ -503,7 +516,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
         else
             LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        bool cEnableAnalogue = this->configPixel(pMPA, "PixelEnable", 0, cRegValue, pVerifLoop);
+        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, cRegValue, pVerifLoop);
         // mask pixel 1
         {
             this->maskPixel(pMPA, 1, 1, pVerifLoop);
@@ -541,34 +554,8 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
 {
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    bool cFound = pChip->getRegMap().find(pRegNode) != pChip->getRegMap().end();
-
-    ChipRegItem cRegItem;
-    // modified registers map
-    uint32_t cChipId = (uint8_t)(pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
-    cChipId          = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId();
-    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg writing " << pRegNode << " -- chip id in modified map is " << cChipId << RESET;
-    auto cMapIter = fModifiedRegisters.find(cChipId);
-    if(cMapIter == fModifiedRegisters.end())
-    {
-        ChipRegMap cRegMap;
-        fModifiedRegisters[cChipId] = cRegMap;
-    }
-    cMapIter      = fModifiedRegisters.find(cChipId);
-    auto& cModMap = cMapIter->second;
-    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg ModMap contains " << cModMap.size() << " items." << RESET;
-    if(cFound)
-    {
-        cRegItem = pChip->getRegItem(pRegNode);
-        // update map with value before it has been modified
-        if(cModMap.find(pRegNode) == cModMap.end()) cModMap[pRegNode] = cRegItem;
-    }
-    else
-    {
-        return cFound;
-    }
-    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteChipSingleReg ModMap contains " << cModMap.size() << " items." << RESET;
-
+    auto cRegItem = pChip->getRegMap().find(pRegNode)->second; 
+    UpdateModifiedRegMap(pChip,  cRegItem.fAddress); 
     cRegItem.fValue = pValue & 0xFF;
     if(!lpGBTFound())
     {
@@ -588,7 +575,7 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
         bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
         cSuccess     = (cVerify) ? (ReadChipReg(pChip, pRegNode) == pValue) : true;
     }
-    if(cSuccess && cFound)
+    if(cSuccess)
     {
         pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
         cRegItem = pChip->getRegItem(pRegNode);
@@ -787,55 +774,12 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg writing 0x" << std::hex << pRegisterAddress << std::dec << RESET;
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
-
     ChipRegItem cRegItem;
-    // modified registers map
-    uint32_t cChipId = (uint8_t)(pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
-    cChipId          = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId();
-    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg writing " << pRegisterAddress << " -- chip id in modified map is " << cChipId << RESET;
-
-    auto cMapIter = fModifiedRegisters.find(cChipId);
-    if(cMapIter == fModifiedRegisters.end())
-    {
-        ChipRegMap cRegMap;
-        fModifiedRegisters[cChipId] = cRegMap;
-    }
-    cMapIter      = fModifiedRegisters.find(cChipId);
-    auto& cModMap = cMapIter->second;
-    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg ModMap contains " << cModMap.size() << " items." << RESET;
-    if(cFound)
-    {
-        cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
-        if(cModMap.find(fMap[pRegisterAddress]) == cModMap.end()) { cModMap[fMap[pRegisterAddress]] = cRegItem; }
-    }
-    else
-    {
-        cRegItem.fAddress = pRegisterAddress;
-        // these still need to be added to the map
-        // first check if the register address matches any of the map
-        auto cModMapIter = cModMap.begin();
-        for(auto cMapItem: cModMap)
-        {
-            if(cMapItem.second.fAddress == pRegisterAddress) break;
-            cModMapIter++;
-        }
-        bool cFoundMatchingAddress = cModMapIter != cModMap.end();
-        if(!cFoundMatchingAddress)
-        {
-            // read back actual value from the chip
-            if(cRegItem.fStatusReg == 0)
-            {
-                cRegItem.fValue = ReadReg(pChip, pRegisterAddress, pVerifLoop);
-                std::ostringstream cRegName;
-                cRegName << "NewReg#" << cModMap.size();
-                cModMap[cRegName.str()] = cRegItem;
-            }
-        }
-    }
-    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg ModMap contains " << cModMap.size() << " items." << RESET;
+    cRegItem.fAddress = pRegisterAddress; 
+    UpdateModifiedRegMap(pChip,  pRegisterAddress); 
+    bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
+    if(cFound) cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
     cRegItem.fValue = pRegisterValue & 0xFF;
-
     // write
     if(!lpGBTFound())
     {

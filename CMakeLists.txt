@@ -165,26 +165,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
-    if(uhal_boost)
-        MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version")
-            set(Boost_NO_SYSTEM_PATHS TRUE)
-            if(Boost_NO_SYSTEM_PATHS)
-                if(${CACTUS_FOUND})
-                    set(BOOST_ROOT /opt/cactus)
-                else(${CACTUS_FOUND})
-                    set(BOOST_ROOT /opt/cactus)
-                endif(${CACTUS_FOUND})
-                set(BOOST_INCLUDE_DIRS ${BOOST_ROOT}/include)
-                set(BOOST_LIBRARY_DIRS ${BOOST_ROOT}/lib)
-            endif(Boost_NO_SYSTEM_PATHS)
-    else(uhal_boost)
-        MESSAGE(STATUS "    No boost headers found with uHAL (you are most likely using CC7) - make sure to install boost 1.53 (default version on CC7)")
-    endif(uhal_boost)
-
-    #find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
-    find_package(Boost 1.53)
-
+    set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
+    set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
+    find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
+    
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
     # All the subdirs

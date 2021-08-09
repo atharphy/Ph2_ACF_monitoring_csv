@@ -761,12 +761,131 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                 }
             }
         }
-
+        // parse global hybrids container - masks for noisy pixels/strips 
+        parseGlobalHybridMask( pHybridNode, cHybrid, os);
         // Finally map front-end to LpGBT
         if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
     }
 }
+void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os) 
+{
+    os << BOLDCYAN << "|"
+       << "  Parsing global hybrid settings " << "\n";
 
+    pugi::xml_node cGlobalSettingsNode = pHybridNode.child("Global");
+    // parse masked channels 
+    for(pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
+    {
+        std::string cName          = cChildGlobal.name();
+        if( cName.find("Masked") == std::string::npos ) continue;
+
+        os << BOLDCYAN << "\t|\t|\t|"
+                << cName << "\n";
+        
+        std::vector<uint8_t> cFeIds(0);
+        std::map<uint8_t,std::vector<uint16_t>> cMapOfMaks; // key FeId, ChannelIds 
+        std::map<uint8_t,FrontEndType> cMapOfTypes; // key FeId , value Type 
+        for(const pugi::xml_attribute cAttribute: cChildGlobal.attributes())
+        {
+            std::string       cAttrName = cAttribute.name();
+            std::string       cList = std::string(cAttribute.value());
+            std::string       ctoken;
+            std::stringstream cStr(cList);
+            os << GREEN << "|\t|\t|\t|---- " << cAttrName << " : "; 
+            int cIndex = 0;
+            while(std::getline(cStr, ctoken, ','))
+            {
+                uint8_t cItem = convertAnyInt(ctoken.c_str());
+                if( cAttrName.find("Id") != std::string::npos ) 
+                {
+                    // check if item exists in map 
+                    cFeIds.push_back( cItem );
+                    auto cIter = cMapOfMaks.find(cItem);
+                    if( cIter == cMapOfMaks.end() ){
+                        std::vector<uint16_t> cMskedChnls(1,0);
+                        cMapOfMaks[cItem]=cMskedChnls;
+                        FrontEndType cType = FrontEndType::CBC3;
+                        if( cAttrName.find("MPA") != std::string::npos  ) cType = FrontEndType::MPA;
+                        if( cAttrName.find("SSA") != std::string::npos  ) cType = FrontEndType::SSA;
+                        if( cAttrName.find("SSA2") != std::string::npos  ) cType = FrontEndType::SSA2;
+                        cMapOfTypes[cItem] = cType;
+                    }
+                    else cMapOfMaks[cItem].push_back(0);
+                }
+                else if( cAttrName.find("Rows") != std::string::npos ) 
+                {
+                    cMapOfMaks[cFeIds[cIndex]][cIndex] = cItem ;
+                }
+                else if( cAttrName.find("Columns") != std::string::npos ) 
+                {
+                    uint16_t cPixelId = 120*cItem + cMapOfMaks[cFeIds[cIndex]][cIndex];
+                    cMapOfMaks[cFeIds[cIndex]][cIndex] = cPixelId;
+                }
+                os << GREEN << +cItem << ", ";
+                cIndex++;
+            }
+            os << "\n";
+        }
+        std::sort( cFeIds.begin(), cFeIds.end() );
+        cFeIds.erase( std::unique( cFeIds.begin(), cFeIds.end() ), cFeIds.end() );
+        for( auto cFeId : cFeIds ) 
+        {
+            auto cType = cMapOfTypes[cFeId];
+            std::string cRegNameBase="";
+            if( cType == FrontEndType::MPA )
+            { 
+                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId 
+                    << " have " << cMapOfMaks[cFeId].size() << " MPA pixels to mask..." << "\n";
+                cRegNameBase = "ENFLAGS_P";
+            }
+            else if ( cType == FrontEndType::SSA || cType == FrontEndType::SSA2  )
+            {
+                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId 
+                    << " have " << cMapOfMaks[cFeId].size() << " SSA strips to mask..." << "\n";
+                cRegNameBase = "ENFLAGS_S";
+            }
+            else 
+            { 
+                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId 
+                    << " have " << cMapOfMaks[cFeId].size() << " CBC strips to mask..." << "\n";
+                cRegNameBase = "MaskChannelFrom";
+            }
+            
+            for( auto cChnlId :  cMapOfMaks[cFeId] ) 
+            {
+                std::stringstream cRegName; 
+                cRegName << cRegNameBase;
+                // get the index of the bit to shift
+                uint8_t cBitShift = 0 ; 
+                uint8_t cMaskValue = 0; 
+                if( cType == FrontEndType::CBC3 ) 
+                {
+                    uint8_t cRegisterIndex = 1+8*(cChnlId/8); 
+                    cRegName << std::setfill('0')<<std::setw(3)<<+(7+cRegisterIndex)<<"downto"<<std::setfill('0')<<std::setw(3)<<+(cRegisterIndex);
+                    cBitShift = (cChnlId) % 8;
+                }
+                else{
+                    cRegName << cChnlId; 
+                }
+                // get the original value of the register
+                os << GREEN << "|\t|\t|\t|\t|\t|  ---- Preparing registers to mask channel " << +cChnlId 
+                    << " - controled by register " << cRegName.str() << " \n"; 
+                for( auto cROC : *pHybrid ) 
+                {
+                    if( cROC->getId() != cFeId ) continue; 
+                    auto cRegValue = cROC->getReg(cRegName.str() );
+                    uint8_t     cRegMask  = (0x1 << cBitShift); //
+                    cRegMask              = ~(cRegMask);
+                    uint8_t cValue        = (cRegValue & cRegMask) | (cMaskValue << cBitShift);
+                    // write the new value
+                    os << GREEN << "|\t|\t|\t|\t|\t|\t|  ---- register set to 0x" << std::hex << +cValue << std::dec << "\n";
+                    cROC->setReg(cRegName.str(), cValue); 
+                }
+            }
+        }
+    }
+
+}
 void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -993,56 +1112,56 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
         os << GREEN << "|\t|\t|\t|----Analog Mux "
            << "value: " << RED << +cAmuxValue << " (0x" << std::hex << +cAmuxValue << std::dec << ", 0b" << std::bitset<5>(cAmuxValue) << ")" << RESET << std::endl;
     }
+    // replaced with a function that parses masks per hybrid
+    // // CHANNEL MASK
+    // pugi::xml_node cDisableNode = pCbcNode.child("ChannelMask");
 
-    // CHANNEL MASK
-    pugi::xml_node cDisableNode = pCbcNode.child("ChannelMask");
+    // if(cDisableNode != nullptr)
+    // {
+    //     std::string       cList = std::string(cDisableNode.attribute("disable").value());
+    //     std::string       ctoken;
+    //     std::stringstream cStr(cList);
+    //     os << GREEN << "|\t|\t|\t|----List of disabled Channels: ";
 
-    if(cDisableNode != nullptr)
-    {
-        std::string       cList = std::string(cDisableNode.attribute("disable").value());
-        std::string       ctoken;
-        std::stringstream cStr(cList);
-        os << GREEN << "|\t|\t|\t|----List of disabled Channels: ";
+    //     int cIndex = 0;
 
-        int cIndex = 0;
+    //     while(std::getline(cStr, ctoken, ','))
+    //     {
+    //         if(cIndex != 0) os << GREEN << ", ";
 
-        while(std::getline(cStr, ctoken, ','))
-        {
-            if(cIndex != 0) os << GREEN << ", ";
+    //         uint8_t cChannel = convertAnyInt(ctoken.c_str());
+    //         // cDisableVec.push_back (cChannel);
 
-            uint8_t cChannel = convertAnyInt(ctoken.c_str());
-            // cDisableVec.push_back (cChannel);
+    //         if(cChannel == 0 || cChannel > 254)
+    //             LOG(ERROR) << BOLDRED << "Error: channels for mask have to be between 1 and 254!" << RESET;
+    //         else
+    //         {
+    //             // get the reigister string name from the map in Definition.h
+    //             uint8_t cRegisterIndex = (cChannel - 1) / 8;
+    //             // get the index of the bit to shift
+    //             uint8_t cBitShift = (cChannel - 1) % 8;
+    //             // get the original value of the register
+    //             uint8_t cReadValue;
 
-            if(cChannel == 0 || cChannel > 254)
-                LOG(ERROR) << BOLDRED << "Error: channels for mask have to be between 1 and 254!" << RESET;
-            else
-            {
-                // get the reigister string name from the map in Definition.h
-                uint8_t cRegisterIndex = (cChannel - 1) / 8;
-                // get the index of the bit to shift
-                uint8_t cBitShift = (cChannel - 1) % 8;
-                // get the original value of the register
-                uint8_t cReadValue;
+    //             if(cType == FrontEndType::CBC3)
+    //             {
+    //                 // get the original value of the register
+    //                 cReadValue = pCbc->getReg(ChannelMaskMapCBC3[cRegisterIndex]);
+    //                 // clear bit cBitShift
+    //                 cReadValue &= ~(1 << cBitShift);
+    //                 // write the new value
+    //                 pCbc->setReg(ChannelMaskMapCBC3[cRegisterIndex], cReadValue);
+    //                 LOG(DEBUG) << ChannelMaskMapCBC3[cRegisterIndex] << " " << std::bitset<8>(cReadValue);
+    //             }
 
-                if(cType == FrontEndType::CBC3)
-                {
-                    // get the original value of the register
-                    cReadValue = pCbc->getReg(ChannelMaskMapCBC3[cRegisterIndex]);
-                    // clear bit cBitShift
-                    cReadValue &= ~(1 << cBitShift);
-                    // write the new value
-                    pCbc->setReg(ChannelMaskMapCBC3[cRegisterIndex], cReadValue);
-                    LOG(DEBUG) << ChannelMaskMapCBC3[cRegisterIndex] << " " << std::bitset<8>(cReadValue);
-                }
+    //             os << BOLDCYAN << +cChannel;
+    //         }
 
-                os << BOLDCYAN << +cChannel;
-            }
+    //         cIndex++;
+    //     }
 
-            cIndex++;
-        }
-
-        os << RESET << std::endl;
-    }
+    //     os << RESET << std::endl;
+    // }
 }
 
 void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
