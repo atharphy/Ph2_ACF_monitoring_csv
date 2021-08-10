@@ -7,7 +7,9 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-PSAlignment::PSAlignment() : Tool() { fRegMapContainer.reset(); }
+PSAlignment::PSAlignment() : Tool() { 
+    fRegMapContainer.reset(); 
+}
 
 PSAlignment::~PSAlignment() {}
 void PSAlignment::Reset()
@@ -41,7 +43,7 @@ void PSAlignment::Reset()
                 {
                     if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
                     auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
@@ -52,7 +54,7 @@ void PSAlignment::Reset()
                         }
                         if( !cLeaveReg ) 
                         {
-                            LOG(DEBUG) << BOLDBLUE << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                            LOG(INFO) << BOLDYELLOW << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                        << cMapItem.second.fValue << RESET;
                             fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                         }
@@ -61,39 +63,34 @@ void PSAlignment::Reset()
             }
         }
 
-        // // comment out for now
-        // auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
-        // for(auto cOpticalGroup: *cBoard)
-        // {
-        //     auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
-        //     for(auto cHybrid: *cOpticalGroup)
-        //     {
-        //         auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
-        //         LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
-        //         for(auto cChip: *cHybrid)
-        //         {
-        //             auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
-        //             std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
-        //             cVecRegisters.clear();
-        //             for(auto cReg: cRegMapThisChip)
-        //             {
-        //                 if(cChip->getFrontEndType() == FrontEndType::MPA)
-        //                 {
-        //                     LOG (INFO) << BOLDMAGENTA << "Register " << cReg.first << " changed on MPA#" << +cChip->getId()%8 << RESET;
-        //                     if(cReg.first.find("OutSetting") != std::string::npos || cReg.first.find("LatencyRx320") != std::string::npos || cReg.first.find("LatencyRx40") != std::string::npos ||
-        //                        cReg.first.find("RetimePix") != std::string::npos ||
-        //                        cReg.first.find("EdgeSelTrig") != std::string::npos || cReg.first.find("EdgeSelT1Raw") != std::string::npos )
-        //                     { LOG(INFO) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
-        //                 }
-        //                 else
-        //                 {
-        //                     cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-        //                 }
-        //             }
-        //             fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
-        //         }
-        //     }
-        // }
+        // reset masks 
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    const ChannelGroupBase* cOriginalMask = cChip->getChipOriginalMask();
+                    // until maskChannelsGroup works for PS 
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) 
+                    {
+                        LOG (INFO) << BOLDYELLOW << "ROC" << +cChip->getId() << " originally had " << cOriginalMask->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+                        // enable all channels 
+                        std::stringstream cRegName; 
+                        cRegName << "MaskChannel" << std::setfill('0')<<std::setw(4) << (0);
+                        fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), 0);//disable mask on all 
+                        for(uint16_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                        {
+                            cRegName.str(std::string());
+                            if( cOriginalMask->isChannelEnabled(iChannel) ) continue;
+                            cRegName << "MaskChannel" << std::setfill('0')<<std::setw(4) << (iChannel);
+                            fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), 1);//enable mask 
+                        }
+                    }                           
+                    else fReadoutChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), cOriginalMask);
+                }//ROC 
+            }//Hybrid
+        }//OG
     }
     if(fReadoutChipInterface != nullptr)
     {
@@ -354,17 +351,17 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                     cFmatch      = cNmatch;
                     if(cNmatch)
                     {
-                        LOG(DEBUG) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size() << " S clusters and "
+                        LOG(INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size() << " S clusters and "
                                    << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << RESET;
                         for(size_t cIndx = 0; cIndx < pInjections.size(); cIndx++)
                         {
                             cFmatch = cFmatch && (cPclus[cIndx].fAddress == cSclus[cIndx].fAddress);
                             if((cPclus[cIndx].fAddress == cSclus[cIndx].fAddress))
-                                LOG(DEBUG) << BOLDGREEN << "Exact match found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
+                                LOG(INFO) << BOLDGREEN << "Exact match found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
                                            << +cPclus[cIndx].fWidth << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
                                            << RESET;
                             else
-                                LOG(DEBUG) << BOLDRED << "Exact match not found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
+                                LOG(INFO) << BOLDRED << "Exact match not found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
                                            << +cPclus[cIndx].fWidth << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
                                            << RESET;
                         }

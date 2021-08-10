@@ -885,80 +885,6 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     LOG(INFO) << GREEN << "PS Phase tuning finished succesfully" << RESET;
     return cTuned;
 }
-
-// bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
-// {
-//     bool cTuned = true;
-//     LOG(INFO) << GREEN << "Trying Phase Tuning for PS Chip(s)" << RESET;
-
-//     for(auto cOpticalReadout: *pBoard)
-//     {
-//         for(auto cHybrid: *cOpticalReadout)
-//         {
-//             for(auto cChip: *cHybrid)
-//             {
-//                 ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
-
-//                 if(cChip->getFrontEndType() == FrontEndType::MPA)
-//                 {
-//                     LOG(INFO) << GREEN << "MPA Alignment" << RESET;
-//                     std::vector<std::string> cRegNames{"ReadoutMode", "ECM", "LFSR_data"};
-//                     std::vector<uint8_t>     cOriginalValues;
-//                     uint8_t                  cAlignmentPattern = 0xa0;
-//                     std::vector<uint8_t>     cRegValues{0x0, 0x08, cAlignmentPattern};
-
-//                     for(size_t cIndex = 0; cIndex < 3; cIndex++)
-//                     {
-//                         cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
-//                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
-//                     }
-
-//                     for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
-//                     {
-//                         cTuned = cTuned &&
-//                                  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getIndex(), cChip->getIndex(), cLineId, cAlignmentPattern,
-//                                  8);
-//                     }
-
-//                     for(size_t cIndex = 0; cIndex < 3; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); };
-//                 }
-//                 if(cChip->getFrontEndType() == FrontEndType::SSA)
-//                 {
-//                     LOG(INFO) << GREEN << "SSA Alignment" << RESET;
-//                     ReadoutChip*             cReadoutChip = static_cast<ReadoutChip*>(cChip);
-//                     std::vector<std::string> cRegNames{"SLVS_pad_current", "ReadoutMode"};
-//                     std::vector<uint8_t>     cOriginalValues;
-//                     std::vector<uint8_t>     cRegValues{0x7, 2};
-//                     for(size_t cIndex = 0; cIndex < 2; cIndex++)
-//                     {
-//                         cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
-//                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
-//                     }
-
-//                     uint8_t cAlignmentPattern = 0x80;
-
-//                     for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
-//                     {
-//                         // char cBuffer[11];
-//                         // sprintf(cBuffer, "OutPattern%d", cLineId);
-//                         // std::string cRegName = (cLineId == 7) ? "OutPattern7/FIFOconfig" : std::string(cBuffer, sizeof(cBuffer));
-//                         std::string cRegName = (cLineId == 7) ? "OutPattern7/FIFOconfig" : "OutPattern" + (boost::format("%|01|") % cLineId).str();
-//                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cAlignmentPattern);
-//                         cTuned = cTuned &&
-//                                  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getIndex(), cChip->getIndex(), cLineId, cAlignmentPattern,
-//                                  8);
-//                     }
-
-//                     for(size_t cIndex = 0; cIndex < 2; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); }
-//                 }
-//             }
-//         }
-//     }
-
-//     LOG(INFO) << GREEN << "PS Phase tuning finished succesfully" << RESET;
-//     return cTuned;
-// }
-
 bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 {
     // make sure you're only sending one trigger at a time here
@@ -1192,7 +1118,7 @@ bool BackEndAlignment::Align()
             }     // Hybrids
         }         // OGs
         if(cWithCIC)
-            cAligned = this->FindStubLatency(theBoard);
+            cAligned = this->CICAlignment(theBoard);
         else if(cWithCBC)
         {
             cAligned = this->CBCAlignment(theBoard);

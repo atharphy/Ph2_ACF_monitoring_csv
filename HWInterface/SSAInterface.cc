@@ -94,7 +94,19 @@ bool SSAInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAm
 //
 bool SSAInterface::setInjectionSchema(ReadoutChip* pSSA, const ChannelGroupBase* group, bool pVerifLoop) { return true; }
 //
-bool SSAInterface::maskChannelsGroup(ReadoutChip* pSSA, const ChannelGroupBase* group, bool pVerifLoop) { return true; }
+bool SSAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+{
+    LOG (INFO) << BOLDBLUE << "SSAInterface::maskChannelsGroup" << RESET;
+    // const ChannelGroupBase* cOriginalMask = cChip->getChipOriginalMask();
+    // //const ChannelGroup<NSSACHANNELS>* groupToMask  = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
+    // //auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & originalMask->getBitset() );
+    // LOG(INFO) << BOLDBLUE << "\t... Applying mask to SSA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels()
+    //            //<< " desired mask \t... : " << std::bitset<NSSACHANNELS>(groupToMask->getBitset()) 
+    //            << " original mask  \t... : " << cOriginalMask->getNumberOfEnabledChannels() << " enabled channels "
+    //            //<< " mask to set will be \t... " << cBitset
+    //            << RESET;
+    return true;
+}
 //
 bool SSAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop) { return true; }
 //
@@ -121,6 +133,21 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     else if(pRegName == "MonitorGround")
     {
         return this->ConfigureAmux(pSSA, "GND");
+    }
+    else if(pRegName.find("MaskChannel") != std::string::npos )
+    {
+       std::string cToken       = "MaskChannel";
+       auto        cStripNum   = std::atoi(pRegName.substr(pRegName.find(cToken) + cToken.length(), 4).c_str());
+       LOG (DEBUG) << BOLDMAGENTA << "Masking strip number " << +cStripNum << " register is " << pRegName << RESET;
+       std::stringstream cRegName;
+       if(cStripNum == 0 ) cRegName << "ENFLAGS_ALL"; 
+       else cRegName << "ENFLAGS_S" << +cStripNum ;
+       auto cRegValue = pSSA->getReg(cRegName.str());
+       uint8_t     cRegMask  = (0x1 << 0); //
+       cRegMask              = ~(cRegMask);
+       uint8_t     cValue    = (cRegValue & cRegMask) | (1-pValue);
+       LOG(DEBUG) << BOLDBLUE << "Setting strip mask to 0x" << std::hex << +cValue << std::dec << " on StripNum#" << cStripNum << RESET;
+       return WriteChipSingleReg(pSSA, cRegName.str(), cValue, pVerifLoop);
     }
     else if(pRegName == "AnalogueAsync")
     {

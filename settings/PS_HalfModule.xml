@@ -21,8 +21,8 @@
         </lpGBT>
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
-                <MaskedStrips/> <!-- SSAId="0"   Rows="13" />-->
-                <MaskedPixels/> <!-- MPAId="8" Rows="0,100" Columns="1,1"/> -->
+                <MaskedStrips SSAId="0" Rows="13" /> 
+                <MaskedPixels MPAId="8,8" Rows="10,20" Columns="1,1"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
 

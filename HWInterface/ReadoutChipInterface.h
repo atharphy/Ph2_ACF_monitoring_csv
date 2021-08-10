@@ -104,7 +104,7 @@ class ReadoutChipInterface : public ChipInterface
             if(cModMap.find(fMap[pRegisterAddress]) == cModMap.end()) { 
                 auto cSize = cModMap.size();
                 cModMap[fMap[pRegisterAddress]] = cRegItem; 
-                LOG (INFO) << BOLDMAGENTA << "ReadoutChipInterface - ModMap contained " << cSize << " items....now has " 
+                LOG (DEBUG) << BOLDMAGENTA << "ReadoutChipInterface - ModMap contained " << cSize << " items....now has " 
                     << cModMap.size() << " items that " << fMap[pRegisterAddress] << " register has been modified"
                     << RESET;
         

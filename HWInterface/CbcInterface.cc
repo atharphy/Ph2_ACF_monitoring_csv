@@ -600,31 +600,10 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
         LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << pValue << " on registed " << pRegNode;
         return cSuccess;
     }
-
-    ChipRegItem cRegItem;
-    // modified registers map
-    uint32_t cChipId = (uint8_t)(pCbc->getFrontEndType() == FrontEndType::MPA || pCbc->getFrontEndType() == FrontEndType::RD53) << 12;
-    cChipId          = cChipId | pCbc->getOpticalId() << 8 | pCbc->getHybridId() << 4 | pCbc->getId();
-    auto cMapIter    = fModifiedRegisters.find(cChipId);
-    if(cMapIter == fModifiedRegisters.end())
-    {
-        ChipRegMap cRegMap;
-        fModifiedRegisters[cChipId] = cRegMap;
-    }
-    cMapIter      = fModifiedRegisters.find(cChipId);
-    auto& cModMap = cMapIter->second;
-    if(cFound)
-    {
-        cRegItem = pCbc->getRegItem(pRegNode);
-        // update map with value before it has been modified
-        if(cModMap.find(pRegNode) == cModMap.end()) cModMap[pRegNode] = cRegItem;
-    }
-    else
-    {
-        return cFound;
-    }
+    if( !cFound ) return cFound; 
+    ChipRegItem cRegItem = pCbc->getRegMap().find(pRegNode)->second; 
+    UpdateModifiedRegMap(pCbc,  cRegItem.fAddress); 
     cRegItem.fValue = pValue & 0xFF;
-
     if(!lpGBTFound())
     {
         // vector for transaction
@@ -685,11 +664,18 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
     } customGreaterForPage;
     for(auto& cReg: pVecReq)
     {
+        if( pCbc->getRegMap().find(cReg.first) == pCbc->getRegMap().end() ) continue;
         if(cReg.first.find("BandgapFuse") != std::string::npos) continue;
         if(cReg.first.find("ChipIDFuse") != std::string::npos) continue;
 
         ChipRegItem cRegister = pCbc->getRegItem(cReg.first);
         cRegister.fValue      = cReg.second;
+        if(cRegister.fValue > 0xFF)
+        {
+            LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << cRegister.fValue << " on register " << cReg.first;
+            continue;
+        }
+            
         cRegItems.push_back(std::make_pair(cReg.first, cRegister));
     }
     // address in map depends on board id, hybrid id, chip id
@@ -714,37 +700,12 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         std::vector<uint32_t> cVec;
         for(const auto& cRegItem: cRegItems)
         {
-            // update list of
-            ChipRegItem cItem;
-            // modified registers map
-            uint32_t cChipId = (uint8_t)(pCbc->getFrontEndType() == FrontEndType::MPA || pCbc->getFrontEndType() == FrontEndType::RD53) << 12;
-            cChipId          = cChipId | pCbc->getOpticalId() << 8 | pCbc->getHybridId() << 4 | pCbc->getId();
-            auto cMapIter    = fModifiedRegisters.find(cChipId);
-            if(cMapIter == fModifiedRegisters.end())
-            {
-                ChipRegMap cRegMap;
-                fModifiedRegisters[cChipId] = cRegMap;
-            }
-            cMapIter      = fModifiedRegisters.find(cChipId);
-            auto& cModMap = cMapIter->second;
-            bool  cFound  = pCbc->getRegMap().find(cRegItem.first) != pCbc->getRegMap().end();
-            if(cFound)
-            {
-                cItem = pCbc->getRegItem(cRegItem.first);
-                // update map with value before it has been modified
-                if(cModMap.find(cRegItem.first) == cModMap.end()) cModMap[cRegItem.first] = cItem;
-            }
-
-            if(cRegItem.second.fValue > 0xFF)
-            {
-                LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << cRegItem.second.fValue << " on register " << cRegItem.first;
-                continue;
-            }
+            // update list of modified registers 
+            UpdateModifiedRegMap(pCbc,  cRegItem.second.fAddress); 
             fBoardFW->EncodeReg(cRegItem.second, pCbc, cVec, pVerifLoop, true);
-// fBoardFW->EncodeReg(cRegItem.second, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
+            #ifdef COUNT_FLAG
+                fRegisterCount++;
+            #endif
         }
 
         // write the registers, the answer will be in the same cVec

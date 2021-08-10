@@ -26,6 +26,7 @@ SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId,
 {
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = new ChannelGroup<120>;
+    fChipOriginalMask->enableAllChannels();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
@@ -35,6 +36,7 @@ SSA::SSA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t p
 {
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = new ChannelGroup<120>;
+    fChipOriginalMask->enableAllChannels();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);

@@ -49,7 +49,17 @@ bool PSInterface::WriteChipReg(Chip* pPS, const std::string& pRegName, uint16_t 
         LOG(ERROR) << "Bad chip for PS interface";
     return false;
 }
-
+bool PSInterface::maskChannelsGroup(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
+{
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->maskChannelsGroup(pPS, group, pVerifLoop); }
+    else if(pPS->getFrontEndType() == FrontEndType::SSA)
+    {
+        return theSSAInterface-maskChannelsGroup(pPS, group, pVerifLoop);
+    }
+    else
+        LOG(ERROR) << "Bad chip for PS interface";
+    return false;
+}
 // To generalize
 bool PSInterface::WriteChipMultReg(Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop)
 {

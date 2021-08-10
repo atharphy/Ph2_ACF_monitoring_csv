@@ -27,6 +27,7 @@ Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& 
 {
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = new ChannelGroup<NCHANNELS, 1>;
+    fChipOriginalMask->enableAllChannels();
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
 }
@@ -36,6 +37,7 @@ Cbc::Cbc(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std
 {
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = new ChannelGroup<NCHANNELS, 1>;
+    fChipOriginalMask->enableAllChannels();
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
 }

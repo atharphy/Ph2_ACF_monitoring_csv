@@ -25,11 +25,6 @@
 #include <string>
 #include <utility>
 
-// #############
-// # CONSTANTS #
-// #############
-#define NROWSMPA 16  // Total number of rows
-#define NCOLSMPA 120 // Total number of columns
 
 /*!
  * \namespace Ph2_HwDescription
@@ -43,8 +38,8 @@ using CommentMap = std::map<int, std::string>;
 class MPA : public ReadoutChip
 {
   public:
-    static constexpr size_t nRows = NROWSMPA;
-    static constexpr size_t nCols = NCOLSMPA;
+    static constexpr size_t nRows = NSSACHANNELS;
+    static constexpr size_t nCols = NMPACOLS;
 
     MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename);
     // C'tors with object FE Description

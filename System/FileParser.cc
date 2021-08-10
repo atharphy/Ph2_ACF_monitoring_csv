@@ -767,6 +767,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
     }
 }
+// so far implemented for MPA/SSA/CBC 
 void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os) 
 {
     os << BOLDCYAN << "|"
@@ -848,9 +849,10 @@ void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHyb
             { 
                 os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId 
                     << " have " << cMapOfMaks[cFeId].size() << " CBC strips to mask..." << "\n";
-                cRegNameBase = "MaskChannelFrom";
+                cRegNameBase = "MaskChannel-";
             }
             
+            // configure register map for each chip 
             for( auto cChnlId :  cMapOfMaks[cFeId] ) 
             {
                 std::stringstream cRegName; 
@@ -861,7 +863,7 @@ void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHyb
                 if( cType == FrontEndType::CBC3 ) 
                 {
                     uint8_t cRegisterIndex = 1+8*(cChnlId/8); 
-                    cRegName << std::setfill('0')<<std::setw(3)<<+(7+cRegisterIndex)<<"downto"<<std::setfill('0')<<std::setw(3)<<+(cRegisterIndex);
+                    cRegName << std::setfill('0')<<std::setw(3)<<+(7+cRegisterIndex)<<"-to-"<<std::setfill('0')<<std::setw(3)<<+(cRegisterIndex);
                     cBitShift = (cChnlId) % 8;
                 }
                 else{
@@ -881,6 +883,14 @@ void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHyb
                     os << GREEN << "|\t|\t|\t|\t|\t|\t|  ---- register set to 0x" << std::hex << +cValue << std::dec << "\n";
                     cROC->setReg(cRegName.str(), cValue); 
                 }
+            }
+
+            // set original mask for each ROC 
+            for( auto cROC : *pHybrid ) 
+            {
+                if( cROC->getId() != cFeId ) continue;
+                os << GREEN << "|\t|\t|\t|\t|\t   ---- Applying channel mask to ROC" << +cROC->getId() << "\n";
+                cROC->setChipOriginalMask( cMapOfMaks[cFeId] );
             }
         }
     }

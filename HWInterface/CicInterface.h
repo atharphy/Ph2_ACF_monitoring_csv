@@ -65,7 +65,6 @@ class CicInterface : public ChipInterface
      */
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
-    // CIC specific functions
     std::pair<bool, uint16_t>         ReadChipRegItem(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
     bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset = 0);
     bool                              SetOptimalTaps(Ph2_HwDescription::Chip* pChip, int pOffset = 0);

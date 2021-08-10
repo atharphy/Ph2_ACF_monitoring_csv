@@ -290,32 +290,41 @@ int main(int argc, char* argv[])
         cRegTester.RegisterTest();
     }
 
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(&cTool);
-    cPSAlignment.Initialise();
-    // map MPA outputs for PS module
-    cPSAlignment.MapMPAOutputs();
-
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit(&cTool);
-    cCicAligner.Start(0);
-    cCicAligner.waitForRunToBeCompleted();
-    cCicAligner.dumpConfigFiles();
-
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
-    cBackEndAligner.waitForRunToBeCompleted();
-    cBackEndAligner.Reset();
     if(!cmd.foundOption("skipAlignment"))
     {
-        //
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
+    }
+    cBackEndAligner.Reset();
+    
+    // align CIC     
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cTool);
+    if(!cmd.foundOption("skipAlignment"))
+    {
+        cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
+        cCicAligner.dumpConfigFiles();
+    }
+    cCicAligner.Reset();
+
+    // align PS module components 
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    cPSAlignment.MapMPAOutputs();
+    if(!cmd.foundOption("skipAlignment"))
+    {
         cPSAlignment.Align();
     }
     cPSAlignment.Reset();
     cPSAlignment.dumpConfigFiles();
-
+    
+    // stub time alignment in the back-end 
+    
     // equalize thresholds on readout chips
     if(cTune)
     {

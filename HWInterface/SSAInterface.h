@@ -42,7 +42,7 @@ class SSAInterface : public ReadoutChipInterface
     void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA, uint32_t n_pulse);
     void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
     void     Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
-
+    
     // std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
     // std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
     // void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; };

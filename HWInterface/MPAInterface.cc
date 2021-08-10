@@ -8,6 +8,7 @@
 
 #include "MPAInterface.h"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/ChannelGroupHandler.h"
 #include <typeinfo>
 
 #define DEV_FLAG 0
@@ -116,7 +117,7 @@ void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInj
     // then .. for pixels I want enable pattern on PixelN
     for(auto pInjection: pInjections)
     {
-        uint32_t           cPixelIds = (uint32_t)(pInjection.fColumn) * 120 + (uint32_t)pInjection.fRow;
+        uint32_t           cPixelIds = (uint32_t)(pInjection.fColumn) * NSSACHANNELS + (uint32_t)pInjection.fRow;
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
         // LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
@@ -170,8 +171,8 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uin
 {
     // auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
     int      cPixNum     = pPixelNum - 1;
-    uint32_t cRow        = (pPixelNum == 0) ? 0 : 1 + cPixNum / 120;
-    uint32_t cColumn     = (pPixelNum == 0) ? 0 : 1 + cPixNum % 120;
+    uint32_t cRow        = (pPixelNum == 0) ? 0 : 1 + cPixNum / NSSACHANNELS;
+    uint32_t cColumn     = (pPixelNum == 0) ? 0 : 1 + cPixNum % NSSACHANNELS;
     uint8_t  cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress    = this->regPixel(pChip, cRegAddress, cRow, cColumn);
     LOG(DEBUG) << BOLDBLUE
@@ -203,8 +204,8 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uin
 uint16_t MPAInterface::readPixel(Chip* pChip, std::string cReg, int pPixelNum)
 {
     int      cPixNum     = pPixelNum - 1;
-    uint32_t cRow        = (pPixelNum == 0) ? 0 : 1 + cPixNum / 120;
-    uint32_t cColumn     = (pPixelNum == 0) ? 0 : 1 + cPixNum % 120;
+    uint32_t cRow        = (pPixelNum == 0) ? 0 : 1 + cPixNum / NSSACHANNELS;
+    uint32_t cColumn     = (pPixelNum == 0) ? 0 : 1 + cPixNum % NSSACHANNELS;
     uint8_t  cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress    = this->regPixel(pChip, cRegAddress, cRow, cColumn);
     LOG(DEBUG) << BOLDBLUE << "PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn << " register 0x" << std::hex << cAddress << std::dec << RESET;
@@ -215,13 +216,13 @@ bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum, uint8_t pMask, bool pVe
     // pixel num starts from 1 [0 == global]
     auto    cRegValue = this->readPixel(pChip, "ENFLAGS", pPixelNum);
     uint8_t cNewValue = (cRegValue & 0xFE) | (1 - pMask);
-    LOG(DEBUG) << BOLDBLUE << "Setting pixel mask to 0x" << std::hex << +cNewValue << std::dec << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Setting pixel mask to 0x" << std::hex << +cNewValue << std::dec << " on PixelNum#" << pPixelNum << RESET;
     return this->configPixel(pChip, "ENFLAGS", pPixelNum, cNewValue, pVerifLoop);
 }
 bool MPAInterface::maskRowCol(Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerifLoop)
 {
     // row and col num starts from 1 [0 == global]
-    int cPixNum = 1 + (pColumn - 1) * 120 + (pRow - 1); // starting from 1
+    int cPixNum = 1 + (pColumn - 1) * NSSACHANNELS + (pRow - 1); // starting from 1
     return this->maskPixel(pChip, cPixNum, pMask, pVerifLoop);
 }
 bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pValue, bool pVerifLoop)
@@ -289,7 +290,20 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
     uint16_t cRegAddress = ((pRow << 11) | (pBaseRegister << 7) | 0x79);
     return cRegAddress;
 }
-
+bool MPAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+{
+    // first make sure all pixels are enabled 
+    // then mask those disabled 
+    // const ChannelGroupBase* cOriginalMask = cChip->getChipOriginalMask();
+    // //const ChannelGroup<NSSACHANNELS>* groupToMask  = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
+    // //auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & originalMask->getBitset() );
+    // LOG(INFO) << BOLDBLUE << "\t... Applying mask to SSA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels()
+    //            //<< " desired mask \t... : " << std::bitset<NSSACHANNELS>(groupToMask->getBitset()) 
+    //            << " original mask  \t... : " << cOriginalMask->getNumberOfEnabledChannels() << " enabled channels "
+    //            //<< " mask to set will be \t... " << cBitset
+    //            << RESET;
+    return true;
+}
 void MPAInterface::readAllBias(Chip* pChip)
 {
     std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
@@ -315,6 +329,13 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         LOG(INFO) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA->getId() << " to " << pValue << RESET;
         this->Set_threshold(pMPA, pValue);
         return true;
+    }
+    else if(pRegName.find("MaskChannel") != std::string::npos )
+    {
+       std::string cToken       = "MaskChannel";
+       auto        cPixelNum   = std::atoi(pRegName.substr(pRegName.find(cToken) + cToken.length(), 4).c_str());
+       LOG (DEBUG) << BOLDMAGENTA << "Masking pixel number " << +cPixelNum << " register is " << pRegName << RESET;
+       return maskPixel(pMPA, cPixelNum, pValue, pVerifLoop);
     }
     else if(pRegName.find("SelectEdgeT1") != std::string::npos)
     {

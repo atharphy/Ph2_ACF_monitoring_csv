@@ -47,6 +47,7 @@ class CicFEAlignment : public Tool
     bool SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
     bool BackEndAlignment();
     bool PhaseAlignmentMPA(uint16_t pWait_ms = 100);
+    bool PhaseAlignmentLpgbt(); 
     void Running() override;
     void Stop() override;
     void Pause() override;

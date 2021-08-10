@@ -318,6 +318,7 @@ void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGrou
             cTrainRxReg = "EPRXTrainEc6";
 
         WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
@@ -415,8 +416,7 @@ void lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
 
             // enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
-            // 1-0 transition to assert training?
-            // maybe do this a few times
+            // 1-0 transition to assert training
             WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));

@@ -138,9 +138,8 @@ class MPAInterface : public ReadoutChipInterface
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
-    bool maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pMPA, const ChannelGroupBase* group, bool pVerifLoop) { return true; }
-    //
-    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop) { return true; }
+    bool     maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
+    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = true) override{ return true;}
     //
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pMPA, bool pVerifLoop, uint32_t pBlockSize) { return true; }
     //

@@ -481,82 +481,66 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     }
     else
         LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
+    
+    // // align BE for CIC
+    // for(auto cOpticalGroup: *pBoard)
+    // {
+    //     bool cWithCIC = false;
+    //     for(auto cHybrid: *cOpticalGroup)
+    //     {
+    //         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //         if(cCic == NULL) continue;
+    //         cWithCIC = true;
+    //     }
+    //     if(!cWithCIC) continue;
 
-    // align lines between lpGBT + CIC
-    for(auto cOpticalGroup: *pBoard)
-    {
-        auto& clpGBT = cOpticalGroup->flpGBT;
-        if(clpGBT == nullptr) continue;
-        bool cWithCIC = false;
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            if(cCic == NULL) continue;
-            cWithCIC = true;
-        }
-        if(!cWithCIC) continue;
-        CicLpGbtAlignment(cOpticalGroup);
-    }
-    bool cSuccess = true;
-    // align BE for CIC
-    for(auto cOpticalGroup: *pBoard)
-    {
-        bool cWithCIC = false;
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            if(cCic == NULL) continue;
-            cWithCIC = true;
-        }
-        if(!cWithCIC) continue;
+    //     bool cBeAlignSuccess = CicBeAlignment(cOpticalGroup);
+    //     if(cBeAlignSuccess)
+    //         LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC data [hits+stubs]..." << RESET;
+    //     else
+    //         LOG(INFO) << BOLDRED << "FAILED  BE alignment for CIC data [hits+stubs]..." << RESET;
+    //     cSuccess = cSuccess && cBeAlignSuccess;
+    // }
+    // if(cSuccess)
+    // {
+    //     uint16_t                                      cOriginalTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    //     uint8_t                                       cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
+    //     std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    //     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+    //     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    //     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    //     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    //     for(auto cOpticalGroup: *pBoard)
+    //     {
+    //         bool cWithCIC = false;
+    //         for(auto cHybrid: *cOpticalGroup)
+    //         {
+    //             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //             if(cCic == NULL) continue;
+    //             cWithCIC = true;
+    //         }
+    //         if(!cWithCIC) continue;
 
-        bool cBeAlignSuccess = CicBeAlignment(cOpticalGroup);
-        if(cBeAlignSuccess)
-            LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC data [hits+stubs]..." << RESET;
-        else
-            LOG(INFO) << BOLDRED << "FAILED  BE alignment for CIC data [hits+stubs]..." << RESET;
-        cSuccess = cSuccess && cBeAlignSuccess;
-    }
-    if(cSuccess)
-    {
-        uint16_t                                      cOriginalTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        uint8_t                                       cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
-        std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
-        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-        cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
-        fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-        for(auto cOpticalGroup: *pBoard)
-        {
-            bool cWithCIC = false;
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                if(cCic == NULL) continue;
-                cWithCIC = true;
-            }
-            if(!cWithCIC) continue;
-
-            bool cDelayFoundSuccess = CicPackageDelay(cOpticalGroup);
-            if(cDelayFoundSuccess) { LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC stub pkg..." << RESET; }
-            else
-            {
-                LOG(INFO) << BOLDRED << "FAILED  BE alignment CIC stub pkg..." << RESET;
-                throw std::runtime_error(std::string("FAILED to align BE... could not find CIC stub pkg... .. STOPPING"));
-            }
-            cSuccess = cSuccess && cDelayFoundSuccess;
-        }
-        cRegVec.clear();
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
-        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-        cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
-        fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-    }
-    else
-    {
-        LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to align BE .." << RESET;
-        throw std::runtime_error(std::string("FAILED to align BE... something is wrong... .. STOPPING"));
-    }
+    //         bool cDelayFoundSuccess = CicPackageDelay(cOpticalGroup);
+    //         if(cDelayFoundSuccess) { LOG(INFO) << BOLDGREEN << "Successful BE alignment for CIC stub pkg..." << RESET; }
+    //         else
+    //         {
+    //             LOG(INFO) << BOLDRED << "FAILED  BE alignment CIC stub pkg..." << RESET;
+    //             throw std::runtime_error(std::string("FAILED to align BE... could not find CIC stub pkg... .. STOPPING"));
+    //         }
+    //         cSuccess = cSuccess && cDelayFoundSuccess;
+    //     }
+    //     cRegVec.clear();
+    //     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
+    //     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    //     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
+    //     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    // }
+    // else
+    // {
+    //     LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to align BE .." << RESET;
+    //     throw std::runtime_error(std::string("FAILED to align BE... something is wrong... .. STOPPING"));
+    // }
     // finally
     // configure ROCs on hybrid .. can have SSAs or MPAs
     for(auto cOpticalGroup: *pBoard)

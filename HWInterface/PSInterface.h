@@ -54,6 +54,7 @@ class PSInterface : public ReadoutChipInterface
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pPS, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName) override;
+    bool     maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
 
     void                  Pix_write(Ph2_HwDescription::ReadoutChip* cPS, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
     uint32_t              Pix_read(Ph2_HwDescription::ReadoutChip* cPS, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
@@ -98,8 +99,6 @@ class PSInterface : public ReadoutChipInterface
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
-    bool maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop) { return true; }
-    //
     bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop) { return true; }
     //
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pPS, bool pVerifLoop, uint32_t pBlockSize) { return true; }
