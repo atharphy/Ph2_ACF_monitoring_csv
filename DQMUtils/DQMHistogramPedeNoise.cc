@@ -40,9 +40,9 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& 
     // == FrontEndType::SSA) NCH = NSSACHANNELS;
 
     auto cSetting = pSettingsMap.find("PlotSCurves");
-    fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
+    fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     cSetting      = pSettingsMap.find("FitSCurves");
-    fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
+    fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     if(fFitSCurves) fPlotSCurves = true;
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);

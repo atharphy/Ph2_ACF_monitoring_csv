@@ -5,9 +5,11 @@
 #include "../tools/CBCPulseShape.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/CombinedCalibration.h"
+#include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/PedestalEqualization.h"
 #include "../tools/RD53ClockDelay.h"
+#include "../tools/RD53DataTransmissionTest.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53InjectionDelay.h"
@@ -90,6 +92,8 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CalibrationExample>;
         else if(getVariableValue("Calibration", buffer) == "cbcPulseShape")
             theSystemController_ = new CombinedCalibration<BackEndAlignment, CBCPulseShape>;
+        else if(getVariableValue("Calibration", buffer) == "OTLatency")
+            theSystemController_ = new CombinedCalibration<BackEndAlignment, LatencyScan>;
 
         else if(getVariableValue("Calibration", buffer) == "pixelalive")
             theSystemController_ = new CombinedCalibration<PixelAlive>;
@@ -115,6 +119,8 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<ClockDelay>;
         else if(getVariableValue("Calibration", buffer) == "physics")
             theSystemController_ = new Physics;
+        else if(getVariableValue("Calibration", buffer) == "datatrtest")
+            theSystemController_ = new CombinedCalibration<DataTransmissionTest>;
 
         else
         {

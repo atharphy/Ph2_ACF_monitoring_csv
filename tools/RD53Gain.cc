@@ -9,6 +9,9 @@
 
 #include "RD53Gain.h"
 
+#include <boost/multiprecision/number.hpp>
+
+using namespace boost::numeric;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
@@ -17,20 +20,21 @@ void Gain::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    startValue     = this->findValueInSettings("VCalHstart");
-    stopValue      = this->findValueInSettings("VCalHstop");
-    nSteps         = this->findValueInSettings("VCalHnsteps");
-    offset         = this->findValueInSettings("VCalMED");
-    nHITxCol       = this->findValueInSettings("nHITxCol");
-    doFast         = this->findValueInSettings("DoFast");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    startValue     = this->findValueInSettings<double>("VCalHstart");
+    stopValue      = this->findValueInSettings<double>("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    nSteps         = this->findValueInSettings<double>("VCalHnsteps");
+    offset         = this->findValueInSettings<double>("VCalMED");
+    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
+    doFast         = this->findValueInSettings<double>("DoFast");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ########################
     // # Custom channel group #
@@ -85,8 +89,8 @@ void Gain::Running()
 
 void Gain::sendData()
 {
-    auto theOccStream              = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theGainAndInterceptStream = prepareChannelContainerStreamer<GainAndIntercept>("GainAndIntercept");
+    auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
+    auto theGainStream = prepareChannelContainerStreamer<GainFit>("Gain");
 
     if(fStreamerEnabled == true)
     {
@@ -98,8 +102,8 @@ void Gain::sendData()
             index++;
         }
 
-        if(theGainAndInterceptContainer != nullptr)
-            for(const auto cBoard: *theGainAndInterceptContainer.get()) theGainAndInterceptStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        if(theGainContainer != nullptr)
+            for(const auto cBoard: *theGainContainer.get()) theGainStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
@@ -188,29 +192,27 @@ void Gain::run()
     Gain::chipErrorReport();
 }
 
-void Gain::draw(bool saveData)
+void Gain::draw(bool doSaveData)
 {
-    if(saveData == true) Gain::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) Gain::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if(saveData == true)
+    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
     }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Gain::fillHisto();
     histos->process();
-    if(saveData == true) this->WriteRootFile();
+    saveData = doSaveData;
 
     if(doDisplay == true) myApp->Run(true);
-
-    if(saveData == true) this->CloseResultFile();
 #endif
 
     // #####################
@@ -227,10 +229,10 @@ void Gain::draw(bool saveData)
                         myString.clear();
                         myString.str("");
                         myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain_"
-                                 << "B" << std::setfill('0') << std::setw(2) << cBoard->getId() << "_"
-                                 << "O" << std::setfill('0') << std::setw(2) << cOpticalGroup->getId() << "_"
-                                 << "M" << std::setfill('0') << std::setw(2) << cHybrid->getId() << "_"
-                                 << "C" << std::setfill('0') << std::setw(2) << cChip->getId() << ".dat";
+                                 << "B" << std::setfill('0') << std::setw(2) << +cBoard->getId() << "_"
+                                 << "O" << std::setfill('0') << std::setw(2) << +cOpticalGroup->getId() << "_"
+                                 << "M" << std::setfill('0') << std::setw(2) << +cHybrid->getId() << "_"
+                                 << "C" << std::setfill('0') << std::setw(2) << +cChip->getId() << ".dat";
                         std::ofstream fileOutID(myString.str(), std::ios::out);
                         for(auto i = 0u; i < dacList.size(); i++)
                         {
@@ -264,15 +266,18 @@ void Gain::draw(bool saveData)
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()
 {
-    float              gain, gainErr, intercept, interceptErr;
+    float slope, slopeErr, intercept, interceptErr, lowQslope, lowQslopeErr, lowQintercept, lowQinterceptErr, chi2, DoF;
+
+    std::vector<float> par(NGAINPAR, 0);
+    std::vector<float> parErr(NGAINPAR, 0);
+
     std::vector<float> x(dacList.size(), 0);
     std::vector<float> y(dacList.size(), 0);
     std::vector<float> e(dacList.size(), 0);
+    std::vector<float> o(dacList.size(), 0);
 
-    theGainAndInterceptContainer = std::make_shared<DetectorDataContainer>();
-    ContainerFactory::copyAndInitStructure<GainAndIntercept>(*fDetectorContainer, *theGainAndInterceptContainer);
-    DetectorDataContainer theMaxGainContainer;
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, theMaxGainContainer, gain = 0);
+    theGainContainer = std::make_shared<DetectorDataContainer>();
+    ContainerFactory::copyAndInitStructure<GainFit>(*fDetectorContainer, *theGainContainer);
 
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)
@@ -301,142 +306,205 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                                ->at(cChip->getIndex())
                                                ->getChannel<OccupancyAndPh>(row, col)
                                                .fPhError;
+                                    o[i] = detectorContainerVector[i]
+                                               ->at(cBoard->getIndex())
+                                               ->at(cOpticalGroup->getIndex())
+                                               ->at(cHybrid->getIndex())
+                                               ->at(cChip->getIndex())
+                                               ->getChannel<OccupancyAndPh>(row, col)
+                                               .fOccupancy;
                                 }
 
-                                Gain::computeStats(x, y, e, gain, gainErr, intercept, interceptErr);
+                                // ##################
+                                // # Run regression #
+                                // ##################
+                                Gain::computeStats(x, y, e, o, par, parErr, chi2, DoF);
+                                intercept        = par[0];
+                                interceptErr     = parErr[0];
+                                slope            = par[1];
+                                slopeErr         = parErr[1];
+                                lowQintercept    = par[2];
+                                lowQinterceptErr = parErr[2];
+                                lowQslope        = par[3];
+                                lowQslopeErr     = parErr[3];
 
-                                if(gain != 0)
+                                if(chi2 != 0)
                                 {
-                                    theGainAndInterceptContainer->at(cBoard->getIndex())
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fIntercept =
+                                        intercept;
+                                    theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
-                                        ->getChannel<GainAndIntercept>(row, col)
-                                        .fGain = gain;
-                                    theGainAndInterceptContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainAndIntercept>(row, col)
-                                        .fGainError = gainErr;
-                                    theGainAndInterceptContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainAndIntercept>(row, col)
-                                        .fIntercept = intercept;
-                                    theGainAndInterceptContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainAndIntercept>(row, col)
+                                        ->getChannel<GainFit>(row, col)
                                         .fInterceptError = interceptErr;
 
-                                    if(gain > theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>())
-                                        theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = gain;
-                                }
-                                else
-                                    theGainAndInterceptContainer->at(cBoard->getIndex())
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope =
+                                        slope;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
+                                        slopeErr;
+
+                                    theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
-                                        ->getChannel<GainAndIntercept>(row, col)
-                                        .fGain = RD53Shared::FITERROR;
+                                        ->getChannel<GainFit>(row, col)
+                                        .fInterceptLowQ = lowQintercept;
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fInterceptLowQError = lowQinterceptErr;
+
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeLowQ =
+                                        lowQslope;
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fSlopeLowQError = lowQslopeErr;
+
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 = chi2;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fDoF  = DoF;
+                                }
+                                else
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
+                                        RD53Shared::FITERROR;
                             }
 
                     index++;
                 }
 
-    theGainAndInterceptContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+    theGainContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
-    for(const auto cBoard: *theGainAndInterceptContainer)
+    for(const auto cBoard: *theGainContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Average gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(4) << cChip->getSummary<GainAndIntercept, GainAndIntercept>().fGain << RESET
-                              << GREEN << " (ToT/Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest gain: " << BOLDYELLOW << std::fixed << std::setprecision(4)
-                              << theMaxGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << std::setprecision(-1)
-                              << RESET;
+                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fIntercept, cChip->getSummary<GainFit, GainFit>().fSlope}, targetCharge);
+
+                    if(ToTatTarget >= RD53Shared::setBits(RD53Constants::NBIT_TDAC))
+                        LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
+                                  << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is greater than " << BOLDYELLOW
+                                  << RD53Shared::setBits(RD53Constants::NBIT_TDAC) - 1 << RESET << GREEN << " (ToT)" << std::setprecision(-1) << RESET;
+                    else
+                        LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
+                                  << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)"
+                                  << std::setprecision(-1) << RESET;
+
                     RD53Shared::resetDefaultFloat();
                 }
 
-    return theGainAndInterceptContainer;
+    return theGainContainer;
 }
 
 void Gain::fillHisto()
 {
 #ifdef __USE_ROOT__
     for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset);
-    histos->fillGainAndIntercept(*theGainAndInterceptContainer);
+    histos->fillGain(*theGainContainer);
 #endif
 }
 
-void Gain::computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, float& gain, float& gainErr, float& intercept, float& interceptErr)
-// ##############################################
-// # Linear regression with least-square method #
-// # Model: y = f(x) = q + mx                   #
-// # Measurements with uncertainty: Y = AX + E  #
-// ##############################################
-// # A = (XtX)^(-1)XtY                          #
-// # X = | 1 x1 |                               #
-// #     | 1 x2 |                               #
-// #     ...                                    #
-// # A = | q |                                  #
-// #     | m |                                  #
-// ##############################################
+void Gain::computeStats(const std::vector<float>& x,
+                        const std::vector<float>& y,
+                        const std::vector<float>& e,
+                        const std::vector<float>& o,
+                        std::vector<float>&       par,
+                        std::vector<float>&       parErr,
+                        float&                    chi2,
+                        float&                    DoF)
+// #######################################################
+// # Linear regression with least-square method          #
+// # Model: y = f(x) = [0] + [1]*x + [2]*x^2 + [3]*ln(x) #
+// #######################################################
 {
-    float a = 0, b = 0, c = 0, d = 0;
-    float ai = 0, bi = 0, ci = 0, di = 0;
-    float it = 0;
-    float det;
+    int nPar  = NGAINPAR - 2; // @TMP@
+    int nData = 0;
 
-    intercept    = 0;
-    gain         = 0;
-    interceptErr = 0;
-    gainErr      = 0;
-
-    // #######
-    // # XtX #
-    // #######
     for(auto i = 0u; i < x.size(); i++)
-        if(e[i] != 0)
-        {
-            b += x[i];
-            d += x[i] * x[i];
-            it++;
-        }
-    a = it;
-    c = b;
+        if((e[i] != 0) && (o[i] == 1)) nData++;
 
-    // ##############
-    // # (XtX)^(-1) #
-    // ##############
-    det = a * d - b * c;
-    if(det != 0)
+    do
     {
-        ai = d / det;
-        bi = -b / det;
-        ci = -c / det;
-        di = a / det;
+        chi2 = 0;
+        DoF  = nData - nPar;
+        for(auto c = 0; c < NGAINPAR; c++)
+        {
+            par[c]    = 0;
+            parErr[c] = 0;
+        }
+        if(DoF < 1) return;
 
-        // #################
-        // # (XtX)^(-1)XtY #
-        // #################
+        ublas::matrix<double> H(nData, nPar);
+        ublas::matrix<double> V(nData, nData);
+        ublas::vector<double> myY(nData);
+
+        for(auto c = 0u; c < V.size2(); c++)
+            for(auto r = 0u; r < V.size1(); r++) V(r, c) = 0;
+
+        int r = 0;
         for(auto i = 0u; i < x.size(); i++)
-            if(e[i] != 0)
+            if((e[i] != 0) && (o[i] == 1))
             {
-                intercept += (ai + bi * x[i]) * y[i];
-                gain += (ci + di * x[i]) * y[i];
+                H(r, 0) = 1;
+                H(r, 1) = x[i];
+                // @TMP@
+                // if(H.size2() > 2) H(r, 2) = x[i] * x[i];
+                // if(H.size2() > 3) H(r, 3) = log(x[i]);
 
-                interceptErr += (ai + bi * x[i]) * (ai + bi * x[i]) * e[i] * e[i];
-                gainErr += (ci + di * x[i]) * (ci + di * x[i]) * e[i] * e[i];
+                V(r, r) = e[i] * e[i];
+                myY[r]  = y[i];
+
+                r++;
             }
 
-        interceptErr = sqrt(interceptErr);
-        gainErr      = sqrt(gainErr);
+        auto invV(V);
+        for(r = 0; r < nData; r++) invV(r, r) = 1 / V(r, r);
+
+        ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
+        ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
+        auto                  parCov(invParCov);
+
+        auto det = RD53Shared::mtxInversion<double>(invParCov, parCov);
+        if((isnan(det) == false) && (det != 0))
+        {
+            ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
+            ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
+            ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
+
+            std::copy(myPar.begin(), myPar.end(), par.begin());
+            for(auto c = 0; c < nPar; c++) parErr[c] = sqrt(parCov(c, c));
+
+            // ################
+            // # Compute chi2 #
+            // ################
+            ublas::vector<double> num(myY - ublas::prod(H, myPar));
+            ublas::vector<double> tmpNum(ublas::prod(invV, num));
+            chi2 = ublas::inner_prod(num, tmpNum);
+        }
+
+        if((chi2 == 0) || ((nPar == 4) && (par[3] - parErr[3] < 0))) // @TMP@
+            nPar--;
+        else
+            break;
+
+    } while(nPar > 1);
+
+    // #############################################
+    // # Extract best estimate of low-charge range # // @TMP@
+    // #############################################
+    auto itHi = std::find_if(o.begin(), o.end(), [&](double val) { return val == 1.0; }) - o.begin();
+    auto itLo = std::find_if(o.begin(), o.end(), [&](double val) { return val >= 0.1; }) - o.begin();
+    if((itHi != itLo) && (itHi != static_cast<int>(o.size())) && (itLo != static_cast<int>(o.size())) && ((x[itHi] - x[itLo]) != 0))
+    {
+        par[NGAINPAR - 1] = (y[itHi] - y[itLo]) / (x[itHi] - x[itLo]);
+        par[NGAINPAR - 2] = y[itHi] - par[NGAINPAR - 1] * x[itHi];
     }
 }
 

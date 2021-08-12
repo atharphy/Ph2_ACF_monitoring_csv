@@ -97,8 +97,8 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("debug", "d");
     // scope
     cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
-    // efficency
-    cmd.defineOption("eff", "Measure the DC/DC efficency");
+    // efficiency
+    cmd.defineOption("eff", "Measure the DC/DC efficiency");
     // Test VTRx+ registers
     cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("powersupply", "ps");
@@ -106,6 +106,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ", ArgvParser::OptionRequiresValue);
     // Bias voltage on sensor side
     cmd.defineOption("bias", "Measure the Bias voltage on sensor side ", ArgvParser::OptionRequiresValue);
+    // Load values defining a test from file
+    cmd.defineOption("ext-leak", "Measure the Bias voltage leakage current using an external power supply", ArgvParser::OptionRequiresValue);
+    // Bias voltage on sensor side
+    cmd.defineOption("ext-bias", "Measure the Bias voltage on sensor side using an external power supply", ArgvParser::OptionRequiresValue);
     // Load values defining a test from file
     cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise (or if file is missing it) default parameters will be used", ArgvParser::OptionRequiresValue);
     // Test VTRx+ registers
@@ -148,6 +152,7 @@ int main(int argc, char* argv[])
     std::string cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "testParameters.txt";
     uint16_t    cBiasVoltage           = (cmd.foundOption("bias")) ? convertAnyInt(cmd.optionValue("bias").c_str()) : 0;
     uint16_t    cLeakVoltage           = (cmd.foundOption("leak")) ? convertAnyInt(cmd.optionValue("leak").c_str()) : 0;
+    uint16_t    cExtLeakVoltage        = (cmd.foundOption("ext-leak")) ? convertAnyInt(cmd.optionValue("ext-leak").c_str()) : 0;
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
@@ -324,8 +329,8 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("eff"))
     {
         // cSEHTester.exampleFit();
-        LOG(INFO) << BOLDBLUE << "Efficency Test" << RESET;
-        cSEHTester.TestEfficency(0, 2500, 500);
+        LOG(INFO) << BOLDBLUE << "Efficiency Test" << RESET;
+        cSEHTester.TestEfficiency(0, 2500, 500);
     }
 
     if(cmd.foundOption("leak"))
@@ -338,6 +343,18 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side" << RESET;
         cSEHTester.TestBiasVoltage(cBiasVoltage);
+    }
+
+    if(cmd.foundOption("ext-leak"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 600, "MyIsegSHR4220", "HV_Module1");
+    }
+
+    if(cmd.foundOption("ext-bias"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side with external power supply" << RESET;
+        cSEHTester.ExternalTestBiasVoltage("MyIsegSHR4220", "HV_Module1");
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())

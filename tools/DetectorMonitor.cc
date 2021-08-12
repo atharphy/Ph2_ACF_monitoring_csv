@@ -4,7 +4,7 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController& theSystCntr
     : theSystCntr(theSystCntr), fDetectorMonitorConfig(theDetectorMonitorConfig)
 {
     fKeepRunning = true;
-    startMonitor = false;
+    startMonitor = true;
 }
 
 DetectorMonitor::~DetectorMonitor()
@@ -20,6 +20,7 @@ void DetectorMonitor::operator()()
     while(fKeepRunning == true)
     {
         if(startMonitor == true) runMonitor();
+        // LOG(INFO) << BOLDMAGENTA << "Running in the loop" << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
     }
 }

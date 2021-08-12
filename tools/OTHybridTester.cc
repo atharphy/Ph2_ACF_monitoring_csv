@@ -4,13 +4,18 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
+
 #ifdef __USE_ROOT__
+
 OTHybridTester::OTHybridTester() : Tool() {}
 
 OTHybridTester::~OTHybridTester()
 {
 #ifdef __TCUSB__
+#ifdef __TCP_SERVER__
+#else
     if(fTC_USB != nullptr) delete fTC_USB;
+#endif
 #endif
 }
 
@@ -32,13 +37,27 @@ void OTHybridTester::FindUSBHandler()
         }
     }
     if(!cThereIsLpGBT)
+    {
 #ifdef __ROH_USB__
         fTC_USB = new TC_PSROH();
 #elif __SEH_USB__
+#ifdef __TCP_SERVER__
+        if(fTestcardClient == nullptr)
+        {
+            LOG(ERROR) << BOLDRED << "Not connected to the test card! Test cannot be executed" << RESET;
+            throw std::runtime_error("Test card cannot be reached");
+        }
+#else
         fTC_USB = new TC_2SSEH();
 #endif
+#endif
+    }
+
+#ifdef __TCP_SERVER__
+#else
     else
         fTC_USB = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
+#endif
 #endif
 }
 
@@ -341,6 +360,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             auto cDACtoADCMultiGraph = new TMultiGraph();
             cDACtoADCMultiGraph->SetName("mgDACtoADC");
             cDACtoADCMultiGraph->SetTitle("lpGBT - DAC to ADC conversion");
+            auto dieLegende = new TLegend(0.1, 0.7, 0.48, 0.9);
 
             LOG(INFO) << BOLDMAGENTA << "Testing ADC channels" << RESET;
 
@@ -362,8 +382,12 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 #ifdef __ROH_USB__
                     fTC_USB->dac_output(cDACValue);
 #elif __SEH_USB__
+#ifdef __TCP_SERVER__
+                    fTestcardClient->sendAndReceivePacket("set_AMUX,rightValue:" + std::to_string(cDACValue) + ",leftValue:" + std::to_string(cDACValue) + ",");
+#else
                     fTC_USB->set_AMUX(cDACValue, cDACValue);
                     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+#endif
 #endif
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -384,18 +408,18 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cfitDataVect[1] = cADCValVect;
                 cReg_Class.fit(cDACValVect, cADCValVect);
                 cDACtoADCGraph->Fit("pol1");
+                cDACtoADCGraph->GetFunction("pol1")->SetLineColor(cADCId + 2);
 
-                TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
+                // TF1* cFit = (TF1*)cDACtoADCGraph->GetListOfFunctions()->FindObject("pol1");
+                TF1* cFit = cDACtoADCGraph->GetFunction("pol1");
+                dieLegende->AddEntry(cDACtoADCGraph);
+                dieLegende->AddEntry(cFit, Form("Fit ADC%i", cADCId), "lpf");
                 // LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << "  Parameter 2   " << cFit->GetParameter(1) << RESET;
                 // LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << "  Parameter 2   " << cReg_Class.b_1 << RESET;
                 LOG(INFO) << BOLDBLUE << "Using custom class for ADC " << cADCId << ": Parameter 1  " << cReg_Class.b_0 << " +/- " << cReg_Class.b_0_error << "  Parameter 2   " << cReg_Class.b_1
                           << " +/- " << cReg_Class.b_1_error << RESET;
                 LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1)
                           << " +/- " << cFit->GetParError(1) << " Chi^2 " << cFit->GetChisquare() << " NDF " << cFit->GetNDF() << RESET;
-                LOG(INFO) << BOLDBLUE << "DAC value = "
-                          << ""
-                          << " --- ADC value = "
-                          << "" << RESET;
                 cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
                 LOG(INFO) << BOLDBLUE << "Trim value " << cTrim << RESET;
                 // ---Information also included in ROOT file of the fit
@@ -412,8 +436,11 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCMultiGraph->Draw("AL");
             cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
             cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
-            cDACtoADCCanvas->BuildLegend(0, .2, .8, .9);
-            cDACtoADCMultiGraph->Write();
+            dieLegende->Draw();
+            // TLegend* dieLegende= cDACtoADCCanvas->BuildLegend();
+            // dieLegende->AddEntry("pol1","Fit x","lpf");
+            cDACtoADCCanvas->Write();
+            // cDACtoADCMultiGraph->Write();
         }
     }
 #endif
@@ -432,7 +459,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     std::string                         cADCNameString;
     std::vector<int>                    cADCValueVect;
 
-    auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
+    auto cFixedADCsTree = new TTree("tFixedADCs", "lpGBT ADCs not tied to AMUX");
     cFixedADCsTree->Branch("Id", &cADCNameString);
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
@@ -446,9 +473,11 @@ bool OTHybridTester::LpGBTTestFixedADCs()
                 {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
-
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_P1V25_L_Sense:On");
+#else
     fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-
+#endif
 #elif __ROH_USB__
 
     cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
@@ -461,7 +490,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cADCNametoPinMapping = &fPSROHADCInputMap;
 #endif
 
-    auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
+    auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
     auto  cADCsMapIterator = cADCsMap.begin();
@@ -481,7 +510,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             // Configure Temperature sensor
-            clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+            // clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
             do
             {
                 cADCValueVect.clear();
@@ -519,7 +548,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
             } while(cADCsMapIterator != cADCsMap.end());
         }
     }
-    auto cADCCanvas = new TCanvas("tFixedADCs", "lpGBT ADCs not tied to AMUX", 1600, 900);
+    auto cADCCanvas = new TCanvas("cFixedADCs", "lpGBT ADCs not tied to AMUX", 1600, 900);
     cADCCanvas->SetRightMargin(0.2);
     cADCHistogram->GetXaxis()->SetTitle("ADC channel");
     cADCHistogram->GetYaxis()->SetTitle("ADC count");
@@ -529,8 +558,11 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Write();
 
 #ifdef __SEH_USB__
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_P1V25_L_Sense:Off");
+#else
     fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
-
+#endif
 #endif
 #endif
 #endif
@@ -564,7 +596,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12};
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-    std::vector<uint8_t> cGPIOs = {0, 3, 6, 8};
+    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
 
     for(auto cLevel: cLevels)
@@ -579,12 +611,14 @@ bool OTHybridTester::LpGBTTestResetLines()
             fTC_USB->adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
-            // std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+#ifdef __TCP_SERVER__
+            cMeasurement         = this->getMeasurement("read_reset:" + cMapIterator->first);
+#else
             fTC_USB->read_reset(cMapIterator->second, cMeasurement);
 
+#endif
             float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
-
             cStatus = cStatus && (cDifference_mV <= 100);
             cValid  = cValid && cStatus;
 
@@ -848,4 +882,19 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
+#ifdef __TCP_SERVER__
+float OTHybridTester::getMeasurement(std::string name)
+{
+    std::string buffer = fTestcardClient->sendAndReceivePacket(name);
+    float       value  = std::stof(this->getVariableValue("value", buffer));
+    return value;
+}
+std::string OTHybridTester::getVariableValue(std::string variable, std::string buffer)
+{
+    size_t begin = buffer.find(variable) + variable.size() + 1;
+    size_t end   = buffer.find(',', begin);
+    if(end == std::string::npos) end = buffer.size();
+    return buffer.substr(begin, end - begin);
+}
+#endif
 #endif

@@ -8,8 +8,6 @@
 */
 
 #include "RD53DataReadbackOptimization.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -24,27 +22,29 @@ void DataReadbackOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValueTAP0 = this->findValueInSettings("TAP0Start");
-    stopValueTAP0  = this->findValueInSettings("TAP0Stop");
-    startValueTAP1 = this->findValueInSettings("TAP1Start");
-    stopValueTAP1  = this->findValueInSettings("TAP1Stop");
-    startValueTAP2 = this->findValueInSettings("TAP2Start");
-    stopValueTAP2  = this->findValueInSettings("TAP2Stop");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+    startValueTAP0 = this->findValueInSettings<double>("TAP0Start");
+    stopValueTAP0  = this->findValueInSettings<double>("TAP0Stop");
+    startValueTAP1 = this->findValueInSettings<double>("TAP1Start");
+    stopValueTAP1  = this->findValueInSettings<double>("TAP1Stop");
+    invTAP1        = this->findValueInSettings<double>("InvTAP1");
+    startValueTAP2 = this->findValueInSettings<double>("TAP2Start");
+    stopValueTAP2  = this->findValueInSettings<double>("TAP2Stop");
+    invTAP2        = this->findValueInSettings<double>("InvTAP2");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP0 - startValueTAP0 + 1);
+    size_t nSteps = (stopValueTAP0 - startValueTAP0 + 1 >= RD53Shared::MAXSTEPS ? RD53Shared::MAXSTEPS : stopValueTAP0 - startValueTAP0 + 1);
     size_t step   = floor((stopValueTAP0 - startValueTAP0 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP0.push_back(startValueTAP0 + step * i);
 
-    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP1 - startValueTAP1 + 1);
+    nSteps = (stopValueTAP1 - startValueTAP1 + 1 >= RD53Shared::MAXSTEPS ? RD53Shared::MAXSTEPS : stopValueTAP1 - startValueTAP1 + 1);
     step   = floor((stopValueTAP1 - startValueTAP1 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP1.push_back(startValueTAP1 + step * i);
 
-    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MINSTEPS ? RD53Shared::MINSTEPS : stopValueTAP2 - startValueTAP2 + 1);
+    nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MAXSTEPS ? RD53Shared::MAXSTEPS : stopValueTAP2 - startValueTAP2 + 1);
     step   = floor((stopValueTAP2 - startValueTAP2 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP2.push_back(startValueTAP2 + step * i);
 
@@ -140,11 +140,13 @@ void DataReadbackOptimization::run()
     DataReadbackOptimization::analyze("CML_TAP0_BIAS", dacListTAP0, theTAP0scanContainer, theTAP0Container);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x1);
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", 0x1);
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", invTAP1);
     DataReadbackOptimization::scanDac("CML_TAP1_BIAS", dacListTAP1, &theTAP1scanContainer);
     DataReadbackOptimization::analyze("CML_TAP1_BIAS", dacListTAP1, theTAP1scanContainer, theTAP1Container);
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x2);
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x3);
+    for(const auto cBoard: *fDetectorContainer)
+        static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", bits::pack<1, 1>(invTAP2, invTAP1));
     DataReadbackOptimization::scanDac("CML_TAP2_BIAS", dacListTAP2, &theTAP2scanContainer);
     DataReadbackOptimization::analyze("CML_TAP2_BIAS", dacListTAP2, theTAP2scanContainer, theTAP2Container);
 
@@ -163,17 +165,17 @@ void DataReadbackOptimization::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     DataReadbackOptimization::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 
@@ -198,7 +200,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                     {
                         auto current =
                             theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
-                        if(current < best)
+                        if((current >= 0) && (current < best))
                         {
                             regVal = dacListTAP[i];
                             best   = current;

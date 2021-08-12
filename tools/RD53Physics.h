@@ -32,20 +32,26 @@ class Physics : public Tool
 
   public:
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
+    ~Physics()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
 
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 
     void sendBoardData(const BoardContainer* cBoard);
-    void localConfigure(const std::string fileRes_, int currentRun);
-    void initializeFiles(const std::string fileRes_, int currentRun);
+    void localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void run();
     void draw();
     void analyze(bool doReadBinary = false);
     void saveChipRegisters(int currentRun);
     void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
-    /* void monitor(); */
 
     void setGenericEvtConverter(evtConvType arg)
     {

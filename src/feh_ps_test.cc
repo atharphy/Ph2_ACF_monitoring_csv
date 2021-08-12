@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
         // put it back in normal readout mode
         // and make sure we're in normal readout mode
         // i.e. synchronous
-        // auto cNevents  = 9;//cTool.findValueInSettings("Nevents" ,10);
+        // auto cNevents  = 9;//cTool.findValueInSettings<double>("Nevents" ,10);
         // for(auto cBoard : *cHybridTester.fDetectorContainer)
         // {
         //     BeBoard* cBeBoard = static_cast<BeBoard*>( cBoard );

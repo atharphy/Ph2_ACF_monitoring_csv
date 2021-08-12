@@ -735,7 +735,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    double RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return 0; };
+    double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return 0; };
 
     // ############################
     // # Read/Write Optical Group #

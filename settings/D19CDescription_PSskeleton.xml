@@ -4,7 +4,7 @@
     <!---<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.13:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <!-- B598 skeleton, direct powering -->
-    <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- B14 skeleton, POH -->
     <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
 

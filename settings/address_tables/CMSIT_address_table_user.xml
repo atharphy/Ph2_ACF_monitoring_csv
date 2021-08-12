@@ -105,11 +105,9 @@
       <node id="Nb_of_events"          mask="0x3FFFC000"      permission="rw"      description="" />
     </node>
 
-    <node id="Hybrids_en"           address="0x0000000B"      permission="rw"      description="">
-    </node>
+    <node id="Hybrids_en"           address="0x0000000B"      permission="rw"      description=""> </node>
 
-    <node id="Chips_en"             address="0x0000000C"      permission="rw"      description="">
-    </node>
+    <node id="Chips_en"             address="0x0000000C"      permission="rw"      description=""> </node>
 
     <node id="Slow_cmd_fifo_din"    address="0x0000000D"      permission="rw"      mode="non-incremental"       description=""> </node>
 
@@ -183,6 +181,17 @@
       <node id="l12"                   mask="0xFFFF8000"      permission="rw"      description="Polarity for FMC L12 RX pins" />
     </node>
 
+    <node id="reg_gp_lvds"          address="0x0000001E"      permission="rw"      description="register for gp lvds signals.">
+      <node id="gp_lvds_ctrl"          mask="0x00000007"      permission="rw"      description="Signal gp lvds selected" />
+      <node id="lvds_enable_l12"       mask="0x00000078"      permission="rw"      description="enable gp lvds display port" />
+      <node id="lvds_addr"             mask="0x00000780"     permission="rw"      description="enable gp lvds signal -lvds_1,2,3 or 4" />
+    </node>
+
+    <node id="ctrl_cdr"             address="0x0000001F"      permission="rw"      description="Signals for CDR bypass mode">
+      <node id="cdr_freq_sel"          mask="0x0000000F"      permission="rw"      description="Select the external cmd freq in cdr bypass. Default -0: 160Mhz, 1:140MHz, 2:145, 3:150, 4:155, 5:164, 6: 170, 7: 175, 8:180Mhz " />
+      <node id="cdr_addr"              mask="0x00000030"      permission="rw"      description="Used to select the cdr freq monitor in the terminal. 0: 160MhZ ext_cmd_clk, 1: 1.28G/640M hZ ext_ser_clk" />
+    </node>
+
   </node>
 
   <!-- ================================================ -->
@@ -215,6 +224,7 @@
       <node id="front_end_type"        mask="0x000000C0"      permission="r"       description="Front-End type.1=RD53A, 2=RD53B, 0=unspecified" />
       <node id="fmc_l12_type"          mask="0x00000700"      permission="r"       description="Type of FMC board plugged at L12 slot. 1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=unspecified" />
       <node id="fmc_l8_type"           mask="0x00003800"      permission="r"       description="Type of FMC board plugged at L8 slot. 1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=unspecified" />
+      <node id="error_gp_lvds"         mask="0x3FFFC000"      permission="r"       description="Error counter for gp lvds. Valid for pattern bit and CMD_DATA" />
     </node>
 
     <node id="slow_cmd"             address="0x00000003"      permission="r"       description="Clk_rate_tool output, for debugging purpose only">
@@ -230,6 +240,8 @@
       <node id="trigger_state"         mask="0x00000030"      permission="r"       description="Status of the triggering process. 2= running, 0=Idle" />
       <node id="if_configured"         mask="0x00000040"      permission="r"       description="Checks if the congiguration registers have been set. 1=configured." />
       <node id="error_code"            mask="0x00007F80"      permission="r"       description="0= no error." />
+      <node id="dio5_not_ready"        mask="0x00008000"      permission="r"       description="Still configuring the dio5 thresholds." />
+      <node id="dio5_error"            mask="0x00010000"      permission="r"       description="Error when configuring dio5 thresholds via i2c" />
     </node>
 
     <node id="trigger_cntr"         address="0x00000005"      permission="r"       description="Number of triggers received."> </node>
@@ -270,11 +282,8 @@
     <node id="ddr3_num_errors"      address="0x0000000E"      permission="r"       description="Number of errors during DDR3 self-check"> </node>
     <node id="ddr3_num_words"       address="0x0000000F"      permission="r"       description="Nb of words readout during DDR3 self-check"> </node>
 
-    <!-- DIO5 -->
-    <node id="stat_dio5"            address="0x00000010"      permission="r"       description="Status Registers from DIO5 card.">
-      <node id="dio5_not_ready"        mask="0x00000001"      permission="r"       description="Still configuring the dio5 thresholds." />
-      <node id="dio5_error"            mask="0x00000002"      permission="r"       description="Error when configuring dio5 thresholds via i2c" />
-    </node>
+    <node id="cdr_freq_mon"         address="0x00000010"      permission="r"> </node>
+    <node id="gp_lvds_freq_mon"     address="0x0000001F"      permission="r"> </node>
 
     <!-- Register Readout -->
     <node id="Register_Rdback_fifo" address="0x00000011"      permission="r"      mode="non-incremental"      description="Fifo with Register Read-back data from all chips."> </node>

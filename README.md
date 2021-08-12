@@ -29,12 +29,12 @@ dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 06/04/2021
++ Last change made to this section: 10/05/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `IT-v4.0`
-- Firmware tag: `4.0`
+- Software git branch / tag : `Dev` / `v4-01`
+- Firmware tag: `4.1`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
 **FC7 setup:**
@@ -95,7 +95,9 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 11. Clock delay scan
 12. Bit Error Rate test
 13. Data read back optimisation
-14. Physics
+14. Chip internal voltage tuning
+15. Generic DAC-DAC scan
+16. Physics
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
@@ -193,7 +195,9 @@ For more information on the firmware, please check the doc directory of https://
 
 ### Gitlab CI setup for Developers (required to submit merge requests!!!)
 
-1. Add predefined variables
+1. Make sure you are subscribed to the cms-tracker-phase2-DAQ e-group
+
+2. Add predefined variables
 
     i. from your fork go to `Ph2_ACF > settings > CI/CD`
 
@@ -209,17 +213,12 @@ For more information on the firmware, please check the doc directory of https://
         - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
-2. Enable shared Runners (if not enabled)
+3. Enable shared Runners (if not enabled)
 
     i. from `settings > CI/CD` expand the `Runners` section
 
     ii. click the `Allow shared Runners` button
 
-3. Enable specific Runners (if not enabled)
-
-    i. from `settings > CI/CD` expand the `Runners` section
-
-    ii. in the section `Available specific runners` click button `Enable for this project` for the Ph2_ACF runner with the `FNAL`
 
 
 ### Setup on CentOs8

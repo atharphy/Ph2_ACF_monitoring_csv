@@ -11,6 +11,7 @@
 #ifndef __DQMHISTOGRAMBASE_H__
 #define __DQMHISTOGRAMBASE_H__
 
+#include <boost/any.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,6 +34,44 @@ class DetectorContainer;
  * \class DQMHistogramBase
  * \brief Base class for monitoring histograms
  */
+
+namespace user_detail
+{
+template <typename>
+struct sfinae_true_DQMHistogramBase : std::true_type
+{
+};
+
+template <typename T>
+static auto test_SetZTitle(int) -> sfinae_true_DQMHistogramBase<decltype(std::declval<T>().SetZTitle(""))>;
+template <typename>
+static auto test_SetZTitle(long) -> std::false_type;
+} // namespace user_detail
+
+// SFINAE: check if object T has SetZTitle
+template <typename T>
+struct has_SetZTitle : decltype(user_detail::test_SetZTitle<T>(0))
+{
+};
+
+// Functor for SetZTitle - default case
+template <typename T, bool hasSetZTitle = false>
+struct CallSetZTitle
+{
+    void operator()(T* thePlot, const char* theTitle) { return; }
+};
+
+// Functor for SetZTitle - case when SetZTitle is defined
+template <typename T>
+struct CallSetZTitle<T, true>
+{
+    void operator()(T* thePlot, const char* theTitle)
+    {
+        thePlot.SetZTitle(theTitle);
+        return;
+    }
+};
+
 class DQMHistogramBase
 {
   public:
@@ -80,16 +119,22 @@ class DQMHistogramBase
                          DetectorDataContainer&       dataContainer,
                          const CanvasContainer<Hist>& histContainer,
                          const char*                  XTitle = nullptr,
-                         const char*                  YTitle = nullptr)
+                         const char*                  YTitle = nullptr,
+                         const char*                  ZTitle = nullptr)
     {
-        if(XTitle != nullptr) histContainer.fTheHistogram->SetXTitle(XTitle);
-        if(YTitle != nullptr) histContainer.fTheHistogram->SetYTitle(YTitle);
+        if(XTitle != nullptr) histContainer.fTheHistogram->GetXaxis()->SetTitle(XTitle);
+        if(YTitle != nullptr) histContainer.fTheHistogram->GetYaxis()->SetTitle(YTitle);
+        if(ZTitle != nullptr)
+        {
+            CallSetZTitle<Hist, has_SetDirectory<Hist>::value> setZTitleFunctor;
+            setZTitleFunctor(histContainer.fTheHistogram, ZTitle);
+        }
 
         RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
 
     template <typename Hist>
-    void draw(DetectorDataContainer& HistDataContainer, const char* opt = "", bool electronAxis = false, const char* electronAxisTitle = "", bool isNoise = false)
+    void draw(DetectorDataContainer& HistDataContainer, const char* opt = "", const std::string additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
     {
         for(auto cBoard: HistDataContainer)
             for(auto cOpticalGroup: *cBoard)
@@ -104,20 +149,31 @@ class DQMHistogramBase
                         canvas->Modified();
                         canvas->Update();
 
-                        if(electronAxis == true)
+                        if(additionalAxisType != "")
                         {
                             TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
                             myPad->SetTopMargin(0.16);
 
-                            axes.emplace_back(new TGaxis(myPad->GetUxmin(),
-                                                         myPad->GetUymax(),
-                                                         myPad->GetUxmax(),
-                                                         myPad->GetUymax(),
-                                                         RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
-                                                         RD53chargeConverter::VCAl2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
-                                                         510,
-                                                         "-"));
-                            axes.back()->SetTitle(electronAxisTitle);
+                            if(additionalAxisType == "electron")
+                                axes.emplace_back(new TGaxis(myPad->GetUxmin(),
+                                                             myPad->GetUymax(),
+                                                             myPad->GetUxmax(),
+                                                             myPad->GetUymax(),
+                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
+                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
+                                                             510,
+                                                             "-"));
+                            else if(additionalAxisType == "frequency")
+                                axes.emplace_back(new TGaxis(myPad->GetUxmin(),
+                                                             myPad->GetUymax(),
+                                                             myPad->GetUxmax(),
+                                                             myPad->GetUymax(),
+                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(1)),
+                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
+                                                             510,
+                                                             "-"));
+
+                            axes.back()->SetTitle(additionalAxisTitle);
                             axes.back()->SetTitleOffset(1.2);
                             axes.back()->SetTitleSize(0.035);
                             axes.back()->SetTitleFont(40);
@@ -134,10 +190,11 @@ class DQMHistogramBase
                     }
     }
 
-    double findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
+    template <typename T>
+    T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
-        return (setting != std::end(settingsMap) ? setting->second : defaultValue);
+        return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
     }
 };
 

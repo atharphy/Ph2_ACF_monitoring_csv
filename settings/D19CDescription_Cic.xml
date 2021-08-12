@@ -5,7 +5,7 @@
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
       <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-      <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  
+      <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  
       <!-- <connection id="board" uri="chtcp-2.0://jadsdesktop.cern.ch:10203?target=192.168.2.100:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
     
     <CDCE configure="0" clockRate="120"/>

@@ -23,17 +23,17 @@ void Latency::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
-    startValue     = this->findValueInSettings("LatencyStart");
-    stopValue      = this->findValueInSettings("LatencyStop");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
+    startValue     = this->findValueInSettings<double>("LatencyStart");
+    stopValue      = this->findValueInSettings<double>("LatencyStop");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #
@@ -145,17 +145,17 @@ void Latency::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Latency::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 

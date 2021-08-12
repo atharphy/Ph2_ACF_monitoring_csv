@@ -307,7 +307,7 @@ void ExtraChecks::Running() { Initialise(); }
 void ExtraChecks::FindOpens()
 {
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     for(int cAntennaGroup = 0; cAntennaGroup < 1; cAntennaGroup++)
     {
         // to do
@@ -370,11 +370,11 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
     // parse xml file
     // now read the settings from the map
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // get number of attempts
     cSetting         = fSettingsMap.find("Attempts");
-    size_t cAttempts = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    size_t cAttempts = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
 
     LOG(INFO) << BOLDBLUE << "Quick [manual] check of noise and pedetal of the FE ASICs  ..." << RESET;
     for(auto cBoard: *fDetectorContainer)
@@ -584,7 +584,7 @@ void ExtraChecks::Evaluate(int pSigma, uint16_t pTriggerRate, bool pDisableStubs
 void ExtraChecks::OccupancyCheck(uint16_t pTriggerRate, bool pDisableStubs)
 {
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     LOG(INFO) << BOLDBLUE << "Quick [manual] check of noise and pedetal of the FE ASICs  ..." << RESET;
     uint16_t cDefaultStubLatency = 50;
@@ -710,7 +710,7 @@ void ExtraChecks::ExternalTriggers(uint16_t pNconsecutive, const std::string& pS
 void ExtraChecks::ConsecutiveTriggers(uint8_t pNconsecutive)
 {
     auto              cSetting = fSettingsMap.find("Nevents");
-    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     std::stringstream outp;
     // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(0,10,3,0);
     // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureConsecutiveTriggerFSM(
@@ -960,7 +960,7 @@ void ExtraChecks::MonitorAmux(bool pAll)
 void ExtraChecks::DataCheckTP(std::vector<uint8_t> pChipIds, uint8_t pTPamplitude, int pTPgroup, int pBendCode, bool pScan)
 {
     auto     cSetting          = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerAttempt = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerAttempt = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     // configure FE chips so that stubs are detected [i.e. make sure HIP
     // suppression is off ]
     for(auto cBoard: *fDetectorContainer)
@@ -1168,7 +1168,7 @@ void ExtraChecks::ReconstructTP(uint8_t pTPamplitude, uint8_t pGroup, uint8_t pS
     // parse xml file
     // now read the settings from the map
     auto     cSetting        = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // set-up for TP
     fAllChan                     = false;
@@ -1293,7 +1293,7 @@ void ExtraChecks::ReconstructTP(uint8_t pTPamplitude, uint8_t pGroup, uint8_t pS
 void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate, uint8_t pSeed, int pBend)
 {
     auto     cSetting            = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     uint16_t cDefaultStubLatency = 50;
 
     // configure FE chips so that stubs are detected [i.e. make sure HIP
@@ -1452,7 +1452,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
 void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate, uint8_t pSeed, int pBend, bool pScan)
 {
     auto     cSetting            = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     uint16_t cDefaultStubLatency = 50;
 
     // configure FE chips so that stubs are detected [i.e. make sure HIP
@@ -1909,7 +1909,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
     ContainerFactory::copyAndInitChannel<int>(*fDetectorContainer, fShortsContainer);
     uint8_t  cTPdelay              = 0;
     auto     cSetting              = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerAttempt     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerAttempt     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     uint8_t  cFirmwareTPdelay      = 100;
     uint8_t  cFirmwareTriggerDelay = 200;
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
-    <connection id="board" uri="chtcp-2.0://cmsuptracker003.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="120"/>
     
     <OpticalGroup Id="0" FMCId="0" >

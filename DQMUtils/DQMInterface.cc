@@ -6,10 +6,12 @@
 
 #include "CBCHistogramPulseShape.h"
 #include "DQMHistogramCalibrationExample.h"
+#include "DQMHistogramLatencyScan.h"
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMInterface.h"
 #include "RD53ClockDelayHistograms.h"
+#include "RD53DataTransmissionTestGraphs.h"
 #include "RD53GainHistograms.h"
 #include "RD53GainOptimizationHistograms.h"
 #include "RD53InjectionDelayHistograms.h"
@@ -94,6 +96,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
         fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
     }
+    else if(calibrationName == "OTLatency")
+        fDQMHistogrammerVector.push_back(new DQMHistogramLatencyScan());
     else if(calibrationName == "calibrationexample")
         fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
     else if(calibrationName == "cbcPulseShape")
@@ -124,6 +128,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new PhysicsHistograms());
     else if(calibrationName == "ssaphysics")
         fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
+    else if(calibrationName == "datatrtest")
+        fDQMHistogrammerVector.push_back(new DataTransmissionTestGraphs());
 
     fOutputFile = new TFile("tmp.root", "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);

@@ -25,17 +25,17 @@ void ThrMinimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings("ROWstart");
-    rowStop         = this->findValueInSettings("ROWstop");
-    colStart        = this->findValueInSettings("COLstart");
-    colStop         = this->findValueInSettings("COLstop");
-    nEvents         = this->findValueInSettings("nEvents");
-    targetOccupancy = this->findValueInSettings("TargetOcc");
-    ThrStart        = this->findValueInSettings("ThrStart");
-    ThrStop         = this->findValueInSettings("ThrStop");
-    doDisplay       = this->findValueInSettings("DisplayHisto");
-    doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData  = this->findValueInSettings("SaveBinaryData");
+    rowStart        = this->findValueInSettings<double>("ROWstart");
+    rowStop         = this->findValueInSettings<double>("ROWstop");
+    colStart        = this->findValueInSettings<double>("COLstart");
+    colStop         = this->findValueInSettings<double>("COLstop");
+    nEvents         = this->findValueInSettings<double>("nEvents");
+    targetOccupancy = this->findValueInSettings<double>("TargetOcc");
+    ThrStart        = this->findValueInSettings<double>("ThrStart");
+    ThrStop         = this->findValueInSettings<double>("ThrStop");
+    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd = RD53::getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);
@@ -155,20 +155,19 @@ void ThrMinimization::draw()
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ThrMinimization::fillHisto();
     histos->process();
 
     PixelAlive::draw(false);
 
-    this->WriteRootFile();
-
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 
@@ -258,7 +257,6 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                                   << " <<<" << RESET;
                     }
 
-                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
@@ -347,7 +345,6 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
 
-                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 

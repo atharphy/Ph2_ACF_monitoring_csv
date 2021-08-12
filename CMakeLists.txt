@@ -142,6 +142,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
+        if($ENV{UseTCUSBTcpServer})
+            message(STATUS "    Building the components to use the TCP Server")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+        endif($ENV{UseTCUSBTcpServer})
       endif(PH2_TCUSB_FOUND)
     endif($ENV{CompileWithTCUSB})
 
@@ -193,6 +197,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS " ")
     if(CompileForHerd OR NoDataShipping)
         add_subdirectory(tools)
+        add_subdirectory(ProductionTools)
         add_subdirectory(HWDescription)
         add_subdirectory(HWInterface)
         add_subdirectory(System)
@@ -257,7 +262,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # ZeroMQ 
+    # ZeroMQ
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -284,6 +289,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     endif()
 
     add_subdirectory(tools)
+    add_subdirectory(ProductionTools)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)

@@ -24,6 +24,7 @@
 #include "../Utils/easylogging++.h"
 
 #include "pugixml.hpp"
+#include <boost/any.hpp>
 #include <iostream>
 #include <stdlib.h>
 #include <string>
@@ -38,7 +39,7 @@ namespace Ph2_System
 {
 using BeBoardVec   = std::vector<Ph2_HwDescription::BeBoard*>;                 /*!< Vector of Board pointers */
 using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
-using SettingsMap  = std::unordered_map<std::string, double>;                  /*!< Maps the settings */
+using SettingsMap  = std::unordered_map<std::string, boost::any>;              /*!< Maps the settings */
 
 /*!
  * \class FileParser
@@ -60,7 +61,7 @@ class FileParser
      * \param pVoltage: the Voltage level
      * \return corresponding 8-bit DAC value
      */
-    uint32_t Vto8Bit(float pVoltage) { return static_cast<uint32_t>(pVoltage / 3.3 * 256 + 0.5); }
+    /* uint32_t Vto8Bit(float pVoltage) { return static_cast<uint32_t>(pVoltage / 3.3 * 256 + 0.5); } */
 
   private:
     /*!
@@ -93,6 +94,8 @@ class FileParser
     //
     void parseMPA(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix);
     void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cMPA);
+    //
+    void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
 
     // ########################
     // # RD53 specific parser #

@@ -317,35 +317,35 @@ void SignalScanFit::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 0;
 
     cSetting = fSettingsMap.find("SignalScanStep");
 
     if(cSetting != std::end(fSettingsMap))
-        fSignalScanStep = cSetting->second;
+        fSignalScanStep = boost::any_cast<double>(cSetting->second);
     else
         fSignalScanStep = 1;
 
     cSetting = fSettingsMap.find("InitialVcth");
 
     if(cSetting != std::end(fSettingsMap))
-        fInitialThreshold = cSetting->second;
+        fInitialThreshold = boost::any_cast<double>(cSetting->second);
     else
         fInitialThreshold = 0x78;
 
     cSetting = fSettingsMap.find("FitSignal"); // In this case we fit the signal which is an s curve with charge sharing (???)
 
     if(cSetting != std::end(fSettingsMap))
-        fFit = cSetting->second;
+        fFit = boost::any_cast<double>(cSetting->second);
     else
         fFit = 0;
 

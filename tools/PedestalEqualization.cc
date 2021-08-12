@@ -39,11 +39,11 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     this->fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fCheckLoop                   = findValueInSettings("VerificationLoop", 1);
-    fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fCheckLoop                   = findValueInSettings<double>("VerificationLoop", 1);
+    fTestPulseAmplitude          = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     fTargetOffset                = 0x7F;
     if(cWithSSA or cWithMPA) fTargetOffset = 0xF;

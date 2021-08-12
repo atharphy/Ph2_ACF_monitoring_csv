@@ -19,6 +19,8 @@
 
 void ContainerFactory::copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 {
+    copy.reset();
+
     for(const auto board: original)
     {
         BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
