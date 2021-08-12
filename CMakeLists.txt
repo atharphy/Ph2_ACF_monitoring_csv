@@ -164,7 +164,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    file(GLOB_RECURSE uhal_boost /opt/cactus/*version.hpp)
+    file(GLOB_RECURSE uhal_boost /opt/cactus/*version2.hpp)
     if(uhal_boost)
         MESSAGE(STATUS "    Found boost installation that comes with uHAL, using this version")
             set(Boost_NO_SYSTEM_PATHS TRUE)

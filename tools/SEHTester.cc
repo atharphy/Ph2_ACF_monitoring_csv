@@ -403,8 +403,10 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
 
+    fTC_USB->set_HV(true, true, true, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     fTC_USB->set_HV(false, false, false, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(30000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(25000));
     fillSummaryTree("LeakDone", 1);
 #endif
 #endif
