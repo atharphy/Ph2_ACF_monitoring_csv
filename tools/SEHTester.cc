@@ -567,9 +567,10 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 void SEHTester::TurnOn()
 {
 	// workaround to turn on the bPOL2V5 propertly
-	float T ;
+	
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
+    float T ;
 	// check if the critical temperature of -35C has been reached
 	fTC_USB->read_temperature(fTC_USB->Temp1,T);
 	if (T < -35.0){
