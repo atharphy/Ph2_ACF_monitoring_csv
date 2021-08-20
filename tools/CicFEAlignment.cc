@@ -175,14 +175,14 @@ void CicFEAlignment::AlignInputs()
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " word alignment on CIC inputs... " << RESET;
     
-    bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelayPS) : this->SetBx0Delay(fStubBxDelay2S);
-    if(!cBxAligned)
-    {
-        LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to set Bx0 delay in CIC ... " << RESET;
-        exit(FAILED_BX_ALIGNMENT);
-    }
-    LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " setting of Bx0 delay in CIC ... " << RESET;
-    fSuccess = (cPhaseAligned && cWordAligned && cBxAligned );
+    // bool cBxAligned = (fWithMPA) ? this->SetBx0Delay(fStubBxDelayPS) : this->SetBx0Delay(fStubBxDelay2S);
+    // if(!cBxAligned)
+    // {
+    //     LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to set Bx0 delay in CIC ... " << RESET;
+    //     exit(FAILED_BX_ALIGNMENT);
+    // }
+    // LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " setting of Bx0 delay in CIC ... " << RESET;
+    fSuccess = (cPhaseAligned && cWordAligned );
 }
 void CicFEAlignment::Running()
 {

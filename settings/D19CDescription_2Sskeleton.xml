@@ -35,7 +35,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run851/" />
             <CIC2 Id="8" configfile="BE0_OG1_FE2.txt" />
             </Hybrid>
-        <Hybrid Id="3" Status="0" LinkId="1">
+        <Hybrid Id="1" Status="1" LinkId="1">
             <Global>
                 <Settings threshold="550" latency="201"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="5" groundothers="0"/>

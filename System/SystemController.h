@@ -183,9 +183,6 @@ class SystemController
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pDriveStrength = 4, uint8_t pUseNegEdge = 0);
-    bool CicBeAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    bool CicPackageDelay(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested
