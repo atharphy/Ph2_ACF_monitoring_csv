@@ -218,7 +218,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             }
                             else
                             {
-                                LOG (INFO) << BOLDBLUE << "Un-sparsified CIC data.." << RESET;
+                                LOG (DEBUG) << BOLDBLUE << "Un-sparsified CIC data.." << RESET;
                                 fEventRawList[cFe->getIndex()].first = cL1Information;
                                 fEventRawList[cFe->getIndex()].second.clear();
                                 size_t                                  cFullSize = 8;// going to assume that I will always readout 8*275 block of data
