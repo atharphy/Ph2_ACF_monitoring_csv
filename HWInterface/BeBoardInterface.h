@@ -221,6 +221,13 @@ class BeBoardInterface
     void Resume(Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
+     * \brief Start a DAQ
+     * \param pBoard
+     */
+    void SendNTriggers(Ph2_HwDescription::BeBoard* pBoard, uint16_t pNtriggers);
+
+
+    /*!
      * \brief Read board monitor data
      * \param pReadoutChipInterface
      * \param pChip

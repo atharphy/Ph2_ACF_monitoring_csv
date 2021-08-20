@@ -168,7 +168,7 @@ void LatencyScan::ScanLatency()
         uint16_t cOffset = 0;
         for(auto cBoard: *fDetectorContainer)
         {
-            // auto cBrdIndx = cBoard->getIndex();
+            auto cBrdIndx = cBoard->getIndex();
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             // LOG (INFO) << BOLDRED << "Reading events in scan latency.." << RESET;
             this->ReadNEvents(cBoard, fNevents);
@@ -207,7 +207,7 @@ void LatencyScan::ScanLatency()
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat + cTriggerId]       = theOccupancyContainer;
-                // auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
+                auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
                 int cTotalHits = 0;
                 LOG(INFO) << BOLDMAGENTA << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << RESET;
                 do {
@@ -222,17 +222,17 @@ void LatencyScan::ScanLatency()
                     //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                     for(auto cOpticalGroup: *cBoard)
                     {
-                        // auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
+                        auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            // auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
+                            auto& cOccHybrid = cOccOG->at(cHybrid->getIndex());
                             for(auto cChip: *cHybrid)
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                                 auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                 cTotalHits += cHits.size();
-                                // auto& cOccChip = cOccHybrid->at(cChip->getIndex());
+                                auto& cOccChip = cOccHybrid->at(cChip->getIndex());
                                 for(auto cHit: cHits)
                                 {
                                     uint16_t cRow    = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : ((cHit >> 8) & 0x7F);
@@ -241,7 +241,7 @@ void LatencyScan::ScanLatency()
                                     cRow += cId;
                                     if(cColumn == 0)
                                     {
-                                        LOG(INFO) << BOLDYELLOW << "\t Event#" << (*cEventIter)->GetEventCount() << "\t\t Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << RESET;
+                                        if( (*cEventIter)->GetEventCount()%100 == 0 && cRow == 128) LOG(INFO) << BOLDYELLOW << "\t Event#" << (*cEventIter)->GetEventCount() << "\t\t Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << RESET;
                                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                         {
                                             if(cHit % 2 == 0)
@@ -273,20 +273,20 @@ void LatencyScan::ScanLatency()
                                     }
 
                                     // temporary remove does not seem to be set for MPAs/SSAs
-                                    // if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
-                                    //{
-                                    cHitContainer.at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
-                                    theLatencyContainer.at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] += 1;
-                                    // cOccChip->getChannel<Occupancy>(cRow, cColumn).fOccupancy++;
-                                    // cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
-                                    //}
+                                    if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
+                                    {
+                                        cHitContainer.at(cBoard->getIndex())
+                                            ->at(cOpticalGroup->getIndex())
+                                            ->at(cHybrid->getIndex())
+                                            ->at(cChip->getIndex())
+                                            ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                        theLatencyContainer.at(cBoard->getIndex())
+                                            ->at(cOpticalGroup->getIndex())
+                                            ->at(cHybrid->getIndex())
+                                            ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] += 1;
+                                        cOccChip->getChannel<Occupancy>(cRow + cColumn*120).fOccupancy++;
+                                        //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+                                    }
                                 } // hit vector
                             }     // chip vector
                         }         // hybrid vector

@@ -50,6 +50,9 @@ class CbcInterface : public ReadoutChipInterface
     bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerifLoop = true);
     bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
 
+    void producePhaseAlignmentPattern(Ph2_HwDescription::Chip* pChip, uint8_t pWait_ms = 10);
+    void produceWordAlignmentPattern(Ph2_HwDescription::Chip* pChip);
+
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
 
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject = true, bool pVerifLoop = true) override;
@@ -135,8 +138,11 @@ class CbcInterface : public ReadoutChipInterface
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);
-
+    
+    std::vector<uint8_t> getWordAlignmentPatterns(){ return fWordAlignmentPatterns; }
   private:
+
+    std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0xBC, 0xD4, 0x31, 0x81 };
     bool                        fRetry = true;
     std::map<uint32_t, uint8_t> fPageMap;
     bool                        fWithlpGBT = false;

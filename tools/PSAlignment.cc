@@ -668,12 +668,12 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     cInjection.fRow    = 70;
     cInjection.fColumn = 12;
     cInjections.push_back(cInjection);
-    // cInjection.fRow    = 45;
-    // cInjection.fColumn = 9;
-    // cInjections.push_back(cInjection);
-    // cInjection.fRow    = 20;
-    // cInjection.fColumn = 7;
-    // cInjections.push_back(cInjection);
+    cInjection.fRow    = 45;
+    cInjection.fColumn = 9;
+    cInjections.push_back(cInjection);
+    cInjection.fRow    = 20;
+    cInjection.fColumn = 7;
+    cInjections.push_back(cInjection);
     
     // check trigger source
     // and reload
@@ -687,13 +687,6 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-
-    // uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-    // cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
-    // std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
-    // cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    // fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     auto     cTriggerMult   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -1016,7 +1009,6 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
-    LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
     cRegVec.clear();
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
@@ -1129,16 +1121,25 @@ bool PSAlignment::Align()
     {
         fBeBoardInterface->ChipReSync(cBoard);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
-
+        bool cWithMPA=false;
+        bool cWithSSA=false;
+        for(auto cOpticalReadout: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    cWithMPA = cWithMPA || cChip->getFrontEndType() == FrontEndType::MPA;
+                    cWithSSA = cWithMPA || (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) ; 
+                }
+            }
+        }
+        if( !(cWithSSA && cWithMPA) ){ 
+            LOG(INFO) << BOLDBLUE << "Not performing SSA-MPA L1 alignment... no PS chips!" << RESET;
+            continue;
+        }
         cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
-
-        // cStubAligned = cStubAligned && this->AlignStubInputs(cBoard);
-
-        LOG(INFO) << BOLDBLUE << "L1 alignemnt " << RESET;
         cl1Aligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
-
-        // LOG(INFO) << BOLDBLUE << "Stub alignemnt " << RESET;
-        // cStubAligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
     }
     return cStubAligned && cl1Aligned;
 }

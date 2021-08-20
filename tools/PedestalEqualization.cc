@@ -366,7 +366,6 @@ void PedestalEqualization::FindOffsets()
 void PedestalEqualization::writeObjects()
 {
     this->SaveResults();
-
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.process();
 #endif

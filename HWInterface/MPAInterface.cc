@@ -105,6 +105,29 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     }
     return cRegItem.fValue & 0xFF;
 }
+void MPAInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+{
+    LOG(INFO) << GREEN << "Producing phase alignment pattern on MPA#" << +pChip->getId() <<  RESET;
+    uint8_t                  cAlignmentPattern = 0xAA;
+    std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
+    std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
+    for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
+    {
+        this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]);
+    }  // loop over registers
+}
+void MPAInterface::produceWordAlignmentPattern(Chip* pChip)
+{
+    LOG(INFO) << GREEN << "Producing phase alignment pattern on MPA#" << +pChip->getId() <<  RESET;
+    std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
+    std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
+    for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
+    {
+        this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]);
+    }  // loop over registers
+}
+
+
 void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
     // std::vector<uint32_t> cPixelIds(0);
@@ -120,7 +143,7 @@ void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInj
         uint32_t           cPixelIds = (uint32_t)(pInjection.fColumn) * NSSACHANNELS + (uint32_t)pInjection.fRow;
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
-        // LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
         this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
 }
@@ -328,6 +351,11 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     {
         LOG(INFO) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA->getId() << " to " << pValue << RESET;
         this->Set_threshold(pMPA, pValue);
+        return true;
+    }
+    else if(pRegName == "EnablePhaseAlignmentPattern" ) 
+    {
+        this->producePhaseAlignmentPattern(pMPA, pValue );
         return true;
     }
     else if(pRegName.find("MaskChannel") != std::string::npos )

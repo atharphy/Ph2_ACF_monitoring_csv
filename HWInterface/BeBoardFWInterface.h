@@ -236,6 +236,11 @@ class BeBoardFWInterface : public RegManager
     virtual void Resume() = 0;
 
     /*!
+     * \brief Resume a DAQ
+     */
+    virtual void SendNTriggers(uint16_t pNtriggers) = 0;
+
+    /*!
      * \brief Read data from DAQ
      * \param pBoard
      * \param pBreakTrigger : if true, enable the break trigger

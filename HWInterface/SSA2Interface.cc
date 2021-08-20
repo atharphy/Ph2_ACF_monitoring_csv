@@ -99,6 +99,24 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
 #endif
     return cSuccess;
 }
+void SSA2Interface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+{
+    uint8_t                     cPhaseAlignmentPattern = 0xAA;
+    std::vector<std::string> cRegNames{"Shift_pattern_L1",
+        "Shift_pattern_st_0",
+       "Shift_pattern_st_1",
+       "Shift_pattern_st_2",
+       "Shift_pattern_st_3",
+       "Shift_pattern_st_4_st_5",
+       "Shift_pattern_st_4_st_5",
+       "Shift_pattern_st_6_st_7",
+       "Shift_pattern_st_6_st_7"};
+    this->WriteChipReg(pChip, "ReadoutMode", 0x2, false);            
+    for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
+    {
+        this->WriteChipReg(pChip, cRegNames[cLineId], cPhaseAlignmentPattern);
+    }
+}
 //	// READ REGISTER ON CHIP:
 //////////
 uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
@@ -329,6 +347,11 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     {
         uint8_t cRegValue = (pValue << 2) | (1 << 0);
         return WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
+    }
+    else if(pRegName == "EnablePhaseAlignmentPattern" ) 
+    {
+        this->producePhaseAlignmentPattern(pSSA2, pValue );
+        return true;
     }
     else if(pRegName == "AmuxHigh")
     {

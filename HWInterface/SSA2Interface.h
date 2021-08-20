@@ -29,6 +29,7 @@ class SSA2Interface : public ReadoutChipInterface
     bool ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerifLoop = true, uint32_t pBlockSize = 310) override; // FIXME
     void DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                   // FIXME
 
+    void producePhaseAlignmentPattern(Ph2_HwDescription::Chip* pChip, uint8_t pWait_ms = 10);
     bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;                                        // FIXME
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;                                                             // FIXME
     bool     setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;                                        // FIXME

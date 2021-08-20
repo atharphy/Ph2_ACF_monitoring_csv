@@ -619,11 +619,6 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
-            // find correct stub latency with TP
-            for(auto cBoard: *cMemoryChecker.fDetectorContainer)
-            {
-                cBackEndAligner.FindStubLatency(cBoard); // find stub latency
-            }
             auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
             int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);

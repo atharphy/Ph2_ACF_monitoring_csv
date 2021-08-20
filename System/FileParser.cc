@@ -1091,12 +1091,13 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
     if(cMiscNode != nullptr)
     {
-        uint8_t cPipeLogic, cStubLogic, cOr254, cTestClock, cTpgClock, cDll;
+        uint8_t cPipeLogic, cStubLogic, cOr254, cTestClock, cTpgClock, cDll, cHIPcount;
         uint8_t cAmuxValue;
 
         cPipeLogic = convertAnyInt(cMiscNode.attribute("pipelogic").value());
         cStubLogic = convertAnyInt(cMiscNode.attribute("stublogic").value());
         cOr254     = convertAnyInt(cMiscNode.attribute("or254").value());
+        cHIPcount  = convertAnyInt(cMiscNode.attribute("hipCount").value());
         cDll       = reverseBits(static_cast<uint8_t>(convertAnyInt(cMiscNode.attribute("dll").value())) & 0x1F);
         // LOG (DEBUG) << convertAnyInt (cMiscNode.attribute ("dll").value() ) << " " << +cDll << " " << std::bitset<5>
         // (cDll);
@@ -1114,64 +1115,20 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
             uint8_t cAmuxRead = pCbc->getReg("MiscTestPulseCtrl&AnalogMux");
             pCbc->setReg("MiscTestPulseCtrl&AnalogMux", ((cAmuxRead & 0xE0) | (cAmuxValue & 0x1F)));
 
+            ChipRegMask cMask; 
+            cMask.fNbits = 3; cMask.fBitShift=5;
+            pCbc->setRegBits("HIP&TestMode", cMask, cHIPcount);
+
             os << GREEN << "|\t|\t|\t|----Misc Settings: "
                << " PipelineLogicSource: " << RED << +cPipeLogic << GREEN << ", StubLogicSource: " << RED << +cStubLogic << GREEN << ", OR254: " << RED << +cOr254 << GREEN << ", TPG Clock: " << RED
-               << +cTpgClock << GREEN << ", Test Clock 40: " << RED << +cTestClock << GREEN << ", DLL: " << RED << convertAnyInt(cMiscNode.attribute("dll").value()) << RESET << std::endl;
+               << +cTpgClock << GREEN << ", Test Clock 40: " << RED << +cTestClock << GREEN << ", DLL: " << RED << convertAnyInt(cMiscNode.attribute("dll").value()) 
+               << ", HIPCount: " << +cHIPcount
+               << RESET << std::endl;
         }
 
         os << GREEN << "|\t|\t|\t|----Analog Mux "
            << "value: " << RED << +cAmuxValue << " (0x" << std::hex << +cAmuxValue << std::dec << ", 0b" << std::bitset<5>(cAmuxValue) << ")" << RESET << std::endl;
     }
-    // replaced with a function that parses masks per hybrid
-    // // CHANNEL MASK
-    // pugi::xml_node cDisableNode = pCbcNode.child("ChannelMask");
-
-    // if(cDisableNode != nullptr)
-    // {
-    //     std::string       cList = std::string(cDisableNode.attribute("disable").value());
-    //     std::string       ctoken;
-    //     std::stringstream cStr(cList);
-    //     os << GREEN << "|\t|\t|\t|----List of disabled Channels: ";
-
-    //     int cIndex = 0;
-
-    //     while(std::getline(cStr, ctoken, ','))
-    //     {
-    //         if(cIndex != 0) os << GREEN << ", ";
-
-    //         uint8_t cChannel = convertAnyInt(ctoken.c_str());
-    //         // cDisableVec.push_back (cChannel);
-
-    //         if(cChannel == 0 || cChannel > 254)
-    //             LOG(ERROR) << BOLDRED << "Error: channels for mask have to be between 1 and 254!" << RESET;
-    //         else
-    //         {
-    //             // get the reigister string name from the map in Definition.h
-    //             uint8_t cRegisterIndex = (cChannel - 1) / 8;
-    //             // get the index of the bit to shift
-    //             uint8_t cBitShift = (cChannel - 1) % 8;
-    //             // get the original value of the register
-    //             uint8_t cReadValue;
-
-    //             if(cType == FrontEndType::CBC3)
-    //             {
-    //                 // get the original value of the register
-    //                 cReadValue = pCbc->getReg(ChannelMaskMapCBC3[cRegisterIndex]);
-    //                 // clear bit cBitShift
-    //                 cReadValue &= ~(1 << cBitShift);
-    //                 // write the new value
-    //                 pCbc->setReg(ChannelMaskMapCBC3[cRegisterIndex], cReadValue);
-    //                 LOG(DEBUG) << ChannelMaskMapCBC3[cRegisterIndex] << " " << std::bitset<8>(cReadValue);
-    //             }
-
-    //             os << BOLDCYAN << +cChannel;
-    //         }
-
-    //         cIndex++;
-    //     }
-
-    //     os << RESET << std::endl;
-    // }
 }
 
 void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)

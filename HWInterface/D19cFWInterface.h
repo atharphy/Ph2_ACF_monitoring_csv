@@ -221,6 +221,9 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     void Resume() override;
 
+    // send N triggers 
+    void SendNTriggers(uint16_t pNtriggers) override;
+    
     void ResetTriggerFSM();
     /*!
      * \brief Reset Readout
@@ -282,6 +285,7 @@ class D19cFWInterface : public BeBoardFWInterface
     bool PSAsyncCounterData(uint8_t pRawMode=1);
     void FastAsyncRead(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pRawMode);
     void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pFast = false, bool pRawMode = false);
+
 
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
@@ -991,6 +995,7 @@ class D19cFWInterface : public BeBoardFWInterface
     /*! \brief Set or reset the start signal */
     void SetForceStart(bool bStart) {}
 
+    bool GetCounterData(uint8_t pRawMode);
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////

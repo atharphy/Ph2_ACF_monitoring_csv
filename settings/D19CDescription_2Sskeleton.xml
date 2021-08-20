@@ -3,42 +3,39 @@
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1">
     <!-- B598 skeleton -->
     <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
-    <!-- B14 skeleton -->
-    <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <!-- <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <CDCE configure="0" clockRate="320"/>
     
-    <OpticalGroup Id="0" FMCId="0">
+    <OpticalGroup Id="1" FMCId="0">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" LinkId="0">
+        <Hybrid Id="2" Status="1" LinkId="1">
             <Global>
-                <MaskedStrips CBCId="0,1,7" Rows="13,100,10" />
-                <Settings threshold="550" latency="201"/>
-                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="5" groundothers="0"/>
+                <Settings threshold="590" latency="201"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="0"/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+                <Misc analogmux="0b00000" pipelogic="2" stublogic="2" or254="0" tpgclock="1" testclock="0" dll="0" hipCount="1"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
             </Global>
 
-            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" configfile="CBC3_default.txt" />
-            <CBC Id="3" configfile="CBC3_default.txt" />
-            <CBC Id="4" configfile="CBC3_default.txt" />
-            <CBC Id="5" configfile="CBC3_default.txt" />
-            <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run851/" />
+            <CBC Id="0" configfile="BE0_OG1_FE2_Chip0.txt" />
+            <CBC Id="1" configfile="BE0_OG1_FE2_Chip1.txt" />
+            <CBC Id="2" configfile="BE0_OG1_FE2_Chip2.txt" />
+            <CBC Id="3" configfile="BE0_OG1_FE2_Chip3.txt" />
+            <CBC Id="4" configfile="BE0_OG1_FE2_Chip4.txt" />
+            <CBC Id="5" configfile="BE0_OG1_FE2_Chip5.txt" />
+            <CBC Id="6" configfile="BE0_OG1_FE2_Chip6.txt" />
+            <CBC Id="7" configfile="BE0_OG1_FE2_Chip7.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run851/" />
+            <CIC2 Id="8" configfile="BE0_OG1_FE2.txt" />
             </Hybrid>
-        <Hybrid Id="1" Status="0" LinkId="0">
+        <Hybrid Id="3" Status="0" LinkId="1">
             <Global>
                 <Settings threshold="550" latency="201"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="5" groundothers="0"/>
@@ -48,7 +45,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
             
-              <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
@@ -90,7 +87,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 4 </Register>
+    		<Register name="trigger_source"> 6 </Register>
     		<Register name="user_trigger_frequency"> 10 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
@@ -126,7 +123,7 @@
                     <Register name="stubOR"> 1 </Register>
                     <Register name="initial_fast_reset_enable"> 0 </Register>
     	            <Register name="trigger_timeout_enable"> 0 </Register>
-    	           <Register name="trigger_multiplicity"> 4 </Register>
+    	           <Register name="trigger_multiplicity"> 0 </Register>
             </Register>
         </Register>
 	<!-- I2C manager -->
@@ -165,28 +162,28 @@
             </Register>
 	    <Register name="ch2">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch3">
                 <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
 	    <Register name="ch4">
                 <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch5">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
 	</Register>
 	<!-- TLU Block -->
 	<Register name="tlu_block">
-        <Register name="tlu_enabled"> 1 </Register>
+        <Register name="tlu_enabled"> 0 </Register>
         <Register name="handshake_mode"> 2 </Register>
         <Register name="trigger_id_delay"> 2 </Register>
 	</Register>
@@ -251,8 +248,8 @@
     <Setting name="TriggerSeparation">500</Setting>
     <Setting name="TestPulseSeparation">70</Setting>
 
-    <Setting name="StartLatency">180</Setting>
-    <Setting name="LatencyRange">30</Setting>
+    <Setting name="StartLatency">195</Setting>
+    <Setting name="LatencyRange">10</Setting>
     <Setting name="UseFcmdBram">0</Setting>
     <Setting name="MeanTriggerSeparation">100</Setting>
         

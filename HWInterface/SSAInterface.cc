@@ -75,7 +75,32 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
         LOG(INFO) << BOLDBLUE << "Complete configuration of SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [configuring registers for individual strips]" << RESET;
     return this->WriteRegs(pSSA, cRegs, pVerifLoop);
 }
-
+void SSAInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+{
+    LOG(INFO) << GREEN << "SSA Alignment" << RESET;
+    this->WriteChipReg(pChip, "ReadoutMode", 2);
+    uint8_t cAlignmentPattern = 0xAA;
+    for(uint8_t cLineId = 0; cLineId < 9; cLineId++)
+    {
+        std::stringstream cRegName;
+        if( cLineId < 8 ) cRegName << "OutPattern" << +cLineId; 
+        else cRegName << "OutPattern7/FIFOconfig";
+        this->WriteChipReg(pChip, cRegName.str(), cAlignmentPattern);
+    }
+}
+void SSAInterface::produceWordAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+{
+    LOG(INFO) << GREEN << "SSA Alignment" << RESET;
+    this->WriteChipReg(pChip, "ReadoutMode", 2);
+    uint8_t cAlignmentPattern = 0xEA;
+    for(uint8_t cLineId = 0; cLineId < 9; cLineId++)
+    {
+        std::stringstream cRegName;
+        if( cLineId < 8 ) cRegName << "OutPattern" << +cLineId; 
+        else cRegName << "OutPattern7/FIFOconfig";
+        this->WriteChipReg(pChip, cRegName.str(), cAlignmentPattern);
+    }
+}
 bool SSAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifLoop)
 {
     // for now always with asynchronous mode
@@ -121,6 +146,11 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         uint8_t cRegValue = (pValue << 2) | (1 << 0);
         return WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
+    }
+    else if(pRegName == "EnablePhaseAlignmentPattern" )
+    {
+        this->producePhaseAlignmentPattern(pSSA, pValue );
+        return true;
     }
     else if(pRegName == "AmuxHigh")
     {

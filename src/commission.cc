@@ -13,6 +13,7 @@
 #include "TApplication.h"
 #include "TROOT.h"
 #include "tools/BackEndAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
 
@@ -142,31 +143,40 @@ int main(int argc, char* argv[])
     cTool.StartHttpServer();
     cTool.ConfigureHw();
 
-    // align ASICs on PS module
+    // Align lpGBT-CIC first
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cTool);
+    cCicAligner.Initialise();
+    cCicAligner.CicLpGbtAlignment();
+   
+    // map MPA outputs on PS module 
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
     cPSAlignment.Initialise();
-    // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
 
-    // if CIC is enabled then align CIC first
-    if(cWithCIC)
-    {
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
-        cCicAligner.waitForRunToBeCompleted();
-        cCicAligner.dumpConfigFiles();
-    }
-
-    // align back-end
+    // align back-end - make sure L1 and stub data lines can be sampled correctly
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
-    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
+    
+    // if you would like to re-do the input alignment
+    // then run align CIC align inputs   
+    if(cWithCIC) cCicAligner.AlignInputs(); 
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
 
+    // time align stubs in back-end 
+    StubBackEndAlignment cStubBackEndAligner;
+    cStubBackEndAligner.Inherit(&cTool);
+    cStubBackEndAligner.Start(0);
+    cStubBackEndAligner.waitForRunToBeCompleted();
+
+    // now align data between SSA-MPA
+    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
+    
     // hack
     // make sure MPAs and SSAs have all pixels enabled
     auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");

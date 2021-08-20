@@ -146,6 +146,14 @@ void BeBoardInterface::Start(BeBoard* pBoard)
     fBoardFW->Start();
 }
 
+void BeBoardInterface::SendNTriggers(BeBoard* pBoard, uint16_t pNtriggers)
+{
+    std::lock_guard<std::mutex> theGuard(theMtx);
+
+    setBoard(pBoard->getId());
+    fBoardFW->SendNTriggers(pNtriggers);
+}
+
 void BeBoardInterface::Stop(BeBoard* pBoard)
 {
     std::lock_guard<std::mutex> theGuard(theMtx);

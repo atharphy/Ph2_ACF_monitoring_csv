@@ -32,6 +32,11 @@ class ChannelGroupBase;
  */
 namespace Ph2_HwDescription
 {
+struct ChipRegMask
+{
+    uint8_t fBitShift;
+    uint8_t fNbits; 
+};
 using ChipRegMap  = std::unordered_map<std::string, ChipRegItem>;
 using ChipRegPair = std::pair<std::string, ChipRegItem>;
 using CommentMap  = std::map<int, std::string>;
@@ -139,6 +144,15 @@ class Chip : public FrontEndDescription
         if(fType == FrontEndType::CIC2) os << "FrontEndType\t--> CIC2";
     }
 
+    // set some of the bits in register , leave others untouched 
+    void setRegBits( const std::string& pReg, ChipRegMask pMask , uint16_t pValue ) 
+    {
+        uint16_t cMask = 0x00; 
+        for(uint8_t cIndx=0; cIndx < pMask.fNbits; cIndx++) cMask = cMask | ( 1 << cIndx);
+        uint16_t  cRegMask        = (cMask << pMask.fBitShift);
+        cRegMask          = ~(cRegMask);
+        setReg( pReg, (getReg(pReg) & cRegMask) | (pValue<< pMask.fBitShift) ); 
+    }
   protected:
     uint8_t    fChipId;
     uint16_t   fMaxRegValue;
