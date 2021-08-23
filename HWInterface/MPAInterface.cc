@@ -604,7 +604,7 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
     auto cRegItem = pChip->getRegMap().find(pRegNode)->second; 
-    UpdateModifiedRegMap(pChip,  cRegItem.fAddress); 
+    if( fTrackRegisters ) UpdateModifiedRegMap(pChip,  cRegItem.fAddress); 
     cRegItem.fValue = pValue & 0xFF;
     if(!lpGBTFound())
     {
@@ -723,6 +723,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
 {
+    fTrackRegisters=false;
     // for now ...
     bool              cSkipLocalRegs = true;
     std::stringstream cOutput;
@@ -760,7 +761,9 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual pixels]" << RESET;
     else
         LOG(INFO) << BOLDBLUE << "Complete configuration of MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [configuring registers for individual pixels]" << RESET;
-    return this->WriteRegs(pMPA, cRegs, pVerifLoop);
+    bool cSuccess = this->WriteRegs(pMPA, cRegs, pVerifLoop);
+    fTrackRegisters = true;
+    return cSuccess;
 }
 
 bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
@@ -825,7 +828,7 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem;
     cRegItem.fAddress = pRegisterAddress; 
-    UpdateModifiedRegMap(pChip,  pRegisterAddress); 
+    if( fTrackRegisters ) UpdateModifiedRegMap(pChip,  pRegisterAddress); 
     bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
     if(cFound) cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
     cRegItem.fValue = pRegisterValue & 0xFF;

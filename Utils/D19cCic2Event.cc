@@ -251,7 +251,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                                 cPosition++;
                                             }
                                         }
-                                        //LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
+                                        LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
                                         fEventRawList[cFe->getIndex()].second.push_back(cBitset);
                                     }
                                     for( auto cChip : * cFe )
@@ -1105,7 +1105,10 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pFeId, uint8_t pReadoutChip
             auto   cDataBitset = this->getRawL1Word(pFeId, pReadoutChipId);
             for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
             {
-                if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1) cHits.push_back(cPos);
+                if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1){ 
+                    LOG (DEBUG) << BOLDYELLOW << " Hit in channel " << +cPos << RESET;
+                    cHits.push_back(cPos);
+                }
             }
         }
         else

@@ -34,6 +34,7 @@ SSAInterface::~SSAInterface() {}
 
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
+    fTrackRegisters=false;
     // for now ..
     bool              cSkipLocalRegs = true;
     std::stringstream cOutput;
@@ -73,7 +74,9 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
         LOG(INFO) << BOLDBLUE << "Configuring SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual strips]" << RESET;
     else
         LOG(INFO) << BOLDBLUE << "Complete configuration of SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [configuring registers for individual strips]" << RESET;
-    return this->WriteRegs(pSSA, cRegs, pVerifLoop);
+    bool cSuccess = this->WriteRegs(pSSA, cRegs, pVerifLoop);
+    fTrackRegisters=true;
+    return cSuccess;
 }
 void SSAInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
 {
@@ -385,7 +388,7 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem;
     cRegItem.fAddress = pRegisterAddress; 
-    UpdateModifiedRegMap(pChip,  pRegisterAddress); 
+    if( fTrackRegisters ) UpdateModifiedRegMap(pChip,  pRegisterAddress); 
     bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
     if(cFound) cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
     cRegItem.fValue = pRegisterValue & 0xFF;
@@ -542,7 +545,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
         }
     }
     auto cRegItem = pChip->getRegMap().find(pRegNode)->second; 
-    UpdateModifiedRegMap(pChip,  cRegItem.fAddress); 
+    if( fTrackRegisters ) UpdateModifiedRegMap(pChip,  cRegItem.fAddress); 
     cRegItem.fValue = pValue & 0xFF;
     if(!lpGBTFound())
     {

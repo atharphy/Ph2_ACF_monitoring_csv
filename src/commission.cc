@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
     
     // if you would like to re-do the input alignment
     // then run align CIC align inputs   
-    if(cWithCIC) cCicAligner.AlignInputs(); 
+    if(cWithCIC && !cmd.foundOption("skipAlignment"))  cCicAligner.AlignInputs(); 
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
 

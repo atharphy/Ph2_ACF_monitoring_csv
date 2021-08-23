@@ -33,6 +33,7 @@ class ReadoutChipInterface : public ChipInterface
   protected:
     std::map<uint32_t, Ph2_HwDescription::ChipRegMap> fModifiedRegisters;
     std::map<uint16_t, std::string> fMap;
+    bool fTrackRegisters=false;
   public:
     /*!
      * \brief Constructor of the ReadoutChipInterface Class
@@ -48,7 +49,7 @@ class ReadoutChipInterface : public ChipInterface
     /*!
      * \brief Clear Register Map
      */
-    void                          ClearModifiedRegisterMap() { fModifiedRegisters.clear(); }
+    void                          ClearModifiedRegisterMap() { fModifiedRegisters.clear(); LOG (INFO) << BOLDMAGENTA << "After clearing register map have " << +fModifiedRegisters.size() << " regs." << RESET;}
     Ph2_HwDescription::ChipRegMap GetModifiedRegisterMap(Ph2_HwDescription::Chip* pChip)
     {
         Ph2_HwDescription::ChipRegMap cMap;
@@ -76,15 +77,8 @@ class ReadoutChipInterface : public ChipInterface
         fModifiedRegisters[cChipId] = pRegMap;
         // std::cout << "OverwriteModifiedRegisterMap interface --- " << +cChipId << " contains " << fModifiedRegisters[cChipId].size() << " items.\n";
     }
-    void UpdateModifiedRegMap(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
+    void UpdateModifiedRegMap(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pPage = 0 )
     {
-        if( fMap.size() == 0 )
-        {
-            for(auto& cRegItem: pChip->getRegMap() )
-            {
-                fMap[cRegItem.second.fAddress] = cRegItem.first;
-            }
-        }
         // modified registers map
         uint32_t cChipId = (uint8_t)(pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
         cChipId          = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId();
@@ -96,18 +90,22 @@ class ReadoutChipInterface : public ChipInterface
         }
         cMapIter      = fModifiedRegisters.find(cChipId);
         auto& cModMap = cMapIter->second;
-        // if register is in map 
-        bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
-        if(cFound)
+        bool cFound = false;
+        for(auto cMapItem : pChip->getRegMap() ) 
         {
-            auto cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
-            if(cModMap.find(fMap[pRegisterAddress]) == cModMap.end()) { 
-                auto cSize = cModMap.size();
-                cModMap[fMap[pRegisterAddress]] = cRegItem; 
-                LOG (DEBUG) << BOLDMAGENTA << "ReadoutChipInterface - ModMap contained " << cSize << " items....now has " 
-                    << cModMap.size() << " items that " << fMap[pRegisterAddress] << " register has been modified"
-                    << RESET;
-        
+            if( cFound ) break;
+            if( cMapItem.second.fAddress == pRegisterAddress && cMapItem.second.fPage == pPage ) 
+            {
+                cFound=true;
+                if(cModMap.find(cMapItem.first) == cModMap.end())
+                {
+                    auto cSize = cModMap.size();
+                    cModMap[cMapItem.first] = cMapItem.second; 
+                    LOG (DEBUG) << BOLDMAGENTA << "ReadoutChipInterface - ModMap contained " << cSize << " items....now has " 
+                        << cModMap.size() << " items that " << cMapItem.first << " register will be  modified "
+                        << " original value is " << +cMapItem.second.fValue 
+                        << RESET;
+                }
             }
         }
     }

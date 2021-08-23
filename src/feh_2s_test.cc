@@ -6,6 +6,7 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -506,26 +507,37 @@ int main(int argc, char* argv[])
         }                 // mux sel
     }                     // monitor AMUX
 
-    // if CIC is enabled then align CIC first
-    if(cWithCIC)
-    {
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
-        cCicAligner.waitForRunToBeCompleted();
-        cCicAligner.dumpConfigFiles();
-    }
+    // Align lpGBT-CIC first
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cTool);
+    cCicAligner.Initialise();
+    cCicAligner.CicLpGbtAlignment();
 
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    cBackEndAligner.Reset();
+    
+    // if CIC is enabled then align CIC first
+    if(cWithCIC && !cmd.foundOption("skipAlignment")) 
+    {
+        cCicAligner.AlignInputs();
+    }
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
+    
+    // time align stubs in back-end 
     if(!cmd.foundOption("skipAlignment"))
     {
-        cBackEndAligner.Start(0);
-        cBackEndAligner.waitForRunToBeCompleted();
-        cBackEndAligner.Reset();
+        // time align stubs in back-end 
+        StubBackEndAlignment cStubBackEndAligner;
+        cStubBackEndAligner.Inherit(&cTool);
+        cStubBackEndAligner.Start(0);
+        cStubBackEndAligner.waitForRunToBeCompleted();
     }
-
+    
     // equalize thresholds on readout chips
     if(cTune)
     {

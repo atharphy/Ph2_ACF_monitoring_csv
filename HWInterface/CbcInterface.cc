@@ -27,6 +27,7 @@ CbcInterface::~CbcInterface() {}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
+    fTrackRegisters=false;
     std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());
     pCbc->printChipType(cOutput);
@@ -115,7 +116,7 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
         }
         cSuccess = this->WriteChipMultReg(pCbc, cRegsToWrite, pVerifLoop);
     }
-
+    fTrackRegisters=true;
     return cSuccess;
 }
 
@@ -409,6 +410,7 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
     std::lock_guard<std::mutex> theGuard(fMutex);
+    LOG (DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipReg " << dacName << RESET;
     if(dacName == "VCth" || dacName == "Threshold")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -602,7 +604,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     }
     if( !cFound ) return cFound; 
     ChipRegItem cRegItem = pCbc->getRegMap().find(pRegNode)->second; 
-    UpdateModifiedRegMap(pCbc,  cRegItem.fAddress); 
+    if( fTrackRegisters ) { LOG (DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipSingleReg updating " << pRegNode << RESET; UpdateModifiedRegMap(pCbc,  cRegItem.fAddress, cRegItem.fPage); }
     cRegItem.fValue = pValue & 0xFF;
     if(!lpGBTFound())
     {
@@ -701,7 +703,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         for(const auto& cRegItem: cRegItems)
         {
             // update list of modified registers 
-            UpdateModifiedRegMap(pCbc,  cRegItem.second.fAddress); 
+            if( fTrackRegisters ) { LOG (DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipMultReg updating " << cRegItem.first << RESET; UpdateModifiedRegMap(pCbc,  cRegItem.second.fAddress, cRegItem.second.fPage); }
             fBoardFW->EncodeReg(cRegItem.second, pCbc, cVec, pVerifLoop, true);
             #ifdef COUNT_FLAG
                 fRegisterCount++;
@@ -972,7 +974,7 @@ void CbcInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms)
         LOG (DEBUG) << BOLDBLUE << "Injecting on stub lines 0,1 and 2 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
         std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
         std::vector<int>     cBends_ph1(cSeeds_ph1.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph1, cBends_ph1, true);
+        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph1, cBends_ph1 );
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
 
         // second pattern - 1, 2, 3 , 4
@@ -981,7 +983,7 @@ void CbcInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms)
         LOG (DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
         std::vector<uint8_t> cSeeds_ph3{42, 0x55, 0xAA};
         std::vector<int>     cBends_ph3(cSeeds_ph3.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3, true);
+        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3 );
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
     }
     this->maskChannelsGroup(static_cast<ReadoutChip*>(pChip), &cChannelMask);

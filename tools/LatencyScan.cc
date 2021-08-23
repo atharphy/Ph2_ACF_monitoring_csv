@@ -241,7 +241,8 @@ void LatencyScan::ScanLatency()
                                     cRow += cId;
                                     if(cColumn == 0)
                                     {
-                                        if( (*cEventIter)->GetEventCount()%100 == 0 && cRow == 128) LOG(INFO) << BOLDYELLOW << "\t Event#" << (*cEventIter)->GetEventCount() << "\t\t Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << RESET;
+                                        // if( (*cEventIter)->GetEventCount() == 0) 
+                                        //     LOG(INFO) << BOLDYELLOW << "\t Event#" << (*cEventIter)->GetEventCount() << "\t\t Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << RESET;
                                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                         {
                                             if(cHit % 2 == 0)
@@ -293,35 +294,9 @@ void LatencyScan::ScanLatency()
                     }             // optical group vector
                     cEventIter += (1 + cTriggerMult);
                 } while(cEventIter < cEvents.end());
-                // cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
+                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 LOG(INFO) << BOLDMAGENTA << "... on average have found " << cTotalHits / (float)fNevents << " hits per event." << RESET;
-//    << " - on average have found " << cOccGlbl * cTotalNChnls << " channels with a hit [per board per event]." << RESET;
-
-/*
-// for now don't normalize
-// //normalize and average TDC summary
-for( uint16_t cIndx=0; cIndx< fTDCBins; cIndx++)
-{
-    LOG (INFO) << BOLDMAGENTA << "TDC Phase of " << +cIndx << RESET;
-    for(auto cOpticalGroup: *cBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            for( auto cChip : * cHybrid)
-            {
-                auto& cOccThisPhase = cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE,
-uint16_t>>()[cIndx]; LOG (INFO) << BOLDMAGENTA << "\t\t.. OG" << +cOpticalGroup->getId()
-                    << " Hybrid" << +cHybrid->getId()
-                    << " Chip" << +cChip->getId()
-                    << " - on average have found " << cOccThisPhase
-                    << " channels with a hit [per chip per event]."
-                    << RESET;
-            } //chip
-        }// hybrid
-    } //optical group
-}//TDC bins
-*/
 #ifdef __USE_ROOT__
                 fDQMHistogramLatencyScan.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
 #endif

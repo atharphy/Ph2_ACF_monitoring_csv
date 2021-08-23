@@ -434,8 +434,10 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
 
                 for(auto cChip: *cHybrid)
                 {
+                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
                     cWithCBC = cWithCBC || ( cChip->getFrontEndType() == FrontEndType::CBC3 );
-                    if( cWithCBC ) static_cast<CbcInterface*>(fReadoutChipInterface)->producePhaseAlignmentPattern(cChip,pWait_us*1000);
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->producePhaseAlignmentPattern(cChip,pWait_us*1000);
                     else static_cast<MPAInterface*>(fReadoutChipInterface)->producePhaseAlignmentPattern(cChip,pWait_us*1000);
                 }    
             }

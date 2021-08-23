@@ -38,6 +38,7 @@ void SSA2Interface::DumpConfiguration(Chip* pSSA2, std::string filename)
 }
 bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
 {
+    fTrackRegisters = false;
     this->WriteChipSingleReg(pSSA2, "mask_strip", 255, false);
     this->WriteChipSingleReg(pSSA2, "mask_peri_A", 255, false);
     this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
@@ -97,6 +98,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
 #ifdef COUNT_FLAG
     LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA2" << +pSSA2->getId() << " config." << RESET;
 #endif
+    fTrackRegisters=false;
     return cSuccess;
 }
 void SSA2Interface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )

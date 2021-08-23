@@ -12,14 +12,14 @@
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="2" Status="1" LinkId="1">
+        <Hybrid Id="2" Status="1" LinkId="0">
             <Global>
-                <Settings threshold="590" latency="201"/>
+                <Settings threshold="550" latency="201"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="2" stublogic="2" or254="0" tpgclock="1" testclock="0" dll="0" hipCount="1"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="1" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run851/" />
@@ -35,7 +35,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run851/" />
             <CIC2 Id="8" configfile="BE0_OG1_FE2.txt" />
             </Hybrid>
-        <Hybrid Id="1" Status="1" LinkId="1">
+        <Hybrid Id="1" Status="0" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="201"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="5" groundothers="0"/>
