@@ -557,22 +557,28 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
     // address in map depends on board id, hybrid id, chip id
     uint32_t cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
     auto     cIter    = fPageMap.find(cAddress);
+    bool     cMapWasEmpty = false;
     if(cIter == fPageMap.end())
     {
         uint8_t cDefaultPage = 0;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
+        cMapWasEmpty=true;
     }
     cIter         = fPageMap.find(cAddress);
     uint8_t cPage = cIter->second;
     cSuccess      = (cPage == pPage);
     // don't need to change page
-    if(cSuccess) return true;
+    LOG (DEBUG) << BOLDBLUE << "\t...No need to switch page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId()
+        << " current page " <<+cPage
+        << " page to write to is " << +pPage
+        << RESET;
+    if(cSuccess && !cMapWasEmpty ) return true;
 
     // switch page
-    // LOG (INFO) << BOLDMAGENTA << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId()
-    //     << " from page " <<+cPage
-    //     << " to page " << +pPage
-    //     << RESET;
+    LOG (DEBUG) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId()
+        << " from page " <<+cPage
+        << " to page " << +pPage
+        << RESET;
     ChipRegItem cPageReg  = pCbc->getRegItem("FeCtrl&TrgLat2");
     uint8_t     cRegValue = (cPageReg.fValue & 0x7F) | (pPage << 7);
     // LOG (INFO) << BOLDBLUE << "\t...Current page is " << cPage << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;

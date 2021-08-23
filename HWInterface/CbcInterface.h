@@ -138,6 +138,7 @@ class CbcInterface : public ReadoutChipInterface
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);
+    void                 resetPageMap(){fPageMap.clear();}
     
     std::vector<uint8_t> getWordAlignmentPatterns(){ return fWordAlignmentPatterns; }
   private:

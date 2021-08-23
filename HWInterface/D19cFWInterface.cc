@@ -2665,7 +2665,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     {
         if(cWithMPA or cWithSSA)
         {
-            this->ReadPSCounters(pBoard, pData, true);
+            this->ReadPSCounters(pBoard, pData, false);
         }
         else
         {

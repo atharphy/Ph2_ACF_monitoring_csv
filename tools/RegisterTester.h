@@ -90,5 +90,9 @@ class RegisterTester : public Tool
     {
         bool operator()(Register a, Register b) const { return a.second.fPage > b.second.fPage; }
     } customGreaterThanPage;
+    struct
+    {
+        bool operator()(Register a, Register b) const { return a.second.fAddress > b.second.fAddress; }
+    } customGreaterThanAddress;
 };
 #endif
