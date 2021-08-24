@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
 
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("skipAlignment", "Skip the back-end alignment step for stubs", ArgvParser::NoOptionAttribute);
 
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
@@ -518,10 +518,10 @@ int main(int argc, char* argv[])
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
-    cBackEndAligner.Reset();
+    
     
     // if CIC is enabled then align CIC first
-    if(cWithCIC && !cmd.foundOption("skipAlignment")) 
+    if(cWithCIC) 
     {
         cCicAligner.AlignInputs();
     }
@@ -529,15 +529,16 @@ int main(int argc, char* argv[])
     cCicAligner.dumpConfigFiles();
     
     // time align stubs in back-end 
+    StubBackEndAlignment cStubBackEndAligner;
+    cStubBackEndAligner.Inherit(&cTool);
+    cStubBackEndAligner.Initialise();
     if(!cmd.foundOption("skipAlignment"))
     {
-        // time align stubs in back-end 
-        StubBackEndAlignment cStubBackEndAligner;
-        cStubBackEndAligner.Inherit(&cTool);
-        cStubBackEndAligner.Start(0);
-        cStubBackEndAligner.waitForRunToBeCompleted();
+        cStubBackEndAligner.FindPackageDelay();
+        cStubBackEndAligner.FindStubLatency();
     }
-    
+    cStubBackEndAligner.Reset();
+
     // equalize thresholds on readout chips
     if(cTune)
     {

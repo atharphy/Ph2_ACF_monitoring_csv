@@ -53,21 +53,24 @@ class CicFEAlignment : public Tool
     void writeObjects();
 
     // get alignment results
-    uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine);
-    uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine);
+    uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine)
+    {
+        return fPhaseAlignmentValues.at(pBoard->getIndex())->at(pGroup->getIndex())->at(pFe->getIndex())->at(pChip->getIndex())->getSummary<AlignmentValues>()[pLine];
+    }
+    uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine)
+    {
+        return fWordAlignmentValues.at(pBoard->getIndex())->at(pGroup->getIndex())->at(pFe->getIndex())->at(pChip->getIndex())->getSummary<AlignmentValues>()[pLine];
+    }
     bool    getStatus() const { return fSuccess; }
-
   protected:
   private:
     // status
     bool fSuccess;
     // Containers
-    DetectorDataContainer fThresholds, fLogic, fHIPs, fPtCuts;
     DetectorDataContainer fPhaseAlignmentValues;
     DetectorDataContainer fWordAlignmentValues;
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
-    DetectorDataContainer fChipMasks;
     // with MPA
     bool fWithMPA;
 

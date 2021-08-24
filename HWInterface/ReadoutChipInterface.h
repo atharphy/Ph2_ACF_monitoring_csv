@@ -49,7 +49,7 @@ class ReadoutChipInterface : public ChipInterface
     /*!
      * \brief Clear Register Map
      */
-    void                          ClearModifiedRegisterMap() { fModifiedRegisters.clear(); LOG (INFO) << BOLDMAGENTA << "After clearing register map have " << +fModifiedRegisters.size() << " regs." << RESET;}
+    void                          ClearModifiedRegisterMap() { fModifiedRegisters.clear(); LOG (DEBUG) << BOLDMAGENTA << "After clearing register map have " << +fModifiedRegisters.size() << " regs." << RESET;}
     Ph2_HwDescription::ChipRegMap GetModifiedRegisterMap(Ph2_HwDescription::Chip* pChip)
     {
         Ph2_HwDescription::ChipRegMap cMap;

@@ -25,9 +25,8 @@ class StubBackEndAlignment : public Tool
 
     void Initialise();
     bool Align();
-
-    bool FindStubLatency(Ph2_HwDescription::BeBoard* pBoard);
-    bool FindPackageDelay(Ph2_HwDescription::BeBoard* pBoard);
+    bool FindStubLatency();
+    bool FindPackageDelay();
     void Running() override;
     void Stop() override;
     void Pause() override;
@@ -44,5 +43,9 @@ class StubBackEndAlignment : public Tool
     DetectorDataContainer fBoardRegContainer;
     bool fSuccess;
     bool fWithCIC;
+
+    bool FindStubLatency(Ph2_HwDescription::BeBoard* pBoard);
+    bool FindPackageDelay(Ph2_HwDescription::BeBoard* pBoard);
+    
 };
 #endif

@@ -31,7 +31,7 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());
     pCbc->printChipType(cOutput);
-    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCbc->getId() << "]" << RESET;
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCbc->getId() << "] oh Hybrid" << +pCbc->getHybridId() << RESET;
 
     bool cSkipLocalRegs = false;
     // Deal with the ChipRegItems and encode them

@@ -508,7 +508,7 @@ class D19cFWInterface : public BeBoardFWInterface
             }
             else if(fType == 6)
             {
-                LOG(INFO) << "\t\t Default FSM State: " << +fFSMstate;
+                LOG(DEBUG) << "\t\t Default FSM State: " << +fFSMstate;
                 cStatus = 1;
             }
             else
@@ -598,7 +598,7 @@ class D19cFWInterface : public BeBoardFWInterface
             // select FE
             ConfigureInput(pHybrid, pChip, pLine);
             // print header
-            LOG(INFO) << BOLDBLUE << "\t Hybrid: " << RESET << +pHybrid << BOLDBLUE << ", Chip: " << RESET << +pChip << BOLDBLUE << ", Line: " << RESET << +pLine;
+            LOG(DEBUG) << BOLDBLUE << "\t Hybrid: " << RESET << +pHybrid << BOLDBLUE << ", Chip: " << RESET << +pChip << BOLDBLUE << ", Line: " << RESET << +pLine;
             uint8_t command_type = 0;
             ConfigureCommandType(command_type);
             uint32_t command_final = fHybrid + fChip + fLine + fCommand;
@@ -635,7 +635,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
         bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
-            LOG(INFO) << BOLDBLUE << "Tuning line " << +pLine << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Tuning line " << +pLine << RESET;
             if(pChangePattern)
             {
                 SetLineMode(pInterface, pHybrid, pChip, pLine);

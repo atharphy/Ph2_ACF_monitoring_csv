@@ -5140,7 +5140,6 @@ void DataChecker::ReadNeventsTest()
     LOG (INFO) << BOLDYELLOW << "ReadNEvents test with default settings in xml.." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        cNevents = 1;
         LOG(INFO) << BOLDBLUE << "Checking ReadNEvents by reading " << +cNevents << " event from BeBoard#" << +cBoard->getIndex() << RESET;
 
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
@@ -5163,8 +5162,11 @@ void DataChecker::ReadNeventsTest()
                             auto cHits            = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                             auto cPipelineAddress = cEvent->PipelineAddress(cHybrid->getId(), cChip->getId());
                             auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
-                            LOG(INFO) << BOLDGREEN << "ROC#" << +cChip->getId() << " L1Id is " << +cL1Id << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
-                                      << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
+                            auto cBxId            = cEvent->BxId(cHybrid->getId());
+                            LOG(INFO) << BOLDBLUE << "\t...ROC" << +cChip->getId() << " on hybrid " << +cHybrid->getId() 
+                                << " L1Id is " << +cL1Id  << " BxId is " << +cBxId 
+                                << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
+                                << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
                             for(auto cHit: cHits) LOG(INFO) << BOLDGREEN << "\t\t... hit in channel#" << +cHit << RESET;
                         }
                     }
@@ -5175,86 +5177,89 @@ void DataChecker::ReadNeventsTest()
         // cBoard->setEventType(cEventType);
     }
 
-    // LOG (INFO) << BOLDYELLOW << "ReadNEvents test with stub injection ..." << RESET;
-    //bool     cWithNoise = false;
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     // auto cEventType = cBoard->getEventType();
-    //     // bool cSparsified = cBoard->getSparsification();
-    //     // fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
-    //     bool cSkip = false;
-    //     if(!cSkip)
-    //     {
-    //         for(auto cOpticalGroup: *cBoard)
-    //         {
-    //             for(auto cHybrid: *cOpticalGroup)
-    //             {
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
-    //                     {
-    //                         std::vector<uint8_t> cSeeds{10};
-    //                         cSeeds[0] = 2 * (cChip->getId() + 1) + 5;
-    //                         std::vector<int> cBends{0};
-    //                         for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
-    //                         {
-    //                             auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-    //                             LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
-    //                             for(auto cHit: cHitList) LOG(INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
-    //                         }
-    //                         (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
-    //                     }
-    //                     else if(cChip->getFrontEndType() == FrontEndType::MPA)
-    //                     {
-    //                         auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip, "ReadoutMode");
-    //                         LOG(INFO) << BOLDBLUE << "MPA#" << +cChip->getId() << " : readout mode [" << +cReadoutMode << " ]" << RESET;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     cNevents = 1;
-    //     LOG(INFO) << BOLDBLUE << "Checking ReadNEvents by reading " << +cNevents << " event from BeBoard#" << +cBoard->getIndex() << RESET;
+    LOG (INFO) << BOLDYELLOW << "ReadNEvents test with stub injection ..." << RESET;
+    bool     cWithNoise = true;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        // auto cEventType = cBoard->getEventType();
+        // bool cSparsified = cBoard->getSparsification();
+        // fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
+        bool cSkip = false;
+        if(!cSkip)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                        {
+                            std::vector<uint8_t> cSeeds{10};
+                            cSeeds[0] = 2 * (cChip->getId() + 1) + 5;
+                            std::vector<int> cBends{0};
+                            for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                            {
+                                auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                                LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
+                                for(auto cHit: cHitList) LOG(INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
+                            }
+                            (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
+                        }
+                        else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        {
+                            auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip, "ReadoutMode");
+                            LOG(INFO) << BOLDBLUE << "MPA#" << +cChip->getId() << " : readout mode [" << +cReadoutMode << " ]" << RESET;
+                        }
+                    }
+                }
+            }
+        }
+        cNevents = 10;
+        LOG(INFO) << BOLDBLUE << "Checking ReadNEvents by reading " << +cNevents << " event from BeBoard#" << +cBoard->getIndex() << RESET;
 
-    //     BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-    //     this->ReadNEvents(cBeBoard, cNevents);
-    //     const std::vector<Event*>& cEvents = this->GetEvents();
-    //     LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
+        BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+        this->ReadNEvents(cBeBoard, cNevents);
+        const std::vector<Event*>& cEvents = this->GetEvents();
+        LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
 
-    //     uint32_t cN = 0;
-    //     for(auto& cEvent: cEvents)
-    //     {
-    //         for(auto cBoard: *fDetectorContainer)
-    //         {
-    //             for(auto cOpticalGroup: *cBoard)
-    //             {
-    //                 for(auto cHybrid: *cOpticalGroup)
-    //                 {
-    //                     for(auto cChip: *cHybrid)
-    //                     {
-    //                         auto cStubs           = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-    //                         auto cHits            = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-    //                         auto cPipelineAddress = cEvent->PipelineAddress(cHybrid->getId(), cChip->getId());
-    //                         auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
-    //                         LOG(INFO) << BOLDGREEN << "ROC#" << +cChip->getId() << " L1Id is " << +cL1Id << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
-    //                                   << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
-    //                         for(auto cHit: cHits) LOG(INFO) << BOLDGREEN << "\t\t... hit in channel#" << +cHit << RESET;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         // if(cN % 5 == 0)
-    //         // {
-    //         //     LOG(INFO) << ">>> Event #" << cN << RESET;
-    //         //     ;
-    //         //     outp.str("");
-    //         //     outp << *cEvent;
-    //         //     LOG(INFO) << outp.str();
-    //         // }
-    //         cN++;
-    //     }
-    //     // cBoard->setEventType(cEventType);
-    // }
+        uint32_t cN = 0;
+        for(auto& cEvent: cEvents)
+        {
+            for(auto cBoard: *fDetectorContainer)
+            {
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        for(auto cChip: *cHybrid)
+                        {
+                            auto cStubs           = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cHits            = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                            auto cPipelineAddress = cEvent->PipelineAddress(cHybrid->getId(), cChip->getId());
+                            auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
+                            auto cBxId            = cEvent->BxId(cHybrid->getId());
+                            LOG(INFO) << BOLDYELLOW << "\t...ROC" << +cChip->getId() << " on hybrid " << +cHybrid->getId() 
+                                << " L1Id is " << +cL1Id  << " BxId is " << +cBxId 
+                                << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
+                                << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
+                            for(auto cHit: cHits) LOG(INFO) << BOLDGREEN << "\t\t... hit in channel#" << +cHit << RESET;
+                        }
+                    }
+                }
+            }
+            // if(cN % 5 == 0)
+            // {
+            //     LOG(INFO) << ">>> Event #" << cN << RESET;
+            //     ;
+            //     outp.str("");
+            //     outp << *cEvent;
+            //     LOG(INFO) << outp.str();
+            // }
+            cN++;
+        }
+        // cBoard->setEventType(cEventType);
+    }
 
     // // now just a very high threshold 
     // LOG (INFO) << BOLDYELLOW << "ReadNEvents test with a high threshold ..." << RESET;

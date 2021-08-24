@@ -278,7 +278,7 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
         auto cSum = std::accumulate(pSuccesses.begin(), pSuccesses.end(), 0.0);
         cSuccess  = (cSum == pRegs.size());
         if(cSuccess)
-            LOG(INFO) << BOLDGREEN << "Register write successfull for CIC#" << +pChip->getId() << RESET;
+            LOG(DEBUG) << BOLDGREEN << "Register write successfull for CIC#" << +pChip->getId() << RESET;
         else
             LOG(INFO) << BOLDRED << "Register write faile for CIC#" << +pChip->getId() << RESET;
         fAttemptedWrites    = fRegisterWrites - cWritesCounter;
@@ -324,7 +324,7 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
         //     << " register value " << std::hex << +cReg.second << std::dec
         //     << RESET;
     }
-    LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << +pCic->getHybridId() << RESET;
     return this->WriteRegs(pCic, cRegs, pVerifLoop);
 }
 
@@ -461,7 +461,7 @@ bool CicInterface::GetResyncRequest(Chip* pChip)
     uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAD : 0xA6;
 
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Checking if CIC requires a ReSync." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Checking if CIC requires a ReSync." << RESET;
     ChipRegItem cRegItem;
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;
@@ -470,7 +470,8 @@ bool CicInterface::GetResyncRequest(Chip* pChip)
 
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     if(!cReadBack.first) return false;
-    return (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
+    auto cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? cReadBack.second : ((cReadBack.second & 0x8) >> 3) ;
+    return (cResyncNeeded == 1); 
 }
 bool CicInterface::CheckReSync(Chip* pChip)
 {
@@ -481,42 +482,43 @@ bool CicInterface::CheckReSync(Chip* pChip)
     cRegItem.fPage      = 0x00;
     cRegItem.fAddress   = cRegAddress;
     cRegItem.fStatusReg = 0x01;
+    return cResyncNeeded;
     // std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
 
     // LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     // if(!cReadBack.first) return false;
 
     // bool cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
-    if(!cResyncNeeded)
-    {
-        LOG(INFO) << BOLDBLUE << "....... No ReSync needed" << RESET;
-        return true;
-    }
+    // if(!cResyncNeeded)
+    // {
+    //     LOG(INFO) << BOLDBLUE << "....... No ReSync needed" << RESET;
+    //     return true;
+    // }
 
-    LOG(INFO) << BOLDBLUE << "....... ReSync needed - sending one now ...... " << RESET;
-    // if readback worked and the CIC says it needs a Resync then send
-    // a resync
-    fBoardFW->ChipReSync();
-    // check if CIC still needs one
-    auto cReadBack = this->ReadChipRegItem(pChip, cRegItem);
-    LOG(DEBUG) << BOLDBLUE << "After ReSync... read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
-    cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
-    if(!cReadBack.first || cResyncNeeded)
-    {
-        LOG(INFO) << BOLDRED << "..............FAILED" << BOLDBLUE << " cleared RESYNC request" << RESET;
-        return false;
-    }
-    else
-    {
-        LOG(INFO) << BOLDGREEN << "..............SUCCESSFULLY" << BOLDBLUE << " cleared  RESYNC request" << RESET;
-        return true;
-    }
+    // LOG(INFO) << BOLDBLUE << "....... ReSync needed - sending one now ...... " << RESET;
+    // // if readback worked and the CIC says it needs a Resync then send
+    // // a resync
+    // fBoardFW->ChipReSync();
+    // // check if CIC still needs one
+    // auto cReadBack = this->ReadChipRegItem(pChip, cRegItem);
+    // LOG(DEBUG) << BOLDBLUE << "After ReSync... read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
+    // cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x8) >> 3);
+    // if(!cReadBack.first || cResyncNeeded)
+    // {
+    //     LOG(INFO) << BOLDRED << "..............FAILED" << BOLDBLUE << " cleared RESYNC request" << RESET;
+    //     return false;
+    // }
+    // else
+    // {
+    //     LOG(INFO) << BOLDGREEN << "..............SUCCESSFULLY" << BOLDBLUE << " cleared  RESYNC request" << RESET;
+    //     return true;
+    // }
 }
 bool CicInterface::CheckFastCommandLock(Chip* pChip)
 {
     uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAE : 0xA6;
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Checking if CIC fast command decoder locked" << RESET;
+    LOG(INFO) << BOLDBLUE << "Checking CIC" << +pChip->getHybridId() << " - has fast command decoder locked?" << RESET;
     ChipRegItem cRegItem;
     cRegItem.fPage                      = 0x00;
     cRegItem.fAddress                   = cRegAddress;
@@ -524,11 +526,11 @@ bool CicInterface::CheckFastCommandLock(Chip* pChip)
     std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
     if(!cReadBack.first) return false;
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
-    bool cLocked = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x10) >> 4);
-    if(cLocked)
-        return this->CheckReSync(pChip);
-    else
-        return cLocked;
+    return (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x10) >> 4);
+    // if(cLocked)
+    //     return this->CheckReSync(pChip);
+    // else
+    //     return cLocked;
 }
 // configure alignment patterns on CIC
 bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns)
@@ -559,9 +561,10 @@ bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
     cSuccess = cSuccess && this->WriteChipReg(pChip, "EXT_BX0_DELAY", pBx0delay);
     return cSuccess;
 }
-// run automated Bx0 alignment
+// run automated Bx0 alignment - FIX ME 
 bool CicInterface::ConfigureBx0Alignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, uint8_t pFEId, uint8_t pLineId)
 {
+    //std::vector<uint8_t> cFeMapping = getMapping(pChip);
     std::vector<uint8_t> cFeMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
     setBoard(pChip->getBeBoardId());
     LOG(DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getHybridId() << RESET;
@@ -644,13 +647,13 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
 bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, int pWait_ms)
 {
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getHybridId() << RESET;
-    LOG(INFO) << BOLDBLUE << "Configuring word alignment patterns on CIC" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getHybridId() << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Configuring word alignment patterns on CIC" << RESET;
     bool cSuccess = ConfigureAlignmentPatterns(pChip, pAlignmentPatterns);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot configure patterns on CIC.." << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Could NOT configure patterns in CIC"));
     }
 
     std::string cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
@@ -662,7 +665,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot disable external word alignment value on CIC.." << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Cannot disable external word alignment value on CIC.."));
     }
 
     cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "AUTO_WA_REQUEST" : "MISC_CTRL";
@@ -673,9 +676,9 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot send external word alignment request to CIC.." << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Cannot send external word alignment request to CIC.."));
     }
-    LOG(INFO) << BOLDBLUE << "Running automated word alignment .... " << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Running automated word alignment .... " << RESET;
     // check if word alingment is done
     bool    cDone          = false;
     uint8_t cMaxIterations = (pWait_ms / 100);
@@ -692,11 +695,11 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         {
             LOG(INFO) << BOLDBLUE << "Readback failed.." << RESET;
             cDone = false;
-            exit(0);
+            throw std::runtime_error(std::string("Readback CIC register failed..."));
         }
         cDone = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x01) == 1);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if(cIteration % 10 == 0) LOG(INFO) << BOLDBLUE << "\t....Iteration " << +cIteration << " ... : " << cDone << RESET;
+        if(cIteration % 10 == 0) LOG(DEBUG) << BOLDBLUE << "\t....Iteration " << +cIteration << " ... : " << cDone << RESET;
         // stop either if done or if the maximum number of iterations
         // has been exceeded
         cStop = cDone || (cIteration > cMaxIterations);
@@ -704,12 +707,12 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     } while(!cStop);
     if(!cDone) { return cDone; }
 
-    LOG(INFO) << BOLDBLUE << "Requesting CIC to stop automated word alignment..." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Requesting CIC to stop automated word alignment..." << RESET;
     cSuccess = this->WriteChipReg(pChip, cRegName, cToggleOff);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot disable automated Word alignment request.." << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Cannot disable automated Word alignment request..."));
     }
 
     if(cSuccess) { ConfigureExternalWordAlignment(pChip); }
@@ -720,9 +723,9 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
 {
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Resetting DLL in CIC" << RESET;
+    LOG(INFO) << BOLDBLUE << "Resetting DLL in CIC" << +pChip->getHybridId() << RESET;
     // apply a channel reset
-    LOG(INFO) << BOLDBLUE << "\t.... Enabling RESET on DLL" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t.... Enabling RESET on DLL" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
         // char cBuffer[14];
@@ -735,12 +738,12 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC DLL reset" << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("Error setting CIC DLL reset..."));
         }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
     // release channel reset
-    LOG(INFO) << BOLDBLUE << "\t... Disabling RESET on DLL" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t... Disabling RESET on DLL" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
         // char cBuffer[14];
@@ -753,7 +756,7 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC DLL reset" << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("FAILED to st CIC DLL reset... .. STOPPING"));
         }
     }
     return cSuccess;
@@ -763,7 +766,7 @@ bool CicInterface::CheckDLL(Chip* pChip)
 {
     uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5A : 0x9A;
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Checking DLL lock in CIC" << RESET;
+    LOG(INFO) << BOLDBLUE << "Checking DLL lock in CIC" << +pChip->getHybridId() << RESET;
     ChipRegItem           cRegItem;
     std::vector<uint16_t> cValues(2);
     for(int cIndex = 0; cIndex < (int)cValues.size(); cIndex += 1)
@@ -783,9 +786,9 @@ bool CicInterface::SetAutomaticPhaseAlignment(Chip* pChip, bool pAuto)
 {
     setBoard(pChip->getBeBoardId());
     if(pAuto)
-        LOG(INFO) << BOLDBLUE << "Configuring CIC to use automatic phase aligner..." << RESET;
+        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +pChip->getHybridId() << " to use automatic phase aligner..." << RESET;
     else
-        LOG(INFO) << BOLDBLUE << "Configuring CIC to use static phase aligner..." << RESET;
+        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +pChip->getHybridId() << " to use static phase aligner..." << RESET;
     // set phase aligner in static mode
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "scTrackMode" : "PHY_PORT_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
@@ -793,8 +796,8 @@ bool CicInterface::SetAutomaticPhaseAlignment(Chip* pChip, bool pAuto)
     bool        cSuccess  = this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess)
     {
-        LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-        exit(0);
+        LOG(ERROR) << BOLDRED << "Error setting automatic phase alignment in CIC" << RESET;
+        throw std::runtime_error(std::string("Error setting automatic phase alignment in CIC"));
     }
     if(pAuto) { this->ResetPhaseAligner(pChip); }
     return cSuccess;
@@ -818,8 +821,8 @@ bool CicInterface::PhaseAlignerPorts(Chip* pChip, uint8_t pState)
         cSuccess = this->WriteChipReg(pChip, cRegName, (pState == 1) ? 0xFF : 0x00);
         if(!cSuccess)
         {
-            LOG(ERROR) << BOLDRED << "Error conifguring CIC" << RESET;
-            exit(0);
+            LOG(ERROR) << BOLDRED << "Error selecting phase aligner ports" << RESET;
+            throw std::runtime_error(std::string("Error setting automatic phase alignment in CIC"));
         }
     }
     return cSuccess;
@@ -828,9 +831,9 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
 {
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Resetting CIC phase aligner..." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Resetting CIC phase aligner..." << RESET;
     // apply a channel reset
-    LOG(INFO) << BOLDBLUE << "\t.... Enabling RESET on all phase aligner inputs" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t.... Enabling RESET on all phase aligner inputs" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
         // char cBuffer[14];
@@ -843,13 +846,13 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC phase aligner reset" << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("Error setting CIC phase aligner reset"));
         }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
     this->CheckPhaseAlignerLock(pChip, 0x00);
     // release channel reset
-    LOG(INFO) << BOLDBLUE << "\t... Disabling RESET on all phase aligner inputs" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t... Disabling RESET on all phase aligner inputs" << RESET;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
         // char cBuffer[14];
@@ -862,57 +865,11 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC phase aligner reset" << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("Error setting CIC phase aligner reset"));
         }
     }
     return cSuccess;
 }
-// FIX ME
-// bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, uint8_t pReadoutChipId, uint8_t pLineId, uint8_t pPhase)
-// {
-//     std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
-//     auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
-//     bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
-//     std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-//     if(!c2S) cFeMapping = (pChip->getId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-
-//     bool    cL1Selected = (pLineId == 0);
-//     uint8_t cPort       = 0;
-//     uint8_t cInput      = 0;
-//     if(cL1Selected)
-//     {
-//         // uint8_t cChipId_onyHybrid = std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), cFeCounter));
-//         uint8_t cChipId_forCic = cFeMapping[pReadoutChipId]; // std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
-//         LOG(DEBUG) << BOLDBLUE << "Modifying phase alignment value for readout chip " << +pReadoutChipId << " [ in CIC mapping this is FE" << +cChipId_forCic << " ]" << RESET;
-//         cInput = cChipId_forCic & 0x3;
-//         cPort  = 10 + ((cChipId_forCic & 0x4) >> 2);
-//         LOG(DEBUG) << BOLDBLUE << "Will modifiy phase aligner value for phy port " << +cPort << " input " << +cInput << RESET;
-//     }
-//     // I assume this has already been done
-//     // bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
-//     bool cSuccess = true;
-//     setBoard(pChip->getBeBoardId());
-//     if(cSuccess)
-//     {
-//         ChipRegItem cRegItem;
-//         uint8_t     cIndex = std::floor(cPort / 2.);
-//         char        cBuffer[17];
-//         sprintf(cBuffer, "scPhaseSelectB%di%d", cInput, cIndex);
-//         std::string cRegName(cBuffer, sizeof(cBuffer));
-//         uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-//         uint8_t     cMask     = ~(0xF << ((cPort & 0x1))) & 0xFF;
-//         uint16_t    cValue    = (cRegValue & cMask) | pPhase;
-//         LOG(DEBUG) << BOLDBLUE << "Will modifiy register " << cBuffer << " which was set to " << std::bitset<8>(cRegValue) << " -- new value is " << std::bitset<8>(cValue) << RESET;
-//         cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
-//     }
-//     if(!cSuccess)
-//     {
-//         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-//         exit(0);
-//     }
-//     return cSuccess;
-// }
-// FIX ME
 bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
 {
     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
@@ -920,32 +877,6 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
 
     cSuccess = this->SetOptimalTaps(pChip);
     return cSuccess;
-    // setBoard(pChip->getBeBoardId());
-    // if(cSuccess)
-    // {
-    //     ChipRegItem cRegItem;
-    //     for(uint8_t cInput = 0; cInput < 4; cInput += 1)
-    //     {
-    //         uint8_t cPhyPort = 0;
-    //         for(uint8_t cIndex = 0; cIndex < 6; cIndex += 1)
-    //         {
-    //             char cBuffer[17];
-    //             sprintf(cBuffer, "scPhaseSelectB%di%d", cInput, cIndex);
-    //             uint8_t     cValue = (pPhaseTaps[cInput][cPhyPort + 1] << 4) | (pPhaseTaps[cInput][cPhyPort]);
-    //             std::string cRegName(cBuffer, sizeof(cBuffer));
-    //             LOG(DEBUG) << BOLDBLUE << "Input" << +cInput << " : " << +pPhaseTaps[cInput][cPhyPort + 1] << " " << +pPhaseTaps[cInput][cPhyPort] << " " << cRegName << "  ---> "
-    //                        << std::bitset<8>(cValue) << RESET;
-    //             cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
-    //             cPhyPort += 2;
-    //         }
-    //     }
-    // }
-    // if(!cSuccess)
-    // {
-    //     LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-    //     exit(0);
-    // }
-    // return cSuccess;
 }
 
 bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
@@ -979,9 +910,9 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
 bool CicInterface::SetStaticWordAlignment(Chip* pChip, uint8_t pValue)
 {
     if(pValue == 0)
-        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getId() << " to use external values" << RESET;
+        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getHybridId() << " to use external values" << RESET;
     else
-        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getId() << " to use internal values" << RESET;
+        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getHybridId() << " to use internal values" << RESET;
 
     if(pValue == 1)
         if(!this->ConfigureExternalWordAlignment(pChip)) return false;
@@ -1226,7 +1157,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     setBoard(pChip->getBeBoardId());
     std::string cRegName    = "FE_ENABLE";
     uint8_t     cEnabledFEs = this->ReadChipReg(pChip, cRegName);
-    LOG(INFO) << BOLDMAGENTA << "FE_Enable Register set to " << +cEnabledFEs << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "FE_Enable Register set to " << +cEnabledFEs << RESET;
 
     uint16_t cRegBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5C : 0xA0;
     LOG(DEBUG) << BOLDBLUE << "Checking Auto phase aligner lock in CIC." << RESET;
@@ -1242,15 +1173,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     size_t cL1Line            = 5;
     bool   cLastStubLineFound = false;
 
-    cRegName                        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
-    auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
-    bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
-    std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S)
-        cFeMapping = (pChip->getHybridId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-    else if(fWith8CBC3)
-        cFeMapping = fFeMapping8BC3;
-
+    std::vector<uint8_t> cFeMapping = getMapping(pChip);
     // read back phase alignment on stub lines
     for(int cIndex = 0; cIndex < 6; cIndex++)
     {
@@ -1259,7 +1182,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         cRegItem.fStatusReg = 0x01;
 
         std::pair<bool, uint16_t> cReadBack = this->ReadChipRegItem(pChip, cRegItem);
-        LOG(INFO) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cReadBack.second) << RESET;
 
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
@@ -1327,7 +1250,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
                        << +fFeStates[cFeCounter][cNStubLines] << BOLDBLUE << " [L1 lines] " << BOLDRED << std::bitset<5>(fFeStates[cFeCounter].to_ulong() & 0x1F) << " [Stub lines 0 -- 4]" << RESET;
     }
     if(cLocked)
-        LOG(INFO) << BOLDGREEN << "SUCCESSFULL " << BOLDBLUE << " lock on all phase aligner lines.." << RESET;
+        LOG(DEBUG) << BOLDGREEN << "SUCCESSFULL " << BOLDBLUE << " lock on all phase aligner lines.." << RESET;
     else
         LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to lock on all phase aligner lines.." << RESET;
     return cLocked;
@@ -1342,11 +1265,11 @@ bool CicInterface::SoftReset(Chip* pChip, uint32_t cWait_ms)
     uint16_t    cToggleOn  = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : (cRegValue & 0x0F) | (0x1 << 4);
     uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : (cRegValue & 0x0F) | (0x0 << 4);
 
-    LOG(INFO) << BOLDBLUE << "Setting register " << cRegName << " to " << std::bitset<5>(cToggleOn) << " to toggle ON soft reset." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Setting register " << cRegName << " to " << std::bitset<5>(cToggleOn) << " to toggle ON soft reset." << RESET;
     if(!this->WriteChipReg(pChip, cRegName, cToggleOn)) return false;
     std::this_thread::sleep_for(std::chrono::milliseconds(cWait_ms));
 
-    LOG(INFO) << BOLDBLUE << "Setting register " << cRegName << " to " << std::bitset<5>(cToggleOff) << " to toggle OFF soft reset." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Setting register " << cRegName << " to " << std::bitset<5>(cToggleOff) << " to toggle OFF soft reset." << RESET;
     if(!this->WriteChipReg(pChip, cRegName, cToggleOff)) return false;
     std::this_thread::sleep_for(std::chrono::milliseconds(cWait_ms));
     return true;
@@ -1355,9 +1278,9 @@ bool CicInterface::SelectOutput(Chip* pChip, bool pFixedPattern)
 {
     setBoard(pChip->getBeBoardId());
     if(pFixedPattern)
-        LOG(INFO) << BOLDBLUE << "Want to configure CIC to output fixed pattern on all lines... " << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Want to configure CIC to output fixed pattern on all lines... " << RESET;
     else
-        LOG(INFO) << BOLDBLUE << "Want to configure CIC to output data from readout chips... " << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Want to configure CIC to output data from readout chips... " << RESET;
 
     // enable output pattern from CIC
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "OUTPUT_PATTERN_ENABLE" : "MISC_CTRL";
@@ -1367,7 +1290,7 @@ bool CicInterface::SelectOutput(Chip* pChip, bool pFixedPattern)
     if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
     cRegValue = this->ReadChipReg(pChip, cRegName);
-    LOG(INFO) << BOLDBLUE << "CIC output pattern configured by setting " << cRegName << " to " << std::bitset<8>(cRegValue) << RESET;
+    LOG(DEBUG) << BOLDBLUE << "CIC output pattern configured by setting " << cRegName << " to " << std::bitset<8>(cRegValue) << RESET;
     return true;
 }
 bool CicInterface::SetSparsification(Chip* pChip, uint8_t pEnable)
@@ -1382,17 +1305,9 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     setBoard(pChip->getBeBoardId());
 
     //  read type of CIC to figure out which mapping to use
-    std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
-    auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
-    bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
-    std::vector<uint8_t> cFeMapping = c2S ? fFeMapping2S : fFeMappingPSR;
-    if(!c2S)
-        cFeMapping = (pChip->getHybridId() % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-    else if(fWith8CBC3)
-        cFeMapping = fFeMapping8BC3;
-
+    std::vector<uint8_t> cFeMapping = getMapping(pChip);
     // read enable register
-    cRegName        = "FE_ENABLE";
+    std::string cRegName        = "FE_ENABLE";
     uint16_t cValue = this->ReadChipReg(pChip, cRegName);
     // LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register set to 0x" << std::hex  << +cValue << std::dec << RESET;
     for(auto pFeId: pFeIds)
@@ -1422,7 +1337,7 @@ bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)
     cValue                = (pLineSel == 5 || pLineSel == 6) ? (uint8_t)(pLineSel == 6) : cValue;
     uint8_t cValueToWrite = (cRegValue & cMask) | (cValue << cBitShift);
     uint8_t cNlines       = 5 + cValue;
-    LOG(INFO) << BOLDMAGENTA << "Configuring CIC to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << std::dec << " to CIC register " << cRegName
+    LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << +pChip->getHybridId() << " to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << std::dec << " to CIC register " << cRegName
               << RESET;
     return this->WriteChipReg(pChip, cRegName, cValueToWrite);
 }
@@ -1464,7 +1379,7 @@ bool CicInterface::CheckSoftReset(Chip* pChip)
     if(!cReadBack.first)
     {
         LOG(ERROR) << BOLDRED << "Read back failed!" << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Error reading back CIC soft reset"));
     }
     bool cSoftResetNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : (((cReadBack.second & 0x04) >> 2) == 1);
     // if readback worked and the CIC says it needs a Resync then send
@@ -1492,7 +1407,7 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pPhyPort : (cRegValue & 0x10) | pPhyPort;
-    LOG(INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << " by setting register to 0x" << std::hex << +cValue << std::dec << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << " by setting register to 0x" << std::hex << +cValue << std::dec << RESET;
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
 bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
@@ -1552,7 +1467,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
         if(!cSuccess)
         {
             LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " configure drive strength on CIC output pads." << RESET;
-            exit(0);
+            throw std::runtime_error(std::string("Could NOT configure drive strength on CIC output pads"));
         }
         cRegValue = this->ReadChipReg(pChip, cRegName);
         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << RESET;
@@ -1563,14 +1478,14 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " Reset DLL in CIC " << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Could NOT reset DLL in CIC"));
     }
     // checking DLL lock
     cSuccess = this->CheckDLL(pChip);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " LOCK DLL in CIC  " << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Could NOT lock DLL in CIC"));
     }
     LOG(INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET;
 
@@ -1595,7 +1510,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Could NOT set automatic phase aligner in CIC"));
     }
 
     // select fast command edge
@@ -1611,7 +1526,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " select FC edge in CIC  " << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Error selecting FC edge in CIC"));       
     }
 
     // check fast command lock
@@ -1619,9 +1534,9 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " lock FC decoder in CIC  " << RESET;
-        exit(0);
+        throw std::runtime_error(std::string("Could NOT lock FC decoder in CIC"));
     }
-    LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured fast command block in CIC." << RESET;
+    LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " locked fast command decoder in CIC." << RESET;
 
     // cSuccess = this->CheckReSync(pChip);
     // LOG(INFO) << BOLDGREEN << ".... Completed CIC start-up ........ " << RESET;

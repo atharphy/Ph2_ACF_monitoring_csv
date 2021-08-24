@@ -76,7 +76,7 @@ bool BackendAlignmentInterface::TuneLine(BeBoard* pBoard)
 {
     this->SetLineMode(0);
     this->SendCommand(pBoard);
-    LOG(INFO) << BOLDBLUE << "Tuning line " << +fObject.fLine << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Tuning line " << +fObject.fLine << RESET;
     // perform phase alignment
     // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
     this->SendControl(pBoard, "PhaseAlignment");

@@ -428,7 +428,6 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
 
     // module start-up
     // depends on module type
-    bool cReSyncNeeded = false;
     for(auto cOpticalGroup: *pBoard)
     {
         uint8_t pCICUseNegEdge = 0;
@@ -436,7 +435,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTracker2S module " << RESET;
             ModuleStartUp2S(cOpticalGroup);
-            pCICUseNegEdge = 0;
+            pCICUseNegEdge = 1;
         }
         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
         {
@@ -469,9 +468,29 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalId() << " on hybrid " << +cHybrid->getId() << RESET;
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
-        }                                                                    // CIC part - configure and make sure all FE blocks are disabled
-        // then start-up CIC
-        cReSyncNeeded = cReSyncNeeded || CicStartUp(cOpticalGroup, cCicDriveStrength, pCICUseNegEdge);
+        }      
+        bool cSuccess = CicStartUp(cOpticalGroup, cCicDriveStrength, pCICUseNegEdge);
+        if( !cSuccess ){ 
+            LOG (INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET; 
+            throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
+        }
+    }
+
+    // check if a resync is needed 
+    LOG (INFO) << BOLDBLUE << "Checking if a ReSync is needed for Board" << +pBoard->getId() << RESET;
+    bool cReSyncNeeded = false;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            if(cCic == NULL) continue;
+            if( cReSyncNeeded ) continue; 
+
+            bool cReSync = fCicInterface->GetResyncRequest(cCic);
+            if( cReSync ) LOG (INFO) << BOLDBLUE << "\t... CIC" << +cHybrid->getId() << " requires a ReSync" << RESET;
+            cReSyncNeeded = cReSync;
+        }
     }
     if(cReSyncNeeded)
     {
@@ -498,12 +517,13 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             {
                 uint8_t cSide       = cHybrid->getId() % 2;
                 auto    cHybridIter = std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; });
+                LOG (DEBUG) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
                 if(clpGBT != nullptr && cHybridIter != cHybrid->end())
                 {
                     // no SSA because I don't want to reset it here. . already done earlier
                     if(cType == FrontEndType::MPA)
                     {
-                        LOG(INFO) << BOLDBLUE << "Resetting MPA" << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to MPAs" << RESET;
                         if(!cBrokenPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide); }
                         else
                         {
@@ -512,7 +532,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     }
                     if(cType == FrontEndType::CBC3)
                     {
-                        LOG(INFO) << BOLDBLUE << "Resetting CBC" << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to CBCs" << RESET;
                         static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
                     }
                 }
@@ -657,13 +677,14 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
     auto cSparsified = (*cBoardIter)->getSparsification();
 
     auto& clpGBT        = pOpticalGroup->flpGBT;
-    bool  cReSyncNeeded = false;
+    bool  cSuccess = true;
+    LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     for(auto cHybrid: *pOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         if(cCic == NULL) continue;
 
-        LOG(INFO) << BOLDMAGENTA << "SystemController::CicStartUp for OpticalGroup#" << +pOpticalGroup->getId() << " CIC#" << +cCic->getId() << RESET;
+        LOG(INFO) << BOLDMAGENTA << "SystemController::CicStartUp for OpticalGroup#" << +pOpticalGroup->getId() << " CIC#" << +cCic->getHybridId() << RESET;
 
         // if there is an lpGBT .
         // its configuration overwrites whatever is in the xml
@@ -682,7 +703,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
         uint8_t cModeSelect = (cIs2S) ? 0 : 1;
         uint8_t cBx0Delay   = (cIs2S) ? 8 : 22;
         // select CIC mode
-        bool cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
+        cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
         if(!cSuccess)
         {
             LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
@@ -722,20 +743,24 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
             cClkTerm = 0;
             cRxTerm  = 1;
         }
-        fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
+        cSuccess = fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
         if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
+        else throw std::runtime_error(std::string("FAILED to start-up CIC ... something is wrong... .. STOPPING")); 
+        
         if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
+        else throw std::runtime_error(std::string("FAILED to set CIC sparsification... .. STOPPING")); 
+        
         if(cSuccess) cSuccess = fCicInterface->ConfigureStubOutput(cCic);
+        else throw std::runtime_error(std::string("FAILED to configure CIC stub output... .. STOPPING")); 
+        
         if(cSuccess) cSuccess = fCicInterface->ManualBx0Alignment(cCic, cBx0Delay);
-        if(cSuccess)
-        {
-            LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +cHybrid->getId() % 2 << " connected to link " << +cHybrid->getOpticalId() << RESET;
-            cReSyncNeeded = cReSyncNeeded || fCicInterface->GetResyncRequest(cCic);
-        }
-        LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
+        else throw std::runtime_error(std::string("FAILED to configure CIC Bx0 delay... .. STOPPING")); 
+        
+        //continue;
+        
     } // all hybrids connected to this OG
-
-    return cReSyncNeeded;
+    LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
+    return cSuccess;
 }
 
 void SystemController::ConfigureHw(bool bIgnoreI2c)
@@ -762,7 +787,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
         fDetectorMonitor->startMonitoring();
     }
-    std::cout << __LINE__ << std::endl;
+    //std::cout << __LINE__ << std::endl;
 }
 
 void SystemController::initializeWriteFileHandler()

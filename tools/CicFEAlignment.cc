@@ -38,12 +38,12 @@ void CicFEAlignment::Reset()
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
                 cWithPS       = cWithPS || cIsPS;
-                LOG(INFO) << BOLDBLUE << "CicFEAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+                LOG(DEBUG) << BOLDBLUE << "CicFEAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
                     if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
                     auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
@@ -265,7 +265,7 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                         cPhaseAlignmentVals[cLineId] = cPhaseTapsThisFE[cLineId];
                         cOutput << +cPhaseAlignmentVals[cLineId] << " "; 
                     }
-                    LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput.str() << RESET;
+                    LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC#" << +cChip->getHybridId() << " FE" << +cChip->getId() << " : " << cOutput.str() << RESET;
                 }
                 fCicInterface->SetStaticPhaseAlignment(cCic);
             }
@@ -390,7 +390,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         // send N triggers on L1 lines 
         if( cWithCBC )
         {
-            LOG(INFO) << BOLDBLUE << "Sending triggers with to FEs.." << RESET;
+            LOG(INFO) << BOLDBLUE << "Sending triggers to FEs to align L1 output from CBCs.." << RESET;
             uint16_t                                      cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
             // if external or async triggers are used then revert to internal here 
             bool cReconfigureTrigger = (cTriggerSrc == 4 || cTriggerSrc || 5 || cTriggerSrc == 10 );
@@ -430,13 +430,15 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 // if locked .. switch to automatic phase aligner mode with best values
                 if(cLocked)
                 {
-                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
-                    this->SetStaticPhaseAlignment();
+                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() <<  BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                 }
+                else
+                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() <<  BOLDRED << " FAILED to LOCK " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                 cAligned = cAligned && cLocked;
             } // CICs
         }// OG
     }
+    if( cAligned ) this->SetStaticPhaseAlignment();
     return cAligned;
 }
 bool CicFEAlignment::WordAlignment(uint16_t pWait_us)

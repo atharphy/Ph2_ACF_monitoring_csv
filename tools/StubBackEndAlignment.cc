@@ -40,12 +40,12 @@ void StubBackEndAlignment::Reset()
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
                 cWithPS       = cWithPS || cIsPS;
-                LOG(INFO) << BOLDBLUE << "StubBackEndAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+                LOG(DEBUG) << BOLDBLUE << "StubBackEndAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
                     if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
                     auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
@@ -108,25 +108,22 @@ void StubBackEndAlignment::Initialise()
 }
 bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 {
+    
+    // make sure you're only sending one trigger at a time here
+    LOG(INFO) << GREEN << "Trying to align CIC decoder in the back-end" << RESET;
+    // sparsification of
+    bool cSparsified = pBoard->getSparsification();
+    uint32_t cNevents      = 10;
+    uint16_t cMaxBxCounter = 3564;
     bool    cCorrectDelay = false;
+    std::vector<uint8_t> cFeEnableRegs(0);
     for(auto cOpticalGroup: *pBoard)
     {
-        // only perform for first link
-        if(cOpticalGroup->getIndex() > 0) return true;
-
-        // make sure you're only sending one trigger at a time here
-        LOG(INFO) << GREEN << "Trying CIC un-packer alignment in the back-end" << RESET;
-        uint32_t cNevents      = 10;
-        uint16_t cMaxBxCounter = 3564;
-
-        // sparsification of
-        bool cSparsified = pBoard->getSparsification();
         if(cSparsified)
             LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Sparsification on " << RESET;
         else
             LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Sparsification off " << RESET;
 
-        std::vector<uint8_t> cFeEnableRegs(0);
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
@@ -134,48 +131,50 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             // disable all FEs. . not needed here
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
+    }// disable FEs for all hybrids 
 
-        // check trigger source
-        // and reload
-        uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        uint16_t cOriginalTriggerSrc = cTriggerSrc;
-        uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
-        cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
-        LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
-        std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
-        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0x0});
-        cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
-        fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    // check trigger source
+    // and reload
+    uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    uint16_t cOriginalTriggerSrc = cTriggerSrc;
+    uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
+    cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0x0});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
-        // now try and find correct package delay
-        auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
-        LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
-        uint8_t cPackageDelay = 7;
-        uint8_t cFinalDelay   = cPackageDelay;
+    // now try and find correct package delay
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
+    uint8_t cPackageDelay = 7;
+    uint8_t cFinalDelay   = cPackageDelay;
+    for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+    {
+        if(cCorrectDelay) continue;
 
-        for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+        LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
+
+        // check stubs
+        // 2 events should be enough
+        // LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
+        ReadNEvents(pBoard, cNevents);
+        const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
+        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+
+        // now ... check for incrementing BxIds
+        int              cNRollOvers = 0;
+        std::vector<int> cBxIds(0);
+        std::vector<int> cBxDifferences(0); // I think by injecting this way this number should always be the same ..
+        for(auto& cEvent: cEventsWithStubs)
         {
-            if(cCorrectDelay) continue;
-
-            LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
-            fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
-            (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
-
-            // check stubs
-            // 2 events should be enough
-            // LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
-            ReadNEvents(pBoard, cNevents);
-            const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
-            LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
-
-            // now ... check for incrementing BxIds
-            int              cNRollOvers = 0;
-            std::vector<int> cBxIds(0);
-            std::vector<int> cBxDifferences(0); // I think by injecting this way this number should always be the same ..
-            for(auto& cEvent: cEventsWithStubs)
+            for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
@@ -191,42 +190,46 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
                         // LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
                     }
                     cBxIds.push_back(cBx);
-                    // LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+                    LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
                 } // hybrids or CICs
-            }     // events
-            // figure out the differences between the bxIds
-            auto cFirstDifference = cBxDifferences[0];
-            std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
-            cBxDifferences.erase(cBxDifferences.begin()); // erase the first element
-            for(auto cDifference: cBxDifferences) LOG(DEBUG) << BOLDBLUE << "\t..." << +cDifference << RESET;
-            // all elements are equal
-            if(cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()))
-            {
-                LOG(INFO) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
-                LOG(INFO) << BOLDGREEN << "Going to fix the manual package delay to " << +cPackageDelay << RESET;
-                cFinalDelay   = cPackageDelay;
-                cCorrectDelay = true;
-            }
-            else
-                LOG(INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
+            }//OGs
+        }     // events
+        // figure out the differences between the bxIds
+        auto cFirstDifference = cBxDifferences[0];
+        std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
+        cBxDifferences.erase(cBxDifferences.begin()); // erase the first element
+        for(auto cDifference: cBxDifferences) LOG(DEBUG) << BOLDBLUE << "\t..." << +cDifference << RESET;
+        // all elements are equal
+        if(cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()))
+        {
+            LOG(INFO) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
+            LOG(INFO) << BOLDGREEN << "Going to fix the manual package delay to " << +cPackageDelay << RESET;
+            cFinalDelay   = cPackageDelay;
+            cCorrectDelay = true;
+        }
+        else
+            LOG(INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
 
-        } // pkg delay
-        
-        // set everything back to original values .. like I wasn't here
-        // reset fast command registers
-        LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
-        cRegVec.clear();
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
-        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
-        cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
-        fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    } // pkg delay
+    
+    // set everything back to original values .. like I wasn't here
+    // reset fast command registers
+    LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
+    cRegVec.clear();
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
-        // reconfigure sparsification + FEs enabled in this CIC
-        LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-        size_t cIndx = 0;
+    // reconfigure sparsification + FEs enabled in this CIC
+    LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    size_t cIndx = 0;
+
+    for(auto cOpticalGroup: *pBoard)
+    {
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
@@ -234,9 +237,8 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
             cIndx++;
         }
-
-        LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
     }
+    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
     return cCorrectDelay;
     
 }
@@ -453,7 +455,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             LOG(DEBUG) << BOLDBLUE << "\t.. Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " ROC" << +cChip->getId() << " found "   
                                 << +cNHitsThisFE << " hits." << RESET;
                         }
-                        LOG (INFO) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;
+                        LOG (DEBUG) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;
                     }
                 }
                 cCorrectLatency = cCorrectLatency && (cNHits == cNinjectedHits);
@@ -612,9 +614,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig);
     return cFoundCorrectStubLatency;
 }
-bool StubBackEndAlignment::Align()
+bool StubBackEndAlignment::FindPackageDelay()
 {
-    LOG(INFO) << BOLDBLUE << "Starting back-end alignment procedure .... " << RESET;
     bool cAligned = true;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -624,9 +625,33 @@ bool StubBackEndAlignment::Align()
             cAligned = cAligned && FindPackageDelay(cBoard);
             if(!cAligned) continue;
         }
-        // check this one later
-        cAligned = cAligned && FindStubLatency(cBoard);
     }
+    return cAligned;
+}
+bool StubBackEndAlignment::FindStubLatency()
+{
+    bool cAligned = true;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        // only find package delay if there is a CIC
+        if( fWithCIC ) 
+        {
+            cAligned = cAligned && FindStubLatency(cBoard);
+            if(!cAligned) continue;
+        }
+    }
+    return cAligned;
+}
+
+bool StubBackEndAlignment::Align()
+{
+    LOG(INFO) << BOLDBLUE << "Starting back-end alignment procedure .... " << RESET;
+    bool cAligned = FindPackageDelay(); 
+    if(!cAligned) return cAligned; 
+
+    cAligned = FindStubLatency(); 
+    if(!cAligned) return cAligned; 
+
     return cAligned;
 }
 // State machine control functions

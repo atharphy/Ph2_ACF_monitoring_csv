@@ -406,7 +406,7 @@ bool lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
 
         std::vector<uint8_t> cPhases(0);
         std::vector<uint8_t> cUniquePhases(0);
-        LOG(INFO) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
+        LOG(DEBUG) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
         size_t cMaxAttempts=5;
         for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
         {
@@ -465,10 +465,12 @@ bool lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
         cSuccess = cSuccess && (cUniquePhases[cIndxBstPhase] != 15);
         if(cUniquePhases[cIndxBstPhase] != 15)
         {
-            LOG(INFO) << BOLDGREEN << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel 
+                << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] 
+                << RESET;
         }
         else
-            LOG(INFO) << BOLDRED << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+            LOG(ERROR) << BOLDRED << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
 
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
