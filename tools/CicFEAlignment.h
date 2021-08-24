@@ -17,11 +17,8 @@
 #include <map>
 // #ifdef __USE_ROOT__
 
-#ifndef PortAlignment
-typedef std::vector<uint8_t> PortAlignment;
-#endif
-#ifndef PortAlignmentVals
-typedef std::vector<PortAlignment> PortAlignmentVals;
+#ifndef AlignmentValues
+typedef std::vector<uint8_t> AlignmentValues;
 #endif
 
 // add break codes here

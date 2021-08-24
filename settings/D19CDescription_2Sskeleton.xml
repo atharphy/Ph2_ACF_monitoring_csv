@@ -22,18 +22,18 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run851/" />
-            <CBC Id="0" configfile="BE0_OG1_FE2_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG1_FE2_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG1_FE2_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG1_FE2_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG1_FE2_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG1_FE2_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG1_FE2_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG1_FE2_Chip7.txt" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            <!-- <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" /> -->
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/FEH_2S_Skeleton_Run851/" />
-            <CIC2 Id="8" configfile="BE0_OG1_FE2.txt" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
             </Hybrid>
         <Hybrid Id="1" Status="0">
             <Global>
@@ -61,7 +61,37 @@
      </OpticalGroup>
 
    
-    
+     <OpticalGroup Id="1" FMCId="0">
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
+        <lpGBT_Files path="./settings/lpGBTFiles/" />
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+          <Settings
+          />
+        </lpGBT>
+        <Hybrid Id="2" Status="0">
+            <Global>
+                <Settings threshold="550" latency="201"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="2" stublogic="2" or254="0" tpgclock="1" testclock="0" dll="0" hipCount="1"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" />
+
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            </Hybrid>
+     </OpticalGroup>
     <!--CONFIG-->
     <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="clock_source_u7">3</Register> 
