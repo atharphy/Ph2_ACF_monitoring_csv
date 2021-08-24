@@ -102,7 +102,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
             else if(it.first.find("ext_clk_en") != std::string::npos)
             {
-                cfgDIO5.enable     = true;
+                cfgDIO5.enable     = cfgDIO5.enable | it.second;
                 cfgDIO5.ch_out_en  = cfgDIO5.ch_out_en & 0x0F;
                 cfgDIO5.ext_clk_en = it.second;
             }
