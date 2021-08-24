@@ -102,8 +102,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
             else if(it.first.find("ext_clk_en") != std::string::npos)
             {
-                cfgDIO5.enable     = it.second;
-                cfgDIO5.ch_out_en  = 0x0;
+                cfgDIO5.enable     = true;
+                cfgDIO5.ch_out_en  = cfgDIO5.ch_out_en & 0x0F;
                 cfgDIO5.ext_clk_en = it.second;
             }
             else
@@ -113,13 +113,13 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
                     cfgDIO5.enable    = true;
-                    cfgDIO5.ch_out_en = 0x0;
+                    cfgDIO5.ch_out_en = cfgDIO5.ch_out_en & 0x1D;
                 }
                 else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     cfgDIO5.enable             = true;
-                    cfgDIO5.ch_out_en          = 0x05;
+                    cfgDIO5.ch_out_en          = cfgDIO5.ch_out_en | 0x05;
                     cfgDIO5.tlu_en             = true;
                     cfgDIO5.tlu_handshake_mode = 0x02;
                 }
