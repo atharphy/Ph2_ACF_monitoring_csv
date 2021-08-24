@@ -162,18 +162,28 @@ void RD53eudaqProducer::MySendEvent(eudaq::Event& theEvent)
 void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
 {
     if(RD53EvtList.size() != 0)
-        for(const auto& evt: RD53EvtList)
+    {
+        size_t it = 0;
+        while(it < RD53EvtList.size())
         {
             eudaq::RawDataEvent eudaqEvent(EUDAQ::EVENT, eudaqProducer->theRunNumber, eudaqProducer->evCounter);
 
-            CMSITEventData::EventData theEvent{std::time(nullptr), evt.l1a_counter, evt.tdc, evt.bx_counter, evt.tlu_trigger_id, {}};
+            auto                      tluTrigId = RD53EvtList[it].tlu_trigger_id;
+            CMSITEventData::EventData theEvent{std::time(nullptr), RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
 
-            for(const auto& frame: evt.chip_frames_events)
+            // ##################################################
+            // # Collect all hits that have same TLU trigger ID #
+            // ##################################################
+            do
             {
-                theEvent.chipData.push_back({frame.first.chip_id, frame.first.chip_lane, {}});
+                for(const auto& frame: RD53EvtList[it].chip_frames_events)
+                {
+                    theEvent.chipData.push_back({frame.first.chip_id, frame.first.chip_lane, frame.first.hybrid_id, frame.second.trigger_id, frame.second.trigger_tag, frame.second.bc_id, {}});
+                    for(const auto& hit: frame.second.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
+                }
 
-                for(const auto& hit: frame.second.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
-            }
+                it++;
+            } while((it < RD53EvtList.size()) && (RD53EvtList[it].tlu_trigger_id == tluTrigId));
 
             // #################
             // # Serialization #
@@ -188,4 +198,5 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
 
             eudaqProducer->evCounter += 1;
         }
+    }
 }
