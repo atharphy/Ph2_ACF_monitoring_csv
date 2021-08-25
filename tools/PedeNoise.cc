@@ -395,8 +395,8 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
 void PedeNoise::scanScurves()
 {
     float    cLimit         = 0.05;
-    int      cMinBreakCount =  5;
-    int      cStepSize      =  1; 
+    int      cMinBreakCount =  5;//take from xml
+    int      cStepSize      =  1;//take from xml 
     int      cInitialSign   = -1;
     DetectorDataContainer cCounts, cSigns, cThresholds ;
     ContainerFactory::copyAndInitChip<std::pair<int,int>>(*fDetectorContainer, cCounts);
