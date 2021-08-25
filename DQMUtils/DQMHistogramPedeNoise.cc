@@ -522,6 +522,51 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
     }
 }
 
+void DQMHistogramPedeNoise::fillSCurvePlots(DetectorDataContainer& fThresholds, DetectorDataContainer& fSCurveOccupancy)
+{
+    for(auto board: fSCurveOccupancy)
+    {
+        auto& cThThisBrd = fThresholds.at(board->getIndex());
+        for(auto opticalGroup: *board)
+        {
+            auto& cThThisGrp = cThThisBrd->at(opticalGroup->getIndex());
+            for(auto hybrid: *opticalGroup)
+            {
+                auto& cThThisHybrd = cThThisGrp->at(hybrid->getIndex());
+                for(auto chip: *hybrid)
+                {
+                    auto& cThThisChip = cThThisHybrd->at(chip->getIndex());
+                    TH2F* chipSCurve =
+                        fDetectorSCurveHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+
+                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    uint16_t channelNumber = 0;
+                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    {
+                        float tmpOccupancy      = channel.fOccupancy;
+                        float tmpOccupancyError = channel.fOccupancyError;
+                        chipSCurve->SetBinContent(channelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
+                        chipSCurve->SetBinError(channelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
+
+                        if(fFitSCurves)
+                        {
+                            TH1F* channelSCurve = fDetectorChannelSCurveHistograms.at(board->getIndex())
+                                                      ->at(opticalGroup->getIndex())
+                                                      ->at(hybrid->getIndex())
+                                                      ->at(chip->getIndex())
+                                                      ->getChannel<HistContainer<TH1F>>(channelNumber)
+                                                      .fTheHistogram;
+                            channelSCurve->SetBinContent(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
+                            channelSCurve->SetBinError(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
+                        }
+                        ++channelNumber;
+                    }
+                }
+            }
+        }
+    }
+}
+
 //========================================================================================================================
 void DQMHistogramPedeNoise::fitSCurves()
 {

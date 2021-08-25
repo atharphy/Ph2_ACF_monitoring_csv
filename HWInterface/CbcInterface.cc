@@ -829,16 +829,12 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     ChipRegItem                 cRegItem;
     setBoard(pCbc->getBeBoardId());
     std::vector<uint32_t> cVecReq;
-    if(pRegNode == "VCth")
+    if(pRegNode == "VCth" || pRegNode == "Threshold")
     {
         uint8_t  cReg0      = ReadChipSingleReg(pCbc, "VCth1");
         uint8_t  cReg1      = ReadChipSingleReg(pCbc, "VCth2");
         uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
         return cThreshold;
-    }
-    else if(pRegNode == "Threshold")
-    {
-        return ReadChipReg(pCbc, "VCth");
     }
     else if(pRegNode == "HitLogic")
     {

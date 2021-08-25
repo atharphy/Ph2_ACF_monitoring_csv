@@ -36,6 +36,7 @@ class PedeNoise : public Tool
 
     void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
     void measureNoise(); // method based on the one below that actually analyzes the scurves and extracts the noise
+    void scanScurves();
     void sweepSCurves(); // actual methods to measure SCurves
     void Validate(uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
     void writeObjects();

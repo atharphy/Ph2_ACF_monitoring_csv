@@ -519,7 +519,6 @@ int main(int argc, char* argv[])
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     
-    
     // if CIC is enabled then align CIC first
     if(cWithCIC) 
     {
@@ -659,7 +658,7 @@ int main(int argc, char* argv[])
         t.start();
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cTool);
-        cDataChecker.Initialise();
+        //cDataChecker.Initialise();
         if(cmd.foundOption("checkClusters")) cDataChecker.ClusterCheck(cArgs);
         if(cmd.foundOption("checkSLink")) cDataChecker.WriteSlinkTest(cmd.optionValue("checkSLink"));
         if(cmd.foundOption("checkStubs")) cDataChecker.StubCheck(cArgs);
@@ -673,8 +672,8 @@ int main(int argc, char* argv[])
         // cDataChecker.DataCheck(cFEsToCheck,0,0);
         // cDataChecker.ReadDataTest();
         // cDataChecker.HitCheck();
-        cDataChecker.writeObjects();
-        cDataChecker.resetPointers();
+        //cDataChecker.writeObjects();
+        //cDataChecker.resetPointers();
         t.show("Time to check data of the front-ends on the system: ");
     }
 

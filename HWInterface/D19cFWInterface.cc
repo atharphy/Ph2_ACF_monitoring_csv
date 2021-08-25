@@ -1832,7 +1832,8 @@ bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNl
                 if(fOptical)
                 {
                     LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
-                    pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                    pTuner.AlignWord(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                    //pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
                     cSuccess = cSuccess && pTuner.fDone;
                 }
                 else

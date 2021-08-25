@@ -5,6 +5,31 @@
     <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
+    <OpticalGroup Id="0" FMCId="0">
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
+        <lpGBT_Files path="./settings/lpGBTFiles/" />
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+          <Settings
+          />
+        </lpGBT>
+        <Hybrid Id="0" Status="1">
+            <Global>
+                <Settings threshold="550" latency="201"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="0" hipCount="1"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            </Hybrid>
+    </OpticalGroup>
+
     <OpticalGroup Id="1" FMCId="0">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
@@ -24,7 +49,7 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
-
+           
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
             </Hybrid>
@@ -40,37 +65,13 @@
             
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
+            
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
      </OpticalGroup>
 
-   
-     <OpticalGroup Id="0" FMCId="0">
-        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
-        <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
-          <Settings
-          />
-        </lpGBT>
-        <Hybrid Id="0" Status="1">
-            <Global>
-                <Settings threshold="550" latency="201"/>
-                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="0" hipCount="1"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
-            </Global>
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configfile="CBC3_default.txt" />
-
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-            </Hybrid>
-     </OpticalGroup>
     <!--CONFIG-->
     <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="clock_source_u7">3</Register> 
@@ -163,7 +164,7 @@
     	</Register>
 	<!-- DIO5 Block -->
 	<Register name="dio5_block">
-	    <Register name="dio5_en"> 1 </Register>
+	    <Register name="dio5_en"> 0 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
@@ -201,7 +202,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">10</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>

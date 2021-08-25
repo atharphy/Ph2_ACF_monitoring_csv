@@ -18,6 +18,7 @@ DataChecker::~DataChecker() {}
 
 void DataChecker::Initialise()
 {
+    exit(0);
     // get threshold range
     auto     cSetting   = fSettingsMap.find("PulseShapeInitialVcth");
     uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 400;
@@ -5163,7 +5164,7 @@ void DataChecker::ReadNeventsTest()
                             auto cPipelineAddress = cEvent->PipelineAddress(cHybrid->getId(), cChip->getId());
                             auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
                             auto cBxId            = cEvent->BxId(cHybrid->getId());
-                            LOG(INFO) << BOLDBLUE << "\t...ROC" << +cChip->getId() << " on hybrid " << +cHybrid->getId() 
+                            LOG(DEBUG) << BOLDBLUE << "\t...ROC" << +cChip->getId() << " on hybrid " << +cHybrid->getId() 
                                 << " L1Id is " << +cL1Id  << " BxId is " << +cBxId 
                                 << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
                                 << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
@@ -5196,12 +5197,12 @@ void DataChecker::ReadNeventsTest()
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
                             std::vector<uint8_t> cSeeds{10};
-                            cSeeds[0] = 2 * (cChip->getId() + 1) + 5;
+                            cSeeds[0] = 2 * (cChip->getHybridId() + 1) + 5;
                             std::vector<int> cBends{0};
                             for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
                             {
                                 auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                                LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
+                                LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " expect to see hits in channels : " << RESET;
                                 for(auto cHit: cHitList) LOG(INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
                             }
                             (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
