@@ -196,7 +196,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             eudaqEvent.AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
             eudaqProducer->MySendEvent(eudaqEvent);
 
-            eudaqProducer->evCounter += 1;
+            eudaqProducer->evCounter++;
         }
     }
 }
