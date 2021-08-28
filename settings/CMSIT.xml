@@ -20,7 +20,7 @@
       <Hybrid Id="0" Status="1">
         <RD53_Files path="${PWD}/" />
 
-        <!-- Available Comment field are: 50x50, 25x100up, 25x100down, unknown -->
+        <!-- Available Comment field are: 50x50, 25x100up, 25x100down, unknown combined with dual, quad -->
         <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0" Comment="50x50">
           <!-- Overwrite .txt configuration file settings -->
           <Settings
