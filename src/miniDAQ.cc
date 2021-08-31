@@ -18,6 +18,7 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/PSAlignment.h"
@@ -155,8 +156,26 @@ int main(int argc, char* argv[])
     outp.str("");
     cTool.ConfigureHw();
 
-    cTool.addFileHandler(cOutputFile, 'w');
+    // Align lpGBT-CIC first
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cTool);
+    cCicAligner.Initialise();
+    cCicAligner.CicLpGbtAlignment();
 
+    // align back-end
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+
+    // if CIC is enabled then align CIC first
+    if(cmd.foundOption("alignCIC")) 
+    {
+        cCicAligner.AlignInputs();
+    }
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
+    
     // align ASICs on PS module
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
@@ -164,27 +183,20 @@ int main(int argc, char* argv[])
     // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
 
-    // if CIC is enabled then align CIC first
-    if(cmd.foundOption("alignCIC"))
-    {
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
-        cCicAligner.waitForRunToBeCompleted();
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cCicAligner.Reset();
-        // cCicAligner.dumpConfigFiles();
-    }
-
-    // align back-end
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
+    // time align stubs in back-end 
+    StubBackEndAlignment cStubBackEndAligner;
+    cStubBackEndAligner.Inherit(&cTool);
+    cStubBackEndAligner.Initialise();
     if(!cmd.foundOption("skipAlignment"))
     {
-        cBackEndAligner.Start(0);
-        cBackEndAligner.waitForRunToBeCompleted();
-        cBackEndAligner.Reset();
+        cStubBackEndAligner.FindPackageDelay();
+        cStubBackEndAligner.FindStubLatency();
+    }
+    cStubBackEndAligner.Reset();
+
+    
+    if(!cmd.foundOption("skipAlignment"))
+    {
         cPSAlignment.Align();
     }
     cPSAlignment.dumpConfigFiles();

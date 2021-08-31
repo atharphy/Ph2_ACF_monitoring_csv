@@ -527,7 +527,8 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module3");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyTTi,ChannelId:LV_Module");
+        //fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module3");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -555,7 +556,7 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module3");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyTTi,ChannelId:LV_Module");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -616,7 +617,7 @@ void D19cFWInterface::configureLink(const BeBoard* pBoard)
         if(cSCAenabled == 1) LOG(INFO) << BOLDBLUE << "SCA enabled successfully." << RESET;
         cGBTx.scaConfigureGPIO(this);
         // configure GBTx
-        bool cRisingEdge = true;
+        bool cRisingEdge = false;
         // cGBTx.gbtxResetPhaseShifterClocks(this);
         cGBTx.gbtxConfigureChargePumps(this);
         cGBTx.gbtxResetPhaseShifterClocks(this);
@@ -624,7 +625,7 @@ void D19cFWInterface::configureLink(const BeBoard* pBoard)
         cGBTx.gbtxConfigure(this);
         cGBTx.gbtxSetPhase(this, fGBTphase);
         cGBTx.gbtxSelectEdgeTx(this, cRisingEdge);
-        cGBTx.gbtxSelectTerminationRx(this, true);
+        cGBTx.gbtxSelectTerminationRx(this, false);
         cGBTx.gbtxSetDriveStrength(this, 0xa);
     }
 }
@@ -1499,29 +1500,80 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
     WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 }
 
-void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
+void D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint )
 {
     // this->ConfigureTriggerFSM(0, 10, 3);
     // disable back-pressure
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
-    this->Start();
-    std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
-    this->Stop();
+
+    // use generic fast command block to send ReSync + L1A 
+    this->ResetFCMDBram();
+    std::vector<uint8_t> cFastCommands(0);cFastCommands.clear();
+    size_t cL1toClear = 10; 
+    size_t cAfterClear = 5000;
+    size_t cDelayAfterReSync = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
+    size_t cDelayAfterTP     = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    size_t cDelayToNext      = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
+    LOG (INFO) << BOLDMAGENTA << "Delay after ReSync : " << cDelayAfterReSync << " Delay after TP : " << cDelayAfterTP << RESET;
+    for(size_t cIndx=0; cIndx < 14000 ; cIndx++)
+    {
+        if( cIndx == 0 ) cFastCommands.push_back( 0xC3 ); // BC0 to reset L1 capture 
+        else if( cIndx == cL1toClear )  cFastCommands.push_back( 0xC9 ); // flush L1A FIFO 
+        else if( cIndx ==  cL1toClear+cAfterClear ) cFastCommands.push_back( 0xD3 ); // send a ReSync+BC0 
+        else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync ) cFastCommands.push_back( 0xC5 ); // send a TP injection 
+        else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP ) cFastCommands.push_back( 0xC9 ); // send an L1A 
+        else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP+cDelayToNext ) cFastCommands.push_back( 0xC9 ); // send another L1A 
+        else cFastCommands.push_back( 0xC1 );
+    }
+    ConfigureFCMDBram(cFastCommands);
+    // repeat the sequence N times
+    this->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
+    this->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", 1);
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", 1);
+    // make sure fast command duration is 0
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
+    // make sure all triggers are accepted 
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1);
+    ResetTriggerFSM();
+
+    //this->Compose_fast_command(fFastCommandDuration, 0, 0, 0, 1);
+    // start generic  - ctrl signal high
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x1);
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
+
+
+    // this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
+    // this->Start();
+    // std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
+    // this->Stop();
 
     auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-    LOG(INFO) << BOLDBLUE << "Hits debug ...." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Hits debug ...." << RESET;
     std::string cBuffer = "";
+    size_t cLineIndx=0;
     for(auto cWord: cWords)
     {
         auto                     cString = std::bitset<32>(cWord).to_string();
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < 4; cIndex++) { cOutputWords.push_back(cString.substr(cIndex * 8, 8)); }
         std::string cOutput = "";
-        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--) { cOutput += *cIt + " "; }
-        LOG(INFO) << BOLDBLUE << cOutput << RESET;
+        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--) { cOutput += *cIt + " "; cBuffer += *cIt;}
+        if( pPrint ) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
+        cLineIndx++;
     }
-
-    this->ResetReadout();
+    size_t cOffset = 28;
+    auto cHeader = cBuffer.substr(4, cOffset); cOffset+=4;
+    auto cStatus = cBuffer.substr(cOffset, 9);cOffset+=9; 
+    auto cL1Id = std::stoi( cBuffer.substr(cOffset, 9), 0 ,2 );cOffset+=9;
+    auto cCbcErr = cBuffer.substr(cOffset, 2); cOffset+=2;
+    auto cPipeAddr = std::stoi( cBuffer.substr(cOffset, 9),0,2); cOffset+=9;
+    auto cL1IdCbc = std::stoi( cBuffer.substr(cOffset, 9),0,2);cOffset+=9;
+    LOG (INFO) << BOLDMAGENTA << "Header is " << cHeader  
+        << " Status is " << cStatus
+        << " L1Id is " << cL1Id 
+        << " CBC Error is " << cCbcErr 
+        << " Pipeaddress is " << cPipeAddr 
+        << " L1Id CBC is " << cL1IdCbc << RESET;
+    // this->ResetReadout();
 }
 std::vector<std::string> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 {
@@ -5824,7 +5876,7 @@ void D19cFWInterface::ResetFCMDBram()
         cRegs.push_back({"fc7_daq_cnfg.fast_command_block.generic_fcmd_addr", cBx});
         cRegs.push_back({"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x1});
         cRegs.push_back({"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x0});
-        if(cBx % (cBRAMdepth / 10) == 0) LOG(INFO) << BOLDBLUE << "\t... Bx..." << +cBx << RESET;
+        if(cBx % (cBRAMdepth / 10) == 0) LOG(DEBUG) << BOLDBLUE << "\t... Bx..." << +cBx << RESET;
     }
     this->WriteStackReg(cRegs);
     LOG(DEBUG) << BOLDBLUE << "Resetting FCMD BRAM from sw..... done" << RESET;

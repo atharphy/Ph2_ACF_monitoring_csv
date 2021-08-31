@@ -131,15 +131,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
-    /*
-    fPowerSupplyClient = new TCPClient("192.168.122.123", 7000);
+    
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
     for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
-    */
+    
 
     if(fDetectorContainer->size() > 0)
     {
@@ -497,6 +497,20 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
         // send a ReSync to all chips before starting
         fBeBoardInterface->ChipReSync(pBoard);
+        // check resync request has been cleared 
+        for(auto cOpticalGroup: *pBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                if(cCic == NULL) continue;
+
+                if( fCicInterface->GetResyncRequest(cCic) ){
+                    LOG (INFO) << BOLDRED << "ReSync request ofrom CIC" << +cHybrid->getId() << RESET;
+                    throw std::runtime_error(std::string("FAILED to clear CIC ReSync request"));
+                }
+            }   
+        }
     }
     else
         LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;

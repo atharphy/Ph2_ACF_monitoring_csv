@@ -31,7 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     CPBconfig cCPBconfig;
     cCPBconfig.fEnable       = fUseCPB;
     cCPBconfig.fI2CFrequency = 3;
-    cCPBconfig.fWait_us      = 500;   // TO-DO - make configurable from xml
+    cCPBconfig.fWait_us      = 0;   // TO-DO - make configurable from xml
     cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
     cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
     cCPBconfig.fMaxAttempts  = 1000; // TO-DO - make configurable from xml
@@ -64,7 +64,10 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cReady = IsPUSMDone(pChip);
         cIter++;
     }
-    if(cReady) LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+    if(cReady){ 
+        LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
+        ResetI2C(pChip, {0, 1, 2});
+    }
     if(!cReady) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     // PrintChipMode(pChip);
     return cReady;

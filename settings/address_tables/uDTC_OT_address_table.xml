@@ -123,6 +123,7 @@
                 <node id="power_enable"                     mask="0x00000008"/>
                 <node id="fast_commands_enable"             mask="0x00000010"/>
                 <node id="stub_package_delay"               mask="0x1c000000"/>
+                <!-- <node id="stub_package_delay"               mask="0x00700000"/> -->
             </node>
             <node id="i2c"              address="0x001">
                     <node id="frequency"                mask="0x0000000f"/>
@@ -544,6 +545,7 @@
            <node id="slvs_debug"               address="0x00F">
                 <node id="ps_counters_ready"        mask="0x00000004"/>
                 <node id="ps_counters_fsm_state"    mask="0x000000f0"/>
+                <node id="first_header_delay"       mask="0x0000ff00"/>
             </node>
 
 

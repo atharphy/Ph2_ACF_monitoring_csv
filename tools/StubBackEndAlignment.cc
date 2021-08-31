@@ -420,6 +420,9 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             }     // hybrid
         }         // OG
 
+        // send a ReSync since the latency was changed 
+        fBeBoardInterface->ChipReSync(pBoard);
+        // look at data 
         ReadNEvents(pBoard, cNevents);
         const std::vector<Event*>& cEvents         = this->GetEvents();
         size_t                     cNEventsMatched = 0;

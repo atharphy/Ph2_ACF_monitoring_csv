@@ -290,6 +290,26 @@ void GbtInterface::gbtxSelectEdge(BeBoardFWInterface* pInterface, bool pRising)
     LOG(INFO) << BOLDBLUE << "GBTx default configuration " << std::bitset<8>(cReadBack) << " -- will be set to " << std::bitset<8>(cRegValue) << RESET;
     // icWrite(pInterface, 244 , cRegValue ) ;
 }
+void GbtInterface::gbtxAutoAlign(BeBoardFWInterface* pInterface, uint8_t pHybridId) 
+{
+    uint16_t cReg = 62;
+    // training mode 
+    uint8_t  cPhaseSelectMode = 0x01;
+    uint32_t cReadBack        = icRead(pInterface, cReg, 1);
+    uint32_t cWrite           = (cReadBack & 0xc0) | ((cPhaseSelectMode << 4) | (cPhaseSelectMode << 2) | (cPhaseSelectMode << 0));
+    icWrite(pInterface, cReg, cWrite);
+    // train channels 
+    //                                0,1,2,3,4,5
+
+    // gbtxEnableRxChannel(pInterface, 0, {0, 4});
+    // gbtxEnableRxChannel(pInterface, 1, {4});
+    // gbtxEnableRxChannel(pInterface, 2, {0, 4});
+    // gbtxEnableRxChannel(pInterface, 3, {0, 4});
+    // gbtxEnableRxChannel(pInterface, 4, {0, 4});
+    // gbtxEnableRxChannel(pInterface, 5, {1, 4});
+    // gbtxEnableRxChannel(pInterface, 6, {0, 4});
+}
+
 void GbtInterface::gbtxSetPhase(BeBoardFWInterface* pInterface, uint8_t pPhase)
 {
     uint16_t cReg = 62;

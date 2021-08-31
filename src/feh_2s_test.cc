@@ -151,6 +151,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
     cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkL1Timing", "Check L1 timing for hybrid# [please provide hybrid number]", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
 
@@ -537,6 +538,46 @@ int main(int argc, char* argv[])
         cStubBackEndAligner.FindStubLatency();
     }
     cStubBackEndAligner.Reset();
+
+    // quickly check the new capture
+    if( cmd.foundOption("checkL1Timing") )
+    {
+        uint8_t      cChipId = (cmd.foundOption("checkL1Timing")) ? convertAnyInt(cmd.optionValue("checkL1Timing").c_str()) : 0;
+        std::vector<uint8_t> cHybridIds(0);
+        // get unique hybrid Ids 
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            for( const auto cOpticalGroup : *cBoard )
+            {
+                for( const auto cHybrid : *cOpticalGroup )
+                {
+                    if( std::find( cHybridIds.begin(), cHybridIds.end(), cHybrid->getId() ) != cHybridIds.end() ) continue; 
+                    cHybridIds.push_back( cHybrid->getId() );
+                }
+            }
+        }
+
+        for( auto cHybridId : cHybridIds) 
+        {
+            auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            for(const auto cBoard: *cTool.fDetectorContainer)
+            {
+                cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
+                cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
+            }
+            LOG (INFO) << BOLDYELLOW << "Scoping L1 data on hybrid" << +cHybridId << RESET;
+            cInterface->L1ADebug(1, false);
+            for(const auto cBoard: *cTool.fDetectorContainer)
+            {
+                LOG (INFO) << BOLDMAGENTA << "First header found after " << +cTool.fBeBoardInterface->ReadBoardReg(cBoard,"fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay")
+                    << " 40 MHz clock cycles." << RESET;
+                //size_t cReadBackEvents = cTool.ReadData(cBoard, true);
+                //LOG(INFO) << BOLDMAGENTA << "Read-back " << +cReadBackEvents << " events from Board#" << +cBoard->getId() << RESET;
+
+            }
+        }
+    }
+    
 
     // equalize thresholds on readout chips
     if(cTune)
