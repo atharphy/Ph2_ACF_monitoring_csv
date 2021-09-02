@@ -105,7 +105,6 @@ void RD53eudaqProducer::OnStopRun()
     try
     {
         RD53sysCntrPhys.Stop();
-        RD53sysCntrPhys.draw();
 
         // #####################
         // # Send a EORE event #
