@@ -290,7 +290,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
 
                                 SCurve::computeStats(measurements, offset, nHits, mean, rms);
 
-                                if((rms > 0) && (nHits > 0) && (isnan(rms) == false))
+                                if((mean > 0) && (rms > 0) && (nHits > 0) && (std::isnormal(rms) == true))
                                 {
                                     theThresholdAndNoiseContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -385,7 +385,7 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
 
     nHits = weight * nEvents;
 
-    if(weight != 0)
+    if((weight > 0) && (mean > 0))
     {
         mean /= weight;
         rms = sqrt((mean2 / weight - mean * mean) * weight / (weight - 1. / nEvents));
