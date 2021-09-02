@@ -298,7 +298,9 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 for(const pugi::xml_attribute& attr: theChild.attributes())
                 {
                     os << BOLDBLUE << "|\t|\t|---- " << attr.name() << ": " << BOLDYELLOW << attr.value() << "\n" << RESET;
-                    if(std::string(attr.name()) == "RxHSLPolarity")
+                    if(std::string(attr.name()) == "ChipAddress")
+                        thelpGBT->setChipAddress(convertAnyInt(theChild.attribute("ChipAddress").value()));
+                    else if(std::string(attr.name()) == "RxHSLPolarity")
                         thelpGBT->setRxHSLPolarity(convertAnyInt(theChild.attribute("RxHSLPolarity").value()));
                     else if(std::string(attr.name()) == "TxHSLPolarity")
                         thelpGBT->setTxHSLPolarity(convertAnyInt(theChild.attribute("TxHSLPolarity").value()));
@@ -1066,10 +1068,10 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 
             // In the case of IT propagate LpGBT mapping the front-end chip
             uint8_t cChipId = cChild.attribute("Id").as_int();
-            static_cast<RD53*>(cHybrid->at(cChipId))->setRxGroup(cRxGroups[0]);
-            static_cast<RD53*>(cHybrid->at(cChipId))->setRxChannel(cRxChannels[0]);
-            static_cast<RD53*>(cHybrid->at(cChipId))->setTxGroup(cTxGroups[0]);
-            static_cast<RD53*>(cHybrid->at(cChipId))->setTxChannel(cTxChannels[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
         }
     }
 }

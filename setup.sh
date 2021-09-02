@@ -87,6 +87,7 @@ export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
 export TCUSBforROHFlag='-D__ROH_USB__'
 export TCUSBforSEHFlag='-D__SEH_USB__'
+export TCUSBTcpServerFlag='-D__TCP_SERVER__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -118,6 +119,7 @@ export CompileWithEUDAQ=false
 # Compile with TC_USB library
 export CompileWithTCUSB=false
 export UseTCUSBforROH=false
+export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then

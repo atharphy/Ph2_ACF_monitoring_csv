@@ -299,12 +299,12 @@
     <node id="gtx_refclk_rate"      address="0x00000015"      permission="r"> </node>
     <node id="clkin_rate"           address="0x00000016"      permission="r"> </node>
 
-    <node id="i2c_block_1"          address="0x0000001B"      permission="r"       description="">
+    <node id="i2c_block_1"          address="0x00000017"      permission="r"       description="">
       <node id="NTC1"                  mask="0x00000FFF"      permission="r"       description="" />
       <node id="NTC2"                  mask="0x00FFF000"      permission="r"       description="" />
     </node>
 
-    <node id="i2c_block_2"          address="0x0000001C"      permission="r"       description="">
+    <node id="i2c_block_2"          address="0x00000018"      permission="r"       description="">
       <node id="vdd_sense"             mask="0x00000FFF"      permission="r"       description="" />
       <node id="gnd_sense"             mask="0x00FFF000"      permission="r"       description="" />
     </node>

@@ -36,7 +36,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& t
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "ToT Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "ToT Distribution", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
@@ -121,7 +121,10 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-                                ToT2DHist->SetBinError(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPhError);
+                                ToT2DHist->SetBinError(col + 1,
+                                                       row + 1,
+                                                       sqrt(ToT2DHist->GetBinError(col + 1, row + 1) * ToT2DHist->GetBinError(col + 1, row + 1) +
+                                                            cChip->getChannel<OccupancyAndPh>(row, col).fPhError * cChip->getChannel<OccupancyAndPh>(row, col).fPhError));
                             }
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }

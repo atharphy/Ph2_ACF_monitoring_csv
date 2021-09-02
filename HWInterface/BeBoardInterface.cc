@@ -44,6 +44,13 @@ void BeBoardInterface::setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pB
     setBoard(pBoard->getId());
     fBoardFW->setPowerSupplyClient(fPowerSupplyClient);
 }
+#ifdef __TCP_SERVER__
+void BeBoardInterface::setTestcardClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fTestcardClient)
+{
+    setBoard(pBoard->getId());
+    fBoardFW->setTestcardClient(fTestcardClient);
+}
+#endif
 
 void BeBoardInterface::enableFileHandler(BeBoard* pBoard)
 {

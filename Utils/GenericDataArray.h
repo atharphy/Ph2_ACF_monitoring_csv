@@ -17,7 +17,10 @@ template <size_t size, typename T = float>
 class GenericDataArray
 {
   public:
-    GenericDataArray() {}
+    GenericDataArray()
+    {
+        for(size_t i = 0; i < size; ++i) data[i] = T();
+    }
     ~GenericDataArray() {}
 
     T& operator[](size_t position) { return data[position]; }

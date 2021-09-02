@@ -283,7 +283,7 @@ class Command
         frameVector.push_back(cmdCode);
 
         // Insert: chip id, address and data
-        for(auto i = 1u; i < nFields; i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
+        for(auto i = 1; i < static_cast<int>(nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
     }
 
     std::vector<uint16_t> getFrames() const

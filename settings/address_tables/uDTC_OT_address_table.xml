@@ -133,10 +133,8 @@
             </node>
             
             <node id="slvs_debug" address = "0x000">
-                <!--<node id="hybrid_select"                   mask="0x000F0000"/>
-                <node id="chip_select"                     mask="0x00F00000"/>
-            --> <!-- for firmware with multiple hybrids -->
                 <node id="chip_select"                     mask="0x000F0000"/>
+                <node id="hybrid_select"                   mask="0x0F000000"/>        
             </node>
 
             <!-- line debug -->

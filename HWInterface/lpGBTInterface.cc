@@ -235,14 +235,12 @@ void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGrou
         else if(cGroup == 2 || cGroup == 3)
             cTrainRxReg = "EPRXTrain32";
         else if(cGroup == 4 || cGroup == 5)
-            cTrainRxReg = "EPRXTrain32";
+            cTrainRxReg = "EPRXTrain54";
         else if(cGroup == 6)
-            cTrainRxReg = "EPRXTrain32";
+            cTrainRxReg = "EPRXTrainEc6";
 
-        if(pTrain == true)
-            WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-        else
-            WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
+        WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
+        WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
     }
 }
 
@@ -290,6 +288,17 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
 
     // Set back Rx source to normal data
     lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_NORMAL);
+}
+
+void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups)
+{
+    std::string cRegName = "RST1";
+    uint8_t     cValue   = 0x00;
+
+    for(auto cGroup: pGroups) { cValue = cValue | (1 << cGroup); }
+    this->WriteChipReg(pChip, "RST1", cValue);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    this->WriteChipReg(pChip, "RST1", 0x00);
 }
 
 // ################################
@@ -508,7 +517,7 @@ void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::str
     uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
     WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
 
-    // Sets output current for the current DAC. Current = CURDACSelect * XX uA
+    // Sets output current for the current DAC. Current = CURDACSelect * 3.5 uA
     WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
 
     // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
@@ -659,7 +668,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 // ####################
 {
     const double   mainClock       = 40e6;                             // @CONST@
-    const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
+    const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double         frames2run;
@@ -685,7 +694,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // # Start #
     // #########
     lpGBTInterface::StartBERT(pChip, false); // Stop
-    lpGBTInterface::StartBERT(pChip, true);  // Stert
+    lpGBTInterface::StartBERT(pChip, true);  // Start
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
@@ -798,11 +807,10 @@ void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
 }
 
-bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes)
+bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
 {
     // Write Data to Slave Address using I2C Master
-    uint8_t cFreq = 3; // 1 MHz
-    lpGBTInterface::ConfigureI2C(pChip, pMaster, cFreq, (pNBytes > 1) ? pNBytes : 0, 0);
+    lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, (pNBytes > 1) ? pNBytes : 0, 0);
 
     // Prepare Address Register
     // Write Slave Address
@@ -842,18 +850,22 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "I2C Write Transaction FAILED" << RESET;
-        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C Transaction failed"));
+        LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
+#ifdef __TCUSB__
+        // In the test system a run time error is undesired
+        return false;
+#else
+        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C write transaction FAILED"));
+#endif
     }
 
     return true;
 }
 
-uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes)
+uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq)
 {
     // Read Data from Slave Address using I2C Master
-    uint8_t cFreq = 3; // 1 MHz
-    lpGBTInterface::ConfigureI2C(pChip, pMaster, cFreq, pNBytes, 0);
+    lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, pNBytes, 0);
     // Prepare Address Register
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
     // Write Slave Address
@@ -877,8 +889,13 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
     } while(cIter < RD53Shared::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
-        LOG(INFO) << GREEN << "I2C Read Transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
+#ifdef __TCUSB__
+        // In the test system a run time error is undesired
+        return false;
+#else
         throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
+#endif
     }
 
     // Return read back value
@@ -893,7 +910,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         for(uint8_t cByte = 0; cByte < pNBytes; cByte++)
         {
             std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Read" + std::to_string(15 - cByte);
-            cReadData |= ((uint32_t)ReadChipReg(pChip, cI2CDataReg) << cByte);
+            cReadData |= ((uint32_t)ReadChipReg(pChip, cI2CDataReg) << 8 * cByte);
         }
         return cReadData;
     }

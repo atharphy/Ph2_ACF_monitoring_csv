@@ -740,14 +740,13 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    const uint8_t                   flpGBTAddress = 0x70;
     const uint8_t                   fI2CFrequency = 3; // 1 MHz
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override;
-    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress) override;
+    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress) override;
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################

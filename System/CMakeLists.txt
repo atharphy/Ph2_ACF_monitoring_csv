@@ -21,6 +21,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${UHAL_LOG_LIB_PREFIX})
     link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
+    # Find root and link against it
+    if(${ROOT_FOUND})
+        include_directories(${ROOT_INCLUDE_DIRS})
+        set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+    endif()
+
     # Find source files
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
@@ -49,6 +55,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       else($ENV{UseTCUSBforROH})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforROH})
+      if($ENV{UseTCUSBTcpServer})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+      endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
     ####################################

@@ -13,28 +13,13 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
-#include "../tools/RD53ClockDelay.h"
-#include "../tools/RD53Gain.h"
-#include "../tools/RD53GainOptimization.h"
-#include "../tools/RD53InjectionDelay.h"
-#include "../tools/RD53Latency.h"
 #include "../tools/RD53Physics.h"
 #include "../tools/RD53PixelAlive.h"
-#include "../tools/RD53SCurve.h"
-#include "../tools/RD53ThrAdjustment.h"
-#include "../tools/RD53ThrEqualization.h"
-#include "../tools/RD53ThrMinimization.h"
 
 #include <chrono>
 #include <thread>
 
-#ifdef __USE_ROOT__
 #include "TApplication.h"
-#endif
-
-#ifdef __EUDAQ__
-#include "../tools/RD53eudaqProducer.h"
-#endif
 
 // ##################
 // # Default values #
@@ -79,6 +64,10 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
         LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN
                   << " events" << RESET;
     }
+
+    std::string fileName(binaryFile);
+    RD53Event::MakeNtuple(fileName.replace(fileName.find(".raw"), 4, ".root"), decodedEvents);
+    LOG(INFO) << GREEN << "Saving raw data into ROOT ntuple: " << BOLDYELLOW << fileName << RESET;
 
     mySysCntr.closeFileHandler();
 }

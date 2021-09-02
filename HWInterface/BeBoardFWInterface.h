@@ -63,7 +63,10 @@ class BeBoardFWInterface : public RegManager
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
 
     void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
-
+#ifdef __TCP_SERVER__
+    void       setTestcardClient(TCPClient* theTestcardClient) { fTestcardClient = theTestcardClient; };
+    TCPClient* getTestcardClient() { return fTestcardClient; };
+#endif
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
@@ -269,10 +272,10 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                    = 0;
-    virtual void     ResetOptoLink()                                                                                                                = 0;
-    virtual bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)                                                       = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                                                 = 0;
+    virtual void     ResetOptoLink()                                                                                                                                             = 0;
+    virtual bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
+    virtual uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress)                                                       = 0;
 
     // ##########################################
     // # Read/Write new Command Processor Block #
@@ -297,7 +300,9 @@ class BeBoardFWInterface : public RegManager
     uint32_t   numAcq{0};
     uint32_t   nbMaxAcq{0};
     TCPClient* fPowerSupplyClient;
-
+#ifdef __TCP_SERVER__
+    TCPClient* fTestcardClient;
+#endif
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison
     template <typename T, class BinaryPredicate>

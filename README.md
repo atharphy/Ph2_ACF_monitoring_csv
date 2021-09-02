@@ -24,6 +24,11 @@ Alternatively, instead of the `dd` command above, to only copy the needed bytes 
 imageName=sdgoldenimage.img
 dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --block-size=1 $imageName | awk '{print $1}')
 ```
+
+If you installed the command `pv` (`sudo yum install -y pv`), then the best way is the following (replacing `/dev/mmcblk0` with your target device):
+```bash
+pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
+```
 <hr>
 
 
@@ -44,7 +49,7 @@ dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --
 4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
 5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
-More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
+More details on the hardware needed to setup the system can be bound [here](https://indico.cern.ch/event/1014295/contributions/4257334/attachments/2200045/3728440/Low-resoution%202021_02%20DAQ%20School.pdf)
 
 **Firmware setup:**
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
@@ -195,7 +200,9 @@ For more information on the firmware, please check the doc directory of https://
 
 ### Gitlab CI setup for Developers (required to submit merge requests!!!)
 
-1. Add predefined variables
+1. Make sure you are subscribed to the cms-tracker-phase2-DAQ e-group
+
+2. Add predefined variables
 
     i. from your fork go to `Ph2_ACF > settings > CI/CD`
 
@@ -211,7 +218,7 @@ For more information on the firmware, please check the doc directory of https://
         - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
-2. Enable shared Runners (if not enabled)
+3. Enable shared Runners (if not enabled)
 
     i. from `settings > CI/CD` expand the `Runners` section
 

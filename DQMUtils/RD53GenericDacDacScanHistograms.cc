@@ -48,7 +48,7 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, const DetectorConta
 
 bool GenericDacDacScanHistograms::fill(std::vector<char>& dataBuffer)
 {
-    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     ChipContainerStream<EmptyContainer, GenericDataArray<GenericDacDacScanSize>> theOccStreamer("GenericDacDacScanOcc");
     ChipContainerStream<EmptyContainer, std::pair<uint16_t, uint16_t>>           theGenericDacDacScanStreamer("GenericDacDacScanDACDAC");
@@ -73,7 +73,7 @@ bool GenericDacDacScanHistograms::fill(std::vector<char>& dataBuffer)
 
 void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -124,7 +124,7 @@ void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContai
 
 void GenericDacDacScanHistograms::process()
 {
-    draw<TH2F>(Occupancy2D, "gcolz", "frequency", "Frequency (MHz)");
+    draw<TH2F>(Occupancy2D, "gcolz", "frequency", "VDDD (V)");
     draw<TH1F>(GenericDac1Scan);
     draw<TH1F>(GenericDac2Scan);
 }

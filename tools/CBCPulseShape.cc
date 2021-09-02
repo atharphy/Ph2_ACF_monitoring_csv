@@ -19,13 +19,16 @@ CBCPulseShape::~CBCPulseShape() { delete fChannelGroupHandler; }
 
 void CBCPulseShape::Initialise(void)
 {
-    fEventsPerPoint = findValueInSettings<double>("PulseShapeNevents", 10);
-    fInitialLatency = findValueInSettings<double>("PulseShapeInitialLatency", 200);
-    fInitialDelay   = findValueInSettings<double>("PulseShapeInitialDelay", 0);
-    fFinalDelay     = findValueInSettings<double>("PulseShapeFinalDelay", 25);
-    fDelayStep      = findValueInSettings<double>("PulseShapeDelayStep", 1);
-    fPulseAmplitude = findValueInSettings<double>("PulseShapePulseAmplitude", 150);
-    fChannelGroup   = findValueInSettings<double>("PulseShapeChannelGroup", -1);
+    fEventsPerPoint        = findValueInSettings<double>("PulseShapeNevents", 10);
+    fInitialLatency        = findValueInSettings<double>("PulseShapeInitialLatency", 200);
+    fInitialDelay          = findValueInSettings<double>("PulseShapeInitialDelay", 0);
+    fFinalDelay            = findValueInSettings<double>("PulseShapeFinalDelay", 25);
+    fDelayStep             = findValueInSettings<double>("PulseShapeDelayStep", 1);
+    fPulseAmplitude        = findValueInSettings<double>("PulseShapePulseAmplitude", 150);
+    fChannelGroup          = findValueInSettings<double>("PulseShapeChannelGroup", -1);
+    fPlotPulseShapeSCurves = findValueInSettings<double>("PlotPulseShapeSCurves", 0);
+
+    fLimit = 0.02; // larger tollerance for SCurve limits
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -54,21 +57,23 @@ void CBCPulseShape::runCBCPulseShape(void)
     setFWTestPulse();
     disableStubLogic();
 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        setSameDacBeBoard(static_cast<Ph2_HwDescription::BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
-        setSameDacBeBoard(static_cast<Ph2_HwDescription::BeBoard*>(cBoard), "TriggerLatency", fInitialLatency);
-    }
+    setSameDac("TestPulsePotNodeSel", fPulseAmplitude);
+    setSameDac("TriggerLatency", fInitialLatency);
 
     // setSameGlobalDac("TestPulsePotNodeSel",  pTPAmplitude);
     LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
 
     for(uint16_t delay = fInitialDelay; delay <= fFinalDelay; delay += fDelayStep)
     {
-        uint8_t  delayDAC   = delay % 25;
-        uint16_t latencyDAC = fInitialLatency - delay / 25;
+        uint16_t delayDAC   = 25 - (delay % 25);
+        uint16_t latencyDAC = fInitialLatency - (delay / 25);
+        if(delayDAC == 25)
+        {
+            delayDAC   = 0;
+            latencyDAC = latencyDAC + 1;
+        }
         LOG(INFO) << BOLDBLUE << "Scanning VcThr for delay = " << +delayDAC << " and latency = " << +latencyDAC << RESET;
-        // setSameDac("TestPulseDel&ChanGroup", reverseBits(delayDAC));
+
         setSameDac("TestPulseDelay", delayDAC);
         setSameDac("TriggerLatency", latencyDAC);
 
@@ -76,7 +81,10 @@ void CBCPulseShape::runCBCPulseShape(void)
         extractPedeNoise();
 
 #ifdef __USE_ROOT__
+        LOG(INFO) << BOLDGREEN << "Plotting delay for " << +delay << RESET;
         fCBCHistogramPulseShape.fillCBCPulseShapePlots(delay, *fThresholdAndNoiseContainer);
+        if(fPlotPulseShapeSCurves)
+            for(auto& scurveOccupancy: fSCurveOccupancyMap) { fCBCHistogramPulseShape.fillSCurvePlots(scurveOccupancy.first, latencyDAC, delayDAC, *scurveOccupancy.second); }
 #else
         if(fStreamerEnabled)
         {
@@ -84,6 +92,15 @@ void CBCPulseShape::runCBCPulseShape(void)
             theThresholdAndNoiseStream.setHeaderElement<0>(delay);
 
             for(auto board: *fThresholdAndNoiseContainer) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
+
+            for(auto& scurveOccupancy: fSCurveOccupancyMap)
+            {
+                auto theScurveOccupancyStream = prepareChannelContainerStreamer<Occupancy, uint16_t, uint16_t, uint16_t>("SCurve");
+                theScurveOccupancyStream.setHeaderElement<0>(scurveOccupancy.first);
+                theScurveOccupancyStream.setHeaderElement<1>(latencyDAC);
+                theScurveOccupancyStream.setHeaderElement<2>(delayDAC);
+                for(auto board: *scurveOccupancy.second) { theScurveOccupancyStream.streamAndSendBoard(board, fNetworkStreamer); }
+            }
         }
 #endif
         fThresholdAndNoiseContainer->reset();

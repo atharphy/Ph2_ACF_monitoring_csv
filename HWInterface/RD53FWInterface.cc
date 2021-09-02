@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), ddr3Offset(0) {}
+RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), ddr3Offset(0), FWinfo(0) {}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {
@@ -25,14 +25,6 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
     }
     else
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
-}
-
-uint32_t RD53FWInterface::getBoardInfo()
-{
-    uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
-    uint32_t cVersionWord  = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
-    return cVersionWord;
 }
 
 void RD53FWInterface::ResetSequence(const std::string& refClockRate)
@@ -68,6 +60,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ########################
     uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
+    this->FWinfo           = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
 
     uint32_t cFWyear    = RegManager::ReadReg("user.stat_regs.fw_date.year");
     uint32_t cFWmonth   = RegManager::ReadReg("user.stat_regs.fw_date.month");
@@ -118,13 +111,15 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
                 if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::External)
                 {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
                     cfgDIO5.enable    = true;
                     cfgDIO5.ch_out_en = 0x0;
                 }
                 else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     cfgDIO5.enable             = true;
-                    cfgDIO5.ch_out_en          = 0x04;
+                    cfgDIO5.ch_out_en          = 0x05;
                     cfgDIO5.tlu_en             = true;
                     cfgDIO5.tlu_handshake_mode = 0x02;
                 }
@@ -970,14 +965,13 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
-bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
+bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // OptoChip ID
     RD53FWInterface::selectLink(linkNumber);
 
     // Config
-    RegManager::WriteStackReg(
-        {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", LpGBTaddress}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_wr_en", 0x1},
@@ -987,7 +981,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
 
     if(pVerifLoop == true)
     {
-        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(linkNumber, pAddress);
+        uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(linkNumber, LpGBTaddress, pAddress);
         if(cReadBack != pData)
         {
             LOG(ERROR) << BOLDRED << "[RD53FWInterface::WriteOpticalLinkRegiser] Register readback failure for register 0x" << BOLDYELLOW << std::hex << std::uppercase << pAddress << std::dec
@@ -999,13 +993,13 @@ bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
     return true;
 }
 
-uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
+uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress)
 {
     // OptoChip ID
     RD53FWInterface::selectLink(linkNumber);
 
     // Config
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", LpGBTaddress}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_2.ic_nb_of_words_to_read", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x0}});
@@ -1051,7 +1045,6 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
 {
     RegManager::WriteReg(regName, value);
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
-    RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 
     if(doReset == true)
     {
@@ -1200,7 +1193,7 @@ void RD53FWInterface::ReadClockGenerator()
         uint32_t          readback = RegManager::ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
-        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
     }
 }
 
@@ -1326,7 +1319,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
+    const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double         frames2run;
@@ -1381,7 +1374,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
             return -1;
         }
         frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-        nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+        nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
@@ -1403,12 +1396,12 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
     cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-    nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+    nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
     LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
-    LOG(INFO) << GREEN << "Final BER: " << BOLDYELLOW << nErrors * nBitInClkPeriod / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)"
-              << RESET;
+    LOG(INFO) << GREEN << "Final Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
+              << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors / frames2run;

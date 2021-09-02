@@ -62,7 +62,11 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
+    fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
+    fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
+
+    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -165,17 +169,23 @@ void PedeNoise::sweepSCurves()
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
+
+    bool forceAllChannels = false;
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(true);
         setFWTestPulse();
         LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
-        cStartValue = this->findPedestal();
     }
     else
     {
         this->enableTestPulse(false);
-        cStartValue = this->findPedestal(true);
+        forceAllChannels = true;
+    }
+    if(!fUseFixRange) { cStartValue = this->findPedestal(forceAllChannels); }
+    else
+    {
+        cStartValue = (fMaxThreshold + fMinThreshold) / 2.;
     }
 
     if(fDisableStubLogic) disableStubLogic();
@@ -356,7 +366,6 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
 void PedeNoise::measureSCurves(uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
-    float    cLimit         = 0.005;
     int      cMinBreakCount = 5;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
@@ -399,21 +408,30 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
 #endif
 
-            auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. "
                       << "Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;
-            if(cDistanceFromTarget <= cLimit)
+            if(!fUseFixRange)
             {
-                LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
-                           << " -- current value is " << +cLimitCounter << RESET;
-                cLimitCounter++;
-            }
+                auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
+                if(cDistanceFromTarget <= fLimit)
+                {
+                    LOG(DEBUG) << BOLDMAGENTA << "\t\t....Incrementing limit found counter "
+                               << " -- current value is " << +cLimitCounter << RESET;
+                    cLimitCounter++;
+                }
 
-            cValue += cSign;
-            cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
-            if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
-            if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
+                cValue += cSign;
+                cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
+                if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
+                if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
+            }
+            else
+            {
+                if(cSign == -1 && cValue == fMinThreshold) cLimitFound = true;
+                if(cSign == 1 && cValue == fMaxThreshold) cLimitFound = true;
+                cValue += cSign;
+            }
 
         } while(!cLimitFound);
         cCounter++;
@@ -506,6 +524,18 @@ void PedeNoise::extractPedeNoise()
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *
                                                                                                                                             chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
+                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise))
+                        {
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = 0.;
+                        }
+                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold))
+                        {
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold = 0.;
+                        }
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 1;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoiseError     = 1;
                     }

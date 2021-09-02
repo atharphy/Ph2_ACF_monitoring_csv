@@ -25,6 +25,12 @@
     set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 
+    # Find root and link against it
+    if(${ROOT_FOUND})
+        include_directories(${ROOT_INCLUDE_DIRS})
+        set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+    endif()
+
     # Check for ZMQ installed
     if(ZMQ_FOUND)
         if(PH2_USBINSTLIB_FOUND)
@@ -54,7 +60,6 @@
     endforeach(sourcefile ${BINARIES})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
-    MESSAGE(STATUS " ")
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/Utils/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")

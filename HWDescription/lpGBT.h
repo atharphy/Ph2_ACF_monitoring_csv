@@ -64,11 +64,14 @@ class lpGBT : public Chip
     uint8_t getRxHSLPolarity() { return fRxHSLPolarity; }
     uint8_t getTxHSLPolarity() { return fTxHSLPolarity; }
 
+    void     setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
+    uint16_t getChipAddress() { return fChipAddress; }
+
   private:
     bool                 phaseRxAligned; // @TMP@
     std::string          configFileName;
     std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
-    uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate;
+    uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
 };
 } // namespace Ph2_HwDescription

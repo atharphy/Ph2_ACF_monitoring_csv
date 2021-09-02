@@ -540,4 +540,114 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     }
 }
 */
+
+void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)
+{
+#ifdef __USE_ROOT__
+    TFile theFile(fileName.c_str(), "RECREATE");
+    TTree theTree("theTree", "Ntuple with event data");
+
+    uint32_t event, FW_block_size, FW_tlu_trigger_id, FW_data_format_ver, FW_tdc, FW_l1a_counter, FW_bx_counter, FW_nframes;
+    theTree.Branch("event", &event, "event/i");
+    theTree.Branch("FW_block_size", &FW_block_size, "FW_block_size/i");
+    theTree.Branch("FW_tlu_trigger_id", &FW_tlu_trigger_id, "FW_tlu_trigger_id/i");
+    theTree.Branch("FW_data_format_ver", &FW_data_format_ver, "FW_data_format_ver/i");
+    theTree.Branch("FW_tdc", &FW_tdc, "FW_tdc/i");
+    theTree.Branch("FW_l1a_counter", &FW_l1a_counter, "FW_l1a_counter/i");
+    theTree.Branch("FW_bx_counter", &FW_bx_counter, "FW_bx_counter/i");
+    theTree.Branch("FW_nframes", &FW_nframes, "FW_nframes/i");
+
+    std::vector<uint32_t> FW_frame_event_error_code;
+    std::vector<uint32_t> FW_frame_event_hybrid_id;
+    std::vector<uint32_t> FW_frame_event_chip_lane;
+    std::vector<uint32_t> FW_frame_event_l1a_data_size;
+    std::vector<uint32_t> FW_frame_event_chip_type;
+    std::vector<uint32_t> FW_frame_event_frame_delay;
+
+    std::vector<uint32_t> RD53_frame_event_trigger_id;
+    std::vector<uint32_t> RD53_frame_event_trigger_tag;
+    std::vector<uint32_t> RD53_frame_event_bc_id;
+    std::vector<uint32_t> RD53_frame_event_nhits;
+
+    theTree.Branch("FW_frame_event_error_code", &FW_frame_event_error_code);
+    theTree.Branch("FW_frame_event_hybrid_id", &FW_frame_event_hybrid_id);
+    theTree.Branch("FW_frame_event_chip_lane", &FW_frame_event_chip_lane);
+    theTree.Branch("FW_frame_event_l1a_data_size", &FW_frame_event_l1a_data_size);
+    theTree.Branch("FW_frame_event_chip_type", &FW_frame_event_chip_type);
+    theTree.Branch("FW_frame_event_frame_delay", &FW_frame_event_frame_delay);
+
+    theTree.Branch("RD53_frame_event_trigger_id", &RD53_frame_event_trigger_id);
+    theTree.Branch("RD53_frame_event_trigger_tag", &RD53_frame_event_trigger_tag);
+    theTree.Branch("RD53_frame_event_bc_id", &RD53_frame_event_bc_id);
+    theTree.Branch("RD53_frame_event_nhits", &RD53_frame_event_nhits);
+
+    std::vector<uint8_t> RD53_hit_row;
+    std::vector<uint8_t> RD53_hit_col;
+    std::vector<uint8_t> RD53_hit_tot;
+
+    theTree.Branch("RD53_hit_row", &RD53_hit_row);
+    theTree.Branch("RD53_hit_col", &RD53_hit_col);
+    theTree.Branch("RD53_hit_tot", &RD53_hit_tot);
+
+    for(auto i = 0u; i < events.size(); i++)
+    {
+        auto& evt = events[i];
+
+        event              = i;
+        FW_block_size      = evt.block_size;
+        FW_tlu_trigger_id  = evt.tlu_trigger_id;
+        FW_data_format_ver = evt.data_format_ver;
+        FW_tdc             = evt.tdc;
+        FW_l1a_counter     = evt.l1a_counter;
+        FW_bx_counter      = evt.bx_counter;
+        FW_nframes         = evt.chip_frames_events.size();
+
+        FW_frame_event_error_code.clear();
+        FW_frame_event_hybrid_id.clear();
+        FW_frame_event_chip_lane.clear();
+        FW_frame_event_l1a_data_size.clear();
+        FW_frame_event_chip_type.clear();
+        FW_frame_event_frame_delay.clear();
+
+        RD53_frame_event_trigger_id.clear();
+        RD53_frame_event_trigger_tag.clear();
+        RD53_frame_event_bc_id.clear();
+        RD53_frame_event_nhits.clear();
+
+        RD53_hit_row.clear();
+        RD53_hit_col.clear();
+        RD53_hit_tot.clear();
+
+        for(auto& frame_event: evt.chip_frames_events)
+        {
+            FW_frame_event_error_code.push_back(frame_event.first.error_code);
+            FW_frame_event_hybrid_id.push_back(frame_event.first.hybrid_id);
+            FW_frame_event_chip_lane.push_back(frame_event.first.chip_lane);
+            FW_frame_event_l1a_data_size.push_back(frame_event.first.l1a_data_size);
+            FW_frame_event_chip_type.push_back(frame_event.first.chip_type);
+            FW_frame_event_frame_delay.push_back(frame_event.first.frame_delay);
+
+            RD53_frame_event_trigger_id.push_back(frame_event.second.trigger_id);
+            RD53_frame_event_trigger_tag.push_back(frame_event.second.trigger_tag);
+            RD53_frame_event_bc_id.push_back(frame_event.second.bc_id);
+            RD53_frame_event_nhits.push_back(frame_event.second.hit_data.size());
+
+            for(const auto& hit: frame_event.second.hit_data)
+            {
+                RD53_hit_row.push_back(hit.row);
+                RD53_hit_col.push_back(hit.col);
+                RD53_hit_tot.push_back(hit.tot);
+            }
+        }
+
+        theTree.Fill();
+    }
+
+    theTree.Write();
+    theFile.Close();
+#else
+    LOG(WARNING) << BOLDBLUE << "[RD53Event::MakeNtuple] Function to translate raw data into ROOT ntuple was not compilded" << RESET;
+#endif
+}
+
 } // namespace Ph2_HwInterface

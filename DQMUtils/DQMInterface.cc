@@ -11,6 +11,7 @@
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMInterface.h"
 #include "RD53ClockDelayHistograms.h"
+#include "RD53DataTransmissionTestGraphs.h"
 #include "RD53GainHistograms.h"
 #include "RD53GainOptimizationHistograms.h"
 #include "RD53InjectionDelayHistograms.h"
@@ -127,6 +128,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new PhysicsHistograms());
     else if(calibrationName == "ssaphysics")
         fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
+    else if(calibrationName == "datatrtest")
+        fDQMHistogrammerVector.push_back(new DataTransmissionTestGraphs());
 
     fOutputFile = new TFile("tmp.root", "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);

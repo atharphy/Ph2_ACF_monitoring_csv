@@ -86,7 +86,9 @@ class SystemController
     TCPPublishServer*  fNetworkStreamer;
     DetectorMonitor*   fDetectorMonitor;
     TCPClient*         fPowerSupplyClient{nullptr};
-
+#ifdef __TCP_SERVER__
+    TCPClient* fTestcardClient{nullptr};
+#endif
     /*!
      * \brief Constructor of the SystemController class
      */
@@ -238,6 +240,18 @@ class SystemController
     {
         auto setting = fSettingsMap.find(name);
         return (setting != std::end(fSettingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
+    }
+
+    template <typename T>
+    bool setValueInSettings(const std::string name, T val)
+    {
+        auto setting = fSettingsMap.find(name);
+        if(setting != std::end(fSettingsMap))
+        {
+            fSettingsMap[name] = val;
+            return true;
+        }
+        return false;
     }
 
   private:

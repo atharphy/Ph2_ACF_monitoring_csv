@@ -33,34 +33,63 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, const DetectorContainer&
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
 
-    fInitialVcth  = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialVcth", 250);
-    fFinalVcth    = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalVcth", 600);
-    fVcthStep     = findValueInSettings<double>(pSettingsMap, "PulseShapeVCthStep", 10);
-    fInitialDelay = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialDelay", 0);
-    fFinalDelay   = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalDelay", 25);
-    fDelayStep    = findValueInSettings<double>(pSettingsMap, "PulseShapeDelayStep", 1);
+    fInitialVcth           = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialVcth", 250);
+    fInitialLatency        = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialLatency", 200);
+    fFinalVcth             = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalVcth", 600);
+    fVcthStep              = findValueInSettings<double>(pSettingsMap, "PulseShapeVCthStep", 10);
+    fInitialDelay          = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialDelay", 0);
+    fFinalDelay            = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalDelay", 25);
+    fDelayStep             = findValueInSettings<double>(pSettingsMap, "PulseShapeDelayStep", 1);
+    fPlotPulseShapeSCurves = findValueInSettings<double>(pSettingsMap, "PlotPulseShapeSCurves", 0);
 
-    int delayNbins       = (fFinalDelay - fInitialDelay) / fDelayStep + 1;
-    fEffectiveFinalDelay = (delayNbins - 1) * fDelayStep + fInitialDelay;
+    uint32_t numberOfChannels = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    int      delayNbins       = (fFinalDelay - fInitialDelay) / fDelayStep + 1;
+    fEffectiveFinalDelay      = (delayNbins - 1) * fDelayStep + fInitialDelay;
 
     float delayHistogramMin = fInitialDelay - fDelayStep / 2.;
     float delayHistogramMax = fEffectiveFinalDelay + fDelayStep / 2.;
 
     HistContainer<TH1F> theTH1FPulseShapeContainer("PulseShapePerChannel", "PulseShape Per Channel", delayNbins, delayHistogramMin, delayHistogramMax);
-    theTH1FPulseShapeContainer.fTheHistogram->GetXaxis()->SetTitle("delay");
+    theTH1FPulseShapeContainer.fTheHistogram->GetXaxis()->SetTitle("time [ns]");
     theTH1FPulseShapeContainer.fTheHistogram->GetYaxis()->SetTitle("Vcth");
     theTH1FPulseShapeContainer.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChannelHistograms(theOutputFile, theDetectorStructure, fDetectorChannelPulseShapeHistograms, theTH1FPulseShapeContainer);
 
     theTH1FPulseShapeContainer.fTheHistogram->SetNameTitle("PulseShapePerChip", "PulseShape Per Chip");
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorChipPulseShapeHistograms, theTH1FPulseShapeContainer);
+
+    if(fPlotPulseShapeSCurves)
+    {
+        for(uint16_t delay = fInitialDelay; delay <= fFinalDelay; delay += fDelayStep)
+        {
+            uint16_t delayDAC   = 25 - (delay % 25);
+            uint16_t latencyDAC = fInitialLatency - (delay / 25);
+            if(delayDAC == 25)
+            {
+                delayDAC   = 0;
+                latencyDAC = latencyDAC + 1;
+            }
+
+            uint16_t nYbins = 1024;
+            float    minY   = -0.5;
+            float    maxY   = 1023.5;
+
+            std::string histogramName = "SCurve_latency_" + std::to_string(latencyDAC) + "_delay_" + std::to_string(delayDAC);
+
+            HistContainer<TH2F> theTH2FSCurve(histogramName.c_str(), histogramName.c_str(), numberOfChannels, -0.5, numberOfChannels - 0.5, nYbins, minY, maxY);
+            RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorSCurveHistogramMap[std::make_tuple(latencyDAC, delayDAC)], theTH2FSCurve);
+        }
+    }
 }
 
 //========================================================================================================================
 void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorDataContainer& theThresholdAndNoiseContainer)
 {
     // float latencyStep = -int(delay/25);
-    float binCenterValue = ceil(fFinalDelay / 25.) * 25 - (delay / 25) * 25. - (25. - delay % 25);
+    // float binCenterValue = (delay % 25) + (ceil((fFinalDelay-delay) / 25.) -1 ) * 25;
+    // float binCenterValue = ceil(fFinalDelay / 25.) * 25 - (delay / 25) * 25. - (25. - delay % 25);
+    float binCenterValue = delay;
+    std::cout << binCenterValue << std::endl;
     // std::cout<<delay << " - " <<  binCenterValue <<  std::endl;
 
     for(auto board: theThresholdAndNoiseContainer) // for on boards - begin
@@ -98,6 +127,41 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
             }         // for on hybrid - end
         }             // for on opticalGroup - end
     }                 // for on boards - end
+}
+
+//========================================================================================================================
+void CBCHistogramPulseShape::fillSCurvePlots(uint16_t vcthr, uint16_t latency, uint16_t delay, DetectorDataContainer& fSCurveOccupancy)
+{
+    for(auto board: fSCurveOccupancy)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    TH2F* chipSCurve = fDetectorSCurveHistogramMap.at(std::make_tuple(latency, delay))
+                                           .at(board->getIndex())
+                                           ->at(opticalGroup->getIndex())
+                                           ->at(hybrid->getIndex())
+                                           ->at(chip->getIndex())
+                                           ->getSummary<HistContainer<TH2F>>()
+                                           .fTheHistogram;
+
+                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    uint16_t channelNumber = 0;
+                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    {
+                        float tmpOccupancy      = channel.fOccupancy;
+                        float tmpOccupancyError = channel.fOccupancyError;
+                        chipSCurve->SetBinContent(channelNumber + 1, vcthr + 1, tmpOccupancy);
+                        chipSCurve->SetBinError(channelNumber + 1, vcthr + 1, tmpOccupancyError);
+                        ++channelNumber;
+                    }
+                }
+            }
+        }
+    }
 }
 
 //========================================================================================================================
@@ -152,18 +216,27 @@ bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
-    ChipContainerStream<ThresholdAndNoise, ThresholdAndNoise, uint16_t> theOccupancyStreamer("CBCPulseShape");
+    ChipContainerStream<ThresholdAndNoise, ThresholdAndNoise, uint16_t> thePulseShapeStreamer("CBCPulseShape");
+    ChannelContainerStream<Occupancy, uint16_t, uint16_t, uint16_t>     theSCurve("CBCPulseShapeSCurve");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from CalibrationExample
     // procedure)
-    if(theOccupancyStreamer.attachBuffer(&dataBuffer))
+    if(thePulseShapeStreamer.attachBuffer(&dataBuffer))
     {
         // It matched! Decoding chip data
-        theOccupancyStreamer.decodeChipData(fDetectorData);
+        thePulseShapeStreamer.decodeChipData(fDetectorData);
         // Filling the histograms
 
-        fillCBCPulseShapePlots(theOccupancyStreamer.getHeaderElement<0>(), fDetectorData);
+        fillCBCPulseShapePlots(thePulseShapeStreamer.getHeaderElement<0>(), fDetectorData);
         // Cleaning the data container to be ready for the next TCP string
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+    else if(theSCurve.attachBuffer(&dataBuffer))
+    {
+        theSCurve.decodeChipData(fDetectorData);
+        fillSCurvePlots(theSCurve.getHeaderElement<0>(), theSCurve.getHeaderElement<1>(), theSCurve.getHeaderElement<2>(), fDetectorData);
+
         fDetectorData.cleanDataStored();
         return true;
     }

@@ -125,6 +125,7 @@ void Physics::localConfigure(const std::string fileRes_, int currentRun)
         theCurrentRun = currentRun;
         LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
+
     Physics::ConfigureCalibration();
     Physics::initializeFiles(fileRes_, currentRun);
 }
@@ -142,7 +143,6 @@ void Physics::initializeFiles(const std::string fileRes_, int currentRun)
 #ifdef __USE_ROOT__
     delete histos;
     histos = new PhysicsHistograms;
-
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)) this->InitResultFile(fileRes);
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -200,7 +200,6 @@ void Physics::analyze(bool doReadBinary)
 #ifdef __USE_ROOT__
             Physics::fillHisto();
 #endif
-
             Physics::fillDataContainer(cBoard);
             Physics::sendBoardData(cBoard);
         }

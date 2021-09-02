@@ -10,6 +10,7 @@
 #ifndef RD53Interface_H
 #define RD53Interface_H
 
+#include "../HWDescription/ChipRegItem.h"
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
 #include "ReadoutChipInterface.h"
@@ -62,6 +63,7 @@ class RD53Interface : public ReadoutChipInterface
     void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault);
+    std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, const Ph2_HwDescription::ChipRegItem& cRegItem, Ph2_HwDescription::ChipRegMap& pRD53RegMap);
 
     template <typename T>
     void sendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)
@@ -83,11 +85,13 @@ class RD53Interface : public ReadoutChipInterface
     {
         for(const auto& arg: args) ReadChipMonitor(pChip, arg);
     }
-    float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
-    float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
-    float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
+    float    ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
+    float    ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
+    float    ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
+    uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
 
   private:
+    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage);
     uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
     float    measureVoltageCurrent(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage);
     float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);

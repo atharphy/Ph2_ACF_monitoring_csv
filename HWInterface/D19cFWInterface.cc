@@ -507,7 +507,8 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        // fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyCAEN,ChannelId:LV_Module1");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -536,7 +537,8 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        // fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyCAEN,ChannelId:LV_Module1");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -4321,44 +4323,44 @@ void D19cFWInterface::ResetOptoLink()
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.ic", 0x00}, {"fc7_daq_cnfg.optical_block.gbtx", 0x00}});
 }
 
-bool D19cFWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
+bool D19cFWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // Reset
     ResetOptoLink();
     selectLink(linkNumber);
     // Config transaction register
-    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", LpGBTaddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
     // Perform transaction
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
     //
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
 
     if(!pVerifLoop) return true;
-    uint8_t cReadBack = ReadOptoLinkRegister(linkNumber, pAddress);
+    uint8_t cReadBack = ReadOptoLinkRegister(linkNumber, LpGBTaddress, pAddress);
     uint8_t cIter = 0, cMaxIter = 50;
     while(cReadBack != pData && cIter < cMaxIter)
     {
         LOG(INFO) << BOLDRED << "[D19cFWInterface::WriteOptoLinkRegister] : lpGBT register write mismatch... retrying" << RESET;
         // Config transaction register
-        this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
+        this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", LpGBTaddress}, {"fc7_daq_cnfg.optical_block.gbtx.data", pData}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}});
         // Perform transaction
         this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.write", 0x00}});
         //
         this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_write", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_write", 0x00}});
-        cReadBack = ReadOptoLinkRegister(linkNumber, pAddress);
+        cReadBack = ReadOptoLinkRegister(linkNumber, LpGBTaddress, pAddress);
         cIter++;
     }
     if(cIter == cMaxIter) throw std::runtime_error(std::string("lpGBT register write mismatch"));
     return true;
 }
 
-uint32_t D19cFWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint32_t pAddress)
+uint32_t D19cFWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress)
 {
     // Reset
     ResetOptoLink();
     selectLink(linkNumber);
     // Config transaction register
-    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", flpGBTAddress}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}, {"fc7_daq_cnfg.optical_block.ic.nwords", 0x01}});
+    this->WriteStackReg({{"fc7_daq_cnfg.optical_block.gbtx.address", LpGBTaddress}, {"fc7_daq_cnfg.optical_block.ic.register", pAddress}, {"fc7_daq_cnfg.optical_block.ic.nwords", 0x01}});
     // Perform transaction
     this->WriteStackReg({{"fc7_daq_ctrl.optical_block.ic.start_read", 0x01}, {"fc7_daq_ctrl.optical_block.ic.start_read", 0x00}});
     //

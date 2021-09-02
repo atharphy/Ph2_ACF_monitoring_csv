@@ -12,6 +12,10 @@
  *
  */
 
+////////////////////////////////////////////
+// Mauro: needs update to new EUDAQ (9/2021)
+////////////////////////////////////////////
+
 #ifndef Eudaq2Producer_h__
 #define Eudaq2Producer_h__
 
@@ -36,11 +40,12 @@
 #ifdef __EUDAQ__
 #include "eudaq/Configuration.hh"
 #include "eudaq/Event.hh"
-#include "eudaq/Factory.hh"
+//#include "eudaq/Factory.hh"
 #include "eudaq/Logger.hh"
 #include "eudaq/OptionParser.hh"
 #include "eudaq/Producer.hh"
-#include "eudaq/RawEvent.hh"
+//#include "eudaq/RawEvent.hh"
+#include "eudaq/RawDataEvent.hh"
 #include "eudaq/Time.hh"
 #include "eudaq/Utils.hh"
 #endif
@@ -51,8 +56,8 @@ class Eudaq2Producer
     , public eudaq::Producer
 {
   public:
-    Eudaq2Producer(const std::string& name, const std::string& runcontrol);
-    ~Eudaq2Producer();
+    Eudaq2Producer(const std::string& name, const std::string& runcontrol) : eudaq::Producer(name, runcontrol){};
+    ~Eudaq2Producer(){};
 
     // ph2 acf tool init
     void Initialise();
@@ -60,20 +65,22 @@ class Eudaq2Producer
 
     // to offload overriden methods a bit
     void ReadoutLoop();
-    void ConvertToSubEvent(const Ph2_HwDescription::BeBoard*, const Ph2_HwInterface::Event*, eudaq::EventSP);
+    void ConvertToSubEvent(const Ph2_HwDescription::BeBoard*, const Ph2_HwInterface::Event*, eudaq::RawDataEvent);
     bool EventsPending();
 
     // override initialization from euDAQ
+    /*
     void DoConfigure() override;
     void DoInitialise() override;
     void DoStartRun() override;
     void DoStopRun() override;
     void DoTerminate() override;
     void DoReset() override;
+    */
     // void RunLoop() override; //is replaced by ReadOutLoop()
 
     // register producer in eudaq2
-    static const uint32_t m_id_factory = eudaq::cstr2hash("CMSPhase2Producer");
+    // static const uint32_t m_id_factory = eudaq::cstr2hash("CMSPhase2Producer");
 
   protected:
   private:
@@ -95,10 +102,10 @@ class Eudaq2Producer
 };
 
 // Register Producer in EUDAQ Factory
-namespace
-{
-auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<Eudaq2Producer, const std::string&, const std::string&>(Eudaq2Producer::m_id_factory);
-}
+// namespace
+//{
+// auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<Eudaq2Producer, const std::string&, const std::string&>(Eudaq2Producer::m_id_factory);
+//}
 
 #endif
 #endif
