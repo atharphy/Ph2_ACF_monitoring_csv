@@ -634,7 +634,7 @@ int main(int argc, char** argv)
             // ###############
             // # Run Physics #
             // ###############
-            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Phsyics data taking @@@" << RESET;
+            LOG(INFO) << BOLDMAGENTA << "@@@ Performing Physics data taking @@@" << RESET;
 
             Physics ph;
             ph.Inherit(&mySysCntr);
