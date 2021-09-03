@@ -161,7 +161,7 @@ int main(int argc, char** argv)
     // ###################
     // # Read run number #
     // ###################
-    int           runNumber = RUNNUMBER;
+    unsigned int  runNumber = RUNNUMBER;
     std::ifstream fileRunNumberIn;
     fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
     if(fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;

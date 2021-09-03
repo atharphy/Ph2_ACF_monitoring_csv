@@ -142,9 +142,12 @@ void Physics::initializeFiles(const std::string fileRes_, int currentRun)
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
     delete histos;
-    histos = new PhysicsHistograms;
-    this->InitResultFile(fileRes);
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(fileRes != "")
+    {
+        histos = new PhysicsHistograms;
+        this->InitResultFile(fileRes);
+        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    }
 #endif
 }
 
