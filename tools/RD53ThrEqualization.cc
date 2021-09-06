@@ -462,6 +462,19 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
+    // ################################
+    // # Custom channel group handler #
+    // ################################
+    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroupNoise;
+    customChannelGroupNoise.disableAllChannels();
+
+    for(auto row = rowStart; row <= rowStop; row++)
+        for(auto col = colStart; col <= colStop; col++) customChannelGroupNoise.enableChannel(row, col);
+
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandlerNoise;
+    theChnGroupHandlerNoise = std::make_shared<RD53ChannelGroupHandler>(customChannelGroupNoise, RD53GroupType::AllPixels, nHITxCol);
+    theChnGroupHandlerNoise->setCustomChannelGroup(customChannelGroupNoise);
+
     for(auto i = 0u; i <= numberOfBits; i++)
     {
         // ###########################
@@ -487,8 +500,10 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
         // #################
         // # Measure noise #
         // #################
+        this->fChannelGroupHandler = theChnGroupHandlerNoise.get();
         this->SetTestPulse(PixelAlive::INJtype::None);
         this->measureData(nEvents, nEvtsBurst);
+        this->fChannelGroupHandler = theChnGroupHandler.get();
         this->SetTestPulse(PixelAlive::injType);
 
         // #####################
