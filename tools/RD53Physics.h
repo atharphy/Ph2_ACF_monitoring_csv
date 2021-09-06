@@ -51,7 +51,7 @@ class Physics : public Tool
     void draw();
     void analyze(bool doReadBinary = false);
     void saveChipRegisters(int currentRun);
-    void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
+    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
 
     void setGenericEvtConverter(evtConvType arg)
     {
@@ -78,7 +78,7 @@ class Physics : public Tool
 
     void fillHisto();
     void chipErrorReport() const;
-    void clearContainers(Ph2_HwDescription::BeBoard* cBoard);
+    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
   protected:
     struct RD53dummyEvtConverter

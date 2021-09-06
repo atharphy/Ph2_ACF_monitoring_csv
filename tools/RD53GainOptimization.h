@@ -47,8 +47,8 @@ class GainOptimization : public Gain
     void   draw();
     size_t getNumberIterations()
     {
-        uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
-        uint16_t moreIterations      = 2;
+        uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 2);
+        uint16_t moreIterations      = 1;
         return Gain::getNumberIterations() * (nIterationsKrumCurr + moreIterations);
     }
     void saveChipRegisters(int currentRun);

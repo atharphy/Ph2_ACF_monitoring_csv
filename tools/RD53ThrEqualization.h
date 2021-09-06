@@ -49,8 +49,8 @@ class ThrEqualization : public PixelAlive
     {
         uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 1);
         uint16_t moreIterationsVCal = 2;
-        uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 1);
-        uint16_t moreIterationsTDAC = 2;
+        uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2) * 2;
+        uint16_t moreIterationsTDAC = 1;
         return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) +
                RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * (nIterationsTDAC + moreIterationsTDAC) * nEvents /
                    nEvtsBurst;
@@ -70,6 +70,7 @@ class ThrEqualization : public PixelAlive
     size_t nEvtsBurst;
     size_t startValue;
     size_t stopValue;
+    size_t nSteps;
     size_t nHITxCol;
     bool   doFast;
 
@@ -83,6 +84,7 @@ class ThrEqualization : public PixelAlive
     void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
     void chipErrorReport() const;
+    void copyAndResetContainer(DetectorDataContainer& fromContainer, DetectorDataContainer& toContainer);
 
   protected:
     std::string fileRes;

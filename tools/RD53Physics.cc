@@ -177,9 +177,12 @@ void Physics::draw()
 
     LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
 
-    Physics::fillHisto();
-    histos->process();
-    this->WriteRootFile();
+    if(fileRes != "")
+    {
+        Physics::fillHisto();
+        histos->process();
+        this->WriteRootFile();
+    }
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -204,7 +207,7 @@ void Physics::analyze(bool doReadBinary)
 #ifdef __USE_ROOT__
             Physics::fillHisto();
 #endif
-            Physics::fillDataContainer(cBoard);
+            Physics::fillDataContainer(*cBoard);
             Physics::sendBoardData(cBoard);
         }
     }
@@ -219,11 +222,11 @@ void Physics::fillHisto()
 #endif
 }
 
-void Physics::fillDataContainer(BeBoard* theBoard)
+void Physics::fillDataContainer(BeBoard& theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.at(theBoard->getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ###################
     // # Clear container #
@@ -316,11 +319,13 @@ void Physics::saveChipRegisters(int currentRun)
                 }
 }
 
-void Physics::clearContainers(BeBoard* theBoard)
+void Physics::clearContainers(BeBoard& theBoard)
 {
+    RD53Event::clearEventContainer(theBoard, theOccContainer);
+
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.at(theBoard->getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ####################
     // # Clear containers #
@@ -329,18 +334,6 @@ void Physics::clearContainers(BeBoard* theBoard)
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
             {
-                for(auto row = 0u; row < RD53::nRows; row++)
-                    for(auto col = 0u; col < RD53::nCols; col++)
-                    {
-                        cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
-                        cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
-                        cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
-                        cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
-                    }
-
-                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.clear();
-                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.clear();
-
                 for(auto i = 0u; i < BCIDsize; i++)
                     theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
                 for(auto i = 0u; i < TrgIDsize; i++)

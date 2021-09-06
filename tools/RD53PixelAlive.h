@@ -63,16 +63,9 @@ class PixelAlive : public Tool
     size_t colStop;
     size_t nEvents;
     size_t nEvtsBurst;
-    size_t injType;
     size_t nHITxCol;
     float  thrOccupancy;
     bool   unstuckPixels;
-    enum INJtype
-    {
-        None,
-        Analog,
-        Digital
-    };
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     std::shared_ptr<DetectorDataContainer>   theOccContainer;
@@ -83,6 +76,14 @@ class PixelAlive : public Tool
     void chipErrorReport() const;
 
   protected:
+    size_t injType;
+    enum INJtype
+    {
+        None,
+        Analog,
+        Digital
+    };
+
     std::string fileRes;
     int         theCurrentRun;
     bool        doUpdateChip;
