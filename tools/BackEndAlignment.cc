@@ -83,6 +83,51 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
+
+
+                if (cChip->getFrontEndType() == FrontEndType::SSA2)
+		    {
+		    LOG(INFO) << GREEN << "SSA2 Alignment" << RESET;
+			// Set SLVS currents to max, set OutPatterns (now called Shift_pattern) to 0x80
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_0_1", 0x3F);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_2_3", 0x3F);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_4_5", 0x3F);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_Stub_6_7", 0x3F);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current_L1", 0x7);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", 0xea);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_0", 0xea);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_1", 0xea);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_2", 0xea);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_3", 0xea);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_4_st_5", 0xea);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_6_st_7", 0xea);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x2);
+			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8);
+			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+			//for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
+			//{
+			//cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getId(), cChip->getId(), cLineId, 0xf0, 8);
+			cTuned = cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubTuning(pBoard, true);
+			//}
+			D19cFWInterface::PhaseTuner cTuner;
+			cTuner.TuneLine((static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())), 0, 0, 0, 0xea, 8, true);
+			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8);
+			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+			// Reset to original values
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "ReadoutMode", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_L1", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_0", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_1", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_2", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_3", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_4_st_5", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "Shift_pattern_st_6_st_7", 0x0);
+			fReadoutChipInterface->WriteChipReg(cReadoutChip, "DigCalibPattern_L", 0xff);
+			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8);
+			static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug();
+			
+		    } 
+
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     LOG(INFO) << GREEN << "SSA Alignment" << RESET;
@@ -325,9 +370,10 @@ bool BackEndAlignment::Align()
             ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cBoard->at(0)->at(0)->at(0));
             bool         cWithCBC            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
             bool         cWithSSA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+            bool         cWithSSA2            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
             bool         cWithMPA            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
             if(cWithCBC) { this->CBCAlignment(theBoard); }
-            else if(cWithMPA or cWithSSA)
+            else if(cWithMPA or cWithSSA or cWithSSA2)
             {
                 this->PSAlignment(theBoard);
             }

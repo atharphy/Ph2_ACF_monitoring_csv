@@ -212,6 +212,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                             LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
                             fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
                         }
+                        else if(cChipType == FrontEndType::SSA2)
+                        {
+                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA2(s)" << RESET;
+                            fReadoutChipInterface = new SSA2Interface(fBeBoardFWMap);
+                        }
                         else if(cChipType == FrontEndType::MPA)
                         {
                             LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
@@ -281,7 +286,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
-            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS) ? 1 : 0;
+            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS || cBoard->getEventType() == EventType::SSA2AS) ? 1 : 0;
 
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
@@ -375,7 +380,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                             }
                             // if SSA + ASYNC
                             // make sure ROCs are configured for that
-                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
+                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA || theReadoutChip->getFrontEndType() == FrontEndType::SSA2) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                         }
                     }
                 }
@@ -646,6 +651,7 @@ void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pu
                 {
                     if(cChip->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
                     if(cChip->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
                 }
             }
         }
@@ -706,6 +712,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
 
             if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
+            if(fEventType == EventType::SSA2AS) { fEventList.push_back(new D19cSSA2EventAS(pBoard, pData)); }
             else if(fEventType == EventType::MPAAS)
             {
                 fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
@@ -734,6 +741,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                         {
                             fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
+                        }
+                        else if(pBoard->getFrontEndType() == FrontEndType::SSA2)
+                        {
+                            fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNFe, cEvent));
                         }
                         else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                         {
