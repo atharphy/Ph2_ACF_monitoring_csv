@@ -448,7 +448,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, maxDACcontainer, init = frontEnd->nTDACvalues);
 
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, bestContainer, tmp = 0);
+    ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, bestContainer, tmp = (target < 0.5 ? 1 : 0));
 
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, saveEff, tmp = 0);
 
@@ -555,6 +555,11 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                 cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
                             }
     }
+
+    // ###################
+    // # Reset container #
+    // ###################
+    ThrEqualization::copyAndResetContainer(theOccContainer, saveEff);
 
     // ###########################
     // # Download new DAC values #
