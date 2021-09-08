@@ -50,7 +50,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
         uint16_t cIndx = 0;
         for(auto& cRegInMap: cSSARegMap)
         {
-            LOG(INFO) << "Checking data written to " << cRegInMap.first << RESET;
+            LOG(DEBUG) << "Checking data written to " << cRegInMap.first << RESET;
             
             uint8_t     cSSAId;
             bool        cFailed = false;
@@ -75,7 +75,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
             }
             else 
             {
-                LOG(INFO) << "Successfully written to " << cRegInMap.first << RESET;
+                LOG(DEBUG) << "Successfully written to " << cRegInMap.first << RESET;
             }
             cIndx++;
         }

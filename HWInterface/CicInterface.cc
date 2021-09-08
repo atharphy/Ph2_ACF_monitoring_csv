@@ -809,7 +809,7 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
 
     // then select phy port
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint16_t    cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pPhyPort : (cRegValue & 0x10 ) | pPhyPort ;
