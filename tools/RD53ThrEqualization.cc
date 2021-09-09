@@ -222,7 +222,7 @@ void ThrEqualization::draw()
 
 void ThrEqualization::analyze()
 {
-  const float  maxTDACdistance = 2; // @CONST@
+    const float  maxTDACdistance = 2; // @CONST@
     const size_t TDACcenter      = RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2;
 
     for(const auto cBoard: *fDetectorContainer)
@@ -616,7 +616,7 @@ void ThrEqualization::copyAndResetContainer(DetectorDataContainer& fromContainer
                 for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                          {
+                        {
                             toContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) =
                                 cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
 
@@ -624,5 +624,5 @@ void ThrEqualization::copyAndResetContainer(DetectorDataContainer& fromContainer
                             cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
                             cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
-                          }
+                        }
 }
