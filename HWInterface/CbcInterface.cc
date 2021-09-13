@@ -818,7 +818,7 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     else
     {
         bool cVerifLoop = true;
-        bool cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        bool cSuccess = ( pRegNode == "FeCtrl&TrgLat2" ) ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
     }
     pCbc->setReg(pRegNode, cRegItem.fValue);
