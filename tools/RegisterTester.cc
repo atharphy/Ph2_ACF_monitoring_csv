@@ -201,7 +201,7 @@ void RegisterTester::RegisterTest()
                                         cSensitiveRegisters.push_back(cItem);
                                         cPageToggles.push_back( cPreviousPage - cPage );
                                     }
-                                    LOG (INFO) << BOLDRED << "When switching from page " << +cPreviousPage
+                                    LOG (INFO) << BOLDRED << "\t\t\t..When switching from page " << +cPreviousPage
                                             << " to page " << +cPage
                                             << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
                                             << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
@@ -220,8 +220,13 @@ void RegisterTester::RegisterTest()
 
                             } // loop over current values and compare what I read back against what I have stored in memory
                             float cMatchedPerc = cMatches / (float)(cExpectedLst.size() );
-                            LOG(INFO) << BOLDMAGENTA << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
-                              << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
+                            if( cMatchedPerc == 100.0)
+                                LOG(INFO) << BOLDGREEN << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                                  << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
+                            else
+                                LOG(INFO) << BOLDRED << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                                  << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
+                            
                             cPreviousPage = cPage;
                         } // register write loop
                         std::sort(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), customGreaterThanAddress);
