@@ -692,7 +692,8 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
     auto     cIter    = fPageMap.find(cAddress);
     if(cIter == fPageMap.end())
     {
-        uint8_t cDefaultPage = 0;
+        uint8_t cDefaultPage = ReadChipReg(pCbc,"Page"); 
+        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
     }
     cIter         = fPageMap.find(cAddress);
