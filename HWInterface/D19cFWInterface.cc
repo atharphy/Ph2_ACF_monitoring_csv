@@ -5721,20 +5721,20 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
     {
-        // reset link
-        this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // // reset link
+        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        ResetLink(pLinkId);
+        // ResetLink(pLinkId);
     
-        // reset I2C master 
-        std::vector<uint8_t> cBitPosition = {2, 1, 0};
-        uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
-        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
-        WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
-        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        // // reset I2C master 
+        // std::vector<uint8_t> cBitPosition = {2, 1, 0};
+        // uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
+        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        // WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
+        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
 
         if(fI2Cstatus != 4)
             LOG(DEBUG) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
@@ -5784,20 +5784,20 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     cFail               = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
     while(cFail)
     {
-        // reset link
-        this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // // reset link
+        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        ResetLink(pLinkId);
+        // ResetLink(pLinkId);
         
-        // reset I2C master 
-        std::vector<uint8_t> cBitPosition = {2, 1, 0};
-        uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
-        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
-        WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
-        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        // // reset I2C master 
+        // std::vector<uint8_t> cBitPosition = {2, 1, 0};
+        // uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
+        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        // WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
+        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
         
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
