@@ -178,8 +178,9 @@ void RegisterTester::RegisterTest()
                         Registers  cSensitiveRegisters;
                         cSensitiveRegisters.clear();
                         std::vector<int> cPageToggles(0);
-                        
                         uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
+                        
+                        continue;
                         for(auto cPage : cPages )
                         {
                             LOG (INFO) << BOLDMAGENTA << "Going to select page " << +cPage
