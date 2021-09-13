@@ -267,7 +267,12 @@ void RegisterTester::RegisterTest()
                                 cRegistersChecked.push_back(cConfigItem.first);
                                 float cMatchedPerc = cMatches / (float)(cExpectedLst.size() - 1);
                                 if( cMatches != cExpectedLst.size() )
-                                    LOG(INFO) << BOLDMAGENTA << " When writing register " << cConfigItem.first << " on page " << +cConfigItem.second.fPage
+                                    LOG(INFO) << BOLDRED << " When writing register " << cConfigItem.first << " on page " << +cConfigItem.second.fPage
+                                      << " found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                                      << +cSensitiveRegisters.size() << " sensitive registers."
+                                      << RESET;
+                                else
+                                    LOG(INFO) << BOLDGREEN << " When writing register " << cConfigItem.first << " on page " << +cConfigItem.second.fPage
                                       << " found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
                                       << +cSensitiveRegisters.size() << " sensitive registers."
                                       << RESET;
