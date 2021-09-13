@@ -51,7 +51,7 @@ void RegisterTester::RegisterTest()
     LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " of I2C registers in CBCs .... just going to toggle the page without writing..." << RESET;
     uint8_t cSortOrder=0;       
     uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
-    std::vector<uint8_t> cPages{static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
+    std::vector<uint8_t> cPages{cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage};
 
     
     // first I want to record the register map for this map
@@ -195,7 +195,7 @@ void RegisterTester::RegisterTest()
                 } // hybrid
             } // OG
         } 
-        
+
         // now .. try and change page after config and look for mis-matches
         for(auto cBoard: *fDetectorContainer)
         {
