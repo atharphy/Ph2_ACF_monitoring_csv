@@ -657,7 +657,12 @@ uint8_t CbcInterface::GetLastPage(Chip* pCbc)
     uint32_t cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
     auto     cIter    = fPageMap.find(cAddress);
     if(cIter == fPageMap.end())
-        return 6;
+    {
+        auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
+        uint8_t cDefaultPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
+        return cDefaultPage;
+    }
     else
         return cIter->second;
 }
