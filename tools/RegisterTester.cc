@@ -153,7 +153,7 @@ void RegisterTester::RegisterTest()
                             auto cRegItem   = cListItem.second;
                             cRegItem.fValue = fReadoutChipInterface->ReadChipReg(cChip, cListItem.first);
                             cList.push_back(std::make_pair(cListItem.first, cRegItem));
-                            LOG (INFO) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x"
+                            LOG (DEBUG) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x"
                                 << std::hex << +cRegItem.fValue << std::dec
                                 << " value after configuration should be 0x" << std::hex << cListItem.second.fValue << std::dec
                                 << RESET;
@@ -180,7 +180,6 @@ void RegisterTester::RegisterTest()
                         std::vector<int> cPageToggles(0);
                         uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
                         
-                        continue;
                         for(auto cPage : cPages )
                         {
                             LOG (INFO) << BOLDMAGENTA << "Going to select page " << +cPage
