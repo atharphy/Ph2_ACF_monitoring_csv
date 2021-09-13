@@ -50,8 +50,8 @@ void RegisterTester::RegisterTest()
     // first just test page toggle 
     LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " of I2C registers in CBCs .... just going to toggle the page without writing..." << RESET;
     uint8_t cSortOrder=0;       
-    uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
-    std::vector<uint8_t> cPages{static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
+    //uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
+    std::vector<uint8_t> cPages{1,0};//static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
 
     
     // first I want to record the register map for this map
@@ -219,8 +219,11 @@ void RegisterTester::RegisterTest()
                             static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cPage );
                             // check for mismatches
                             size_t cMatches = 0;
+                            size_t cNRegs  = 0; 
                             for(auto& cItem: cExpectedLst) // loop over what I think the current values are
                             {
+                                if( cItem.second.fPage == cPage ) continue; 
+
                                 // compare the value read back from the chip against what is expected
                                 LOG (DEBUG) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with value 0x" 
                                     << std::hex << +cItem.second.fValue << std::dec << RESET;
@@ -238,6 +241,7 @@ void RegisterTester::RegisterTest()
                                     }
                                     LOG (INFO) << BOLDRED << "\t\t\t\t..When switching from page " << +cPreviousPage
                                             << " to page " << +cPage
+                                            << " register# " << +cNRegs 
                                             << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
                                             << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
                                     // if register value does not match 
@@ -252,10 +256,11 @@ void RegisterTester::RegisterTest()
                                         << RESET;
                                     cMatches++;
                                 }
+                                cNRegs++;
 
                             } // loop over current values and compare what I read back against what I have stored in memory
                             float cMatchedPerc = cMatches / (float)(cExpectedLst.size() );
-                            if( cMatches == cExpectedLst.size() )
+                            if( cMatches == cNRegs )
                                 LOG(INFO) << BOLDGREEN << "\t\t.. Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
                                   << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
                             else
