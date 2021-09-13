@@ -51,7 +51,7 @@ void RegisterTester::RegisterTest()
     LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " of I2C registers in CBCs .... just going to toggle the page without writing..." << RESET;
     uint8_t cSortOrder=0;       
     uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
-    std::vector<uint8_t> cPages{cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage};
+    std::vector<uint8_t> cPages{static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
 
     
     // first I want to record the register map for this map
@@ -211,7 +211,6 @@ void RegisterTester::RegisterTest()
                         cSensitiveRegisters.clear();
                         std::vector<int> cPageToggles(0);
                         uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
-                        
                         for(auto cPage : cPages )
                         {
                             LOG (INFO) << BOLDMAGENTA << "\t\t.. Going to select page " << +cPage
