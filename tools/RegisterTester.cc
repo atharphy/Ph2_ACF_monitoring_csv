@@ -114,23 +114,7 @@ void RegisterTester::RegisterTest()
         }
     } // board loop to send hard reset
 
-    // reset page map 
-    LOG(INFO) << BOLDMAGENTA << "Resetting page map ..." << RESET;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap(); 
-                } // chip
-            } // hybrid
-        } // OG
-    } 
-
+    
     // container to store default register values after a hard reset
     LOG(INFO) << BOLDMAGENTA << "Reading back default register values after a hard reset ..." << RESET;
     DetectorDataContainer cDefRegListContainer;
@@ -195,6 +179,23 @@ void RegisterTester::RegisterTest()
             }
         } // board loop to send hard reset
 
+        // reset page map 
+        LOG(INFO) << BOLDMAGENTA << "Resetting page map ..." << RESET;
+        for(auto cBoard: *fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap(); 
+                    } // chip
+                } // hybrid
+            } // OG
+        } 
+        
         // now .. try and change page after config and look for mis-matches
         for(auto cBoard: *fDetectorContainer)
         {
