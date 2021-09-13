@@ -5717,6 +5717,13 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
     {
+        // reset I2C master 
+        std::vector<uint8_t> cBitPosition = {2, 1, 0};
+        uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
+        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
+        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        
         if(fI2Cstatus != 4)
             LOG(DEBUG) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
                        << " transaction was to write " << +pNBytes << " to slave address " << +pSlaveAddress << " with data 0x" << std::hex << pSlaveData << std::dec << RESET;
@@ -5765,6 +5772,13 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     cFail               = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
     while(cFail)
     {
+        // reset I2C master 
+        std::vector<uint8_t> cBitPosition = {2, 1, 0};
+        uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
+        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
+        WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
+        
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         std::this_thread::sleep_for(std::chrono::microseconds(50));
