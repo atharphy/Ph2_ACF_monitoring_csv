@@ -839,7 +839,8 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     }
     else if(pRegNode == "Page")
     {
-        ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        LOG (INFO) << BOLDMAGENTA << "Page register set to " << +cValue << RESET;
         ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
         return pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
     
