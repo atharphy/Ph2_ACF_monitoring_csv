@@ -46,10 +46,12 @@ void RegisterTester::RegisterTest()
 {
     std::vector<std::string> cRegsToSkip{"Bandgap","ChipIDFuse","FeCtrl&TrgLat2"};
     size_t  cAttempts = 1;
+    uint8_t cTestFlavor = 0; 
     // first just test page toggle 
     for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
     {
-        LOG(INFO) << BOLDMAGENTA << "Test#" << +cAttempt << " I2C registers .... just going to toggle the page without writing..." << RESET;
+        std::vector<uint8_t> cPages{1,0,1};
+        LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " attempt#" << +cAttempt << " I2C registers .... just going to toggle the page without writing..." << RESET;
         uint8_t cSortOrder=0;       
         // first I want to record the register map for this map
         // retreive original settings for all chips and all back-end boards
@@ -168,14 +170,13 @@ void RegisterTester::RegisterTest()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << RESET;
+                        LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " on hybrid" << +cHybrid->getId() << RESET;
                         Registers& cExpectedLst = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
                         Registers  cSensitiveRegisters;
                         cSensitiveRegisters.clear();
                         std::vector<int> cPageToggles(0);
                         
                         uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
-                        std::vector<uint8_t> cPages{0,1,0};
                         for(auto cPage : cPages )
                         {
                             LOG (INFO) << BOLDMAGENTA << "Going to select page " << +cPage
