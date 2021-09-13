@@ -220,7 +220,7 @@ void RegisterTester::RegisterTest()
 
                             } // loop over current values and compare what I read back against what I have stored in memory
                             float cMatchedPerc = cMatches / (float)(cExpectedLst.size() );
-                            if( cMatchedPerc == 100.0)
+                            if( cMatches == cExpectedLst.size() )
                                 LOG(INFO) << BOLDGREEN << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
                                   << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
                             else
