@@ -563,7 +563,7 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
         auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
         ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
         uint8_t cDefaultPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
-        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
         cMapWasEmpty=true;
     }
@@ -697,7 +697,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
         ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
         uint8_t cDefaultPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
-        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
     }
     cIter         = fPageMap.find(cAddress);
