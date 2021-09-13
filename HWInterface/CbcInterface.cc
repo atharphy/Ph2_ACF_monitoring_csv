@@ -560,8 +560,10 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
     bool     cMapWasEmpty = false;
     if(cIter == fPageMap.end())
     {
-        uint8_t cDefaultPage = ReadChipReg(pCbc,"Page"); 
-        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << RESET;
+        auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
+        uint8_t cDefaultPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
+        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
         cMapWasEmpty=true;
     }
@@ -692,8 +694,10 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
     auto     cIter    = fPageMap.find(cAddress);
     if(cIter == fPageMap.end())
     {
-        uint8_t cDefaultPage = ReadChipReg(pCbc,"Page"); 
-        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << RESET;
+        auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
+        uint8_t cDefaultPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
+        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
     }
     cIter         = fPageMap.find(cAddress);
@@ -837,14 +841,6 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint8_t  cReg1      = ReadChipSingleReg(pCbc, "VCth2");
         uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
         return cThreshold;
-    }
-    else if(pRegNode == "Page")
-    {
-        auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
-        ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
-        auto cPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
-        LOG (DEBUG) << BOLDMAGENTA << "Page register set to 0x" << std::hex << +cValue << std::dec << " page is " << +cPage << RESET;
-        return cPage;
     }
     else if(pRegNode == "HitLogic")
     {
