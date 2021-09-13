@@ -840,12 +840,11 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     }
     else if(pRegNode == "Page")
     {
-        LOG (INFO) << BOLDMAGENTA << "Reading page register from CBC" << +pCbc->getId() << RESET;
         auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
-        LOG (INFO) << BOLDMAGENTA << "Page register set to " << +cValue << RESET;
         ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
-        return pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
-    
+        auto cPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
+        LOG (DEBUG) << BOLDMAGENTA << "Page register set to 0x" << std::hex << +cValue << std::dec << " page is " << +cPage << RESET;
+        return cPage;
     }
     else if(pRegNode == "HitLogic")
     {
