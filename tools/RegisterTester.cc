@@ -48,48 +48,126 @@ void RegisterTester::RegisterTest()
     size_t  cAttempts = 1;
     uint8_t cTestFlavor = 0; 
     // first just test page toggle 
-    for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+    LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " of I2C registers in CBCs .... just going to toggle the page without writing..." << RESET;
+    uint8_t cSortOrder=0;       
+    uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
+    std::vector<uint8_t> cPages{static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
+
+    
+    // first I want to record the register map for this map
+    // retreive original settings for all chips and all back-end boards
+    DetectorDataContainer cRegListContainer;
+    ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cRegListContainer);
+    for(auto cBoard: *fDetectorContainer)
     {
-
-        LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " attempt#" << +cAttempt << " I2C registers .... just going to toggle the page without writing..." << RESET;
-        uint8_t cSortOrder=0;       
-        uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
-        std::vector<uint8_t> cPages{static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
-
-        
-        // first I want to record the register map for this map
-        // retreive original settings for all chips and all back-end boards
-        DetectorDataContainer cRegListContainer;
-        ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cRegListContainer);
-        for(auto cBoard: *fDetectorContainer)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cOpticalGroup: *cBoard)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cHybrid: *cOpticalGroup)
+                for(auto cChip: *cHybrid)
                 {
-                    for(auto cChip: *cHybrid)
-                    {
-                        Registers&        cRegList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        const ChipRegMap& cOriginalMap = cChip->getRegMap();
-                        for(auto cMapItem: cOriginalMap) { 
-                            if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first ) != cRegsToSkip.end() ) continue; 
-                            LOG (DEBUG) << BOLDMAGENTA << "Will configure register " << cMapItem.first 
-                                << " on page " << +cMapItem.second.fPage 
-                                << " with address " << +cMapItem.second.fAddress 
-                                << " with value 0x" << std::hex << +cMapItem.second.fValue  << std::dec
-                                << RESET;
-                            cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second)); 
-                        }
-                        // registers sorted by ... all on page 0 then all on page 1
-                        if(cSortOrder == 0) std::sort(cRegList.begin(), cRegList.end(), customLessThanPage);    // all to page0 then page 1
-                        if(cSortOrder == 1) std::sort(cRegList.begin(), cRegList.end(), customGreaterThanPage); // all to page1 then page 0
+                    Registers&        cRegList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    const ChipRegMap& cOriginalMap = cChip->getRegMap();
+                    for(auto cMapItem: cOriginalMap) { 
+                        if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first ) != cRegsToSkip.end() ) continue; 
+                        LOG (DEBUG) << BOLDMAGENTA << "Will configure register " << cMapItem.first 
+                            << " on page " << +cMapItem.second.fPage 
+                            << " with address " << +cMapItem.second.fAddress 
+                            << " with value 0x" << std::hex << +cMapItem.second.fValue  << std::dec
+                            << RESET;
+                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second)); 
                     }
+                    // registers sorted by ... all on page 0 then all on page 1
+                    if(cSortOrder == 0) std::sort(cRegList.begin(), cRegList.end(), customLessThanPage);    // all to page0 then page 1
+                    if(cSortOrder == 1) std::sort(cRegList.begin(), cRegList.end(), customGreaterThanPage); // all to page1 then page 0
                 }
             }
-        } // board loop to save record of registers
+        }
+    } // board loop to save record of registers
 
+    // so here .. I need to send a hard reset to the ROCs
+    LOG(INFO) << BOLDMAGENTA << "Sending hard reste to ROCs..." << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
+        if(!cWithLpGBT)
+        {
+            fBeBoardInterface->ChipReset(cBoard);
+            continue;
+        }
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto cType    = FrontEndType::CBC3;
+                bool cWithCBC = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType         = FrontEndType::SSA;
+                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType         = FrontEndType::MPA;
+                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+
+                if(cWithCBC) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cHybrid->getId() % 2);
+                if(cWithSSA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cHybrid->getId() % 2);
+                if(cWithMPA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cHybrid->getId() % 2);
+            }
+        }
+    } // board loop to send hard reset
+
+    // reset page map 
+    LOG(INFO) << BOLDMAGENTA << "Resetting page map ..." << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap(); 
+                } // chip
+            } // hybrid
+        } // OG
+    } 
+
+    // container to store default register values after a hard reset
+    LOG(INFO) << BOLDMAGENTA << "Reading back default register values after a hard reset ..." << RESET;
+    DetectorDataContainer cDefRegListContainer;
+    ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cDefRegListContainer);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    Registers& cOriginaList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cList        = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    // set page to that of the first register in the map
+                    // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, 1);//(*cOriginalMap.begin()).second.fPage );
+                    for(auto cListItem: cOriginaList)
+                    {
+                        if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cListItem.first ) != cRegsToSkip.end() ) continue; 
+                        
+                        auto cRegItem   = cListItem.second;
+                        cRegItem.fValue = fReadoutChipInterface->ReadChipReg(cChip, cListItem.first);
+                        cList.push_back(std::make_pair(cListItem.first, cRegItem));
+                        LOG (DEBUG) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x"
+                            << std::hex << +cRegItem.fValue << std::dec
+                            << " value after configuration should be 0x" << std::hex << cListItem.second.fValue << std::dec
+                            << RESET;
+                    } // map
+                }     // chip
+            }         // hybrid
+        }             // OG
+    }                 // board loop to save record of registers
+
+    for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+    {
         // so here .. I need to send a hard reset to the ROCs
-        LOG(INFO) << BOLDMAGENTA << "Sending hard reste to ROCs..." << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Sending hard reste to ROCs...[Test Attempt#" << +cAttempt << "]" << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
@@ -117,57 +195,6 @@ void RegisterTester::RegisterTest()
             }
         } // board loop to send hard reset
 
-        // reset page map 
-        LOG(INFO) << BOLDMAGENTA << "Resetting page map ..." << RESET;
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap(); 
-                    } // chip
-                } // hybrid
-            } // OG
-        } 
-
-        // container to store default register values after a hard reset
-        LOG(INFO) << BOLDMAGENTA << "Reading back default register values after a hard reset ..." << RESET;
-        DetectorDataContainer cDefRegListContainer;
-        ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cDefRegListContainer);
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        Registers& cOriginaList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        Registers& cList        = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        // set page to that of the first register in the map
-                        // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, 1);//(*cOriginalMap.begin()).second.fPage );
-                        for(auto cListItem: cOriginaList)
-                        {
-                            if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cListItem.first ) != cRegsToSkip.end() ) continue; 
-                            
-                            auto cRegItem   = cListItem.second;
-                            cRegItem.fValue = fReadoutChipInterface->ReadChipReg(cChip, cListItem.first);
-                            cList.push_back(std::make_pair(cListItem.first, cRegItem));
-                            LOG (DEBUG) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x"
-                                << std::hex << +cRegItem.fValue << std::dec
-                                << " value after configuration should be 0x" << std::hex << cListItem.second.fValue << std::dec
-                                << RESET;
-                        } // map
-                    }     // chip
-                }         // hybrid
-            }             // OG
-        }                 // board loop to save record of registers
-
-        
         // now .. try and change page after config and look for mis-matches
         for(auto cBoard: *fDetectorContainer)
         {
@@ -246,7 +273,7 @@ void RegisterTester::RegisterTest()
                 }         // hybrid
             }             // OG
         }                 // board loop to run test
-        
+    
     }
     cTestFlavor++;
 
