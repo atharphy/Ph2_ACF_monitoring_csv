@@ -628,7 +628,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     }
     else
     {
-        cSuccess = ConfigurePage(pCbc, cRegItem.fPage, pVerifLoop);
+        cSuccess = ( pRegNode == "FeCtrl&TrgLat2" ) ? true : ConfigurePage(pCbc, cRegItem.fPage, pVerifLoop);
         if(!cSuccess) return cSuccess;
         // read only  register
         if(pRegNode.find("ChipIDFuse") != std::string::npos) { pVerifLoop = false; }
