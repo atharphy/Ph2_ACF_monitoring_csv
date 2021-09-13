@@ -432,6 +432,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // Optical readout specific functions - d19c [temporary]
     void                       setGBTxPhase(uint32_t pPhase) { fGBTphase = pPhase; }
     void                       configureLink(const Ph2_HwDescription::BeBoard* pBoard);
+    bool                       ResetLink(uint8_t pLinkId);
     bool                       LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
     bool                       GBTLock(const Ph2_HwDescription::BeBoard* pBoard);
     std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
