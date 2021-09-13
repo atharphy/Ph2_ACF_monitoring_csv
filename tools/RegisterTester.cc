@@ -266,10 +266,11 @@ void RegisterTester::RegisterTest()
                                 } // loop over current values and compare what I read back against what I have stored in memory
                                 cRegistersChecked.push_back(cConfigItem.first);
                                 float cMatchedPerc = cMatches / (float)(cExpectedLst.size() - 1);
-                                LOG(INFO) << BOLDMAGENTA << " When writing register " << cConfigItem.first << " on page " << +cConfigItem.second.fPage
-                                          << " found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
-                                          << +cSensitiveRegisters.size() << " sensitive registers."
-                                          << RESET;
+                                if( cMatchedPerc != 100 )
+                                    LOG(INFO) << BOLDMAGENTA << " When writing register " << cConfigItem.first << " on page " << +cConfigItem.second.fPage
+                                      << " found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                                      << +cSensitiveRegisters.size() << " sensitive registers."
+                                      << RESET;
                             } // register write loop
                             std::sort(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), customGreaterThanAddress);
                             for( auto cSensitiveRegister : cSensitiveRegisters ) 
