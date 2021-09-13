@@ -169,7 +169,6 @@ void RegisterTester::RegisterTest()
                     for(auto cChip: *cHybrid)
                     {
                         LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << RESET;
-                        LOG (DEBUG) << BOLDMAGENTA << "Going to test by toggling between Page0 and Page1" << RESET;
                         Registers& cExpectedLst = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
                         Registers  cSensitiveRegisters;
                         cSensitiveRegisters.clear();
@@ -220,9 +219,9 @@ void RegisterTester::RegisterTest()
                                 }
 
                             } // loop over current values and compare what I read back against what I have stored in memory
-                            float cMatchedPerc = cMatches / (float)(cExpectedLst.size() - 1);
+                            float cMatchedPerc = cMatches / (float)(cExpectedLst.size() );
                             LOG(INFO) << BOLDMAGENTA << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
-                              << +cSensitiveRegisters.size() << " sensitive registers."
+                              << +cSensitiveRegisters.size() << " sensitive registers. Number of matches is "
                               << RESET;
                             cPreviousPage = cPage;
                         } // register write loop
