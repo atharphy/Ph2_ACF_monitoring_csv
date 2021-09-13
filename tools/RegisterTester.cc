@@ -213,9 +213,9 @@ void RegisterTester::RegisterTest()
                                             << " to page " << +cPage
                                             << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
                                             << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
-                                    // if register value does not match
-                                    // re-write 
-                                    fReadoutChipInterface->WriteChipReg(cChip, cRegName, cItem.second.fValue);
+                                    // if register value does not match 
+                                    // then update value in memory 
+                                    cItem.second.fValue =cReadBack; 
                                 }
                                 else
                                 {
