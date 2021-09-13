@@ -416,6 +416,8 @@ void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t po
         cTC_PSFE.adc_get(TC_PSFE::measurement::ANT_PULL, measurement);
         LOG (INFO) << BOLDBLUE << "Antenna Pull-up Measurement : "
             << measurement << " mV." << RESET;
+        if(cPosition == "Disable")
+            ReadHybridVoltage("AntennaPullUp");
     }
 #endif
 }
@@ -756,7 +758,7 @@ void OpenFinder::FindOpensPS()
                             //     LOG(INFO) << "Potentiometer value: " << 600 << RESET;
                             //   }
                             //   else {
-                            fParameters.potentiometer = finalAntennaEven[cChip->getIndex()];
+                            fParameters.potentiometer = finalAntennaEven[cChip->getIndex()] + 5;
                             LOG(INFO) << "Potentiometer value: " << finalAntennaEven[cChip->getIndex()] << RESET;
                             ;
                             // }
@@ -777,7 +779,7 @@ void OpenFinder::FindOpensPS()
                             // LOG(INFO) << "Potentiometer value: " << 781 << RESET;
                             // }
                             // else {
-                            fParameters.potentiometer = finalAntennaOdd[cChip->getIndex()];
+                            fParameters.potentiometer = finalAntennaOdd[cChip->getIndex()] + 5;
                             LOG(INFO) << "Potentiometer value: " << finalAntennaOdd[cChip->getIndex()];
                             // }
                             Channels = "Odd";
