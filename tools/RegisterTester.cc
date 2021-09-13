@@ -89,6 +89,7 @@ void RegisterTester::RegisterTest()
         } // board loop to save record of registers
 
         // so here .. I need to send a hard reset to the ROCs
+        LOG(INFO) << BOLDMAGENTA << "Sending hard reste to ROCs..." << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
@@ -117,6 +118,7 @@ void RegisterTester::RegisterTest()
         } // board loop to send hard reset
 
         // reset page map 
+        LOG(INFO) << BOLDMAGENTA << "Resetting page map ..." << RESET;
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -133,6 +135,7 @@ void RegisterTester::RegisterTest()
         } 
 
         // container to store default register values after a hard reset
+        LOG(INFO) << BOLDMAGENTA << "Reading back default register values after a hard reset ..." << RESET;
         DetectorDataContainer cDefRegListContainer;
         ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cDefRegListContainer);
         for(auto cBoard: *fDetectorContainer)
