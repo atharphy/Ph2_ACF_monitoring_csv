@@ -266,7 +266,7 @@ void RegisterTester::RegisterTest()
                                 } // loop over current values and compare what I read back against what I have stored in memory
                                 cRegistersChecked.push_back(cConfigItem.first);
                                 float cMatchedPerc = cMatches / (float)(cExpectedLst.size() - 1);
-                                if( cMatchedPerc != 100 )
+                                if( cMatches != cExpectedLst.size() )
                                     LOG(INFO) << BOLDMAGENTA << " When writing register " << cConfigItem.first << " on page " << +cConfigItem.second.fPage
                                       << " found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
                                       << +cSensitiveRegisters.size() << " sensitive registers."
