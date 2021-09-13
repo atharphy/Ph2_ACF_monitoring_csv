@@ -50,9 +50,12 @@ void RegisterTester::RegisterTest()
     // first just test page toggle 
     for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
     {
+
         std::vector<uint8_t> cPages{1,0,1};
         LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " attempt#" << +cAttempt << " I2C registers .... just going to toggle the page without writing..." << RESET;
         uint8_t cSortOrder=0;       
+        //uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
+
         // first I want to record the register map for this map
         // retreive original settings for all chips and all back-end boards
         DetectorDataContainer cRegListContainer;
@@ -241,6 +244,7 @@ void RegisterTester::RegisterTest()
         }                 // board loop to run test
         
     }
+    cTestFlavor++;
 
     // // 0, increasing page order
     // // 1, decreasing page order

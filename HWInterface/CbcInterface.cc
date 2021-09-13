@@ -560,7 +560,8 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
     bool     cMapWasEmpty = false;
     if(cIter == fPageMap.end())
     {
-        uint8_t cDefaultPage = 0;
+
+        uint8_t cDefaultPage = ReadChipReg(pCbc,"Page"); 
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
         cMapWasEmpty=true;
     }
@@ -835,6 +836,13 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint8_t  cReg1      = ReadChipSingleReg(pCbc, "VCth2");
         uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
         return cThreshold;
+    }
+    else if(pRegNode == "Page")
+    {
+        ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
+        return pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
+    
     }
     else if(pRegNode == "HitLogic")
     {

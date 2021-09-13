@@ -153,6 +153,14 @@ class Chip : public FrontEndDescription
         cRegMask          = ~(cRegMask);
         setReg( pReg, (getReg(pReg) & cRegMask) | (pValue<< pMask.fBitShift) ); 
     }
+    // retrieve some bits of register 
+    uint16_t getRegBits( const std::string& pReg, ChipRegMask pMask ) 
+    {
+        uint16_t cMask = 0x00; 
+        for(uint8_t cIndx=0; cIndx < pMask.fNbits; cIndx++) cMask = cMask | ( 1 << cIndx);
+        uint16_t  cRegMask        = (cMask << pMask.fBitShift);
+        return ((getReg(pReg) & cRegMask) >> pMask.fBitShift);
+    }
   protected:
     uint8_t    fChipId;
     uint16_t   fMaxRegValue;
