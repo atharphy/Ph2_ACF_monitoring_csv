@@ -54,7 +54,7 @@ void RegisterTester::RegisterTest()
         LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " attempt#" << +cAttempt << " I2C registers .... just going to toggle the page without writing..." << RESET;
         uint8_t cSortOrder=0;       
         uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
-        std::vector<uint8_t> cPages{cFirstPage, static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage};
+        std::vector<uint8_t> cPages{static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
 
         
         // first I want to record the register map for this map
@@ -183,7 +183,7 @@ void RegisterTester::RegisterTest()
                         
                         for(auto cPage : cPages )
                         {
-                            LOG (INFO) << BOLDMAGENTA << "Going to select page " << +cPage
+                            LOG (INFO) << BOLDMAGENTA << "\t\t.. Going to select page " << +cPage
                                 << " - previous page was " << +cPreviousPage << RESET;
 
                             static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cPage );
@@ -206,7 +206,7 @@ void RegisterTester::RegisterTest()
                                         cSensitiveRegisters.push_back(cItem);
                                         cPageToggles.push_back( cPreviousPage - cPage );
                                     }
-                                    LOG (INFO) << BOLDRED << "\t\t\t..When switching from page " << +cPreviousPage
+                                    LOG (INFO) << BOLDRED << "\t\t\t\t..When switching from page " << +cPreviousPage
                                             << " to page " << +cPage
                                             << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
                                             << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
@@ -226,10 +226,10 @@ void RegisterTester::RegisterTest()
                             } // loop over current values and compare what I read back against what I have stored in memory
                             float cMatchedPerc = cMatches / (float)(cExpectedLst.size() );
                             if( cMatches == cExpectedLst.size() )
-                                LOG(INFO) << BOLDGREEN << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                                LOG(INFO) << BOLDGREEN << "\t\t.. Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
                                   << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
                             else
-                                LOG(INFO) << BOLDRED << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                                LOG(INFO) << BOLDRED << "\t\t.. Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
                                   << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
                             
                             cPreviousPage = cPage;
