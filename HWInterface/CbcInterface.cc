@@ -560,8 +560,8 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
     bool     cMapWasEmpty = false;
     if(cIter == fPageMap.end())
     {
-
         uint8_t cDefaultPage = ReadChipReg(pCbc,"Page"); 
+        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +cCbc->getHybridId() << " is " << +cDefaultPage << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
         cMapWasEmpty=true;
     }
