@@ -205,7 +205,7 @@ void RegisterTester::RegisterTest()
                             {
                                 cPreviousPage = cPage;
                                 cPage = cConfigItem.second.fPage;
-                                LOG (INFO) << BOLDMAGENTA << "Going to configure register " << cConfigItem.first 
+                                LOG (DEBUG) << BOLDMAGENTA << "Going to configure register " << cConfigItem.first 
                                     << " on page " << +cConfigItem.second.fPage 
                                     << " with address " << +cConfigItem.second.fAddress 
                                     << " with value 0x" << std::hex << +cConfigItem.second.fValue  << std::dec
@@ -243,8 +243,13 @@ void RegisterTester::RegisterTest()
                                             cSensitiveRegisters.push_back(cItem);
                                             cPageToggles.push_back( cPreviousPage - cPage );
                                         }
-                                        LOG(INFO) << BOLDRED << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
-                                                  << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
+                                        LOG (INFO) << BOLDRED << "When configuring register " << cConfigItem.first 
+                                                << " on page " << +cConfigItem.second.fPage 
+                                                << " with address " << +cConfigItem.second.fAddress 
+                                                << " with value 0x" << std::hex << +cConfigItem.second.fValue  << std::dec
+                                                << " page toggle from Page " << +(cPreviousPage) << " to page " << +cPage
+                                                << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
+                                                << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
                                     }
                                     else
                                     {
