@@ -180,16 +180,15 @@ void RegisterTester::RegisterTest()
                         for(auto cPage : cPages )
                         {
                             LOG (INFO) << BOLDMAGENTA << "Going to select page " << +cPage
-                                << RESET;
+                                << " - previous page was " << +cPreviousPage << RESET;
 
                             static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cPage );
                             // check for mismatches
                             size_t cMatches = 0;
                             for(auto& cItem: cExpectedLst) // loop over what I think the current values are
                             {
-                                
                                 // compare the value read back from the chip against what is expected
-                                LOG (DEBUG) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with value 0x" 
+                                LOG (INFO) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with value 0x" 
                                     << std::hex << +cItem.second.fValue << std::dec << RESET;
                                 auto cReadBack = fReadoutChipInterface->ReadChipReg(cChip, cItem.first);
                                 auto cValue    = cItem.second.fValue;
@@ -213,7 +212,7 @@ void RegisterTester::RegisterTest()
                                 }
                                 else
                                 {
-                                    LOG (DEBUG) << BOLDGREEN << "\t\t...Match in I2C register " << cItem.first
+                                    LOG (INFO) << BOLDGREEN << "\t\t...Match in I2C register " << cItem.first
                                         << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
                                         << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec
                                         << RESET;
@@ -222,10 +221,9 @@ void RegisterTester::RegisterTest()
 
                             } // loop over current values and compare what I read back against what I have stored in memory
                             float cMatchedPerc = cMatches / (float)(cExpectedLst.size() - 1);
-                            if( cMatches != (cExpectedLst.size()-1) )
-                                LOG(INFO) << BOLDRED << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
-                                  << +cSensitiveRegisters.size() << " sensitive registers."
-                                  << RESET;
+                            LOG(INFO) << BOLDMAGENTA << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                              << +cSensitiveRegisters.size() << " sensitive registers."
+                              << RESET;
                             cPreviousPage = cPage;
                         } // register write loop
                         std::sort(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), customGreaterThanAddress);
