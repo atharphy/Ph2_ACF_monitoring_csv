@@ -153,7 +153,7 @@ void RegisterTester::RegisterTest()
                             auto cRegItem   = cListItem.second;
                             cRegItem.fValue = fReadoutChipInterface->ReadChipReg(cChip, cListItem.first);
                             cList.push_back(std::make_pair(cListItem.first, cRegItem));
-                            LOG (DEBUG) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x"
+                            LOG (INFO) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x"
                                 << std::hex << +cRegItem.fValue << std::dec
                                 << " value after configuration should be 0x" << std::hex << cListItem.second.fValue << std::dec
                                 << RESET;

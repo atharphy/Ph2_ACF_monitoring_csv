@@ -21,7 +21,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-CbcInterface::CbcInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) { fActiveChannels.reset(); }
+CbcInterface::CbcInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) { fActiveChannels.reset(); resetPageMap(); }
 
 CbcInterface::~CbcInterface() {}
 
