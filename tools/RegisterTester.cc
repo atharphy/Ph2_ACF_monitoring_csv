@@ -49,7 +49,7 @@ void RegisterTester::RegisterTest()
     // first just test page toggle 
     for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
     {
-        LOG(INFO) << BOLDMAGENTA << "Test#" << +cAttempt << " I2C registers .... just going to toggle the page " << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Test#" << +cAttempt << " I2C registers .... just going to toggle the page without writing..." << RESET;
         uint8_t cSortOrder=0;       
         // first I want to record the register map for this map
         // retreive original settings for all chips and all back-end boards
@@ -221,8 +221,7 @@ void RegisterTester::RegisterTest()
                             } // loop over current values and compare what I read back against what I have stored in memory
                             float cMatchedPerc = cMatches / (float)(cExpectedLst.size() );
                             LOG(INFO) << BOLDMAGENTA << "Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
-                              << +cSensitiveRegisters.size() << " sensitive registers. Number of matches is "
-                              << RESET;
+                              << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
                             cPreviousPage = cPage;
                         } // register write loop
                         std::sort(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), customGreaterThanAddress);
