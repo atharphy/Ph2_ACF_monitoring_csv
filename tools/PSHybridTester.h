@@ -42,7 +42,7 @@ class PSHybridTester : public Tool
     void SSATestStubOutput(const std::string& cSSAPairSel );
     void SSATestL1Output( const std::string& cSSAPairSel );
     void SetHybridVoltage( uint32_t pUsbBus, uint8_t pUsbDev );
-    void MPATest(uint32_t pPattern);
+    void MPATest();
     void SelectCIC(bool pSelect);
     void SelectAntennaPosition(const std::string& pPosition, uint16_t pPotentiometer);
     void AlignCICout(uint8_t pPattern=0xAA);
@@ -75,7 +75,7 @@ class PSHybridTester : public Tool
     void SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
     void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
-    void MPATest(Ph2_HwDescription::BeBoard* pBoard, uint32_t pPattern);
+    void MPATest(Ph2_HwDescription::BeBoard* pBoard);
     std::map<std::string, uint8_t> fInputDebugMap = {{"sda_out", 0},      {"rtn_clk320", 1},   {"cic_out_6", 2},    {"cic_out_5", 3},    {"cic_out_4", 4},    {"cic_out_3", 5},    {"cic_out_2", 6},
                                                      {"cic_out_1", 7},    {"cic_out_0", 8},    {"sda_out", 9},      {"ssa1_clk320", 10}, {"ssa1_fcmd", 11},   {"ssa1_l1", 12},     {"ssa1_trig_7", 13},
                                                      {"ssa1_trig_6", 14}, {"ssa1_trig_5", 15}, {"ssa1_trig_4", 16}, {"ssa1_trig_3", 17}, {"ssa1_trig_2", 18}, {"ssa1_trig_1", 19}, {"ssa1_trig_0", 20},

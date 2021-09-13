@@ -19,9 +19,9 @@ void PSHybridTester::Initialise()
     cTC_PSFE.antenna_fc7(uint16_t(513), TC_PSFE::ant_channel::NONE);
 #endif
 }
-void PSHybridTester::MPATest(uint32_t pPattern)
+void PSHybridTester::MPATest()
 {
-    for(auto cBoard: *fDetectorContainer) { this->MPATest(cBoard, pPattern); }
+    for(auto cBoard: *fDetectorContainer) { this->MPATest(cBoard); }
 }
 void PSHybridTester::CheckI2C()
 {
@@ -231,31 +231,55 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 4 , pPattern , 8);
     }       
 }
-void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
+void PSHybridTester::MPATest(BeBoard* pBoard)
 {
-    std::string pPattern_str = std::bitset<8>(pPattern).to_string(); // String with the binary representation of the pattern
-    std::stringstream sstream;
-    sstream << std::hex << pPattern;
-    std::string pPattern_str_hex = sstream.str();
-    int         cBadLines    = 0;                                    // Number of bad CIC in lines
-    TString     cParameter   = "";                                   // Placeholder for the name of the summaryTree parameter name
-    TString     cValue       = "";
-    fResultFile->cd();
-    std::string cTitle = Form("CICinTree0x%s",pPattern_str_hex.c_str());
-    std::string cDesc = Form("Bad Lines in the CIC IN test for pattern %s", pPattern_str_hex.c_str());
-    TTree* CICinTree = new TTree( cTitle.c_str() , cDesc.c_str() );
-    CICinTree->Branch("Parameter", &cParameter);
-    CICinTree->Branch("Value", &cValue);
-    cParameter = "Pattern";
-    cValue     = pPattern_str;
-    CICinTree->Fill();
-        
+    uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
+     // String with the binary representation of the pattern
+    int         cTotalBadLines    = 0;                                    // Number of bad CIC in lines
+    TString     cParameter[4]   = {"","","",""};                                   // Placeholder for the name of the summaryTree parameter name
+    TString     cValue[4]       = {"","","",""};
+    
+   
     DPInterface cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( this->fBeBoardFWMap.find(0)->second );
+
+    bool cRun = true;
+    uint8_t cRuns = 0;
+    uint8_t cMaxRuns = 1;
+    
+    TTree* CICinTree[4]; 
+
+    // Create TTrees to contain bad lines
+    for (int cPatternId = 0; cPatternId < 4; cPatternId++ )
+    {
+        uint32_t cPattern = cTestPatterns[cPatternId];
+        
+        std::stringstream sstream;
+        std::string cPattern_str;
+        std::string cPattern_str_hex;
+
+        cPattern_str = std::bitset<8>(cPattern).to_string();
+
+        sstream << std::hex << cPattern;
+        cPattern_str_hex = sstream.str();
+
+        fResultFile->cd();
+        std::string cTitle = Form("CICinTree0x%s",cPattern_str_hex.c_str());
+        std::string cDesc = Form("Bad Lines in the CIC IN test for pattern 0x%s", cPattern_str_hex.c_str());
+        CICinTree[cPatternId] = new TTree( cTitle.c_str() , cDesc.c_str() );
+        CICinTree[cPatternId]->Branch("Parameter", &cParameter[cPatternId]);
+        CICinTree[cPatternId]->Branch("Value", &cValue[cPatternId]);
+        cParameter[cPatternId] = "Pattern";
+        cValue[cPatternId]     = cPattern_str;
+        CICinTree[cPatternId]->Fill();
+    }
 
     // enable CIC mux - phy port 0 -- 10 are stub lines 
     for( uint8_t cPhyPort=0; cPhyPort < 10 ; cPhyPort++)
     {
+        cRuns = 0;
+        cRun = true;
+
         for(auto cOpticalGroup : *pBoard)
         {
             for(auto cHybrid : *cOpticalGroup)
@@ -266,92 +290,142 @@ void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
         }// module 
 
         std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
-        // if the pattern used is not 0xCC, align back-end using 0xAA pattern
-        cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.Configure(cInterface, 0xAA);
-        cDPInterfacer.Start(cInterface);
-        
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        uint8_t cPhyPortBadLines = 0;
 
-        //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+        while(cRun && (cRuns <= cMaxRuns)) {
+            cPhyPortBadLines = 0;
+            cRun = false;
+
+            if(cRuns>0)
+                LOG(INFO) << BOLDRED << "Retrying test on phyPort " << +cPhyPort << "." << RESET ;
+
+            //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+            cDPInterfacer.Stop(cInterface);
+            cDPInterfacer.Configure(cInterface, 0xAA);
+            cDPInterfacer.Start(cInterface);        
+            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
         for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
-        {
-            uint8_t cHybridId=0;
-            uint8_t cChipId=0; 
-            uint8_t cPatternPeriod=8;
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , 0xAA , cPatternPeriod);
-        }
-
-        //Stop 0xAA pattern and use test pattern
-        cDPInterfacer.Stop(cInterface);
-        cDPInterfacer.Configure(cInterface, pPattern);
-        cDPInterfacer.Start(cInterface);
-    
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-        // check output 
-        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
-
-        for(int a = 0; a < (int)cReadLines.size(); a++)
-        {
-            std::string cLine;
-            float       distance;
-            int         badLines;
-            std::string cSubLine;
-            // bool bad = false;
-            for(int b = 0; b < (int)cReadLines[a].size(); b++)
+            for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
             {
-                badLines = 0;
-                cLine = cReadLines[a][b];
-                // Go throught the read line and compare with pattern
-                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length())
+                uint8_t cHybridId=0;
+                uint8_t cChipId=0; 
+            uint8_t cChipId=0; 
+                uint8_t cChipId=0; 
+                uint8_t cPatternPeriod=8;
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , 0xAA , cPatternPeriod);
+            }
+
+            uint8_t cBadLines[4] = {0,0,0,0};
+
+            //Stop 0xAA pattern and use test patterns
+            for (int cPatternId = 0; cPatternId < 4; cPatternId++ )
+            {
+                cReadLines.clear();
+
+                uint32_t cPattern = cTestPatterns[cPatternId];
+                
+                std::stringstream sstream;
+                std::string cPattern_str;
+                std::string cPattern_str_hex;
+
+                cPattern_str = std::bitset<8>(cPattern).to_string();
+                sstream << std::hex << cPattern;
+                cPattern_str_hex = sstream.str();
+
+                // fResultFile->cd();
+                // std::string cTitle = Form("CICinTree0x%s",cPattern_str_hex.c_str());
+                // std::string cDesc = Form("Bad Lines in the CIC IN test for pattern %s", cPattern_str_hex.c_str());
+                // TTree* CICinTree = new TTree( cTitle.c_str() , cDesc.c_str() );
+                // CICinTree->Branch("Parameter", &cParameter);
+                // CICinTree->Branch("Value", &cValue);
+                // cParameter = "Pattern";
+                // cValue     = cPattern_str;
+                // CICinTree->Fill();
+
+                LOG(INFO) << BOLDCYAN << "Testing phyPort " << +cPhyPort << " using pattern " << cPattern_str << RESET;
+
+                cDPInterfacer.Stop(cInterface);
+                cDPInterfacer.Configure(cInterface, cPattern);
+                cDPInterfacer.Start(cInterface);
+            
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                // check output 
+        // check output 
+                // check output 
+                fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
+
+                for(int a = 0; a < (int)cReadLines.size(); a++)
                 {
-                    cSubLine = cLine.substr(k, pPattern_str.length());
-                    // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
-                    // aux = k + 1;
-                    // if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) ) {
-                    if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) && ( (cSubLine != pPattern_str.substr(2, 6) + pPattern_str.substr(0,2)) && (cSubLine != pPattern_str.substr(5,2) + pPattern_str.substr(0, 6)) ) ) {
-                        distance = FuzzyCompareStrings(cSubLine, pPattern_str);
-                        // LOG(INFO) << "Pattern: " << pPattern_str << " . Line: " << cSubLine << ". Distance: " << distance << RESET;
-                        if (distance>1)
-                            badLines++;
-                    }
-                }
+                    std::string cLine;
+                    float       distance;
+                    int         badLines;
+                    std::string cSubLine;
+                    // bool bad = false;
+                    for(int b = 0; b < (int)cReadLines[a].size(); b++)
+                    {
+                        badLines = 0;
+                        cLine = cReadLines[a][b];
+                        // Go throught the read line and compare with pattern
+                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length())
+                        {
+                            cSubLine = cLine.substr(k, cPattern_str.length());
+                            // distance += FuzzyCompareStrings(cSubLine, cPattern_str);
+                            // aux = k + 1;
+                            // if ( ( cSubLine != cPattern_str && cSubLine != (cPattern_str.substr(1, 7) + cPattern_str.front()) && cSubLine != cPattern_str.back() + cPattern_str.substr(0, 7) ) ) {
+                            if ( ( cSubLine != cPattern_str && cSubLine != (cPattern_str.substr(1, 7) + cPattern_str.front()) && cSubLine != cPattern_str.back() + cPattern_str.substr(0, 7) ) && ( (cSubLine != cPattern_str.substr(2, 6) + cPattern_str.substr(0,2)) && (cSubLine != cPattern_str.substr(5,2) + cPattern_str.substr(0, 6)) ) ) {
+                                distance = FuzzyCompareStrings(cSubLine, cPattern_str);
+                                // LOG(INFO) << "Pattern: " << cPattern_str << " . Line: " << cSubLine << ". Distance: " << distance << RESET;
+                                if (distance>1) {
+                                    // if (cRuns!=0)
+                                    badLines++;
+                                    cRun = true;
+                                }
+                            }
+                        }
 
-                // distance = distance / aux;
+                        // distance = distance / aux;
 
-                // LOG(INFO) << "The overall distance in line " << b << " is: " << distance << "." << RESET;
+                        // LOG(INFO) << "The overall distance in line " << b << " is: " << distance << "." << RESET;
 
-                std::string recovered = "";
-                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
-                    recovered += cLine.substr(k, pPattern_str.length()) + "  ";
-                }
-                if(badLines > 2 ) //35
-                {
-                    cBadLines++;
-                    LOG(INFO) << "The pattern " << pPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "." << RESET;
-                    std::string recovered = "";
-                    for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length()) {
-                        recovered += cLine.substr(k, pPattern_str.length()) + "  ";
-                    }
-                    LOG (INFO) << "Recovered:  " << recovered << RESET;
-                    cParameter.Clear();
-                    cParameter = std::to_string(cPhyPort) + "_" + std::to_string(b);
-                    cValue     = cLine;
-                    CICinTree->Fill();
+                        std::string recovered = "";
+                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) {
+                            recovered += cLine.substr(k, cPattern_str.length()) + "  ";
+                        }
+                        if(badLines > 2 ) //35
+                        {
+                            cBadLines[b] = 1;
+                            LOG(INFO) << "The pattern " << cPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                            std::string recovered = "";
+                            for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) {
+                                recovered += cLine.substr(k, cPattern_str.length()) + "  ";
+                            }
+                            LOG (INFO) << "Recovered:  " << recovered << RESET;
+                            cParameter[cPatternId].Clear();
+                            cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
+                            cValue[cPatternId]     = cLine;
+                            CICinTree[cPatternId]->Fill();
+                        } 
                 } 
-                else {
-                    LOG(DEBUG) << "The pattern 0x" << pPattern_str_hex << " was" << BOLDGREEN <<" recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
-                    LOG (DEBUG) << "Recovered:  " << recovered << RESET;
+                        } 
+                        else {
+                            // cBadLines[b] = 0
+                            LOG(DEBUG) << "The pattern 0x" << cPattern_str_hex << " was" << BOLDGREEN <<" recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                            LOG (DEBUG) << "Recovered:  " << recovered << RESET;
+                        }
+                    }
                 }
             }
+            cRuns++;
+            for(int i = 0; i < 4 ; i++)
+                cPhyPortBadLines += cBadLines[i];
         }
-        // CICinTree->Write();
+        cTotalBadLines += cPhyPortBadLines;
     }
-
-    LOG(INFO) << BOLDYELLOW << "***************************************Bad lines for pattern 0x" << pPattern_str_hex << ": " << cBadLines << RESET;
-    fillSummaryTree("CIC IN bad lines_0x" + pPattern_str_hex, cBadLines);
+    LOG(INFO) << BOLDYELLOW << "***************************************Bad lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
+    fillSummaryTree("CIC IN bad lines", cTotalBadLines);
 }
 void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
 {   
