@@ -47,7 +47,7 @@ void RegisterTester::RegisterTest()
     // 0, increasing page order
     // 1, decreasing page order
     // 2, don't sort
-    size_t  cLimitPerPage = 1;
+    size_t  cLimitPerPage = 2;
     size_t  cAttempts = 1;
     std::vector<std::string> cRegsToSkip{"Bandgap","ChipIDFuse","FeCtrl&TrgLat2"};
     for(uint8_t cSortOrder = 0; cSortOrder < 2; cSortOrder++)
@@ -250,6 +250,9 @@ void RegisterTester::RegisterTest()
                                                 << " page toggle from Page " << +(cPreviousPage) << " to page " << +cPage
                                                 << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
                                                 << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
+                                        // if register value does not match
+                                        // re-write 
+                                        fReadoutChipInterface->WriteChipReg(cChip, cRegName, cItem.second.fValue);
                                     }
                                     else
                                     {
