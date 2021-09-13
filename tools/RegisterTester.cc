@@ -50,8 +50,8 @@ void RegisterTester::RegisterTest()
     // first just test page toggle 
     LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " of I2C registers in CBCs .... just going to toggle the page without writing..." << RESET;
     uint8_t cSortOrder=0;       
-    //uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
-    std::vector<uint8_t> cPages{1,0};//static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
+    uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
+    std::vector<uint8_t> cPages{cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};//static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
 
     
     // first I want to record the register map for this map
@@ -85,36 +85,6 @@ void RegisterTester::RegisterTest()
         }
     } // board loop to save record of registers
 
-    // so here .. I need to send a hard reset to the ROCs
-    LOG(INFO) << BOLDMAGENTA << "Sending hard reste to ROCs..." << RESET;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
-        if(!cWithLpGBT)
-        {
-            fBeBoardInterface->ChipReset(cBoard);
-            continue;
-        }
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& clpGBT = cOpticalGroup->flpGBT;
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cType    = FrontEndType::CBC3;
-                bool cWithCBC = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-
-                if(cWithCBC) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cHybrid->getId() % 2);
-                if(cWithSSA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cHybrid->getId() % 2);
-                if(cWithMPA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cHybrid->getId() % 2);
-            }
-        }
-    } // board loop to send hard reset
-
-    
     // container to store default register values after a hard reset
     LOG(INFO) << BOLDMAGENTA << "Reading back default register values after a hard reset ... using values stored in register map " << RESET;
     DetectorDataContainer cDefRegListContainer;
@@ -210,19 +180,19 @@ void RegisterTester::RegisterTest()
                         Registers  cSensitiveRegisters;
                         cSensitiveRegisters.clear();
                         std::vector<int> cPageToggles(0);
-                        uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
                         for(auto cPage : cPages )
                         {
+                            uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
                             LOG (INFO) << BOLDMAGENTA << "\t\t.. Going to select page " << +cPage
                                 << " - previous page was " << +cPreviousPage << RESET;
 
-                            static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cPage );
+                            // static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cPage );
                             // check for mismatches
                             size_t cMatches = 0;
                             size_t cNRegs  = 0; 
                             for(auto& cItem: cExpectedLst) // loop over what I think the current values are
                             {
-                                if( cItem.second.fPage == cPage ) continue; 
+                                //if( cItem.second.fPage == cPage ) continue; 
 
                                 // compare the value read back from the chip against what is expected
                                 LOG (DEBUG) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with value 0x" 
@@ -256,6 +226,7 @@ void RegisterTester::RegisterTest()
                                         << RESET;
                                     cMatches++;
                                 }
+                                cPreviousPage = cItem.second.fPage;
                                 cNRegs++;
 
                             } // loop over current values and compare what I read back against what I have stored in memory
