@@ -188,7 +188,7 @@ void RegisterTester::RegisterTest()
                             for(auto& cItem: cExpectedLst) // loop over what I think the current values are
                             {
                                 // compare the value read back from the chip against what is expected
-                                LOG (INFO) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with value 0x" 
+                                LOG (DEBUG) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with value 0x" 
                                     << std::hex << +cItem.second.fValue << std::dec << RESET;
                                 auto cReadBack = fReadoutChipInterface->ReadChipReg(cChip, cItem.first);
                                 auto cValue    = cItem.second.fValue;
@@ -212,7 +212,7 @@ void RegisterTester::RegisterTest()
                                 }
                                 else
                                 {
-                                    LOG (INFO) << BOLDGREEN << "\t\t...Match in I2C register " << cItem.first
+                                    LOG (DEBUG) << BOLDGREEN << "\t\t...Match in I2C register " << cItem.first
                                         << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
                                         << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec
                                         << RESET;
