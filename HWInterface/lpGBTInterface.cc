@@ -517,7 +517,7 @@ void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::str
     uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
     WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
 
-    // Sets output current for the current DAC. Current = CURDACSelect * XX uA
+    // Sets output current for the current DAC. Current = CURDACSelect * 3.5 uA
     WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
 
     // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
@@ -851,7 +851,12 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
+#ifdef __TCUSB__
+        // In the test system a run time error is undesired
+        return false;
+#else
         throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C write transaction FAILED"));
+#endif
     }
 
     return true;
@@ -884,8 +889,13 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
     } while(cIter < RD53Shared::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
-        LOG(INFO) << GREEN << "I2C Read Transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
+#ifdef __TCUSB__
+        // In the test system a run time error is undesired
+        return false;
+#else
         throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
+#endif
     }
 
     // Return read back value

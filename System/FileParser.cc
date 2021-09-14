@@ -489,6 +489,7 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
     pBoard->addConditionDataSet(cSet);
 }
 
+
 void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -500,7 +501,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
        << ", File: " << expandEnvironmentVariables(pSSAnode.attribute("configfile").value()) << RESET << std::endl;
 
     // Get ID of SSA then add to the Hybrid!
-    uint32_t    cChipId    = pSSAnode.attribute("Id").as_int();
+    uint32_t    cChipId = pSSAnode.attribute("Id").as_int();
     uint32_t    cPartnerId = pSSAnode.attribute("partid").as_int();
     std::string cFileName;
     if(!cFilePrefix.empty())
@@ -516,9 +517,41 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     this->parseSSASettings(pSSAnode, cSSA);
 }
 
+void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
+{
+    os << BOLDCYAN << "|"
+       << "  "
+       << "|"
+       << "   "
+       << "|"
+       << "----" << pSSAnode.name() << "  " << pSSAnode.first_attribute().name() << " :" << pSSAnode.attribute("Id").value()
+       << ", File: " << expandEnvironmentVariables(pSSAnode.attribute("configfile").value()) << RESET << std::endl;
+
+    // Get ID of SSA then add to the Hybrid!
+    uint32_t    cChipId = pSSAnode.attribute("Id").as_int();
+    uint32_t    cPartnerId = pSSAnode.attribute("partid").as_int();
+    std::string cFileName;
+    if(!cFilePrefix.empty())
+    {
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
+
+        cFileName = cFilePrefix + expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
+    }
+    else
+        cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
+    ReadoutChip* cSSA2 = pHybrid->addChipContainer(cChipId, new SSA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
+    cSSA2->setNumberOfChannels(120);
+    this->parseSSA2Settings(pSSAnode, cSSA2);
+}
+
 void FileParser::parseSSASettings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
 {
     // FrontEndType cType = pSSA->getFrontEndType();
+}
+
+void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, ReadoutChip* pSSA2)
+{
+    // FrontEndType cType = pSSA2->getFrontEndType();
 }
 
 void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::string cFilePrefix)
@@ -575,6 +608,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             std::string cNextName      = cChild.next_sibling().name();
             bool        cIsTrackerASIC = cName.find("CBC") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("SSA") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("SSA2") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
@@ -670,6 +704,12 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     {
                         pBoard->setFrontEndType(FrontEndType::SSA);
                         this->parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
+                    }
+                    else if(cName == "SSA2")
+                    {
+			LOG (INFO) << BOLDBLUE << "Implement for SSA2" << RESET;
+                        pBoard->setFrontEndType(FrontEndType::SSA2);
+                        this->parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                     }
                     else if(cName == "MPA")
                     {

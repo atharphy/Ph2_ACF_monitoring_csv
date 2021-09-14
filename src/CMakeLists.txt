@@ -14,6 +14,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR}/tools)
+    include_directories(${PROJECT_SOURCE_DIR}/ProductionTools)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -70,6 +71,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       else($ENV{UseTCUSBforROH})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforROH})
+      if($ENV{UseTCUSBTcpServer})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+      endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
     #boost also needs to be linked

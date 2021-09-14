@@ -18,7 +18,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings<double>("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData", true);
     doLocal     = false;
 
     // ###########################################
@@ -107,7 +107,7 @@ void SSAPhysics::run()
             totalDataSize += dataSize;
         }
 
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
     }
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;

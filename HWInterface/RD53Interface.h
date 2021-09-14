@@ -85,11 +85,13 @@ class RD53Interface : public ReadoutChipInterface
     {
         for(const auto& arg: args) ReadChipMonitor(pChip, arg);
     }
-    float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
-    float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
-    float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
+    float    ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
+    float    ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
+    float    ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
+    uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
 
   private:
+    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage);
     uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
     float    measureVoltageCurrent(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage);
     float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);

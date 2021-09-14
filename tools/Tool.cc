@@ -464,7 +464,7 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
-    // fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+    if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 
 #endif
 

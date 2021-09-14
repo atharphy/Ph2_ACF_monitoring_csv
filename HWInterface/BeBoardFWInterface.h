@@ -63,7 +63,10 @@ class BeBoardFWInterface : public RegManager
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
 
     void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
-
+#ifdef __TCP_SERVER__
+    void       setTestcardClient(TCPClient* theTestcardClient) { fTestcardClient = theTestcardClient; };
+    TCPClient* getTestcardClient() { return fTestcardClient; };
+#endif
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
@@ -297,7 +300,9 @@ class BeBoardFWInterface : public RegManager
     uint32_t   numAcq{0};
     uint32_t   nbMaxAcq{0};
     TCPClient* fPowerSupplyClient;
-
+#ifdef __TCP_SERVER__
+    TCPClient* fTestcardClient;
+#endif
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison
     template <typename T, class BinaryPredicate>
