@@ -661,7 +661,7 @@ uint8_t CbcInterface::GetLastPage(Chip* pCbc)
         auto cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
         ChipRegMask cMask;  cMask.fBitShift=7; cMask.fNbits=1;
         uint8_t cDefaultPage = pCbc->getRegBits( "FeCtrl&TrgLat2",cMask );
-        LOG (INFO) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "\t...Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue << std::dec << RESET;
         return cDefaultPage;
     }
     else
@@ -831,7 +831,7 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
         bool cSuccess = ( pRegNode == "FeCtrl&TrgLat2" ) ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
     }
-    pCbc->setReg(pRegNode, cRegItem.fValue);
+    pCbc->setReg(pRegNode, cValue);
 
     return cValue;
 }

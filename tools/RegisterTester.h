@@ -79,6 +79,9 @@ class RegisterTester : public Tool
     // Counters
     uint32_t fNBadRegisters;
 
+    // HardReset 
+    void SendHardReset(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, const Ph2_HwDescription::Chip* pFrontEndChip  ); 
+
     // functions/procedures
     void PrintTestResults(std::ostream& os = std::cout);
 

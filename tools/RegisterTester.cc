@@ -42,6 +42,23 @@ void RegisterTester::Initialise()
     if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
 }
 
+void RegisterTester::SendHardReset(const OpticalGroup* pOpticalGroup, const Chip* pFrontEndChip ) 
+{
+    auto cBoardId   = pOpticalGroup->getBeBoardId();
+    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto& clpGBT = pOpticalGroup->flpGBT;
+    bool cWithLpGBT = ( clpGBT != nullptr);
+    if(!cWithLpGBT)
+    {
+        fBeBoardInterface->ChipReset((*cBoardIter));
+    }
+    else
+    {
+        if( pFrontEndChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, pFrontEndChip->getHybridId() % 2); 
+        else if( pFrontEndChip->getFrontEndType() == FrontEndType::SSA ) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, pFrontEndChip->getHybridId() % 2); 
+        else static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, pFrontEndChip->getHybridId() % 2);
+    }
+}
 void RegisterTester::RegisterTest()
 {
     std::vector<std::string> cRegsToSkip{"Bandgap","ChipIDFuse","FeCtrl&TrgLat2"};
@@ -50,8 +67,8 @@ void RegisterTester::RegisterTest()
     // first just test page toggle 
     LOG(INFO) << BOLDMAGENTA << "Test" << +cTestFlavor << " of I2C registers in CBCs .... just going to toggle the page without writing..." << RESET;
     uint8_t cSortOrder=0;       
-    uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
-    std::vector<uint8_t> cPages{cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};//static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
+    //uint8_t cFirstPage=(cSortOrder==0)? 0 : 1; 
+    //std::vector<uint8_t> cPages{cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};//static_cast<uint8_t>(~cFirstPage&0x01),cFirstPage,static_cast<uint8_t>(~cFirstPage&0x01)};
 
     
     // first I want to record the register map for this map
@@ -120,52 +137,6 @@ void RegisterTester::RegisterTest()
 
     for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
     {
-        // so here .. I need to send a hard reset to the ROCs
-        LOG(INFO) << BOLDMAGENTA << "Sending hard reste to ROCs...[Test Attempt#" << +cAttempt << "]" << RESET;
-        for(auto cBoard: *fDetectorContainer)
-        {
-            auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
-            if(!cWithLpGBT)
-            {
-                fBeBoardInterface->ChipReset(cBoard);
-                continue;
-            }
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& clpGBT = cOpticalGroup->flpGBT;
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto cType    = FrontEndType::CBC3;
-                    bool cWithCBC = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                    cType         = FrontEndType::SSA;
-                    bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                    cType         = FrontEndType::MPA;
-                    bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-
-                    if(cWithCBC) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cHybrid->getId() % 2);
-                    if(cWithSSA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cHybrid->getId() % 2);
-                    if(cWithMPA) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cHybrid->getId() % 2);
-                }
-            }
-        } // board loop to send hard reset
-
-        // reset page map 
-        LOG(INFO) << BOLDMAGENTA << "Resetting page map ..." << RESET;
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap(); 
-                    } // chip
-                } // hybrid
-            } // OG
-        } 
-
         // now .. try and change page after config and look for mis-matches
         for(auto cBoard: *fDetectorContainer)
         {
@@ -175,71 +146,77 @@ void RegisterTester::RegisterTest()
                 {
                     for(auto cChip: *cHybrid)
                     {
+                        if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+                        
                         LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " on hybrid" << +cHybrid->getId() << RESET;
                         Registers& cExpectedLst = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
                         Registers  cSensitiveRegisters;
                         cSensitiveRegisters.clear();
                         std::vector<int> cPageToggles(0);
-                        for(auto cPage : cPages )
+                        size_t cMatches = 0;
+                        size_t cNRegs  = 0; 
+                        for(auto& cItem: cExpectedLst) // loop over what I think the current values are
                         {
-                            uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
-                            LOG (INFO) << BOLDMAGENTA << "\t\t.. Going to select page " << +cPage
-                                << " - previous page was " << +cPreviousPage << RESET;
+                            // here .. I need to send a hard reset to the ROCs
+                            SendHardReset(cOpticalGroup, cChip);
 
-                            // static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cPage );
-                            // check for mismatches
-                            size_t cMatches = 0;
-                            size_t cNRegs  = 0; 
-                            for(auto& cItem: cExpectedLst) // loop over what I think the current values are
-                            {
-                                //if( cItem.second.fPage == cPage ) continue; 
-
-                                // compare the value read back from the chip against what is expected
-                                LOG (DEBUG) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with value 0x" 
-                                    << std::hex << +cItem.second.fValue << std::dec << RESET;
-                                auto cReadBack = fReadoutChipInterface->ReadChipReg(cChip, cItem.first);
-                                auto cValue    = cItem.second.fValue;
-
-                                bool cCorrupted = cReadBack != cValue;
-                                if(cCorrupted)
-                                {
-                                    std::string cRegName = cItem.first;
-                                    if(std::find_if(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), [&cRegName](Register x) { return x.first == cRegName; }) == cSensitiveRegisters.end())
-                                    {
-                                        cSensitiveRegisters.push_back(cItem);
-                                        cPageToggles.push_back( cPreviousPage - cPage );
-                                    }
-                                    LOG (INFO) << BOLDRED << "\t\t\t\t..When switching from page " << +cPreviousPage
-                                            << " to page " << +cPage
-                                            << " register# " << +cNRegs 
-                                            << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
-                                            << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
-                                    // if register value does not match 
-                                    // then update value in memory 
-                                    cItem.second.fValue =cReadBack; 
-                                }
-                                else
-                                {
-                                    LOG (DEBUG) << BOLDGREEN << "\t\t...Match in I2C register " << cItem.first
-                                        << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
-                                        << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec
-                                        << RESET;
-                                    cMatches++;
-                                }
-                                cPreviousPage = cItem.second.fPage;
-                                cNRegs++;
-
-                            } // loop over current values and compare what I read back against what I have stored in memory
-                            float cMatchedPerc = cMatches / (float)(cNRegs);
-                            if( cMatches == cNRegs )
-                                LOG(INFO) << BOLDGREEN << "\t\t.. Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
-                                  << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
-                            else
-                                LOG(INFO) << BOLDRED << "\t\t.. Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
-                                  << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
+                            // reset page map control 
+                            static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap(); 
                             
-                            cPreviousPage = cPage;
-                        } // register write loop
+                            // read previous page     
+                            uint8_t cPreviousPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
+                            LOG (DEBUG) << BOLDMAGENTA << "Page after a hard reset is " << +cPreviousPage << RESET;
+                            // if this page is the same .. ignore this register for now 
+                            if( cItem.second.fPage == cPreviousPage ) continue; 
+
+                            // so now I expect the value to be the default 
+                            // compare the value read back from the chip against what is expected
+                            // if I'm reading from a different page - this means I'm switching pages 
+                            LOG (DEBUG) << BOLDMAGENTA << "\t... Reading back value from register " << cItem.first << " on page " << +cItem.second.fPage << " with expected value 0x" 
+                                << std::hex << +cItem.second.fValue << std::dec
+                                << " when previous page is " << +cPreviousPage 
+                                << RESET;
+                            auto cReadBack = fReadoutChipInterface->ReadChipReg(cChip, cItem.first);
+                            auto cValue    = cItem.second.fValue;
+
+                            bool cCorrupted = cReadBack != cValue;
+                            if(cCorrupted)
+                            {
+                                std::string cRegName = cItem.first;
+                                if(std::find_if(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), [&cRegName](Register x) { return x.first == cRegName; }) == cSensitiveRegisters.end())
+                                {
+                                    cSensitiveRegisters.push_back(cItem);
+                                    cPageToggles.push_back( cPreviousPage - cItem.second.fPage );
+                                }
+                                LOG (INFO) << BOLDRED << "\t\t\t\t..When switching from page " << +cPreviousPage
+                                        << " to page " << +cItem.second.fPage
+                                        << " register# " << +cNRegs 
+                                        << "\t\t...Mismatch in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
+                                        << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
+                                // if register value does not match 
+                                // then update value in memory 
+                                cItem.second.fValue =cReadBack; 
+                            }
+                            else
+                            {
+                                LOG (DEBUG) << BOLDGREEN << "\t\t\t\t..When switching from page " << +cPreviousPage
+                                        << " to page " << +cItem.second.fPage
+                                        << " register# " << +cNRegs 
+                                        << "\t\t...Match in I2C register " << cItem.first << " value stored in map is 0x" << std::hex << +cItem.second.fValue << std::dec
+                                        << " value read-back from chip is 0x" << std::hex << +cReadBack << std::dec << RESET;
+                                cMatches++;
+                            }
+                            cPreviousPage = cItem.second.fPage;
+                            cNRegs++;
+
+                        } // loop over current values and compare what I read back against what I have stored in memory
+                        float cMatchedPerc = cMatches / (float)(cNRegs);
+                        if( cMatches == cNRegs )
+                            LOG(INFO) << BOLDGREEN << "\t\t.. Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                              << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
+                        else
+                            LOG(INFO) << BOLDRED << "\t\t.. Found read-back matched fraction from other registers to be " << 100 * cMatchedPerc << " percent. Found " 
+                              << +cSensitiveRegisters.size() << " sensitive registers." <<  RESET;
                         std::sort(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), customGreaterThanAddress);
                         for( auto cSensitiveRegister : cSensitiveRegisters ) 
                         {
