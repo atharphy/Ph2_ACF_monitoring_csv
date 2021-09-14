@@ -20,11 +20,6 @@ namespace Ph2_HwInterface
 {
 bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-#ifdef __SEH_USB__
-    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-#endif
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     setBoard(pChip->getBeBoardId());
     SetConfigMode(pChip, fUseOpticalLink, fUseCPB);
@@ -104,7 +99,12 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
     {
         // use PS-ROH test card USB interface
 #ifdef __TCUSB__
+        // use 2S_SEH test card USB interface
+#ifdef __TCP_SERVER__
+        throw std::runtime_error(std::string("lpGBT slave I2C not available in TCP mode!"));
+#else
         fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
+#endif
 #endif
     }
     return true;
@@ -119,7 +119,13 @@ bool D19clpGBTInterface::WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddr
                 // Now pick one configuration mode
                 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
-                cReadBack = fTC_USB->write_i2c(pAddress, static_cast<char>(pValue));
+                // Dont really see the point here. Write_i2c does not return a read back???
+                // cReadBack = fTC_2SSEH.write_i2c(pAddress, static_cast<char>(pValue));
+#ifdef __TCP_SERVER__
+                throw std::runtime_error(std::string("lpGBT slave I2C not available in TCP mode!"));
+#else
+                cReadBack = fTC_USB->read_i2c(pAddress);
+#endif
 #endif
                 cIter++;
             }
@@ -142,7 +148,11 @@ uint16_t D19clpGBTInterface::ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pA
     {
 // use PS-ROH test card USB interface
 #ifdef __TCUSB__
+#ifdef __TCP_SERVER__
+        throw std::runtime_error(std::string("lpGBT slave I2C not avilable in TCP mode!"));
+#else
         return fTC_USB->read_i2c(pAddress);
+#endif
 #endif
     }
     return 0;
@@ -192,7 +202,10 @@ void D19clpGBTInterface::InitialiseTCUSBHandler()
     fTC_USB = new TC_PSROH();
     LOG(INFO) << BOLDGREEN << "Initialised PS-ROH TestCard USB Handler" << RESET;
 #elif __SEH_USB__
+#ifdef __TCP_SERVER__
+#else
     fTC_USB = new TC_2SSEH();
+#endif
     LOG(INFO) << BOLDGREEN << "Initialised 2S-SEH TestCard USB Handler" << RESET;
 #endif
 }
@@ -201,19 +214,24 @@ void D19clpGBTInterface::InitialiseTCUSBHandler()
 // Preliminary
 void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 {
-    uint8_t cChipRate = GetChipRate(pChip);
+    // uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH 5G lpGBT configuration" << RESET;
     // Configure High Speed Link Tx Rx Polarity
     ConfigureHighSpeedPolarity(pChip, 1, 0);
 
     // Clocks
     std::vector<uint8_t> cClocks  = {1, 11}; // Reduced number of clocks and only 320 MHz
-    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 7, cClkInvert = 1;
+    uint8_t              cClkFreq = 4, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups = {0, 2}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    std::vector<uint8_t> cTxGroups =
+                             {
+                                 0,
+                                 2,
+                             },
+                         cTxChannels = {0};
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
@@ -227,7 +245,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
-    uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 12;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -238,17 +256,24 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
                 cRxInvert = 0;
             else
                 cRxInvert = 1;
-
             if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
-    // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+#ifdef __TCUSB__
+    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+#endif
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
-    // Setting GPIO levels Uncomment this for Skeleton test
-    // Setting GPIO levels for Skeleton test
+    // Setting GPIO levels Resets are high
     ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
     ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+}
+void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+    // Configure Rx Phase Shifter
+
+    D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
 }
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
@@ -304,7 +329,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureGPIODirection(pChip, {0, 1, 3, 6, 9, 12}, 1);
     ConfigureGPIOLevel(pChip, {0, 1, 3, 6, 9, 12}, 1);
 }
-
 bool D19clpGBTInterface::cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry)
 {
     LOG(DEBUG) << BOLDBLUE << "CIC Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;

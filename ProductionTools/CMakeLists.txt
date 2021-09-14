@@ -103,6 +103,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
     endif(USE_EUDAQ)
 
+    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionTools *.cc)
+
     ####################################
     ## EXECUTABLES
     ####################################
@@ -154,7 +156,7 @@ else()
     install_source()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tool/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/ProductionTools/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

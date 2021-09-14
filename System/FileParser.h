@@ -92,6 +92,10 @@ class FileParser
     void parseSSAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
     //
+
+    void parseSSA2Container(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA2);
+    //
     void parseMPA(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix);
     void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cMPA);
     //

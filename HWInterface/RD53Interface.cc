@@ -599,14 +599,9 @@ void RD53Interface::SendHybridCommandsPack(const BeBoard* pBoard, const std::vec
 // # Dedicated to monitoring #
 // ###########################
 
-float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
+uint32_t RD53Interface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
 {
-    this->setBoard(pChip->getBeBoardId());
-
-    const float measError = 4.0; // Current or Voltage measurement error due to MONITOR_CONFIG resolution [%]
-    float       value;
-    bool        isCurrentNotVoltage;
-    uint32_t    voltageObservable(0), currentObservable(0), observable;
+    uint32_t voltageObservable(0), currentObservable(0);
 
     const std::unordered_map<std::string, uint32_t> currentMultiplexer = {
         {"Iref", 0x00},          {"IBIASP1_SYNC", 0x01}, {"IBIASP2_SYNC", 0x02},  {"IBIAS_DISC_SYNC", 0x03}, {"IBIAS_SF_SYNC", 0x04},  {"ICTRL_SYNCT_SYNC", 0x05}, {"IBIAS_KRUM_SYNC", 0x06},
@@ -631,16 +626,29 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
         }
         else
             voltageObservable = search->second;
-        isCurrentNotVoltage = false;
+        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
     }
     else
     {
-        currentObservable   = search->second;
-        voltageObservable   = voltageMultiplexer.find("IMUXoutput")->second;
-        isCurrentNotVoltage = true;
+        currentObservable = search->second;
+        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
+        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
     }
 
-    observable = bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
+    return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
+}
+
+float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    const float measError = 4.0; // Current or Voltage measurement error due to MONITOR_CONFIG resolution [%]
+    float       value;
+    bool        isCurrentNotVoltage;
+    uint32_t    observable;
+
+    observable = RD53Interface::getADCobservable(observableName, &isCurrentNotVoltage);
+
     if(observableName.find("TEMPSENS") != std::string::npos)
     {
         value = RD53Interface::measureTemperature(pChip, observable);
@@ -655,6 +663,12 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
     }
 
     return value;
+}
+
+uint32_t RD53Interface::ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName)
+{
+    uint32_t observable = RD53Interface::getADCobservable(observableName, nullptr);
+    return RD53Interface::measureADC(pChip, observable);
 }
 
 uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)

@@ -55,6 +55,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       else($ENV{UseTCUSBforROH})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforROH})
+      if($ENV{UseTCUSBTcpServer})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+      endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
     ####################################

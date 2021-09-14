@@ -1,4 +1,3 @@
-#ifdef __USE_ROOT__
 #include "SEHTester.h"
 #include "linearFitter.h"
 #include <fstream>
@@ -87,14 +86,19 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     float U_SEH;
     while(cVolts < 10.01)
     {
-        std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + "ChannelId:" + channelId + ",Voltage:" + std::to_string(cVolts);
+        std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(cVolts) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
         std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
+#ifdef __TCP_SERVER__
+        I_SEH = this->getMeasurement("read_supply:I_SEH");
+        U_SEH = this->getMeasurement("read_supply:U_SEH");
+#else
         fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
         fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+#endif
 #endif
 #endif
 
@@ -111,9 +115,9 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     cUinIinGraph->SetMarkerStyle(70);
     cUinIinTree->Write();
 
-    auto cUinIinCanvas = new TCanvas("tUinIin", "Uin to Iin during power-up", 750, 500);
+    auto cUinIinCanvas = new TCanvas("cUinIin", "Uin to Iin during power-up", 750, 500);
 
-    cUinIinGraph->Draw("AP");
+    cUinIinGraph->Draw("APL");
     cUinIinGraph->GetXaxis()->SetTitle("Uin [V]");
     cUinIinGraph->GetYaxis()->SetTitle("Iin [A]");
 
@@ -168,6 +172,7 @@ int SEHTester::exampleFit()
 
     // cEfficencyCanvas->BuildLegend();
     cCanvas->Write();
+
 #endif
     return 0;
 }
@@ -181,18 +186,25 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
 
-    fTC_USB->set_HV(false, true, true, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    /* fTC_USB->set_HV(false, true, true, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fTC_USB->set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
-
+#endif
     std::this_thread::sleep_for(std::chrono::milliseconds(15000));
-
+#ifdef __TCP_SERVER__
+    cUMon  = this->getMeasurement("read_hvmon:Mon");
+    cVHVJ7 = this->getMeasurement("read_hvmon:VHVJ7");
+    cVHVJ8 = this->getMeasurement("read_hvmon:VHVJ8");
+#else
     fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
     fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
-    fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
+    fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8); */
     //----------------------------------------------------
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
+#else
     fTC_USB->set_HV(false, true, true, 0);
-
+#endif
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
@@ -206,15 +218,21 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
+#ifdef __TCP_SERVER__
+        fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:" + std::to_string(cDACValue) + ",");
+#else
         fTC_USB->set_HV(true, true, true, cDACValue); // 0x155 = 100V
-
+#endif
         std::this_thread::sleep_for(std::chrono::milliseconds(15000));
-
+#ifdef __TCP_SERVER__
+        cUMon  = this->getMeasurement("read_hvmon:Mon");
+        cVHVJ7 = this->getMeasurement("read_hvmon:VHVJ7");
+        cVHVJ8 = this->getMeasurement("read_hvmon:VHVJ8");
+#else
         fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
         fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
         fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
-
+#endif
         LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cDACValVect.push_back(cDACValue);
         cVHVJ7ValVect.push_back(cVHVJ7);
@@ -230,7 +248,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVMultiGraph->SetTitle("Bias voltage sensor side");
 
     auto cDACtoVHVJ7Graph = new TGraph(cDACValVect.size(), cDACValVect.data(), cVHVJ7ValVect.data());
-    cDACtoVHVJ7Graph->SetName("VHVJ7");
+    cDACtoVHVJ7Graph->SetName("gVHVJ7");
     cDACtoVHVJ7Graph->SetTitle("VHVJ7");
     cDACtoVHVJ7Graph->SetLineColor(1);
     cDACtoVHVJ7Graph->SetFillColor(0);
@@ -239,7 +257,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVMultiGraph->Add(cDACtoVHVJ7Graph);
 
     auto cDACtoVHVJ8Graph = new TGraph(cDACValVect.size(), cDACValVect.data(), cVHVJ8ValVect.data());
-    cDACtoVHVJ8Graph->SetName("VHVJ8");
+    cDACtoVHVJ8Graph->SetName("gVHVJ8");
     cDACtoVHVJ8Graph->SetTitle("VHVJ8");
     cDACtoVHVJ8Graph->SetLineColor(2);
     cDACtoVHVJ8Graph->SetFillColor(0);
@@ -248,16 +266,18 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVMultiGraph->Add(cDACtoVHVJ8Graph);
 
     auto cDACtoMonGraph = new TGraph(cDACValVect.size(), cDACValVect.data(), cUMonValVect.data());
-    cDACtoMonGraph->SetName("UMon");
+    cDACtoMonGraph->SetName("gUMon");
     cDACtoMonGraph->SetTitle("UMon");
     cDACtoMonGraph->SetLineColor(3);
     cDACtoMonGraph->SetFillColor(0);
     cDACtoMonGraph->SetLineWidth(3);
     cDACtoMonGraph->SetMarkerStyle(22);
     cDACtoHVMultiGraph->Add(cDACtoMonGraph);
-
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
+#else
     fTC_USB->set_HV(false, true, true, 0);
-
+#endif
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("HV DAC");
     cDACtoHVMultiGraph->GetYaxis()->SetTitle("Voltage [V]");
@@ -266,17 +286,302 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
-
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
+#else
     fTC_USB->set_HV(false, false, false, 0);
+#endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    fillSummaryTree("BiasDone", 1);
 #endif
 #endif
 #endif
 }
+void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTime, std::string powerSupplyId, std::string channelId)
+{
+    // time_t startTime;
+    // time(&startTime);
+#ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    struct timespec startTime, timer;
+    srand(time(NULL));
+
+    /* generate secret number between 1 and 10: */
+    // int iSecond;
+    // int iMilli;
+
+    // start timer.
+    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+    // clock_gettime(CLOCK_REALTIME, &start);
+    clock_gettime(CLOCK_MONOTONIC, &startTime);
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
+#else
+    fTC_USB->set_HV(true, false, false, 0);
+#endif
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    // Create TTree for leakage current
+    auto cLeakTree = new TTree("tExternalLeakTree", "Leakage Current");
+    // Create variables for TTree branches
+    std::vector<double> cILeakValVect;
+    std::vector<double> cHvMeaValVect;
+    std::vector<double> cIMeaValVect;
+    std::vector<double> cTimeValVect;
+    // Create TTree Branches
+    cLeakTree->Branch("ILeak", &cILeakValVect);
+    cLeakTree->Branch("HvMea", &cHvMeaValVect);
+    cLeakTree->Branch("IMea", &cIMeaValVect);
+    cLeakTree->Branch("Time", &cTimeValVect);
+
+    // for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
+    double time_taken;
+    do
+    {
+        // iSecond = rand() % 2;
+        // iMilli  = rand() % 1000;
+        // LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
+        float ILeak = 0;
+        float HvMea = 0;
+        float IMea  = 0;
+        // time_t timer;
+        // time(&timer);
+        clock_gettime(CLOCK_MONOTONIC, &timer);
+        std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+        HvMea              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
+        IMea               = 1e9 * std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Current", buffer));
+#ifdef __TCP_SERVER__
+        // UMon = this->getMeasurement("read_hvmon:Mon");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        ILeak = this->getMeasurement("read_hvmon:HV_meas");
+#else
+        // fTC_USB->read_hvmon(fTC_USB->Mon, UMon);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        fTC_USB->read_hvmon(fTC_USB->HV_meas, ILeak);
+#endif
+        cILeakValVect.push_back(double(ILeak));
+        cHvMeaValVect.push_back(HvMea);
+        cIMeaValVect.push_back(IMea);
+        // cTimeValVect.push_back(timer-startTime);
+
+        time_taken = (timer.tv_sec - startTime.tv_sec) * 1e9;
+        time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9;
+        cTimeValVect.push_back(time_taken);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    } while(time_taken < measurementTime);
+    cLeakTree->Fill();
+    fResultFile->cd();
+    cLeakTree->Write();
+
+    auto cLeakMultiGraph = new TMultiGraph();
+    cLeakMultiGraph->SetName("mgILeak");
+    cLeakMultiGraph->SetTitle("Leakage Current");
+    auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cILeakValVect.data());
+    cleakGraph->SetName("gILeakTC");
+    cleakGraph->SetTitle("Leakage Current Test Card");
+    cleakGraph->SetLineColor(2);
+    cleakGraph->SetFillColor(0);
+    cleakGraph->SetLineWidth(3);
+    cLeakMultiGraph->Add(cleakGraph);
+    auto cPSleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cIMeaValVect.data());
+    cPSleakGraph->SetName("gILeakPS");
+    cPSleakGraph->SetTitle("Leakage Current Power Supply");
+    cPSleakGraph->SetLineColor(3);
+    cPSleakGraph->SetFillColor(0);
+    cPSleakGraph->SetLineWidth(3);
+    cLeakMultiGraph->Add(cPSleakGraph);
+    auto cLeakCanvas = new TCanvas("cLeak", "Bias Voltage Leakage Current", 1600, 900);
+    cLeakMultiGraph->Draw("AL*");
+    cLeakMultiGraph->GetXaxis()->SetTitle("Time [s]");
+    cLeakMultiGraph->GetYaxis()->SetTitle("Leakage Current [nA]");
+
+    cLeakCanvas->BuildLegend();
+    cLeakMultiGraph->Write();
+    cLeakCanvas->Write();
+
+    auto cMonGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cHvMeaValVect.data());
+    cMonGraph->SetName("gHvMea");
+    cMonGraph->SetTitle("Monitoring Voltage");
+    cMonGraph->SetLineColor(2);
+    cMonGraph->SetFillColor(0);
+    cMonGraph->SetLineWidth(3);
+    auto cMonCanvas = new TCanvas("cMon", "Bias Voltage Monitoring Voltage", 1600, 900);
+    cMonGraph->Draw("AL*");
+    cMonGraph->GetXaxis()->SetTitle("Time [s]");
+    cMonGraph->GetYaxis()->SetTitle("High Voltage [V]");
+
+    // cEfficencyCanvas->BuildLegend();
+    cMonGraph->Write();
+    cMonCanvas->Write();
+    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(0) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
+#else
+    fTC_USB->set_HV(false, false, false, 0);
+
+    fillSummaryTree("ExternalLeakDone", 1);
+#endif
+#endif
+#endif
+#endif
+}
+void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string channelId)
+{
+#ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    // float cHvSet  = 0;
+    float cHvMea = 0;
+    float cVHVJ7 = 0;
+    float cVHVJ8 = 0;
+    if(fPowerSupplyClient == nullptr)
+    {
+        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalTestBiasVoltage cannot be executed" << RESET;
+        throw std::runtime_error("ExternalTestBiasVoltage cannot be executed");
+    }
+
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
+#else
+    fTC_USB->set_HV(false, true, true, 0);
+#endif
+    std::vector<float> cHvSetValVect;
+    std::vector<float> cVHVJ7ValVect;
+    std::vector<float> cVHVJ8ValVect;
+    std::vector<float> cHvMeaValVect;
+    std::vector<float> cPlotHvMeaValVect;
+    auto               cBiasVoltageTree = new TTree("tExtBiasVoltageTree", "Bias Voltage Sensor Side");
+    cBiasVoltageTree->Branch("HvSet", &cHvSetValVect);
+    cBiasVoltageTree->Branch("VHVJ7", &cVHVJ7ValVect);
+    cBiasVoltageTree->Branch("VHVJ8", &cVHVJ8ValVect);
+    cBiasVoltageTree->Branch("HvMea", &cHvMeaValVect);
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(0) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    for(int cHvSet = 0; cHvSet <= 1000; cHvSet += 100)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+#ifdef __TCP_SERVER__
+        fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:" + std::to_string(0) + ",");
+#else
+        fTC_USB->set_HV(true, true, true, 0); // 0x155 = 100V
+#endif
+
+        setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * cHvSet) + ",";
+        fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+        std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+        std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+        cHvMea             = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
+#ifdef __TCP_SERVER__
+        // cUMon  = this->getMeasurement("read_hvmon:Mon");
+        cVHVJ7 = this->getMeasurement("read_hvmon:VHVJ7");
+        cVHVJ8 = this->getMeasurement("read_hvmon:VHVJ8");
+#else
+        // fTC_USB->read_hvmon(fTC_USB->Mon, cUMon);
+        fTC_USB->read_hvmon(fTC_USB->VHVJ7, cVHVJ7);
+        fTC_USB->read_hvmon(fTC_USB->VHVJ8, cVHVJ8);
+#endif
+        LOG(INFO) << BOLDBLUE << "Set HV value = " << +cHvSet << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
+        cHvSetValVect.push_back(cHvSet);
+        cVHVJ7ValVect.push_back(cVHVJ7);
+        cVHVJ8ValVect.push_back(cVHVJ8);
+        cHvMeaValVect.push_back(cHvMea);
+        cPlotHvMeaValVect.push_back(-1 * cHvMea / 1000.);
+    }
+
+    auto cDACtoHVCanvas = new TCanvas("cDACtoHV", "Bias voltage sensor side", 1600, 900);
+    auto cObj           = gROOT->FindObject("mgDACtoHV");
+    if(cObj) delete cObj;
+    auto cDACtoHVMultiGraph = new TMultiGraph();
+    cDACtoHVMultiGraph->SetName("mgDACtoHV");
+    cDACtoHVMultiGraph->SetTitle("Bias voltage sensor side");
+
+    auto cDACtoVHVJ7Graph = new TGraph(cHvSetValVect.size(), cHvSetValVect.data(), cVHVJ7ValVect.data());
+    cDACtoVHVJ7Graph->SetName("gVHVJ7");
+    cDACtoVHVJ7Graph->SetTitle("VHVJ7");
+    cDACtoVHVJ7Graph->SetLineColor(1);
+    cDACtoVHVJ7Graph->SetFillColor(0);
+    cDACtoVHVJ7Graph->SetLineWidth(3);
+    cDACtoVHVJ7Graph->SetMarkerStyle(20);
+    cDACtoHVMultiGraph->Add(cDACtoVHVJ7Graph);
+
+    auto cDACtoVHVJ8Graph = new TGraph(cHvSetValVect.size(), cHvSetValVect.data(), cVHVJ8ValVect.data());
+    cDACtoVHVJ8Graph->SetName("gVHVJ8");
+    cDACtoVHVJ8Graph->SetTitle("VHVJ8");
+    cDACtoVHVJ8Graph->SetLineColor(2);
+    cDACtoVHVJ8Graph->SetFillColor(0);
+    cDACtoVHVJ8Graph->SetLineWidth(3);
+    cDACtoVHVJ8Graph->SetMarkerStyle(21);
+    cDACtoHVMultiGraph->Add(cDACtoVHVJ8Graph);
+
+    auto cDACtoMonGraph = new TGraph(cHvSetValVect.size(), cHvSetValVect.data(), cPlotHvMeaValVect.data());
+    cDACtoMonGraph->SetName("gHvMea*1/1000");
+    cDACtoMonGraph->SetTitle("HvMea*1/1000");
+    cDACtoMonGraph->SetLineColor(3);
+    cDACtoMonGraph->SetFillColor(0);
+    cDACtoMonGraph->SetLineWidth(3);
+    cDACtoMonGraph->SetMarkerStyle(22);
+    cDACtoHVMultiGraph->Add(cDACtoMonGraph);
+    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(0) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
+#else
+    fTC_USB->set_HV(false, true, true, 0);
+#endif
+    cDACtoHVMultiGraph->Draw("ALP");
+    cDACtoHVMultiGraph->GetXaxis()->SetTitle("Set HV [V]");
+    cDACtoHVMultiGraph->GetYaxis()->SetTitle("Voltage [V]");
+
+    cDACtoHVCanvas->BuildLegend();
+    cDACtoHVMultiGraph->Write();
+    cDACtoHVCanvas->Write();
+    cBiasVoltageTree->Fill();
+    cBiasVoltageTree->Write();
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
+#else
+    fTC_USB->set_HV(false, false, false, 0);
+#endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    fillSummaryTree("ExternalBiasDone", 1);
+#endif
+#endif
+#endif
+}
+
 void SEHTester::TurnOn()
 {
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("TurnOn");
+#else
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+#endif
+#endif
+#endif
+}
+void SEHTester::TurnOff()
+{
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("TurnOff");
+#else
+    fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
+#endif
 #endif
 #endif
 }
@@ -298,7 +603,11 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     // clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_MONOTONIC, &startTime);
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(pHvDacValue) + ",");
+#else
     fTC_USB->set_HV(true, false, false, pHvDacValue);
+#endif
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
     // Create variables for TTree branches
@@ -322,9 +631,15 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         // time_t timer;
         // time(&timer);
         clock_gettime(CLOCK_MONOTONIC, &timer);
+#ifdef __TCP_SERVER__
+        UMon = this->getMeasurement("read_hvmon:Mon");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        ILeak = this->getMeasurement("read_hvmon:HV_meas");
+#else
         fTC_USB->read_hvmon(fTC_USB->Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         fTC_USB->read_hvmon(fTC_USB->HV_meas, ILeak);
+#endif
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
         // cTimeValVect.push_back(timer-startTime);
@@ -345,12 +660,11 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cleakGraph->SetLineColor(2);
     cleakGraph->SetFillColor(0);
     cleakGraph->SetLineWidth(3);
-    auto cLeakCanvas = new TCanvas("tLeak", "Bias Voltage Leakage Current", 1600, 900);
+    auto cLeakCanvas = new TCanvas("cLeak", "Bias Voltage Leakage Current", 1600, 900);
     cleakGraph->Draw("AL*");
     cleakGraph->GetXaxis()->SetTitle("Time [s]");
     cleakGraph->GetYaxis()->SetTitle("Leakage Current [nA]");
 
-    // cEfficencyCanvas->BuildLegend();
     cLeakCanvas->Write();
 
     auto cMonGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cUMonValVect.data());
@@ -359,65 +673,89 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cMonGraph->SetLineColor(2);
     cMonGraph->SetFillColor(0);
     cMonGraph->SetLineWidth(3);
-    auto cMonCanvas = new TCanvas("tMon", "Bias Voltage Monitoring Voltage", 1600, 900);
+    auto cMonCanvas = new TCanvas("cMon", "Bias Voltage Monitoring Voltage", 1600, 900);
     cMonGraph->Draw("AL*");
     cMonGraph->GetXaxis()->SetTitle("Time [s]");
     cMonGraph->GetYaxis()->SetTitle("Monitoring Voltage [V]");
 
-    // cEfficencyCanvas->BuildLegend();
     cMonCanvas->Write();
-
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
+#else
     fTC_USB->set_HV(false, false, false, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    fillSummaryTree("LeakDone", 1);
+#endif
 #endif
 #endif
 #endif
 }
 
-void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
+void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
 {
 #ifdef __USE_ROOT__
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
     // Create TTree for Iout to Iin conversion in DC/DC
-    auto cIouttoIinTree = new TTree("tIouttoIinTree", "Iout to Iin conversion in DC/DC");
-    auto cEfficencyTree = new TTree("tEfficency", "DC/DC Efficency");
+    auto cEfficiencyTree = new TTree("tEfficiency", "DC/DC Efficiency");
     // Create variables for TTree branches
+    std::vector<float>       cUoutRValVect;
+    std::vector<float>       cUoutLValVect;
+    std::vector<float>       cU2v5ValVect;
+    std::vector<float>       cIoutRValVect;
+    std::vector<float>       cIoutLValVect;
     std::vector<float>       cIoutValVect;
     std::vector<float>       cIinValVect;
-    std::vector<float>       cEfficencyValVect;
+    std::vector<float>       cUinValVect;
+    std::vector<float>       cEfficiencyValVect;
     std::vector<std::string> cSideValVect;
     // Create TTree Branches
-    cIouttoIinTree->Branch("Iout", &cIoutValVect);
-    cIouttoIinTree->Branch("Iin", &cIinValVect);
-    cIouttoIinTree->Branch("side", &cSideValVect);
-    cEfficencyTree->Branch("Iout", &cIoutValVect);
-    cEfficencyTree->Branch("Efficency", &cEfficencyValVect);
-    cEfficencyTree->Branch("side", &cSideValVect);
+    cEfficiencyTree->Branch("Uout_R", &cUoutRValVect);
+    cEfficiencyTree->Branch("Uout_L", &cUoutLValVect);
+    cEfficiencyTree->Branch("Uout_2v5", &cU2v5ValVect);
+    cEfficiencyTree->Branch("Iin", &cIinValVect);
+    cEfficiencyTree->Branch("Uin", &cUinValVect);
+    cEfficiencyTree->Branch("Iout_R", &cIoutRValVect);
+    cEfficiencyTree->Branch("Iout_L", &cIoutLValVect);
+    cEfficiencyTree->Branch("Iout", &cIoutValVect);
+    cEfficiencyTree->Branch("Efficiency", &cEfficiencyValVect);
+    cEfficiencyTree->Branch("side", &cSideValVect);
     std::vector<std::string> pSides = {"both", "right", "left"};
 
     auto cObj1 = gROOT->FindObject("mgIouttoIin");
-    auto cObj2 = gROOT->FindObject("mgEfficency");
+    auto cObj2 = gROOT->FindObject("mgEfficiency");
+    auto cObj3 = gROOT->FindObject("mgUouttoIout");
     if(cObj1) delete cObj1;
     if(cObj2) delete cObj2;
+    if(cObj3) delete cObj3;
 
     auto cIouttoIinMultiGraph = new TMultiGraph();
     cIouttoIinMultiGraph->SetName("mgIouttoIin");
     cIouttoIinMultiGraph->SetTitle("DC/DC - Iout to Iin conversion");
 
-    auto cEfficencyMultiGraph = new TMultiGraph();
-    cEfficencyMultiGraph->SetName("mgEfficency");
-    cEfficencyMultiGraph->SetTitle("DC/DC conversion efficency");
+    auto cUouttoIoutMultiGraph = new TMultiGraph();
+    cUouttoIoutMultiGraph->SetName("mgUouttoIout");
+    cUouttoIoutMultiGraph->SetTitle("DC/DC - Uout vs Iout conversion");
+
+    auto cEfficiencyMultiGraph = new TMultiGraph();
+    cEfficiencyMultiGraph->SetName("mgEfficiency");
+    cEfficiencyMultiGraph->SetTitle("DC/DC conversion efficiency");
+
     LOG(INFO) << BOLDMAGENTA << "Testing DC/DC" << RESET;
     int iterator = 1;
     // We run three times; Only right side, only left side and load on both sides
     for(const auto& cSide: pSides)
     {
+#ifdef __TCP_SERVER__
+        fTestcardClient->sendAndReceivePacket("set_load1,enable:0,path:0,value:0,");
+        fTestcardClient->sendAndReceivePacket("set_load2,enable:0,path:0,value:0,");
+#else
         fTC_USB->set_load1(false, false, 0);
         fTC_USB->set_load2(false, false, 0);
-
-        cIoutValVect.clear(), cIinValVect.clear();
-        cEfficencyValVect.clear();
-        cSideValVect.clear();
+#endif
+        cIoutRValVect.clear(), cIinValVect.clear(), cUoutRValVect.clear(), cUoutLValVect.clear();
+        cEfficiencyValVect.clear(), cU2v5ValVect.clear(), cIoutLValVect.clear();
+        cSideValVect.clear(), cUinValVect.clear(), cIoutValVect.clear();
 
         for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += pStep)
         {
@@ -427,35 +765,63 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
             float I_P1V2_L;
             float U_P1V2_R;
             float U_P1V2_L;
-
+            float U_P2V5 = 0;
+#ifdef __TCP_SERVER__
+            if(cSide == "both")
+            {
+                // fTestcardClient->sendAndReceivePacket("set_load2,enable:1,path:0,value:" + std::to_string(cLoadValue) + ",");
+                // fTestcardClient->sendAndReceivePacket("set_load1,enable:1,path:0,value:" + std::to_string(cLoadValue) + ",");
+                fTestcardClient->sendAndReceivePacket("set_load2,enable:1,path:0,value:171");
+                fTestcardClient->sendAndReceivePacket("set_load1,enable:1,path:0,value:205");
+            }
+            if(cSide == "left") { fTestcardClient->sendAndReceivePacket("set_load1,enable:1,path:0,value:" + std::to_string(cLoadValue) + ","); }
+            if(cSide == "right") { fTestcardClient->sendAndReceivePacket("set_load2,enable:1,path:0,value:" + std::to_string(cLoadValue) + ","); }
+#else
             if(cSide == "both")
             {
                 fTC_USB->set_load1(true, false, cLoadValue);
                 fTC_USB->set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { fTC_USB->set_load1(true, false, cLoadValue); }
-            if(cSide == "right") { fTC_USB->set_load2(true, false, cLoadValue); }
+            if(cSide == "left") { fTC_USB->set_load2(true, false, cLoadValue); }
+            if(cSide == "right") { fTC_USB->set_load1(true, false, cLoadValue); }
+#endif
             // Delay needs to be optimized during functional testing
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+#ifdef __TCP_SERVER__
+            I_P1V2_R = this->getMeasurement("read_load:I_P1V2_R");
+            I_P1V2_L = this->getMeasurement("read_load:I_P1V2_L");
+            I_SEH    = this->getMeasurement("read_supply:I_SEH");
+            U_P1V2_R = this->getMeasurement("read_load:U_P1V2_R");
+            U_P1V2_L = this->getMeasurement("read_load:U_P1V2_L");
+            U_SEH    = this->getMeasurement("read_supply:U_SEH");
+            U_P2V5   = this->getMeasurement("read_load:P2V5_VTRx_MON");
+#else
             fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
             fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
             fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
             fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
             fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
             fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
-
+            fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
+#endif
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
             cIinValVect.push_back(I_SEH);
+            cUinValVect.push_back(U_SEH);
+            cU2v5ValVect.push_back(U_P2V5);
+            cIoutRValVect.push_back(I_P1V2_R);
+            cUoutRValVect.push_back(U_P1V2_R);
+            cIoutLValVect.push_back(I_P1V2_L);
+            cUoutLValVect.push_back(U_P1V2_L);
             cSideValVect.push_back(cSide);
-            if(I_SEH * U_SEH == 0) { cEfficencyValVect.push_back(-1); }
+            if(I_SEH * U_SEH == 0) { cEfficiencyValVect.push_back(-1); }
             else
             {
-                cEfficencyValVect.push_back((I_P1V2_R * U_P1V2_R + I_P1V2_L * U_P1V2_L) / (I_SEH * U_SEH));
+                cEfficiencyValVect.push_back((I_P1V2_R * U_P1V2_R + I_P1V2_L * U_P1V2_L) / (I_SEH * U_SEH));
             }
         }
-        cIouttoIinTree->Fill();
-        cEfficencyTree->Fill();
+        cEfficiencyTree->Fill();
+
         auto    cIouttoIinGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cIinValVect.data());
         TString str             = cSide;
         cIouttoIinGraph->SetName(str);
@@ -466,38 +832,68 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
         cIouttoIinGraph->SetMarkerStyle(iterator + 20);
         cIouttoIinMultiGraph->Add(cIouttoIinGraph);
 
-        auto cEfficencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficencyValVect.data());
-        cEfficencyGraph->SetName(str);
-        cEfficencyGraph->SetTitle(str);
-        cEfficencyGraph->SetLineColor(iterator);
-        cEfficencyGraph->SetFillColor(0);
-        cEfficencyGraph->SetLineWidth(3);
-        cEfficencyGraph->SetMarkerStyle(iterator + 20);
-        cEfficencyMultiGraph->Add(cEfficencyGraph);
+        auto cEfficiencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficiencyValVect.data());
+        cEfficiencyGraph->SetName(str);
+        cEfficiencyGraph->SetTitle(str);
+        cEfficiencyGraph->SetLineColor(iterator);
+        cEfficiencyGraph->SetFillColor(0);
+        cEfficiencyGraph->SetLineWidth(3);
+        cEfficiencyGraph->SetMarkerStyle(iterator + 20);
+        cEfficiencyMultiGraph->Add(cEfficiencyGraph);
+
+        auto cUoutRtoIoutRGraph = new TGraph(cIoutRValVect.size(), cIoutRValVect.data(), cUoutRValVect.data());
+        str                     = "Voltage right side current drawn " + cSide;
+        cUoutRtoIoutRGraph->SetName(str);
+        cUoutRtoIoutRGraph->SetTitle(str);
+        cUoutRtoIoutRGraph->SetLineColor(iterator);
+        cUoutRtoIoutRGraph->SetFillColor(0);
+        cUoutRtoIoutRGraph->SetLineWidth(3);
+        cUoutRtoIoutRGraph->SetMarkerStyle(iterator + 20);
+        cUouttoIoutMultiGraph->Add(cUoutRtoIoutRGraph);
+
+        auto cUoutLtoIoutLGraph = new TGraph(cIoutLValVect.size(), cIoutLValVect.data(), cUoutLValVect.data());
+        str                     = "Voltage left side current drawn " + cSide;
+        cUoutLtoIoutLGraph->SetName(str);
+        cUoutLtoIoutLGraph->SetTitle(str);
+        cUoutLtoIoutLGraph->SetLineColor(iterator);
+        cUoutLtoIoutLGraph->SetFillColor(0);
+        cUoutLtoIoutLGraph->SetLineWidth(3);
+        cUoutLtoIoutLGraph->SetMarkerStyle(iterator + 30);
+        cUouttoIoutMultiGraph->Add(cUoutLtoIoutLGraph);
         iterator++;
     }
-
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_load1,enable:0,path:0,value:0,");
+    fTestcardClient->sendAndReceivePacket("set_load2,enable:0,path:0,value:0,");
+#else
     fTC_USB->set_load1(false, false, 0);
     fTC_USB->set_load2(false, false, 0);
-
+#endif
     fResultFile->cd();
-    cIouttoIinTree->Write();
-    cEfficencyTree->Write();
-    auto cIouttoIinCanvas = new TCanvas("tIouttoIin", "Iout to Iin conversion in DC/DC", 750, 500);
+    cEfficiencyTree->Write();
 
+    auto cUouttoIoutCanvas = new TCanvas("cUouttoIout", "Uout versus Iout DC/DC", 750, 500);
+    cUouttoIoutMultiGraph->Draw("ALP");
+    cUouttoIoutMultiGraph->GetXaxis()->SetTitle("Iout [A]");
+    cUouttoIoutMultiGraph->GetYaxis()->SetTitle("Uout [V]");
+    cUouttoIoutCanvas->BuildLegend();
+    cUouttoIoutCanvas->Write();
+
+    auto cEfficiencyCanvas = new TCanvas("cEfficiency", "DC/DC conversion efficiency", 750, 500);
+    cEfficiencyMultiGraph->Draw("ALP");
+    cEfficiencyMultiGraph->GetXaxis()->SetTitle("Iout [A]");
+    cEfficiencyMultiGraph->GetYaxis()->SetTitle("Efficiency");
+    cEfficiencyCanvas->BuildLegend();
+    cEfficiencyCanvas->Write();
+
+    auto cIouttoIinCanvas = new TCanvas("cIouttoIin", "Iout to Iin conversion in DC/DC", 750, 500);
     cIouttoIinMultiGraph->Draw("ALP");
     cIouttoIinMultiGraph->GetXaxis()->SetTitle("Iout [A]");
     cIouttoIinMultiGraph->GetYaxis()->SetTitle("Iin [A]");
-
     cIouttoIinCanvas->BuildLegend();
     cIouttoIinCanvas->Write();
-    auto cEfficencyCanvas = new TCanvas("tEfficency", "DC/DC conversion efficency", 750, 500);
-    cEfficencyMultiGraph->Draw("ALP");
-    cEfficencyMultiGraph->GetXaxis()->SetTitle("Iout [A]");
-    cEfficencyMultiGraph->GetYaxis()->SetTitle("Efficency");
 
-    cEfficencyCanvas->BuildLegend();
-    cEfficencyCanvas->Write();
+    fillSummaryTree("EfficiencyDone", 1);
 #endif
 #endif
 #endif
@@ -660,26 +1056,91 @@ void SEHTester::TestCardVoltages()
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
+#ifdef __TCP_SERVER__
+        k = this->getMeasurement("read_supply:" + c2SSEHMapIterator->first);
+#else
         fTC_USB->read_supply(c2SSEHMapIterator->second, k);
+#endif
 #ifdef __USE_ROOT__
         fillSummaryTree(c2SSEHMapIterator->first, k);
 #endif
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+    // fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
+#ifdef __TCP_SERVER__
+        k = this->getMeasurement("read_supply:" + d2SSEHMapIterator->first);
+#else
         fTC_USB->read_supply(d2SSEHMapIterator->second, k);
+#endif
 #ifdef __USE_ROOT__
         fillSummaryTree(d2SSEHMapIterator->first, k);
 #endif
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
+    // fTC_USB->set_SehSupply(fTC_USB->sehSupply_Off);
+#endif
+#endif
+}
+
+void SEHTester::DCDCOutputEvaluation()
+{
+#ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    std::map<std::string, TC_2SSEH::loadMeasurement> c2SSEHOutputVoltageMeasurements = {
+        {"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R}, {"U_P1V2_L", TC_2SSEH::loadMeasurement::U_P1V2_L}, {"P2V5_VTRx_MON", TC_2SSEH::loadMeasurement::P2V5_VTRx_MON}};
+    std::vector<float> cDCDCValueVect;
+    float              cDCDCValue;
+    auto               cDCDCOutputTree  = new TTree("DCDCOutput", "lpGBT ADCs not tied to AMUX");
+    auto               cDCDCMapIterator = c2SSEHOutputVoltageMeasurements.begin();
+    gStyle->SetOptStat(0);
+
+    auto cStackedHistogramm = new THStack("cDCDCOutput", "DC/DC Output Voltages");
+    int  cIt                = 0;
+    // auto gRandom            = new TRandom3();
+    do
+    {
+        cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
+        auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
+        cHistogramm->SetFillColor(cIt + 1);
+        cHistogramm->SetMarkerStyle(cIt + 21);
+        cHistogramm->SetMarkerColor(cIt + 1);
+        cDCDCValueVect.clear();
+        for(int cIteration = 0; cIteration < 10; ++cIteration)
+        {
+#ifdef __TCP_SERVER__
+            cDCDCValue = this->getMeasurement("read_load:" + cDCDCMapIterator->first);
+#else
+            fTC_USB->read_load(cDCDCMapIterator->second, cDCDCValue);
+#endif
+            // cDCDCValue += gRandom->Rndm();
+            cDCDCValueVect.push_back(cDCDCValue);
+            cHistogramm->Fill(cDCDCValue);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+        }
+        cStackedHistogramm->Add(cHistogramm);
+
+        cDCDCOutputTree->Fill();
+        cDCDCMapIterator++;
+        cIt++;
+    } while(cDCDCMapIterator != c2SSEHOutputVoltageMeasurements.end());
+
+    auto cDCDCOutputCanvas = new TCanvas("cDCDcOutput", "DC DC Output voltages", 10, 10, 700, 700);
+    gPad->SetGrid();
+    cStackedHistogramm->Draw("PLC nostack");
+    cStackedHistogramm->GetXaxis()->SetTitle("Output Voltage");
+    cStackedHistogramm->GetYaxis()->SetTitle("Count");
+    cDCDCOutputCanvas->BuildLegend();
+    fResultFile->cd();
+    cDCDCOutputCanvas->Write();
+    cDCDCOutputTree->Write();
+#endif
 #endif
 #endif
 }
@@ -1115,80 +1576,6 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
         }
         cMapIterator++;
     } while(cMapIterator != f2SSEHClockMap.end());
-    //     bool c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
-    //     bool c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
-    //     bool c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
-    //     bool c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
-    //     LOG(INFO) << GREEN << "============================" << RESET;
-    //     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
-
-    //     LOG(INFO) << "Waiting for clock test";
-    //     while(!c320lClkTestDone)
-    //     {
-    //         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //         c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
-    //     }
-    //     if(c320lClkTestDone)
-    //     {
-    //         bool Clk320lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_stat");
-
-    //         if(Clk320lStat)
-    //             LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
-    //         else
-    //             LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
-    // #ifdef __USE_ROOT__
-    //         fillSummaryTree("320_l_Clk_Test", Clk320lStat);
-    // #endif
-    //     }
-
-    //     while(!c320rClkTestDone)
-    //     {
-    //         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //         c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
-    //     }
-    //     if(c320rClkTestDone)
-    //     {
-    //         bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
-
-    //         if(Clk320rStat) { LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET; }
-    //         else
-    //         {
-    //             LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
-    //         }
-    // #ifdef __USE_ROOT__
-    //         fillSummaryTree("320rClkTest", Clk320rStat);
-    // #endif
-    //     }
-
-    //     while(!c640lClkTestDone)
-    //     {
-    //         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //         c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
-    //     }
-    //     if(c640lClkTestDone)
-    //     {
-    //         bool Clk640lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_stat");
-
-    //         if(Clk640lStat)
-    //             LOG(INFO) << "640 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
-    //         else
-    //             LOG(ERROR) << "640 l clock test ->" << BOLDRED << " FAILED" << RESET;
-    //     }
-
-    //     while(!c640rClkTestDone)
-    //     {
-    //         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //         c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
-    //     }
-    //     if(c640rClkTestDone)
-    //     {
-    //         bool Clk640rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_stat");
-    //         if(Clk640rStat)
-    //             LOG(INFO) << "640 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
-    //         else
-    //             LOG(ERROR) << "640 r clock test ->" << BOLDRED << " FAILED" << RESET;
-    //     }
-    //     LOG(INFO) << GREEN << "============================" << RESET;
 }
 
 void SEHTester::CheckClocks()
@@ -1463,5 +1850,28 @@ void SEHTester::Stop()
 void SEHTester::Pause() {}
 
 void SEHTester::Resume() {}
+
+float SEHTester::PowerSupplyGetMeasurement(std::string name)
+{
+    LOG(INFO) << BOLDBLUE << name << RESET;
+    float value = std::stof(this->getVariableValue("value", name));
+    LOG(INFO) << BOLDBLUE << value << RESET;
+    return value;
+}
+std::string SEHTester::getVariableValue(std::string variable, std::string buffer)
+{
+    size_t begin = buffer.find(variable) + variable.size() + 1;
+    size_t end   = buffer.find(',', begin);
+    if(end == std::string::npos) end = buffer.size();
+    return buffer.substr(begin, end - begin);
+}
+#ifdef __TCP_SERVER__
+float SEHTester::getMeasurement(std::string name)
+{
+    std::string buffer = fTestcardClient->sendAndReceivePacket(name);
+    std::cout << buffer << std::endl;
+    float value = std::stof(this->getVariableValue("value", buffer));
+    return value;
+}
 
 #endif

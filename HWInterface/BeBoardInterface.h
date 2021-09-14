@@ -96,7 +96,9 @@ class BeBoardInterface
     void SetFileHandler(const Ph2_HwDescription::BeBoard* pBoard, FileHandler* pHandler);
 
     void setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fPowerSupplyClient);
-
+#ifdef __TCP_SERVER__
+    void setTestcardClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fTestcardClient);
+#endif
     /*!
      * \brief enable the file handler
      * \param pBoard

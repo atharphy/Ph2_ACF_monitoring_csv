@@ -10,13 +10,14 @@
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" >
-        <lpGBT_Interface useOpticalLink="0" useCPB="0"/>
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
           <Settings />
         </lpGBT>
-    </OpticalGroup>
-
+    
+    
+        </OpticalGroup>
     <SLink>
         <DebugMode type="FULL"/>
         <ConditionData type="I2C" Register="VCth1" FeId="0" CbcId="0"/>
@@ -70,6 +71,9 @@
         <Register name="physical_interface_block">
             <Register name="i2c">
                 <Register name="frequency"> 4 </Register>
+            </Register>
+            <Register name="slvs_debug">
+                <Register name="hybrid_select"> 1 </Register>
             </Register>
         </Register>
         <!-- Readout Block -->
