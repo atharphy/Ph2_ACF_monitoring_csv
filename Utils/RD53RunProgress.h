@@ -46,7 +46,7 @@ class RD53RunProgress
             LOG(INFO) << CYAN << "---------------------------" << RESET;
             RD53Shared::resetDefaultFloat();
             if(fraction < 1)
-                for(int i = 0; i < 5; i++) std::cout << "\x1b[A";
+                for(auto i = 0; i < 5; i++) std::cout << "\x1b[A";
         }
     }
 };

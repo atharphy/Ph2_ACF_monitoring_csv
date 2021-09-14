@@ -52,8 +52,7 @@ class ThrEqualizationSC : public PixelAlive
         uint16_t moreIterationsVCal = 1;
         uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
         uint16_t moreIterationsTDAC = 1;
-        return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) +
-               ((sc.getNumberIterations() * (nIterationsTDAC + moreIterationsTDAC)) + nIterationsTDAC) * nEvents / nEvtsBurst;
+        return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) + sc.getNumberIterations() * (nIterationsTDAC + moreIterationsTDAC);
     }
     void saveChipRegisters(int currentRun);
 
