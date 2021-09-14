@@ -57,7 +57,6 @@ class ThrMinimization : public PixelAlive
     size_t rowStop;
     size_t colStart;
     size_t colStop;
-    size_t nEvents;
     float  targetOccupancy;
     size_t ThrStart;
     size_t ThrStop;
@@ -67,7 +66,7 @@ class ThrMinimization : public PixelAlive
     DetectorDataContainer theThrContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
     void chipErrorReport() const;
 
   protected:

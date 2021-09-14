@@ -10,7 +10,6 @@
 #ifndef RD53ThrEqualizationSC_H
 #define RD53ThrEqualizationSC_H
 
-#include "RD53PixelAlive.h"
 #include "RD53SCurve.h"
 
 #ifdef __USE_ROOT__
@@ -25,7 +24,7 @@
 // #####################################
 // # Threshold equalization test suite #
 // #####################################
-class ThrEqualizationSC : public PixelAlive
+class ThrEqualizationSC : public SCurve
 {
   public:
     ~ThrEqualizationSC()
@@ -48,11 +47,10 @@ class ThrEqualizationSC : public PixelAlive
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 2);
-        uint16_t moreIterationsVCal = 1;
+        uint16_t nIterationsVCal    = 1;
         uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
         uint16_t moreIterationsTDAC = 1;
-        return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) + sc.getNumberIterations() * (nIterationsTDAC + moreIterationsTDAC);
+        return SCurve::getNumberIterations() * (nIterationsVCal + nIterationsTDAC + moreIterationsTDAC);
     }
     void saveChipRegisters(int currentRun);
 
@@ -61,29 +59,17 @@ class ThrEqualizationSC : public PixelAlive
 #endif
 
   private:
-    SCurve sc;
-    size_t rowStart;
-    size_t rowStop;
     size_t colStart;
     size_t colStop;
-    size_t nEvents;
-    size_t nEvtsBurst;
-    size_t startValue;
-    size_t stopValue;
-    size_t offset;
-    size_t nHITxCol;
-    bool   doFast;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-    DetectorDataContainer                    theOccContainer;
     DetectorDataContainer                    theTDACcontainer;
 
-    void                                   fillHisto();
-    std::shared_ptr<DetectorDataContainer> bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-    void                                   bitWiseScanLocal(const std::string& regName, uint32_t nEvents, std::shared_ptr<DetectorDataContainer> target, uint32_t nEvtsBurst);
-    void                                   chipErrorReport() const;
+    void fillHisto();
+    void bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target);
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

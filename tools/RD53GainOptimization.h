@@ -62,7 +62,6 @@ class GainOptimization : public Gain
     size_t rowStop;
     size_t colStart;
     size_t colStop;
-    size_t nEvents;
     size_t startValue;
     size_t stopValue;
     float  targetCharge;
@@ -75,7 +74,7 @@ class GainOptimization : public Gain
     DetectorDataContainer theKrumCurrContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
     void chipErrorReport() const;
 
   protected:

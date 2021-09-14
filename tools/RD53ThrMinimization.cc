@@ -29,7 +29,6 @@ void ThrMinimization::ConfigureCalibration()
     rowStop         = this->findValueInSettings<double>("ROWstop");
     colStart        = this->findValueInSettings<double>("COLstart");
     colStop         = this->findValueInSettings<double>("COLstop");
-    nEvents         = this->findValueInSettings<double>("nEvents");
     targetOccupancy = this->findValueInSettings<double>("TargetOcc");
     ThrStart        = this->findValueInSettings<double>("ThrStart");
     ThrStop         = this->findValueInSettings<double>("ThrStop");
@@ -127,7 +126,7 @@ void ThrMinimization::initializeFiles(const std::string fileRes_, int currentRun
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, nEvents, targetOccupancy, ThrStart, ThrStop);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, ThrStart, ThrStop);
 
     // ############################
     // # Fill threshold container #
@@ -188,7 +187,7 @@ void ThrMinimization::fillHisto()
 #endif
 }
 
-void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
@@ -257,10 +256,9 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         PixelAlive::sendData();
 

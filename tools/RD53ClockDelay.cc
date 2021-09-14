@@ -27,8 +27,6 @@ void ClockDelay::ConfigureCalibration()
     rowStop        = this->findValueInSettings<double>("ROWstop");
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
-    doFast         = this->findValueInSettings<double>("DoFast");
     startValue     = 0;
     stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
@@ -197,7 +195,7 @@ void ClockDelay::run()
                         this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency + i);
                     }
 
-        ClockDelay::scanDac("CLK_DATA_DELAY", halfDacList, nEvents, &theOccContainer);
+        ClockDelay::scanDac("CLK_DATA_DELAY", halfDacList, &theOccContainer);
     }
 
     // ################
@@ -287,7 +285,7 @@ void ClockDelay::fillHisto()
 #endif
 }
 
-void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
     const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
@@ -315,7 +313,6 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
         // ###############
         // # Save output #
@@ -330,7 +327,7 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
                     }
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         ClockDelay::sendData();
     }

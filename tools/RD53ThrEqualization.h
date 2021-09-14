@@ -82,7 +82,7 @@ class ThrEqualization : public PixelAlive
     DetectorDataContainer                    theTDACcontainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
     void chipErrorReport() const;
     void copyAndResetContainer(DetectorDataContainer& fromContainer, DetectorDataContainer& toContainer);
