@@ -522,7 +522,6 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, uint32_t nE
                     for(const auto cChip: *cHybrid)
                     {
                         float theTarget = target->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-                        std::cout << "AAA " << __LINE__ << " " << theTarget << std::endl;
 
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
@@ -531,13 +530,11 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, uint32_t nE
                                 // # Build discriminator #
                                 // #######################
                                 float newValue = cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold;
-                                if(row > 10 && row < 50 && col > 130 && col < 170) std::cout << "AAA " << __LINE__ << " " << newValue << std::endl;
 
                                 // ########################
                                 // # Save best DAC values #
                                 // ########################
                                 float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col);
-                                if(row > 10 && row < 50 && col > 130 && col < 170) std::cout << "AAA " << __LINE__ << " " << oldValue << std::endl;
 
                                 if(fabs(newValue - theTarget) <= fabs(oldValue - theTarget))
                                 {
@@ -560,11 +557,6 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, uint32_t nE
                                     (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
                                      maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) /
                                     2;
-
-                                // ###################
-                                // # Reset container #
-                                // ###################
-                                cChip->getSummary<ThresholdAndNoise>().fThreshold = 0;
                             }
                     }
     }
