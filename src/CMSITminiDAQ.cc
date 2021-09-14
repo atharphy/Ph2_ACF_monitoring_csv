@@ -27,6 +27,7 @@
 #include "../tools/RD53SCurve.h"
 #include "../tools/RD53ThrAdjustment.h"
 #include "../tools/RD53ThrEqualization.h"
+#include "../tools/RD53ThrEqualizationSC.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53VoltageTuning.h"
 
@@ -125,8 +126,8 @@ int main(int argc, char** argv)
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("calib",
-                     "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning, gendacdac]",
+                     "Which calibration to run [latency pixelalive noise scurve gain threqu threqusc gainopt thrmin "
+                     "thradj injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning, gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -510,20 +511,33 @@ int main(int argc, char** argv)
             go.analyze();
             go.draw();
         }
-        else if(whichCalib == "threqu")
+        else if((whichCalib == "threqu") || (whichCalib == "threqusc"))
         {
             // ##############################
             // # Run Threshold Equalization #
             // ##############################
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
 
-            std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
-            ThrEqualization te;
-            te.Inherit(&mySysCntr);
-            te.localConfigure(fileName, runNumber);
-            te.run();
-            te.analyze();
-            te.draw();
+            if(whichCalib == "threqu")
+            {
+                std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
+                ThrEqualization te;
+                te.Inherit(&mySysCntr);
+                te.localConfigure(fileName, runNumber);
+                te.run();
+                te.analyze();
+                te.draw();
+            }
+            else
+            {
+                std::string       fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualizationSC");
+                ThrEqualizationSC te;
+                te.Inherit(&mySysCntr);
+                te.localConfigure(fileName, runNumber);
+                te.run();
+                te.analyze();
+                te.draw();
+            }
         }
         else if(whichCalib == "thrmin")
         {

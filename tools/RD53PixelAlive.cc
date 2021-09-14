@@ -151,7 +151,7 @@ void PixelAlive::initializeFiles(const std::string fileRes_, int currentRun)
 
 void PixelAlive::run()
 {
-    theOccContainer              = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+    theOccContainer              = std::make_shared<DetectorDataContainer>();
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
