@@ -26,7 +26,7 @@ void VoltageTuning::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
 }
 
 void VoltageTuning::Running()

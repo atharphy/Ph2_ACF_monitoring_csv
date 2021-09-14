@@ -27,7 +27,6 @@ void Latency::ConfigureCalibration()
     rowStop        = this->findValueInSettings<double>("ROWstop");
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
     nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
     startValue     = this->findValueInSettings<double>("LatencyStart");
     stopValue      = this->findValueInSettings<double>("LatencyStop");
@@ -128,7 +127,7 @@ void Latency::run()
     const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
-    Latency::scanDac("LATENCY_CONFIG", dacList, nEvents, &theOccContainer);
+    Latency::scanDac("LATENCY_CONFIG", dacList, &theOccContainer);
 
     // ################
     // # Error report #
@@ -208,7 +207,7 @@ void Latency::fillHisto()
 #endif
 }
 
-void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
     const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
@@ -225,7 +224,6 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
         // ###############
         // # Save output #
@@ -240,7 +238,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
                     }
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         Latency::sendData();
     }

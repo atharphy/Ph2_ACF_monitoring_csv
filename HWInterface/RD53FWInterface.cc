@@ -102,8 +102,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
             else if(it.first.find("ext_clk_en") != std::string::npos)
             {
-                cfgDIO5.enable     = it.second;
-                cfgDIO5.ch_out_en  = 0x0;
+                cfgDIO5.enable     = cfgDIO5.enable | it.second;
+                cfgDIO5.ch_out_en  = cfgDIO5.ch_out_en & 0x0F;
                 cfgDIO5.ext_clk_en = it.second;
             }
             else
@@ -113,13 +113,13 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
                     cfgDIO5.enable    = true;
-                    cfgDIO5.ch_out_en = 0x0;
+                    cfgDIO5.ch_out_en = cfgDIO5.ch_out_en & 0x1D;
                 }
                 else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     cfgDIO5.enable             = true;
-                    cfgDIO5.ch_out_en          = 0x05;
+                    cfgDIO5.ch_out_en          = cfgDIO5.ch_out_en | 0x05;
                     cfgDIO5.tlu_en             = true;
                     cfgDIO5.tlu_handshake_mode = 0x02;
                 }
@@ -915,7 +915,7 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
                                {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)cfg->ch5_thr},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)cfg->tlu_en},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
-                               {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en", (uint32_t)cfg->ext_clk_en}});
+                               {"user.ctrl_regs.reset_reg.ext_clk_en", (uint32_t)cfg->ext_clk_en}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 }

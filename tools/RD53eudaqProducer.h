@@ -52,12 +52,13 @@ class RD53eudaqProducer : public eudaq::Producer
     int theRunNumber;
     int evCounter;
 
+    Physics RD53sysCntrPhys;
+
   private:
     std::condition_variable wakeUp;
     std::mutex              theMtx;
     bool                    doExit;
     std::string             configFile;
-    Physics                 RD53sysCntrPhys;
 };
 
 #endif

@@ -20,7 +20,8 @@
       <Hybrid Id="0" Status="1">
         <RD53_Files path="${PWD}/" />
 
-        <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0">
+        <!-- Available Comment field are: 50x50, 25x100origR0C0, 25x100origR1C0, unknown, combined with dual, quad -->
+        <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0" Comment="50x50">
           <!-- Overwrite .txt configuration file settings -->
           <Settings
               PA_IN_BIAS_LIN         =  "350"
@@ -163,13 +164,13 @@
           <Register name="dio5_ch4_thr"> 128 </Register>
           <Register name="dio5_ch5_thr"> 128 </Register>
 
-          <Register name="ext_clk_en"> 0 </Register>
+          <Register name="tlu_delay"> 0 </Register>
+          <!-- Delay for TLU trigger ID -->
         </Register>
 
-        <!--
-        <Register name="tlu_delay"> 1 </Register>
-        Set delay on TLU trigger line
-        -->
+        <Register name="reset_reg">
+          <Register name="ext_clk_en"> 0 </Register>
+        </Register>
 
         <Register name="fast_cmd_reg_3">
           <Register name="triggers_to_accept"> 10 </Register>

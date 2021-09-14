@@ -78,7 +78,7 @@ class RD53Interface : public ReadoutChipInterface
     }
 
     // ###########################
-    // # Dedicated to minitoring #
+    // # Dedicated to monitoring #
     // ###########################
   public:
     void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)

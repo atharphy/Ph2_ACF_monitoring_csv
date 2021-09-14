@@ -138,7 +138,7 @@ class RD53 : public ReadoutChip
     static const FrontEnd*    frontEnds[];
     static const FrontEnd*    getMajorityFE(size_t colStart, size_t colStop);
 
-    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
+    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);
 
     void     loadfRegMap(const std::string& fileName) override;
@@ -151,18 +151,19 @@ class RD53 : public ReadoutChip
     std::vector<perColumnPixelData>* getPixelsMask() { return &fPixelsMask; }
     std::vector<perColumnPixelData>* getPixelsMaskDefault() { return &fPixelsMaskDefault; }
 
-    void    copyMaskFromDefault();
-    void    copyMaskToDefault();
-    void    resetMask();
-    void    enableAllPixels();
-    void    disableAllPixels();
-    size_t  getNbMaskedPixels();
-    void    enablePixel(unsigned int row, unsigned int col, bool enable);
-    void    injectPixel(unsigned int row, unsigned int col, bool inject);
-    void    setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
-    void    resetTDAC();
-    uint8_t getTDAC(unsigned int row, unsigned int col);
-    uint8_t getChipLane() const { return myChipLane; }
+    void        copyMaskFromDefault();
+    void        copyMaskToDefault();
+    void        resetMask();
+    void        enableAllPixels();
+    void        disableAllPixels();
+    size_t      getNbMaskedPixels();
+    void        enablePixel(unsigned int row, unsigned int col, bool enable);
+    void        injectPixel(unsigned int row, unsigned int col, bool inject);
+    void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
+    void        resetTDAC();
+    uint8_t     getTDAC(unsigned int row, unsigned int col);
+    uint8_t     getChipLane() const { return myChipLane; }
+    std::string getComment() const { return myComment; }
 
     struct HitData
     {
@@ -226,6 +227,7 @@ class RD53 : public ReadoutChip
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string                     configFileName;
+    std::string                     myComment;
     uint8_t                         myChipLane;
 };
 } // namespace Ph2_HwDescription

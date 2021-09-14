@@ -105,7 +105,6 @@ void RD53eudaqProducer::OnStopRun()
     try
     {
         RD53sysCntrPhys.Stop();
-        RD53sysCntrPhys.draw();
 
         // #####################
         // # Send a EORE event #
@@ -162,18 +161,34 @@ void RD53eudaqProducer::MySendEvent(eudaq::Event& theEvent)
 void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
 {
     if(RD53EvtList.size() != 0)
-        for(const auto& evt: RD53EvtList)
+    {
+        size_t it = 0;
+        while(it < RD53EvtList.size())
         {
             eudaq::RawDataEvent eudaqEvent(EUDAQ::EVENT, eudaqProducer->theRunNumber, eudaqProducer->evCounter);
 
-            CMSITEventData::EventData theEvent{std::time(nullptr), evt.l1a_counter, evt.tdc, evt.bx_counter, evt.tlu_trigger_id, {}};
+            auto                      tluTrigId = RD53EvtList[it].tlu_trigger_id;
+            CMSITEventData::EventData theEvent{std::time(nullptr), RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
 
-            for(const auto& frame: evt.chip_frames_events)
+            // ##################################################
+            // # Collect all hits that have same TLU trigger ID #
+            // ##################################################
+            do
             {
-                theEvent.chipData.push_back({frame.first.chip_id, frame.first.chip_lane, {}});
+                for(const auto& frame: RD53EvtList[it].chip_frames_events)
+                {
+                    std::string chipType = "unknown";
+                    for(const auto& cHybrid: *(eudaqProducer->RD53sysCntrPhys.fDetectorContainer->at(0)->at(0)))
+                        for(const auto& cChip: *cHybrid)
+                            if((cHybrid->getId() == frame.first.hybrid_id) && (cChip->getId() == frame.first.chip_id)) chipType = static_cast<Ph2_HwDescription::RD53*>(cChip)->getComment();
 
-                for(const auto& hit: frame.second.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
-            }
+                    theEvent.chipData.push_back(
+                        {chipType, frame.first.chip_id, frame.first.chip_lane, frame.first.hybrid_id, frame.second.trigger_id, frame.second.trigger_tag, frame.second.bc_id, {}});
+                    for(const auto& hit: frame.second.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
+                }
+
+                it++;
+            } while((it < RD53EvtList.size()) && (RD53EvtList[it].tlu_trigger_id == tluTrigId));
 
             // #################
             // # Serialization #
@@ -186,6 +201,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             eudaqEvent.AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
             eudaqProducer->MySendEvent(eudaqEvent);
 
-            eudaqProducer->evCounter += 1;
+            eudaqProducer->evCounter++;
         }
+    }
 }

@@ -161,6 +161,26 @@ int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t
     return -1; // Chip not found
 }
 
+void RD53Event::clearEventContainer(BeBoard& theBoard, DetectorDataContainer& theContainer)
+{
+    for(const auto cOpticalGroup: *theContainer.at(theBoard.getIndex()))
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
+            {
+                for(auto row = 0u; row < RD53::nRows; row++)
+                    for(auto col = 0u; col < RD53::nCols; col++)
+                    {
+                        cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
+                    }
+
+                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.clear();
+                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.clear();
+            }
+}
+
 // ##########################################
 // # Event static data member instantiation #
 // ##########################################

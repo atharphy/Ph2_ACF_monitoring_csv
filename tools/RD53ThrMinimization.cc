@@ -29,7 +29,6 @@ void ThrMinimization::ConfigureCalibration()
     rowStop         = this->findValueInSettings<double>("ROWstop");
     colStart        = this->findValueInSettings<double>("COLstart");
     colStop         = this->findValueInSettings<double>("COLstop");
-    nEvents         = this->findValueInSettings<double>("nEvents");
     targetOccupancy = this->findValueInSettings<double>("TargetOcc");
     ThrStart        = this->findValueInSettings<double>("ThrStart");
     ThrStop         = this->findValueInSettings<double>("ThrStop");
@@ -127,7 +126,7 @@ void ThrMinimization::initializeFiles(const std::string fileRes_, int currentRun
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, nEvents, targetOccupancy, ThrStart, ThrStop);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, ThrStart, ThrStop);
 
     // ############################
     // # Fill threshold container #
@@ -188,11 +187,12 @@ void ThrMinimization::fillHisto()
 #endif
 }
 
-void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
 
+    float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
@@ -207,20 +207,8 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer);
-
-    // #########################
-    // # Initialize containers #
-    // #########################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
-                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()       = 0;
-                }
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -268,10 +256,9 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         PixelAlive::sendData();
 
