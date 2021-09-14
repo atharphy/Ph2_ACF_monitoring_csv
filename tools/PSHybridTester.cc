@@ -305,12 +305,8 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
             cDPInterfacer.Start(cInterface);        
             // std::this_thread::sleep_for(std::chrono::milliseconds(10));
             for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
-        for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
-            for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
             {
                 uint8_t cHybridId=0;
-                uint8_t cChipId=0; 
-            uint8_t cChipId=0; 
                 uint8_t cChipId=0; 
                 uint8_t cPatternPeriod=8;
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , 0xAA , cPatternPeriod);
@@ -351,8 +347,6 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
             
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-                // check output 
-        // check output 
                 // check output 
                 fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
@@ -407,8 +401,6 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                             cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
                             cValue[cPatternId]     = cLine;
                             CICinTree[cPatternId]->Fill();
-                        } 
-                } 
                         } 
                         else {
                             // cBadLines[b] = 0
@@ -855,18 +847,47 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
     LOG(INFO) << "Out of " << +event_loop << " readouts, " << +bad_events << " were \'empty\'" << RESET;
 }
 
+
+/*!
+    Checks the hybrid and test card measurements using the TC USB library, and compares the measurement to the nominal value, allowing for a percentage of variation, defined in the settings file.
+*/
 void PSHybridTester::RunHybridETest()
+
 {
 #ifdef __TCUSB__
     TC_PSFE cTC_PSFE;
     float result;
 
+    double cAcceptancePercentage = this->findValueInSettings("EMeasurementAcceptance")/100;
+    LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " <<  +this->findValueInSettings("EMeasurementAcceptance") << " %" << RESET;
+
     for (auto cMapIterator : fHybridVoltageMap)
     {
+        auto cNominalValue = fHybridNominalValues.find(cMapIterator.first);
         auto& cMeasurement = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
-        fillSummaryTree(cMapIterator.first, result);
+        std::string cMeasurementName = (cMapIterator.first);
+        fillSummaryTree(cMeasurementName, result);
+        if( cNominalValue != fHybridNominalValues.end() )
+        {
+            if ( cNominalValue->second != 0 && cNominalValue->second != 1 )
+            {
+                fillSummaryTree(cMeasurementName+"dev", cNominalValue->second-result);
+                if( cAcceptancePercentage != 0 )
+                {
+                    if( result < cNominalValue->second*(1+cAcceptancePercentage) && result > cNominalValue->second*(1-cAcceptancePercentage) ) 
+                    {
+                        LOG(INFO) << BOLDGREEN << "OK" << RESET;
+                    }
+                    else 
+                    {
+                        LOG(INFO) << BOLDRED << "BAD" << RESET;
+                    }
+                }
+                
+            }
+        }
     }
 
     for (auto cMapIterator : fHybridCurrentMap)
@@ -875,6 +896,15 @@ void PSHybridTester::RunHybridETest()
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
         fillSummaryTree(cMapIterator.first, result);
+        
+        if( cMapIterator.first == "Hybrid1V00_current" || cMapIterator.first == "Hybrid1V25_current" ) 
+        {
+            if ( result == 0 ) 
+            {
+                LOG(ERROR) << BOLDRED << "Hybrid is not connected! Check the jumper cable between hybrid and test card" << RESET;
+                exit(-6);
+            }
+        }
     }
 
     for (auto cMapIterator : fHybridOtherMap)
@@ -899,7 +929,7 @@ void PSHybridTester::ReadHybridVoltage(const std::string & pVoltageName )
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(fVoltageMeasurementWait_ms));
             cTC_PSFE.adc_get(cMeasurement, cMeasurements[cIndex]);
-            LOG(DEBUG) << BOLDBLUE << "\t\t..After waiting for " << (cIndex + 1) * 1e-3 * fVoltageMeasurementWait_ms << " seconds ..."
+            LOG(INFO) << BOLDBLUE << "\t\t..After waiting for " << (cIndex + 1) * 1e-3 * fVoltageMeasurementWait_ms << " seconds ..."
                        << " reading from test card  : " << cMeasurements[cIndex] << " mV." << RESET;
         }
         fVoltageMeasurement = this->getStats(cMeasurements);
@@ -954,15 +984,15 @@ void PSHybridTester::CheckHybridCurrents()
 }
 void PSHybridTester::CheckHybridVoltages()
 {
-    ReadHybridVoltage("TestCardGround");
+    ReadHybridVoltage("TC_GND");
     LOG(INFO) << BOLDBLUE << "Test card ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
     fillSummaryTree("TestCardGroundavg", fVoltageMeasurement.first );
     fillSummaryTree("TestCardGroundrms", fVoltageMeasurement.second );
 
 
-    ReadHybridVoltage("PanasonicGround");
-    LOG(INFO) << BOLDBLUE << "Panasonic connector ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
+    ReadHybridVoltage("ROH_GND");
+    LOG(INFO) << BOLDBLUE << "ROH connector ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
     fillSummaryTree("PanasonicGroundavg", fVoltageMeasurement.first );
     fillSummaryTree("PanasonicGroundrms", fVoltageMeasurement.second );
