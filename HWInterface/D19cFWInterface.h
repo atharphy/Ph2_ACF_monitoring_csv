@@ -830,6 +830,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
+    
 };
 } // namespace Ph2_HwInterface
 

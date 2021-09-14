@@ -155,7 +155,6 @@ class D19clpGBTInterface : public lpGBTInterface
         if(fFeType == FrontEndType::OuterTrackerPS) return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA};
         return {};
     }
-
   private:
     // default clock configuration
     lpGBTClockConfig fClkConfig;
@@ -170,6 +169,11 @@ class D19clpGBTInterface : public lpGBTInterface
 
     // reset
     uint8_t fResetMinPeriod = 100; // ms was 100
+
+    // number of read transactions 
+    uint8_t fI2CReads_M0 = 0 ; 
+    uint8_t fI2CReads_M1 = 0 ; 
+    uint8_t fI2CReads_M2 = 0 ; 
 
     // clocks
     uint8_t fClock_RHS_Hybrid = 1;

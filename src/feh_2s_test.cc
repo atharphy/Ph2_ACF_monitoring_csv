@@ -775,6 +775,7 @@ int main(int argc, char* argv[])
         cShortFinder.waitForRunToBeCompleted();
         cShortFinder.Stop();
     }
+    cTool.PrintRegCount();
     cTool.dumpConfigFiles();
     cTool.SaveResults();
     cTool.WriteRootFile();
@@ -791,7 +792,6 @@ int main(int argc, char* argv[])
     cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
     cGoodRuns << cRunNumber << "\n";
     cGoodRuns.close();
-
 #ifdef __POWERSUPPLY__
     cPowerLog.open(cTool.getDirectoryName() + "/PowerLog.tab", std::ios::app);
     const auto cStop     = std::chrono::system_clock::now();

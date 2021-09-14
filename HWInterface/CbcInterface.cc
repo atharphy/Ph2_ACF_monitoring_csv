@@ -334,7 +334,9 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     {
         bool cVerifLoop = true;
         bool cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
-        if(cSuccess) cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
+        if(cSuccess){ 
+            cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
+        }
     }
     return cErrorReg;
 }
@@ -829,7 +831,9 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     {
         bool cVerifLoop = true;
         bool cSuccess = ( pRegNode == "FeCtrl&TrgLat2" ) ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
-        if(cSuccess) cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
+        if(cSuccess){ 
+            cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress);
+        }
     }
     pCbc->setReg(pRegNode, cValue);
 

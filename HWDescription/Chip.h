@@ -163,12 +163,31 @@ class Chip : public FrontEndDescription
         //std::cout << "\t\t\t Value is 0x" << std::hex << getReg(pReg) <<  std::dec << " Mask is 0x" << std::hex << cRegMask << std::dec << " value is " << +cValue << "\n"; 
         return cValue;
     }
+    // update write count 
+    void updateWriteCount(uint32_t fIncrement=1 ){ fI2CWrites+= fIncrement ; }
+    void updateReadCount(uint32_t fIncrement=1){ fI2Reads+= fIncrement ; }
+    void updateRBMismatchCount(uint32_t fIncrement=1){ fI2CReadMismatches+= fIncrement ; }
+    void updateRegWriteCount(uint32_t fIncrement=1){ fRegWrites+= fIncrement ; }
+    void updateRegReadCount(uint32_t fIncrement=1){ fRegReads+= fIncrement ; }
+    uint32_t getWriteCount(){ return fI2CWrites;}
+    uint32_t getReadCount(){ return fI2Reads;}
+    uint32_t getRBMismatchCount(){ return fI2CReadMismatches;}
+    uint32_t getRegWriteCount(){ return fRegWrites;}
+    uint32_t getRegReadCount(){ return fRegReads;}
+
   protected:
     uint8_t    fChipId;
     uint16_t   fMaxRegValue;
     uint16_t   fClockFrequency;
     ChipRegMap fRegMap;
     CommentMap fCommentMap;
+   private:
+      uint32_t fI2CWrites=0; 
+      uint32_t fI2Reads=0;
+      uint32_t fI2CReadMismatches=0;
+      uint32_t fRegWrites=0; 
+      uint32_t fRegReads=0; 
+
 };
 
 /*!

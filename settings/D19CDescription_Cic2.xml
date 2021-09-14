@@ -12,7 +12,7 @@
 
     <!-- RHS -->
     <OpticalGroup Id="0" FMCId="0" >
-        <GBT phaseTap="7" enable="1"/>
+        <GBT phaseTap="8" enable="1"/>
         <Hybrid Id="0" Status="1" LinkId="0" >
             <Global>
                 <Settings threshold="560" latency="200"/>
@@ -35,7 +35,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-         <Hybrid Id="1" Status="1" LinkId="0" >
+         <Hybrid Id="1" Status="0" LinkId="0" >
             <Global>
                 <Settings threshold="560" latency="200"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xE1" channelgroup="0" delay="0" groundothers="0"/>
