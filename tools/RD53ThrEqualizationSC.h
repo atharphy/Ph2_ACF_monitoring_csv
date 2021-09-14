@@ -71,6 +71,7 @@ class ThrEqualizationSC : public PixelAlive
     size_t nEvtsBurst;
     size_t startValue;
     size_t stopValue;
+    size_t offset;
     size_t nHITxCol;
     bool   doFast;
 

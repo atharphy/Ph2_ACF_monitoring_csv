@@ -33,6 +33,7 @@ void ThrEqualizationSC::ConfigureCalibration()
     nEvtsBurst     = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
+    offset         = this->findValueInSettings<double>("VCalMED");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
     doFast         = this->findValueInSettings<double>("DoFast");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
@@ -97,14 +98,10 @@ void ThrEqualizationSC::Running()
 
 void ThrEqualizationSC::sendData()
 {
-    auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
     auto theTDACStream = prepareChannelContainerStreamer<uint16_t>("TDAC");
 
     if(fStreamerEnabled == true)
-    {
-        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
         for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-    }
 }
 
 void ThrEqualizationSC::Stop()
@@ -280,7 +277,6 @@ void ThrEqualizationSC::analyze()
 void ThrEqualizationSC::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos->fillOccupancy(theOccContainer);
     histos->fillTDAC(theTDACcontainer);
 #endif
 }
@@ -521,7 +517,7 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, uint32_t nE
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        float theTarget = target->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                        float theTarget = target->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() - offset;
 
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
