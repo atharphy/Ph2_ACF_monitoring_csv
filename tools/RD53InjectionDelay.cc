@@ -27,7 +27,6 @@ void InjectionDelay::ConfigureCalibration()
     rowStop        = this->findValueInSettings<double>("ROWstop");
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
     startValue     = 0;
     stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
@@ -194,7 +193,7 @@ void InjectionDelay::run()
                         this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency + i);
                     }
 
-        InjectionDelay::scanDac("INJECTION_SELECT", halfDacList, nEvents, &theOccContainer);
+        InjectionDelay::scanDac("INJECTION_SELECT", halfDacList, &theOccContainer);
     }
 
     // ################
@@ -280,7 +279,7 @@ void InjectionDelay::fillHisto()
 #endif
 }
 
-void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
     const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
@@ -304,7 +303,6 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
         // ###############
         // # Save output #
@@ -324,7 +322,7 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
                     }
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         InjectionDelay::sendData();
     }

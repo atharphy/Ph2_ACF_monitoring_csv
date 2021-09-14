@@ -151,7 +151,10 @@ void ThrEqualization::initializeFiles(const std::string fileRes_, int currentRun
 
 void ThrEqualization::run()
 {
-    ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", nEvents, TARGETEFF, startValue, stopValue);
+    // #########################
+    // # Find global threshold #
+    // #########################
+    ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", TARGETEFF, startValue, stopValue);
 
     // ##############################
     // # Run threshold equalization #
@@ -269,7 +272,7 @@ void ThrEqualization::fillHisto()
 #endif
 }
 
-void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
@@ -338,10 +341,9 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         PixelAlive::sendData();
 

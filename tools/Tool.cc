@@ -474,7 +474,7 @@ void Tool::SaveResults()
     LOG(INFO) << "Results saved!";
 }
 
-void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
+void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
 {
     // Fabio: CBC specific -> to be moved out from Tool - BEGIN
     bool cCheck = false;
@@ -504,7 +504,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 
     if(pDate) nDirname += currentDateTime();
 
-    LOG(INFO) << GREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
+    LOG(INFO) << GREEN << whichCalib << " attempting to create directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
 
     try

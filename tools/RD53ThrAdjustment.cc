@@ -29,7 +29,6 @@ void ThrAdjustment::ConfigureCalibration()
     rowStop         = this->findValueInSettings<double>("ROWstop");
     colStart        = this->findValueInSettings<double>("COLstart");
     colStop         = this->findValueInSettings<double>("COLstop");
-    nEvents         = this->findValueInSettings<double>("nEvents");
     targetThreshold = this->findValueInSettings<double>("TargetThr");
     ThrStart        = this->findValueInSettings<double>("ThrStart");
     ThrStop         = this->findValueInSettings<double>("ThrStop");
@@ -127,7 +126,7 @@ void ThrAdjustment::initializeFiles(const std::string fileRes_, int currentRun)
 
 void ThrAdjustment::run()
 {
-    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, nEvents, targetThreshold, ThrStart, ThrStop);
+    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, ThrStart, ThrStop);
 
     // ############################
     // # Fill threshold container #
@@ -188,7 +187,7 @@ void ThrAdjustment::fillHisto()
 #endif
 }
 
-void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, float target, uint16_t startValue, uint16_t stopValue)
+void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
@@ -270,10 +269,9 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         PixelAlive::sendData();
 

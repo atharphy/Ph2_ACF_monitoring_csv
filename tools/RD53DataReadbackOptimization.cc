@@ -255,7 +255,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                             BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         DataReadbackOptimization::sendData();
     }

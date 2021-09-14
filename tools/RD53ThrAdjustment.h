@@ -62,7 +62,6 @@ class ThrAdjustment : public PixelAlive
     size_t rowStop;
     size_t colStart;
     size_t colStop;
-    size_t nEvents;
     float  targetThreshold;
     size_t ThrStart;
     size_t ThrStop;
@@ -72,7 +71,7 @@ class ThrAdjustment : public PixelAlive
     DetectorDataContainer theThrContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, float target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
     void chipErrorReport() const;
 
   protected:
