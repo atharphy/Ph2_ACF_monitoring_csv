@@ -718,17 +718,12 @@ void RD53FWInterface::SendBoardCommand(const std::string& cmd_reg)
 
 void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 {
+    const int GLOBAL_PULSE_WIDTH = 0x6; // @TMP@ @CONST@
+
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
     // @TMP@
-    if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
-    {
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(),
-                                          -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
-        RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x0004).getFrames(), -1);
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(),
-                                          -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    }
+    if(cfg->autozero_source == AutozeroSource::FastCMDFSM) RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, GLOBAL_PULSE_WIDTH).getFrames(), -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -766,7 +761,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                // # @TMP@ Autozero configuration #
                                // ################################
                                {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
-                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 0x0008, 0)}});
+                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, GLOBAL_PULSE_WIDTH, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
@@ -879,8 +874,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     {
         RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 4095;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 1023;
     }
 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
