@@ -77,7 +77,7 @@ class PSHybridTester : public Tool
     void SSATestStubOutput(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
-    void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
+    void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger=false);
     void MPATest(Ph2_HwDescription::BeBoard* pBoard);
     std::map<std::string, uint8_t> fInputDebugMap = {{"sda_out", 0},      {"rtn_clk320", 1},   {"cic_out_6", 2},    {"cic_out_5", 3},    {"cic_out_4", 4},    {"cic_out_3", 5},    {"cic_out_2", 6},
                                                      {"cic_out_1", 7},    {"cic_out_0", 8},    {"sda_out", 9},      {"ssa1_clk320", 10}, {"ssa1_fcmd", 11},   {"ssa1_l1", 12},     {"ssa1_trig_7", 13},

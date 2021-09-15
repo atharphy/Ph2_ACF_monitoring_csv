@@ -69,7 +69,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
     }
 }
 
-void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> &cReadLines, BeBoard* pBoard, bool pTrigger)
+void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> &cReadLines, std::string pSSAPairSel, BeBoard* pBoard, bool pTrigger)
 {
     uint32_t cNtriggers= this->findValueInSettings("PSHybridDebugDuration");
     if( pTrigger )
@@ -84,7 +84,22 @@ void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> 
     // pair id 
     for( uint8_t cPairId=0; cPairId < 2; cPairId++)
     {
-        uint8_t cAlignmentPattern = (cPairId == 0 ) ? 0x05 : 0x01; 
+
+        uint8_t cAlignmentPattern;
+
+        if((((int)pSSAPairSel.at(0)-'0')%2==0)) {
+            cAlignmentPattern = (((int)pSSAPairSel.at(cPairId)-'0')%2==0) ? 0xF5 : 0xFA;
+            if ( (int)pSSAPairSel.at(1-cPairId) - '0' == 3)
+                cAlignmentPattern = 0xFA; //SSA3 is configured to output the same pattern as SSA4
+    
+        }
+        else {
+            cAlignmentPattern = (((int)pSSAPairSel.at(cPairId)-'0')%2==0) ? 0xFA: 0xF5;
+            if ( (int)pSSAPairSel.at(cPairId) - '0' == 3)
+                cAlignmentPattern = 0xFA; //SSA3 is configured to output the same pattern as SSA4
+
+        }
+
         // first I would like to align the lines in the back-end 
         if( !pTrigger )
         {
@@ -113,7 +128,6 @@ void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> 
         {
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7, cReadLines);
         }
-        
     }
 }
 
@@ -542,7 +556,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
     }//module 
     // now capture output on pogo sockets and store them
     std::vector<std::vector<std::string>> cReadLines; // Container for the scoped lines
-    this->SSAOutputsPogoScope( cReadLines, pBoard, false); //Recover Scoped lines
+    this->SSAOutputsPogoScope( cReadLines, cSSAPairSel, pBoard, false); //Recover Scoped lines
     std::string pPattern_str;
 
     TString  cParameter;  
@@ -607,14 +621,25 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 }
                 if( !ok ) {
                     cParameter.Clear(); //TString
-                    cParameter = "FE" + std::to_string((int)cSSAPairSel.at(a)-'0') + "_" + std::to_string(b);
+                    if((((int)cSSAPairSel.at(0)-'0')%2==0)) { //Check this
+                        cParameter = "FE" + std::to_string((int)cSSAPairSel.at(1-a)-'0') + "_" + std::to_string(b);
+                    }
+                    else {
+                        cParameter = "FE" + std::to_string((int)cSSAPairSel.at(a)-'0') + "_" + std::to_string(b);
+                    }
                     cValue     = cLine;
                     LOG(INFO) << cParameter << "  " << cValue << RESET;
                     SSATree->Fill();
                     badLines++;
                 }
             }
-            fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(a)-'0' ), badLines);
+            if((((int)cSSAPairSel.at(0)-'0')%2==0)) { //Check this
+                fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(1-a)-'0' ), badLines);
+            }
+            else {
+                fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(a)-'0' ), badLines);
+            }
+            
         }
         // SSATree->Write();
 }
