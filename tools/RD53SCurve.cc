@@ -188,16 +188,16 @@ void SCurve::run()
     SCurve::chipErrorReport();
 }
 
-void SCurve::draw()
+void SCurve::draw(bool doSaveData)
 {
-    SCurve::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) SCurve::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
@@ -206,6 +206,7 @@ void SCurve::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     SCurve::fillHisto();
     histos->process();
+    saveData = doSaveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif

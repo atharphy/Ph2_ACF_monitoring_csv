@@ -50,7 +50,8 @@ void ThrEqualizationSC::ConfigureCalibration()
 
 void ThrEqualizationSC::Running()
 {
-    theCurrentRun = this->fRunNumber;
+    theCurrentRun         = this->fRunNumber;
+    SCurve::theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[ThrEqualizationSC::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
@@ -96,7 +97,8 @@ void ThrEqualizationSC::localConfigure(const std::string fileRes_, int currentRu
 
     if(currentRun >= 0)
     {
-        theCurrentRun = currentRun;
+        theCurrentRun         = currentRun;
+        SCurve::theCurrentRun = currentRun;
         LOG(INFO) << GREEN << "[ThrEqualizationSC::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrEqualizationSC::ConfigureCalibration();
@@ -183,7 +185,7 @@ void ThrEqualizationSC::draw()
     ThrEqualizationSC::fillHisto();
     histos->process();
 
-    SCurve::draw();
+    SCurve::draw(false);
 
     if(doDisplay == true) myApp->Run(true);
 #endif
