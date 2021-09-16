@@ -1818,11 +1818,11 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
                 // if the above doesn't work.. try and find the correct bitslip manually in software
                 if(!cSuccess)
                 {
-                    LOG(INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET;
+                    LOG(INFO) << BOLDBLUE << "Going to try and align manually in software... delay is " << +pTuner.fDelay << RESET;
                     for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
                     {
                         LOG(INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
-                        pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, cBitslip, 0, 0);
+                        pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, pTuner.fDelay, cBitslip, 0, 0);
                         this->Start();
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));
                         this->Stop();

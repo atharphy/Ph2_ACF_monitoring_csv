@@ -355,7 +355,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     else
     {
         // write register
-        LOG (INFO) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg via lpGBT" << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg via lpGBT" << RESET;
         // cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
         cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, pVerifLoop);
 
