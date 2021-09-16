@@ -92,6 +92,9 @@ void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUse
             LOG(INFO) << BOLDGREEN << "Using Command Processor Block" << RESET;
             fUseCPB = true;
         }
+        else LOG(INFO) << BOLDRED << "Not using Command Processor Block" << RESET;
+            
+
     }
     else
     {

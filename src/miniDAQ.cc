@@ -336,7 +336,7 @@ int main(int argc, char* argv[])
         size_t cHeadersFound=0; 
         size_t cComparedL1s=0;
         size_t cIncorrectL1s=0;
-        for( size_t cAttempts=0 ; cAttempts < 5; cAttempts++)
+        for( size_t cAttempts=0 ; cAttempts < 1000; cAttempts++)
         {
             LOG (DEBUG) << BOLDBLUE << "Attempt#" << +cAttempts << RESET;
             auto cBuffer = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug(1,true);

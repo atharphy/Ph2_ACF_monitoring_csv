@@ -216,10 +216,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     {
         if(static_cast<std::string>(pOpticalGroupNode.name()) == "OpticalGroup")
         {
-            this->parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
             cBeBoard->setOptical(false);
             cBeBoard->setUseOpticalLink(false);
             cBeBoard->setUseCPB(false);
+            this->parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
             for(pugi::xml_node cChild: pOpticalGroupNode.children("GBT"))
             {
                 std::string cName = cChild.name();
@@ -302,7 +302,6 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     pBoard->setOptical(cWithOptical);
     theOpticalGroup->setOptical(cWithOptical);
     theOpticalGroup->setOpticalId(cOpticalGroupId);
-    pBoard->setUseCPB(false);
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
         if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
