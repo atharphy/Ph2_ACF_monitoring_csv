@@ -49,7 +49,7 @@ struct lpGBTClockConfig
 
 class lpGBTInterface : public ChipInterface
 {
-  private:
+  protected:
 // I think eventually this will want to change
 #ifdef __TCUSB__
 #ifdef __ROH_USB__

@@ -959,7 +959,7 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
             {
                 uint8_t cWordAlignment                         = (cReadBack.second & (0xF << cNibble * 4)) >> 4 * cNibble;
                 fWordAlignmentVals[cFECounter][cLineCounter]   = cWordAlignment;
-                LOG(INFO) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
                 cLineCounter += 1;
                 if(cLineCounter > 4)
                 {
