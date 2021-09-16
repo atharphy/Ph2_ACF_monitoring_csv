@@ -53,7 +53,8 @@ void GainOptimization::ConfigureCalibration()
 
 void GainOptimization::Running()
 {
-    theCurrentRun = this->fRunNumber;
+    theCurrentRun       = this->fRunNumber;
+    Gain::theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
@@ -99,7 +100,8 @@ void GainOptimization::localConfigure(const std::string fileRes_, int currentRun
 
     if(currentRun >= 0)
     {
-        theCurrentRun = currentRun;
+        theCurrentRun       = currentRun;
+        Gain::theCurrentRun = currentRun;
         LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     GainOptimization::ConfigureCalibration();
