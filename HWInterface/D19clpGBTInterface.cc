@@ -220,57 +220,58 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureHighSpeedPolarity(pChip, 1, 0);
 
     // Clocks
-    std::vector<uint8_t> cClocks  = {1,11}; //11}; // Reduced number of clocks and only 320 MHz
-    uint8_t              cClkFreq = 4, cClkDriveStr = 7, cClkInvert = 1;
-    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
-    // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups =
-                             {
-                                 0,
-                                 2,
-                             },
-                         cTxChannels = {0};
-    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
-    for(const auto& cGroup: cTxGroups)
-    {
-        if(cGroup == 0) cTxInvert = 1;
-        if(cGroup == 2) cTxInvert = 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
-    }
-    // Rx configuration and Phase Align
-    // Configure Rx Groups
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
-    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
-    // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
-    for(const auto& cGroup: cRxGroups)
-    {
-        for(const auto cChannel: cRxChannels)
-        {
-            if(cGroup == 6 && cChannel == 0)
-                cRxInvert = 0;
-            else if(cGroup == 5 && cChannel == 0)
-                cRxInvert = 0;
-            else
-                cRxInvert = 1;
-            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-        }
-    }
-#ifdef __TCUSB__
-    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
-#endif
-    // Reset I2C Masters
-    ResetI2C(pChip, {0, 1, 2});
-    // Setting GPIO levels Resets are high
-    ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
-    ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
-    ConfigureGPIODriverStrength(pChip, {0, 3, 6, 8}, 1);
-    //ConfigureGPIOPull(pChip, {0, 3, 6, 8}, 0,1);
-    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+    std::vector<uint8_t> cClocks = {1, 11};
+}; // Reduced number of clocks and only 320 MHz
+uint8_t cClkFreq = 4, cClkDriveStr = 7, cClkInvert = 1;
+uint8_t cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
+ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+// Tx Groups and Channels
+std::vector<uint8_t> cTxGroups =
+                         {
+                             0,
+                             2,
+},
+                     cTxChannels = {0};
+uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+for(const auto& cGroup: cTxGroups)
+{
+    if(cGroup == 0) cTxInvert = 1;
+    if(cGroup == 2) cTxInvert = 0;
+    for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
 }
+// Rx configuration and Phase Align
+// Configure Rx Groups
+std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+uint8_t              cRxDataRate = 2, cRxTrackMode = 1;
+ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
+// Configure Rx Channels
+uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 12;
+for(const auto& cGroup: cRxGroups)
+{
+    for(const auto cChannel: cRxChannels)
+    {
+        if(cGroup == 6 && cChannel == 0)
+            cRxInvert = 0;
+        else if(cGroup == 5 && cChannel == 0)
+            cRxInvert = 0;
+        else
+            cRxInvert = 1;
+        if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+    }
+}
+#ifdef __TCUSB__
+ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+#endif
+// Reset I2C Masters
+ResetI2C(pChip, {0, 1, 2});
+// Setting GPIO levels Resets are high
+ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
+ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
+ConfigureGPIODriverStrength(pChip, {0, 3, 6, 8}, 1);
+// ConfigureGPIOPull(pChip, {0, 3, 6, 8}, 0,1);
+ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+} // namespace Ph2_HwInterface
 void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     // Configure Rx Phase Shifter

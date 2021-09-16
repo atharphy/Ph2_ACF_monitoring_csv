@@ -55,7 +55,7 @@ class SEHTester : public OTHybridTester
     void Resume();
 
     void SEHInputsDebug();
-    void TurnOn(uint32_t pRightLoadValue=0,uint32_t pLeftLoadValue=0);
+    void TurnOn(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0);
     void TurnOff();
     void RampPowerSupply(std::string powerSupplyId, std::string channelId);
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
