@@ -148,7 +148,7 @@ class OTHybridTester : public Tool
                                                             {"1V25_MONITOR_Nominal", 0.806},
                                                             {"2V55_MONITOR_Nominal", 0.808}};
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
-
+	std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
   protected:
 #ifdef __TCUSB__
 #ifdef __ROH_USB__

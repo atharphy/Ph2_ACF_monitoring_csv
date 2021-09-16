@@ -220,7 +220,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureHighSpeedPolarity(pChip, 1, 0);
 
     // Clocks
-    std::vector<uint8_t> cClocks  = {1, 11}; // Reduced number of clocks and only 320 MHz
+    std::vector<uint8_t> cClocks  = {1,11}; //11}; // Reduced number of clocks and only 320 MHz
     uint8_t              cClkFreq = 4, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
@@ -267,6 +267,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // Setting GPIO levels Resets are high
     ConfigureGPIODirection(pChip, {0, 3, 6, 8}, 1);
     ConfigureGPIOLevel(pChip, {0, 3, 6, 8}, 1);
+    ConfigureGPIODriverStrength(pChip, {0, 3, 6, 8}, 1);
+    //ConfigureGPIOPull(pChip, {0, 3, 6, 8}, 0,1);
     ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
 }
 void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)

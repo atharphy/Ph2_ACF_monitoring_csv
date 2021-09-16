@@ -564,7 +564,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #endif
 }
 
-void SEHTester::TurnOn()
+void SEHTester::TurnOn(uint32_t pRightLoadValue,uint32_t pLeftLoadValue)
 {
 	// workaround to turn on the bPOL2V5 propertly
 	
@@ -588,7 +588,29 @@ void SEHTester::TurnOn()
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
+	fTC_USB->set_load2(true,false, pLeftLoadValue);
+	fTC_USB->set_load1(true,false, pRightLoadValue);
+		// 1 step = 635uA 0xfff = 2.6A
+    	// waiting 7 seconds before turnin on the hybrid ensures propper 
+    	// discharge of the side and lets the current rise so that the negative 
+    	// over-current protection does not activate
+    std::this_thread::sleep_for (std::chrono::milliseconds (3000) );
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+        std::this_thread::sleep_for (std::chrono::milliseconds (3000) );
+        float I_SEH;
+            float U_SEH;
+            float I_P1V2_R;
+            float I_P1V2_L;
+            float U_P1V2_R;
+            float U_P1V2_L;
+            float U_P2V5 = 0;
+    fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
+            fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
+            fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
+            fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
+            fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
+            fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+            fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
     if (T < -35.0){
     	// wait 4 seconds
     	std::this_thread::sleep_for (std::chrono::milliseconds (4000) );

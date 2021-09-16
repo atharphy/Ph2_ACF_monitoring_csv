@@ -296,7 +296,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            uint8_t cSource = 3;
+            uint8_t cSource = 3;//3
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
         }
@@ -316,17 +316,43 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
-                uint8_t cSlaveAddress = 0x60;
+            	uint8_t cSlaveAddress = 0x60;
+				LOG(INFO) << BOLDBLUE << "Don't care about following first I2C transaction" << RESET;
+                uint8_t cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
+                uint8_t i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
+                LOG(INFO) << BOLDBLUE << "--------" << RESET;
+                struct timeval stop, start;
+				gettimeofday(&start, NULL);
+//do stuff
 
-                uint8_t cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
+            	for(int j=0; j<100; j++){
+                
+
+                //cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
                 cSuccess         = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
                 if(cSuccess)
-                    LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
-                else
+                    LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
+                    
+                else{
+                	i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                	LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
+                	clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
+                	i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                	LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
+                	
                     LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
-                cTestSuccess &= cSuccess;
+                    LOG(INFO) << BOLDBLUE << "I2C test number " << BOLDRED << +j <<" failed" << RESET;
+            		break;}
+                
+            	}
+            	cTestSuccess &= cSuccess;
                 fillSummaryTree(Form("i2cmaster%i", cMaster), cSuccess);
+            	gettimeofday(&stop, NULL);
+				 LOG(INFO) << BOLDBLUE << "Duration " << (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec << RESET;
+				 //printf("took %lu us\n", (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
             }
+            
         }
     }
     return cTestSuccess;
@@ -577,7 +603,7 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
+            //LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
             clpGBTInterface->ConfigureGPIODirection(cOpticalGroup->flpGBT, pGPIOs, 1);
             clpGBTInterface->ConfigureGPIOLevel(cOpticalGroup->flpGBT, pGPIOs, pLevel);
         }
@@ -598,7 +624,24 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
     std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
-
+	LpGBTSetGPIOLevel(cGPIOs, 1);
+      
+	while(true){
+	//LpGBTSetGPIOLevel(cGPIOs, 0);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    //LpGBTSetGPIOLevel(cGPIOs, 1);
+    //for(int j=0;j<250;j++){
+    //LpGBTSetGPIOLevel(cGPIOs, 0);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //LpGBTSetGPIOLevel(cGPIOs, 1);
+    //}
+    
+    fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_R, cMeasurement);
+    fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_R, cMeasurement);
+    fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_L, cMeasurement);
+    fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_L, cMeasurement);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+	}
     for(auto cLevel: cLevels)
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
@@ -619,6 +662,7 @@ bool OTHybridTester::LpGBTTestResetLines()
 #endif
             float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
+			fillSummaryTree(cMapIterator->first.c_str() + cLevel.first+"_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
             cValid  = cValid && cStatus;
 
@@ -809,10 +853,10 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
             if(cObj) delete cObj;
             auto cEyeDiagramHist = new TH2I(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 64, 0, 63, 32, 0, 31);
             clpGBTInterface->ConfigureEOM(cOpticalGroup->flpGBT, pEndOfCountSelect, false, true);
-            for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
+            for(uint8_t cVoltageStep = 0; cVoltageStep < 2; cVoltageStep++)//31
             {
                 clpGBTInterface->SelectEOMVof(cOpticalGroup->flpGBT, cVoltageStep);
-                for(uint8_t cTimeStep = 0; cTimeStep < 64; cTimeStep++)
+                for(uint8_t cTimeStep = 0; cTimeStep < 2; cTimeStep++)//64
                 {
                     clpGBTInterface->SelectEOMPhase(cOpticalGroup->flpGBT, cTimeStep);
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
