@@ -28,7 +28,7 @@ ChipIDFuse2                                  	0x00	0x17	0x00	0x00
 ChipIDFuse3                                 	0x00	0x18	0x00	0x00
 LayerSwap&CluWidth                              0x00    0x1B    0x00    0x04
 40MhzClk&Or254                                  0x00    0x1C    0x00    0x84
-*SerialIface&Error                               0x00    0x1D    0x05    0x40
+*SerialIface&Error                               0x00    0x1D    0x05    0x00
 *--------------------------------------------------------------------------------
 * Channel Masks
 *--------------------------------------------------------------------------------

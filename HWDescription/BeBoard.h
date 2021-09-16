@@ -166,12 +166,12 @@ class BeBoard : public BoardContainer
 
     BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
     ConditionDataSet* fCondDataSet;
-    bool              fOptical, fUseOpticalLink, fUseCPB;
-    bool              fConfigureCDCE;
-    bool              fSparsifed;
-    uint32_t          fClockRateCDCE;
-    uint8_t           fResetLink;
-    uint16_t          fStubOffset;
+    bool              fOptical{false}, fUseOpticalLink{false}, fUseCPB{false};
+    bool              fConfigureCDCE{false};
+    bool              fSparsifed{false};
+    uint32_t          fClockRateCDCE{320};
+    uint8_t           fResetLink{1};
+    uint16_t          fStubOffset{0};
 
   private:
     /*!

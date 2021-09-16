@@ -420,7 +420,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    void                     L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
+    std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
     std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
     std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
     bool                     L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);

@@ -129,7 +129,6 @@ bool CicInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint8_t, u
 
     bool cSuccess = true;
     if(!lpGBTFound())
-    // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
         cVec.clear();
@@ -344,11 +343,10 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
     // write
     if(!lpGBTFound())
-    // if(flpGBTInterface == nullptr)
     {
         std::vector<uint32_t> cVec;
-        // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x"
-        //     << std::hex << +cRegItem.fAddress << std::dec << RESET;
+        LOG (DEBUG) << BOLDMAGENTA << "CicInterface::WriteReg(address) Register 0x"
+            << std::hex << +cRegItem.fAddress << std::dec << RESET;
         // fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
         fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
@@ -357,7 +355,7 @@ bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegi
     else
     {
         // write register
-        // LOG (INFO) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg via lpGBT" << RESET;
+        LOG (INFO) << BOLDMAGENTA << "Writing registers CicInterface::WriteReg via lpGBT" << RESET;
         // cSuccess = flpGBTInterface->cicWrite(flpGBT, pChip->getHybridId(), pRegisterAddress, pRegisterValue, cRetry);
         cSuccess = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, pVerifLoop);
 
@@ -432,10 +430,7 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
 {
     setBoard(pChip->getBeBoardId());
     if(!lpGBTFound())
-    // if(flpGBTInterface == nullptr)
     {
-        // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x"
-        //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
         std::vector<uint32_t> cVecReq;
         fBoardFW->EncodeReg(pRegItem, pChip, cVecReq, true, false);
         // fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
@@ -445,6 +440,9 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
         bool    cRead;
         uint8_t cChipId;
         fBoardFW->DecodeReg(pRegItem, cChipId, cVecReq[0], cRead, cFailed);
+        LOG (DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) Register 0x"
+            << std::hex << +pRegItem.fAddress << std::dec << " - value is " << +pRegItem.fValue << RESET;
+        
         return std::make_pair(!cFailed, pRegItem.fValue);
     }
     else
@@ -890,7 +888,8 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
     {
         for(size_t cLine = 0; cLine < 5; cLine++)
         {
-            cValue = cValue | ((fWordAlignmentVals[cFeId][cLine] & 0xF) << (cCounter % 2) * 4);
+            auto cAlVal = (fWordAlignmentVals[cFeId][cLine] & 0xF);
+            cValue = cValue | ( cAlVal << (cCounter % 2) * 4);
             if((1 + cCounter) % 2 == 0)
             {
                 // char cBuffer[14];
@@ -936,7 +935,6 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
     setBoard(pChip->getBeBoardId());
     // 5 lines per FE ... 8 FEs per CIC
     fWordAlignmentVals.clear();
-    std::vector<std::vector<uint8_t>> cWordAlignmentValues(8, std::vector<uint8_t>(5, 0));
     for(size_t cIndx = 0; cIndx < 8; cIndx++)
     {
         std::vector<uint8_t> cTmp(5, 0);
@@ -960,9 +958,8 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
             for(uint8_t cNibble = 0; cNibble < 2; cNibble += 1)
             {
                 uint8_t cWordAlignment                         = (cReadBack.second & (0xF << cNibble * 4)) >> 4 * cNibble;
-                cWordAlignmentValues[cFECounter][cLineCounter] = cWordAlignment;
                 fWordAlignmentVals[cFECounter][cLineCounter]   = cWordAlignment;
-                LOG(DEBUG) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
+                LOG(INFO) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
                 cLineCounter += 1;
                 if(cLineCounter > 4)
                 {
@@ -1462,7 +1459,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(cIterator != fTxDriveStrength.end())
     {
         auto cValue = (cRegValue & 0xFE) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
-        cSuccess    = this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
+        cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
         LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
         if(!cSuccess)
         {

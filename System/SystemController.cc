@@ -179,7 +179,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     if(cWithCBC)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
-                        fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
+                        fReadoutChipInterface = new CbcInterface(fBeBoardFWMap); 
                     }
                     if(cWithSSA && !cWithMPA)
                     {
@@ -219,6 +219,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     bool cFoundLpgbt = fCicInterface->lpGBTCheck(cFirstBoard);
                     if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. CIC interface aware of the lpGBT connected to this board ... " << RESET;
                 }
+                else fCicInterface->setWithLpGBT(false);
             }
         }
         else
@@ -376,7 +377,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 // ######################################
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    const uint8_t cCicDriveStrength = 4;
+    const uint8_t cCicDriveStrength = 5;
     // set board sparisificatio
     // based on what is configured in the fw register
     // read CIC sparsification setting from fW register

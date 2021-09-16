@@ -49,8 +49,8 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 6 </Register>
-		<Register name="user_trigger_frequency"> 10 </Register>
+            <Register name="trigger_source"> 3 </Register>
+		<Register name="user_trigger_frequency"> 1 </Register>
             <Register name="stubs_mask"> 1 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -59,7 +59,7 @@
             <Register name="delay_after_fast_reset"> 50 </Register>
             <Register name="delay_after_test_pulse"> 200 </Register>
             <Register name="delay_before_next_pulse"> 400 </Register>
-            <Register name="en_fast_reset"> 1 </Register>
+            <Register name="en_fast_reset"> 0 </Register>
             <Register name="en_test_pulse"> 1 </Register>
             <Register name="en_l1a"> 1 </Register>
         </Register>

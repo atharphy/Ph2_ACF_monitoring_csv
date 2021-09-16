@@ -1351,8 +1351,8 @@ void D19cFWInterface::SendNTriggers(uint16_t pNtriggers)
 void D19cFWInterface::Start()
 {
     //LOG (INFO) << BOLDBLUE << "D19cFWInterface::Start" << RESET;
-    // ChipReSync();
-    // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    //ChipReSync();
+    //std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     
     // this stops triggers  + resets
     this->ResetTriggerFSM();
@@ -1504,51 +1504,50 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
     WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 }
 
-void D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint )
+std::string D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint )
 {
-    // this->ConfigureTriggerFSM(0, 10, 3);
+    //this->ConfigureTriggerFSM(0, 750, 3);
+    // // use generic fast command block to send ReSync + L1A 
+    // this->ResetFCMDBram();
+    // std::vector<uint8_t> cFastCommands(0);cFastCommands.clear();
+    // size_t cL1toClear = 10; 
+    // size_t cAfterClear = 5000;
+    // size_t cDelayAfterReSync = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
+    // size_t cDelayAfterTP     = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    // size_t cDelayToNext      = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
+    // LOG (INFO) << BOLDMAGENTA << "Delay after ReSync : " << cDelayAfterReSync << " Delay after TP : " << cDelayAfterTP << RESET;
+    // for(size_t cIndx=0; cIndx < 14000 ; cIndx++)
+    // {
+    //     if( cIndx == 0 ) cFastCommands.push_back( 0xC3 ); // BC0 to reset L1 capture 
+    //     else if( cIndx == cL1toClear )  cFastCommands.push_back( 0xC9 ); // flush L1A FIFO 
+    //     else if( cIndx ==  cL1toClear+cAfterClear ) cFastCommands.push_back( 0xD3 ); // send a ReSync+BC0 
+    //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync ) cFastCommands.push_back( 0xC5 ); // send a TP injection 
+    //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP ) cFastCommands.push_back( 0xC9 ); // send an L1A 
+    //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP+cDelayToNext ) cFastCommands.push_back( 0xC9 ); // send another L1A 
+    //     else cFastCommands.push_back( 0xC1 );
+    // }
+    // ConfigureFCMDBram(cFastCommands);
+    // // repeat the sequence N times
+    // this->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
+    // this->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", 1);
+    // this->WriteReg("fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", 1);
+    // // make sure fast command duration is 0
+    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
+    // // make sure all triggers are accepted 
+    // this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1);
+    // ResetTriggerFSM();
+
+    // //this->Compose_fast_command(fFastCommandDuration, 0, 0, 0, 1);
+    // // start generic  - ctrl signal high
+    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x1);
+    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
+
+
     // disable back-pressure
-
-    // use generic fast command block to send ReSync + L1A 
-    this->ResetFCMDBram();
-    std::vector<uint8_t> cFastCommands(0);cFastCommands.clear();
-    size_t cL1toClear = 10; 
-    size_t cAfterClear = 5000;
-    size_t cDelayAfterReSync = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
-    size_t cDelayAfterTP     = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    size_t cDelayToNext      = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
-    LOG (INFO) << BOLDMAGENTA << "Delay after ReSync : " << cDelayAfterReSync << " Delay after TP : " << cDelayAfterTP << RESET;
-    for(size_t cIndx=0; cIndx < 14000 ; cIndx++)
-    {
-        if( cIndx == 0 ) cFastCommands.push_back( 0xC3 ); // BC0 to reset L1 capture 
-        else if( cIndx == cL1toClear )  cFastCommands.push_back( 0xC9 ); // flush L1A FIFO 
-        else if( cIndx ==  cL1toClear+cAfterClear ) cFastCommands.push_back( 0xD3 ); // send a ReSync+BC0 
-        else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync ) cFastCommands.push_back( 0xC5 ); // send a TP injection 
-        else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP ) cFastCommands.push_back( 0xC9 ); // send an L1A 
-        else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP+cDelayToNext ) cFastCommands.push_back( 0xC9 ); // send another L1A 
-        else cFastCommands.push_back( 0xC1 );
-    }
-    ConfigureFCMDBram(cFastCommands);
-    // repeat the sequence N times
-    this->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
-    this->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", 1);
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", 1);
-    // make sure fast command duration is 0
-    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
-    // make sure all triggers are accepted 
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1);
-    ResetTriggerFSM();
-
-    //this->Compose_fast_command(fFastCommandDuration, 0, 0, 0, 1);
-    // start generic  - ctrl signal high
-    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x1);
-    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
-
-
-    // this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
-    // this->Start();
-    // std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
-    // this->Stop();
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
+    this->Start();
+    std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
+    this->Stop();
 
     auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
     LOG(DEBUG) << BOLDBLUE << "Hits debug ...." << RESET;
@@ -1564,20 +1563,42 @@ void D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint )
         if( pPrint ) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
         cLineIndx++;
     }
-    size_t cOffset = 28;
-    auto cHeader = cBuffer.substr(4, cOffset); cOffset+=4;
-    auto cStatus = cBuffer.substr(cOffset, 9);cOffset+=9; 
-    auto cL1Id = std::stoi( cBuffer.substr(cOffset, 9), 0 ,2 );cOffset+=9;
-    auto cCbcErr = cBuffer.substr(cOffset, 2); cOffset+=2;
-    auto cPipeAddr = std::stoi( cBuffer.substr(cOffset, 9),0,2); cOffset+=9;
-    auto cL1IdCbc = std::stoi( cBuffer.substr(cOffset, 9),0,2);cOffset+=9;
-    LOG (INFO) << BOLDMAGENTA << "Header is " << cHeader  
-        << " Status is " << cStatus
-        << " L1Id is " << cL1Id 
-        << " CBC Error is " << cCbcErr 
-        << " Pipeaddress is " << cPipeAddr 
-        << " L1Id CBC is " << cL1IdCbc << RESET;
-    // this->ResetReadout();
+    return cBuffer;
+    /*
+    // search for L1 headers 
+    size_t cSearch = 0; 
+    size_t cPos = 0; 
+    auto   cFound = cBuffer.find("111111111111111111111110",cPos); 
+    std::stringstream cL1DataHeaders;  
+    do
+    {
+        cSearch=cBuffer.find("111111111111111111111110",cPos);
+        auto cHeader = cBuffer.substr( cSearch - 8  , 32 ); 
+        size_t cCount1s = std::count_if( cHeader.begin(), cHeader.end(), []( char c ){return c =='1';});
+        auto cStatus = cBuffer.substr( cSearch - 8 + 32 , 9 ); 
+        auto cL1Id   = cBuffer.substr( cSearch - 8 + 32 + 9 , 9 ); 
+        cL1DataHeaders << cHeader << "[" <<  cCount1s << "]" << cStatus << "-" << std::stoi(cL1Id,0,2) << ":" ;
+        //LOG (INFO) << BOLDYELLOW << cHeader << " - " << cStatus << " - " << cL1Id << RESET; 
+        cPos = cSearch - 8 + 32; 
+        cFound = cBuffer.find("111111111111111111111110",cPos);
+    }while( cFound != std::string::npos );
+    LOG (INFO) << BOLDYELLOW << cL1DataHeaders.str() << RESET;
+    */
+
+    // size_t cOffset = 28;
+    // auto cHeader = cBuffer.substr(4, cOffset); cOffset+=4;
+    // auto cStatus = cBuffer.substr(cOffset, 9);cOffset+=9; 
+    // auto cL1Id = std::stoi( cBuffer.substr(cOffset, 9), 0 ,2 );cOffset+=9;
+    // auto cCbcErr = cBuffer.substr(cOffset, 2); cOffset+=2;
+    // auto cPipeAddr = std::stoi( cBuffer.substr(cOffset, 9),0,2); cOffset+=9;
+    // auto cL1IdCbc = std::stoi( cBuffer.substr(cOffset, 9),0,2);cOffset+=9;
+    // LOG (INFO) << BOLDMAGENTA << "Header is " << cHeader  
+    //     << " Status is " << cStatus
+    //     << " L1Id is " << cL1Id 
+    //     << " CBC Error is " << cCbcErr 
+    //     << " Pipeaddress is " << cPipeAddr 
+    //     << " L1Id CBC is " << cL1IdCbc << RESET;
+    this->ResetReadout();
 }
 std::vector<std::string> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
 {
@@ -1669,7 +1690,22 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
     this->ReconfigureTriggerFSM(cVecReg);
-    this->Start();
+    
+    // check if you have CIC2
+    bool cWithCIC2=false;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        if( cWithCIC2 ) continue;
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            if( cWithCIC2 ) continue;
+            // uint8_t cBitslip=0;
+            selectLink(cOpticalGroup->getId());
+            auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            if( cCic->getFrontEndType() == FrontEndType::CIC2 ) cWithCIC2 = true;
+        }
+    }
+    if(!cWithCIC2) this->Start();
 
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     PhaseTuner pTuner;
@@ -1706,7 +1742,7 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
             }
         }
     }
-    this->Stop();
+    if(!cWithCIC2) this->Stop();
 
     if(pScope) this->L1ADebug();
 
@@ -1737,7 +1773,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.clear();
     std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency", "trigger_source", "misc.backpressure_enable", "triggers_to_accept"};
-    std::vector<uint16_t>    cFcmdRegVals{0, 10, 3, 0, 1};
+    std::vector<uint16_t>    cFcmdRegVals{0, 500, 3, 0, 1000};
     std::vector<uint8_t>     cFcmdRegOrigVals(0);
     for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
     {
@@ -4136,9 +4172,55 @@ void D19cFWInterface::Trigger(uint8_t pDuration)
     uint8_t cBC0      = 0;
     this->Compose_fast_command(pDuration, cReSync, cL1A, cCalPulse, cBC0);
 }
+// bool D19cFWInterface::Bx0Alignment()
+// {
+//     auto     cStubPackageDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+//     bool     cSuccess          = false;
+//     uint32_t cStubDebug        = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
+//     if(cStubDebug)
+//     {
+//         LOG(INFO) << BOLDBLUE << "Stub debug enable set to " << cStubDebug << "..... so disabling it!!." << RESET;
+//         this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x00);
+//     }
+//     // send a resync and reset readout
+//     uint8_t cAttempts = 0;
+//     cSuccess          = false;
+//     // reset decoder
+//     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
+//     do
+//     {
+//         // pause after reset
+//         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+//         // send a resync then wait
+//         this->ChipReSync();
+//         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+//         // check state of bx0 alignment block
+//         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
+//         if(cValue == 8)
+//         {
+//             LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDGREEN << "SUCCEEDED!" << BOLDBLUE << "\t... Stub package delay set to : " << +cStubPackageDelay << RESET;
+//             cSuccess = true;
+//             // definitely works with
+//             // figure out which one of these is needed
+//             // resync after bx0 alignment worked
+//             //this->ChipReSync();
+//             //std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+//             // reset the readout as well
+//             this->ResetReadout();
+//             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+//             this->WriteReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cStubPackageDelay);
+//         }
+//         else
+//         {
+//             LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDRED << "FAILED! State of alignment : " << +cValue << RESET;
+//             this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
+//         }
+//         cAttempts++;
+//     } while(cAttempts < 10 && !cSuccess);
+//     return cSuccess;
+// }
 bool D19cFWInterface::Bx0Alignment()
 {
-    // auto     cStubPackageDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
     bool     cSuccess   = false;
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
