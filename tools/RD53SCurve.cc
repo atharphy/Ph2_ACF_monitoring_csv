@@ -63,7 +63,7 @@ void SCurve::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "SCurve");
 }
 
 void SCurve::Running()
@@ -188,16 +188,16 @@ void SCurve::run()
     SCurve::chipErrorReport();
 }
 
-void SCurve::draw()
+void SCurve::draw(bool doSaveData)
 {
-    SCurve::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) SCurve::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(fileRes);
         LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
@@ -206,6 +206,7 @@ void SCurve::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     SCurve::fillHisto();
     histos->process();
+    saveData = doSaveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -290,7 +291,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
 
                                 SCurve::computeStats(measurements, offset, nHits, mean, rms);
 
-                                if((rms > 0) && (nHits > 0) && (isnan(rms) == false))
+                                if((mean > 0) && (rms > 0) && (nHits > 0) && (std::isnormal(rms) == true))
                                 {
                                     theThresholdAndNoiseContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -340,11 +341,11 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "Average threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold
-                              << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
+                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1)
+                              << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
                     LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
-                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()
-                              << std::setprecision(-1) << RESET;
+                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << BOLDBLUE
+                              << " (Delta_VCal)" << std::setprecision(-1) << RESET;
                     RD53Shared::resetDefaultFloat();
                 }
 
@@ -385,7 +386,7 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
 
     nHits = weight * nEvents;
 
-    if(weight != 0)
+    if((weight > 0) && (mean > 0))
     {
         mean /= weight;
         rms = sqrt((mean2 / weight - mean * mean) * weight / (weight - 1. / nEvents));

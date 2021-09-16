@@ -19,6 +19,7 @@
       <node id="aurora_pma_rst"       mask="0x00000100"       permission="rw"      description="Aurora frame counter reset" />
       <node id="readout_block_rst"    mask="0x00000200"       permission="rw"      description="Readout Block reset" />
       <node id="cmd_disable"          mask="0x00000080"       permission="rw"      description="When '1' cmd stream is stopped for all modules" />
+      <node id="ext_clk_en"           mask="0x00000800"       permission="rw"      description="Enable external clock as main clock input (40MHz)" />
     </node>
 
     <!-- Fast Commands Block -->
@@ -94,7 +95,7 @@
       <node id="dio5_load_config"      mask="0x01000000"      permission="rw"      description="DIO5, load configuration settings" />
       <node id="tlu_en"                mask="0x02000000"      permission="rw"      description="Enable for the tlu module" />
       <node id="tlu_handshake_mode"    mask="0x0C000000"      permission="rw"      description="Handshake mode for tlu, 0 = no handshake, 1 = simple handshake, 2 = data handshake" />
-      <node id="ext_clk_en"            mask="0x10000000"      permission="rw"      description="Enable external clock as main clock input (40MHz)" />
+      <node id="tlu_delay"             mask="0xF0000000"      permission="rw"      description="Trigger ID delay from TLU" />
     </node>
 
     <!-- Readout Block -->

@@ -256,7 +256,6 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             // ################
             PixelAlive::run();
             auto output = PixelAlive::analyze();
-            output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
             // ###############
             // # Save output #
@@ -276,7 +275,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                         }
 
             // ##############################################
-            // # Send periodic data to minitor the progress #
+            // # Send periodic data to monitor the progress #
             // ##############################################
             GenericDacDacScan::sendData();
         }

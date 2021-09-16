@@ -1,28 +1,33 @@
 /*!
-  \file                  RD53ThrMinimization.h
-  \brief                 Implementaion of threshold minimization
+  \file                  RD53ThrEqualizationSC.h
+  \brief                 Implementaion of threshold equalization with SCurves
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53ThrMinimization_H
-#define RD53ThrMinimization_H
+#ifndef RD53ThrEqualizationSC_H
+#define RD53ThrEqualizationSC_H
 
-#include "RD53PixelAlive.h"
+#include "RD53SCurve.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ThresholdHistograms.h"
+#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
 #endif
 
+// #############
+// # CONSTANTS #
+// #############
+#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
+
 // #####################################
-// # Threshold minimization test suite #
+// # Threshold equalization test suite #
 // #####################################
-class ThrMinimization : public PixelAlive
+class ThrEqualizationSC : public SCurve
 {
   public:
-    ~ThrMinimization()
+    ~ThrEqualizationSC()
     {
 #ifdef __USE_ROOT__
         this->WriteRootFile();
@@ -42,31 +47,28 @@ class ThrMinimization : public PixelAlive
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nIterationsThr = floor(log2(ThrStop - ThrStart + 1) + 2);
-        uint16_t moreIterations = 1;
-        return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
+        uint16_t nIterationsVCal    = 1;
+        uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
+        uint16_t moreIterationsTDAC = 1;
+        return SCurve::getNumberIterations() * (nIterationsVCal + nIterationsTDAC + moreIterationsTDAC);
     }
     void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
-    ThresholdHistograms* histos;
+    ThrEqualizationHistograms* histos;
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
     size_t colStart;
     size_t colStop;
-    float  targetOccupancy;
-    size_t ThrStart;
-    size_t ThrStop;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    DetectorDataContainer theThrContainer;
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
+    DetectorDataContainer                    theTDACcontainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target);
     void chipErrorReport() const;
 
   protected:

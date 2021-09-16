@@ -69,7 +69,7 @@ void PixelAlive::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "PixelAlive");
 }
 
 void PixelAlive::Running()
@@ -151,7 +151,7 @@ void PixelAlive::initializeFiles(const std::string fileRes_, int currentRun)
 
 void PixelAlive::run()
 {
-    theOccContainer              = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+    theOccContainer              = std::make_shared<DetectorDataContainer>();
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
@@ -317,6 +317,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                 .data[deltaTrgID]++;
                     }
                 }
+
+    theOccContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
     return theOccContainer;
 }
