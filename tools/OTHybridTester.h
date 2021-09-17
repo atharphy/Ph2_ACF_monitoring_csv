@@ -82,6 +82,9 @@ class OTHybridTester : public Tool
     // Run Bit Error Rate Test
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
 
+    // Phase Alignment 
+    void BackEndAlignment(std::vector<std::string> pLines);
+
   private:
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
@@ -150,6 +153,7 @@ class OTHybridTester : public Tool
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
     std::map<uint8_t, std::string>     fI2CStatusMap             = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
+    std::map<std::string, uint8_t>     fBackendAlignmentLineMap ={{"SSA_FCMD_L",0},{"SSA_FCMD_R",1},{"CIC_FCMD_L",2},{"CIC_FCMD_R",3},{"2S_R",1},{"2S_L",2}};
   protected:
 #ifdef __TCUSB__
 #ifdef __ROH_USB__

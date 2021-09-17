@@ -989,6 +989,40 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
+void OTHybridTester::BackEndAlignment(std::vector<std::string> pLines) 
+{
+    // Phase Tuner object from D19cFWInterface
+    D19cFWInterface::PhaseTuner cTuner;
+    // in fw.. alignment is done assuming hybrid id 0 ,chip id 0
+    uint8_t cHybridId=0;
+    uint8_t cChipId=0;
+    uint8_t cPhaseAlignmentPattern=0xAA; 
+    uint8_t cWordAlignmentPattern=0xEA;
+    // fw interface 
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    LpGBTInjectDLInternalPattern(cPhaseAlignmentPattern);
+    // phase align lines - select correct sampling point
+    for(auto cLine : pLines) 
+    {
+        auto cIter = fBackendAlignmentLineMap.find(cLine);
+        if( cIter == fBackendAlignmentLineMap.end() ) continue;
+
+        auto cLineId = cIter->second; 
+        cTuner.TunePhase(cInterface, cHybridId, cChipId, cLineId);
+        LOG (INFO) << BOLDBLUE << "After phase-alignment, delay is " << +cTuner.fDelay << RESET;
+    }
+    // word align lines 
+    LpGBTInjectDLInternalPattern(cWordAlignmentPattern);
+    for(auto cLine : pLines) 
+    {
+        auto cIter = fBackendAlignmentLineMap.find(cLine);
+        if( cIter == fBackendAlignmentLineMap.end() ) continue;
+
+        auto cLineId = cIter->second; 
+        cTuner.AlignWord(cInterface, cHybridId,cChipId, cLineId, cWordAlignmentPattern, 8, true);
+        LOG (INFO) << BOLDBLUE << "After word-alignment, bit slip is " << +cTuner.fBitslip << RESET;
+    }
+}
 #ifdef __TCP_SERVER__
 float OTHybridTester::getMeasurement(std::string name)
 {

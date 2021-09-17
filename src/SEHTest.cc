@@ -328,6 +328,9 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("scope-fcmd"))
     {
+        // align lines in the back-end 
+        // currently this does both the phase + word alignment 
+        cSEHTester.BackEndAlignment({"2S_L","2S_R"});
         if(cmd.foundOption("fcmd-pattern"))
         {
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
