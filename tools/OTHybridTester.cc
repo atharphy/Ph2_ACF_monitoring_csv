@@ -317,16 +317,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 
     float cSetRightLoad = 0;
     float cSetLeftLoad  = 0;
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
-    fTC_USB->set_load2(true, false, 0);
-    fTC_USB->set_load1(true, false, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1200));
-    fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
-    fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
 
-#endif
-#endif
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -336,6 +327,16 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
+            #ifdef __TCUSB__
+#ifdef __SEH_USB__
+    fTC_USB->set_load2(true, false, 0);
+    fTC_USB->set_load1(true, false, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+    fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
+    fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+
+#endif
+#endif
                 bool                 cMasterSuccess = true;
                 std::vector<uint8_t> cI2CStatusVect;
                 std::vector<int>     cTryVect;
@@ -358,8 +359,8 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 #ifdef __SEH_USB__
                     if(j == tries / 2)
                     {
-                        fTC_USB->set_load2(true, false, 3000);
-                        fTC_USB->set_load1(true, false, 3000);
+                        fTC_USB->set_load2(true, false, 1500);
+                        fTC_USB->set_load1(true, false, 1500);
                         std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                         fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
                         fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
@@ -412,6 +413,9 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
         cI2CTree->Branch("I2C_Master_transaction", &cTryVectVect[index]);
         cI2CTree->Branch("I2C_Master_rightLoad", &cSetRightLoadVectVect[index]);
         cI2CTree->Branch("I2C_Master_leftLoad", &cSetLeftLoadVectVect[index]);
+        cI2CTree->Fill();
+        fResultFile->cd();
+        cI2CTree->Write();
         index += 1;
     }
 #endif
