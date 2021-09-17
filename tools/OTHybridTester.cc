@@ -307,6 +307,26 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 {
     bool                cTestSuccess    = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+#ifdef __USE_ROOT__
+
+    // Create variables for TTree branches
+    std::vector<std::vector<uint8_t>> cI2CStatusVectVect;
+    std::vector<std::vector<int>>     cTryVectVect;
+    std::vector<std::vector<float>>   cSetRightLoadVectVect;
+    std::vector<std::vector<float>>   cSetLeftLoadVectVect;
+
+    float cSetRightLoad = 0;
+    float cSetLeftLoad  = 0;
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    fTC_USB->set_load2(true, false, 0);
+    fTC_USB->set_load1(true, false, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+    fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
+    fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+
+#endif
+#endif
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -316,6 +336,12 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
+                bool                 cMasterSuccess = true;
+                std::vector<uint8_t> cI2CStatusVect;
+                std::vector<int>     cTryVect;
+                std::vector<float>   cSetRightLoadVect;
+                std::vector<float>   cSetLeftLoadVect;
+
                 uint8_t cSlaveAddress = 0x60;
                 LOG(INFO) << BOLDBLUE << "Don't care about following first I2C transaction" << RESET;
                 uint8_t cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
@@ -325,35 +351,70 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 struct timeval stop, start;
                 gettimeofday(&start, NULL);
                 // do stuff
-
-                for(int j = 0; j < 100; j++)
+                int tries = 100;
+                for(int j = 0; j < tries; j++)
                 {
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+                    if(j == tries / 2)
+                    {
+                        fTC_USB->set_load2(true, false, 3000);
+                        fTC_USB->set_load1(true, false, 3000);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+                        fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
+                        fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+                    }
+#endif
+#endif
                     // cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
-                    cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
+                    cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
+                    i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
                     if(cSuccess)
                         LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
 
                     else
                     {
-                        i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
-                        LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
-                        clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
-                        i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
-                        LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
+                        // i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                        LOG(DEBUG) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
+                        // clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
+                        // i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                        // LOG(DEBUG) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
 
-                        LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
-                        LOG(INFO) << BOLDBLUE << "I2C test number " << BOLDRED << +j << " failed" << RESET;
-                        break;
+                        LOG(DEBUG) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "I2C test number " << BOLDRED << +j << " failed" << RESET;
+                        // break;
                     }
+                    cI2CStatusVect.push_back(i2cstatus);
+                    cTryVect.push_back(j);
+                    cSetRightLoadVect.push_back(cSetRightLoad);
+                    cSetLeftLoadVect.push_back(cSetLeftLoad);
+                    cMasterSuccess &= cSuccess;
                 }
-                cTestSuccess &= cSuccess;
-                fillSummaryTree(Form("i2cmaster%i", cMaster), cSuccess);
+                fillSummaryTree(Form("i2cmaster%i", cMaster), cMasterSuccess);
                 gettimeofday(&stop, NULL);
                 LOG(INFO) << BOLDBLUE << "Duration " << (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec << RESET;
                 // printf("took %lu us\n", (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+                cTestSuccess &= cMasterSuccess;
+                cI2CStatusVectVect.push_back(cI2CStatusVect);
+                cTryVectVect.push_back(cTryVect);
+                cSetRightLoadVectVect.push_back(cSetRightLoadVect);
+                cSetLeftLoadVectVect.push_back(cSetLeftLoadVect);
             }
         }
+        // cI2CTree->Branch(Form("I2C_Master_%i_status", cMaster), &cI2CStatusVect);
+        // cI2CTree->Branch("I2C_Master_%i_transaction", &cTryVect);
     }
+    int index = 0;
+    for(const auto cMaster: pMasters)
+    {
+        auto cI2CTree = new TTree(Form("tI2CMaster%i", cMaster), Form("I2C Master %i Test Tree", cMaster));
+        cI2CTree->Branch("I2C_Master_status", &cI2CStatusVectVect[index]);
+        cI2CTree->Branch("I2C_Master_transaction", &cTryVectVect[index]);
+        cI2CTree->Branch("I2C_Master_rightLoad", &cSetRightLoadVectVect[index]);
+        cI2CTree->Branch("I2C_Master_leftLoad", &cSetLeftLoadVectVect[index]);
+        index += 1;
+    }
+#endif
     return cTestSuccess;
 }
 
