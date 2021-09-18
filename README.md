@@ -602,5 +602,5 @@ This uses TCP protocol instead of UDP which accounts for packet loss but decreas
 For any support/suggestions, mail to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
 
 
-### Firmware repository for OT tracker:
+### Firmware repository for OT tracker
 https://udtc-ot-firmware.web.cern.ch/
