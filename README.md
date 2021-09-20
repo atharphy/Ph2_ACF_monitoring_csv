@@ -194,7 +194,7 @@ fi
 ### Setup
 
 Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
-You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
+You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384).
 For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
 
 
@@ -602,5 +602,5 @@ This uses TCP protocol instead of UDP which accounts for packet loss but decreas
 For any support/suggestions, mail to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
 
 
-### Firmware repository for OT tracker:
+### Firmware repository for OT tracker
 https://udtc-ot-firmware.web.cern.ch/
