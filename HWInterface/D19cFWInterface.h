@@ -463,12 +463,14 @@ class D19cFWInterface : public BeBoardFWInterface
             fType = (pReply >> 24) & 0xF;
             if(fType == 0)
             {
-                // fMode    = (pReply & 0x00003000) >> 12;
-                // fDelay   = (pReply & 0x000000F8) >> 3;
-                // fBitslip = (pReply & 0x00000007) >> 0;
-                fMode    = (pReply & (0x3)) >> 13;
-                fDelay   = (pReply & (0x1F)) >> 4;
-                fBitslip = (pReply & (0xF<<0)) >> 0;
+                // bit slip of 3 bits
+                fMode    = (pReply & 0x00003000) >> 12;
+                fDelay   = (pReply & 0x000000F8) >> 3;
+                fBitslip = (pReply & 0x00000007) >> 0;
+
+                // fMode    = (pReply & (0x3)) >> 13;
+                // fDelay   = (pReply & (0x1F)) >> 4;
+                // fBitslip = (pReply & (0xF<<0)) >> 0;
             }
             else if(fType == 1)
             {
@@ -479,7 +481,7 @@ class D19cFWInterface : public BeBoardFWInterface
                 // fWordAlignmentFSMstate  = (pReply & (0xF<<7)) >> 7;
                 // fPhaseAlignmentFSMstate = (pReply & (0xF<<0)) >> 0;
                 
-                // // bit slip of 3 bits
+                // bit slip of 3 bits
                 fDelay                  = (pReply & 0x00F80000) >> 19;
                 fBitslip                = (pReply & 0x00070000) >> 16;
                 fDone                   = (pReply & 0x00008000) >> 15;

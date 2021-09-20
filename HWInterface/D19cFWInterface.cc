@@ -5957,11 +5957,12 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
                           << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
             }
             // dont re-write  - just try and read again
-            cReadBack = ReadFERegister(pChip, pRegisterAddress);
-            fI2CReadMismatches++;
+            //cReadBack = ReadFERegister(pChip, pRegisterAddress);
+            
             // this was repeating both the write and the read 
-            //cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-            //if(cSuccess) { cReadBack = ReadFERegister(pChip, pRegisterAddress); }
+            cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
+            if(cSuccess) { cReadBack = ReadFERegister(pChip, pRegisterAddress); }
+            fI2CReadMismatches++;
             cIter++;
         }
         if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }

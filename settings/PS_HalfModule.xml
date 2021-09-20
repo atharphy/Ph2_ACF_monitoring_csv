@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="0">
+  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1">
     <!-- PS  module CERN-->
     <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
@@ -27,19 +27,19 @@
             </Global>
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configfile="SSA.txt" /> 
-            <SSA Id="1" configfile="SSA.txt" /> 
+            <!-- <SSA Id="0" configfile="SSA.txt" /> 
+            <SSA Id="1" configfile="SSA.txt" /> -->
             <SSA Id="2" configfile="SSA.txt" /> 
             
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="8" configfile="MPA.txt" /> 
-            <MPA Id="9" configfile="MPA.txt" /> 
+            <!-- <MPA Id="8" configfile="MPA.txt" /> 
+            <MPA Id="9" configfile="MPA.txt" /> -->
             <MPA Id="10" configfile="MPA.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="0" LinkId="0">
+        <Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>

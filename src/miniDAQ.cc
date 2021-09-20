@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkData", "Check data..", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("scopeData", "Scope L1 data", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("scopeData", "Scope L1 data", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
 
@@ -126,7 +126,8 @@ int main(int argc, char* argv[])
     getRunNumber("${PH2ACF_BASE_DIR}", cRunNumber);
     cOutputFile    = "Data/" + string_format("run_%04d.raw", cRunNumber);
     pEventsperVcth = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10;
-
+    size_t cScopingAttempts  = (cmd.foundOption("scopeData")) ? convertAnyInt(cmd.optionValue("scopeData").c_str()) : 10;
+    
     std::string  cDAQFileName;
     FileHandler* cDAQFileHandler = nullptr;
     bool         cDAQFile        = cmd.foundOption("daq");
@@ -336,10 +337,10 @@ int main(int argc, char* argv[])
         size_t cHeadersFound=0; 
         size_t cComparedL1s=0;
         size_t cIncorrectL1s=0;
-        for( size_t cAttempts=0 ; cAttempts < 1000; cAttempts++)
+        for( size_t cAttempts=0 ; cAttempts < cScopingAttempts; cAttempts++)
         {
             LOG (DEBUG) << BOLDBLUE << "Attempt#" << +cAttempts << RESET;
-            auto cBuffer = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug(1,true);
+            auto cBuffer = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug(1,false);
             // search for L1 headers 
             size_t cSearch = 0; 
             size_t cPos = 0; 
