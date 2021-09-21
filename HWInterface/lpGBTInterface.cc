@@ -474,7 +474,8 @@ bool lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
 
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
-    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 0);
+    uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase 
+    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, cMode);
     return cSuccess;
 }
 

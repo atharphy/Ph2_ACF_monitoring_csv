@@ -317,8 +317,8 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         // disable alignment output
         fCicInterface->SelectOutput(cCic, true);
-        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
     bool cAligned=true;
     for(auto cHybrid: *pOpticalGroup)
@@ -377,29 +377,17 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         // generate alignment pattern on all stub lines
         LOG(INFO) << BOLDBLUE << "Generating Patterns needed for phase alignment of CIC inputs." << RESET;
 
-        fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
+                // configure ROCs to produce phase alignment patterns 
                 for(auto cChip: *cHybrid)
                 {
                     fReadoutChipInterface->producePhaseAlignmentPattern(cChip,100);
                 }
-                // resync 
-                fBeBoardInterface->ChipReSync(cBoard);
-                fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
-
-                for( uint8_t cPhyPort=0; cPhyPort<12; cPhyPort++)
-                {
-                    fCicInterface->SelectMux(cCic,cPhyPort);
-                    cInterface->StubDebug(true, 4);
-                }
-                fCicInterface->ControlMux(cCic,0);
-            
             }
         }
         // send N triggers on L1 lines 
@@ -454,6 +442,27 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         }// OG
     }
     if( cAligned ) this->SetStaticPhaseAlignment();
+
+    // check
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+         for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                for( uint8_t cPhyPort=0; cPhyPort<12; cPhyPort++)
+                {
+                    fCicInterface->SelectMux(cCic,cPhyPort);
+                    cInterface->StubDebug(true, 4);
+                }
+                fCicInterface->ControlMux(cCic,0);
+            }
+        }
+    }
+    
     return cAligned;
 }
 bool CicFEAlignment::WordAlignment(uint16_t pWait_us)
@@ -479,12 +488,13 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_us)
                 std::vector<uint8_t> cAlignmentPatterns;
                 for(auto cChip: *cHybrid)
                 {
+                    fReadoutChipInterface->produceWordAlignmentPattern(cChip);
                     if( cChip->getFrontEndType() == FrontEndType::CBC3 ){
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->produceWordAlignmentPattern(cChip);
+                        //static_cast<CbcInterface*>(fReadoutChipInterface)->produceWordAlignmentPattern(cChip);
                         cAlignmentPatterns = static_cast<CbcInterface*>(fReadoutChipInterface)->getWordAlignmentPatterns();
                     }
                     else{ 
-                        static_cast<MPAInterface*>(fReadoutChipInterface)->produceWordAlignmentPattern(cChip);
+                        //static_cast<MPAInterface*>(fReadoutChipInterface)->produceWordAlignmentPattern(cChip);
                         cAlignmentPatterns = static_cast<MPAInterface*>(fReadoutChipInterface)->getWordAlignmentPatterns();
                     }
                 } 

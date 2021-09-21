@@ -790,7 +790,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
         fBeBoardInterface->ConfigureBoard(cBoard);
 
         if(cBoard->getBoardType() == BoardType::D19C)
+        {
             InitializeOT(cBoard );
+            ConfigureOT( cBoard );
+        }
         else if(cBoard->getBoardType() == BoardType::RD53)
             ConfigureIT(cBoard);
     }

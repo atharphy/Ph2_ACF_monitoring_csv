@@ -118,7 +118,7 @@ void MPAInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
 }
 void MPAInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
-    LOG(INFO) << GREEN << "Producing phase alignment pattern on MPA#" << +pChip->getId() <<  RESET;
+    LOG(INFO) << GREEN << "Producing word alignment pattern on MPA#" << +pChip->getId() <<  RESET;
     std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
     std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
     for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)

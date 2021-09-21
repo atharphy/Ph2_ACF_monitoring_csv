@@ -6,7 +6,6 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
-#include "tools/StubBackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/MemoryCheck2S.h"
@@ -15,7 +14,6 @@
 #include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
-#include "tools/LpGBTMonitorOT.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -193,11 +191,79 @@ int main(int argc, char* argv[])
     // error I get is new TRootSnifferFull("sniff");
     // cTool.StartHttpServer();
     cTool.ConfigureHw();
-    
-    // LpGBTMonitorOT clpGBTMonitor;
-    // clpGBTMonitor.Inherit(&cTool);
-    // clpGBTMonitor.Initialise(); 
-    
+
+    if(cmd.foundOption("calibrateADC"))
+    {
+        LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT = cOpticalGroup->flpGBT;
+                if(clpGBT == nullptr) continue;
+
+                // use Vin as the reference
+                // this I know does not change with anything
+                std::vector<std::string> cADCs_VoltageMonitors{"ADC2"};
+                std::vector<float>       cADCs_Refs{10.4 * 0.49 / 10.0};
+                size_t                   cIndx = cADCs_VoltageMonitors.size() - 1;
+                // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
+                // find correction
+                std::vector<float>   cVals(10, 0);
+                uint8_t              cEnableVref = 1;
+                std::string          cADCsel     = cADCs_VoltageMonitors[cIndx];
+                std::vector<uint8_t> cRefPoints{0, 0x05, 0x10, 0x20, 0x3F};
+                std::vector<float>   cMeasurements(0);
+                std::vector<float>   cSlopes(0);
+                for(auto cRef: cRefPoints)
+                {
+                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
+                    // wait until Vref is stable
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
+                    float cDifference_V = (cADCs_Refs[cIndx] - cMean);
+                    // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
+                    //         << " correction applied is " << +cRef
+                    //         << " reading [mean] is "
+                    //         << +cMean*1e3
+                    //         << " milli-volts."
+                    //         << "\t...Difference between expected and measured "
+                    //         << " values is "
+                    //         << cDifference_V*1e3
+                    //         << " milli-volts." << RESET;
+                    cMeasurements.push_back(cDifference_V);
+                    if(cMeasurements.size() > 1)
+                    {
+                        for(int cI = cMeasurements.size() - 2; cI >= 0; cI--)
+                        {
+                            float cSlope = (cMeasurements[cMeasurements.size() - 1] - cMeasurements[cI]) / (cRefPoints[cMeasurements.size() - 1] - cRefPoints[cI]);
+                            LOG(DEBUG) << BOLDBLUE << "Index " << +(cMeasurements.size() - 1) << " -- index " << cI << " slope is " << cSlope << RESET;
+                            cSlopes.push_back(cSlope);
+                        }
+                    }
+                }
+                float cMeanSlope = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.) / cSlopes.size();
+                float cIntcpt    = cMeasurements[0];
+                int   cCorr      = std::min(std::floor(-1.0 * cIntcpt / cMeanSlope), 63.);
+                // LOG (INFO) << BOLDMAGENTA << "Mean slope is " << cMeanSlope
+                //     << " , intercept is " << cIntcpt
+                //     << " correction is " << cCorr
+                //     << RESET;
+                // apply correction and check
+                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
+                // wait until Vref is stable
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                float cMeanValue = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
+                LOG(INFO) << BOLDMAGENTA << "Measured V_min after correction is " << std::setprecision(2) << std::fixed << cMeanValue * 1e3 << " mV , expected value is " << cADCs_Refs[cIndx] * 1e3
+                          << " difference is " << std::fabs(cMeanValue - cADCs_Refs[cIndx]) * 1e3 << " mV, correction needed to acheive this was  " << +cCorr << RESET;
+
+                // turn off ADC mon
+                // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
+            } // configure lpGBT
+        }
+    }
     // read chip ids
     if(cmd.foundOption("readIDs"))
     {
@@ -224,45 +290,35 @@ int main(int argc, char* argv[])
         cRegTester.RegisterTest();
     }
 
-    // Align lpGBT-CIC first
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    // map MPA outputs for PS module
+    cPSAlignment.MapMPAOutputs();
+
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
     cCicAligner.Initialise();
     cCicAligner.CicLpGbtAlignment();
+    cCicAligner.AlignInputs();
+    cCicAligner.Reset();
 
-    // align back-end - make sure L1 and stub data lines can be sampled correctly
+    //cCicAligner.Start(0);
+    //cCicAligner.waitForRunToBeCompleted();
+    //cCicAligner.dumpConfigFiles();
+
+    // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
-    
-    for(const auto cBoard: *cTool.fDetectorContainer)
+    if(!cmd.foundOption("skipAlignment"))
     {
-        cTool.ConfigureOT(cBoard);
+        //
+        cPSAlignment.Align();
     }
-    
-    // if you would like to re-do the input alignment
-    // then run align CIC align inputs   
-    cCicAligner.AlignInputs(); 
-    cCicAligner.Reset();
-    cCicAligner.dumpConfigFiles();
-
-    // map MPA outputs on PS module 
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(&cTool);
-    cPSAlignment.Initialise();
-    cPSAlignment.MapMPAOutputs();
-
-    // time align stubs in back-end 
-    StubBackEndAlignment cStubBackEndAligner;
-    cStubBackEndAligner.Inherit(&cTool);
-    cStubBackEndAligner.Start(0);
-    cStubBackEndAligner.waitForRunToBeCompleted();
-
-
-    // now align data between SSA-MPA
-    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
+    cPSAlignment.dumpConfigFiles();
 
     // equalize thresholds on readout chips
     if(cTune)
@@ -390,53 +446,7 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
-        // Injection              cInjection;
-        // std::vector<Injection> cInjections;
-        // cInjection.fRow    = 70;
-        // cInjection.fColumn = 12;
-        // cInjections.push_back(cInjection);
-        // bool cSparsified = false;
-        // for(auto cBoard: *cTool.fDetectorContainer)
-        // {
-        //     uint16_t cDelay   = cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        //     uint16_t cLatency = cDelay - 1;
-        //     cBoard->setSparsification(cSparsified);
-        //     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-        //     for(auto cOpticalReadout: *cBoard)
-        //     {
-        //         for(auto cHybrid: *cOpticalReadout)
-        //         {
-        //             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-        //             // CBC mode 
-        //             if( !cSparsified ) cTool.fCicInterface->SelectMode(cCic,0);
-        //             cTool.fCicInterface->SetSparsification(cCic, cSparsified);
-        //             cTool.fCicInterface->WriteChipReg(cCic,"L1_INPUT_TIMEOUT_VALUE0",0xFF);
-        //             cTool.fCicInterface->WriteChipReg(cCic,"L1_INPUT_TIMEOUT_VALUE1",0xFF);
-        //             cTool.fCicInterface->WriteChipReg(cCic,"L1_OUTPUT_TIMEOUT_VALUE0",0x00);
-        //             cTool.fCicInterface->WriteChipReg(cCic,"L1_OUTPUT_TIMEOUT_VALUE1",0x00);
-        //             for(auto cChip: *cHybrid)
-        //             {
-        //                 if(cChip->getFrontEndType() != FrontEndType::SSA) cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-        //                 else  cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency-1);
-                        
-        //                 if(cChip->getFrontEndType() == FrontEndType::MPA)
-        //                 {
-        //                     cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-        //                     (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections);
-        //                 }
-        //                 if(cChip->getFrontEndType() == FrontEndType::SSA)
-        //                 {
-        //                     cTool.fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
-        //                     cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-        //                     cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
-        //                     for(auto cInjection: cInjections) { cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
-        //                 }
-        //             } // chip
-        //         }     // hybrid
-        //     }//
-        // } 
-
-        // // figure out what I want to do 
+        // figure out what I want to do 
         bool cForcePSasync = true;
         for(auto cBoard: *cTool.fDetectorContainer)
         {
@@ -445,25 +455,18 @@ int main(int argc, char* argv[])
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    //auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     // cTool.fCicInterface->SelectOutput(cCic, true);
                     // cTool.fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
                     //set all SSAs + MPAs to output data in async mode
                     for(auto cROC: *cHybrid)
                     {
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "ENFLAGS_ALL", 0x0);
                         cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                         cTool.fReadoutChipInterface->WriteChipReg(cROC, "Threshold", 0xFF);
                         cTool.fReadoutChipInterface->WriteChipReg(cROC, "InjectedCharge", 0xFF);
                     }
                 }
             }
-        }
-
-        // TP set + readout 
-        for(auto cBoard: *cTool.fDetectorContainer)
-        {
-            cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
             cTool.enableTestPulse(true);
             cTool.setFWTestPulse();
             cTool.ReadNEvents(cBoard, 100);
@@ -510,6 +513,11 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
+            // find correct stub latency with TP
+            // for(auto cBoard: *cMemoryChecker.fDetectorContainer)
+            // {
+            //     cBackEndAligner.FindStubLatency(cBoard); // find stub latency
+            // }
             auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
             int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);

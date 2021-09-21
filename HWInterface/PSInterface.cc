@@ -103,13 +103,21 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { 
-        LOG (INFO) << BOLDMAGENTA << "Generating phase alignment pattern on MPA#" << +pChip->getId() << RESET;
         theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); 
     }
     else if(pChip->getFrontEndType() == FrontEndType::SSA)
     {
-        LOG (INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << RESET;
-        //theSSAInterface->producePhaseAlignmentPattern(pChip, pWait_ms);
+        LOG (INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId()  << " when on a PS module" << RESET;
+    }
+}
+void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
+{
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
+        theMPAInterface->produceWordAlignmentPattern(pChip); 
+    }
+    else if(pChip->getFrontEndType() == FrontEndType::SSA)
+    {
+        LOG (INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
     }
 }
 void PSInterface::setFileHandler(FileHandler* pHandler)
