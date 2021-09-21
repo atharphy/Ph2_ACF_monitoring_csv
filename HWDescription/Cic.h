@@ -60,7 +60,10 @@ class Cic : public Chip
 
     virtual uint8_t getNumberOfBits(const std::string& dacName) { return 8; };
 
+    void setDriveStrength(uint8_t pDriveStrength){fDriveStrength=pDriveStrength;}
+    uint8_t getDriveStrength(){ return fDriveStrength;}
   protected:
+    uint8_t fDriveStrength;
 };
 } // namespace Ph2_HwDescription
 

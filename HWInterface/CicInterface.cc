@@ -1467,7 +1467,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
             throw std::runtime_error(std::string("Could NOT configure drive strength on CIC output pads"));
         }
         cRegValue = this->ReadChipReg(pChip, cRegName);
-        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec 
+            << "[ drive strength set to " << +pDriveStrength << " ]" << RESET;
     }
 
     // reset DLL for each of the 12 phy ports

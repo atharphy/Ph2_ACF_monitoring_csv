@@ -377,7 +377,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 // ######################################
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    const uint8_t cCicDriveStrength = 5;
     // set board sparisificatio
     // based on what is configured in the fw register
     // read CIC sparsification setting from fW register
@@ -470,7 +469,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }      
-        bool cSuccess = CicStartUp(cOpticalGroup, cCicDriveStrength, pCICUseNegEdge);
+        bool cSuccess = CicStartUp(cOpticalGroup, pCICUseNegEdge);
         if( !cSuccess ){ 
             LOG (INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET; 
             throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
@@ -684,7 +683,7 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
         }
     } // lpGBT part ... resets + clocks
 }
-bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDriveStrength, uint8_t pCICUseNegEdge)
+bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pCICUseNegEdge)
 {
     auto cBoardId    = pOpticalGroup->getBeBoardId();
     auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
@@ -759,7 +758,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, uint8_t pDr
             cRxTerm  = 1;
         }
         cSuccess = fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
-        if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, pDriveStrength);
+        if(cSuccess) cSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength() );
         else throw std::runtime_error(std::string("FAILED to start-up CIC ... something is wrong... .. STOPPING")); 
         
         if(cSuccess) cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);

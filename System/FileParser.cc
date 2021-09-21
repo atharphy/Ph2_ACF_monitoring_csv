@@ -742,6 +742,12 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                               << std::bitset<5>(cRegValue) << " -- new value " << std::bitset<5>(cNewValue) << RESET;
                                     cCic->setReg(cRegName, cNewValue);
                                 }
+                                if( cChildGlobal.attribute("driveStrength") )
+                                {
+                                    uint8_t cDriveStrength = cChildGlobal.attribute("driveStrength").as_int();
+                                    cCic->setDriveStrength(cDriveStrength);
+                                }
+                                else cCic->setDriveStrength(3); 
                             }
                         }
                     }

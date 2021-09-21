@@ -1822,6 +1822,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
                     for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
                     {
                         LOG(INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+                        //pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, cBitslip, 0, 0);
                         pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, pTuner.fDelay, cBitslip, 0, 0);
                         this->Start();
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));
