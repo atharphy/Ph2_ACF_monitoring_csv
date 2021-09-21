@@ -74,9 +74,10 @@ class SSAInterface : public ReadoutChipInterface
     void setRetryI2C(bool pRetry) { fRetryI2C = pRetry; }
     void setMaxI2CAttempts(uint8_t pMaxAttempts) { fMaxI2CAttempts = pMaxAttempts; }
 
+    void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void     produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    
   private:
-    void     producePhaseAlignmentPattern(Ph2_HwDescription::Chip* pChip, uint8_t pWait_ms = 10);
-    void     produceWordAlignmentPattern(Ph2_HwDescription::Chip* pChip, uint8_t pWait_ms = 10);
     // I2C config
     bool    fRetryI2C       = false;
     uint8_t fMaxI2CAttempts = 20;

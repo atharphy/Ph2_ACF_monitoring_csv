@@ -100,6 +100,18 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
     return false;
 }
 
+void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
+{
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
+        LOG (INFO) << BOLDMAGENTA << "Generating phase alignment pattern on MPA#" << +pChip->getId() << RESET;
+        theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); 
+    }
+    else if(pChip->getFrontEndType() == FrontEndType::SSA)
+    {
+        LOG (INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << RESET;
+        //theSSAInterface->producePhaseAlignmentPattern(pChip, pWait_ms);
+    }
+}
 void PSInterface::setFileHandler(FileHandler* pHandler)
 {
     setBoard(0);

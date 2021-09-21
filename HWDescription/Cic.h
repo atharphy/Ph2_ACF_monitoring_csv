@@ -62,8 +62,13 @@ class Cic : public Chip
 
     void setDriveStrength(uint8_t pDriveStrength){fDriveStrength=pDriveStrength;}
     uint8_t getDriveStrength(){ return fDriveStrength;}
+
+
+    void setEdgeSelect(uint8_t pEdgeSel){fEdgeSel=pEdgeSel;}
+    uint8_t getEdgeSelect(){ return fEdgeSel;}
   protected:
-    uint8_t fDriveStrength;
+    uint8_t fDriveStrength{3}; // drive strength 1-5
+    uint8_t fEdgeSel{0}; //0 - positive edge, 1 - negative edge 
 };
 } // namespace Ph2_HwDescription
 

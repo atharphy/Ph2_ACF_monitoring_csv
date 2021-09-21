@@ -1400,6 +1400,7 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
     if(!this->ControlMux(pChip, 1)) return false;
 
     // then select phy port
+    LOG (INFO) << BOLDBLUE << "Selecting phyPort" << +pPhyPort << " on CIC on " << +pChip->getHybridId() << RESET;
     setBoard(pChip->getBeBoardId());
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
@@ -1442,17 +1443,11 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     LOG(INFO) << BOLDBLUE << cOut << RESET;
 
     bool cSuccess = this->CheckSoftReset(pChip);
-    // if( !cSuccess )
-    // {
-    //     LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC...
-    //     " << RESET; exit(0);
-    // }
-    // bool cSuccess = this->SoftReset(pChip);
-
-    // bool cClkTermination = false;
-    // bool cRxTermination  = false;
-    //(pChip->getFrontEndType() == FrontEndType::CIC ) ? true : false ;// true, false -- this needs to be false for the
-    // crate set-up .. how to fix this?!?!
+    if( !cSuccess )
+    {
+        LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC..." << RESET;
+    }
+    
     std::string cRegName  = "SLVS_PADS_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     auto        cIterator = fTxDriveStrength.find(pDriveStrength);
@@ -1487,21 +1482,6 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     }
     LOG(INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET;
 
-    // // figure out which FEs have been enabled
-    // // so we can return to this state after
-    // // the reset
-    // cRegName            = "FE_ENABLE";
-    // uint16_t cEnableReg = this->ReadChipReg(pChip, cRegName);
-    // LOG(INFO) << BOLDMAGENTA << "Enable chip register, before phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
-    // // disable all FEs
-    // this->WriteChipReg(pChip, cRegName, 0x00);
-    // // reset
-    // this->ResetPhaseAligner(pChip, 200);
-    // // enable original FEs
-    // this->WriteChipReg(pChip, cRegName, cEnableReg);
-    // cEnableReg = this->ReadChipReg(pChip, cRegName);
-    // LOG(INFO) << BOLDMAGENTA << "Enable chip register, after phase aligner reset, set to " << std::bitset<8>(+cEnableReg) << RESET;
-
     // set phase aligner to static mode
     bool cAutoAlign = false;
     cSuccess        = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
@@ -1535,9 +1515,6 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
         throw std::runtime_error(std::string("Could NOT lock FC decoder in CIC"));
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " locked fast command decoder in CIC." << RESET;
-
-    // cSuccess = this->CheckReSync(pChip);
-    // LOG(INFO) << BOLDGREEN << ".... Completed CIC start-up ........ " << RESET;
     return cSuccess;
 }
 } // namespace Ph2_HwInterface

@@ -101,7 +101,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     fTrackRegisters=false;
     return cSuccess;
 }
-void SSA2Interface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+void SSA2Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms )
 {
     uint8_t                     cPhaseAlignmentPattern = 0xAA;
     std::vector<std::string> cRegNames{"Shift_pattern_L1",
@@ -352,7 +352,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "EnablePhaseAlignmentPattern" ) 
     {
-        this->producePhaseAlignmentPattern(pSSA2, pValue );
+        this->producePhaseAlignmentPattern( static_cast<ReadoutChip*>(pSSA2), pValue );
         return true;
     }
     else if(pRegName == "AmuxHigh")

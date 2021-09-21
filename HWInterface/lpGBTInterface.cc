@@ -715,7 +715,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     uint8_t cADCInputP = lpGBTInterface::fADCInputMap[pADCInputP];
     uint8_t cADCInputN = lpGBTInterface::fADCInputMap[pADCInputN];
 
-    LOG(INFO) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
+    LOG(DEBUG) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
 
     // Select ADC Input
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
@@ -735,7 +735,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     uint8_t cIter    = 0;
     bool    cSuccess = false;
     do {
-        LOG(INFO) << GREEN << "Waiting for ADC conversion to end" << RESET;
+        LOG(DEBUG) << GREEN << "Waiting for ADC conversion to end" << RESET;
 
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;

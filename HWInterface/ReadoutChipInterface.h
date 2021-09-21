@@ -189,6 +189,13 @@ class ReadoutChipInterface : public ChipInterface
      */
     virtual bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) = 0;
 
+    virtual void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms=10 ){
+        //LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
+    virtual void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip ){
+        //LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
+    
     /*!
      * \brief Monitorign memeber functions
      */

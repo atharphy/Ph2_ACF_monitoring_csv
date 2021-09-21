@@ -31,7 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     CPBconfig cCPBconfig;
     cCPBconfig.fEnable       = fUseCPB;
     cCPBconfig.fI2CFrequency = 3;
-    cCPBconfig.fWait_us      = 50;   // TO-DO - make configurable from xml
+    cCPBconfig.fWait_us      = 0;   // TO-DO - make configurable from xml
     cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
     cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
     cCPBconfig.fMaxAttempts  = 1000; // TO-DO - make configurable from xml
@@ -175,7 +175,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 4, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    //uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
@@ -217,14 +218,14 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
     ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
     // hold resets
-    // for(uint8_t cSide = 0; cSide < 2; cSide++)
-    // {
-    //     this->ssaReset(pChip, true, cSide);
-    //     this->mpaReset(pChip, true, cSide);
-    //     this->cicReset(pChip, true, cSide);
-    // }
-    this->mpaReset(pChip, true, 1);
-    this->cicReset(pChip, true, 0);
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->ssaReset(pChip, true, cSide);
+        this->mpaReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+    // this->mpaReset(pChip, true, 1);
+    // this->cicReset(pChip, true, 0);
 
     LOG(INFO) << BOLDGREEN << "PS-ROH-" << +cChipRate << "G lpGBT configuration APPLIED" << RESET;
 }

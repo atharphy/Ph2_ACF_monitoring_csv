@@ -50,8 +50,8 @@ class CbcInterface : public ReadoutChipInterface
     bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerifLoop = true);
     bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
 
-    void producePhaseAlignmentPattern(Ph2_HwDescription::Chip* pChip, uint8_t pWait_ms = 10);
-    void produceWordAlignmentPattern(Ph2_HwDescription::Chip* pChip);
+    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
 
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
 

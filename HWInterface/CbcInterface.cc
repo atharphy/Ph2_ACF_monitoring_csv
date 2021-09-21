@@ -960,7 +960,7 @@ void CbcInterface::WriteBroadcastCbcMultiReg(const Hybrid* pHybrid, const std::v
                 static_cast<ReadoutChip*>(cCbc)->setReg(cReg.first, cReg.second);
             }
 }
-void CbcInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms)
+void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
     // mask for L1A alignment 
     ChannelGroup<NCHANNELS, 1> cChannelMask;
@@ -1006,7 +1006,7 @@ void CbcInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms)
     }
     this->maskChannelsGroup(static_cast<ReadoutChip*>(pChip), &cChannelMask);
 }
-void CbcInterface::produceWordAlignmentPattern(Chip* pChip)
+void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     // switch off HitOr
     WriteChipReg(pChip, "HitOr", 0);

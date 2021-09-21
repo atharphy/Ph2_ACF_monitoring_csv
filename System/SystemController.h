@@ -175,6 +175,7 @@ class SystemController
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureIT(Ph2_HwDescription::BeBoard* pBoard);
+    void InitializeOT(Ph2_HwDescription::BeBoard* pBoard);
     void ConfigureOT(Ph2_HwDescription::BeBoard* pBoard);
     // OT specific configurations for 2S + PS modules
     /*!
@@ -182,7 +183,7 @@ class SystemController
      */
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pUseNegEdge = 0);
+    bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested

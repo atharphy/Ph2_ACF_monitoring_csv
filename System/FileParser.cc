@@ -747,7 +747,12 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                     uint8_t cDriveStrength = cChildGlobal.attribute("driveStrength").as_int();
                                     cCic->setDriveStrength(cDriveStrength);
                                 }
-                                else cCic->setDriveStrength(3); 
+                                
+                                if( cChildGlobal.attribute("edgeSelect") )
+                                {
+                                    uint8_t cEdgeSelect = cChildGlobal.attribute("edgeSelect").as_int();
+                                    cCic->setEdgeSelect(cEdgeSelect);
+                                }
                             }
                         }
                     }

@@ -15,6 +15,7 @@
 #include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
+#include "tools/LpGBTMonitorOT.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -192,79 +193,11 @@ int main(int argc, char* argv[])
     // error I get is new TRootSnifferFull("sniff");
     // cTool.StartHttpServer();
     cTool.ConfigureHw();
-
-    if(cmd.foundOption("calibrateADC"))
-    {
-        LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;
-        for(const auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& clpGBT = cOpticalGroup->flpGBT;
-                if(clpGBT == nullptr) continue;
-
-                // use Vin as the reference
-                // this I know does not change with anything
-                std::vector<std::string> cADCs_VoltageMonitors{"ADC2"};
-                std::vector<float>       cADCs_Refs{10.4 * 0.49 / 10.0};
-                size_t                   cIndx = cADCs_VoltageMonitors.size() - 1;
-                // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", (1 << 4 ) );
-                // find correction
-                std::vector<float>   cVals(10, 0);
-                uint8_t              cEnableVref = 1;
-                std::string          cADCsel     = cADCs_VoltageMonitors[cIndx];
-                std::vector<uint8_t> cRefPoints{0, 0x05, 0x10, 0x20, 0x3F};
-                std::vector<float>   cMeasurements(0);
-                std::vector<float>   cSlopes(0);
-                for(auto cRef: cRefPoints)
-                {
-                    static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
-                    // wait until Vref is stable
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
-                    float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
-                    float cDifference_V = (cADCs_Refs[cIndx] - cMean);
-                    // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
-                    //         << " correction applied is " << +cRef
-                    //         << " reading [mean] is "
-                    //         << +cMean*1e3
-                    //         << " milli-volts."
-                    //         << "\t...Difference between expected and measured "
-                    //         << " values is "
-                    //         << cDifference_V*1e3
-                    //         << " milli-volts." << RESET;
-                    cMeasurements.push_back(cDifference_V);
-                    if(cMeasurements.size() > 1)
-                    {
-                        for(int cI = cMeasurements.size() - 2; cI >= 0; cI--)
-                        {
-                            float cSlope = (cMeasurements[cMeasurements.size() - 1] - cMeasurements[cI]) / (cRefPoints[cMeasurements.size() - 1] - cRefPoints[cI]);
-                            LOG(DEBUG) << BOLDBLUE << "Index " << +(cMeasurements.size() - 1) << " -- index " << cI << " slope is " << cSlope << RESET;
-                            cSlopes.push_back(cSlope);
-                        }
-                    }
-                }
-                float cMeanSlope = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.) / cSlopes.size();
-                float cIntcpt    = cMeasurements[0];
-                int   cCorr      = std::min(std::floor(-1.0 * cIntcpt / cMeanSlope), 63.);
-                // LOG (INFO) << BOLDMAGENTA << "Mean slope is " << cMeanSlope
-                //     << " , intercept is " << cIntcpt
-                //     << " correction is " << cCorr
-                //     << RESET;
-                // apply correction and check
-                static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
-                // wait until Vref is stable
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
-                float cMeanValue = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
-                LOG(INFO) << BOLDMAGENTA << "Measured V_min after correction is " << std::setprecision(2) << std::fixed << cMeanValue * 1e3 << " mV , expected value is " << cADCs_Refs[cIndx] * 1e3
-                          << " difference is " << std::fabs(cMeanValue - cADCs_Refs[cIndx]) * 1e3 << " mV, correction needed to acheive this was  " << +cCorr << RESET;
-
-                // turn off ADC mon
-                // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
-            } // configure lpGBT
-        }
-    }
+    
+    // LpGBTMonitorOT clpGBTMonitor;
+    // clpGBTMonitor.Inherit(&cTool);
+    // clpGBTMonitor.Initialise(); 
+    
     // read chip ids
     if(cmd.foundOption("readIDs"))
     {
@@ -296,12 +229,6 @@ int main(int argc, char* argv[])
     cCicAligner.Inherit(&cTool);
     cCicAligner.Initialise();
     cCicAligner.CicLpGbtAlignment();
-   
-    // map MPA outputs on PS module 
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(&cTool);
-    cPSAlignment.Initialise();
-    cPSAlignment.MapMPAOutputs();
 
     // align back-end - make sure L1 and stub data lines can be sampled correctly
     BackEndAlignment cBackEndAligner;
@@ -310,17 +237,29 @@ int main(int argc, char* argv[])
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
     
+    for(const auto cBoard: *cTool.fDetectorContainer)
+    {
+        cTool.ConfigureOT(cBoard);
+    }
+    
     // if you would like to re-do the input alignment
     // then run align CIC align inputs   
     cCicAligner.AlignInputs(); 
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
 
+    // map MPA outputs on PS module 
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    cPSAlignment.MapMPAOutputs();
+
     // time align stubs in back-end 
     StubBackEndAlignment cStubBackEndAligner;
     cStubBackEndAligner.Inherit(&cTool);
     cStubBackEndAligner.Start(0);
     cStubBackEndAligner.waitForRunToBeCompleted();
+
 
     // now align data between SSA-MPA
     if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }

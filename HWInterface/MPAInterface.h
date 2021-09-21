@@ -99,8 +99,8 @@ class MPAInterface : public ReadoutChipInterface
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
 
-    void producePhaseAlignmentPattern(Ph2_HwDescription::Chip* pChip, uint8_t pWait_ms = 10);
-    void produceWordAlignmentPattern(Ph2_HwDescription::Chip* pChip);
+    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     
     void                  Pix_write(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
     uint32_t              Pix_read(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);

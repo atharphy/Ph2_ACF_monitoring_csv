@@ -311,11 +311,14 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
     LOG(INFO) << BOLDMAGENTA << "Aligning CIC-lpGBT data on OpticalGroup#" << +pOpticalGroup->getId() << RESET;
     auto& clpGBT = pOpticalGroup->flpGBT;
     // configure CICs to output alignment pattern on stub lines
+    std::vector<uint8_t> cFeEnableRegs(0);
     for(auto cHybrid: *pOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         // disable alignment output
         fCicInterface->SelectOutput(cCic, true);
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+        cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
     }
     bool cAligned=true;
     for(auto cHybrid: *pOpticalGroup)
@@ -351,11 +354,14 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
         cAligned = cAligned && flpGBTInterface->AutoPhaseAlignRx(clpGBT, cGroups, cChannels);
     }
     // configure CICs to NOT output alignment pattern on stub lines
+    size_t cIndx=0;
     for(auto cHybrid: *pOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         // disable alignment output
         fCicInterface->SelectOutput(cCic, false);
+        fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+        cIndx++;
     }
     return cAligned;
 }
@@ -370,21 +376,30 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         bool cWithCBC=false;
         // generate alignment pattern on all stub lines
         LOG(INFO) << BOLDBLUE << "Generating Patterns needed for phase alignment of CIC inputs." << RESET;
+
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
-
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                    fReadoutChipInterface->producePhaseAlignmentPattern(cChip,100);
+                }
+                // resync 
+                fBeBoardInterface->ChipReSync(cBoard);
+                fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
 
-                    cWithCBC = cWithCBC || ( cChip->getFrontEndType() == FrontEndType::CBC3 );
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->producePhaseAlignmentPattern(cChip,pWait_us*1000);
-                    else static_cast<MPAInterface*>(fReadoutChipInterface)->producePhaseAlignmentPattern(cChip,pWait_us*1000);
-                }    
+                for( uint8_t cPhyPort=0; cPhyPort<12; cPhyPort++)
+                {
+                    fCicInterface->SelectMux(cCic,cPhyPort);
+                    cInterface->StubDebug(true, 4);
+                }
+                fCicInterface->ControlMux(cCic,0);
+            
             }
         }
         // send N triggers on L1 lines 

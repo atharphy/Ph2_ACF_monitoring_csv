@@ -105,7 +105,7 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     }
     return cRegItem.fValue & 0xFF;
 }
-void MPAInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+void MPAInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms )
 {
     LOG(INFO) << GREEN << "Producing phase alignment pattern on MPA#" << +pChip->getId() <<  RESET;
     uint8_t                  cAlignmentPattern = 0xAA;
@@ -116,7 +116,7 @@ void MPAInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
         this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]);
     }  // loop over registers
 }
-void MPAInterface::produceWordAlignmentPattern(Chip* pChip)
+void MPAInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     LOG(INFO) << GREEN << "Producing phase alignment pattern on MPA#" << +pChip->getId() <<  RESET;
     std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
@@ -355,7 +355,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "EnablePhaseAlignmentPattern" ) 
     {
-        this->producePhaseAlignmentPattern(pMPA, pValue );
+        this->producePhaseAlignmentPattern( static_cast<ReadoutChip*>(pMPA), pValue );
         return true;
     }
     else if(pRegName.find("MaskChannel") != std::string::npos )

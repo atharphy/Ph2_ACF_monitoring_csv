@@ -78,7 +78,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     fTrackRegisters=true;
     return cSuccess;
 }
-void SSAInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+void SSAInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms )
 {
     LOG(INFO) << GREEN << "SSA Alignment" << RESET;
     this->WriteChipReg(pChip, "ReadoutMode", 2);
@@ -91,7 +91,7 @@ void SSAInterface::producePhaseAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
         this->WriteChipReg(pChip, cRegName.str(), cAlignmentPattern);
     }
 }
-void SSAInterface::produceWordAlignmentPattern(Chip* pChip, uint8_t pWait_ms )
+void SSAInterface::produceWordAlignmentPattern(ReadoutChip* pChip )
 {
     LOG(INFO) << GREEN << "SSA Alignment" << RESET;
     this->WriteChipReg(pChip, "ReadoutMode", 2);
@@ -152,7 +152,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "EnablePhaseAlignmentPattern" )
     {
-        this->producePhaseAlignmentPattern(pSSA, pValue );
+        this->producePhaseAlignmentPattern( static_cast<ReadoutChip*>(pSSA), pValue );
         return true;
     }
     else if(pRegName == "AmuxHigh")
