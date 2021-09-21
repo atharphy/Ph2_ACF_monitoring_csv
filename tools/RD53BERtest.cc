@@ -125,7 +125,7 @@ void BERtest::run()
 
                         fReadoutChipInterface->StartPRBSpattern(cChip);
 
-                        auto value = (chain2test == 0 ? fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), cChip->getId(), frontendSpeed)
+                        auto value = (chain2test == 0 ? fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), static_cast<RD53*>(cChip)->getChipLane(), frontendSpeed)
                                                       : flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroup, cChannel, given_time, frames_or_time, frontendSpeed));
                         theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>() = value;
 
