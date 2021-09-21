@@ -1686,7 +1686,7 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // configure trigger
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 10});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
     this->ReconfigureTriggerFSM(cVecReg);
@@ -1705,7 +1705,7 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
             if( cCic->getFrontEndType() == FrontEndType::CIC2 ) cWithCIC2 = true;
         }
     }
-    if(!cWithCIC2) this->Start();
+    if(!cWithCIC2)  this->Start();
 
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     PhaseTuner pTuner;
@@ -1773,7 +1773,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.clear();
     std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency", "trigger_source", "misc.backpressure_enable", "triggers_to_accept"};
-    std::vector<uint16_t>    cFcmdRegVals{0, 500, 3, 0, 1000};
+    std::vector<uint16_t>    cFcmdRegVals{0, 100, 3, 0, 1000};
     std::vector<uint8_t>     cFcmdRegOrigVals(0);
     for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
     {

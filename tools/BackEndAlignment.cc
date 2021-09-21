@@ -276,7 +276,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         return false;
     }
 
-    // fL1Debug = false;
+    fL1Debug = false;
     cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1WordAlignment(pBoard, fL1Debug);
     if(!cAligned)
     {
