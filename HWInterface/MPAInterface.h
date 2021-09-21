@@ -151,7 +151,7 @@ class MPAInterface : public ReadoutChipInterface
     Stubs  Format_stubs(std::vector<std::vector<uint8_t>> rawstubs);
     L1data Format_l1(std::vector<uint8_t> rawl1, bool verbose = false);
 
-    std::vector<uint8_t> getWordAlignmentPatterns(){ return fWordAlignmentPatterns; }
+    std::vector<uint8_t> getWordAlignmentPatterns() override{ return fWordAlignmentPatterns; }
     void Cleardata();
     //
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
@@ -164,7 +164,7 @@ class MPAInterface : public ReadoutChipInterface
     uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
   private:
     std::map<uint16_t, std::string> fMap;
-    std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0x7A, 0x7A, 0x7A, 0x7A };
+    std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A };
 
     bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);

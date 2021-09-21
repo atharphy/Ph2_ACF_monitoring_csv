@@ -542,7 +542,7 @@ bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> 
         cBuffer << "CALIB_PATTERN" << +cIndex;
         std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
         cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, pAlignmentPatterns[cIndex]);
-        if(cSuccess) { LOG(DEBUG) << BOLDBLUE << "Calibration pattern [for word alignment] on stub line " << +cIndex << " set to " << std::bitset<8>(pAlignmentPatterns[cIndex]) << RESET; }
+        if(cSuccess) { LOG(INFO) << BOLDBLUE << "Calibration pattern [for word alignment] on stub line " << +cIndex << " set to " << std::bitset<8>(pAlignmentPatterns[cIndex]) << RESET; }
     }
     return cSuccess;
 }

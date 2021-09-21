@@ -1549,6 +1549,7 @@ std::string D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint )
     std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
     this->Stop();
 
+    LOG (DEBUG) << BOLDMAGENTA << "First header found after " << this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
     auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
     LOG(DEBUG) << BOLDBLUE << "Hits debug ...." << RESET;
     std::string cBuffer = "";
@@ -1675,6 +1676,7 @@ std::vector<std::string> D19cFWInterface::ScopeStubLines(bool pWithTestPulse)
 // tuning of L1A lines
 bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
 {
+    bool cSuccess=true;
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly sample L1A data coming from the front-end objects." << RESET;
     // original reg map
     BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
@@ -1709,7 +1711,6 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
 
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     PhaseTuner pTuner;
-    bool       cSuccess = true;
     // back-end tuning on l1 lines
     for(auto cOpticalGroup: *pBoard)
     {
@@ -1760,11 +1761,9 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
     this->ReconfigureTriggerFSM(cVecReg);
     return cSuccess;
 }
-bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
+bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pScope)
 {
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
-    // original reg map
-    BeBoardRegMap cRegisterMap = pBoard->getBeBoardRegMap();
     PhaseTuner    pTuner;
     bool          cSuccess = true;
 
@@ -1773,7 +1772,7 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.clear();
     std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency", "trigger_source", "misc.backpressure_enable", "triggers_to_accept"};
-    std::vector<uint16_t>    cFcmdRegVals{0, 100, 3, 0, 1000};
+    std::vector<uint16_t>    cFcmdRegVals{0, 100, 3, 0, 0};
     std::vector<uint8_t>     cFcmdRegOrigVals(0);
     for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
     {
@@ -1782,107 +1781,112 @@ bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
         cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
     }
     this->ReconfigureTriggerFSM(cVecReg);
-    if(pScope) this->L1ADebug();
+    cVecReg.clear();
+    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+    {
+        std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+        cVecReg.push_back({cRegName, cFcmdRegOrigVals[cIndx]});
+    }
+    //if(pScope) this->L1ADebug();
 
     // back-end tuning on l1 lines
-    for(auto cOpticalGroup: *pBoard)
+    for(auto cHybrid: *pOpticalGroup)
     {
-        for(auto cHybrid: *cOpticalGroup)
+        auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        int   cChipId = cCic->getId();
+        // if( cHybrid->getId() > 0 )
+        uint8_t cLineId = 0;
+        this->ChipReSync();
+        LOG(INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid->getId() << " Chip" << +cChipId << RESET;
+        uint16_t cPattern = 0xFE;
+        // select lines for slvs debug 
+        this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+        this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+        // configure pattern
+        pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
+        if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
         {
-            auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            int   cChipId = cCic->getId();
-            // if( cHybrid->getId() > 0 )
-            uint8_t cLineId = 0;
-            this->ChipReSync();
-            LOG(INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid->getId() << " Chip" << +cChipId << RESET;
-            uint16_t cPattern = 0xFE;
-            // select lines for slvs debug 
-            this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-            this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-            // configure pattern
-            pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
-            if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
+            for(uint16_t cPatternLength = 40; cPatternLength < 41; cPatternLength++)
             {
-                for(uint16_t cPatternLength = 40; cPatternLength < 41; cPatternLength++)
+                pTuner.SetLinePattern(this, cHybrid->getId(), 0, cLineId, cPattern, cPatternLength);
+                // start word aligner
+                pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
+                this->Start();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                this->Stop();
+                uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                cSuccess = pTuner.fDone;
+            }
+            // if the above doesn't work.. try and find the correct bitslip manually in software
+            if(!cSuccess)
+            {
+                LOG(INFO) << BOLDBLUE << "Going to try and align manually in software... delay is " << +pTuner.fDelay << RESET;
+                for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
                 {
-                    pTuner.SetLinePattern(this, cHybrid->getId(), 0, cLineId, cPattern, cPatternLength);
-                    // start word aligner
-                    pTuner.SendControl(this, cHybrid->getId(), 0, cLineId, "WordAlignment");
+                    LOG(INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+                    //pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, cBitslip, 0, 0);
+                    pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, pTuner.fDelay, cBitslip, 0, 0);
                     this->Start();
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     this->Stop();
-                    uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                    cSuccess = pTuner.fDone;
-                }
-                // if the above doesn't work.. try and find the correct bitslip manually in software
-                if(!cSuccess)
-                {
-                    LOG(INFO) << BOLDBLUE << "Going to try and align manually in software... delay is " << +pTuner.fDelay << RESET;
-                    for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
-                    {
-                        LOG(INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
-                        //pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, cBitslip, 0, 0);
-                        pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, pTuner.fDelay, cBitslip, 0, 0);
-                        this->Start();
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                        this->Stop();
 
-                        auto        cWords   = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-                        std::string cBuffer  = "";
-                        bool        cAligned = false;
-                        std::string cOutput  = "\n";
-                        for(auto cWord: cWords)
+                    auto        cWords   = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                    std::string cBuffer  = "";
+                    bool        cAligned = false;
+                    std::string cOutput  = "\n";
+                    for(auto cWord: cWords)
+                    {
+                        auto                     cString = std::bitset<32>(cWord).to_string();
+                        std::vector<std::string> cOutputWords(0);
+                        for(size_t cIndex = 0; cIndex < 4; cIndex++)
                         {
-                            auto                     cString = std::bitset<32>(cWord).to_string();
-                            std::vector<std::string> cOutputWords(0);
-                            for(size_t cIndex = 0; cIndex < 4; cIndex++)
-                            {
-                                auto c8bitWord = cString.substr(cIndex * 8, 8);
-                                cOutputWords.push_back(c8bitWord);
-                                cAligned = (cAligned | (std::stoi(c8bitWord, nullptr, 2) == cPattern));
-                            }
-                            for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--) { cOutput += *cIt + " "; }
-                            cOutput += "\n";
+                            auto c8bitWord = cString.substr(cIndex * 8, 8);
+                            cOutputWords.push_back(c8bitWord);
+                            cAligned = (cAligned | (std::stoi(c8bitWord, nullptr, 2) == cPattern));
                         }
-                        if(cAligned)
-                        {
-                            LOG(INFO) << BOLDGREEN << cOutput << RESET;
-                            this->ResetReadout();
-                            cSuccess = true;
-                            break;
-                        }
-                        else
-                            LOG(INFO) << BOLDRED << cOutput << RESET;
-                        this->ResetReadout();
+                        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--) { cOutput += *cIt + " "; }
+                        cOutput += "\n";
                     }
+                    if(cAligned)
+                    {
+                        LOG(INFO) << BOLDGREEN << cOutput << RESET;
+                        this->ResetReadout();
+                        cSuccess = true;
+                        break;
+                    }
+                    else
+                        LOG(INFO) << BOLDRED << cOutput << RESET;
+                    this->ResetReadout();
                 }
             }
-            else if(fFirmwareFrontEndType == FrontEndType::CBC3)
-            {
-            }
-            else if(fFirmwareFrontEndType == FrontEndType::SSA)
-            {
-            }
-            else
-            {
-                LOG(INFO) << BOLDBLUE << "Word alignment in the back-end not implemented for this firmware type.." << RESET;
-            }
-            if(pScope) this->L1ADebug();
         }
+        else if(fFirmwareFrontEndType == FrontEndType::CBC3)
+        {
+        }
+        else if(fFirmwareFrontEndType == FrontEndType::SSA)
+        {
+        }
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Word alignment in the back-end not implemented for this firmware type.." << RESET;
+        }
+        if(pScope) this->L1ADebug();
     }
 
     // reconfigure original trigger configu
-    for(auto const& it: cRegisterMap)
-    {
-        auto cRegName = it.first;
-        if(cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos)
-        {
-            // LOG (INFO) << BOLDBLUE << "Setting " << cRegName << " back to original value of  " << it.second << RESET;
-            cVecReg.push_back({it.first, it.second});
-        }
-    }
     this->ReconfigureTriggerFSM(cVecReg);
+    return cSuccess;
+}
+bool D19cFWInterface::L1WordAlignment(const BeBoard* pBoard, bool pScope)
+{
+    LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
+    bool cSuccess=true;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        if( !cSuccess ) continue;
+        cSuccess = this->L1WordAlignment(cOpticalGroup, pScope);
+    }
     return cSuccess;
 }
 // tuning of L1A lines
@@ -1899,76 +1903,83 @@ bool D19cFWInterface::L1Tuning(const BeBoard* pBoard, bool pScope)
     return cSuccess;
 }
 // tuning of stub lines
-bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNlines)
+bool D19cFWInterface::StubTuning(const OpticalGroup* pOpticalGroup, bool pScope, uint8_t pNlines)
 {
     PhaseTuner pTuner;
     bool       cSuccess = true;
 
     // back-end tuning on stub lines
     uint8_t cNlines = pNlines;
+    selectLink(pOpticalGroup->getId());
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        if(cCic == NULL) continue;
+
+        // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
+        this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+        this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+        //if(pScope) this->StubDebug(true, cNlines);
+
+        LOG(INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
+        for(uint8_t cLineId = 1; cLineId < 1 + cNlines; cLineId += 1)
+        {
+            if(fOptical)
+            {
+                LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
+                pTuner.AlignWord(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                //pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                cSuccess = cSuccess && pTuner.fDone;
+            }
+            else
+            {
+                bool   cSuccessThisLine = false;
+                size_t cAttempts        = 0;
+                do {
+                    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+                    pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                    cSuccessThisLine = pTuner.fDone && pTuner.fBitslip != 0;
+                    if(pTuner.fBitslip == 0) LOG(DEBUG) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                    cAttempts++;
+                } while(!cSuccessThisLine && cAttempts < 10);
+                // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                // if(pTuner.fBitslip == 0)
+                // {
+                //     uint32_t cAttempts = 0;
+                //     do
+                //     {
+                //         if(cAttempts > 10)
+                //         {
+                //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
+                //         }
+                //         // try again
+                //         //LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                //         pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
+                //         //cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
+                //         //LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
+                //         cAttempts++;
+                //     } while(pTuner.fBitslip == 0 && cAttempts < 10);
+                // }
+                cSuccess = cSuccess && cSuccessThisLine;
+            }
+            // if(pTuner.fDone != 1)
+            // {
+            //     LOG(ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId - 1) << " in the back-end." << RESET;
+            //     exit(0);
+            // }
+        }
+
+        if(pScope) this->StubDebug(true, cNlines);
+    }
+    return cSuccess;
+}
+bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNlines)
+{
+    PhaseTuner pTuner;
+    bool       cSuccess = true;
     for(auto cOpticalGroup: *pBoard)
     {
-        selectLink(cOpticalGroup->getId());
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            if(cCic == NULL) continue;
-
-            // this->WriteReg( "fc7_daq_cnfg.physical_interface_block.cic.debug_select" , cHybrid->getId()) ;
-            this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-            this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-            if(pScope) this->StubDebug(true, cNlines);
-
-            LOG(INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC stub data ...: FE " << +cHybrid->getId() << " Chip" << +cCic->getId() << RESET;
-            for(uint8_t cLineId = 1; cLineId < 1 + cNlines; cLineId += 1)
-            {
-                if(fOptical)
-                {
-                    LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
-                    pTuner.AlignWord(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                    //pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                    cSuccess = cSuccess && pTuner.fDone;
-                }
-                else
-                {
-                    bool   cSuccessThisLine = false;
-                    size_t cAttempts        = 0;
-                    do {
-                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                        pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                        cSuccessThisLine = pTuner.fDone && pTuner.fBitslip != 0;
-                        if(pTuner.fBitslip == 0) LOG(DEBUG) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
-                        cAttempts++;
-                    } while(!cSuccessThisLine && cAttempts < 10);
-                    // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    // if(pTuner.fBitslip == 0)
-                    // {
-                    //     uint32_t cAttempts = 0;
-                    //     do
-                    //     {
-                    //         if(cAttempts > 10)
-                    //         {
-                    //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                    //         }
-                    //         // try again
-                    //         //LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
-                    //         pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                    //         //cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                    //         //LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                    //         cAttempts++;
-                    //     } while(pTuner.fBitslip == 0 && cAttempts < 10);
-                    // }
-                    cSuccess = cSuccess && cSuccessThisLine;
-                }
-                // if(pTuner.fDone != 1)
-                // {
-                //     LOG(ERROR) << BOLDRED << "FAILED " << BOLDBLUE << " to tune stub line " << +(cLineId - 1) << " in the back-end." << RESET;
-                //     exit(0);
-                // }
-            }
-
-            if(pScope) this->StubDebug(true, cNlines);
-        }
+        cSuccess = cSuccess && StubTuning(cOpticalGroup, pScope, pNlines);
     }
     return cSuccess;
 }
@@ -3067,17 +3078,17 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
     fFastCommandDuration = 0;
     // enable raw 
     //this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", pRawMode);
-    uint32_t cIteration = 0;
-    auto cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
-    // wait until fifo is ready to start readout of counters 
-    do {
-        LOG (INFO) << BOLDMAGENTA << "\t\t..D19cFWInterface::WaitForData DECODER State: " << +cDecoderState << "Running.. .Iteration#"
-            << +cIteration
-            << RESET;
-        cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
-        cIteration++;
-    } while(cDecoderState != 0 );// idle state is 0 
-    LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
+    // uint32_t cIteration = 0;
+    // auto cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
+    // // wait until fifo is ready to start readout of counters 
+    // do {
+    //     LOG (INFO) << BOLDMAGENTA << "\t\t..D19cFWInterface::WaitForData DECODER State: " << +cDecoderState << "Running.. .Iteration#"
+    //         << +cIteration
+    //         << RESET;
+    //     cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
+    //     cIteration++;
+    // } while(cDecoderState != 0 );// idle state is 0 
+    // LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
     // reset the readout
     //this->ResetReadout();
     //std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
@@ -3094,11 +3105,12 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
     //     cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
     //     cIteration++;
     // } while(cDecoderState != 0 && cDecoderState != 4 );// idle state is 0 , done is 4 
-    bool cFailed = (cDecoderState!=0);
-    if( cDecoderState == 0 )
-        LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
-    else
-        LOG (INFO) << BOLDMAGENTA << "Decoder in DONE state after " << +cIteration << " iterations." << RESET;
+    bool cFailed = false;
+    // (cDecoderState!=0);
+    // if( cDecoderState == 0 )
+    //     LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
+    // else
+    //     LOG (INFO) << BOLDMAGENTA << "Decoder in DONE state after " << +cIteration << " iterations." << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(1500));
     size_t cNbits = 20e3*8*6 ;
     size_t cNWords = cNbits/32; // number of 32-bit words to read from DDR3
@@ -3138,7 +3150,7 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
         do
         {
             cBxId = (*cIter);
-            //LOG (INFO) << BOLDBLUE << "Indx" << cIndx << " : Bx#" << +cBxId << RESET;
+            LOG (INFO) << BOLDBLUE << "Indx" << cIndx << " : Bx#" << +cBxId << RESET;
             cIter++; cIndx++;
             std::string cWrd="";
             for( size_t cOffst=0; cOffst < 512/32-1 ; cOffst++)
@@ -3154,7 +3166,7 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
                     std::pair<uint16_t, uint8_t> cDataWrd; 
                     cDataWrd.first = cBxId;
                     cDataWrd.second =  std::stoi( cWrd.substr( cOffst*6, 6 ) , 0,  2 );
-                    LOG (DEBUG) << BOLDYELLOW << "BxId" << cDataWrd.first << " : " << std::bitset<6>(cDataWrd.second) << RESET;
+                    LOG (INFO) << BOLDYELLOW << "BxId" << cDataWrd.first << " : " << std::bitset<6>(cDataWrd.second) << RESET;
                     cDataWrds.push_back( cDataWrd );
                     for( size_t cLine=0;cLine < 6 ; cLine++)
                     {
@@ -3474,7 +3486,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         // make sure uDTC vetos fast commands to CIC in this mode 
         uint8_t cTriggerForPS=12;
         auto cVetoCIC = this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
-        this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.select_even",0x0);
+        this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.select_even",0x1);
         this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
         LOG (INFO) << BOLDMAGENTA << "CIC fast command VETO set to " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto") << RESET;
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents});
@@ -3488,7 +3500,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x1);
         this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
         // configure raw mode 
-        this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 0);
+        this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
     
         // this stops triggers  + resets
         this->ResetTriggerFSM();
@@ -3499,7 +3511,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         uint32_t cIteration = 0; 
         do {
             cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-            LOG (DEBUG) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
+            LOG (INFO) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
                 << +cIteration
                 << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));

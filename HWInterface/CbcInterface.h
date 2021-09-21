@@ -140,7 +140,7 @@ class CbcInterface : public ReadoutChipInterface
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);
     void                 resetPageMap(){fPageMap.clear();}
     
-    std::vector<uint8_t> getWordAlignmentPatterns(){ return fWordAlignmentPatterns; }
+    std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
   private:
 
     std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0xBC, 0xD4, 0x31, 0x81 };

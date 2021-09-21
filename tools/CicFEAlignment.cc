@@ -368,6 +368,7 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
 
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
 {
+    bool cDebug=false;
     bool cAligned = true;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
 
@@ -446,6 +447,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
     // check
     for(auto cBoard: *fDetectorContainer)
     {
+        if(!cDebug) continue;
+        
         fBeBoardInterface->setBoard(cBoard->getId());
         auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
          for(auto cOpticalGroup: *cBoard)
@@ -473,11 +476,9 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_us)
     for(auto cBoard: *fDetectorContainer)
     {
         auto&    cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
-
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(cOpticalGroup->getIndex());
-
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
@@ -485,18 +486,10 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_us)
                 if(cCic == NULL) continue;
                 
                 // configure word alignment pattern on CBCs 
-                std::vector<uint8_t> cAlignmentPatterns;
+                std::vector<uint8_t> cAlignmentPatterns=fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *cHybrid)
                 {
                     fReadoutChipInterface->produceWordAlignmentPattern(cChip);
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ){
-                        //static_cast<CbcInterface*>(fReadoutChipInterface)->produceWordAlignmentPattern(cChip);
-                        cAlignmentPatterns = static_cast<CbcInterface*>(fReadoutChipInterface)->getWordAlignmentPatterns();
-                    }
-                    else{ 
-                        //static_cast<MPAInterface*>(fReadoutChipInterface)->produceWordAlignmentPattern(cChip);
-                        cAlignmentPatterns = static_cast<MPAInterface*>(fReadoutChipInterface)->getWordAlignmentPatterns();
-                    }
                 } 
                 
                 // run automated word alignment

@@ -39,6 +39,7 @@ class PSInterface : public ReadoutChipInterface
     // I2C config
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
+    std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0x7A, 0x7A, 0x7A, 0x7A };
 
   public:
     PSInterface(const BeBoardFWMap& pBoardMap);
@@ -79,6 +80,7 @@ class PSInterface : public ReadoutChipInterface
 
     void             producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void             produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    std::vector<uint8_t> getWordAlignmentPatterns() override{ return fWordAlignmentPatterns; }
     
     void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);

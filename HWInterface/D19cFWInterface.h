@@ -424,8 +424,10 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
     std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
     bool                     L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool                     L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope = false);
     bool                     L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     bool                     L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool                     StubTuning(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope=false, uint8_t pNlines=5);
     bool                     StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false, uint8_t pNlines = 5);
     // bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
 
