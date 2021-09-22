@@ -25,6 +25,7 @@ void LinkAlignmentOT::Reset()
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap)
         {
+            if(cReg.first.find("stub_package_delay") != std::string::npos) continue;
             cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
