@@ -962,6 +962,7 @@ void CbcInterface::WriteBroadcastCbcMultiReg(const Hybrid* pHybrid, const std::v
 }
 void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
+    LOG (INFO) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
     // mask for L1A alignment 
     ChannelGroup<NCHANNELS, 1> cChannelMask;
     cChannelMask.disableAllChannels();

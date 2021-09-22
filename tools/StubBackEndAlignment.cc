@@ -528,6 +528,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
+                        auto cBx = (int)cEvent->BxId(cHybrid->getId());
                         size_t cNstubsThisHybrd = 0;
                         for(auto cChip: *cHybrid)
                         {
@@ -538,10 +539,10 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
                         } // ROCs
-                        // LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd
-                        //     << " stubs and " << +cHitsThisHybrid
-                        //     << " in CIC#" << +cHybrid->getId()
-                        //     << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd
+                            << " stubs in CIC#" << +cHybrid->getId()
+                            << " BxId is " << +cBx
+                            << RESET;
                     } // hybrids
                 }     // OGs
             }         // events

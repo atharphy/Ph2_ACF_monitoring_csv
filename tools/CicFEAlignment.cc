@@ -387,7 +387,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 // configure ROCs to produce phase alignment patterns 
                 for(auto cChip: *cHybrid)
                 {
-                    fReadoutChipInterface->producePhaseAlignmentPattern(cChip,100);
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3) cWithCBC = true;
+                    fReadoutChipInterface->producePhaseAlignmentPattern(cChip,10);
                 }
             }
         }
