@@ -292,10 +292,10 @@ int main(int argc, char* argv[])
         cRegTester.RegisterTest();
     }
 
+    // map MPA outputs for PS module
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
     cPSAlignment.Initialise();
-    // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
 
     // align CIC-lpGBT-BE 
@@ -317,10 +317,12 @@ int main(int argc, char* argv[])
     {
         StubBackEndAlignment cStubBackEndAligner;
         cStubBackEndAligner.Inherit(&cTool);
-        cStubBackEndAligner.Initialise();
-        cStubBackEndAligner.FindStubLatency();
-        cStubBackEndAligner.Reset();
-        
+        cStubBackEndAligner.Start(0);
+        cStubBackEndAligner.waitForRunToBeCompleted();
+
+        // cStubBackEndAligner.Initialise();
+        // cStubBackEndAligner.FindStubLatency();
+        // cStubBackEndAligner.Reset();
         cPSAlignment.Align();
     }
     cPSAlignment.dumpConfigFiles();
@@ -517,8 +519,8 @@ int main(int argc, char* argv[])
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(cROC, "ENFLAGS_ALL", 0x0);
                         cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "Threshold", 0xFF);
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "InjectedCharge", 0xFF);
+                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "Threshold", 0x00);
+                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "InjectedCharge", 0x00);
                     }
                 }
             }
@@ -530,7 +532,7 @@ int main(int argc, char* argv[])
             cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
             cTool.enableTestPulse(true);
             cTool.setFWTestPulse();
-            cTool.ReadNEvents(cBoard, 100);
+            cTool.ReadNEvents(cBoard, 254);
             //const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
             //LOG (DEBUG) << +cPh2Events.size() << RESET;
         }

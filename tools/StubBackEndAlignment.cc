@@ -662,7 +662,7 @@ bool StubBackEndAlignment::Align()
 void StubBackEndAlignment::Running()
 {
     Initialise();
-    fSuccess = this->Align();
+    fSuccess =  FindStubLatency(); 
     if(!fSuccess)
     {
         LOG(ERROR) << BOLDRED << "Failed to align stubs in the back-end" << RESET;

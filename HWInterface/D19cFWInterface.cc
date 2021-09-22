@@ -2270,7 +2270,7 @@ void D19cFWInterface::FastAsyncRead(BeBoard* pBoard, std::vector<uint32_t>& pDat
                             if( cStbFields[cIndx] ==  "FeStub" ) 
                             {
                                 cCounterValue = std::stoi( cSubStr.substr(8,6) + cSubStr.substr(0,7), 0 ,2 ) - 1 ; 
-                                LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::FastAsyncRead \t\t\t .. FeId " << +cFeId << " Counter#" << +cNCountersReadout << " : " << +cCounterValue << RESET;
+                                LOG (DEBUG) << BOLDMAGENTA << "D19cFWInterface::FastAsyncRead \t\t\t .. FeId " << +cFeId << " Counter#" << +cNCountersReadout << " : " << +cCounterValue << RESET;
                             }
                             if( cStbFields[cIndx] == "FeId" ) cFeId = std::stoi( cSubStr, 0 ,2 ); 
                             cShft += cSize;
@@ -2595,7 +2595,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     {
         if(cWithMPA or cWithSSA)
         {
-            this->ReadPSCounters(pBoard, pData, false);
+            this->ReadPSCounters(pBoard, pData, true);
         }
         else
         {
@@ -3066,53 +3066,23 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 }
 bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
 {
-    bool cStartPatternFound=(pRawMode == 1) ? false : true;
-    // // enable DDR3 dump of counters
-    // this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x1);
-    // this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
-    
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0);
     this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-    
     fFastCommandDuration = 0;
-    // enable raw 
-    //this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", pRawMode);
-    // uint32_t cIteration = 0;
-    // auto cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
-    // // wait until fifo is ready to start readout of counters 
-    // do {
-    //     LOG (INFO) << BOLDMAGENTA << "\t\t..D19cFWInterface::WaitForData DECODER State: " << +cDecoderState << "Running.. .Iteration#"
-    //         << +cIteration
-    //         << RESET;
-    //     cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
-    //     cIteration++;
-    // } while(cDecoderState != 0 );// idle state is 0 
-    // LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
-    // reset the readout
-    //this->ResetReadout();
-    //std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-    // start counter readout : BC0+ReSync
-    //this->PS_Start_counters_read();
-    // cIteration=0;
-    // cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
-    // LOG (INFO) << BOLDMAGENTA << "Waiting for counter readout to complete..." << RESET;
-    // do {
-    //     LOG (INFO) << BOLDYELLOW << "\t\t...D19cFWInterface::WaitForData DECODER State: " << +cDecoderState << "Running.. .Iteration#"
-    //         << +cIteration
-    //         << RESET;
-    //     std::this_thread::sleep_for(std::chrono::microseconds(1));
-    //     cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
-    //     cIteration++;
-    // } while(cDecoderState != 0 && cDecoderState != 4 );// idle state is 0 , done is 4 
-    bool cFailed = false;
-    // (cDecoderState!=0);
-    // if( cDecoderState == 0 )
-    //     LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
-    // else
-    //     LOG (INFO) << BOLDMAGENTA << "Decoder in DONE state after " << +cIteration << " iterations." << RESET;
+    uint32_t cIteration = 0;
+    auto cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
+    //wait until fifo is ready to start readout of counters 
+    do {
+        LOG (INFO) << BOLDMAGENTA << "\t\t..D19cFWInterface::WaitForData DECODER State: " << +cDecoderState << "Running.. .Iteration#"
+            << +cIteration
+            << RESET;
+        cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state"); 
+        cIteration++;
+    } while(cDecoderState != 0 );// idle state is 0 
+    LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(1500));
-    size_t cNbits = 20e3*8*6 ;
+    size_t cNbits = 800e3*8*6 ;
     size_t cNWords = cNbits/32; // number of 32-bit words to read from DDR3
     auto cData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, 0);
     std::string cDataWord = ""; 
@@ -3135,143 +3105,124 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
             }
             cIter++; cIndx++;
         }while( cIter < cData.end() );
+        return true;
     }
-    else
+    else // raw counter readout - have to parse stubs in sw 
     {
-        cIter += 4; cIndx += 4; 
-        cDataWord = "";
-        std::vector<std::pair<uint16_t, uint8_t>> cDataWrds; 
-        cDataWrds.clear();
-        std::vector<std::string> cSLVSlines;
-        for( uint8_t cLine=0; cLine<6; cLine++)
-        {
-            cSLVSlines.push_back("");
-        } 
+        cIndx=0;cIter += 4;
+        std::vector<uint8_t> cStubBuffer;
+        std::vector<uint32_t> cBxCounter; 
         do
         {
-            cBxId = (*cIter);
-            LOG (INFO) << BOLDBLUE << "Indx" << cIndx << " : Bx#" << +cBxId << RESET;
-            cIter++; cIndx++;
-            std::string cWrd="";
-            for( size_t cOffst=0; cOffst < 512/32-1 ; cOffst++)
+            std::stringstream cPacket512;
+            for( uint8_t cFrag=0; cFrag < 512/32; cFrag++)
             {
-                cWrd += std::bitset<32>(*cIter).to_string();
-                cIter++; cIndx++;
+                if( cIter >= cData.end() ) break;
+                cPacket512 << std::bitset<32>(*cIter);
+                cIter++;    
             }
-            std::string cPkt="";
-            for( size_t  cOffst=0; cOffst < cWrd.length()/6 ; cOffst++)
+            if( cIter < cData.end() && cPacket512.str().length() >= 80 ) 
             {
-                if( cOffst < 8 ){ 
-                    cPkt +=cWrd.substr( cOffst*6, 6 );
-                    std::pair<uint16_t, uint8_t> cDataWrd; 
-                    cDataWrd.first = cBxId;
-                    cDataWrd.second =  std::stoi( cWrd.substr( cOffst*6, 6 ) , 0,  2 );
-                    LOG (INFO) << BOLDYELLOW << "BxId" << cDataWrd.first << " : " << std::bitset<6>(cDataWrd.second) << RESET;
-                    cDataWrds.push_back( cDataWrd );
-                    for( size_t cLine=0;cLine < 6 ; cLine++)
-                    {
-                        cSLVSlines[cLine] += std::to_string( (cDataWrd.second & (0x1 << (5-cLine))) >> (5-cLine) );
-                    }
+                std::pair<uint32_t, const char*> cDataWrd;
+                cDataWrd.first = (uint32_t)std::stoi( cPacket512.str().substr(0,32), 0, 2) ; 
+                cDataWrd.second =  cPacket512.str().substr(32,6*8).c_str() ; // if 640 this needs to change 
+                LOG (DEBUG) << BOLDBLUE << "Pkt#" << cIndx << " " << cPacket512.str().substr(0,80) << "\t\t.. Bx " << cDataWrd.first << " " << cDataWrd.second << RESET;
+                for( size_t cClk=0; cClk < 8; cClk++)
+                {
+                    cStubBuffer.push_back( static_cast<uint8_t>( std::stoi( cPacket512.str().substr(32+6*cClk,6), 0, 2 ) ) );
+                    cBxCounter.push_back( static_cast<uint32_t>( std::stoi( cPacket512.str().substr(0,32), 0, 2 ) ) );
                 }
             }
-
-            cDataWord += cPkt; 
+            cIndx++;
         }while( cIter < cData.end() );
-        for( size_t cOffst = 0 ; cOffst < cSLVSlines[0].length()/8; cOffst++)
-        {
-            for( uint8_t cLine=0; cLine<6; cLine++)
-            {
-                std::string cCapture = cSLVSlines[cLine].substr(cOffst*8,8);
-                std::string cReversed =  cCapture; std::reverse( cReversed.begin(), cReversed.end() );
-                LOG (DEBUG) << BOLDYELLOW << "#" << +cOffst << ", SLVSLine" << +cLine << " : " << "\t\t" << cCapture << "  " <<  cReversed << RESET;
-            }
-        } 
-        auto   cDataIter = cDataWrds.begin(); 
-        size_t cNpktsWithStubs = 0; 
+
+        size_t cBxId=0;
+        std::vector<std::pair<uint32_t,std::string>> cBxCars; 
+        auto cStubBufferIter = cStubBuffer.begin();
+        std::string cStubPkt="";
+        size_t cPktLength=0; 
+        std::vector<uint16_t> cCounters(0);
+        size_t cStubCounter=0; 
+        bool cFirstStubCorrect=true;
         do
         {
-            if( ((*cDataIter).second&(0x1<<5))>>5 == 1 ) 
+            for( size_t cClk=0; cClk < 8; cClk++)
             {
-                std::string cBxCar=""; 
-                //if( cNpktsWithStubs == 0 ) LOG (INFO) << BOLDYELLOW << "BxId" << (*cDataIter).first << RESET;
-                for( size_t cOffst= 0 ; cOffst < 8*8 ; cOffst ++ ) 
+                LOG (DEBUG) << BOLDMAGENTA << "Bx" << +cBxId << " : " << std::bitset<6>( *cStubBufferIter & 0x3F ) << RESET; 
+                if( (( *cStubBufferIter & 0x3F ) >> 5 ) == 1 || cPktLength > 0 ) // configuration bit is 1 
                 {
-                    cBxCar += std::bitset<6>( (*cDataIter).second ).to_string() ;
-                    //if( cNpktsWithStubs == 0 ) LOG (INFO) << BOLDYELLOW << "\t\t" << std::bitset<6>( (*cDataIter).second ).to_string() << RESET;
-                    if( cDataIter >= cDataWrds.end() ) continue;
-                    cDataIter++;
+                    std::stringstream cStream; cStream << std::bitset<6>( *cStubBufferIter & 0x3F ); 
+                    cStubPkt += cStream.str(); 
+                    cPktLength +=6;
                 }
-                std::vector<uint8_t> cSizes{1,9,12,6}; // Cnfg, Status, BxId, Nstubs 
-                std::vector<std::pair<std::string,uint8_t>> cHdrFlds;
-                cHdrFlds.push_back( std::make_pair("Cnfg",1) );
-                cHdrFlds.push_back( std::make_pair("Status",9) );
-                cHdrFlds.push_back( std::make_pair("BxId",12) );
-                cHdrFlds.push_back( std::make_pair("Nstbs",6) );
-                size_t cShft=0; 
-                size_t cNstubs=0; 
-                for( auto cFld : cHdrFlds ) 
+                
+                if( cPktLength == 6*8*8 )
                 {
-                    auto cSubStr = cBxCar.substr(cShft,cFld.second);
-                    if( cFld.first == "BxId"  ) cBxId = std::stoi(cSubStr,0,2); 
-                    if( cNpktsWithStubs == 0 ) LOG (DEBUG) << BOLDYELLOW << "BxId" << (*cDataIter).first << "..." << cFld.first << " : " << cSubStr << " \t " << std::stoi(cSubStr,0,2) << RESET;
-                    else if( cNpktsWithStubs < 10 ) LOG (DEBUG) << BOLDGREEN << "BxId" << (*cDataIter).first << "..." << cFld.first << " : " << cSubStr << " \t " << std::stoi(cSubStr,0,2) << RESET;
-                    if( cFld.first == "Nstbs" ) cNstubs = std::stoi(cSubStr,0,2);
-                    cShft += cFld.second;
-                }
-                if( cNstubs > 0 )
-                {
-                    auto cStbPkts = cBxCar.substr(cShft, cNstubs*21);
-                    std::vector<uint8_t> cSizesStbFields{3,3,15};
-                    std::vector<std::string> cStbFields{"Offset","FeId","FeStub"};
-                    if( cNpktsWithStubs == 0 )
+                    std::pair<uint32_t,std::string> cBxCar; 
+                    cBxCar.first = *( cBxCounter.begin()  + std::distance( cStubBuffer.begin(), cStubBufferIter) ) ; 
+                    cBxCar.second = cStubPkt;
+                    std::vector<uint8_t> cSizes{1,9,12,6}; // Cnfg, Status, BxId, Nstubs 
+                    std::vector<std::pair<std::string,uint8_t>> cHdrFlds;
+                    cHdrFlds.push_back( std::make_pair("Cnfg",1) );
+                    cHdrFlds.push_back( std::make_pair("Status",9) );
+                    cHdrFlds.push_back( std::make_pair("BxId",12) );
+                    cHdrFlds.push_back( std::make_pair("Nstbs",6) );
+                    size_t cShft=0; 
+                    size_t cNstubs=0; 
+                    std::stringstream cStream;
+                    for( auto cFld : cHdrFlds ) 
                     {
-                        cStartPatternFound = ( std::stoi(cStbPkts.substr(6,15),0,2) == 0x7fff );
-                        if(cStartPatternFound)
-                        {
-                            LOG (INFO) << BOLDGREEN << "BxId" << (*cDataIter).first << " - BxCntr CIC " << cBxId << RESET;
-                            LOG (INFO) << BOLDGREEN << "\t.. Stub Packet " <<  cStbPkts << " -- 0x" << std::hex << std::stoi(cStbPkts.substr(6,15),0,2) << std::dec << RESET;
+                        auto cSubStr = cBxCar.second.substr(cShft,cFld.second);
+                        if( cFld.first == "BxId"  || cFld.first == "Nstbs"  ){ 
+                            if( cFld.first == "Nstbs" ) cNstubs = std::stoi(cSubStr,0,2); 
+                            cStream << BOLDYELLOW << "\t" << cFld.first << "=" << std::stoi(cSubStr,0,2) << "\t";
                         }
-                        else
-                        {
-                            LOG (INFO) << BOLDRED << "BxId" << (*cDataIter).first << " - BxCntr CIC " << cBxId << RESET;
-                            LOG (INFO) << BOLDRED << "\t.. Stub Packet " <<  cStbPkts << " -- 0x" << std::hex << std::stoi(cStbPkts.substr(6,15),0,2) << std::dec << RESET;
-                        }
-                        if( !cStartPatternFound ) cDataIter = cDataWrds.end(); 
+                        else cStream << BOLDYELLOW << "\t" << cFld.first << "=" << cSubStr << "\t";
+                        cShft += cFld.second;
                     }
-                    else if( cNpktsWithStubs < 10 )
+                    if( cNstubs > 0 && cStubCounter == 0 ) LOG (INFO) << BOLDBLUE << "Bx" << +cBxId << " - " << cBxCar.first << cStream.str() << "\t" << cBxCar.second.substr(0,cShft) << ":" << cBxCar.second.substr(cShft, 8*21) << RESET;
+                    std::vector<uint32_t> cStubs(0);
+                    for( size_t cStubId=0; cStubId < cNstubs; cStubId++)
                     {
-                        LOG (DEBUG) << BOLDBLUE << "BxId" << (*cDataIter).first << " - BxCntr CIC " << cBxId << RESET;
-                        LOG (DEBUG) << BOLDBLUE << "\t.. Stub Packet " <<  cStbPkts << RESET;
-                    }
-                    for( size_t cStbIndx =  0 ; cStbIndx < cNstubs; cStbIndx++)
-                    {
-                        cShft=cStbIndx*21;  
-                        size_t cIndx=0; 
-                        if( cNpktsWithStubs == 0 ) LOG (DEBUG) << BOLDGREEN << "\t\t.. Stub#" << +cStbIndx << RESET;
-                        else if( cNpktsWithStubs < 10 ) LOG (DEBUG) << BOLDBLUE << "\t\t.. Stub#" << +cStbIndx << RESET;
-                        for( auto cSize : cSizesStbFields ) 
+                        std::vector<std::pair<std::string,uint8_t>> cStubFlds;
+                        cStubFlds.push_back( std::make_pair("Offset",3) );
+                        cStubFlds.push_back( std::make_pair("FeId",3) );
+                        cStubFlds.push_back( std::make_pair("Stub",15) );
+                        std::stringstream cStubOutput; 
+                        for( auto cFld : cStubFlds ) 
                         {
-                            auto cSubStr = cStbPkts.substr(cShft,cSize);
-                            if( cStbFields[cIndx] ==  "FeStub" ) 
+                            auto cSubStr = cBxCar.second.substr(cShft,cFld.second);
+                            if( cFld.first != "Stub" )
                             {
-                                cSubStr = cSubStr.substr(8,6) + cSubStr.substr(0,7); 
+                                cStubOutput << BOLDBLUE << "\t" << cFld.first << "\t" << cSubStr << RESET;
                             }
-                            if( cNpktsWithStubs == 0 )  LOG (DEBUG) << BOLDGREEN << "\t\t\t.. " << cStbFields[cIndx] << " : " <<  cSubStr << RESET; 
-                            else if( cNpktsWithStubs < 10 ) LOG (DEBUG) << BOLDBLUE << cSubStr << "\t\t\t.. " << cStbFields[cIndx] << " : " <<  cSubStr << RESET;
-                            cShft += cSize;
-                            cIndx++;
+                            else
+                            {
+                                if( cStubCounter == 0 ) // check if first stub is correct 
+                                {
+                                    cFirstStubCorrect = ( cSubStr == "111111111111111"); // first stub needs to be all 1's
+                                }
+                                uint16_t cCounterValue = std::stoi( cSubStr.substr(8,6) + cSubStr.substr(0,7), 0 ,2 ) - 1 ; 
+                                cStubOutput << BOLDBLUE << "\t" << cFld.first << "\t" << cSubStr << " [ " << +cCounterValue << " ] " << RESET;
+                                cCounters.push_back( cCounterValue );
+                            }
+                            cShft += cFld.second;
                         }
+                        if( cStubCounter < 8 ) LOG (INFO) << BOLDBLUE << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
+                        cStubCounter++;
                     }
-                    cNpktsWithStubs++;
+                    cPktLength=0; 
+                    cStubPkt="";
+                    cBxCars.push_back(cBxCar);
                 }
-            }//PS configuration bit is 1 
-            else cDataIter++;
-        }while(  cDataIter < cDataWrds.end() );
+                cStubBufferIter++;
+            }
+            cBxId++;
+        }while( cStubBufferIter < cStubBuffer.end() && cFirstStubCorrect && cCounters.size() < 16320);
+        if( cFirstStubCorrect ) 
+            LOG (INFO) << BOLDGREEN << "Found " << cCounters.size() << " counters." << RESET;
+        return cFirstStubCorrect;
     }
-    // disable DDR3 dump of counters
-    this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
-    this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
-    return cStartPatternFound && !cFailed;
 }
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
@@ -3502,66 +3453,51 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         // configure raw mode 
         this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
     
-        // this stops triggers  + resets
-        this->ResetTriggerFSM();
-        auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        LOG (INFO) << BOLDBLUE << "Trigger state before start is " << +cTriggerState << RESET;
-        this->Start();
-        uint32_t cIteration = 0; 
-        do {
-            cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-            LOG (INFO) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
-                << +cIteration
-                << RESET;
+        //this stops triggers  + resets
+        bool cCounterReadoutFailed=true;
+        do
+        {
+            this->ResetTriggerFSM();
+            auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-            cIteration++;
-        } while(cTriggerState && cIteration < 1000);
-        LOG (INFO) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << RESET;
-        
-        // // readiyt counters 
-        // this->PS_Start_counters_read();
-        bool cCounterReadoutSuccess = GetCounterData(1);
-        return cCounterReadoutSuccess;
-        // ChipReSync();
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    
-        // fFastCommandDuration = 0;
-        // //this->ReconfigureTriggerFSM(cVecReg);
-        // // clear counters + reset counter decoder block
-        // bool cCounterReadoutSuccess=false;
-        // do
-        // {
-        //     this->PS_Clear_counters(fFastCommandDuration);
-        //     this->PS_Open_shutter(fFastCommandDuration);
-        //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        //     for( size_t cAttempt=0; cAttempt<cNevents; cAttempt++)
-        //     {
-        //         this->ChipTestPulse();
-        //         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        //     }
-        //     // behaving strangely ..
-        //     // //start triggers
-        //     // this->Start();
-        //     // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        //     // uint32_t cIteration = 0;
-        //     // do {
-        //     //     // LOG (INFO) << "D19cFWInterface::WaitForData TriggerSource 10 Trigger State: " << BOLDGREEN << "Running.. .Iteration#"
-        //     //     //     << +cIteration
-        //     //     //     << RESET;
-        //     //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        //     //     cIteration++;
-        //     // } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIteration < 10);
-        //     // cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIteration == 10);
-        //     // this->Stop();
-        //     // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        //     // cVecReg.clear();
-        //     cCounterReadoutSuccess = GetCounterData(1);
-        //     this->PS_Close_shutter(fFastCommandDuration);
-        // }while(!cCounterReadoutSuccess); 
-        // // reconfigure original veto
+            LOG (INFO) << BOLDBLUE << "Trigger state before start is " << +cTriggerState << RESET;
+            
+            this->Start();
+            uint32_t cIteration = 0; 
+            do {
+                cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+                LOG (INFO) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
+                    << +cIteration
+                    << RESET;
+                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                cIteration++;
+            } while(cTriggerState && cIteration < 1000);
+            LOG (INFO) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << RESET;
 
+            // this->PS_Clear_counters(fFastCommandDuration);
+            // this->PS_Open_shutter(fFastCommandDuration);
+            // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            // for( size_t cAttempt=0; cAttempt<cNevents; cAttempt++)
+            // {
+            //     this->ChipTestPulse();
+            //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            // }
+            // this->PS_Close_shutter(fFastCommandDuration);
+            // this->PS_Start_counters_read(); // start signal for readout block 
+            // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
+            cCounterReadoutFailed=(!GetCounterData(1));
+            if( !cCounterReadoutFailed ) LOG (INFO) << BOLDGREEN << "Successful readout of PS counter data" << RESET;
+            else LOG (INFO) << BOLDRED << "Failed to readout PS counter data" << RESET;
+        }while( cCounterReadoutFailed );
+
+        // reconfigure original veto
         this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cVetoCIC);
+        // disable DDR3 dump of counters
+        this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
+        this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
+        cFailed = cCounterReadoutFailed;
+        
     }
     return cFailed;
 }
