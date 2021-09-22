@@ -17,6 +17,7 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
+#include "tools/LinkTestOT.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -152,6 +153,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
     cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkL1Timing", "Check L1 timing for hybrid# [please provide hybrid number]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("linkTest", "Check data quality on L1/stub data", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -578,6 +580,12 @@ int main(int argc, char* argv[])
         }
     }
     
+    if( cmd.foundOption("linkTest") ) 
+    {
+        LinkTestOT cLinkTest;
+        cLinkTest.Inherit(&cTool);
+        cLinkTest.TestL1ALines();
+    }
 
     // equalize thresholds on readout chips
     if(cTune)

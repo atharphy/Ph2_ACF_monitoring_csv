@@ -1546,7 +1546,7 @@ std::string D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint )
     // disable back-pressure
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     this->Start();
-    std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
+    //std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
     this->Stop();
 
     LOG (DEBUG) << BOLDMAGENTA << "First header found after " << this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
@@ -1763,6 +1763,9 @@ bool D19cFWInterface::L1PhaseTuning(const BeBoard* pBoard, bool pScope)
 }
 bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pScope)
 {
+    fBeL1Delays.clear();
+    fBeL1Bitslips.clear();
+
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     PhaseTuner    pTuner;
     bool          cSuccess = true;
@@ -1787,8 +1790,7 @@ bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
         cVecReg.push_back({cRegName, cFcmdRegOrigVals[cIndx]});
     }
-    //if(pScope) this->L1ADebug();
-
+    
     // back-end tuning on l1 lines
     for(auto cHybrid: *pOpticalGroup)
     {
@@ -1821,44 +1823,50 @@ bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
             // if the above doesn't work.. try and find the correct bitslip manually in software
             if(!cSuccess)
             {
-                LOG(INFO) << BOLDBLUE << "Going to try and align manually in software... delay is " << +pTuner.fDelay << RESET;
-                for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
+                LOG(INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET;
+                const uint8_t cMaxIters=10; 
+                uint8_t cIterCount=0; 
+                do
                 {
-                    LOG(INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
-                    //pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, 0, cBitslip, 0, 0);
-                    pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, pTuner.fDelay, cBitslip, 0, 0);
-                    this->Start();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    this->Stop();
+                    LOG(INFO) << BOLDBLUE << "\t\t Alignment attempt#" << +cIterCount << RESET;
+                    for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
+                    {
+                        LOG(INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
+                        pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 2, pTuner.fDelay, cBitslip, 0, 0);
+                        this->Start();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        this->Stop();
 
-                    auto        cWords   = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-                    std::string cBuffer  = "";
-                    bool        cAligned = false;
-                    std::string cOutput  = "\n";
-                    for(auto cWord: cWords)
-                    {
-                        auto                     cString = std::bitset<32>(cWord).to_string();
-                        std::vector<std::string> cOutputWords(0);
-                        for(size_t cIndex = 0; cIndex < 4; cIndex++)
+                        auto        cWords   = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                        std::string cBuffer  = "";
+                        bool        cAligned = false;
+                        std::string cOutput  = "\n";
+                        for(auto cWord: cWords)
                         {
-                            auto c8bitWord = cString.substr(cIndex * 8, 8);
-                            cOutputWords.push_back(c8bitWord);
-                            cAligned = (cAligned | (std::stoi(c8bitWord, nullptr, 2) == cPattern));
+                            auto                     cString = std::bitset<32>(cWord).to_string();
+                            std::vector<std::string> cOutputWords(0);
+                            for(size_t cIndex = 0; cIndex < 4; cIndex++)
+                            {
+                                auto c8bitWord = cString.substr(cIndex * 8, 8);
+                                cOutputWords.push_back(c8bitWord);
+                                cAligned = (cAligned | (std::stoi(c8bitWord, nullptr, 2) == cPattern));
+                            }
+                            for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--) { cOutput += *cIt + " "; }
+                            cOutput += "\n";
                         }
-                        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--) { cOutput += *cIt + " "; }
-                        cOutput += "\n";
-                    }
-                    if(cAligned)
-                    {
-                        LOG(INFO) << BOLDGREEN << cOutput << RESET;
+                        if(cAligned)
+                        {
+                            LOG(INFO) << BOLDGREEN << cOutput << RESET;
+                            this->ResetReadout();
+                            pTuner.fBitslip = cBitslip;
+                            cSuccess = (cBitslip!=0);
+                            break;
+                        }
+                        else
+                            LOG(INFO) << BOLDRED << cOutput << RESET;
                         this->ResetReadout();
-                        cSuccess = true;
-                        break;
                     }
-                    else
-                        LOG(INFO) << BOLDRED << cOutput << RESET;
-                    this->ResetReadout();
-                }
+                }while( cIterCount < cMaxIters && !cSuccess );
             }
         }
         else if(fFirmwareFrontEndType == FrontEndType::CBC3)
@@ -1871,6 +1879,9 @@ bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         {
             LOG(INFO) << BOLDBLUE << "Word alignment in the back-end not implemented for this firmware type.." << RESET;
         }
+        fBeL1Delays.push_back( pTuner.fDelay );
+        fBeL1Bitslips.push_back( pTuner.fBitslip );
+                        
         if(pScope) this->L1ADebug();
     }
 
@@ -1939,27 +1950,11 @@ bool D19cFWInterface::StubTuning(const OpticalGroup* pOpticalGroup, bool pScope,
                     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
                     pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
                     cSuccessThisLine = pTuner.fDone && pTuner.fBitslip != 0;
-                    if(pTuner.fBitslip == 0) LOG(DEBUG) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                    if(pTuner.fBitslip == 0){ 
+                        LOG(DEBUG) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
+                    }
                     cAttempts++;
                 } while(!cSuccessThisLine && cAttempts < 10);
-                // uint8_t cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                // if(pTuner.fBitslip == 0)
-                // {
-                //     uint32_t cAttempts = 0;
-                //     do
-                //     {
-                //         if(cAttempts > 10)
-                //         {
-                //             LOG(INFO) << BOLDRED << "Back-end alignment FAILED. Stopping... " << RESET;
-                //         }
-                //         // try again
-                //         //LOG(INFO) << BOLDBLUE << "Trying to reset alignment .... don't like bit slip of 0!" << RESET;
-                //         pTuner.TuneLine(this, cHybrid->getId(), 0, cLineId, 0xEA, 8, true);
-                //         //cLineStatus = pTuner.GetLineStatus(this, cHybrid->getId(), 0, cLineId);
-                //         //LOG(DEBUG) << BOLDBLUE << "Line status is " << +cLineStatus << RESET;
-                //         cAttempts++;
-                //     } while(pTuner.fBitslip == 0 && cAttempts < 10);
-                // }
                 cSuccess = cSuccess && cSuccessThisLine;
             }
             // if(pTuner.fDone != 1)
@@ -1975,10 +1970,10 @@ bool D19cFWInterface::StubTuning(const OpticalGroup* pOpticalGroup, bool pScope,
 }
 bool D19cFWInterface::StubTuning(const BeBoard* pBoard, bool pScope, uint8_t pNlines)
 {
-    PhaseTuner pTuner;
-    bool       cSuccess = true;
+   bool       cSuccess = true;
     for(auto cOpticalGroup: *pBoard)
     {
+        LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::StubTuning OG#" << +cOpticalGroup->getId() << RESET;
         cSuccess = cSuccess && StubTuning(cOpticalGroup, pScope, pNlines);
     }
     return cSuccess;

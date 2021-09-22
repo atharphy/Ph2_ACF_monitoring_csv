@@ -13,19 +13,12 @@
 #ifndef BackEndAlignment_h__
 #define BackEndAlignment_h__
 
-#include "Tool.h"
-
-#include <map>
-
-namespace Ph2_HwInterface
-{
-class BackendAlignmentInterface;
-}
+#include "LinkAlignmentOT.h"
 
 // add breakcodes here
 const uint8_t FAILED_BACKEND_ALIGNMENT = 5;
 
-class BackEndAlignment : public Tool
+class BackEndAlignment : public LinkAlignmentOT
 {
   public:
     BackEndAlignment();

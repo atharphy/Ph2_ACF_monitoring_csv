@@ -87,11 +87,35 @@ void LinkAlignmentOT::Initialise()
     
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
+    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeSamplingDelay);
+    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlip);
     for(auto cBoard: *fDetectorContainer)
     {
         auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
+
+        auto& cBeSamplingDelay = fBeSamplingDelay.at(cBoard->getIndex());
+        auto& cBeBitSlip  = fBeBitSlip.at(cBoard->getIndex());
+
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cBeSamplingDelayOG = cBeSamplingDelay->at(cOpticalGroup->getIndex());
+            auto& cBeBitSlipOG  = cBeBitSlip->at(cOpticalGroup->getIndex());
+            size_t cNlines = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cBeSamplingDelayHybrd = cBeSamplingDelayOG->at(cHybrid->getIndex());
+                auto& cBeBitSlipHybrd = cBeBitSlipOG->at(cHybrid->getIndex());
+                auto& cThisBeSamplingDelay        = cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>();
+                auto& cThisBeBitSlip              = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
+                for( size_t cLineId=0; cLineId < cNlines; cLineId++)
+                {
+                    cThisBeSamplingDelay.push_back(0);
+                    cThisBeBitSlip.push_back(0);
+                }
+            }
+        }
     }
 
     // clear map of modified registers
@@ -134,6 +158,8 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
     
     LOG(INFO) << BOLDMAGENTA << "Aligning CIC-lpGBT data on OpticalGroup#" << +pOpticalGroup->getId() << RESET;
     auto& clpGBT = pOpticalGroup->flpGBT;
+    if( clpGBT == nullptr ) return true;
+    
     // configure CICs to output alignment pattern on stub lines
     std::vector<uint8_t> cFeEnableRegs(0);
     for(auto cHybrid: *pOpticalGroup)
@@ -191,6 +217,19 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
 }
 
 // Word align L1 + stub data in the backend 
+bool LinkAlignmentOT::WordAlignBEdata(const BeBoard* pBoard)
+{
+    bool cAligned=true;
+    for( auto cBoard: *fDetectorContainer )
+    {
+        for( auto cOpticalGroup : *cBoard )
+        {
+            cAligned = WordAlignBEdata(cOpticalGroup);
+            if( !cAligned ) return cAligned;
+        }
+    }
+    return cAligned;
+}
 bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
 {
     bool cAligned=false;
@@ -198,7 +237,10 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        
+    
+    auto& cBeBitSlip  = fBeBitSlip.at((*cBoardIter)->getIndex());
+    auto& cBeBitSlipOG = cBeBitSlip->at(pOpticalGroup->getIndex());
+    
     // configure CICs to output alignment pattern on L1 lines
     std::vector<uint8_t> cFeEnableRegs(0);
     for(auto cHybrid: *pOpticalGroup)
@@ -216,13 +258,116 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     // align stub lines in the BE 
     size_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
     LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::WordAlignBEdata ... word alignment on " << +cNlines << "/6 lines stub from CIC.." << RESET;
-    cAligned = cInterface->StubTuning(pOpticalGroup, fStubDebug, cNlines);
-    if( !cAligned ) return cAligned; 
+    D19cFWInterface::PhaseTuner cTuner;
+    for( size_t cLineId =1 ; cLineId <= cNlines; cLineId++)
+    {
+        for(auto cHybrid: *pOpticalGroup)
+        {
+            auto& cBeBitSlipHybrd = cBeBitSlipOG->at(cHybrid->getIndex());
+            auto& cThisBeBitSlip        = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
+            
+            LOG (INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
+            cTuner.AlignWord(cInterface, cHybrid->getId(),0, cLineId, 0xEA, 8, true);
+            cTuner.GetLineStatus(cInterface, cHybrid->getId(), 0, cLineId);
+            cAligned = ( cTuner.fWordAlignmentFSMstate == 14 ); 
+            cThisBeBitSlip[cLineId] = cTuner.fBitslip;
+            if(!cAligned) return false; 
+        }
+    }
+    if(fStubDebug) cInterface->StubDebug( true, cNlines );
 
+    // align L1 data in the BE 
     LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
     cAligned = cInterface->L1WordAlignment(pOpticalGroup, fL1Debug);
+    auto cL1Bitslips = cInterface->getL1Bitslips();
+    size_t cIndx=0;
+    // configure CICs to NOT output alignment pattern on stub lines
+    // and also re-confiure enabled FEs 
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        
+        auto& cBeBitSlipHybrd = cBeBitSlipOG->at(cHybrid->getIndex());
+        auto& cThisBeBitSlip        = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
+        
+        cThisBeBitSlip[0] = cL1Bitslips[cIndx];
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, false);
+        fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+        cIndx++;
+    }
+    // size_t cIndx=0;
+    // for(auto cHybrid: *pOpticalGroup)
+    // {
+    //     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //     // disable alignment output
+    //     fCicInterface->SelectOutput(cCic, false);
+    //     fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+    //     cIndx++;
+    // }
+    return cAligned;
+}
+// Phase align L1 + stub data in the backend 
+bool LinkAlignmentOT::PhaseAlignBEdata(const BeBoard* pBoard)
+{
+    bool cAligned=true;
+    for( auto cBoard: *fDetectorContainer )
+    {
+        for( auto cOpticalGroup : *cBoard )
+        {
+            cAligned = PhaseAlignBEdata(cOpticalGroup);
+            if( !cAligned ) return cAligned;
+        }
+    }
+    return cAligned;
+}
+bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
+{
+    bool cAligned=true;
+    auto cBoardId   = pOpticalGroup->getBeBoardId();
+    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    
+    auto& cBeSamplingDelay = fBeSamplingDelay.at((*cBoardIter)->getIndex());
+    auto& cBeSamplingDelayOG = cBeSamplingDelay->at(pOpticalGroup->getIndex());
+            
+    // configure CICs to output alignment pattern on L1 lines
+    std::vector<uint8_t> cFeEnableRegs(0);
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, true);
+        cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+    }
+    // stop triggers to make sure that there are no L1 packets from the CIC
+    fBeBoardInterface->Stop((*cBoardIter));
+    
+    // align stub lines in the BE 
+    size_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
+    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::WordAlignBEdata ... word alignment on " << +cNlines << "/6 lines stub from CIC.." << RESET;
+    D19cFWInterface::PhaseTuner cTuner;
+    for( size_t cLineId =0 ; cLineId <= cNlines; cLineId++)
+    {
+        for(auto cHybrid: *pOpticalGroup)
+        {
+            auto& cBeSamplingDelayHybrd = cBeSamplingDelayOG->at(cHybrid->getIndex());
+            auto& cThisBeSamplingDelay        = cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>();
+            
+            if( cLineId > 0 ) LOG (INFO) << BOLDMAGENTA << "Setting sampling delay on Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
+            else LOG (INFO) << BOLDMAGENTA << "Setting sampling delay on L1A line on Hybrid#" << +cHybrid->getId() << RESET;
+            cTuner.TunePhase(cInterface, cHybrid->getId(), 0, cLineId);
+            cTuner.GetLineStatus(cInterface, cHybrid->getId(), 0, cLineId);
+            cThisBeSamplingDelay[cLineId] = cTuner.fDelay;
+            cAligned = cTuner.fPhaseAlignmentFSMstate == 14 ;
+            if( !cAligned ) return cAligned; 
+        }
+    }
 
     // configure CICs to NOT output alignment pattern on stub lines
+    // and re-configure FE enable register 
     size_t cIndx=0;
     for(auto cHybrid: *pOpticalGroup)
     {

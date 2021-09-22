@@ -137,6 +137,9 @@ class D19cFWInterface : public BeBoardFWInterface
     int  fResetAttempts;
     void Align_out();
 
+    // L1 word alignment values 
+    std::vector<uint8_t> fBeL1Delays;
+    std::vector<uint8_t> fBeL1Bitslips;
   public:
     /*!
      *
@@ -447,6 +450,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void syncCDCE();
     void epromCDCE();
 
+    
     // phase tuning commands - d19c
     struct PhaseTuner
     {
@@ -834,6 +838,10 @@ class D19cFWInterface : public BeBoardFWInterface
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
+
+    // get alignment values for L1 lines 
+    std::vector<uint8_t> getL1Delays(){ return fBeL1Delays; }
+    std::vector<uint8_t> getL1Bitslips(){ return fBeL1Bitslips; }
     
 };
 } // namespace Ph2_HwInterface

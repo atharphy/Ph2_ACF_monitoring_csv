@@ -513,8 +513,8 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 }
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    // hard reset chips on hybrid 
-    bool cWithLpGBT=false; 
+    // hard reset ROCs on hybrid if lpGBT is there; if no lpGBT this
+    // is already taken care of by ConfigureBoard
     for(auto cOpticalGroup: *pBoard)
     {
         auto& clpGBT = cOpticalGroup->flpGBT;
@@ -525,7 +525,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             uint8_t cSide       = cHybrid->getId() % 2;
             LOG (DEBUG) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
 
-            cWithLpGBT=true;
+            // cWithLpGBT=true;
             // no SSA because I don't want to reset it here. . already done earlier
             if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS )
             {
@@ -543,7 +543,6 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             }
         }//hybrid
     }//OG
-    if( !cWithLpGBT) fBeBoardInterface->ChipReset(pBoard);
 
     // configure chips 
     for(auto cOpticalGroup: *pBoard)
@@ -791,7 +790,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
         if(cBoard->getBoardType() == BoardType::D19C)
         {
-            InitializeOT(cBoard );
+            InitializeOT( cBoard );
             ConfigureOT( cBoard );
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
