@@ -1866,6 +1866,7 @@ bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
                             LOG(INFO) << BOLDRED << cOutput << RESET;
                         this->ResetReadout();
                     }
+                    cIterCount++;
                 }while( cIterCount < cMaxIters && !cSuccess );
             }
         }
@@ -2590,7 +2591,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     {
         if(cWithMPA or cWithSSA)
         {
-            this->ReadPSCounters(pBoard, pData, true);
+            this->ReadPSCounters(pBoard, pData, false);
         }
         else
         {
@@ -3077,7 +3078,7 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
     } while(cDecoderState != 0 );// idle state is 0 
     LOG (INFO) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(1500));
-    size_t cNbits = 800e3*8*6 ;
+    size_t cNbits = 300e3*8*6;//800e3*8*6 ;
     size_t cNWords = cNbits/32; // number of 32-bit words to read from DDR3
     auto cData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, 0);
     std::string cDataWord = ""; 
@@ -3121,7 +3122,7 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
                 std::pair<uint32_t, const char*> cDataWrd;
                 cDataWrd.first = (uint32_t)std::stoi( cPacket512.str().substr(0,32), 0, 2) ; 
                 cDataWrd.second =  cPacket512.str().substr(32,6*8).c_str() ; // if 640 this needs to change 
-                LOG (DEBUG) << BOLDBLUE << "Pkt#" << cIndx << " " << cPacket512.str().substr(0,80) << "\t\t.. Bx " << cDataWrd.first << " " << cDataWrd.second << RESET;
+                //LOG (IN) << BOLDBLUE << "Pkt#" << cIndx << " " << cPacket512.str().substr(0,80) << "\t\t.. Bx " << cDataWrd.first << " " << cDataWrd.second << RESET;
                 for( size_t cClk=0; cClk < 8; cClk++)
                 {
                     cStubBuffer.push_back( static_cast<uint8_t>( std::stoi( cPacket512.str().substr(32+6*cClk,6), 0, 2 ) ) );
@@ -3175,7 +3176,8 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
                         else cStream << BOLDYELLOW << "\t" << cFld.first << "=" << cSubStr << "\t";
                         cShft += cFld.second;
                     }
-                    if( cNstubs > 0 && cStubCounter == 0 ) LOG (INFO) << BOLDBLUE << "Bx" << +cBxId << " - " << cBxCar.first << cStream.str() << "\t" << cBxCar.second.substr(0,cShft) << ":" << cBxCar.second.substr(cShft, 8*21) << RESET;
+                    //if( cNstubs > 0 && cStubCounter == 0 ) 
+                    LOG (INFO) << BOLDBLUE << "Bx" << +cBxId << " - " << cBxCar.first << cStream.str() << "\t" << cBxCar.second.substr(0,cShft) << ":" << cBxCar.second.substr(cShft, 8*21) << RESET;
                     std::vector<uint32_t> cStubs(0);
                     for( size_t cStubId=0; cStubId < cNstubs; cStubId++)
                     {
@@ -3203,7 +3205,7 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode)
                             }
                             cShft += cFld.second;
                         }
-                        if( cStubCounter < 8 ) LOG (INFO) << BOLDBLUE << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
+                        LOG (INFO) << BOLDBLUE << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
                         cStubCounter++;
                     }
                     cPktLength=0; 
@@ -3430,13 +3432,16 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     else
     {
         // make sure uDTC vetos fast commands to CIC in this mode 
-        uint8_t cTriggerForPS=12;
         auto cVetoCIC = this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
-        this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.select_even",0x1);
+        this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.select_even",0x0);
         this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
+        
+        uint8_t cTriggerForPS=10;
         LOG (INFO) << BOLDMAGENTA << "CIC fast command VETO set to " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto") << RESET;
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents});
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerForPS});
+        cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        //this->WriteStackReg(cVecReg);
         this->ReconfigureTriggerFSM(cVecReg);
         cVecReg.clear();
         LOG(INFO) << BOLDBLUE << "Async SSA [trigger source == " << +cTriggerForPS << " ] [ number of injections is " << +cNevents << " ]" << RESET;
@@ -3449,9 +3454,9 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
     
         //this stops triggers  + resets
-        bool cCounterReadoutFailed=true;
-        do
-        {
+        // bool cCounterReadoutFailed=true;
+        // do
+        // {
             this->ResetTriggerFSM();
             auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
@@ -3478,21 +3483,21 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             // }
             // this->PS_Close_shutter(fFastCommandDuration);
-            // this->PS_Start_counters_read(); // start signal for readout block 
-            // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            // this->PS_Start_counters_read(fFastCommandDuration); // start signal for readout block 
+            // //std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            //GetCounterData(1);
 
-            cCounterReadoutFailed=(!GetCounterData(1));
-            if( !cCounterReadoutFailed ) LOG (INFO) << BOLDGREEN << "Successful readout of PS counter data" << RESET;
-            else LOG (INFO) << BOLDRED << "Failed to readout PS counter data" << RESET;
-        }while( cCounterReadoutFailed );
+        //     cCounterReadoutFailed=(!GetCounterData(1));
+        //     if( !cCounterReadoutFailed ) LOG (INFO) << BOLDGREEN << "Successful readout of PS counter data" << RESET;
+        //     else LOG (INFO) << BOLDRED << "Failed to readout PS counter data" << RESET;
+        // }while( cCounterReadoutFailed );
 
         // reconfigure original veto
         this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cVetoCIC);
         // disable DDR3 dump of counters
         this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
         this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
-        cFailed = cCounterReadoutFailed;
-        
+        //cFailed = cCounterReadoutFailed;
     }
     return cFailed;
 }

@@ -507,30 +507,16 @@ int main(int argc, char* argv[])
         for(auto cBoard: *cTool.fDetectorContainer)
         {
             if(cForcePSasync) cBoard->setEventType(EventType::PSAS);
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    //auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    // cTool.fCicInterface->SelectOutput(cCic, true);
-                    // cTool.fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-                    //set all SSAs + MPAs to output data in async mode
-                    for(auto cROC: *cHybrid)
-                    {
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "ENFLAGS_ALL", 0x0);
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "Threshold", 0x00);
-                        cTool.fReadoutChipInterface->WriteChipReg(cROC, "InjectedCharge", 0x00);
-                    }
-                }
-            }
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", 0xFF);
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", 0xFF);
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
         }
 
         // TP set + readout 
         for(auto cBoard: *cTool.fDetectorContainer)
         {
             cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-            cTool.enableTestPulse(true);
+            //cTool.enableTestPulse(true);
             cTool.setFWTestPulse();
             cTool.ReadNEvents(cBoard, 254);
             //const std::vector<Event*>& cPh2Events   = cTool.GetEvents();

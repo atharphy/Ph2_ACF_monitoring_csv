@@ -198,7 +198,7 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uin
     uint32_t cColumn     = (pPixelNum == 0) ? 0 : 1 + cPixNum % NSSACHANNELS;
     uint8_t  cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress    = this->regPixel(pChip, cRegAddress, cRow, cColumn);
-    LOG(DEBUG) << BOLDBLUE
+    LOG(INFO) << BOLDBLUE
                << "Configuring "
                   ""
                << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column "
@@ -519,62 +519,33 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     else if(pRegName == "AnalogueAsync")
     {
         // readout mode 1 -- ASYNC counter
-        bool    cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x01);
-        uint8_t cPixelMask   = 1;
-        uint8_t cPolarity    = 1;
-        uint8_t cEnEdgeBR    = 0;
-        uint8_t cEnLvlBr     = 0;
-        uint8_t cEnCount     = pValue;
-        uint8_t cDigCal      = 0;
-        uint8_t cAnaCal      = pValue;
-        uint8_t cBrClk       = 0;
-        uint8_t cRegValue    = (cEnEdgeBR << 2) | (cPolarity << 1) | cPixelMask;
-        cRegValue            = cRegValue | ((cDigCal << 5) | (cEnCount << 4) | (cEnLvlBr << 3));
-        cRegValue            = cRegValue | ((cBrClk << 7) | (cAnaCal << 6));
+        ChipRegMask cMask; 
+        cMask.fBitShift = PIXEL_ENABLE_TABLE.find("AnalogueInjection")->second; 
+        cMask.fNbits = 1; 
+        pMPA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
         if(pValue == 1)
-            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         else
-            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, cRegValue, pVerifLoop);
-        // mask pixel 1
-        {
-            this->maskPixel(pMPA, 1, 1, pVerifLoop);
-        }
+            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerifLoop);
+        // enabling async readout for stubs 
+        bool    cReadoutMode=true;
         if(pValue == 1)
+        {   
+            configPeri(pMPA, "ReadoutMode", 0x01);
             LOG(INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
+        }
         else
+        {
+            configPeri(pMPA, "ReadoutMode", 0x00);
             LOG(INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
+        }
         return cEnableAnalogue && cReadoutMode;
     }
     else if(pRegName == "AnalogueSync")
     {
-        // readout mode 1 -- ASYNC counter
-        bool    cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
-        uint8_t cPixelMask   = 1;
-        uint8_t cPolarity    = 1;
-        uint8_t cEnEdgeBR    = 1;
-        uint8_t cEnLvlBr     = 1;
-        uint8_t cEnCount     = pValue;
-        uint8_t cDigCal      = 0;
-        uint8_t cAnaCal      = pValue;
-        uint8_t cBrClk       = 0;
-        uint8_t cRegValue    = (cEnEdgeBR << 2) | (cPolarity << 1) | cPixelMask;
-        cRegValue            = cRegValue | ((cDigCal << 5) | (cEnCount << 4) | (cEnLvlBr << 3));
-        cRegValue            = cRegValue | ((cBrClk << 7) | (cAnaCal << 6));
-        if(pValue == 1)
-            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        else
-            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, cRegValue, pVerifLoop);
-        // mask pixel 1
-        {
-            this->maskPixel(pMPA, 1, 1, pVerifLoop);
-        }
-        if(pValue == 1)
-            LOG(INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
-        else
-            LOG(INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
-        return cEnableAnalogue && cReadoutMode;
+        bool cConfigAna = this->WriteChipReg(pMPA,"AnalogueAsync",1); 
+        return cConfigAna && configPeri(pMPA, "ReadoutMode", 0x00); 
     }
     else if(pRegName == "Threshold" or pRegName == "Bias_THDAC")
     {
@@ -823,7 +794,6 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
 
 bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop)
 {
-    // LOG (INFO) << BOLDMAGENTA << "MPAInterface::WriteReg writing 0x" << std::hex << pRegisterAddress << std::dec << RESET;
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem;
@@ -831,6 +801,9 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     if( fTrackRegisters ) UpdateModifiedRegMap(pChip,  pRegisterAddress); 
     bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
     if(cFound) cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
+    else cRegItem.fValue=0x66;
+
+    LOG (DEBUG) << BOLDBLUE << "MPAInterface::WriteReg writing register with address 0x" << std::hex << pRegisterAddress << std::dec << " register value in map 0x" << std::hex << +cRegItem.fValue << std::dec << RESET;
     cRegItem.fValue = pRegisterValue & 0xFF;
     // write
     if(!lpGBTFound())
@@ -843,25 +816,29 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
         fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId() % 8, cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+        if(cSuccess ) // check is done in lpGBTInterface for opto
+        {
+            bool     cVerify = pVerifLoop && (cRegItem.fStatusReg == 0); 
+            uint16_t cValue  = pRegisterValue; // if not verifying .. set this to what I have written to  
+            if(cVerify) cValue = ReadReg(pChip, pRegisterAddress);
+            cSuccess = (cVerify) ? (cValue == pRegisterValue) : true;
+        }
     }
     else
     {
         bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
         cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cVerify);
     }
-    if(cSuccess && !lpGBTFound()) // check is done in lpGBTInterface for opto
-    {
-        bool     cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
-        uint16_t cValue  = 0x00;
-        if(cVerify) cValue = (!cFound) ? ReadReg(pChip, pRegisterAddress) : ReadChipReg(pChip, fMap[pRegisterAddress]);
-        cSuccess = (cVerify) ? (cValue == pRegisterValue) : true;
-    }
+    
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Read back value from " << fMap[pRegisterAddress] << BOLDBLUE << " at I2C address " << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
                   << std::hex << +cRegItem.fValue << std::dec << RESET;
     }
-    if(cSuccess && cFound) { pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg); }
+    if(cSuccess && cFound) { 
+        LOG (DEBUG) << BOLDBLUE << "\t..MPAInterface::WriteReg updating value in memory of register with address 0x" << std::hex << pRegisterAddress << std::dec << " to 0x" << std::hex << +cRegItem.fValue << std::dec << RESET;
+        pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg); 
+    }
     return cSuccess;
 }
 
@@ -1165,10 +1142,12 @@ bool MPAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifL
     // uint32_t enwrite=1;
     // if(inject) enwrite=17;
 
+    return this->WriteChipReg(pChip,"AnalogueAsync",1);
+    /*
     uint32_t enwrite = 0x17;
     if(inject) enwrite = 0x53;
     this->WriteChipReg(pChip, "ENFLAGS_ALL", enwrite);
-    return true;
+    return true;*/
 }
 
 uint32_t MPAInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
