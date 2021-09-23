@@ -195,6 +195,7 @@
     <Setting name="TestPulsePotentiometer">0x50</Setting>
     <Setting name="SyncDebug">0</Setting>
 
+    <Setting name="EMeasurementAcceptance">15</Setting>
 </Settings>
 </HwDescription>
 

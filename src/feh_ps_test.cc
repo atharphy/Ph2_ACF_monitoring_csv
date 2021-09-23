@@ -319,11 +319,6 @@ int main(int argc, char* argv[])
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cHybridTester);
-
-        // OpenFinder cOpenFinder;
-        // cOpenFinder.Inherit(&cHybridTester);
-        // cOpenFinder.SelectAntennaPosition("Enable", 550);
-
         // second parameter disables stub logic on CBC3
         cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
@@ -352,7 +347,6 @@ int main(int argc, char* argv[])
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
         cPedestalEqualization.Inherit(&cHybridTester);
-        // second parameter disables stub logic on CBC3
         cPedestalEqualization.Initialise(true, true);
         cPedestalEqualization.FindVplus();
         
@@ -385,7 +379,6 @@ int main(int argc, char* argv[])
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cHybridTester);
-        // second parameter disables stub logic on CBC3
         cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
@@ -397,8 +390,6 @@ int main(int argc, char* argv[])
         }
 
     }
-
-    cOpenFinder.SelectAntennaPosition("Disable", 512);
 
     if(cmd.foundOption("checkCountersRead"))
     {
@@ -462,6 +453,7 @@ int main(int argc, char* argv[])
                 cDPInterfacer.Stop(cInterface);
             }
 
+            //Is this needed?
             if( cAttempt == 0 )
                 LOG (INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
             else if( cAttempt == 1 )
@@ -471,51 +463,9 @@ int main(int argc, char* argv[])
             else if( cAttempt == 3 )
                 LOG (INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
 
-            // cDPInterfacer.Configure(cInterface, 0xEA);
-            // cDPInterfacer.Start(cInterface);
-            // BackEndAlignment cBackEndAligner;
-            // cBackEndAligner.Inherit (&cHybridTester);
-            // cBackEndAligner.Start(0);
-            // //reset all chip and board registers 
-            // // to what they were before this tool was called 
-            // cBackEndAligner.Reset();
-            cHybridTester.MPATest(0xAA);
-            // cDPInterfacer.Stop(cInterface);
-            // cDPInterfacer.CheckNPatterns(cInterface);
-            
-            // cDPInterfacer.Configure(cInterface, 0xCC);
-            // cDPInterfacer.Start(cInterface);
-            // // cBackEndAligner.Start(0);
-            // // //reset all chip and board registers 
-            // // // to what they were before this tool was called 
-            // // cBackEndAligner.Reset();
-            cHybridTester.MPATest(0xCC);
-            // cDPInterfacer.Stop(cInterface);
-            // cDPInterfacer.CheckNPatterns(cInterface);
-
-                        
-            // cDPInterfacer.Configure(cInterface, 0xFF);
-            // cDPInterfacer.Start(cInterface);
-            // // cBackEndAligner.Start(0);
-            // // //reset all chip and board registers 
-            // // // to what they were before this tool was called 
-            // // cBackEndAligner.Reset();
-            cHybridTester.MPATest(0xFF);
-            // cDPInterfacer.Stop(cInterface);
-            // cDPInterfacer.CheckNPatterns(cInterface);
-
-                        
-            // cDPInterfacer.Configure(cInterface, 0x00);
-            // cDPInterfacer.Start(cInterface);
-            // // cBackEndAligner.Start(0);
-            // // //reset all chip and board registers 
-            // // // to what they were before this tool was called 
-            // // cBackEndAligner.Reset();
-            cHybridTester.MPATest(0x00);
+            cHybridTester.MPATest();    //The pattern is not being set by the function anymore
             cDPInterfacer.Stop(cInterface);
-            // cDPInterfacer.CheckNPatterns(cInterface);
         }
-        // cHybridTester.SelectCIC(false);    
 
         if ( cGui ){
             gui::message("MPA input test done."); 
