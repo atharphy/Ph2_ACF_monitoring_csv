@@ -49,7 +49,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
 5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
-More details on the hardware needed to setup the system can be bound [here](https://indico.cern.ch/event/1014295/contributions/4257334/attachments/2200045/3728440/Low-resoution%202021_02%20DAQ%20School.pdf)
+More details on the hardware needed to setup the system can be found [here](https://indico.cern.ch/event/1014295/contributions/4257334/attachments/2200045/3728440/Low-resoution%202021_02%20DAQ%20School.pdf)
 
 **Firmware setup:**
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
