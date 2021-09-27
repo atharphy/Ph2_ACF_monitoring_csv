@@ -40,7 +40,10 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 **Suggested software and firmware versions:**
 - Software git branch / tag : `Dev` / `v4-02`
 - Firmware tag: `4.2`
+
+**Important webpages:**
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
+- DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
