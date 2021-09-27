@@ -63,7 +63,7 @@ void VoltageTuning::Stop()
     RD53RunProgress::reset();
 }
 
-void VoltageTuning::localConfigure(const std::string fileRes_, int currentRun)
+void VoltageTuning::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -78,7 +78,7 @@ void VoltageTuning::localConfigure(const std::string fileRes_, int currentRun)
     VoltageTuning::initializeFiles(fileRes_, currentRun);
 }
 
-void VoltageTuning::initializeFiles(const std::string fileRes_, int currentRun)
+void VoltageTuning::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

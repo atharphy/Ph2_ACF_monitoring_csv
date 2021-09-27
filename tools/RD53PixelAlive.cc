@@ -118,7 +118,7 @@ void PixelAlive::Stop()
     RD53RunProgress::reset();
 }
 
-void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
+void PixelAlive::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -133,7 +133,7 @@ void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::initializeFiles(fileRes_, currentRun);
 }
 
-void PixelAlive::initializeFiles(const std::string fileRes_, int currentRun)
+void PixelAlive::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

@@ -119,7 +119,7 @@ void Gain::Stop()
     RD53RunProgress::reset();
 }
 
-void Gain::localConfigure(const std::string fileRes_, int currentRun)
+void Gain::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -134,7 +134,7 @@ void Gain::localConfigure(const std::string fileRes_, int currentRun)
     Gain::initializeFiles(fileRes_, currentRun);
 }
 
-void Gain::initializeFiles(const std::string fileRes_, int currentRun)
+void Gain::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

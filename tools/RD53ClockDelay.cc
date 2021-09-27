@@ -103,7 +103,7 @@ void ClockDelay::Stop()
     RD53RunProgress::reset();
 }
 
-void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)
+void ClockDelay::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -118,7 +118,7 @@ void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)
     ClockDelay::initializeFiles(fileRes_, currentRun);
 }
 
-void ClockDelay::initializeFiles(const std::string fileRes_, int currentRun)
+void ClockDelay::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

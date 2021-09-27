@@ -112,7 +112,7 @@ void ThrEqualization::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)
+void ThrEqualization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos             = nullptr;
@@ -128,7 +128,7 @@ void ThrEqualization::localConfigure(const std::string fileRes_, int currentRun)
     ThrEqualization::initializeFiles(fileRes_, currentRun);
 }
 
-void ThrEqualization::initializeFiles(const std::string fileRes_, int currentRun)
+void ThrEqualization::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     // ##############################
     // # Initialize sub-calibration #

@@ -62,7 +62,7 @@ void BERtest::Stop()
     RD53RunProgress::reset();
 }
 
-void BERtest::localConfigure(const std::string fileRes_, int currentRun)
+void BERtest::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -77,7 +77,7 @@ void BERtest::localConfigure(const std::string fileRes_, int currentRun)
     BERtest::initializeFiles(fileRes_, currentRun);
 }
 
-void BERtest::initializeFiles(const std::string fileRes_, int currentRun)
+void BERtest::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

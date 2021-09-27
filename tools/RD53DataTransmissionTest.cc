@@ -67,7 +67,7 @@ void DataTransmissionTest::Stop()
     RD53RunProgress::reset();
 }
 
-void DataTransmissionTest::localConfigure(const std::string fileRes_, int currentRun)
+void DataTransmissionTest::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -82,7 +82,7 @@ void DataTransmissionTest::localConfigure(const std::string fileRes_, int curren
     DataTransmissionTest::initializeFiles(fileRes_, currentRun);
 }
 
-void DataTransmissionTest::initializeFiles(const std::string fileRes_, int currentRun)
+void DataTransmissionTest::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
