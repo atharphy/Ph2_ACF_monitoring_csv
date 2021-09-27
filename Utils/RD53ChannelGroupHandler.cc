@@ -40,7 +40,7 @@ void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup(ChannelGrou
         }
 }
 
-RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>& customChannelGroup, uint8_t groupType, uint8_t hitPerCol)
+RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>& customChannelGroup, uint8_t groupType, uint8_t hitPerCol, uint8_t onlyNGroups)
 {
     if(groupType == RD53GroupType::AllPixels)
     {
@@ -53,7 +53,7 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription:
         currentChannelGroup_ = new RD53ChannelGroupPattern(hitPerCol);
     }
 
-    numberOfGroups_ = getNumberOfGroups(groupType, hitPerCol);
+    numberOfGroups_ = getNumberOfGroups(groupType, hitPerCol, onlyNGroups);
 
     // ###############################
     // # Refine custom channel group #

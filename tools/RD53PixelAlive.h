@@ -47,7 +47,8 @@ class PixelAlive : public Tool
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations()
     {
-        return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) *
+        return RD53ChannelGroupHandler::getNumberOfGroups(
+                   injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups) *
                nEvents / nEvtsBurst;
     }
     void saveChipRegisters(int currentRun);
@@ -89,6 +90,7 @@ class PixelAlive : public Tool
     bool        doUpdateChip;
     bool        doDisplay;
     bool        doFast;
+    size_t      doOnlyNGroups;
     bool        saveBinaryData;
     bool        saveData;
 };

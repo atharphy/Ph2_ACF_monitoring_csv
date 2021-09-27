@@ -52,7 +52,7 @@ class Gain : public Tool
     void                                   run();
     void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
+    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * nSteps; }
     void   saveChipRegisters(int currentRun);
 
     static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
@@ -74,6 +74,7 @@ class Gain : public Tool
     size_t offset;
     size_t nHITxCol;
     bool   doFast;
+    size_t doOnlyNGroups;
 
     std::vector<uint16_t> dacList;
 

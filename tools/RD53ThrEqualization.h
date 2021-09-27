@@ -52,7 +52,7 @@ class ThrEqualization : public PixelAlive
         uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
         uint16_t moreIterationsTDAC = 1;
         return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) +
-               ((RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * (nIterationsTDAC + moreIterationsTDAC)) +
+               ((RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * (nIterationsTDAC + moreIterationsTDAC)) +
                 nIterationsTDAC) *
                    nEvents / nEvtsBurst;
     }
@@ -74,6 +74,7 @@ class ThrEqualization : public PixelAlive
     size_t nSteps;
     size_t nHITxCol;
     bool   doFast;
+    size_t doOnlyNGroups;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
