@@ -42,7 +42,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 - Firmware tag: `4.2`
 
 **Important webpages:**
-- Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
+- Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 
 **FC7 setup:**
