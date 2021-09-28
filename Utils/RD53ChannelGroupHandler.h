@@ -29,7 +29,7 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
     static size_t getNumberOfGroups(uint8_t groupType, uint8_t hitPerCol, uint8_t onlyNGroups)
     {
         if(groupType == RD53GroupType::AllGroups)
-            return (onlyNGroups == 0 ? Ph2_HwDescription::RD53::nRows / hitPerCol : onlyNGroups);
+            return (onlyNGroups == 0 ? Ph2_HwDescription::RD53::nRows : onlyNGroups) / hitPerCol;
         else
             return 1;
     };
