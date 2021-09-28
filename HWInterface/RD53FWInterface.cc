@@ -659,6 +659,8 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     int  nAttempts = 0;
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
+    if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     do
     {
@@ -722,8 +724,9 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    // @TMP@
-    if(cfg->autozero_source == AutozeroSource::FastCMDFSM) RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, GLOBAL_PULSE_WIDTH).getFrames(), -1);
+    // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+    if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     // ##################################
     // # Configuring fast command block #
