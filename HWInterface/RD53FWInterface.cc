@@ -718,7 +718,7 @@ void RD53FWInterface::SendBoardCommand(const std::string& cmd_reg)
 
 void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 {
-    const int GLOBAL_PULSE_WIDTH = 0x6; // @TMP@ @CONST@
+    const int GLOBAL_PULSE_WIDTH = 0x6; // @CONST@
 
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
