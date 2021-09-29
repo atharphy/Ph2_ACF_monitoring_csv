@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::OptionRequiresValue);
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -150,6 +150,7 @@ int main(int argc, char* argv[])
     bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
     bool        cCheckData        = (cmd.foundOption("checkData"));
     bool cSaveToFile = cmd.foundOption("save");
+    std::string   cSkip       = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
     std::string   cSrcLnkTst  = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string   cModuleId  = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string   cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
@@ -326,19 +327,27 @@ int main(int argc, char* argv[])
     cCicAligner.dumpConfigFiles();
     
     // time align stubs with L1 data in the BE 
-    StubBackEndAlignment cStubBackEndAligner;
-    cStubBackEndAligner.Inherit(&cTool);
-    cStubBackEndAligner.Start(0);
-    cStubBackEndAligner.waitForRunToBeCompleted();
+    bool cSkipBEstubs = (cmd.foundOption("skipAlignment")) && ( cSkip.find("all") != std::string::npos || cSkip.find("beStubs") != std::string::npos );
+    if( cSkipBEstubs ) LOG (INFO) << BOLDBLUE << "Will skip time alignment of stub data with L1 data in the BE " << RESET;
+    else
+    { 
+        LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+        StubBackEndAlignment cStubBackEndAligner;
+        cStubBackEndAligner.Inherit(&cTool);
+        cStubBackEndAligner.Start(0);
+        cStubBackEndAligner.waitForRunToBeCompleted();
+    }
 
-    if(!cmd.foundOption("skipAlignment"))
-    {
+    // now align data between SSA-MPA
+    bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && ( cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos );
+    if( cSkipMPAin ) LOG (INFO) << BOLDBLUE << "Will skip alignment of SSA output data (L1+stubs) to MPAs " << RESET;
+    else
+    { 
+        LOG (INFO) << BOLDBLUE << "Performing alignment of SSA output data (L1+stubs) to MPAs " << RESET;
         cPSAlignment.Align();
     }
     cPSAlignment.dumpConfigFiles();
 
-    // now align data between SSA-MPA
-    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
 
     // equalize thresholds on readout chips
     if(cTune)
@@ -466,9 +475,6 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
-        auto cSetting    = cTool.fSettingsMap.find("Nevents");
-        int  cNevents = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 254;
-             
         // Injection              cInjection;
         // std::vector<Injection> cInjections;
         // cInjection.fRow    = 70;
@@ -528,9 +534,10 @@ int main(int argc, char* argv[])
         // TP set + readout 
         for(auto cBoard: *cTool.fDetectorContainer)
         {
-            cTool.enableTestPulse(true);
+            cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+            //cTool.enableTestPulse(true);
             cTool.setFWTestPulse();
-            cTool.ReadNEvents(cBoard, cNevents);
+            cTool.ReadNEvents(cBoard, 254);
             //const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
             //LOG (DEBUG) << +cPh2Events.size() << RESET;
         }

@@ -25,7 +25,7 @@ class PSAlignment : public Tool
 
     void                                     Initialise();
     bool                                     AlignStubInputs(Ph2_HwDescription::BeBoard* pBoard);
-    bool                                     AlignL1Inputs(Ph2_HwDescription::BeBoard* pBoard);
+    bool                                     AlignInputs(Ph2_HwDescription::BeBoard* pBoard, uint8_t pChipId=0);
     void                                     MapMPAOutputs(std::string pSetupType = "PSModule");
     bool                                     Align();
     std::vector<std::pair<uint8_t, uint8_t>> AlignL1(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections);
@@ -48,6 +48,8 @@ class PSAlignment : public Tool
     // Containers
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+
+    
 
 // booking histograms
 #ifdef __USE_ROOT__

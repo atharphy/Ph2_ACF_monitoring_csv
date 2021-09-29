@@ -54,7 +54,7 @@ void PSAlignment::Reset()
                         }
                         if( !cLeaveReg ) 
                         {
-                            LOG(INFO) << BOLDYELLOW << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                            LOG(DEBUG) << BOLDYELLOW << "BackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                        << cMapItem.second.fValue << RESET;
                             fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                         }
@@ -63,34 +63,6 @@ void PSAlignment::Reset()
             }
         }
 
-        // reset masks 
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    const ChannelGroupBase* cOriginalMask = cChip->getChipOriginalMask();
-                    // until maskChannelsGroup works for PS 
-                    if( cChip->getFrontEndType() != FrontEndType::CBC3 ) 
-                    {
-                        LOG (INFO) << BOLDYELLOW << "ROC" << +cChip->getId() << " originally had " << cOriginalMask->getNumberOfEnabledChannels() << " enabled channels." << RESET;
-                        // enable all channels 
-                        std::stringstream cRegName; 
-                        cRegName << "MaskChannel" << std::setfill('0')<<std::setw(4) << (0);
-                        fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), 0);//disable mask on all 
-                        for(uint16_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
-                        {
-                            cRegName.str(std::string());
-                            if( cOriginalMask->isChannelEnabled(iChannel) ) continue;
-                            cRegName << "MaskChannel" << std::setfill('0')<<std::setw(4) << (iChannel);
-                            fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), 1);//enable mask 
-                        }
-                    }                           
-                    else fReadoutChipInterface->maskChannelsGroup(static_cast<ReadoutChip*>(cChip), cOriginalMask);
-                }//ROC 
-            }//Hybrid
-        }//OG
     }
     if(fReadoutChipInterface != nullptr)
     {
@@ -311,6 +283,15 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
 }
 std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip, std::vector<Injection> pInjections )
 {
+    struct
+    {
+        bool operator()(PCluster a, PCluster b) const { return a.fAddress < b.fAddress; }
+    } customSortPclus;
+    struct
+    {
+        bool operator()(SCluster a, SCluster b) const { return a.fAddress < b.fAddress; }
+    } customSortSclus;
+
     std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinations;
     cGoodCombinations.clear();
     LOG(INFO) << BOLDMAGENTA << "PSAlignment::AlignL1  - aligning L1 and stub data for SSA-MPA pair#" << +pChip->getId() % 8 << RESET;
@@ -319,7 +300,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
     auto     cTriggerMult = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t cNevents     = 10;
 
-    uint8_t cStartPhaseL1 = 0; 
+    uint8_t cStartPhaseL1 = 3; 
     uint8_t cStopPhaseL1  = 5; 
     bool    cOnlyFirst    = true;
     for(uint8_t cPhase = cStartPhaseL1; cPhase < cStopPhaseL1; cPhase++)
@@ -335,7 +316,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
             const std::vector<Event*>& cEvents = this->GetEvents();
             if(cEvents.size() == 0) continue;
 
-            LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
+            LOG(INFO) << BOLDBLUE << "\tSetting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << " -- reading back " << cNevents << RESET;
             // start at the beginning + trigger id in burst
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
@@ -347,21 +328,28 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                     bool cFmatch = true;
                     auto cPclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
                     auto cSclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
+                    // sort P clusters by row 
+                    std::sort(cPclus.begin(), cPclus.end(), customSortPclus);
+                    // sort S clusters by row
+                    std::sort(cSclus.begin(), cSclus.end(), customSortSclus);
                     cNmatch      = cNmatch && (cSclus.size() == pInjections.size() && cPclus.size() == pInjections.size());
                     cFmatch      = cNmatch;
                     if(cNmatch)
                     {
-                        LOG(INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size() << " S clusters and "
-                                   << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << RESET;
                         for(size_t cIndx = 0; cIndx < pInjections.size(); cIndx++)
                         {
                             cFmatch = cFmatch && (cPclus[cIndx].fAddress == cSclus[cIndx].fAddress);
                             if((cPclus[cIndx].fAddress == cSclus[cIndx].fAddress))
-                                LOG(INFO) << BOLDGREEN << "Exact match found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
-                                           << +cPclus[cIndx].fWidth << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
-                                           << RESET;
+                            {
+                                LOG(INFO) << BOLDGREEN << "\t\t Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() 
+                                    << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size() << " S clusters and "
+                                    << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << RESET;
+                                LOG (INFO) << BOLDGREEN << "\t\t\t Exact match found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
+                                    << +cPclus[cIndx].fWidth << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
+                                    << RESET;
+                            }
                             else
-                                LOG(INFO) << BOLDRED << "Exact match not found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
+                                LOG(DEBUG) << BOLDRED << "Exact match not found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
                                            << +cPclus[cIndx].fWidth << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
                                            << RESET;
                         }
@@ -391,6 +379,19 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
 }
 std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs( ReadoutChip* pChip, std::vector<Injection> pInjections, uint16_t pLatency)
 {
+    struct
+    {
+        bool operator()(PCluster a, PCluster b) const { return a.fAddress < b.fAddress; }
+    } customSortPclus;
+    struct
+    {
+        bool operator()(SCluster a, SCluster b) const { return a.fAddress < b.fAddress; }
+    } customSortSclus;
+    struct
+    {
+        bool operator()(Stub a, Stub b) const { return a.fPosition < b.fPosition; }
+    } customSortStubs;
+
     std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinationsStubs;
     cGoodCombinationsStubs.clear();
     LOG(INFO) << BOLDMAGENTA << "PSAlignment::AlignChip  - aligning L1 and stub data for SSA-MPA pair#" << +pChip->getId() % 8 << RESET;
@@ -401,12 +402,13 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs( ReadoutChip* p
 
     int cGoodStubDelay = 0;
     uint8_t cStartPhase = 0; 
-    uint8_t cEndPhase  = 8; 
+    uint8_t cEndPhase  = 7; 
     bool    cOnlyFirst    = true;
-    bool    cCheckL1      = false;
-    for(int cStubAddDelay = 0; cStubAddDelay <= 5; cStubAddDelay++)
+    bool    cCheckL1      = true;
+    for(int cStubAddDelay = 0 ; cStubAddDelay <= 5; cStubAddDelay++)
     {
         if(cOnlyFirst && cGoodCombinationsStubs.size() > 0) continue;
+        auto   cStubOffset = (*cBoardIter)->getStubOffset() + cStubAddDelay;
         LOG(INFO) << BOLDMAGENTA << "Additional stub data delay of " << cStubAddDelay << RESET;
         for(uint8_t cPhase = cStartPhase; cPhase < cEndPhase; cPhase++)
         {
@@ -414,47 +416,68 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs( ReadoutChip* p
             for(uint8_t cRetime = 0; cRetime < 8; cRetime++)
             {
                 if(cOnlyFirst && cGoodCombinationsStubs.size() > 0) continue;
-                auto   cStubOffset = (*cBoardIter)->getStubOffset() + cStubAddDelay;
                 size_t cStubDelay  = pLatency - cStubOffset - cRetime; // stub latency
                 fReadoutChipInterface->WriteChipReg(pChip, "RetimePix", cRetime);
                 fReadoutChipInterface->WriteChipReg(pChip, "StubInputPhase", cPhase);
 
-                // LOG (INFO) << BOLDYELLOW  << "Writing common_stubdata_delay " << cStubDelay << " [ReTime pix is set to " << +cRetime << " ]" << std::endl;
                 fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDelay);
                 ReadNEvents((*cBoardIter), cNevents);
                 const std::vector<Event*>& cEvents = this->GetEvents();
 
-                LOG(INFO) << BOLDMAGENTA << "LatencyRx320 for stubs of " << +cPhase << " ReTime of " << +cRetime << RESET;
+                LOG (DEBUG) << BOLDMAGENTA  << "Writing common_stubdata_delay " << cStubDelay << " [ReTime pix is set to " << +cRetime 
+                    << " ]\t\t LatencyRx320 for stubs of " << +cPhase << " ReTime of " << +cRetime << RESET;
                 for(size_t cTriggerId = 0; cTriggerId < (1 + cTriggerMult); cTriggerId++)
                 {
                     size_t cMatchedEvents = 0;
                     auto   cEventIter     = cEvents.begin() + cTriggerId;
+                    size_t cMatchedEventsL1 = 0 ;
+                    size_t cNchecked=0;
                     do {
                         if(cEventIter >= cEvents.end()) break;
                         auto cPclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
                         auto cSclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
+                        // sort P clusters by row 
+                        std::sort(cPclus.begin(), cPclus.end(), customSortPclus);
+                        // sort S clusters by row
+                        std::sort(cSclus.begin(), cSclus.end(), customSortSclus);
                         auto cStubs  = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(pChip->getHybridId(), pChip->getId());
-                        bool cNmatch      = (cStubs.size() == pInjections.size());
-                        if( cCheckL1 ) cNmatch = cNmatch && (cPclus.size() == pInjections.size() && cSclus.size() == pInjections.size());
+                        cMatchedEventsL1 += (cPclus.size() == pInjections.size() && cSclus.size() == pInjections.size()) ? 1 : 0; 
+                        bool cNmatch      = true;
+                        if( cCheckL1 ){ 
+                            cNmatch = (cPclus.size() == pInjections.size() && cSclus.size() == pInjections.size());
+                            LOG(DEBUG) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " <<
+                                " correct numnber of S and P clusters." << RESET;
+                        }
                         if(cStubs.size() != 0 && cNmatch)
-                            LOG(INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size()
-                                      << " S clusters and " << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << " also have " << +cStubs.size() << " stbs." << RESET;
-                        else
-                            LOG(DEBUG) << BOLDRED << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size()
-                                      << " S clusters and " << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << " also have " << +cStubs.size() << " stbs." << RESET;
-                        if(cStubs.size() == pInjections.size())
-                        {
+                            LOG(INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() 
+                                << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size()
+                                << " S clusters and " << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << " also have " << +cStubs.size() << " stbs." << RESET;
+                        // print stubs if they are there
+                        if( cNmatch )
+                        { 
                             size_t cStubCntr = 0;
+                            // sort stubs by position 
+                            std::sort(cStubs.begin(), cStubs.end(), customSortStubs);
                             for(auto cStub: cStubs)
                             {
                                 LOG(INFO) << BOLDCYAN << "\t\tStub#" << +cStubCntr << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend()
                                           << RESET;
                                 cStubCntr++;
                             }
+                            cNmatch = cNmatch && (cStubs.size() == pInjections.size());
                         }
+                        // update counters 
                         cEventIter += (1 + cTriggerMult);
                         cMatchedEvents += (cNmatch) ? 1 : 0;
+                        cNchecked++; 
                     } while(cEventIter < cEvents.end());
+                    if( cMatchedEvents > 0 ) LOG (INFO) << BOLDMAGENTA << cMatchedEvents << " out of " << cNevents 
+                            << " matched for stubs " 
+                            << cMatchedEventsL1 << " events matched for L1A data "
+                            << ". Found " << cEvents.size() 
+                            << " events in the readout ]. In total " 
+                            << cNchecked << " events were checked"
+                            << RESET;
                     if(cMatchedEvents == cNevents)
                     {
                         cGoodStubDelay = cStubAddDelay;
@@ -505,7 +528,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
             const std::vector<Event*>& cEvents = this->GetEvents();
             if(cEvents.size() == 0) continue;
 
-            LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
+            LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << " - going to read " << +cNevents << RESET;
             // start at the beginning + trigger id in burst
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
@@ -654,26 +677,42 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
     }
     return cGoodCombinations;
 }
-bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
+// want 
+bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId) 
 {
     bool cPhaseFound = true;
-    LOG(INFO) << BOLDBLUE << "Aligning MPA L1 inputs.." << RESET;
-    // uint32_t cNevents = 10;
-    // float cFraction = 1.0;
-
+    LOG(INFO) << BOLDBLUE << "Aligning MPA inputs for both L1 and Stub data for SSA-MPA pair #" << +pChipId << RESET;
+    
     // check trigger source
     // and reload
     Injection              cInjection;
     std::vector<Injection> cInjections;
-    cInjection.fRow    = 70;
-    cInjection.fColumn = 12;
-    cInjections.push_back(cInjection);
-    cInjection.fRow    = 45;
-    cInjection.fColumn = 9;
-    cInjections.push_back(cInjection);
+    // in principle here I would like to make sure all lines are aligned 
+    // for now I will do just four 
+    cInjection.fRow    = 10;
+    cInjection.fColumn = 2;
+    cInjections.push_back(cInjection);//0
     cInjection.fRow    = 20;
-    cInjection.fColumn = 7;
-    cInjections.push_back(cInjection);
+    cInjection.fColumn = 3;
+    cInjections.push_back(cInjection);//1
+    cInjection.fRow    = 30;
+    cInjection.fColumn = 4;
+    cInjections.push_back(cInjection);//2
+    cInjection.fRow    = 40;
+    cInjection.fColumn = 5;
+    cInjections.push_back(cInjection);//3
+    // cInjection.fRow    = 50;
+    // cInjection.fColumn = 6;
+    // cInjections.push_back(cInjection);//4
+    // cInjection.fRow    = 45;
+    // cInjection.fColumn = 9;
+    // cInjections.push_back(cInjection);//1
+    // cInjection.fRow    = 20;
+    // cInjection.fColumn = 7;
+    // cInjections.push_back(cInjection);//2
+    // cInjection.fRow    = 10;
+    // cInjection.fColumn = 2;
+    // cInjections.push_back(cInjection);//3
     
     // check trigger source
     // and reload
@@ -691,321 +730,128 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
     auto     cTriggerMult   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint16_t cDelay         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    int      cOptimalOffset = -1 + (cTriggerMult > 1);
+    int      cOptimalOffset = 1 + (cTriggerMult > 1); // want triggered event to be in trigger#2 of the burst 
     uint16_t cLatency       = cDelay + cOptimalOffset;
     LOG(DEBUG) << BOLDMAGENTA << "Expect correct latency to be " << +cLatency << RESET;
 
+    // inject 
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
             for(auto cChip: *cHybrid)
             {
+                if( cChip->getId()%8 != pChipId ) continue;
+
                 // make sure L1 latency is configured
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
+                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections,0x01);
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                    fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01); 
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
                     for(auto cInjection: cInjections) { fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
                 }
             } // chip
         }     // hybrid
-    }         // optica]l group
+    }// optica]l group
 
+    // scan alignment parameters 
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
             for(auto cChip: *cHybrid)
             {
+                if( cChip->getId()%8 != pChipId ) continue;
+                
                 // make sure L1 latency is configured
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     // testing if selecting edge per line works
                     std::vector<uint8_t> cEdgeSelsT1{1};
-                    std::vector<uint8_t> cEdgeSelsRaw{0};
-                    std::vector<uint8_t> cEdgeSelsInputs{0};
+                    std::vector<uint8_t> cEdgeSelsRaw{0}; 
+                    std::vector<uint8_t> cEdgeSelsInputs{1};
                     for( auto cEdgeSelT1 : cEdgeSelsT1)
                     {
-                        LOG (INFO) << BOLDMAGENTA << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;
                         // L1 lines 
                         fReadoutChipInterface->WriteChipReg(cChip, "SelectEdgeT1", cEdgeSelT1);
+                        std::vector<uint8_t> cRawEdge(0);
+                        std::vector<std::pair<uint8_t, uint8_t>> cAlParsL1; 
                         for(auto cEdgeSelRaw: cEdgeSelsRaw)
                         {
                             uint8_t           cLineId = 8;
                             std::stringstream cRegName;
                             cRegName << "SelectEdgeL" << +cLineId;
+                            LOG (INFO) << BOLDMAGENTA << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;
                             LOG(INFO) << BOLDMAGENTA << "Edge-select for Raw strip input L" << +cLineId << " will be set to " << +cEdgeSelRaw << RESET;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cEdgeSelRaw);
                             auto cL1AlignmentPars = this->AlignL1( cChip, cInjections);
+                            for( auto cPar : cL1AlignmentPars )
+                            {
+                                cAlParsL1.push_back( cPar ); 
+                                cRawEdge.push_back( cEdgeSelRaw );
+                            }
                             LOG (INFO) << BOLDBLUE << "Found " << +cL1AlignmentPars.size() << " combinations of alignment parameters for L1 data from SSA" << RESET;
                         }
-                        // stub lines 
-                        for( auto cEdgeSelsInput : cEdgeSelsInputs )
+                        // Stub lines + final parameters 
+                        std::vector<std::pair<uint8_t, uint8_t>> cAlParsStubData; 
+                        std::vector<std::pair<uint8_t, uint8_t>> cAlParsHitData; 
+                        std::vector<uint8_t> cRawEdgeL1(0);
+                        std::vector<uint8_t> cRawEdgeStubs(0);
+                        for( size_t cIndx=0; cIndx < cRawEdge.size() ; cIndx++)
                         {
-                            LOG (INFO) << BOLDGREEN << "Edge select for stub input is " << +cEdgeSelsInput << RESET;
-                            auto cStbOffset    = pBoard->getStubOffset();
-                            // each stub will appear on one of the lines 
-                            for( uint8_t cLineId = 0; cLineId < cInjections.size(); cLineId++)
+                            // make sure L1 line is aligned 
+                            uint8_t           cLineId = 8;
+                            std::stringstream cRegName;
+                            cRegName << "SelectEdgeL" << +cLineId;
+                            LOG(INFO) << BOLDMAGENTA << "Edge-select for Raw strip input L" << +cLineId << " will be set to " << +cRawEdge[cIndx] << RESET;
+                            LOG(INFO) << BOLDMAGENTA << "L1InputPhase for Raw input L" << +cLineId << " will be set to " << +cAlParsL1[cIndx].first << RESET;
+                            LOG(INFO) << BOLDMAGENTA << "Edge-LatencyRx40 for Raw strip input L" << +cLineId << " will be set to " << +cAlParsL1[cIndx].second << RESET;
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cRawEdge[cIndx]);
+                            fReadoutChipInterface->WriteChipReg(cChip, "L1InputPhase", cAlParsL1[cIndx].first);
+                            fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cAlParsL1[cIndx].second);
+                            // stub lines 
+                            for( auto cEdgeSelsInput : cEdgeSelsInputs )
                             {
-                                std::stringstream cRegName;
-                                cRegName << "SelectEdgeL" << +cLineId;
-                                fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cEdgeSelsInput);
+                                LOG (INFO) << BOLDGREEN << "Edge select for stub input is " << +cEdgeSelsInput << RESET;
+                                auto cStbOffset    = pBoard->getStubOffset();
+                                //each stub will appear on one of the lines 
+                                for( uint8_t cLine = 0; cLine < cInjections.size(); cLine++)
+                                {
+                                    std::stringstream cRegName;
+                                    cRegName << "SelectEdgeL" << +cLine;
+                                    fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cEdgeSelsInput);
+                                }
+                                auto cStubAlignmentPars = this->AlignStubs( cChip, cInjections, cLatency);
+                                for( auto cPar : cStubAlignmentPars )
+                                {
+                                    cAlParsStubData.push_back( cPar ); 
+                                    cAlParsHitData.push_back( cAlParsL1[cIndx] );
+                                    cRawEdgeL1.push_back( cRawEdge[cIndx] );
+                                    cRawEdgeStubs.push_back( cEdgeSelsInput );
+                                }
+                                pBoard->setStubOffset(cStbOffset);
                             }
-                            auto cStubAlignmentPars = this->AlignStubs( cChip, cInjections, cLatency);
-                            pBoard->setStubOffset(cStbOffset);
+                        }
+                        // print out summary 
+                        for( size_t cIndx=0 ; cIndx < cAlParsStubData.size(); cIndx++)
+                        {
+                            LOG (INFO) << BOLDBLUE << "Alignment parameters for L1 hit data : [" << +cAlParsHitData[cIndx].first << "," << +cAlParsStubData[cIndx].first << "]" << RESET;
+                            LOG (INFO) << BOLDBLUE << "Alignment parameters for Stub data : [" << +cAlParsStubData[cIndx].first << "," << +cAlParsStubData[cIndx].first << "]" << RESET;
+                            LOG (INFO) << BOLDBLUE << "Edge select L1 data is " << +cRawEdgeL1[cIndx] << RESET;
+                            LOG (INFO) << BOLDBLUE << "Edge select Stub data is " << +cRawEdgeStubs[cIndx] << RESET;
                         }
                     }
                 }
             } // chip
         }     // hybrid
-    }         // optica]l group
-
-    // // scan phase and check L1
-    // std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinations;
-    // cGoodCombinations.clear();
-    // for( uint8_t cPhase = 2; cPhase < 4; cPhase++)
-    // {
-    //     for(uint8_t cWord = 0; cWord < 16; cWord++)
-    //     {
-    //         for(auto cOpticalReadout: *pBoard)
-    //         {
-    //             for(auto cHybrid: *cOpticalReadout)
-    //             {
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-    //                     fReadoutChipInterface->WriteChipReg(cChip, "L1InputPhase", cPhase);
-    //                     fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cWord);
-    //                 }
-    //             }
-    //         }
-    //         ReadNEvents(pBoard, cNevents);
-    //         const std::vector<Event*>& cEvents = this->GetEvents();
-    //         if( cEvents.size() == 0 ) continue;
-
-    //         LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase MPAs to " << +cPhase << " and Rx40 delay to " << +cWord << RESET;
-    //         // start at the beginning + trigger id in burst
-    //         for( size_t cTriggerId=0; cTriggerId < cTriggerMult+1 ; cTriggerId++)
-    //         {
-    //             size_t cMatchedEvents=0;
-    //             auto cEventIter = cEvents.begin() + cTriggerId ;
-    //             do
-    //             {
-    //                 if( cEventIter >= cEvents.end() ) break;
-    //                 bool cNmatch=true;
-    //                 bool cFmatch=true;
-    //                 for(auto cOpticalGroup: *pBoard)
-    //                 {
-    //                     for(auto cHybrid: *cOpticalGroup)
-    //                     {
-    //                         for(auto cChip: *cHybrid)
-    //                         {
-    //                             if (cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-    //                             auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-    //                             auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
-    //                             cNmatch = cNmatch && ( cSclus.size() == cInjections.size() && cPclus.size() == cInjections.size() ) ;
-    //                             cFmatch = cNmatch;
-    //                             if( cNmatch )
-    //                             {
-    //                                 LOG (DEBUG) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult)
-    //                                             << " MPA" << +cChip->getId() << " found " << cSclus.size()
-    //                                             << " S clusters and "
-    //                                             << cPclus.size()
-    //                                             << " P clusters in L1 data from MPA#" << +cChip->getId()
-    //                                             << RESET;
-    //                                 for( size_t cIndx=0; cIndx < cInjections.size(); cIndx++)
-    //                                 {
-    //                                     cFmatch = cFmatch && ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress);
-    //                                     if( ( cPclus[cIndx].fAddress == cSclus[cIndx].fAddress) )
-    //                                         LOG (DEBUG) << BOLDGREEN << "Exact match found "
-    //                                                 << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
-    //                                                 << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
-    //                                                 << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
-    //                                                 << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
-    //                                                 << RESET;
-    //                                     else
-    //                                         LOG (DEBUG) << BOLDRED << "Exact match not found "
-    //                                                 << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress
-    //                                                 << " column " << +cPclus[cIndx].fZpos << " width is " << +cPclus[cIndx].fWidth
-    //                                                 << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress
-    //                                                 << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
-    //                                                 << RESET;
-    //                                 }
-    //                             }
-    //                         }// chip vector
-    //                     }// hybrid vector
-    //                 }// optical group vector
-    //                 // if( cNmatch && cFmatch )
-    //                 //     LOG (INFO) << BOLDGREEN << "Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId
-    //                 //         << " in a burst of " << (1+ cTriggerMult)
-    //                 //         << " number of S-clusters match is " << +cNmatch
-    //                 //         << " full S-cluster match is " << +cFmatch
-    //                 //         << RESET;
-    //                 cMatchedEvents += (cFmatch&&cNmatch) ? 1 : 0;
-    //                 cEventIter += (1+cTriggerMult);
-    //             }while(cEventIter < cEvents.end());
-    //             if( cMatchedEvents == cNevents*cFraction ){
-    //                 std::pair<uint8_t, uint8_t> cComb;
-    //                 cComb.first = cPhase;
-    //                 cComb.second = cWord;
-    //                 cGoodCombinations.push_back( cComb );
-    //                 LOG (INFO) << BOLDGREEN << "All events match for, LatencyRx320 of "
-    //                     << +cComb.first << " , LatencyRx40 "
-    //                     << +cComb.second << " full matching of S-clusters in MPA data"
-    //                     << RESET;
-    //             }
-    //         }
-    //     }
-    // }
-
-    // size_t cL1CombIndx=0;
-    // for(auto cComb : cGoodCombinations)
-    // {
-    //     if( cL1CombIndx > 0 ) continue;
-    //     // now run stub alignment procedure
-    //     LOG (INFO) << BOLDYELLOW << "Scanning Stub alignment parameters for L1 alignmnet parameters.." << RESET;
-    //     for(auto cOpticalReadout: *pBoard)
-    //     {
-    //         for(auto cHybrid: *cOpticalReadout)
-    //         {
-    //             for(auto cChip: *cHybrid)
-    //             {
-    //                 if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-
-    //                 fReadoutChipInterface->WriteChipReg(cChip, "L1InputPhase", cComb.first);
-    //                 fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cComb.second);
-    //                 fReadoutChipInterface->WriteChipReg(cChip, "StubMode", 0 );
-    //                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", 1   );
-    //             }
-    //         }
-    //     }
-    //     // I think that the sampling phase or the stub line should be about the same
-    //     // as the L1 line
-    //     // if the lines between SSAs and MPAs on the hybrid are matched
-    //     // and I think they are
-    //     uint8_t cStartPhase = (cComb.first == 0 ) ? cComb.first : cComb.first-1;
-    //     uint8_t cEndPhase = cComb.first+2;
-    //     std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinationsStubs;
-    //     cGoodCombinationsStubs.clear();
-    //     int cGoodStubDelay=0;
-    //     for(int cStubAddDelay = 0; cStubAddDelay <= 5 ; cStubAddDelay++)
-    //     {
-    //         LOG (INFO) << BOLDMAGENTA << "Additional stub data delay of " << cStubAddDelay << RESET;
-    //         for(uint8_t cPhase = cStartPhase; cPhase < cEndPhase; cPhase++)
-    //         {
-    //             for(uint8_t cRetime = 4; cRetime < 6; cRetime++)
-    //             {
-    //                 auto    cStubOffset = pBoard->getStubOffset() + cStubAddDelay ;
-    //                 size_t cStubDelay = cLatency - cStubOffset - cRetime; // stub latency
-    //                 for(auto cOpticalReadout: *pBoard)
-    //                 {
-    //                     for(auto cHybrid: *cOpticalReadout)
-    //                     {
-    //                         for(auto cChip: *cHybrid)
-    //                         {
-    //                             if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-
-    //                             fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", cRetime);
-    //                             fReadoutChipInterface->WriteChipReg(cChip, "StubInputPhase", cPhase);
-    //                         }
-    //                     }
-    //                 }
-
-    //                 //LOG (INFO) << BOLDYELLOW  << "Writing common_stubdata_delay " << cStubDelay << " [ReTime pix is set to " << +cRetime << " ]" << std::endl;
-    //                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDelay);
-    //                 ReadNEvents(pBoard, cNevents);
-    //                 const std::vector<Event*>& cEvents = this->GetEvents();
-
-    //                 LOG (INFO) << BOLDMAGENTA << "LatencyRx320 for stubs of " << +cPhase <<  " ReTime of " << +cRetime << RESET;
-    //                 for( size_t cTriggerId=0; cTriggerId < (1+cTriggerMult) ; cTriggerId++)
-    //                 {
-    //                     size_t cMatchedEvents=0;
-    //                     auto cEventIter = cEvents.begin() + cTriggerId ;
-    //                     do
-    //                     {
-    //                         if( cEventIter >= cEvents.end() ) break;
-    //                         bool cNmatch=true;
-    //                         for(auto cOpticalGroup: *pBoard)
-    //                         {
-    //                             for(auto cHybrid: *cOpticalGroup)
-    //                             {
-    //                                 for(auto cChip: *cHybrid)
-    //                                 {
-    //                                     if (cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-    //                                     auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-    //                                     auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
-    //                                     auto cStubs = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-    //                                     cNmatch = cNmatch && (cStubs.size() == cInjections.size() && cPclus.size() == cInjections.size() && cSclus.size() == cInjections.size() );
-    //                                     if( cStubs.size() != 0 )
-    //                                         LOG (INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1+ cTriggerMult)
-    //                                                             << " MPA" << +cChip->getId() << " found " << cSclus.size()
-    //                                                             << " S clusters and "
-    //                                                             << cPclus.size()
-    //                                                             << " P clusters in L1 data from MPA#" << +cChip->getId()
-    //                                                             << " also have " << +cStubs.size() << " stbs."
-    //                                                             << RESET;
-    //                                     if( cStubs.size() == cInjections.size() )
-    //                                     {
-    //                                         size_t cStubCntr=0;
-    //                                         for( auto cStub : cStubs)
-    //                                         {
-    //                                             LOG (INFO) << BOLDCYAN << "\t\tStub#" << +cStubCntr
-    //                                                 << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend() << RESET;
-    //                                             cStubCntr++;
-    //                                         }
-    //                                     }
-    //                                 }// chip vector
-    //                             }// hybrid vector
-    //                         }// optical group vector
-    //                         cEventIter += (1+cTriggerMult);
-    //                         cMatchedEvents += (cNmatch) ? 1 : 0;
-    //                     }while(cEventIter < cEvents.end());
-    //                     if( cMatchedEvents == cNevents*cFraction )
-    //                     {
-    //                         cGoodStubDelay = cStubAddDelay;
-    //                         std::pair<uint8_t, uint8_t> cComb;
-    //                         cComb.first = cPhase;
-    //                         cComb.second = cRetime;
-    //                         cGoodCombinationsStubs.push_back( cComb );
-    //                         LOG (INFO) << BOLDGREEN << "All events stubs match for, LatencyRx320 of "
-    //                             << +cComb.first << " , ReTimePix "
-    //                             << +cComb.second << " full matching of S-clusters in MPA data"
-    //                             << RESET;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     pBoard->setStubOffset(pBoard->getStubOffset() + cGoodStubDelay);
-
-    //     LOG (INFO) << BOLDMAGENTA << "Summary of SSA-MPA data alignment" << RESET;
-    //     LOG (INFO) << BOLDMAGENTA << "LatencyRx320 of " << +cComb.first << " , LatencyRx40 " << +cComb.second << " full matching of S-clusters in MPA data" << RESET;
-    //     for(auto cCombStbs : cGoodCombinationsStubs)
-    //     {
-    //         LOG (INFO) << BOLDMAGENTA << "\t.. Stub data : LatencyRx320 of " << +cCombStbs.first << " , ReTimePix " << +cCombStbs.second << " full matching of stub data in MPA" << RESET;
-    //         for(auto cOpticalReadout: *pBoard)
-    //         {
-    //             for(auto cHybrid: *cOpticalReadout)
-    //             {
-    //                 for(auto cChip: *cHybrid)
-    //                 {
-    //                     if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-
-    //                     fReadoutChipInterface->WriteChipReg(cChip, "StubInputPhase", cCombStbs.first);
-    //                     fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", cCombStbs.second);
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     cL1CombIndx++;
-    // }
+    }// optica]l group
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
@@ -1014,101 +860,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-
-    // for(uint8_t cChipId = 0+8; cChipId < 8+8; cChipId++)
-    // {
-    //     bool nochip = true;
-    //     if(!cCurPhaseFound) cPhaseFound = false;
-    //     cCurPhaseFound = false;
-    //     for(uint8_t cPhase = 0; cPhase < 8; cPhase++)
-    //     {
-    //         if(cCurPhaseFound == true) break;
-    //         for(uint8_t cES = 2; cES < 4; cES++)
-    //         {
-    //             if(cCurPhaseFound == true) break;
-    //             for(uint8_t cWord = 0; cWord < 16; cWord++)
-    //             {
-    //                 if(cCurPhaseFound == true) break;
-    //                 for(auto cOpticalReadout: *pBoard)
-    //                 {
-    //                     for(auto cHybrid: *cOpticalReadout)
-    //                     {
-    //                         for(auto cChip: *cHybrid)
-    //                         {
-    //                             if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
-    //                             if(cChip->getId() != cChipId) continue;
-    //                             nochip = false;
-    //                             fReadoutChipInterface->WriteChipReg(cChip, "L1InputPhase", cPhase);
-    //                             fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cWord);
-    //                             fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", cES);
-    //                         } // chip
-    //                     }     // hybrid
-    //                 }         // optical group
-    //                 if(nochip)
-    //                 {
-    //                     cCurPhaseFound = true;
-    //                     continue;
-    //                 }
-    //                 // now read data
-    //                 LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase and word for MPA#" << +cChipId << " on hybrid to " << +cPhase << " and " << +cWord << RESET;
-    //                 ReadNEvents(pBoard, cNevents);
-    //                 const std::vector<Event*>& cEvents = this->GetEvents();
-    //                 LOG(INFO) << BOLDBLUE << "Checking phase by reading back " << +cEvents.size() << " events from the FC7 ..." << RESET;
-    //                 uint32_t MatchNPclustot = 0;
-    //                 uint32_t MatchNSclustot = 0;
-    //                 for(auto& ev: cEvents)
-    //                 {
-    //                     for(auto cOpticalReadout: *pBoard)
-    //                     {
-    //                         for(auto cHybrid: *cOpticalReadout)
-    //                         {
-    //                             for(auto cChip: *cHybrid)
-    //                             {
-    //                                 if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
-    //                                 if(cChip->getId() != cChipId) continue;
-
-    //                                 std::vector<PCluster> Pclus = static_cast<D19cCic2Event*>(ev)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-    //                                 std::vector<SCluster> Sclus = static_cast<D19cCic2Event*>(ev)->GetStripClusters(cHybrid->getId(), cChip->getId());
-
-    //                                 for(auto& pc: Pclus)
-    //                                 {
-    //                                     std::cout << "-------------------------------PIXELS-------------------------------"<< std::endl;
-    //                                     std::cout << "fAddress "<<+pc.fAddress<<std::endl;
-    //                                     std::cout << "fWidth "<<+pc.fWidth<< std::endl;
-    //                                     std::cout << "fZpos "<<+pc.fZpos << std::endl;
-    //                                     if((cInjection.fRow) == pc.fAddress and (cInjection.fColumn - 1) == pc.fZpos) MatchNPclustot += 1;
-    //                                 }
-    //                                 for(auto& sc: Sclus)
-    //                                 {
-    //                                     std::cout << "-------------------------------STRIPS-------------------------------"<< std::endl;
-    //                                     std::cout << "fAddress? "<<+sc.fAddress<<std::endl;
-    //                                     std::cout << "fWidth "<<+sc.fWidth<< std::endl;
-    //                                     std::cout << "fMip "<<+sc.fMip << std::endl<< std::endl;
-    //                                     if((cInjection.fRow) == sc.fAddress ) MatchNSclustot += 1;
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //                 if((MatchNPclustot == (cNevents)*cFraction) and (MatchNSclustot == (cNevents)*cFraction ))
-    //                 {
-    //                     LOG(INFO) << BOLDGREEN << "-----" << RESET;
-    //                     LOG(INFO) << BOLDGREEN << "Phase and Word alignment for MPA#" << +cChipId << " completed." << RESET;
-    //                     LOG(INFO) << BOLDGREEN << "Phase:" << +cPhase << " Word:" << +cWord << " Edge Sel:" << +cES << RESET;
-    //                     LOG(INFO) << BOLDGREEN << "-----" << RESET;
-    //                     cCurPhaseFound = true;
-    //                 }
-    //                 else
-    //                 {
-    //                     LOG(INFO) << BOLDRED << "-----" << RESET;
-    //                     LOG(INFO) << BOLDRED << "Phase and Word alignment for MPA#" << +cChipId << " completed." << RESET;
-    //                     LOG(INFO) << BOLDRED << "Phase:" << +cPhase << " Word:" << +cWord << " Edge Sel:" << +cES << RESET;
-    //                     LOG(INFO) << BOLDRED << "-----" << RESET;
-    //                 }
-    //             } // word loop
-    //         }     // ES loop
-    //     }         // phase loop
-    // }             // chip id loop [up-to 8 chips per hybrid ]
+    
     return cPhaseFound;
 }
 bool PSAlignment::Align()
@@ -1138,8 +890,30 @@ bool PSAlignment::Align()
             LOG(INFO) << BOLDBLUE << "Not performing SSA-MPA L1 alignment... no PS chips!" << RESET;
             continue;
         }
-        cl1Aligned = cl1Aligned && this->AlignL1Inputs(cBoard);
-        cl1Aligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
+        // potentially we have 8 chips possible 
+        for( uint8_t cChipId=0; cChipId < 8; cChipId++)
+        {
+            // check if chip id is there 
+            bool cChipFound=false; 
+            for(auto cOpticalReadout: *cBoard)
+            {
+                if(cChipFound) break;
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    if(cChipFound) break;
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChipFound) break;
+                        if( cChip->getFrontEndType() == FrontEndType::MPA && cChip->getId()%2 == cChipId ) cChipFound=true;
+                    }
+                }
+            }
+            if( !cChipFound ) continue;
+
+            cl1Aligned = cl1Aligned && this->AlignInputs(cBoard, cChipId);
+            cl1Aligned ? LOG(INFO) << BOLDGREEN << "Succeeded" << RESET : LOG(INFO) << BOLDRED << "Failed" << RESET;
+            this->Reset();
+        }
     }
     return cStubAligned && cl1Aligned;
 }

@@ -476,7 +476,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
         int cLatency = cDelay + cOffset;
         if(cLatency < 0) continue;
 
-        LOG(INFO) << BOLDGREEN << "Hit Latency of " << +cLatency << RESET;
+        LOG(INFO) << BOLDGREEN << "Hit Latency of " << +cLatency << " - offset of " << +cOffset << RESET;
 
         for(auto cOpticalReadout: *pBoard)
         {
@@ -527,8 +527,9 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             size_t cNHitsThisFE = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId()).size();
                             cNHitsPerHybrid += cNHitsThisFE;
                             cNHits += cNHitsThisFE;
-                            LOG(DEBUG) << BOLDBLUE << "\t.. Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " ROC" << +cChip->getId() << " found "   
-                                << +cNHitsThisFE << " hits." << RESET;
+                            if( cNHitsThisFE > 0 )
+                                LOG(INFO) << BOLDBLUE << "\t.. Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " ROC" << +cChip->getId() << " found "   
+                                    << +cNHitsThisFE << " hits." << RESET;
                         }
                         LOG (DEBUG) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;
                     }

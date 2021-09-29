@@ -84,7 +84,7 @@ class Stub
     uint8_t getRow() { return fRow; }
     float   getCenter() { return fCenter; }
 
-  private:
+  public:
     uint8_t fPosition;
     uint8_t fBend;
     uint8_t fRow;

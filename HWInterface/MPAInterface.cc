@@ -143,7 +143,7 @@ void MPAInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInj
         uint32_t           cPixelIds = (uint32_t)(pInjection.fColumn) * NSSACHANNELS + (uint32_t)pInjection.fRow;
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
-        LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
         this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
 }
@@ -198,7 +198,7 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uin
     uint32_t cColumn     = (pPixelNum == 0) ? 0 : 1 + cPixNum % NSSACHANNELS;
     uint8_t  cRegAddress = PIXEL_CONFIG_TABLE.find(cReg)->second;
     uint16_t cAddress    = this->regPixel(pChip, cRegAddress, cRow, cColumn);
-    LOG(INFO) << BOLDBLUE
+    LOG(DEBUG) << BOLDBLUE
                << "Configuring "
                   ""
                << cReg << " on PXL#" << +pPixelNum << " register is row " << +cRow << " column "
@@ -386,7 +386,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t     cRegMask  = (0x1 << cBitShift); //
         cRegMask              = ~(cRegMask);
         uint8_t cValue        = (cRegValue & cRegMask) | (pValue << cBitShift);
-        //LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
         return this->WriteChipReg(pMPA, cRegName, cValue);
     }
     else if(pRegName.find("SLVSDrive") != std::string::npos)
