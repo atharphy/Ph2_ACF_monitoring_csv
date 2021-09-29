@@ -159,10 +159,7 @@ bool CicInterface::CheckFastCommandLock(Chip* pChip)
     if(!cReadBack.first) return false;
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cReadBack.second) << " from RO status register" << RESET;
     bool cLocked = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x10) >> 4);
-    if(cLocked)
-        return this->CheckReSync(pChip);
-    else
-        return cLocked;
+    return cLocked;
 }
 // configure alignment patterns on CIC
 bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns)
@@ -830,7 +827,7 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
 }
 // start-up sequence for CIC [everything that does not require interaction
 // with the BE or the other readout ASICs on the chip
-bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
+bool CicInterface::StartUp(Chip* pChip,uint8_t pDriveStrength, uint8_t pUseNegEdge)
 {
     std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getFeId());
     if(pChip->getFrontEndType() == FrontEndType::CIC)
@@ -895,7 +892,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     this->EnableFEs(pChip, {0, 1, 2, 3, 4, 5, 6, 7}, true);
 
     // select fast command edge
-    bool cNegEdge = true;
+    bool cNegEdge =  (pUseNegEdge == 1);
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else
@@ -920,7 +917,14 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength)
     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured fast command block in CIC." << RESET;
 
     cSuccess = this->CheckReSync(pChip);
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear ReSync request in CIC  " << RESET;
+        exit(0);
+    }
+
     LOG(INFO) << BOLDGREEN << ".... Completed CIC start-up ........ " << RESET;
+
     return cSuccess;
 }
 } // namespace Ph2_HwInterface

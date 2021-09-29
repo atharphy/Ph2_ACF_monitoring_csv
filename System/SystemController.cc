@@ -243,8 +243,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         }
                         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
                         // CIC start-up sequence
-                        uint8_t cDriveStrength = 5;
-                        cSuccess               = fCicInterface->StartUp(cCic, cDriveStrength);
+                        // uint8_t cDriveStrength = 5;
+                        cSuccess               = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect() );
                         fBeBoardInterface->ChipReSync(cBoard);
                         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(theOuterTrackerModule->getId() % 2) << " connected to link "
                                   << +theOuterTrackerModule->getLinkId() << RESET;

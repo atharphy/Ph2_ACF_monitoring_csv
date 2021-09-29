@@ -7,7 +7,7 @@
     <OpticalGroup Id="0" FMCId="0" >
         <Module FeId="0" ModuleId="0" Status="1">
             <Global>
-                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320" edgeSelect="1"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
