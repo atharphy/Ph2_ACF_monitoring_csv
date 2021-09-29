@@ -75,7 +75,16 @@ Tool::Tool(THttpServer* pHttpServer)
 
 Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
-Tool::~Tool() {}
+Tool::~Tool()
+{
+    // #######################################
+    // # Disable all channels before exiting #
+    // #######################################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
+}
 
 bool Tool::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
 
