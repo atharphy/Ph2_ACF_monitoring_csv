@@ -542,15 +542,32 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
 
                 // make sure SSA is configured to output a test pattern on SLVS out
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern0", cPattern);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern1", cPattern);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern2", cPattern);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern3", cPattern);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern4", cPattern);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern5", cPattern);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern6", cPattern);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
+                if( cReadoutChip->getId() == (int)cSSAPairSel.at(1)-'0' || cReadoutChip->getId() == (int)cSSAPairSel.at(0)-'0'  )
+                {
+                    LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern0", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern1", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern2", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern3", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern4", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern5", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern6", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
+                }
+                else{
+                    cPattern = 0xAA;
+                    LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern0", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern1", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern2", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern3", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern4", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern5", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern6", cPattern);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
+                }
             }//chip
 	    }//hybrid
     }//module 
@@ -607,7 +624,10 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                     // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
                     // aux = k + 1;
                     for ( int i = 0; i < (int)cSubLine.length()-1 ; i++) {
-                        if ( cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) == pPattern_str ) {
+                        if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) && ( (cSubLine != pPattern_str.substr(2, 6) + pPattern_str.substr(0,2)) && (cSubLine != pPattern_str.substr(5,2) + pPattern_str.substr(0, 6)) ) ) {
+                            LOG (DEBUG) << BOLDRED << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << RESET;
+                        }
+                        else{
                             ok = true;
                             LOG (INFO) << BOLDMAGENTA << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << " equals " << pPattern_str << RESET;
                             break;
