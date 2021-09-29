@@ -539,7 +539,6 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
         		// uint8_t cPattern= (uint8_t)cReadoutChip->getId()+1;
                 uint8_t cPattern = (cReadoutChip->getId() % 2 == 0) ? 0xFA : 0xF5;
 
-                LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
 
                 // make sure SSA is configured to output a test pattern on SLVS out
                 if( cReadoutChip->getId() == (int)cSSAPairSel.at(1)-'0' || cReadoutChip->getId() == (int)cSSAPairSel.at(0)-'0'  )

@@ -488,7 +488,7 @@ int main(int argc, char* argv[])
         else
         {
             std::string current_pair;
-            for(int i = 0; i < 7; i++)
+            for(int i = 0; i < 7; i+=2)
             {
                 current_pair = std::to_string(i) + std::to_string(i + 1);
                 cHybridTester.SSATestStubOutput(current_pair);
