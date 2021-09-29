@@ -236,7 +236,7 @@ class D19cCic2Event : public Event
     std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};   // Index Hybrid FE Id , Value CIC FE Id
     std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id - double check this!
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMappingPSL{8, 8, 4, 5, 6, 7, 8, 8};  //  Index Hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
 
     std::vector<uint8_t>              fFeMapping; //{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
     std::vector<uint8_t>              fFeIds;

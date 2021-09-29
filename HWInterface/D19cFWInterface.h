@@ -140,6 +140,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // L1 word alignment values 
     std::vector<uint8_t> fBeL1Delays;
     std::vector<uint8_t> fBeL1Bitslips;
+    std::vector<uint8_t> fStubBuffer;
   public:
     /*!
      *
@@ -508,15 +509,15 @@ class D19cFWInterface : public BeBoardFWInterface
 
             if(fType == 0)
             {
-                LOG(DEBUG) << "\t\t Mode: " << +fMode;
-                LOG(DEBUG) << "\t\t Manual Delay: " << +fDelay << ", Manual Bitslip: " << +fBitslip;
+                LOG(INFO) << "\t\t Mode: " << +fMode;
+                LOG(INFO) << "\t\t Manual Delay: " << +fDelay << ", Manual Bitslip: " << +fBitslip;
                 cStatus = 1;
             }
             else if(fType == 1)
             {
-                LOG(DEBUG) << "\t\t Done: " << +fDone << ", PA FSM: " << BOLDGREEN << fPhaseFSMStateMap[fPhaseAlignmentFSMstate] << RESET << ", WA FSM: " << BOLDGREEN
+                LOG(INFO) << "\t\t Done: " << +fDone << ", PA FSM: " << BOLDGREEN << fPhaseFSMStateMap[fPhaseAlignmentFSMstate] << RESET << ", WA FSM: " << BOLDGREEN
                           << fWordFSMStateMap[fWordAlignmentFSMstate] << RESET;
-                LOG(DEBUG) << "\t\t Delay: " << +fDelay << ", Bitslip: " << +fBitslip;
+                LOG(INFO) << "\t\t Delay: " << +fDelay << ", Bitslip: " << +fBitslip;
                 cStatus = 1;
             }
             else if(fType == 6)
@@ -770,6 +771,7 @@ class D19cFWInterface : public BeBoardFWInterface
     /*! \brief Set or reset the start signal */
     void SetForceStart(bool bStart) {}
 
+    bool CheckStartPattern();
     bool GetCounterData(uint8_t pRawMode);
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //

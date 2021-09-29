@@ -574,6 +574,7 @@
             <node id="async_counter_decode"        address="0x0FF">
                     <node id="ready"                  mask="0x00000001"/>
                     <node id="state"                  mask="0x000000F0"/>
+                    <node id="received_start"         mask="0x00FFFF00"/>
             </node>
             
             <node id="ps_return"                address="0x00E">

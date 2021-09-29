@@ -82,6 +82,7 @@ bool Tool::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::mil
 void Tool::waitForRunToBeCompleted()
 {
     while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)

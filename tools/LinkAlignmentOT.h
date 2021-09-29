@@ -57,7 +57,7 @@ class LinkAlignmentOT : public Tool
     // Alignment parameters 
     DetectorDataContainer fBeSamplingDelay;//one per line per data line from hybrid  
     DetectorDataContainer fBeBitSlip;//one per line per data line from hybrid  
-    bool fSuccess{false};
+    bool fSuccess{true};
     bool fWithCIC{false};
     bool fStubDebug{false};
     bool fL1Debug{false};
@@ -66,6 +66,6 @@ class LinkAlignmentOT : public Tool
     bool PhaseAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool AlignStubPackage(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void Align();
+    bool Align();
 };
 #endif

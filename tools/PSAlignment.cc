@@ -319,7 +319,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
     auto     cTriggerMult = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t cNevents     = 10;
 
-    uint8_t cStartPhaseL1 = 2; 
+    uint8_t cStartPhaseL1 = 0; 
     uint8_t cStopPhaseL1  = 5; 
     bool    cOnlyFirst    = true;
     for(uint8_t cPhase = cStartPhaseL1; cPhase < cStopPhaseL1; cPhase++)
@@ -729,8 +729,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                 {
                     // testing if selecting edge per line works
                     std::vector<uint8_t> cEdgeSelsT1{1};
-                    std::vector<uint8_t> cEdgeSelsRaw{1};
-                    std::vector<uint8_t> cEdgeSelsInputs{1};
+                    std::vector<uint8_t> cEdgeSelsRaw{0};
+                    std::vector<uint8_t> cEdgeSelsInputs{0};
                     for( auto cEdgeSelT1 : cEdgeSelsT1)
                     {
                         LOG (INFO) << BOLDMAGENTA << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;

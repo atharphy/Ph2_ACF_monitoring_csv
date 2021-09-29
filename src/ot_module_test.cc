@@ -301,9 +301,22 @@ int main(int argc, char* argv[])
     // align CIC-lpGBT-BE 
     LinkAlignmentOT cLinkAlignment; 
     cLinkAlignment.Inherit(&cTool);
-    cLinkAlignment.Start(0);
+    try
+    {
+        cLinkAlignment.Start(0);
+    }
+    catch(const std::exception& e)
+    {
+        LOG (INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+        return(666);
+    }
     cLinkAlignment.waitForRunToBeCompleted();
     cLinkAlignment.dumpConfigFiles();
+    if( !cLinkAlignment.getStatus() ) 
+    {
+        LOG (INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+        return(666);
+    }
 
     // align FEs - CIC
     CicFEAlignment cCicAligner;
@@ -313,16 +326,13 @@ int main(int argc, char* argv[])
     cCicAligner.dumpConfigFiles();
     
     // time align stubs with L1 data in the BE 
+    StubBackEndAlignment cStubBackEndAligner;
+    cStubBackEndAligner.Inherit(&cTool);
+    cStubBackEndAligner.Start(0);
+    cStubBackEndAligner.waitForRunToBeCompleted();
+
     if(!cmd.foundOption("skipAlignment"))
     {
-        StubBackEndAlignment cStubBackEndAligner;
-        cStubBackEndAligner.Inherit(&cTool);
-        cStubBackEndAligner.Start(0);
-        cStubBackEndAligner.waitForRunToBeCompleted();
-
-        // cStubBackEndAligner.Initialise();
-        // cStubBackEndAligner.FindStubLatency();
-        // cStubBackEndAligner.Reset();
         cPSAlignment.Align();
     }
     cPSAlignment.dumpConfigFiles();
@@ -456,6 +466,9 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
+        auto cSetting    = cTool.fSettingsMap.find("Nevents");
+        int  cNevents = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 254;
+             
         // Injection              cInjection;
         // std::vector<Injection> cInjections;
         // cInjection.fRow    = 70;
@@ -515,10 +528,9 @@ int main(int argc, char* argv[])
         // TP set + readout 
         for(auto cBoard: *cTool.fDetectorContainer)
         {
-            cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-            //cTool.enableTestPulse(true);
+            cTool.enableTestPulse(true);
             cTool.setFWTestPulse();
-            cTool.ReadNEvents(cBoard, 254);
+            cTool.ReadNEvents(cBoard, cNevents);
             //const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
             //LOG (DEBUG) << +cPh2Events.size() << RESET;
         }
