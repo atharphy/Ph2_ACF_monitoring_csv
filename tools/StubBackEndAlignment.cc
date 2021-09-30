@@ -441,14 +441,16 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
             } // PS chips  - MPAs
 
-            if(cPSmode == 2) continue;
             // for PS - digital injection in SSAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
                 if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                 // uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
+                // disable all SSAs when doing this - why?
                 fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+            
+                if(cPSmode == 2) continue;
                 fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", (0x1 << 0));
                 fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", (0x0 << 0));
                 fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
@@ -498,15 +500,18 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
         ReadNEvents(pBoard, cNevents);
         const std::vector<Event*>& cEvents         = this->GetEvents();
         size_t                     cNEventsMatched = 0;
+        // one of these triggers should match 
         for(size_t cTriggerId = 0; cTriggerId < (size_t)(cMult + 1); cTriggerId++)
         {
-            //size_t cMatchedEvents = 0;
+            if(cFoundCorrectHitLatency) continue;
+            LOG(INFO) << BOLDBLUE << "Checking readout for match in number of hits ... looking at Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << RESET;
             auto   cEventIter     = cEvents.begin() + cTriggerId;
+            cNEventsMatched=0;
+            size_t cAllEvents=0;
             do 
             {
                 if(cEventIter >= cEvents.end()) break;
                 size_t cNHits          = 0;
-                bool   cCorrectLatency = true;
                 for(auto cOpticalReadout: *pBoard)
                 {
                     for(auto cHybrid: *cOpticalReadout)
@@ -528,46 +533,25 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             cNHitsPerHybrid += cNHitsThisFE;
                             cNHits += cNHitsThisFE;
                             if( cNHitsThisFE > 0 )
-                                LOG(INFO) << BOLDBLUE << "\t.. Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " ROC" << +cChip->getId() << " found "   
-                                    << +cNHitsThisFE << " hits." << RESET;
+                                LOG(INFO) << BOLDBLUE << "\t.. ROC" << +cChip->getId() << " found "   
+                                    << +cNHitsThisFE << " hits .." << RESET;
                         }
                         LOG (DEBUG) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;
                     }
                 }
-                cCorrectLatency = cCorrectLatency && (cNHits == cNinjectedHits);
-                cNEventsMatched += (cCorrectLatency) ? 1 : 0;
+                cNEventsMatched += (cNHits == cNinjectedHits) ? 1 : 0;
+                cAllEvents++;
                 cEventIter += (1 + cMult);
             } while(cEventIter < cEvents.end());
+            if( cNEventsMatched == cAllEvents && cAllEvents > 0 )
+            {
+                LOG (INFO) << BOLDGREEN << ".... matched number of hits in all events." << RESET;
+                cFoundCorrectHitLatency=true;
+            } 
         }//event loop 
-        // for(auto cEvent: cEvents)
-        // {
-        //     size_t cNHits          = 0;
-        //     bool   cCorrectLatency = true;
-        //     for(auto cOpticalGroup: *pBoard)
-        //     {
-        //         for(auto cHybrid: *cOpticalGroup)
-        //         {
-        //             // only for the first hybrid
-        //             // if(cHybrid->getIndex() > 0) continue;
-        //             for(auto cChip: *cHybrid)
-        //             {
-        //                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-        //                 size_t cNHitsThisFE = cEvent->GetHits(cHybrid->getId(), cChip->getId()).size();
-        //                 // LOG (INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " ... found ..." << +cNHitsThisFE << " clusters in MPA" << +cChip->getId() << RESET;
-        //                 cNHits += cNHitsThisFE;
-        //             } // ROCs
-        //         }     // hybrids
-        //     }         // OGs
-        //     cCorrectLatency = cCorrectLatency && (cNHits == cNinjectedHits);
-        //     cNEventsMatched += (cCorrectLatency) ? 1 : 0;
-        // } // event loop
-
-        // check match
-        // won't ask for a 100 percent here as I'm not s
-        if(cNEventsMatched > cFraction * cEvents.size())
+        if( cFoundCorrectHitLatency )
         {
             cHitLatency             = cLatency;
-            cFoundCorrectHitLatency = true;
             LOG(INFO) << BOLDGREEN << "For a latency of " << +cLatency << " found " << +cNEventsMatched << " out of " << +cEvents.size() << " events with the correct number of hits for all FEs."
                       << RESET;
         }

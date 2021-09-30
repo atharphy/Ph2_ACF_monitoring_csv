@@ -3563,8 +3563,8 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         //this stops triggers  + resets
         bool cCounterReadoutFailed=true;
         size_t cAttempt=0;
-        do
-        {
+        //do
+        //{
             auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             LOG(INFO) << BOLDBLUE << "Attempt#" << +cAttempt << " Async SSA [trigger source == " << +cTriggerForPS << " ] [ number of injections is " << +cNevents << " ]" 
@@ -3601,7 +3601,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         //     cCounterReadoutFailed=(!GetCounterData(1));
         //     if( !cCounterReadoutFailed ) LOG (INFO) << BOLDGREEN << "Successful readout of PS counter data" << RESET;
         //     else LOG (INFO) << BOLDRED << "Failed to readout PS counter data" << RESET;
-        }while( cCounterReadoutFailed );
+        //}while( cCounterReadoutFailed );
 
         // reconfigure original veto
         this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cVetoCIC);

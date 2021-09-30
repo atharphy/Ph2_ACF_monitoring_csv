@@ -24,6 +24,7 @@ class PSAlignment : public Tool
     ~PSAlignment();
 
     void                                     Initialise();
+    bool                                     AlignL1Inputs(Ph2_HwDescription::BeBoard* pBoard);
     bool                                     AlignStubInputs(Ph2_HwDescription::BeBoard* pBoard);
     bool                                     AlignInputs(Ph2_HwDescription::BeBoard* pBoard, uint8_t pChipId=0);
     void                                     MapMPAOutputs(std::string pSetupType = "PSModule");

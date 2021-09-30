@@ -349,7 +349,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     // need to or success
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)
     {
-        LOG(INFO) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA->getId() << " to " << pValue << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA->getId() << " to " << pValue << RESET;
         this->Set_threshold(pMPA, pValue);
         return true;
     }
@@ -386,7 +386,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t     cRegMask  = (0x1 << cBitShift); //
         cRegMask              = ~(cRegMask);
         uint8_t cValue        = (cRegValue & cRegMask) | (pValue << cBitShift);
-        LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
+        //LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
         return this->WriteChipReg(pMPA, cRegName, cValue);
     }
     else if(pRegName.find("SLVSDrive") != std::string::npos)
@@ -431,7 +431,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t cLatencyReg2 = (0x0100 & pValue) >> 8;
         bool    cConfigReg1  = this->configRow(pMPA, "L1Offset_1", 0, cLatencyReg1);
         bool    cConfigReg2  = this->configRow(pMPA, "L1Offset_2", 0, cLatencyReg2);
-        LOG(INFO) << BOLDMAGENTA << "Setting TriggerLatency on MPA to " << pValue << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "Setting TriggerLatency on MPA to " << pValue << RESET;
 
         return cConfigReg1 && cConfigReg2;
     }
@@ -532,20 +532,31 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         bool    cReadoutMode=true;
         if(pValue == 1)
         {   
-            configPeri(pMPA, "ReadoutMode", 0x01);
+            cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x01);
             LOG(INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
         }
         else
         {
-            configPeri(pMPA, "ReadoutMode", 0x00);
+            cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
             LOG(INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
         }
         return cEnableAnalogue && cReadoutMode;
     }
     else if(pRegName == "AnalogueSync")
     {
-        bool cConfigAna = this->WriteChipReg(pMPA,"AnalogueAsync",1); 
-        return cConfigAna && configPeri(pMPA, "ReadoutMode", 0x00); 
+        // readout mode 1 -- ASYNC counter
+        ChipRegMask cMask; 
+        cMask.fBitShift = PIXEL_ENABLE_TABLE.find("AnalogueInjection")->second; 
+        cMask.fNbits = 1; 
+        pMPA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+        if(pValue == 1)
+            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+        else
+            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerifLoop);
+        // enabling async readout for stubs 
+        bool    cReadoutMode=configPeri(pMPA, "ReadoutMode", 0x00);
+        return cEnableAnalogue && cReadoutMode;
     }
     else if(pRegName == "Threshold" or pRegName == "Bias_THDAC")
     {

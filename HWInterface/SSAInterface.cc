@@ -210,7 +210,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool    cConfigReg1  = this->WriteChipSingleReg(pSSA, "L1-Latency_LSB", cLatencyReg1);
         bool    cConfigReg2  = this->WriteChipSingleReg(pSSA, "L1-Latency_MSB", cLatencyReg2);
 
-        LOG(INFO) << BOLDMAGENTA << "Setting TriggerLatency on SSA to " << pValue << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "Setting TriggerLatency on SSA to " << pValue << RESET;
         return cConfigReg1 && cConfigReg2;
     }
     else if(pRegName == "Sync")

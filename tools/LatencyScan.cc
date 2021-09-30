@@ -176,7 +176,6 @@ void LatencyScan::ScanLatency()
             // loop over triggers in the burst
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
-                // LOG (INFO) << BOLDMAGENTA << "Latency of " << cLat+cTriggerId << RESET;
                 if((cLat + cTriggerId) >= (fStartLatency + fLatencyRange)) continue;
 
                 // prepare container to hold hit information per chip
@@ -257,10 +256,15 @@ void LatencyScan::ScanLatency()
                                                     ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] += 1;
                                         }
                                         else
+                                        {
                                             theLatencyContainerS1.at(cBoard->getIndex())
                                                 ->at(cOpticalGroup->getIndex())
                                                 ->at(cHybrid->getIndex())
                                                 ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] += 1;
+                                            if( (*cEventIter)->GetEventCount()%10 == 0) 
+                                                LOG(INFO) << BOLDCYAN << "\t Event#" << (*cEventIter)->GetEventCount() << "\t\t.. Hit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cRow << " column "
+                                                  << +cColumn << RESET;
+                                        }
                                     }
                                     else
                                     {
@@ -269,13 +273,14 @@ void LatencyScan::ScanLatency()
                                             ->at(cOpticalGroup->getIndex())
                                             ->at(cHybrid->getIndex())
                                             ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] += 1;
-                                        LOG(INFO) << BOLDCYAN << "\t Event#" << (*cEventIter)->GetEventCount() << "\t\t.. Hit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cRow << " column "
+                                        if( (*cEventIter)->GetEventCount()%10 == 0) 
+                                            LOG(INFO) << BOLDCYAN << "\t Event#" << (*cEventIter)->GetEventCount() << "\t\t.. Hit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cRow << " column "
                                                   << +cColumn << RESET;
                                     }
 
                                     // temporary remove does not seem to be set for MPAs/SSAs
-                                    if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
-                                    {
+                                    //if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
+                                    //{
                                         cHitContainer.at(cBoard->getIndex())
                                             ->at(cOpticalGroup->getIndex())
                                             ->at(cHybrid->getIndex())
@@ -287,7 +292,7 @@ void LatencyScan::ScanLatency()
                                             ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] += 1;
                                         cOccChip->getChannel<Occupancy>(cRow + cColumn*120).fOccupancy++;
                                         //cOccChip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
-                                    }
+                                    //}
                                 } // hit vector
                             }     // chip vector
                         }         // hybrid vector
@@ -296,7 +301,7 @@ void LatencyScan::ScanLatency()
                 } while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNevents);
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
-                LOG(INFO) << BOLDMAGENTA << "... on average have found " << cTotalHits / (float)fNevents << " hits per event." << RESET;
+                if( cTotalHits > 0 ) LOG(INFO) << BOLDMAGENTA << "... on average have found " << cTotalHits / (float)fNevents << " hits per event." << RESET;
 #ifdef __USE_ROOT__
                 fDQMHistogramLatencyScan.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
 #endif
