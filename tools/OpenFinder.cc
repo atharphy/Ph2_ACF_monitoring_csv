@@ -506,8 +506,10 @@ void OpenFinder::FindOpensPS()
                             LOG(INFO) << BOLDBLUE << "Threshold  " << cThreshold << RESET;;
                         }
                         // cThreshold = 12;
-                        TString tmpParameter = Form("thresholdForOpens_%d", cChip->getId());
+                        std::string tmpParameter = "thresholdForOpens_" + std::to_string(cChip->getId());
+                        #ifdef __USE_ROOT__
                         fillSummaryTree(tmpParameter, cThreshold);
+                        #endif
 
                         // std::string cHistName  = Form("AntennaOccupancy_Even_%d", cChip->getId());
                         // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
@@ -809,7 +811,7 @@ void OpenFinder::FindOpensPS()
                         auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
                         auto cHitVector = cEvent->GetHits(cHybrid->getId(), cChip->getId());
 
-                        TString tmpParameter = "";
+                        std::string tmpParameter = "";
 
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
@@ -849,10 +851,10 @@ void OpenFinder::FindOpensPS()
                             }
                         } // chnl
 
-                        tmpParameter.Clear();
+                        tmpParameter = "";
                         tmpParameter = "opens" + std::to_string(cChip->getId()) + "_" + Channels;
-                        fillSummaryTree(tmpParameter, opens.size());
 #ifdef __USE_ROOT__
+                        fillSummaryTree(tmpParameter, opens.size());
                         if (true){
                         fResultFile->cd();
                         fOpensTreeParameter.Clear();

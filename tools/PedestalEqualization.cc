@@ -146,7 +146,7 @@ void PedestalEqualization::FindVplus()
             for(auto module: *opticalGroup) // for on module - begin
             {
                 nCbc += module->size();
-                TString tmpParameter = "";
+                std::string tmpParameter = "";
                 for(auto chip: *module) // for on chip - begin
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(module->getIndex())->at(chip->getIndex()));
@@ -161,10 +161,11 @@ void PedestalEqualization::FindVplus()
                     LOG (INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId()  << " Module " << +module->getId() << " ROC " << +chip->getId() << " = " << tmpVthr << RESET;
                     cMeanValue+=tmpVthr;
 
-                    tmpParameter.Clear();
+                    tmpParameter = "";
                     tmpParameter = "VCth" + std::to_string(chip->getId());
-                    fillSummaryTree(tmpParameter, tmpVthr);
-
+                    #ifdef __USE_ROOT__
+                        fillSummaryTree(tmpParameter, tmpVthr);
+                    #endif
                 } // for on chip - end
             }     // for on module - end
         }         // for on opticalGroup - end
@@ -186,7 +187,9 @@ void PedestalEqualization::FindVplus()
     if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
 
     LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
-    fillSummaryTree("VCth", fTargetVcth);
+    #ifdef __USE_ROOT__
+        fillSummaryTree("VCth", fTargetVcth);
+    #endif
 }
 void PedestalEqualization::FindOffsets()
 {

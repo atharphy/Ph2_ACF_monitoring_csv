@@ -129,7 +129,6 @@ int main(int argc, char* argv[])
     Timer       t;
 
 #ifdef __TCUSB__
-#endif
 
     if ( cGui ){
         //Initialize gui communication with named pipe
@@ -138,9 +137,6 @@ int main(int argc, char* argv[])
         gui::status("Initializing test");
         gui::progress(0 / 10.0);        
     }
-
-    #ifdef __TCUSB__
-    #endif
     
     std::stringstream outp;
     // hybrid testing tool
@@ -263,8 +259,9 @@ int main(int argc, char* argv[])
             LOG (INFO) << "Phase alignment MPA" << RESET;
             cAligned = cCicAligner.PhaseAlignmentMPA(100);
             cAlignedDouble = cAligned ? 1.0: 0.0;
+            #ifdef __USE_ROOT__
             cHybridTester.fillSummaryTree( Form("MPA Alignment attemp %d", i+1), cAlignedDouble );
-
+            #endif
             // for (uint8_t value = 0; value < 16; value ++ ) {
             //     cAligned = cCicAligner.ManualPhaseAlignment(value);
             //     if (cAligned) 
@@ -353,7 +350,6 @@ int main(int argc, char* argv[])
         cHybridTester.ReadSSABias("CalLevel");
 
         cPedestalEqualization.FindOffsets();
-        // cPedestalEqualization.FindGains();
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
@@ -547,4 +543,6 @@ int main(int argc, char* argv[])
 
     if ( !batchMode ) cApp.Run();
     return 0;
+
+    #endif
 }

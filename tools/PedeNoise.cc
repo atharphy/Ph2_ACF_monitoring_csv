@@ -500,12 +500,12 @@ void PedeNoise::producePedeNoisePlots()
                             chipNoiseHistogram->Fill(channelData.fNoise);
                         }
                         LOG(DEBUG) << "Filling summary tree with noise measurements" << RESET;
-                        fillSummaryTree("AvgNoiseSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipNoiseHistogram->GetMean() ) ); //For GUI summaryTree
-                        fillSummaryTree("RMSNoiseSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipNoiseHistogram->GetRMS() ) ); //For GUI summaryTree
-                        fillSummaryTree("StDvNoiseSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipNoiseHistogram->GetStdDev() ) ); //For GUI summaryTree
-                        fillSummaryTree("AvgPedeSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipPedestalHistogram->GetMean() ) ); //For GUI summaryTree
-                        fillSummaryTree("RMSPedeSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipPedestalHistogram->GetRMS() ) ); //For GUI summaryTree
-                        fillSummaryTree("StDvPedeSSA" + fSummaryTreeParameter.Itoa(chip->getId(), 10) , Double_t(chipPedestalHistogram->GetStdDev() ) ); //For GUI summaryTree
+                        fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()) , Double_t(chipNoiseHistogram->GetMean() ) ); //For GUI summaryTree
+                        fillSummaryTree("RMSNoiseSSA" + std::to_string(chip->getId()) , Double_t(chipNoiseHistogram->GetRMS() ) ); //For GUI summaryTree
+                        fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()) , Double_t(chipNoiseHistogram->GetStdDev() ) ); //For GUI summaryTree
+                        fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()) , Double_t(chipPedestalHistogram->GetMean() ) ); //For GUI summaryTree
+                        fillSummaryTree("RMSPedeSSA" + std::to_string(chip->getId()) , Double_t(chipPedestalHistogram->GetRMS() ) ); //For GUI summaryTree
+                        fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()) , Double_t(chipPedestalHistogram->GetStdDev() ) ); //For GUI summaryTree
                     }
                 }
             }
