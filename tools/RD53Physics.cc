@@ -114,7 +114,7 @@ void Physics::Stop()
     LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
 }
 
-void Physics::localConfigure(const std::string fileRes_, int currentRun)
+void Physics::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -129,7 +129,7 @@ void Physics::localConfigure(const std::string fileRes_, int currentRun)
     Physics::initializeFiles(fileRes_, currentRun);
 }
 
-void Physics::initializeFiles(const std::string fileRes_, int currentRun)
+void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

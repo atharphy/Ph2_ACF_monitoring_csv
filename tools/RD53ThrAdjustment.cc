@@ -87,7 +87,7 @@ void ThrAdjustment::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)
+void ThrAdjustment::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos             = nullptr;
@@ -103,7 +103,7 @@ void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)
     ThrAdjustment::initializeFiles(fileRes_, currentRun);
 }
 
-void ThrAdjustment::initializeFiles(const std::string fileRes_, int currentRun)
+void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     // ##############################
     // # Initialize sub-calibration #

@@ -38,8 +38,8 @@ class BERtest : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void run();
     void draw();
 

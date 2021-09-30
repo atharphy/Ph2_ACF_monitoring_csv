@@ -98,7 +98,7 @@ void GenericDacDacScan::Stop()
     RD53RunProgress::reset();
 }
 
-void GenericDacDacScan::localConfigure(const std::string fileRes_, int currentRun)
+void GenericDacDacScan::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -113,7 +113,7 @@ void GenericDacDacScan::localConfigure(const std::string fileRes_, int currentRu
     GenericDacDacScan::initializeFiles(fileRes_, currentRun);
 }
 
-void GenericDacDacScan::initializeFiles(const std::string fileRes_, int currentRun)
+void GenericDacDacScan::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

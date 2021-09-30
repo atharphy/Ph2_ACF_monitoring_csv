@@ -28,8 +28,8 @@ class DataTransmissionTest : public BERtest
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string fileRes_, int currentRun);
-    void initializeFiles(const std::string fileRes_, int currentRun);
+    void localConfigure(const std::string& fileRes_, int currentRun);
+    void initializeFiles(const std::string& fileRes_, int currentRun);
     void run();
     void draw(bool saveData = true);
     void analyze();
