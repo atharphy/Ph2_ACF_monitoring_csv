@@ -256,8 +256,8 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
      // String with the binary representation of the pattern
     int         cTotalBadLines    = 0;                                    // Number of bad CIC in lines
-    TString     cParameter[4]   = {"","","",""};                                   // Placeholder for the name of the summaryTree parameter name
-    TString     cValue[4]       = {"","","",""};
+    std::string     cParameter[4]   = {"","","",""};                                   // Placeholder for the name of the summaryTree parameter name
+    std::string     cValue[4]       = {"","","",""};
     
    
     DPInterface cDPInterfacer;
@@ -437,10 +437,13 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         cTotalBadLines += cPhyPortBadLines;
     }
     LOG(INFO) << BOLDYELLOW << "***************************************Bad lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
+    #ifdef __USE_ROOT__
     fillSummaryTree("CIC IN bad lines", cTotalBadLines);
+    #endif
 }
 void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
 {   
+    #ifdef __USE_ROOT__
     TString  cParameter;  
     TString  cValue;
     fResultFile->cd();
@@ -454,6 +457,7 @@ void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
         PATree->Branch("Parameter", &cParameter);
         PATree->Branch("Value", &cValue);
     }
+    #endif
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -479,6 +483,7 @@ void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
                         std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
                         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
 
+                        #ifdef __USE_ROOT__
                         for (int i = 0; i < (int)cReadLines.size(); i++ ){
                             cParameter.Clear();
                             cValue.Clear();
@@ -490,6 +495,7 @@ void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
                                 PATree->Fill();
                             }
                         }
+                        #endif
                     }
                 }
             }
@@ -581,8 +587,8 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
     this->SSAOutputsPogoScope( cReadLines, cSSAPairSel, pBoard, false); //Recover Scoped lines
     std::string pPattern_str;
 
-    TString  cParameter;  
-    TString  cValue;
+    std::string  cParameter;  
+    std::string  cValue;
     fResultFile->cd();
 
     TTree* SSATree = nullptr;
@@ -647,7 +653,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                         break;
                 }
                 if( !ok ) {
-                    cParameter.Clear(); //TString
+                    cParameter = "";
                     if((((int)cSSAPairSel.at(0)-'0')%2==0)) { //Check this
                         cParameter = "FE" + std::to_string((int)cSSAPairSel.at(1-a)-'0') + "_" + std::to_string(b);
                     }
@@ -656,15 +662,21 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                     }
                     cValue     = cLine;
                     LOG(INFO) << cParameter << "  " << cValue << RESET;
-                    SSATree->Fill();
+                    #ifdef __USE_ROOT__
+                        SSATree->Fill();
+                    #endif
                     badLines++;
                 }
             }
             if((((int)cSSAPairSel.at(0)-'0')%2==0)) { //Check this
-                fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(1-a)-'0' ), badLines);
+                #ifdef __USE_ROOT__
+                    fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(1-a)-'0' ), badLines);
+                #endif
             }
             else {
-                fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(a)-'0' ), badLines);
+                #ifdef __USE_ROOT__
+                    fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(a)-'0' ), badLines);
+                #endif
             }
             
         }
@@ -884,7 +896,9 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
                     {
                         LOG(DEBUG) << BOLDRED << "All injected channels on all chips have 0 hits." << RESET;
                         LOG(INFO) << BOLDRED << "Event number " << +event_loop << " is \'empty\'." << RESET;
+                        #ifdef __USE_ROOT__
                         fillSummaryTree("Empty event",event_loop);
+                        #endif
                         bad_events++;
                     }
                     else
@@ -920,12 +934,16 @@ void PSHybridTester::RunHybridETest()
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
         std::string cMeasurementName = (cMapIterator.first);
+        #ifdef __USE_ROOT__
         fillSummaryTree(cMeasurementName, result);
+        #endif
         if( cNominalValue != fHybridNominalValues.end() )
         {
             if ( cNominalValue->second != 0 && cNominalValue->second != 1 )
             {
+                #ifdef __USE_ROOT__
                 fillSummaryTree(cMeasurementName+"dev", cNominalValue->second-result);
+                #endif
                 if( cAcceptancePercentage != 0 )
                 {
                     if( result < cNominalValue->second*(1+cAcceptancePercentage) && result > cNominalValue->second*(1-cAcceptancePercentage) ) 
@@ -964,6 +982,7 @@ void PSHybridTester::RunHybridETest()
         auto& cMeasurement = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+        #ifdef __USE_ROOT_
         fillSummaryTree(cMapIterator.first, result);
     }
 #endif
@@ -1036,6 +1055,7 @@ void PSHybridTester::CheckHybridCurrents()
 }
 void PSHybridTester::CheckHybridVoltages()
 {
+    #ifdef __USE_ROOT__
     ReadHybridVoltage("TC_GND");
     LOG(INFO) << BOLDBLUE << "Test card ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
@@ -1077,6 +1097,7 @@ void PSHybridTester::CheckHybridVoltages()
     {    
         throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH"));
     }
+    #endif
 }
 void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
 {

@@ -205,17 +205,18 @@ void Tool::SoftDestroy()
 	* \param cParameter : Name of the measurement to be stored
 	* \param cValue: Value of the measurement to be stored
 	*/
-	void Tool::fillSummaryTree(TString cParameter,	Double_t cValue) //MINE
+	void Tool::fillSummaryTree(std::string cParameter,	Double_t cValue) //MINE
 	{
 		fResultFile->cd();
 		fSummaryTreeParameter.Clear();
-		fSummaryTreeParameter = cParameter;
+        TString cParameter_TString(cParameter);
+		fSummaryTreeParameter = cParameter_TString;
 		fSummaryTreeValue = cValue;
 		if(fSummaryTree)
 			fSummaryTree->Fill();
 	}
 
-	Double_t Tool::getSummaryParameter( TString cParameter )
+	Double_t Tool::getSummaryParameter( std::string cParameter )
 	{
 		for(int i=0; i<fSummaryTree->GetEntries(); i++)
 		{

@@ -95,9 +95,9 @@ class Tool : public Ph2_System::SystemController
     * \param cParameter : Name of the measurement to be stored
     * \param cValue: Value of the measurement to be stored
     */
-    void fillSummaryTree( TString cParameter, Double_t cValue);
+    void fillSummaryTree( std::string cParameter, Double_t cValue);
 
-    Double_t getSummaryParameter( TString cParameter );
+    Double_t getSummaryParameter( std::string cParameter );
 
     TString getDirectoryName();
 
