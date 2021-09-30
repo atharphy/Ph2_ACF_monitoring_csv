@@ -1643,9 +1643,10 @@ bool SEHTester::CheckClocks(BeBoard* pBoard)
 
             if(cClkStat)
                 LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
-            else
+            else{
                 LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
-            cStatus &= false;
+                cStatus &= false;
+            }
 #ifdef __USE_ROOT__
             fillSummaryTree(cMapIterator->first, cClkStat);
 #endif
