@@ -50,7 +50,13 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
             for(uint8_t cLineId = 1; cLineId < 8; cLineId++)
             {
                 cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, cAlignmentPattern, 8);
-                if(!cAligned) LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
+                if(!cAligned){
+                    LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << ". Retrying with pattern for SSA3... " << +cLineId << RESET;
+                        cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, 0x04, 8);
+                    if(!cAligned){
+                        LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
+                    }
+                } 
             }
             // if aligned then try and scope
             LOG(INFO) << "SLVS debug [stub lines] : Chip " << +cPairId << RESET;
@@ -555,7 +561,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
                 }
                 else{
-                    cPattern = 0xAA;
+                    cPattern = cReadoutChip->getId();
                     LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern0", cPattern);
@@ -595,13 +601,13 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
             if((((int)cSSAPairSel.at(0)-'0')%2==0)) {
                 pPattern_str = (((int)cSSAPairSel.at(a)-'0')%2==0) ? std::bitset<8>(0xF5).to_string() : std::bitset<8>(0xFA).to_string();
                 if ( (int)cSSAPairSel.at(1-a) - '0' == 3)
-                    pPattern_str = std::bitset<8>( 0xFA ).to_string(); //SSA3 is configured to output the same pattern as SSA4
+                    pPattern_str = std::bitset<8>( 0x04 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
        
             }
             else {
                 pPattern_str = (((int)cSSAPairSel.at(a)-'0')%2==0) ? std::bitset<8>(0xFA).to_string() : std::bitset<8>(0xF5).to_string();
                 if ( (int)cSSAPairSel.at(a) - '0' == 3)
-                    pPattern_str = std::bitset<8>( 0xFA ).to_string(); //SSA3 is configured to output the same pattern as SSA4
+                    pPattern_str = std::bitset<8>( 0x04 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
     
             }
             // pPattern_str = ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) ? std::bitset<8>(  (int)cSSAPairSel.at(a) - '0' + 1  ).to_string() : std::bitset<8>(  (int)cSSAPairSel.at(1-a) - '0' + 1  ).to_string() ;
@@ -623,16 +629,18 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                     // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
                     // aux = k + 1;
                     for ( int i = 0; i < (int)cSubLine.length()-1 ; i++) {
-                        if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) && ( (cSubLine != pPattern_str.substr(2, 6) + pPattern_str.substr(0,2)) && (cSubLine != pPattern_str.substr(5,2) + pPattern_str.substr(0, 6)) ) ) {
+                        bool cPatternFound = false;
+                        for ( int j = 0; j < (int)pPattern_str.length() ; j ++ )
+                            cPatternFound |= ((pPattern_str.substr(j, pPattern_str.length()-j) + pPattern_str.substr(0,j)) == cSubLine);
+                        // if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) && ( (cSubLine != pPattern_str.substr(2, 6) + pPattern_str.substr(0,2)) && (cSubLine != pPattern_str.substr(3,5) + pPattern_str.substr(0, 3)) && (cSubLine != pPattern_str.substr(4,4) + pPattern_str.substr(0, 4)) ) ) {
+                        if ( !cPatternFound){
                             LOG (DEBUG) << BOLDRED << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << RESET;
                         }
                         else{
                             ok = true;
-                            LOG (INFO) << BOLDMAGENTA << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << " equals " << pPattern_str << RESET;
+                            // LOG (INFO) << BOLDMAGENTA << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << " equals " << pPattern_str << RESET;
+                            LOG (INFO) << BOLDMAGENTA << pPattern_str << " pattern found." << RESET;
                             break;
-                        }
-                        else{
-                            LOG (DEBUG) << BOLDRED << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << RESET;
                         }
                     }
                     if( ok )
