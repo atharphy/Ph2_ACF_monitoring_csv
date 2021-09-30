@@ -587,7 +587,7 @@ bool OTHybridTester::LpGBTTestResetLines()
 
             cStatus = cStatus && (cDifference_mV <= 100);
             cValid  = cValid && cStatus;
-
+            fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             if(cDifference_mV > 100)
             {
                 LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
