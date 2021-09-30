@@ -70,7 +70,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug(false);
         else
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7);
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8);
         }
     }
 }
@@ -110,7 +110,7 @@ void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> 
         if( !pTrigger )
         {
             bool cAligned=true;
-            for( uint8_t cLineId=1; cLineId < 8; cLineId++)
+            for( uint8_t cLineId=1; cLineId < 9; cLineId++)
             { 
                 cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, 0 , cPairId , cLineId , cAlignmentPattern , 8);
                 if( !cAligned )
@@ -132,7 +132,7 @@ void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> 
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug(false);
         else
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7, cReadLines);
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8, cReadLines);
         }
     }
 }
