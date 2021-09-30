@@ -1655,13 +1655,15 @@ bool SEHTester::CheckClocks(BeBoard* pBoard)
     return cStatus;
 }
 
-void SEHTester::CheckClocks()
+bool SEHTester::CheckClocks()
 {
+    bool cStatus=true;
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT != nullptr) continue;
-        this->CheckClocks(cBoard);
+        cStatus = this->CheckClocks(cBoard);
     }
+    return cStatus;
 }
 void SEHTester::FastCommandScope(BeBoard* pBoard)
 {
