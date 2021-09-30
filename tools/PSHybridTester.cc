@@ -417,7 +417,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                                 recovered += cLine.substr(k, cPattern_str.length()) + "  ";
                             }
                             LOG (INFO) << "Recovered:  " << recovered << RESET;
-                            cParameter[cPatternId].Clear();
+                            cParameter[cPatternId] = "";
                             cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
                             cValue[cPatternId]     = cLine;
                             CICinTree[cPatternId]->Fill();
@@ -965,7 +965,9 @@ void PSHybridTester::RunHybridETest()
         auto& cMeasurement = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+        #ifdef __USE_ROOT__
         fillSummaryTree(cMapIterator.first, result);
+        #endif
         
         if( cMapIterator.first == "Hybrid1V00_current" || cMapIterator.first == "Hybrid1V25_current" ) 
         {
@@ -984,6 +986,7 @@ void PSHybridTester::RunHybridETest()
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
         #ifdef __USE_ROOT_
         fillSummaryTree(cMapIterator.first, result);
+        #endif
     }
 #endif
 }
@@ -1055,6 +1058,7 @@ void PSHybridTester::CheckHybridCurrents()
 }
 void PSHybridTester::CheckHybridVoltages()
 {
+    #ifdef __TCUSB__
     #ifdef __USE_ROOT__
     ReadHybridVoltage("TC_GND");
     LOG(INFO) << BOLDBLUE << "Test card ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
@@ -1098,9 +1102,11 @@ void PSHybridTester::CheckHybridVoltages()
         throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH"));
     }
     #endif
+    #endif
 }
 void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
 {
+    #ifdef __TCUSB__
     TC_PSFE cTC_PSFE;
     // now cycle through chips one at a time ..
     for(auto cOpticalReadout: *pBoard)
@@ -1176,6 +1182,7 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
             }
         }
     }
+    #endif
 }
 void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
 {
