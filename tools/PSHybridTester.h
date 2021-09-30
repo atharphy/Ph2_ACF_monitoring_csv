@@ -44,7 +44,6 @@ class PSHybridTester : public Tool
     void SetHybridVoltage( uint32_t pUsbBus, uint8_t pUsbDev );
     void MPATest();
     void SelectCIC(bool pSelect);
-    void SelectAntennaPosition(const std::string& pPosition, uint16_t pPotentiometer);
     void AlignCICout(uint8_t pPattern=0xAA);
     
     void Start(int currentRun) override;
