@@ -33,7 +33,6 @@ class PedestalEqualization : public Tool
     void FindVplus();
     // offsets are found by taking pMultiple*fEvents triggers
     void FindOffsets();
-    void FindGains();
     void writeObjects();
 
     void Start(int currentRun) override;
