@@ -61,6 +61,9 @@ void OTHybridTester::FindUSBHandler()
 #endif
 }
 
+// void OTHybridTester::makeDir(const char* cDirName) { fResultFile->mkdir(cDirName); }
+// void OTHybridTester::changeDir(const char* cDirName) { fResultFile->cd(cDirName); }
+
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -130,6 +133,16 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     LOG(INFO) << BOLDGREEN << "Checking against : " << std::bitset<8>(pPattern) << RESET;
     bool                res             = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    // #ifdef __USE_ROOT__
+    //     auto cCICOutTree = new TTree("tCicOut", "CIC_Out lines going to the SEH");
+
+    //     std::vector<TString> cLineNames;
+    //     std::vector<uint8_t> cMissMatch;
+    //     // Create TTree Branches
+    //     cCICOutTree->Branch("LineName", &cLineNames);
+    //     cCICOutTree->Branch("MissMatch", &cMissMatch);
+    // #endif
+
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -183,6 +196,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                               << BOLDWHITE << +cShift << RESET;
 
 #ifdef __USE_ROOT__
+                    // cLineNames.push_back(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber));
+                    // cMissMatch.push_back(cMatch);
                     fillSummaryTree(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber), cMatch);
                     fillSummaryTree(Form("stub_%d_hybrid_%d_shift", int(cLine), hybridNumber), cShift);
 #endif
@@ -214,7 +229,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     // cStrLength = cOutput.length();
                     cLine++;
 #ifdef __SEH_USB__
-                } while(cLine < 5); // makeing sure missing stub line pair is skipped in 2S case
+                } while(cLine < 5); // making sure missing stub line pair is skipped in 2S case
 #else
                 } while(cLine < 6);
 #endif
@@ -267,6 +282,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     res = false;
                 }
 #ifdef __USE_ROOT__
+                // cLineNames.push_back(Form("L1A_hybrid_%d_match", hybridNumber));
+                // cMissMatch.push_back(cMatch);
                 fillSummaryTree(Form("L1A_hybrid_%d_match", hybridNumber), cMatch);
                 fillSummaryTree(Form("L1A_hybrid_%d_shift", hybridNumber), cShift);
 #endif
@@ -285,6 +302,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
             }
         }
     }
+    // cCICOutTree->Fill();
+    // cCICOutTree->Write();
     return res;
 }
 
@@ -318,7 +337,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
 
     // Create variables for TTree branches
     std::vector<std::vector<uint8_t>> cI2CStatusVectVect;
-    std::vector<std::vector<int>>     cTryVectVect;
+    // std::vector<std::vector<int>>     cTryVectVect;
     // std::vector<std::vector<float>>   cSetRightLoadVectVect;
     // std::vector<std::vector<float>>   cSetLeftLoadVectVect;
 
@@ -360,7 +379,8 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 struct timeval stop, start;
                 gettimeofday(&start, NULL);
                 // do stuff
-                int tries = 10000;
+                uint8_t failureIter = 0;
+                int     tries       = 100000;
                 for(int j = 0; j < tries; j++)
                 {
                     // #ifdef __TCUSB__
@@ -377,30 +397,40 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                     // #endif
                     // cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
 
-                    uint8_t cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
-                    uint8_t i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
-                    pInterface->I2CWrite(cMaster, cSlaveAddress, 0x9, 1);
+                    // uint8_t cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
+                    uint8_t i2cstatus = 4; // clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                    bool    cSuccess  = pInterface->I2CWrite(cMaster, cSlaveAddress, 0x09, 1);
 
                     if(cSuccess)
+                    {
                         LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
-
+                        failureIter = 0;
+                    }
                     else
                     {
-                        // i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                        i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
                         LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
-                        // clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
-                        // i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
-                        // LOG(DEBUG) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
-
                         LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
                         LOG(INFO) << BOLDBLUE << "I2C test number " << BOLDRED << +j << " failed" << RESET;
-                        // break;
+                        failureIter++;
+                        if(failureIter >= 5)
+                        {
+                            cI2CStatusVect.push_back(i2cstatus);
+                            cMasterSuccess &= cSuccess;
+                            break;
+                        }
                     }
-                    cI2CStatusVect.push_back(i2cstatus);
+
                     // cTryVect.push_back(j);
                     // cSetRightLoadVect.push_back(cSetRightLoad);
                     // cSetLeftLoadVect.push_back(cSetLeftLoad);
+                    cI2CStatusVect.push_back(i2cstatus);
                     cMasterSuccess &= cSuccess;
+                }
+                if(cMasterSuccess) { LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED the Test Card Test" << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED the Test Card Test" << RESET;
                 }
                 fillSummaryTree(Form("i2cmaster%i", cMaster), cMasterSuccess);
                 gettimeofday(&stop, NULL);
@@ -431,11 +461,11 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
     {
         auto cI2CTree = new TTree(Form("tI2CMaster%i", cMaster), Form("I2C Master %i Test Tree", cMaster));
         cI2CTree->Branch("I2C_Master_status", &cI2CStatusVectVect[index]);
-        cI2CTree->Branch("I2C_Master_transaction", &cTryVectVect[index]);
+        // cI2CTree->Branch("I2C_Master_transaction", &cTryVectVect[index]);
         // cI2CTree->Branch("I2C_Master_rightLoad", &cSetRightLoadVectVect[index]);
         // cI2CTree->Branch("I2C_Master_leftLoad", &cSetLeftLoadVectVect[index]);
         cI2CTree->Fill();
-        // fResultFile->cd();
+        fResultFile->cd();
         cI2CTree->Write();
         index += 1;
     }
@@ -711,23 +741,32 @@ bool OTHybridTester::LpGBTTestResetLines()
 #endif
     LpGBTSetGPIOLevel(cGPIOs, 1);
 
-    while(true)
-    {
-        // LpGBTSetGPIOLevel(cGPIOs, 0);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        // LpGBTSetGPIOLevel(cGPIOs, 1);
-        // for(int j=0;j<250;j++){
-        // LpGBTSetGPIOLevel(cGPIOs, 0);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        // LpGBTSetGPIOLevel(cGPIOs, 1);
-        //}
+    // while(true)
+    // {
+    //     // LpGBTSetGPIOLevel(cGPIOs, 0);
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    //     // LpGBTSetGPIOLevel(cGPIOs, 1);
+    //     // for(int j=0;j<250;j++){
+    //     // LpGBTSetGPIOLevel(cGPIOs, 0);
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //     // LpGBTSetGPIOLevel(cGPIOs, 1);
+    //     //}
 
-        fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_R, cMeasurement);
-        fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_R, cMeasurement);
-        fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_L, cMeasurement);
-        fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_L, cMeasurement);
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    }
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_R, cMeasurement);
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_R, cMeasurement);
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_L, cMeasurement);
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_L, cMeasurement);
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    // }
+
+    // auto cResetTree = new TTree("tReset", "Reset Test");
+
+    // std::vector<TString> cLineNames;
+    // std::vector<float> cValues;
+    // // Create TTree Branches
+    // cResetTree->Branch("LineAndLevel", &cLineNames);
+    // cResetTree->Branch("VoltageValue", &cValues);
+
     for(auto cLevel: cLevels)
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
@@ -751,7 +790,8 @@ bool OTHybridTester::LpGBTTestResetLines()
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
             cValid  = cValid && cStatus;
-
+            // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
+            // cValues.push_back(cMeasurement);
             if(cDifference_mV > 100)
             {
                 LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
@@ -775,6 +815,8 @@ bool OTHybridTester::LpGBTTestResetLines()
     {
         LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
     }
+    // cResetTree->Write();
+    // cResetTree->Fill();
     return cValid;
 }
 
@@ -1010,38 +1052,38 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
-void OTHybridTester::BackEndAlignment(std::vector<std::string> pLines) 
+void OTHybridTester::BackEndAlignment(std::vector<std::string> pLines)
 {
     // Phase Tuner object from D19cFWInterface
     D19cFWInterface::PhaseTuner cTuner;
     // in fw.. alignment is done assuming hybrid id 0 ,chip id 0
-    uint8_t cHybridId=0;
-    uint8_t cChipId=0;
-    uint8_t cPhaseAlignmentPattern=0xAA; 
-    uint8_t cWordAlignmentPattern=0xEA;
-    // fw interface 
+    uint8_t cHybridId              = 0;
+    uint8_t cChipId                = 0;
+    uint8_t cPhaseAlignmentPattern = 0xAA;
+    uint8_t cWordAlignmentPattern  = 0xEA;
+    // fw interface
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     LpGBTInjectDLInternalPattern(cPhaseAlignmentPattern);
     // phase align lines - select correct sampling point
-    for(auto cLine : pLines) 
+    for(auto cLine: pLines)
     {
         auto cIter = fBackendAlignmentLineMap.find(cLine);
-        if( cIter == fBackendAlignmentLineMap.end() ) continue;
+        if(cIter == fBackendAlignmentLineMap.end()) continue;
 
-        auto cLineId = cIter->second; 
+        auto cLineId = cIter->second;
         cTuner.TunePhase(cInterface, cHybridId, cChipId, cLineId);
-        LOG (INFO) << BOLDBLUE << "After phase-alignment, delay is " << +cTuner.fDelay << RESET;
+        LOG(INFO) << BOLDBLUE << "After phase-alignment, delay is " << +cTuner.fDelay << RESET;
     }
-    // word align lines 
+    // word align lines
     LpGBTInjectDLInternalPattern(cWordAlignmentPattern);
-    for(auto cLine : pLines) 
+    for(auto cLine: pLines)
     {
         auto cIter = fBackendAlignmentLineMap.find(cLine);
-        if( cIter == fBackendAlignmentLineMap.end() ) continue;
+        if(cIter == fBackendAlignmentLineMap.end()) continue;
 
-        auto cLineId = cIter->second; 
-        cTuner.AlignWord(cInterface, cHybridId,cChipId, cLineId, cWordAlignmentPattern, 8, true);
-        LOG (INFO) << BOLDBLUE << "After word-alignment, bit slip is " << +cTuner.fBitslip << RESET;
+        auto cLineId = cIter->second;
+        cTuner.AlignWord(cInterface, cHybridId, cChipId, cLineId, cWordAlignmentPattern, 8, true);
+        LOG(INFO) << BOLDBLUE << "After word-alignment, bit slip is " << +cTuner.fBitslip << RESET;
     }
 }
 #ifdef __TCP_SERVER__

@@ -957,7 +957,13 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         if(!clpGBTlock)
         {
             LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+#ifdef __TCUSB__
+            // In the test system a run time error is undesired
+            // return false;
             throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
+#else
+            throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
+#endif
         }
     }
     // resetting hard
@@ -4387,6 +4393,7 @@ void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVecto
         }
     }
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
+    std::this_thread::sleep_for(std::chrono::microseconds(50));
 }
 
 std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
@@ -4468,16 +4475,23 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
 {
     uint8_t               cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
+    // ResetCPB();
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     uint8_t               cI2CStatus   = cReplyVector[7] & 0xFF;
-    uint8_t               cIter = 0, cMaxIter = 50;
+#ifdef __TCUSB__
+    uint8_t cIter = 0, cMaxIter = 10;
+#else
+    uint8_t cIter = 0, cMaxIter = 50;
+#endif
     while(cI2CStatus != 4 && cIter < cMaxIter)
     {
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed ... retrying" << RESET;
+        LOG(DEBUG) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed ... retrying" << RESET;
+        LOG(DEBUG) << BOLDRED << "I2C STATUS " << +cI2CStatus << RESET;
+
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
@@ -4485,7 +4499,15 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
         cI2CStatus   = cReplyVector[7] & 0xFF;
         cIter++;
     }
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
+    if(cIter == cMaxIter)
+    {
+#ifdef __TCUSB__
+        // In the test system a run time error is undesired
+        return false;
+#else
+        throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
+#endif
+    }
     return true;
 }
 
@@ -4493,6 +4515,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
 {
     uint8_t               cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
+    // ResetCPB();
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24);

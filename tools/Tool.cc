@@ -239,11 +239,14 @@ void Tool::bookSummaryTree() // MINE
  */
 void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
 {
+    // TString currentDirectory = getDirectoryName();
+    // const char* currentDirectory = gDirectory->GetPath();
     fResultFile->cd();
     fSummaryTreeParameter.Clear();
     fSummaryTreeParameter = cParameter;
     fSummaryTreeValue     = cValue;
     if(fSummaryTree) fSummaryTree->Fill();
+    // fResultFile->cd(currentDirectory);
 }
 
 TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
@@ -464,6 +467,7 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
+    fResultFile->cd();
     if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 
 #endif
