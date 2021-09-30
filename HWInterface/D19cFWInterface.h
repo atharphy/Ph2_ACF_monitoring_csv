@@ -587,6 +587,24 @@ class D19cFWInterface : public BeBoardFWInterface
             cStatus = ParseStatus(pInterface);
             return cStatus;
         };
+        void TunePhase(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
+        {
+            SetLineMode(pInterface, pHybrid, pChip, pLine);
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
+        };
+        void AlignWord(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
+        {
+            if(pChangePattern)
+            {
+                SetLineMode(pInterface, pHybrid, pChip, pLine);
+                SetLinePattern(pInterface, pHybrid, pChip, pLine, pPattern, pPatternPeriod);
+            }
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
+        };
         bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
             LOG(INFO) << BOLDBLUE << "Tuning line " << +pLine << RESET;
@@ -735,7 +753,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    double RunBERtest(bool given_time, double frames_or_time, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return 0; };
+    double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return 0; };
 
     // ############################
     // # Read/Write Optical Group #

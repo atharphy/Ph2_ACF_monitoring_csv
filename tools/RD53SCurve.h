@@ -31,6 +31,10 @@ class SCurve : public Tool
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
     }
 
     void Running() override;
@@ -38,8 +42,8 @@ class SCurve : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string fileRes_, int currentRun);
-    void                                   initializeFiles(const std::string fileRes_, int currentRun);
+    void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void                                   run();
     void                                   draw();
     std::shared_ptr<DetectorDataContainer> analyze();
@@ -71,7 +75,7 @@ class SCurve : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
     void chipErrorReport() const;
 
   protected:

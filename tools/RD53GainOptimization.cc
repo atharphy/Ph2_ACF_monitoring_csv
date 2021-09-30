@@ -25,20 +25,20 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    startValue     = this->findValueInSettings("VCalHstart");
-    stopValue      = this->findValueInSettings("VCalHstop");
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
-    KrumCurrStart  = this->findValueInSettings("KrumCurrStart");
-    KrumCurrStop   = this->findValueInSettings("KrumCurrStop");
-    doFast         = this->findValueInSettings("DoFast");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    startValue     = this->findValueInSettings<double>("VCalHstart");
+    stopValue      = this->findValueInSettings<double>("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    KrumCurrStart  = this->findValueInSettings<double>("KrumCurrStart");
+    KrumCurrStop   = this->findValueInSettings<double>("KrumCurrStop");
+    doFast         = this->findValueInSettings<double>("DoFast");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd = RD53::getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);
@@ -158,19 +158,19 @@ void GainOptimization::draw()
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
+    }
 
     Gain::draw(false);
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 
@@ -260,7 +260,6 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                                   << " <<<" << RESET;
                     }
 
-                    // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
@@ -290,32 +289,36 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         // ##############################################
                         // # Search for maximum and build discriminator #
                         // ##############################################
+                        float  avg    = 0;
                         float  stdDev = 0;
                         size_t cnt    = 0;
                         for(auto row = 0u; row < RD53::nRows; row++)
                             for(auto col = 0u; col < RD53::nCols; col++)
-                                if(cChip->getChannel<GainAndIntercept>(row, col).fGain > 0)
+                                if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
-                                    stdDev += cChip->getChannel<GainAndIntercept>(row, col).fGain * cChip->getChannel<GainAndIntercept>(row, col).fGain;
+                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept, cChip->getChannel<GainFit>(row, col).fSlope}, target);
+                                    avg += ToTatTarget;
+                                    stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;
                                 }
-                        stdDev          = (cnt != 0 ? stdDev / cnt : 0) - cChip->getSummary<GainAndIntercept>().fGain * cChip->getSummary<GainAndIntercept>().fGain;
-                        stdDev          = (stdDev > 0 ? sqrt(stdDev) : 0);
-                        size_t ToTpoint = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) - 2;
-                        float  newValue = (ToTpoint - cChip->getSummary<GainAndIntercept>().fIntercept) / (cChip->getSummary<GainAndIntercept>().fGain + NSTDEV * stdDev);
+                        avg              = cnt != 0 ? avg / cnt : 0;
+                        stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
+                        stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
+                        float  newValue  = avg + NSTDEV * stdDev;
+                        size_t targetToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION);
 
                         // ########################
                         // # Save best DAC values #
                         // ########################
                         float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>();
-                        if(fabs(newValue - target) < fabs(oldValue - target))
+                        if(fabs(newValue - targetToT) < fabs(oldValue - targetToT))
                         {
                             bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = newValue;
                             bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                         }
 
-                        if((newValue > target) || (newValue < 0))
+                        if((newValue < targetToT) && (stdDev != 0))
 
                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
@@ -359,7 +362,6 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
 
-                // static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendChipCommandsPack(cBoard, chipCommandList, hybridId);
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 

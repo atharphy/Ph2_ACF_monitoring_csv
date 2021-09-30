@@ -20,6 +20,7 @@
 
 #include <TH1F.h>
 #include <TH2F.h>
+#include <TH3F.h>
 
 class SCurveHistograms : public DQMHistogramBase
 {
@@ -36,6 +37,7 @@ class SCurveHistograms : public DQMHistogramBase
     DetectorDataContainer DetectorData;
 
     DetectorDataContainer Occupancy2D;
+    DetectorDataContainer Occupancy3D;
     DetectorDataContainer ErrorReadOut2D;
     DetectorDataContainer ErrorFit2D;
     DetectorDataContainer Threshold1D;

@@ -9,7 +9,7 @@
 
 #set(CACTUS_ROOT ${PROJECT_SOURCE_DIR}/extern/cactus )
 
-file(GLOB_RECURSE uhal_include $ENV{CACTUSROOT}*uhal.hpp)
+file(GLOB_RECURSE uhal_include $ENV{CACTUSROOT}/*uhal.hpp)
 if(uhal_include)
     set(CACTUS_ROOT "$ENV{CACTUSROOT}")
     set(CACTUS_FOUND TRUE)

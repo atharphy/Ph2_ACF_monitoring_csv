@@ -75,6 +75,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("fcmd-pattern", "Injected pattern (simulates FCMD) on the DownLink", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("fcmd-pattern", "fp");
     //
+    // run Eye Opening Monitor
+    cmd.defineOption("eye-monitor", "Run Eye Opening Monitor test");
+    cmd.defineOptionAlternative("eye-monitor", "eom");
     cmd.defineOption("fcmd-test", "Run fast command tests", ArgvParser::NoOptionAttribute);
     cmd.defineOption("fcmd-test-start-pattern", "Fast command FSM test start pattern", ArgvParser::OptionRequiresValue);
     cmd.defineOption("fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue);
@@ -97,8 +100,8 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("debug", "d");
     // scope
     cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
-    // efficency
-    cmd.defineOption("eff", "Measure the DC/DC efficency");
+    // efficiency
+    cmd.defineOption("eff", "Measure the DC/DC efficiency");
     // Test VTRx+ registers
     cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("powersupply", "ps");
@@ -106,6 +109,12 @@ int main(int argc, char* argv[])
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ", ArgvParser::OptionRequiresValue);
     // Bias voltage on sensor side
     cmd.defineOption("bias", "Measure the Bias voltage on sensor side ", ArgvParser::OptionRequiresValue);
+    // Load values defining a test from file
+    cmd.defineOption("rightLoad", "right load 1 step = 635uA 0xfff = 2.6A ", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("leftLoad", "left load 1 step = 635uA 0xfff = 2.6A ", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("ext-leak", "Measure the Bias voltage leakage current using an external power supply", ArgvParser::OptionRequiresValue);
+    // Bias voltage on sensor side
+    cmd.defineOption("ext-bias", "Measure the Bias voltage on sensor side using an external power supply", ArgvParser::OptionRequiresValue);
     // Load values defining a test from file
     cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise (or if file is missing it) default parameters will be used", ArgvParser::OptionRequiresValue);
     // Test VTRx+ registers
@@ -148,6 +157,9 @@ int main(int argc, char* argv[])
     std::string cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "testParameters.txt";
     uint16_t    cBiasVoltage           = (cmd.foundOption("bias")) ? convertAnyInt(cmd.optionValue("bias").c_str()) : 0;
     uint16_t    cLeakVoltage           = (cmd.foundOption("leak")) ? convertAnyInt(cmd.optionValue("leak").c_str()) : 0;
+    uint16_t    cLeftLoad              = (cmd.foundOption("leftLoad")) ? convertAnyInt(cmd.optionValue("leftLoad").c_str()) : 0;
+    uint16_t    cRightLoad             = (cmd.foundOption("rightLoad")) ? convertAnyInt(cmd.optionValue("rightLoad").c_str()) : 0;
+    uint16_t    cExtLeakVoltage        = (cmd.foundOption("ext-leak")) ? convertAnyInt(cmd.optionValue("ext-leak").c_str()) : 0;
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
@@ -176,9 +188,9 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
-
     cSEHTester.FindUSBHandler();
-    cSEHTester.TurnOn();
+    cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+    // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
     cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
     cTool.ConfigureHw();
@@ -194,7 +206,7 @@ int main(int argc, char* argv[])
     else
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
-        cSEHTester.TurnOn();
+        // cSEHTester.TurnOn();
     }
 
     // cSEHTester.TestCardVoltages();
@@ -207,7 +219,39 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDYELLOW << "You are using the default parameter set stored in fDefaultParameters" << RESET;
     }
-
+    //     std::vector<std::string> cMeasurements = {};
+    //     if(cmd.foundOption("rightLoad") || cmd.foundOption("leftLoad"))
+    //     {
+    //         cMeasurements.push_back("withLoad");
+    //         cMeasurements.push_back("noLoad");
+    //     }
+    //     else
+    //     {
+    //         cMeasurements.push_back("noLoad");
+    //     }
+    // #ifdef __USE_ROOT__
+    //     cTool.fillSummaryTree("SoftwareVersion", 1);
+    // #endif
+    //     for(auto dirName: cMeasurements)
+    //     {
+    //         LOG(INFO) << BOLDBLUE << dirName << RESET;
+    //         cSEHTester.makeDir(dirName.c_str());
+    //         cSEHTester.changeDir(dirName.c_str());
+    /****************************/
+    /*  Test VTRx+ slow control */
+    /****************************/
+    if(cmd.foundOption("testVTRxplus"))
+    {
+        bool cStatus = cSEHTester.LpGBTTestVTRx();
+// cStatus = cSEHTester.LpGBTTestVTRx();
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_vtrxplusslowcontrol", (cStatus) ? 1 : 0);
+#endif
+        if(cStatus)
+            LOG(INFO) << BOLDGREEN << "VTRx+ slow control test passed." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
+    }
     /*******************/
     /*   TEST UPLINK   */
     /* E-links CIC_OUT */
@@ -227,7 +271,10 @@ int main(int argc, char* argv[])
         {
             // cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
             bool cStatus = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
-            cSEHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
+// cSEHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
+#endif
             if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
             else
             {
@@ -235,7 +282,6 @@ int main(int argc, char* argv[])
             }
         }
     }
-
     /****************************/
     /* TEST RESET LINES (GPIOs) */
     /*     And test GPIs        */
@@ -243,43 +289,45 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("testReset"))
     {
         bool cStatus = cSEHTester.LpGBTTestResetLines();
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
+#endif
         if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
         else
         {
             LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
         }
         cStatus = cSEHTester.LpGBTTestGPILines();
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_PowerGoodTest", (cStatus) ? 1 : 0);
+#endif
         if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
         else
         {
             LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
         }
     }
-
-    /****************************/
-    /*  Test VTRx+ slow control */
-    /****************************/
-    if(cmd.foundOption("testVTRxplus"))
-    {
-        bool cStatus = cSEHTester.LpGBTTestVTRx();
-
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
-        else
-            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
-    }
+    //}
 
     /****************************/
     /*  Test LpGBT I2C Masters */
     /****************************/
+    // for(int j=0; j<100; j++){
     if(cmd.foundOption("testI2C"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
         bool                 cStatus  = cSEHTester.LpGBTTestI2CMaster(cMasters);
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_i2cmasters", (cStatus) ? 1 : 0);
+#endif
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
         else
+        {
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
+            // LOG(INFO) << BOLDBLUE << "I2C test number" << BOLDRED <<+j <<" failed" << RESET;
+            // break;}
+        }
     }
 
     /**********************************/
@@ -290,29 +338,40 @@ int main(int argc, char* argv[])
         // cSEHTester.ToyTestFixedADCs();
         cSEHTester.LpGBTTestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 0xe00, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
-    }
-
-    // Test Fast Commands
-    if(cDebug)
-    {
-        LOG(INFO) << "Start debugging" << RESET;
-        cSEHTester.SEHInputsDebug();
+        // cSEHTester.LpGBTTestADC(cADCs, 0, 0xe00, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }
 
     if(cClockTest)
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cSEHTester.CheckClocks();
+        bool cStatus=cSEHTester.CheckClocks();
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
+
+        }
+        #ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
+    #endif
     }
+    int counter = 0;
 
     if(cmd.foundOption("scope-fcmd"))
     {
+        // align lines in the back-end
+        // currently this does both the phase + word alignment
+        cSEHTester.BackEndAlignment({"2S_L", "2S_R"});
         if(cmd.foundOption("fcmd-pattern"))
         {
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            cSEHTester.LpGBTFastCommandChecker(cFCMDPattern);
+            for(int i = 0; i < 100; i++)
+            {
+                if(!cSEHTester.LpGBTFastCommandChecker(cFCMDPattern)) counter += 1;
+            }
+            LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +counter << " times" << RESET;
         }
         else
         {
@@ -320,17 +379,20 @@ int main(int argc, char* argv[])
         }
     }
 
+    // cSEHTester.changeDir("");
+    //}
+
     if(cmd.foundOption("eff"))
     {
         // cSEHTester.exampleFit();
-        LOG(INFO) << BOLDBLUE << "Efficency Test" << RESET;
-        cSEHTester.TestEfficency(0, 2500, 500);
+        LOG(INFO) << BOLDBLUE << "Efficiency Test" << RESET;
+        cSEHTester.TestEfficiency(0, 2500, 500);
     }
 
     if(cmd.foundOption("leak"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
-        cSEHTester.TestLeakageCurrent(cLeakVoltage, 600);
+        cSEHTester.TestLeakageCurrent(cLeakVoltage, 150);
     }
 
     if(cmd.foundOption("bias"))
@@ -338,6 +400,20 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side" << RESET;
         cSEHTester.TestBiasVoltage(cBiasVoltage);
     }
+
+    if(cmd.foundOption("ext-leak"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, "MyIsegSHR4220", "HV_Module1");
+    }
+
+    if(cmd.foundOption("ext-bias"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side with external power supply" << RESET;
+        cSEHTester.ExternalTestBiasVoltage("MyIsegSHR4220", "HV_Module1");
+    }
+
+    if(cmd.foundOption("eye-monitor")) { cSEHTester.LpGBTRunEyeOpeningMonitor(7); }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
     {
@@ -388,6 +464,12 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cSEHTester.ClearBRAM(std::string("test"));
     }
+    // Test Fast Commands
+    if(cDebug)
+    {
+        LOG(INFO) << "Start debugging" << RESET;
+        cSEHTester.SEHInputsDebug();
+    }
     if(cmd.foundOption("cic-pattern"))
     {
         LOG(INFO) << BOLDBLUE << "Checking back-end alignment with CIC.." << RESET;
@@ -409,6 +491,7 @@ int main(int argc, char* argv[])
     */
     // Save Result File
     cSEHTester.TurnOff();
+    cSEHTester.SetLoad(0, 0);
     cSEHTester.LpGBTInjectULExternalPattern(false, 170);
 
     cTool.SaveResults();

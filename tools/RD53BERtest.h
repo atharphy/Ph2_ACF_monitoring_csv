@@ -11,6 +11,7 @@
 #define RD53BERtest_H
 
 #include "../Utils/Container.h"
+#include "../Utils/ContainerFactory.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -24,13 +25,21 @@
 class BERtest : public Tool
 {
   public:
+    ~BERtest()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string fileRes_, int currentRun);
-    void initializeFiles(const std::string fileRes_, int currentRun);
+    void localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void run();
     void draw();
 

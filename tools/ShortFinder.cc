@@ -88,7 +88,7 @@ void ShortFinder::Initialise()
     {
         fChannelGroupHandler = new CBCChannelGroupHandler();
         fChannelGroupHandler->setChannelGroupParameters(16, 2);
-        fSkipMaskedChannels = findValueInSettings("SkipMaskedChannels", 0);
+        fSkipMaskedChannels = findValueInSettings<double>("SkipMaskedChannels", 0);
         this->SetSkipMaskedChannels(fSkipMaskedChannels);
     }
     if(ShortFinder::fWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
@@ -96,9 +96,9 @@ void ShortFinder::Initialise()
 
     // now read the settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
-    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
     cSetting            = fSettingsMap.find("ShortsPulseAmplitude");
-    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     if(fTestPulseAmplitude == 0)
         fTestPulse = 0;

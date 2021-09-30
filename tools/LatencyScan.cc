@@ -1,81 +1,25 @@
 #include "LatencyScan.h"
 
-#ifdef __USE_ROOT__
 #include "../HWDescription/Cbc.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GenericDataArray.h"
 #include "../Utils/Occupancy.h"
 
 LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}
 
-void LatencyScan::Initialize(uint32_t pStartLatency, uint32_t pLatencyRange)
+void LatencyScan::Initialize()
 {
+    fStartLatency = findValueInSettings<double>("StartLatency", 1);
+    fLatencyRange = findValueInSettings<double>("LatencyRange", 1);
+    fHoleMode     = findValueInSettings<double>("HoleMode", 1);
+    fNevents      = findValueInSettings<double>("Nevents", 10);
+
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        uint32_t cBoardId = cBoard->getId();
-
-        TH1F* cTriggerTDC = new TH1F(Form("h_BeBoard_triggerTDC_Be%d", cBoardId), Form("Trigger TDC BE%d; Trigger TDC; # of Hits", cBoardId), fTDCBins, -0.5, fTDCBins - 0.5);
-
-        cTriggerTDC->SetFillColor(4);
-        cTriggerTDC->SetFillStyle(3001);
-        bookHistogram(cBoard, "triggerTDC", cTriggerTDC);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cFe: *cOpticalGroup)
-            {
-                uint32_t cFeId = cFe->getId();
-
-                TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cFeId), Form("FE%d  Online Canvas", cFeId));
-                // ctmpCanvas->Divide( 2, 2 );
-                fCanvasMap[cFe] = ctmpCanvas;
-
-                fNCbc = cFe->size();
-
-                // 1D Hist forlatency scan
-                TString  cName = Form("h_hybrid_latency_Fe%d", cFeId);
-                TObject* cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TH1F* cLatHist = nullptr;
-
-                cLatHist = new TH1F(cName, Form("Latency FE%d; Latency; # of Hits", cFeId), (pLatencyRange), pStartLatency - 0.5, pStartLatency + (pLatencyRange)-0.5);
-
-                cLatHist->GetXaxis()->SetTitle("Trigger Latency");
-                cLatHist->SetFillColor(4);
-                cLatHist->SetFillStyle(3001);
-                bookHistogram(cFe, "hybrid_latency", cLatHist);
-
-                cName = Form("h_hybrid_stub_latency_Fe%d", cFeId);
-                cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TH1F* cStubHist = new TH1F(cName, Form("Stub Lateny FE%d; Stub Lateny; # of Stubs", cFeId), pLatencyRange, pStartLatency, pStartLatency + pLatencyRange);
-                cStubHist->SetMarkerStyle(2);
-                bookHistogram(cFe, "hybrid_stub_latency", cStubHist);
-
-                cName                = Form("h_hybrid_latency_2D_Fe%d", cFeId);
-                TH2D* cLatencyScan2D = new TH2D(cName,
-                                                Form("Latency FE%d; Stub Latency; L1 Latency; # of Events w/ no Hits and no Stubs", cFeId),
-                                                pLatencyRange,
-                                                pStartLatency - 0.5,
-                                                pStartLatency + (pLatencyRange)-0.5,
-                                                pLatencyRange,
-                                                pStartLatency - 0.5,
-                                                pStartLatency + (pLatencyRange)-0.5);
-                bookHistogram(cFe, "hybrid_latency_2D", cLatencyScan2D);
-            }
-        }
-    }
-
-    parseSettings();
     LOG(INFO) << "Histograms and Settings initialised.";
 }
 
@@ -83,21 +27,21 @@ void LatencyScan::MeasureTriggerTDC()
 {
     LOG(INFO) << "Measuring Trigger TDC ... ";
 
-    std::map<uint16_t, std::vector<uint16_t>> BeBoardTriggerTDCMap;
-    // Take Data for all Hybrids
-    for(auto pBoard: *fDetectorContainer)
+    DetectorDataContainer theTriggerTDCContainer;
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<TDCBINS, uint16_t>>(*fDetectorContainer, theTriggerTDCContainer);
+
+    for(auto board: theTriggerTDCContainer)
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
-        // I need this to normalize the TDC values I get from the Strasbourg FW
-        BeBoardTriggerTDCMap[pBoard->getId()] = std::vector<uint16_t>(fTDCBins, 0);
+        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
 
         ReadNEvents(theBoard, fNevents);
-
         const std::vector<Event*>& events = GetEvents();
+        std::vector<uint32_t>      values(TDCBINS - 1, 0);
 
         for(auto& cEvent: events)
         {
             uint8_t cTDCVal = cEvent->GetTDC();
+            LOG(INFO) << "TDC Val is " << cTDCVal;
 
             if(theBoard->getBoardType() == BoardType::D19C)
             {
@@ -115,67 +59,102 @@ void LatencyScan::MeasureTriggerTDC()
                           << std::endl;
             else
             {
-                ++BeBoardTriggerTDCMap[pBoard->getId()][cTDCVal];
+                // Board level value, just fill the first optical group & hybrid with the value for streaming simplicity
+                values[cTDCVal]++;
             }
+        }
+        LOG(INFO) << "hybrid? " << board->at(0)->at(0)->getIndex();
+        for(uint32_t v = 0; v < fTDCBins; v++)
+        {
+            LOG(INFO) << "filling " << v << " with " << values[v];
+            board->at(0)->at(0)->getSummary<GenericDataArray<TDCBINS, uint16_t>>()[v] = values[v];
         }
     }
 
-    for(auto pBoard: *fDetectorContainer)
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fillTriggerTDCPlots(theTriggerTDCContainer);
+#else
+    auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>("TriggerTDC");
+    for(auto board: theTriggerTDCContainer)
     {
-        TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(pBoard, "triggerTDC"));
-        for(size_t tdcValue = 0; tdcValue < fTDCBins; ++tdcValue) { cTmpHist->SetBinContent(tdcValue + 1, BeBoardTriggerTDCMap[pBoard->getId()][tdcValue]); }
+        if(fStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fNetworkStreamer);
     }
-
-    return;
+#endif
 }
 
-std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency(uint8_t pStartLatency, uint8_t pLatencyRange)
+void LatencyScan::ScanLatency()
 {
     LOG(INFO) << "Scanning Latency ... ";
     uint32_t cIterationCount = 0;
 
-    // //Fabio - clean BEGIN
-    // setFWTestPulse();
-    // setSystemTestPulse ( 200, 0, true, false );
-    // //Fabio - clean END
+    // Fabio - clean BEGIN
+    setFWTestPulse();
+    enableTestPulse(true);
+    setSameDac("TestPulsePotNodeSel", 150);
+    // Fabio - clean END
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
-    for(auto pBoard: *fDetectorContainer)
+
+    DetectorDataContainer theLatencyContainer;
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
+
+    for(auto board: theLatencyContainer)
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
-        for(uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
+        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
+        for(uint16_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
         {
             //  Set a Latency Value on all FEs
             cVisitor.setLatency(cLat);
             this->accept(cVisitor);
             ReadNEvents(theBoard, fNevents);
-            const std::vector<Event*>& events = GetEvents();
-            countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
-            // done counting hits for all FE's, now update the Histograms
-            updateHists("hybrid_latency", false);
-        }
 
-        // done counting hits for all FE's, now update the Histograms
-        updateHists("hybrid_latency", false);
+            for(auto opticalGroup: *board)
+            {
+                const std::vector<Event*>& events = GetEvents();
+                for(auto hybrid: *opticalGroup)
+                {
+                    uint32_t cHitSum = 0;
+                    for(auto& cEvent: events)
+                    {
+                        // first, reset the hit counter - I need separate counters for each event
+                        int cHitCounter = 0;
+                        for(auto chip: *hybrid)
+                        {
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
+                            if(theChip->getFrontEndType() == FrontEndType::MPA)
+                                cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(hybrid->getId(), chip->getId());
+                            else if(theChip->getFrontEndType() == FrontEndType::SSA)
+                                cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(hybrid->getId(), static_cast<SSA*>(theChip)->getPartid());
+                            else
+                                cHitCounter += cEvent->GetNHits(hybrid->getId(), chip->getId());
+                        }
+                        cHitSum += cHitCounter; // TODO: It would be nice to fill per event so you could have the errors correct, maybe do with occupancy?
+
+                    } // end event loop
+
+                    LOG(INFO) << "FE: " << +hybrid->getId() << "; Latency " << +cLat << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
+                    hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cHitSum;
+                } // end hybrid
+
+            } // end optical group
+
+        } // end latency loop
+
         cIterationCount++;
-    }
+    } // end board loop
 
-    // analyze the Histograms
-    std::map<HybridContainer*, uint8_t> cLatencyMap;
-
-    for(auto cFe: fHybridHistMap)
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fillLatencyPlots(theLatencyContainer);
+#else
+    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
+    for(auto board: theLatencyContainer)
     {
-        TH1F*   cTmpHist       = dynamic_cast<TH1F*>(getHist(cFe.first, "hybrid_latency"));
-        uint8_t cHitLatency    = static_cast<uint8_t>(cTmpHist->GetXaxis()->GetBinUpEdge(cTmpHist->GetMaximumBin()));
-        cLatencyMap[cFe.first] = cHitLatency;
-
-        LOG(INFO) << "Hit Latency FE " << +cFe.first->getId() << ": " << +cHitLatency << " clock cycles!";
+        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
-
-    return cLatencyMap;
+#endif
 }
 
-void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
+void LatencyScan::StubLatencyScan()
 {
     // check if TP trigger is being used
     for(auto cBoard: *fDetectorContainer)
@@ -222,8 +201,10 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
         }
     }
 
-    // scan stub latency
-    for(uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
+    DetectorDataContainer theStubContainer;
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theStubContainer);
+
+    for(uint8_t cLat = fStartLatency; cLat < fStartLatency + fLatencyRange; cLat++)
     {
         // container to hold scan result
         DetectorDataContainer* cMatchedEvents = new DetectorDataContainer();
@@ -239,7 +220,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
             // here set the stub latency
 
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
-            this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
+            this->ReadNEvents(cBeBoard, this->findValueInSettings<double>("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)
@@ -251,7 +232,7 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                     auto& cMatchesThisOpticalGroup = cMatchesThisBoard->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cCic               = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                        auto& cCic               = static_cast<OuterTrackerHybrid*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))->fCic;
                         auto& cMatchesThisHybrid = cMatchesThisOpticalGroup->at(cHybrid->getIndex());
                         if(cCic != NULL)
                         {
@@ -313,118 +294,43 @@ void LatencyScan::StubLatencyScan(uint8_t pStartLatency, uint8_t pLatencyRange)
                                 cNStubs += cStubs.size();
                             }
                         } // chip
-                    }     // hybrid
+                    }     // optical group
                 }         // hybrids
             }             // events
             LOG(INFO) << BOLDBLUE << "\t..." << +cNStubs << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
-#ifdef __USE_ROOT__
+
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    TH1F* cTmpHist    = dynamic_cast<TH1F*>(getHist(cHybrid, "hybrid_stub_latency"));
-                    int   cBin        = cTmpHist->FindBin(cLat);
-                    float cBinContent = cTmpHist->GetBinContent(cBin);
-                    cBinContent += cNStubs;
-                    cTmpHist->SetBinContent(cBin, cBinContent);
+                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency] = cNStubs;
+
                 } // hybrid
             }     // hybrid
-#endif
+
         } // board
     }     // latency
-}
-std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartLatency, uint8_t pLatencyRange)
-{
-    // Now the actual scan
-    LOG(INFO) << BOLDBLUE << "Scanning Stub Latency ... ";
-    for(auto cBoard: *fDetectorContainer)
+
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fillStubLatencyPlots(theStubContainer);
+#else
+    auto theStubStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
+    for(auto board: theStubContainer)
     {
-        BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-        // check trigger source
-        uint16_t cTriggerSource = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        if(cTriggerSource == 6)
-        {
-            LOG(INFO) << BOLDBLUE << "Trigger source is ... using TP" << RESET;
-
-            // if TP on .. and CIC
-            // make sure stubs are only in one CBC
-            // becaause otherwise ..
-            uint8_t cTPgroup = 0;
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto& cCic        = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    bool  cMaskOthers = (cCic != NULL) ? true : false;
-                    for(auto cChip: *cHybrid)
-                    {
-                        auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        if(cMaskOthers && cChip->getId() == 0)
-                        {
-                            uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
-                            cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
-                        }
-                        else if(cMaskOthers)
-                        {
-                            fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
-                        }
-                    } // roc
-                }     // hybrid
-            }         // hybrid
-        }
-
-        for(uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
-        {
-            int cNStubs = 0;
-            // Take Data for all Hybrids
-            // here set the stub latency
-            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
-            this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
-            const std::vector<Event*>& cEvents = this->GetEvents();
-            // Loop over Events from this Acquisition
-            for(auto& cEvent: cEvents)
-            {
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    for(auto cHybrid: *cOpticalGroup) { cNStubs += countStubs(cHybrid, cEvent, "hybrid_stub_latency", cLat); }
-                }
-            }
-            LOG(INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs << " Events " << cEvents.size();
-        }
-        // done counting hits for all FE's, now update the Histograms
-        updateHists("hybrid_stub_latency", false);
+        if(fStreamerEnabled) theStubStream.streamAndSendBoard(board, fNetworkStreamer);
     }
-
-    // // analyze the Histograms
-    std::map<HybridContainer*, uint8_t> cStubLatencyMap;
-
-    LOG(INFO) << "Identified the Latency with the maximum number of Stubs at: ";
-
-    for(auto cFe: fHybridHistMap)
-    {
-        TH1F*   cTmpHist           = dynamic_cast<TH1F*>(getHist(cFe.first, "hybrid_stub_latency"));
-        uint8_t cStubLatency       = static_cast<uint8_t>(cTmpHist->GetMaximumBin() - 1);
-        cStubLatencyMap[cFe.first] = cStubLatency;
-
-        // BeBoardRegWriter cLatWriter ( fBeBoardInterface, "", 0 );
-
-        // if ( cFe.first->getHybridId() == 0 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe1", cStubLatency );
-        // else if ( cFe.first->getHybridId() == 1 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe2",
-        // cStubLatency );
-
-        // this->accept ( cLatWriter );
-
-        LOG(INFO) << "Stub Latency FE " << +cFe.first->getId() << ": " << +cStubLatency << " clock cycles!";
-    }
-
-    return cStubLatencyMap;
+#endif
 }
 
-void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
+void LatencyScan::ScanLatency2D()
 {
+    DetectorDataContainer theLatencyContainer;
+    // 2D array -- hit latency vs stub latency
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(*fDetectorContainer, theLatencyContainer);
+
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
     int            cNSteps = 0;
-    for(uint16_t cLatency = pStartLatency; cLatency < pStartLatency + pLatencyRange; cLatency++)
+    for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
     {
         //  Set a Latency Value on all FEs
         cVisitor.setLatency(cLatency);
@@ -482,10 +388,11 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                                 cNEvents_wStub += cStubFound ? 1 : 0;
                                 cNEvents_wBoth += (cHitFound && cStubFound) ? 1 : 0;
                             }
-                            TH2D* cTmpHist2D = dynamic_cast<TH2D*>(getHist(cFe, "hybrid_latency_2D"));
-                            cTmpHist2D->Fill(cStubLatency, cLatency, cNEvents_wBoth);
-                            cTmpHist2D->GetZaxis()->SetRangeUser(1, cNevents);
-                            updateHists("hybrid_latency_2D", false);
+
+                            theLatencyContainer.at(pBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cFe->getIndex())
+                                ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)] += cNEvents_wBoth;
                         }
                     }
 
@@ -516,38 +423,242 @@ void LatencyScan::ScanLatency2D(uint8_t pStartLatency, uint8_t pLatencyRange)
                 cOptimalLatencies.second = 0;
                 int cMaxNEvents_wBoth    = 0;
 
-                TH2D* cTmpHist2D = dynamic_cast<TH2D*>(getHist(cFe, "hybrid_latency_2D"));
-
-                for(int cBinX = 1; cBinX < cTmpHist2D->GetXaxis()->GetNbins(); cBinX++)
+                // run same loop as before
+                for(uint16_t cLatency = fStartLatency; cLatency < fStartLatency + fLatencyRange; cLatency++)
                 {
-                    for(int cBinY = 1; cBinY < cTmpHist2D->GetYaxis()->GetNbins(); cBinY++)
+                    // maximum stub latency can only be L1 latency ...
+                    for(uint8_t cStubLatency = 0; cStubLatency < cLatency; cStubLatency++)
                     {
-                        int cBinContent = cTmpHist2D->GetBinContent(cBinX, cBinY);
-                        if(cBinContent >= cMaxNEvents_wBoth)
+                        uint16_t val = theLatencyContainer.at(pBoard->getIndex())
+                                           ->at(cOpticalGroup->getIndex())
+                                           ->at(cFe->getIndex())
+                                           ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)];
+
+                        if(val >= cMaxNEvents_wBoth)
                         {
-                            cOptimalLatencies.first  = (uint8_t)cTmpHist2D->GetXaxis()->GetBinCenter(cBinX);
-                            cOptimalLatencies.second = (uint16_t)cTmpHist2D->GetYaxis()->GetBinCenter(cBinY);
-                            cMaxNEvents_wBoth        = cBinContent;
+                            cOptimalLatencies.first  = cStubLatency;
+                            cOptimalLatencies.second = cLatency;
+                            cMaxNEvents_wBoth        = val;
                         }
                     }
-                }
 
-                LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
-                LOG(INFO) << BOLDRED << "For FE" << +cFe->getId() << " found optimal latencies to be : " << RESET;
-                LOG(INFO) << BOLDRED << "........ Stub Latency of " << +cOptimalLatencies.first << " and a Trigger Latency of " << +cOptimalLatencies.second << RESET;
-                LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
+                    LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
+                    LOG(INFO) << BOLDRED << "For FE" << +cFe->getId() << " found optimal latencies to be : " << RESET;
+                    LOG(INFO) << BOLDRED << "........ Stub Latency of " << +cOptimalLatencies.first << " and a Trigger Latency of " << +cOptimalLatencies.second << RESET;
+                    LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
+                }
             }
         }
     }
+
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.fill2DLatencyPlots(theLatencyContainer);
+#else
+    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>("2D");
+    for(auto board: theLatencyContainer)
+    {
+        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
 }
 
 //////////////////////////////////////          PRIVATE METHODS             //////////////////////////////////////
 
-// int LatencyScan::countHits ( BeBoard* pBoard,  const std::vector<Event*> pEventVec, std::map<uint8_t,
-// std::map<uint8_t,uint32_t> > numberOfHits, std::map<uint8_t,uint32_t> > numberOfStubs)
-// {
+void LatencyScan::writeObjects()
+{
+#ifdef __USE_ROOT__
+    fDQMHistogramLatencyScan.process();
+#endif
+}
 
-// }
+// State machine control functions
+
+void LatencyScan::ConfigureCalibration() { CreateResultDirectory("Results/Run_Latency"); }
+
+void LatencyScan::Running()
+{
+    LOG(INFO) << "Starting Latency Scan";
+
+    Initialize();
+    ScanLatency();
+    // StubLatencyScan();
+    // MeasureTriggerTDC();
+    LOG(INFO) << "Done with Latency Scan";
+}
+
+void LatencyScan::Stop()
+{
+    LOG(INFO) << "Stopping Latency Scan.";
+    writeObjects();
+    dumpConfigFiles();
+    closeFileHandler();
+    LOG(INFO) << "Latency Scan stopped.";
+}
+
+void LatencyScan::Pause() {}
+
+void LatencyScan::Resume() {}
+
+// these functions are used by MPA latency that relies on their output histograms
+// they should be replaced to avoid duplication
+#ifdef __USE_ROOT__
+std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartLatency, uint8_t pLatencyRange)
+{
+    // Now the actual scan
+    LOG(INFO) << BOLDBLUE << "Scanning Stub Latency ... ";
+    for(auto cBoard: *fDetectorContainer)
+    {
+        BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+        // check trigger source
+        uint16_t cTriggerSource = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        if(cTriggerSource == 6)
+        {
+            LOG(INFO) << BOLDBLUE << "Trigger source is ... using TP" << RESET;
+
+            // if TP on .. and CIC
+            // make sure stubs are only in one CBC
+            // becaause otherwise ..
+            uint8_t cTPgroup = 0;
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    auto& cCic        = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    bool  cMaskOthers = (cCic != NULL) ? true : false;
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                        if(cMaskOthers && cChip->getId() == 0)
+                        {
+                            uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
+                            cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
+                        }
+                        else if(cMaskOthers)
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip, "TestPulse", (int)0);
+                        }
+                    } // roc
+                }     // hybrid
+            }         // hybrid
+        }
+
+        for(uint8_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
+        {
+            int cNStubs = 0;
+            // Take Data for all Hybrids
+            // here set the stub latency
+            for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
+            this->ReadNEvents(cBeBoard, this->findValueInSettings<double>("Nevents"));
+            const std::vector<Event*>& cEvents = this->GetEvents();
+            // Loop over Events from this Acquisition
+            for(auto& cEvent: cEvents)
+            {
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup) { cNStubs += countStubs(cHybrid, cEvent, "hybrid_stub_latency", cLat); }
+                }
+            }
+            LOG(INFO) << "Stub Latency " << +cLat << " Stubs " << cNStubs << " Events " << cEvents.size();
+        }
+        // done counting hits for all FE's, now update the Histograms
+        updateHists("hybrid_stub_latency", false);
+    }
+
+    // // analyze the Histograms
+    std::map<HybridContainer*, uint8_t> cStubLatencyMap;
+
+    LOG(INFO) << "Identified the Latency with the maximum number of Stubs at: ";
+
+    for(auto cFe: fHybridHistMap)
+    {
+        TH1F*   cTmpHist           = dynamic_cast<TH1F*>(getHist(cFe.first, "hybrid_stub_latency"));
+        uint8_t cStubLatency       = static_cast<uint8_t>(cTmpHist->GetMaximumBin() - 1);
+        cStubLatencyMap[cFe.first] = cStubLatency;
+
+        // BeBoardRegWriter cLatWriter ( fBeBoardInterface, "", 0 );
+
+        // if ( cFe.first->getHybridId() == 0 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe1", cStubLatency );
+        // else if ( cFe.first->getHybridId() == 1 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe2",
+        // cStubLatency );
+
+        // this->accept ( cLatWriter );
+
+        LOG(INFO) << "Stub Latency FE " << +cFe.first->getId() << ": " << +cStubLatency << " clock cycles!";
+    }
+
+    return cStubLatencyMap;
+}
+
+int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistName, uint8_t pParameter)
+{
+    // loop over Hybrids & Cbcs and count hits separately
+    int cStubCounter = 0;
+
+    //  get histogram to fill
+    TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(pFe, pHistName));
+
+    for(auto cCbc: *pFe)
+    {
+        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += pEvent->StubVector(pFe->getId(), cCbc->getId()).size();
+    }
+    int   cBin        = cTmpHist->FindBin(pParameter);
+    float cBinContent = cTmpHist->GetBinContent(cBin);
+    cBinContent += cStubCounter;
+    cTmpHist->SetBinContent(cBin, cBinContent);
+
+    // if (cStubCounter != 0) std::cout << "Found " << cStubCounter << " Stubs in this event" << std::endl;
+
+    // GA, old, potentially buggy code)
+    // cTmpHist->Fill ( pParameter );
+
+    return cStubCounter;
+}
+
+std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency_root(uint16_t pStartLatency, uint16_t pLatencyRange)
+{
+    LOG(INFO) << "Scanning Latency ... ";
+    uint32_t cIterationCount = 0;
+
+    // //Fabio - clean BEGIN
+    // setFWTestPulse();
+    // setSystemTestPulse ( 200, 0, true, false );
+    // //Fabio - clean END
+
+    LatencyVisitor cVisitor(fReadoutChipInterface, 0);
+    for(auto pBoard: *fDetectorContainer)
+    {
+        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
+        for(uint16_t cLat = pStartLatency; cLat < pStartLatency + pLatencyRange; cLat++)
+        {
+            //  Set a Latency Value on all FEs
+            cVisitor.setLatency(cLat);
+            this->accept(cVisitor);
+            ReadNEvents(theBoard, fNevents);
+            const std::vector<Event*>& events = GetEvents();
+            countHitsLat(theBoard, events, "hybrid_latency", cLat, pStartLatency);
+            // done counting hits for all FE's, now update the Histograms
+            updateHists("hybrid_latency", false);
+        }
+
+        // done counting hits for all FE's, now update the Histograms
+        updateHists("hybrid_latency", false);
+        cIterationCount++;
+    }
+
+    // analyze the Histograms
+    std::map<HybridContainer*, uint8_t> cLatencyMap;
+
+    for(auto cFe: fHybridHistMap)
+    {
+        TH1F*   cTmpHist       = dynamic_cast<TH1F*>(getHist(cFe.first, "hybrid_latency"));
+        uint8_t cHitLatency    = static_cast<uint8_t>(cTmpHist->GetXaxis()->GetBinUpEdge(cTmpHist->GetMaximumBin()));
+        cLatencyMap[cFe.first] = cHitLatency;
+
+        LOG(INFO) << "Hit Latency FE " << +cFe.first->getId() << ": " << +cHitLatency << " clock cycles!";
+    }
+
+    return cLatencyMap;
+}
 
 int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency)
 {
@@ -595,31 +706,6 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
     return cTotalHits;
 }
 
-int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistName, uint8_t pParameter)
-{
-    // loop over Hybrids & Cbcs and count hits separately
-    int cStubCounter = 0;
-
-    //  get histogram to fill
-    TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(pFe, pHistName));
-
-    for(auto cCbc: *pFe)
-    {
-        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += pEvent->StubVector(pFe->getId(), cCbc->getId()).size();
-    }
-    int   cBin        = cTmpHist->FindBin(pParameter);
-    float cBinContent = cTmpHist->GetBinContent(cBin);
-    cBinContent += cStubCounter;
-    cTmpHist->SetBinContent(cBin, cBinContent);
-
-    // if (cStubCounter != 0) std::cout << "Found " << cStubCounter << " Stubs in this event" << std::endl;
-
-    // GA, old, potentially buggy code)
-    // cTmpHist->Fill ( pParameter );
-
-    return cStubCounter;
-}
-
 void LatencyScan::updateHists(std::string pHistName, bool pFinal)
 {
     for(auto& cCanvas: fCanvasMap)
@@ -651,64 +737,5 @@ void LatencyScan::updateHists(std::string pHistName, bool pFinal)
 
     this->HttpServerProcess();
 }
-
-void LatencyScan::parseSettings()
-{
-    // now read the settings from the map
-    auto cSetting = fSettingsMap.find("Nevents");
-
-    if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
-    else
-        fNevents = 2000;
-
-    cSetting = fSettingsMap.find("HoleMode");
-
-    if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
-    else
-        fHoleMode = 1;
-
-    cSetting = fSettingsMap.find("TriggerSource");
-    if(cSetting != std::end(fSettingsMap)) trigSource = cSetting->second;
-    LOG(INFO) << int(trigSource);
-
-    // cSetting = fSettingsMap.find ( "TestPulsePotentiometer" );
-    // fTestPulseAmplitude = ( cSetting != std::end ( fSettingsMap ) ) ? cSetting->second : 0x7F;
-
-    LOG(INFO) << "Parsed the following settings:";
-    LOG(INFO) << "	Nevents = " << fNevents;
-    LOG(INFO) << "	HoleMode = " << int(fHoleMode);
-    // LOG (INFO) << "   TestPulseAmplitude = " << int ( fTestPulseAmplitude ) ;
-}
-void LatencyScan::writeObjects()
-{
-    this->SaveResults();
-    // just use auto iterators to write everything to disk
-    // this is the old method before Tool class was cool
-    fResultFile->cd();
-
-    // Save canvasses too
-    // fNoiseCanvas->Write ( fNoiseCanvas->GetName(), TObject::kOverwrite );
-    // fPedestalCanvas->Write ( fPedestalCanvas->GetName(), TObject::kOverwrite );
-    // fFeSummaryCanvas->Write ( fFeSummaryCanvas->GetName(), TObject::kOverwrite );
-    fResultFile->Flush();
-}
-
-// State machine control functions
-
-void LatencyScan::ConfigureCalibration()
-{
-    CreateResultDirectory("Results/Run_LatencyScan");
-    InitResultFile("LatencyScanResults");
-}
-
-void LatencyScan::Running() {}
-
-void LatencyScan::Stop() {}
-
-void LatencyScan::Pause() {}
-
-void LatencyScan::Resume() {}
 
 #endif

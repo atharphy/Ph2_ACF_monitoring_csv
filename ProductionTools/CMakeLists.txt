@@ -2,25 +2,31 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
-    include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR}/tools)
+    include_directories(${PROJECT_SOURCE_DIR}/ProductionTools)
+    include_directories(${PROJECT_SOURCE_DIR}/DQMUtils)
+    include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${PROJECT_SOURCE_DIR/lib})
+    link_directories(${UHAL_LOG_LIB_PREFIX})
+    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
-    # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils NetworkUtils)
+    # Find source files
+    file(GLOB HEADERS *.h)
+    file(GLOB SOURCES *.cc)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -51,25 +57,36 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(${PH2_ANTENNA_FOUND})
         include_directories(${PH2_ANTENNA_INCLUDE_DIRS})
         link_directories(${PH2_ANTENNA_LIBRARY_DIRS})
-        set(LIBS ${LIBS} ${PH2_ANTENNA_LIBRARIES} usb)
+        set(LIBS ${LIBS} usb ${PH2_ANTENNA_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
+    endif()
+
+    # Power supplt
+    if(${PH2_POWERSUPPLY_FOUND})
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
     endif()
 
     # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
-      include_directories(${PH2_TCUSB_INCLUDE_DIRS})
-      link_directories(${PH2_TCUSB_LIBRARY_DIRS})
-      set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
-      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-    endif()
+        include_directories(${PH2_TCUSB_INCLUDE_DIRS})
+        link_directories(${PH2_TCUSB_LIBRARY_DIRS})
+        set(LIBS ${LIBS} usb ${PH2_TCUSB_LIBRARIES})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
+        if($ENV{UseTCUSBforROH})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
+        else($ENV{UseTCUSBforROH})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+        endif($ENV{UseTCUSBforROH})
+    endif(${PH2_TCUSB_FOUND})
 
-    # Find root and link against it
+    #last but not least, find root and link against it
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
-        if(NoDataShipping)
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
-        endif()
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
 
         #check for THttpServer
         if(${ROOT_HAS_HTTP})
@@ -77,11 +94,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
         endif()
     endif()
-
-    # Check if the setup is based on the multiplexing backplane
-    if(DEFINED ENV{MultiplexingFlag})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{MultiplexingFlag}")
-    endif(DEFINED ENV{MultiplexingFlag})
+    
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils Ph2_Tools NetworkUtils)
 
     # Build eudaq producer
     if (USE_EUDAQ)
@@ -93,34 +107,22 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     ## EXECUTABLES
     ####################################
 
-    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
-
-    # Remove binaries
-    if(CompileForShep AND CompileForHerd)
-        list(REMOVE_ITEM BINARIES *.cc)
-        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc fpgaconfig.cc)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
-    else()
-        list(REMOVE_ITEM BINARIES supervisor.cc)
-    endif()
-
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
+
+    # Add the library
+    add_library(Ph2_ProductionTools STATIC ${SOURCES} ${HEADERS})
 
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
-        add_executable(${name} ${sourcefile})
-        if (("${name}" STREQUAL "miniDAQ") OR ("${name}" STREQUAL "miniSLinkDQM"))
-          target_link_libraries(${name} ${LIBS} Ph2_RootUtils RootWeb)
-        else()
-          target_link_libraries(${name} ${LIBS})
-        endif()
     endforeach(sourcefile ${BINARIES})
+
+    TARGET_LINK_LIBRARIES(Ph2_ProductionTools ${LIBS})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -128,14 +130,31 @@ else()
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${PROJECT_SOURCE_DIR/lib})
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
+    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
+
+    include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
+
+    cet_set_compiler_flags(
+     EXTRA_FLAGS -Wno-reorder -Wl,--undefined
+     )
+
+    cet_make(LIBRARY_NAME Ph2_ProductionTools_${Ph2_ACF_Master}
+            LIBRARIES
+            pthread
+            ${Boost_SYSTEM_LIBRARY}
+            EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
+            )
+
+    install_headers()
+    install_source()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tool/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

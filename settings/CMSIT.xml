@@ -10,17 +10,17 @@
     <!-- Frontend chip configuration -->
     <OpticalGroup Id="0" FMCId="0">
       <!--
-      <lpGBT_Files path="./" />
-      <lpGBT configfile="CMSIT_LpGBT.txt">
+      <lpGBT_Files path="${PWD}/" />
+      <lpGBT Id="0" configfile="CMSIT_LpGBT.txt" RxDataRate="1280" TxDataRate="160">
         <Settings
-            EPRXDllConfig = "81"
+            EPRX60ChnCntr_phase = "6"
             />
       </lpGBT>
       -->
       <Hybrid Id="0" Status="1">
-        <RD53_Files path="./" />
+        <RD53_Files path="${PWD}/" />
 
-        <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt">
+        <RD53 Id="0" Lane="0" configfile="CMSIT_RD53.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0">
           <!-- Overwrite .txt configuration file settings -->
           <Settings
               PA_IN_BIAS_LIN         =  "350"
@@ -186,62 +186,82 @@
 
          TargetCharge  (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
          TargetOcc     (thrmin):           average pixel occupancy
-         TargetOcc     (pixelalive,noise): per pixel occupancy threhold below/above which pixels are masked
+         TargetOcc     (pixelalive,noise): per pixel occupancy threshold below/above which pixels are masked
          UnstuckPixels (pixelalive) = 0: do not try to unstuck pixels; UnstuckPixels = 1: set TDAC to 0 to unstuck pixels
          TimePerStep   (datarbopt):        number of seconds for running BER test at every step of the register scan
          chain2Test    (bertest,datarbopt) = 0: BE-FE; chain2Test = 1: BE-LPGBT; chain2Test = 2: LPGBT-FE
          byTime        (bertest,datarbopt) = 0: give time in [s]; byTime = 1: give n. frames
          framesORtime  (bertest,datarbopt):time in [s] or number of frames
     -->
-    <Setting name="nEvents">          100 </Setting>
-    <Setting name="nEvtsBurst">       100 </Setting>
+    <Setting name="nEvents">            100 </Setting>
+    <Setting name="nEvtsBurst">         100 </Setting>
     <!-- For Noise and Threshold Minimization
     <Setting name="nEvents">     10000000 </Setting>
     <Setting name="nEvtsBurst">     10000 </Setting>
     -->
 
-    <Setting name="nTRIGxEvent">       10 </Setting>
-    <Setting name="INJtype">            1 </Setting>
-    <Setting name="ResetMask">          0 </Setting>
-    <Setting name="ResetTDAC">          0 </Setting>
+    <Setting name="VDDDTrimTarget">    1.30 </Setting>
+    <Setting name="VDDATrimTarget">    1.20 </Setting>
+    <Setting name="VDDDTrimTolerance"> 0.01 </Setting>
+    <Setting name="VDDATrimTolerance"> 0.01 </Setting>
 
-    <Setting name="ROWstart">           0 </Setting>
-    <Setting name="ROWstop">          191 </Setting>
-    <Setting name="COLstart">         128 </Setting>
-    <Setting name="COLstop">          263 </Setting>
+    <Setting name="nTRIGxEvent">         10 </Setting>
+    <Setting name="INJtype">              1 </Setting>
+    <Setting name="ResetMask">            0 </Setting>
+    <Setting name="ResetTDAC">            0 </Setting>
 
-    <Setting name="LatencyStart">       0 </Setting>
-    <Setting name="LatencyStop">      511 </Setting>
+    <Setting name="ROWstart">             0 </Setting>
+    <Setting name="ROWstop">            191 </Setting>
+    <Setting name="COLstart">           128 </Setting>
+    <Setting name="COLstop">            263 </Setting>
 
-    <Setting name="VCalHstart">       100 </Setting>
-    <Setting name="VCalHstop">        600 </Setting>
-    <Setting name="VCalHnsteps">       50 </Setting>
-    <Setting name="VCalMED">          100 </Setting>
+    <Setting name="LatencyStart">         0 </Setting>
+    <Setting name="LatencyStop">        511 </Setting>
 
-    <Setting name="TargetCharge">   20000 </Setting>
-    <Setting name="KrumCurrStart">      0 </Setting>
-    <Setting name="KrumCurrStop">     127 </Setting>
+    <Setting name="VCalHstart">         100 </Setting>
+    <Setting name="VCalHstop">          600 </Setting>
+    <Setting name="VCalHnsteps">         50 </Setting>
+    <Setting name="VCalMED">            100 </Setting>
 
-    <Setting name="ThrStart">         340 </Setting>
-    <Setting name="ThrStop">          440 </Setting>
-    <Setting name="TargetThr">       2000 </Setting>
-    <Setting name="TargetOcc">       1e-6 </Setting>
-    <Setting name="UnstuckPixels">      0 </Setting>
+    <Setting name="TargetCharge">     20000 </Setting>
+    <Setting name="KrumCurrStart">        0 </Setting>
+    <Setting name="KrumCurrStop">       127 </Setting>
 
-    <Setting name="TAP0Start">          0 </Setting>
-    <Setting name="TAP0Stop">        1023 </Setting>
-    <Setting name="TAP1Start">          0 </Setting>
-    <Setting name="TAP1Stop">         511 </Setting>
-    <Setting name="TAP2Start">          0 </Setting>
-    <Setting name="TAP2Stop">         511 </Setting>
+    <Setting name="ThrStart">           340 </Setting>
+    <Setting name="ThrStop">            440 </Setting>
+    <Setting name="TargetThr">         2000 </Setting>
+    <Setting name="TargetOcc">         1e-6 </Setting>
+    <Setting name="UnstuckPixels">        0 </Setting>
 
-    <Setting name="chain2Test">         0 </Setting>
-    <Setting name="byTime">             1 </Setting>
-    <Setting name="framesORtime">      10 </Setting>
+    <Setting name="TAP0Start">            0 </Setting>
+    <Setting name="TAP0Stop">          1023 </Setting>
+    <Setting name="TAP1Start">            0 </Setting>
+    <Setting name="TAP1Stop">           511 </Setting>
+    <Setting name="InvTAP1">              1 </Setting>
+    <Setting name="TAP2Start">            0 </Setting>
+    <Setting name="TAP2Stop">           511 </Setting>
+    <Setting name="InvTAP2">              0 </Setting>
 
-    <Setting name="DoFast">             0 </Setting>
-    <Setting name="DisplayHisto">       0 </Setting>
-    <Setting name="UpdateChipCfg">      1 </Setting>
+    <Setting name="chain2Test">           0 </Setting>
+    <Setting name="byTime">               1 </Setting>
+    <Setting name="framesORtime">        10 </Setting>
+    
+    <Setting name="TargetBER">         1e-5 </Setting>
+
+    <Setting name="TargetBER">         1e-5 </Setting>
+    
+    <Setting name="RegNameDAC1">  VCAL_HIGH </Setting>
+    <Setting name="StartValueDAC1">     250 </Setting>
+    <Setting name="StopValueDAC1">      600 </Setting>
+    <Setting name="StepDAC1">            50 </Setting>
+    <Setting name="RegNameDAC2"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
+    <Setting name="StartValueDAC2">      28 </Setting>
+    <Setting name="StopValueDAC2">       50 </Setting>
+    <Setting name="StepDAC2">             1 </Setting>
+    
+    <Setting name="DoFast">               0 </Setting>
+    <Setting name="DisplayHisto">         0 </Setting>
+    <Setting name="UpdateChipCfg">        1 </Setting>
 
     <!-- === Expert settings ===
          SaveBinaryData = 0: do not save raw data in binary format; SaveBinaryData = 1: save raw data in binary format
@@ -249,10 +269,10 @@
          InjLatency:    controls the latency of the injection in terms of 100ns period (up to 4095)
          nClkDelays:    controls the delay between two consecutive injections in terms of 100ns period (up to 4095)
     -->
-    <Setting name="SaveBinaryData">     0 </Setting>
-    <Setting name="nHITxCol">           1 </Setting>
-    <Setting name="InjLatency">        32 </Setting>
-    <Setting name="nClkDelays">       280 </Setting>
+    <Setting name="SaveBinaryData">       0 </Setting>
+    <Setting name="nHITxCol">             1 </Setting>
+    <Setting name="InjLatency">          32 </Setting>
+    <Setting name="nClkDelays">         280 </Setting>
   </Settings>
 
   <!-- === Monitoring parameters ===

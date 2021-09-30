@@ -239,11 +239,14 @@ void Tool::bookSummaryTree() // MINE
  */
 void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
 {
+    // TString currentDirectory = getDirectoryName();
+    // const char* currentDirectory = gDirectory->GetPath();
     fResultFile->cd();
     fSummaryTreeParameter.Clear();
     fSummaryTreeParameter = cParameter;
     fSummaryTreeValue     = cValue;
     if(fSummaryTree) fSummaryTree->Fill();
+    // fResultFile->cd(currentDirectory);
 }
 
 TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
@@ -404,7 +407,10 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
     }
 }
 
-void Tool::WriteRootFile() { fResultFile->Write(); }
+void Tool::WriteRootFile()
+{
+    if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->Write();
+}
 #endif
 
 void Tool::SaveResults()
@@ -461,7 +467,8 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
-    fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+    fResultFile->cd();
+    if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 
 #endif
 
@@ -481,7 +488,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     if(cSetting != std::end(fSettingsMap))
     {
         cCheck    = true;
-        cHoleMode = (cSetting->second == 1) ? true : false;
+        cHoleMode = (boost::any_cast<double>(cSetting->second) == 1) ? true : false;
     }
 
     std::string cMode;
@@ -543,10 +550,9 @@ void Tool::InitResultFile(const std::string& pFilename)
 
 void Tool::CloseResultFile()
 {
-    LOG(INFO) << GREEN << "Closing result file" << RESET;
-
     if(fResultFile != nullptr)
     {
+        LOG(INFO) << GREEN << "Closing result file" << RESET;
         fResultFile->Close();
         delete fResultFile;
         fResultFile = nullptr;
@@ -1413,10 +1419,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
                 else
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
     else
-    {
-        LOG(INFO) << BOLDBLUE << "Broadcasting to chips on board.." << RESET;
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
-    }
 }
 
 // set same local dac for all BeBoard

@@ -1,4 +1,4 @@
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR}) 
+if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
 MESSAGE(STATUS " ")
 MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")

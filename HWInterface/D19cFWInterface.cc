@@ -506,7 +506,8 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        // fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyCAEN,ChannelId:LV_Module1");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -535,7 +536,8 @@ bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
     else
     {
         LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        // fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1");
+        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyCAEN,ChannelId:LV_Module1");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
@@ -955,10 +957,15 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         if(!clpGBTlock)
         {
             LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+#ifdef __TCUSB__
+            // In the test system a run time error is undesired
+            // return false;
             throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
+#else
+            throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
+#endif
         }
     }
-
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
     {
@@ -982,8 +989,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                auto                                          cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
-                auto&                                         cCic                = cOuterTrackerHybrid->fCic;
+                auto cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                if(cOuterTrackerHybrid->fCic == nullptr) continue;
+                auto&                                         cCic = cOuterTrackerHybrid->fCic;
                 std::vector<std::pair<std::string, uint32_t>> cVecReg;
                 // make sure CIC is receiving clock
                 // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
@@ -1077,6 +1085,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             cReplies.clear();
             if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
             {
+                if(cOuterTrackerHybrid->fCic == nullptr) continue;
                 auto& cCic = cOuterTrackerHybrid->fCic;
                 LOG(INFO) << BOLDBLUE << "CIC " << +cCic->getId() << " on FE" << +cFe->getId() << RESET;
                 size_t cIndex       = 0;
@@ -4384,6 +4393,7 @@ void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVecto
         }
     }
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
+    std::this_thread::sleep_for(std::chrono::microseconds(50));
 }
 
 std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
@@ -4465,24 +4475,39 @@ bool D19cFWInterface::I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_
 {
     uint8_t               cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
+    // ResetCPB();
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
     WriteCommandCPB(cCommandVector);
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     uint8_t               cI2CStatus   = cReplyVector[7] & 0xFF;
-    uint8_t               cIter = 0, cMaxIter = 50;
+#ifdef __TCUSB__
+    uint8_t cIter = 0, cMaxIter = 10;
+#else
+    uint8_t cIter = 0, cMaxIter = 50;
+#endif
     while(cI2CStatus != 4 && cIter < cMaxIter)
     {
+        LOG(DEBUG) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed ... retrying" << RESET;
+        LOG(DEBUG) << BOLDRED << "I2C STATUS " << +cI2CStatus << RESET;
+
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);
         cI2CStatus   = cReplyVector[7] & 0xFF;
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2C Transaction Failed" << RESET;
         cIter++;
     }
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
+    if(cIter == cMaxIter)
+    {
+#ifdef __TCUSB__
+        // In the test system a run time error is undesired
+        return false;
+#else
+        throw std::runtime_error(std::string("[D19cFWInterface::I2CWrite] : I2C Transaction Failed"));
+#endif
+    }
     return true;
 }
 
@@ -4490,6 +4515,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
 {
     uint8_t               cWorkerId = 16, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fI2CFrequency;
     std::vector<uint32_t> cCommandVector;
+    // ResetCPB();
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24);
@@ -4507,12 +4533,14 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8
     // check reply
     while(cReadBackRegAddr != cI2CReadByteRegAddr && cIter < cMaxIter)
     {
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector     = ReadReplyCPB(10);
         cReadBack        = cReplyVector[7] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
         cIter++;
     };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
@@ -4536,7 +4564,6 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
             LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
             I2CWrite(((pChip->getHybridId() % 2) == 0) ? 2 : 0, cChipAddress, (pRegisterValue << 16) | cInvertedRegister, 3);
             cReadBack = ReadFERegister(pChip, pRegisterAddress);
-            ;
             cIter++;
         }
         if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }

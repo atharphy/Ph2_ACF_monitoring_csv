@@ -19,6 +19,39 @@
 
 #include <iostream>
 
+namespace user_detail
+{
+template <typename>
+struct sfinae_true_CanvasContainer : std::true_type
+{
+};
+
+template <typename T>
+static auto test_SetDirectory(int) -> sfinae_true_CanvasContainer<decltype(std::declval<T>().SetDirectory())>;
+template <typename>
+static auto test_SetDirectory(long) -> std::false_type;
+} // namespace user_detail
+
+// SFINAE: check if object T has SetDirectory
+template <typename T>
+struct has_SetDirectory : decltype(user_detail::test_SetDirectory<T>(0))
+{
+};
+
+// Functor for SetDirectory - default case
+template <typename T, bool hasSetDirectory = false>
+struct CallSetDirectory
+{
+    void operator()(T* thePlot) { return; }
+};
+
+// Functor for SetDirectory - case when SetDirectory is defined
+template <typename T>
+struct CallSetDirectory<T, true>
+{
+    void operator()(T* thePlot) { thePlot.SetDirectory(0); }
+};
+
 template <class Hist>
 class CanvasContainer : public PlotContainer
 {
@@ -32,7 +65,8 @@ class CanvasContainer : public PlotContainer
     CanvasContainer(Args... args)
     {
         fTheHistogram = new Hist(args...);
-        fTheHistogram->SetDirectory(0);
+        CallSetDirectory<Hist, has_SetDirectory<Hist>::value> setDirectoryFunctor;
+        setDirectoryFunctor(fTheHistogram);
         fCanvas = nullptr;
     }
 
@@ -76,7 +110,8 @@ class CanvasContainer : public PlotContainer
         fTheHistogram = new Hist(*(static_cast<const CanvasContainer<Hist>*>(reference)->fTheHistogram));
         fTheHistogram->SetName(name.data());
         fTheHistogram->SetTitle(title.data());
-        fTheHistogram->SetDirectory(0);
+        CallSetDirectory<Hist, has_SetDirectory<Hist>::value> setDirectoryFunctor;
+        setDirectoryFunctor(fTheHistogram);
 
         gDirectory->Append(fCanvas);
     }
