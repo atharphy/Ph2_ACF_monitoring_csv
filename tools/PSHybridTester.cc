@@ -1158,7 +1158,7 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
 }
 void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
 {
-    // now cycle through chips one at a time ..
+    #ifdef __TCUSB__
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -1199,6 +1199,9 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
             }
         } // hybrid
     }     // board
+    #else
+    LOG(ERROR) << BOLDRED << "Can't read SSA bias value, the TC USB library is not built. Check the installation."
+    #endif
 }
 void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
 {
@@ -1473,23 +1476,6 @@ void PSHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string>
 void PSHybridTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
     for(auto cBoard: *fDetectorContainer) { this->CheckHybridInputs(cBoard, pInputs, pCounters); }
-}
-void PSHybridTester::SelectAntennaPosition(const std::string& pPosition, uint16_t pPotentiometer)
-{
-#ifdef __TCUSB__
-    std::map<std::string, TC_PSFE::ant_channel> cAntennaControl = {
-        {"Disable", TC_PSFE::ant_channel::NONE}, {"EvenChannels", TC_PSFE::ant_channel::_1}, {"OddChannels", TC_PSFE::ant_channel::_2}, {"Enable", TC_PSFE::ant_channel::ALL}};
-
-    auto cMapIterator = cAntennaControl.find(pPosition);
-    if(cMapIterator != cAntennaControl.end())
-    {
-        auto& cChannel = cMapIterator->second;
-        LOG(INFO) << BOLDBLUE << "Selecting antenna channel to "
-                  << " inject charge in [ " << pPosition << " ] position. This is switch position " << +cChannel << RESET;
-        TC_PSFE cTC_PSFE;
-        cTC_PSFE.antenna_fc7(pPotentiometer, cChannel);
-    }
-#endif
 }
 
 void PSHybridTester::SetTrim(BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue) 
