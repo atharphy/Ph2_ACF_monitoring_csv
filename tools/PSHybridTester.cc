@@ -403,7 +403,6 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                 for(int a = 0; a < (int)cReadLines.size(); a++)
                 {
                     std::string cLine;
-                    float       distance;
                     int         badLines;
                     std::string cSubLine;
                     // bool bad = false;
@@ -415,23 +414,14 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                         for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length())
                         {
                             cSubLine = cLine.substr(k, cPattern_str.length());
-                            // distance += FuzzyCompareStrings(cSubLine, cPattern_str);
-                            // aux = k + 1;
-                            // if ( ( cSubLine != cPattern_str && cSubLine != (cPattern_str.substr(1, 7) + cPattern_str.front()) && cSubLine != cPattern_str.back() + cPattern_str.substr(0, 7) ) ) {
-                            if ( ( cSubLine != cPattern_str && cSubLine != (cPattern_str.substr(1, 7) + cPattern_str.front()) && cSubLine != cPattern_str.back() + cPattern_str.substr(0, 7) ) && ( (cSubLine != cPattern_str.substr(2, 6) + cPattern_str.substr(0,2)) && (cSubLine != cPattern_str.substr(5,2) + cPattern_str.substr(0, 6)) ) ) {
-                                distance = FuzzyCompareStrings(cSubLine, cPattern_str);
-                                // LOG(INFO) << "Pattern: " << cPattern_str << " . Line: " << cSubLine << ". Distance: " << distance << RESET;
-                                if (distance>1) {
-                                    // if (cRuns!=0)
+                            bool cPatternFound = false;
+                            for ( int j = 0; j < (int)cPattern_str.length() ; j ++ )
+                                cPatternFound |= ((cPattern_str.substr(j, cPattern_str.length()-j) + cPattern_str.substr(0,j)) == cSubLine);
+                            if ( !cPatternFound ) {
                                     badLines++;
                                     cRun = true;
-                                }
                             }
                         }
-
-                        // distance = distance / aux;
-
-                        // LOG(INFO) << "The overall distance in line " << b << " is: " << distance << "." << RESET;
 
                         std::string recovered = "";
                         for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) {
@@ -465,7 +455,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         }
         cTotalBadLines += cPhyPortBadLines;
     }
-    LOG(INFO) << BOLDYELLOW << "***************************************Bad lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
+    LOG(INFO) << BOLDYELLOW << "***************************************Bad CIC IN lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
     #ifdef __USE_ROOT__
     fillSummaryTree("CIC IN bad lines", cTotalBadLines);
     #endif
@@ -530,35 +520,6 @@ void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
             }
         }
     }
-}
-int PSHybridTester::FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str)
-{
-    // Levenshtein Distance Computing Algorithm copied from https://www.tutorialspoint.com/cplusplus-program-to-implement-levenshtein-distance-computing-algorithm
-    int t, track = 0;
-    int dist[50][50];
-
-    LOG(DEBUG) << cSubLine << RESET;
-    LOG(DEBUG) << pPattern_str << RESET;
-
-    int lSubLine = cSubLine.length();
-    int lPattern = pPattern_str.length();
-    for(int i = 0; i <= lSubLine; i++) { dist[0][i] = i; }
-    for(int j = 0; j <= lPattern; j++) { dist[j][0] = j; }
-    for(int j = 1; j <= lSubLine; j++)
-    {
-        for(int i = 1; i <= lPattern; i++)
-        {
-            if(cSubLine[i - 1] == pPattern_str[j - 1]) { track = 0; }
-            else
-            {
-                track = 1;
-            }
-            t          = MIN((dist[i - 1][j] + 1), (dist[i][j - 1] + 1));
-            dist[i][j] = MIN(t, (dist[i - 1][j - 1] + track));
-        }
-    }
-    LOG(DEBUG) << "The Levinstein distance is: " << dist[lPattern][lSubLine] << RESET;
-    return dist[lPattern][lSubLine];
 }
 
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAPairSel)

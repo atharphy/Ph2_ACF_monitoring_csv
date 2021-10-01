@@ -94,8 +94,6 @@ class PSHybridTester : public Tool
         {"67", 0xB}  // 0b1011}};
     };
 
-    int FuzzyCompareStrings(std::string cSubLine, std::string pPattern_str);
-
     #ifdef __TCUSB__
     // Maps for electrical measurements on the hybrid:
     std::map<std::string, TC_PSFE::measurement> fHybridVoltageMap = {{"TC_GND", TC_PSFE::measurement::GROUND},
