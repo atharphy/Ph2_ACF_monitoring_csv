@@ -239,21 +239,46 @@ void PSHybridTester::SelectCIC(bool pSelect)
 void PSHybridTester::AlignCICout(uint8_t pPattern)
 {
     this->SelectCIC(true);
-    for (auto cBoard : *fDetectorContainer)
+    bool cRetry = true;
+    bool cSuccess;
+    int cBadLines[4] = {0,0,0,0};
+    for(int cTries = 0 ; (cTries < 2)&&cRetry ; cTries ++)
     {
-        for(auto cOpticalGroup : *cBoard)
+        cRetry = false;
+        
+        for (auto cBoard : *fDetectorContainer)
         {
-            for(auto cHybrid : *cOpticalGroup)
+            for(auto cOpticalGroup : *cBoard)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                fCicInterface->SelectMux(cCic, 6 );
-            }//hybrid 
-        }// module 
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 1 , pPattern , 8);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 2 , pPattern , 8);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 3 , pPattern , 8);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , 4 , pPattern , 8);
-    }       
+                for(auto cHybrid : *cOpticalGroup)
+                {
+                    auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                    fCicInterface->SelectMux(cCic, 6+cTries );
+                }//hybrid 
+            }// module 
+            for(int cLine = 1 ; cLine < 5 ; cLine ++)
+            {
+                cSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , cLine , pPattern , 8);
+                if (!cSuccess)
+                {
+                    LOG(INFO) << BOLDRED << "CIC OUT Line " << +cLine << " was not aligned correctly." << RESET;
+                    cBadLines[cLine-1] ++;
+                }
+                else 
+                {    LOG(DEBUG) << BOLDGREEN << "CIC OUT Line " << +cLine << " was aligned correctly." << RESET; }
+                cRetry |= !cSuccess;
+            }
+        }       
+    }
+    for(int cLine = 1 ; cLine < 5 ; cLine ++)
+    {
+        if( cBadLines[cLine-1]==2 ) 
+        {
+            #ifdef __USE_ROOT__
+                fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine);
+            #endif 
+        }
+    }
 }
 void PSHybridTester::MPATest(BeBoard* pBoard)
 {
