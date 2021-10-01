@@ -344,17 +344,16 @@ int main(int argc, char* argv[])
     if(cClockTest)
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        bool cStatus=cSEHTester.CheckClocks();
+        bool cStatus = cSEHTester.CheckClocks();
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
         else
         {
             LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
-
         }
-        #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
-    #endif
+#endif
     }
     int counter = 0;
 

@@ -1643,7 +1643,8 @@ bool SEHTester::CheckClocks(BeBoard* pBoard)
 
             if(cClkStat)
                 LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
-            else{
+            else
+            {
                 LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
                 cStatus &= false;
             }
@@ -1658,7 +1659,7 @@ bool SEHTester::CheckClocks(BeBoard* pBoard)
 
 bool SEHTester::CheckClocks()
 {
-    bool cStatus=true;
+    bool cStatus = true;
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT != nullptr) continue;
