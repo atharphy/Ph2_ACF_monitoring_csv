@@ -482,6 +482,7 @@ int main(int argc, char* argv[])
             {
                 current_pair = std::to_string(i) + std::to_string(i + 1);
                 cHybridTester.SSATestStubOutput(current_pair);
+                cHybridTester.SSATestL1Output(current_pair);
             }
         }
         // configure SSA to output something on L1 lines
