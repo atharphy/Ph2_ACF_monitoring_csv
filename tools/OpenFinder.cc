@@ -417,7 +417,7 @@ void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t po
         LOG (INFO) << BOLDBLUE << "Antenna Pull-up Measurement : "
             << measurement << " mV." << RESET;
         if(cPosition == "Disable")
-            ReadHybridVoltage("AntennaPullUp");
+            ReadAntennaVoltage();
     }
 #endif
 }
