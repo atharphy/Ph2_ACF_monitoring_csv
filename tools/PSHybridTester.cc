@@ -31,6 +31,10 @@ void PSHybridTester::CheckCounters()
 {
     for(auto cBoard: *fDetectorContainer) { this->CheckCounters(cBoard); }
 }
+void PSHybridTester::ReadAntennaVoltage() 
+{
+    this->ReadHybridVoltage("AntennaPullUp");
+}
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
     uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");

@@ -36,6 +36,7 @@ class PSHybridTester : public Tool
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t> &pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t> &pCounters);
     void ReadSSABias( const std::string & pBiasName );
+    void ReadAntennaVoltage();
     void CalibrateSSABias();
     void CalibrateGainTrim();
     void SetTrim(std::string pTrimRegister, uint16_t pTrimValue);
@@ -51,10 +52,6 @@ class PSHybridTester : public Tool
     void Pause() override;
     void Resume() override;
 
-    
-    void ReadHybridVoltage(const std::string& pVoltageName);
-
-
     void SweepPhaseAlignment(uint8_t);
 
   private:
@@ -68,7 +65,7 @@ class PSHybridTester : public Tool
     void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& pFastCommand, uint8_t pDuartion = 1);
-    // void ReadHybridVoltage(const std::string& pVoltageName);
+    void ReadHybridVoltage(const std::string& pVoltageName);
     void ReadHybridCurrent(const std::string& pCurrentName);
     // functions to test SSA outputs (pogo)
     void SSAPairSelect(Ph2_HwDescription::BeBoard* pBoard, const std::string& SSAPairSel);
