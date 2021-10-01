@@ -809,7 +809,7 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
     LOG(INFO) << BOLDMAGENTA << "Selecting phyPort [0-11]: " << +pPhyPort << RESET;
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pPhyPort : (cRegValue & 0x10 ) | pPhyPort ;
+    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pPhyPort : (cRegValue & 0x10) | pPhyPort;
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
 bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
@@ -817,7 +817,7 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
     setBoard(pChip->getBeBoardId());
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "enableMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue = (pChip->getFrontEndType()  == FrontEndType::CIC ) ? pEnable : (cRegValue & 0xF ) | (pEnable << 4 ) ;
+    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0xF) | (pEnable << 4);
     if(pEnable == 1)
         LOG(INFO) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " << RESET;
     else
@@ -827,7 +827,7 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
 }
 // start-up sequence for CIC [everything that does not require interaction
 // with the BE or the other readout ASICs on the chip
-bool CicInterface::StartUp(Chip* pChip,uint8_t pDriveStrength, uint8_t pUseNegEdge)
+bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegEdge)
 {
     std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getFeId());
     if(pChip->getFrontEndType() == FrontEndType::CIC)
@@ -892,7 +892,7 @@ bool CicInterface::StartUp(Chip* pChip,uint8_t pDriveStrength, uint8_t pUseNegEd
     this->EnableFEs(pChip, {0, 1, 2, 3, 4, 5, 6, 7}, true);
 
     // select fast command edge
-    bool cNegEdge =  (pUseNegEdge == 1);
+    bool cNegEdge = (pUseNegEdge == 1);
     if(cNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else

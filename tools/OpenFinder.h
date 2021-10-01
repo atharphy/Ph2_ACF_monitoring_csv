@@ -14,8 +14,8 @@
 
 #include "PSHybridTester.h"
 #ifdef __USE_ROOT__
-  #include "TTree.h"
-  #include "TH2F.h"
+#include "TH2F.h"
+#include "TTree.h"
 #endif
 
 #ifdef __ANTENNA__
@@ -73,8 +73,8 @@ class OpenFinder : public PSHybridTester
 #endif
     void Reset();
 
-
     void SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer = 0);
+
   private:
     // type aliases
     using channelVector      = std::vector<int>;
@@ -101,13 +101,10 @@ class OpenFinder : public PSHybridTester
     DetectorDataContainer fBoardRegContainer;
 
     // #ifdef __TCUSB__
-        std::map<std::string, TC_PSFE::ant_channel> fAntennaControl =
-        {
-            { "EvenChannels", TC_PSFE::ant_channel::_2 },
-            { "OddChannels", TC_PSFE::ant_channel::_1 },
-            { "Enable", TC_PSFE::ant_channel::ALL },
-            { "Disable" , TC_PSFE::ant_channel::NONE}
-        };
+    std::map<std::string, TC_PSFE::ant_channel> fAntennaControl = {{"EvenChannels", TC_PSFE::ant_channel::_2},
+                                                                   {"OddChannels", TC_PSFE::ant_channel::_1},
+                                                                   {"Enable", TC_PSFE::ant_channel::ALL},
+                                                                   {"Disable", TC_PSFE::ant_channel::NONE}};
     // #endif
 };
 

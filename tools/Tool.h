@@ -9,7 +9,6 @@
 
  */
 
-
 #ifndef __TOOL_H__
 #define __TOOL_H__
 
@@ -17,13 +16,13 @@
 #include "../Utils/ContainerStream.h"
 
 #ifdef __USE_ROOT__
-    #include "TROOT.h"
-    #include "TSystem.h"
-    #include "TFile.h"
-    #include "TObject.h"
-    #include "TCanvas.h"
-    #include "TTree.h"
-    #include "TString.h"
+#include "TCanvas.h"
+#include "TFile.h"
+#include "TObject.h"
+#include "TROOT.h"
+#include "TString.h"
+#include "TSystem.h"
+#include "TTree.h"
 #endif
 
 class DetectorContainer;
@@ -86,18 +85,18 @@ class Tool : public Ph2_System::SystemController
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
 
     /*!
-    * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
-    */
+     * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+     */
     void bookSummaryTree();
 
     /*!
-    * \brief Insert data into the summary tree
-    * \param cParameter : Name of the measurement to be stored
-    * \param cValue: Value of the measurement to be stored
-    */
-    void fillSummaryTree( std::string cParameter, Double_t cValue);
+     * \brief Insert data into the summary tree
+     * \param cParameter : Name of the measurement to be stored
+     * \param cValue: Value of the measurement to be stored
+     */
+    void fillSummaryTree(std::string cParameter, Double_t cValue);
 
-    Double_t getSummaryParameter( std::string cParameter );
+    Double_t getSummaryParameter(std::string cParameter);
 
     TString getDirectoryName();
 
@@ -400,7 +399,7 @@ class Tool : public Ph2_System::SystemController
     ChipHistogramMap    fChipHistMap;
     ModuleHistogramMap  fModuleHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
-    TTree*              fSummaryTree;               /*< TTree for summary of results*/
+    TTree*              fSummaryTree; /*< TTree for summary of results*/
     static TString      fSummaryTreeParameter;
     static Double_t     fSummaryTreeValue;
 #endif
@@ -428,8 +427,6 @@ class Tool : public Ph2_System::SystemController
     ChannelGroupHandler* fChannelGroupHandler;
 
     std::string getCalibrationName();
-
-
 };
 
 #endif

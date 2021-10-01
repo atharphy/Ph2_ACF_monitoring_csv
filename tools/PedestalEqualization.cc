@@ -156,16 +156,17 @@ void PedestalEqualization::FindVplus()
 
                     chip->getSummary<uint16_t>() = tmpVthr;
 
-                    chip->getSummary<uint16_t>()=tmpVthr;
+                    chip->getSummary<uint16_t>() = tmpVthr;
 
-                    LOG (INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId()  << " Module " << +module->getId() << " ROC " << +chip->getId() << " = " << tmpVthr << RESET;
-                    cMeanValue+=tmpVthr;
+                    LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Module " << +module->getId() << " ROC " << +chip->getId()
+                              << " = " << tmpVthr << RESET;
+                    cMeanValue += tmpVthr;
 
                     tmpParameter = "";
                     tmpParameter = "VCth" + std::to_string(chip->getId());
-                    #ifdef __USE_ROOT__
-                        fillSummaryTree(tmpParameter, tmpVthr);
-                    #endif
+#ifdef __USE_ROOT__
+                    fillSummaryTree(tmpParameter, tmpVthr);
+#endif
                 } // for on chip - end
             }     // for on module - end
         }         // for on opticalGroup - end
@@ -186,10 +187,10 @@ void PedestalEqualization::FindVplus()
     if(cWithCBC) setSameDac("VCth", fTargetVcth);
     if(cWithSSA) setSameDac("Bias_THDAC", fTargetVcth);
 
-    LOG (INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
-    #ifdef __USE_ROOT__
-        fillSummaryTree("VCth", fTargetVcth);
-    #endif
+    LOG(INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
+#ifdef __USE_ROOT__
+    fillSummaryTree("VCth", fTargetVcth);
+#endif
 }
 void PedestalEqualization::FindOffsets()
 {

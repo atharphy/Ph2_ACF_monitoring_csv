@@ -614,16 +614,16 @@ void FileParser::parseModuleContainer(pugi::xml_node pModuleNode, OpticalGroup* 
                             std::string cNameGlobal = cChildGlobal.name();
                             if(cNameGlobal.find("CIC") != std::string::npos || cNameGlobal.find("CIC2") != std::string::npos)
                             {
-                                if( cChildGlobal.attribute("driveStrength") )
+                                if(cChildGlobal.attribute("driveStrength"))
                                 {
                                     uint8_t cDriveStrength = cChildGlobal.attribute("driveStrength").as_int();
                                     cCic->setDriveStrength(cDriveStrength);
                                 }
-                                
-                                if( cChildGlobal.attribute("edgeSelect") )
+
+                                if(cChildGlobal.attribute("edgeSelect"))
                                 {
                                     uint8_t cEdgeSelect = cChildGlobal.attribute("edgeSelect").as_int();
-                                    LOG (INFO) << BOLDBLUE << "Setting edge select to " <<+cEdgeSelect << RESET;
+                                    LOG(INFO) << BOLDBLUE << "Setting edge select to " << +cEdgeSelect << RESET;
                                     cCic->setEdgeSelect(cEdgeSelect);
                                 }
                                 LOG(INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;

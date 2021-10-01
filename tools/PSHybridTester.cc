@@ -31,10 +31,7 @@ void PSHybridTester::CheckCounters()
 {
     for(auto cBoard: *fDetectorContainer) { this->CheckCounters(cBoard); }
 }
-void PSHybridTester::ReadAntennaVoltage() 
-{
-    this->ReadHybridVoltage("AntennaPullUp");
-}
+void PSHybridTester::ReadAntennaVoltage() { this->ReadHybridVoltage("AntennaPullUp"); }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
     uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
@@ -54,13 +51,12 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
             for(uint8_t cLineId = 1; cLineId < 8; cLineId++)
             {
                 cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, cAlignmentPattern, 8);
-                if(!cAligned){
+                if(!cAligned)
+                {
                     LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << ". Retrying with pattern for SSA3... " << +cLineId << RESET;
-                        cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, 0x04, 8);
-                    if(!cAligned){
-                        LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
-                    }
-                } 
+                    cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, 0x04, 8);
+                    if(!cAligned) { LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET; }
+                }
             }
             // if aligned then try and scope
             LOG(INFO) << "SLVS debug [stub lines] : Chip " << +cPairId << RESET;
@@ -79,60 +75,48 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
     }
 }
 
-void PSHybridTester::SSAOutputsPogoScope( std::vector<std::vector<std::string>> &cReadLines, std::string pSSAPairSel, BeBoard* pBoard, bool pTrigger)
+void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& cReadLines, std::string pSSAPairSel, BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers= this->findValueInSettings("PSHybridDebugDuration");
-    if( pTrigger )
-        LOG (INFO) << BOLDBLUE << "Going to send "
-            << +cNtriggers << " triggers to debug L1 SSA output " 
-            << RESET;
+    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    if(pTrigger)
+        LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else
-        LOG (INFO) << BOLDBLUE << "Going to capture for "
-            << +cNtriggers*10 << " ms to debug stub SSA output " 
-            << RESET;
+        LOG(INFO) << BOLDBLUE << "Going to capture for " << +cNtriggers * 10 << " ms to debug stub SSA output " << RESET;
 
-    // pair id 
-    for( uint8_t cPairId=0; cPairId < 2; cPairId++)
+    // pair id
+    for(uint8_t cPairId = 0; cPairId < 2; cPairId++)
     {
-
         uint8_t cAlignmentPattern;
 
-        if((((int)pSSAPairSel.at(0)-'0')%2==0)) {
-            cAlignmentPattern = (((int)pSSAPairSel.at(cPairId)-'0')%2==0) ? 0xF5 : 0xFA;
-            if ( (int)pSSAPairSel.at(1-cPairId) - '0' == 3)
-                cAlignmentPattern = 0xFA; //SSA3 is configured to output the same pattern as SSA4
-    
-        }
-        else {
-            cAlignmentPattern = (((int)pSSAPairSel.at(cPairId)-'0')%2==0) ? 0xFA: 0xF5;
-            if ( (int)pSSAPairSel.at(cPairId) - '0' == 3)
-                cAlignmentPattern = 0xFA; //SSA3 is configured to output the same pattern as SSA4
-
-        }
-
-        // first I would like to align the lines in the back-end 
-        if( !pTrigger )
+        if((((int)pSSAPairSel.at(0) - '0') % 2 == 0))
         {
-            bool cAligned=true;
-            for( uint8_t cLineId=1; cLineId < 9; cLineId++)
-            { 
-                cAligned=static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, 0 , cPairId , cLineId , cAlignmentPattern , 8);
-                if( !cAligned )
-                    LOG (INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
-            }
-            //if aligned then try and scope 
-            LOG (INFO) << "SLVS debug [stub lines] : Chip "
-                << +cPairId 
-                << RESET;
+            cAlignmentPattern = (((int)pSSAPairSel.at(cPairId) - '0') % 2 == 0) ? 0xF5 : 0xFA;
+            if((int)pSSAPairSel.at(1 - cPairId) - '0' == 3) cAlignmentPattern = 0xFA; // SSA3 is configured to output the same pattern as SSA4
         }
         else
         {
-            LOG (INFO) << BOLDBLUE << "SLVS debug [L1 line] : Chip "
-                << +cPairId 
-                << RESET;
+            cAlignmentPattern = (((int)pSSAPairSel.at(cPairId) - '0') % 2 == 0) ? 0xFA : 0xF5;
+            if((int)pSSAPairSel.at(cPairId) - '0' == 3) cAlignmentPattern = 0xFA; // SSA3 is configured to output the same pattern as SSA4
         }
-        fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
-        if( pTrigger )
+
+        // first I would like to align the lines in the back-end
+        if(!pTrigger)
+        {
+            bool cAligned = true;
+            for(uint8_t cLineId = 1; cLineId < 9; cLineId++)
+            {
+                cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, cAlignmentPattern, 8);
+                if(!cAligned) LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
+            }
+            // if aligned then try and scope
+            LOG(INFO) << "SLVS debug [stub lines] : Chip " << +cPairId << RESET;
+        }
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "SLVS debug [L1 line] : Chip " << +cPairId << RESET;
+        }
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
+        if(pTrigger)
             static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug(false);
         else
         {
@@ -241,71 +225,72 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
     this->SelectCIC(true);
     bool cRetry = true;
     bool cSuccess;
-    int cBadLines[4] = {0,0,0,0};
-    for(int cTries = 0 ; (cTries < 2)&&cRetry ; cTries ++)
+    int  cBadLines[4] = {0, 0, 0, 0};
+    for(int cTries = 0; (cTries < 2) && cRetry; cTries++)
     {
         cRetry = false;
-        
-        for (auto cBoard : *fDetectorContainer)
+
+        for(auto cBoard: *fDetectorContainer)
         {
-            for(auto cOpticalGroup : *cBoard)
+            for(auto cOpticalGroup: *cBoard)
             {
-                for(auto cHybrid : *cOpticalGroup)
+                for(auto cHybrid: *cOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                    fCicInterface->SelectMux(cCic, 6+cTries );
-                }//hybrid 
-            }// module 
-            for(int cLine = 1 ; cLine < 5 ; cLine ++)
+                    fCicInterface->SelectMux(cCic, 6 + cTries);
+                } // hybrid
+            }     // module
+            for(int cLine = 1; cLine < 5; cLine++)
             {
-                cSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, 0 , 0 , cLine , pPattern , 8);
-                if (!cSuccess)
+                cSuccess = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(cBoard, 0, 0, cLine, pPattern, 8);
+                if(!cSuccess)
                 {
                     LOG(INFO) << BOLDRED << "CIC OUT Line " << +cLine << " was not aligned correctly." << RESET;
-                    cBadLines[cLine-1] ++;
+                    cBadLines[cLine - 1]++;
                 }
-                else 
-                {    LOG(DEBUG) << BOLDGREEN << "CIC OUT Line " << +cLine << " was aligned correctly." << RESET; }
+                else
+                {
+                    LOG(DEBUG) << BOLDGREEN << "CIC OUT Line " << +cLine << " was aligned correctly." << RESET;
+                }
                 cRetry |= !cSuccess;
             }
-        }       
+        }
     }
-    for(int cLine = 1 ; cLine < 5 ; cLine ++)
+    for(int cLine = 1; cLine < 5; cLine++)
     {
-        if( cBadLines[cLine-1]==2 ) 
+        if(cBadLines[cLine - 1] == 2)
         {
-            #ifdef __USE_ROOT__
-                fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine);
-            #endif 
+#ifdef __USE_ROOT__
+            fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine);
+#endif
         }
     }
 }
 void PSHybridTester::MPATest(BeBoard* pBoard)
 {
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
-     // String with the binary representation of the pattern
-    int         cTotalBadLines    = 0;                                    // Number of bad CIC in lines
-    std::string     cParameter[4]   = {"","","",""};                                   // Placeholder for the name of the summaryTree parameter name
-    std::string     cValue[4]       = {"","","",""};
-    
-   
-    DPInterface cDPInterfacer;
-    BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>( this->fBeBoardFWMap.find(0)->second );
+    // String with the binary representation of the pattern
+    int         cTotalBadLines = 0;                // Number of bad CIC in lines
+    std::string cParameter[4]  = {"", "", "", ""}; // Placeholder for the name of the summaryTree parameter name
+    std::string cValue[4]      = {"", "", "", ""};
 
-    bool cRun = true;
-    uint8_t cRuns = 0;
+    DPInterface         cDPInterfacer;
+    BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(this->fBeBoardFWMap.find(0)->second);
+
+    bool    cRun     = true;
+    uint8_t cRuns    = 0;
     uint8_t cMaxRuns = 1;
-    
-    TTree* CICinTree[4]; 
+
+    TTree* CICinTree[4];
 
     // Create TTrees to contain bad lines
-    for (int cPatternId = 0; cPatternId < 4; cPatternId++ )
+    for(int cPatternId = 0; cPatternId < 4; cPatternId++)
     {
         uint32_t cPattern = cTestPatterns[cPatternId];
-        
+
         std::stringstream sstream;
-        std::string cPattern_str;
-        std::string cPattern_str_hex;
+        std::string       cPattern_str;
+        std::string       cPattern_str_hex;
 
         cPattern_str = std::bitset<8>(cPattern).to_string();
 
@@ -313,9 +298,9 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         cPattern_str_hex = sstream.str();
 
         fResultFile->cd();
-        std::string cTitle = Form("CICinTree0x%s",cPattern_str_hex.c_str());
-        std::string cDesc = Form("Bad Lines in the CIC IN test for pattern 0x%s", cPattern_str_hex.c_str());
-        CICinTree[cPatternId] = new TTree( cTitle.c_str() , cDesc.c_str() );
+        std::string cTitle    = Form("CICinTree0x%s", cPattern_str_hex.c_str());
+        std::string cDesc     = Form("Bad Lines in the CIC IN test for pattern 0x%s", cPattern_str_hex.c_str());
+        CICinTree[cPatternId] = new TTree(cTitle.c_str(), cDesc.c_str());
         CICinTree[cPatternId]->Branch("Parameter", &cParameter[cPatternId]);
         CICinTree[cPatternId]->Branch("Value", &cValue[cPatternId]);
         cParameter[cPatternId] = "Pattern";
@@ -323,56 +308,56 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         CICinTree[cPatternId]->Fill();
     }
 
-    // enable CIC mux - phy port 0 -- 10 are stub lines 
-    for( uint8_t cPhyPort=0; cPhyPort < 10 ; cPhyPort++)
+    // enable CIC mux - phy port 0 -- 10 are stub lines
+    for(uint8_t cPhyPort = 0; cPhyPort < 10; cPhyPort++)
     {
         cRuns = 0;
-        cRun = true;
+        cRun  = true;
 
-        for(auto cOpticalGroup : *pBoard)
+        for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cHybrid : *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-                fCicInterface->SelectMux(cCic, cPhyPort ); 
-            }//hybrid 
-        }// module 
+                fCicInterface->SelectMux(cCic, cPhyPort);
+            } // hybrid
+        }     // module
 
         std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
-        uint8_t cPhyPortBadLines = 0;
+        uint8_t                               cPhyPortBadLines = 0;
 
-        while(cRun && (cRuns <= cMaxRuns)) {
+        while(cRun && (cRuns <= cMaxRuns))
+        {
             cPhyPortBadLines = 0;
-            cRun = false;
+            cRun             = false;
 
-            if(cRuns>0)
-                LOG(INFO) << BOLDRED << "Retrying test on phyPort " << +cPhyPort << "." << RESET ;
+            if(cRuns > 0) LOG(INFO) << BOLDRED << "Retrying test on phyPort " << +cPhyPort << "." << RESET;
 
-            //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+            // align lines 1,2,3 and 4 (first 4 stub lines from CIC )
             cDPInterfacer.Stop(cInterface);
             cDPInterfacer.Configure(cInterface, 0xAA);
-            cDPInterfacer.Start(cInterface);        
+            cDPInterfacer.Start(cInterface);
             // std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
+            for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
             {
-                uint8_t cHybridId=0;
-                uint8_t cChipId=0; 
-                uint8_t cPatternPeriod=8;
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( pBoard, cHybridId , cChipId , cLineId , 0xAA , cPatternPeriod);
+                uint8_t cHybridId      = 0;
+                uint8_t cChipId        = 0;
+                uint8_t cPatternPeriod = 8;
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybridId, cChipId, cLineId, 0xAA, cPatternPeriod);
             }
 
-            uint8_t cBadLines[4] = {0,0,0,0};
+            uint8_t cBadLines[4] = {0, 0, 0, 0};
 
-            //Stop 0xAA pattern and use test patterns
-            for (int cPatternId = 0; cPatternId < 4; cPatternId++ )
+            // Stop 0xAA pattern and use test patterns
+            for(int cPatternId = 0; cPatternId < 4; cPatternId++)
             {
                 cReadLines.clear();
 
                 uint32_t cPattern = cTestPatterns[cPatternId];
-                
+
                 std::stringstream sstream;
-                std::string cPattern_str;
-                std::string cPattern_str_hex;
+                std::string       cPattern_str;
+                std::string       cPattern_str_hex;
 
                 cPattern_str = std::bitset<8>(cPattern).to_string();
                 sstream << std::hex << cPattern;
@@ -393,11 +378,11 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                 cDPInterfacer.Stop(cInterface);
                 cDPInterfacer.Configure(cInterface, cPattern);
                 cDPInterfacer.Start(cInterface);
-            
+
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-                // check output 
-                fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                // check output
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
 
                 for(int a = 0; a < (int)cReadLines.size(); a++)
@@ -409,74 +394,71 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                     for(int b = 0; b < (int)cReadLines[a].size(); b++)
                     {
                         badLines = 0;
-                        cLine = cReadLines[a][b];
+                        cLine    = cReadLines[a][b];
                         // Go throught the read line and compare with pattern
                         for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length())
                         {
-                            cSubLine = cLine.substr(k, cPattern_str.length());
+                            cSubLine           = cLine.substr(k, cPattern_str.length());
                             bool cPatternFound = false;
-                            for ( int j = 0; j < (int)cPattern_str.length() ; j ++ )
-                                cPatternFound |= ((cPattern_str.substr(j, cPattern_str.length()-j) + cPattern_str.substr(0,j)) == cSubLine);
-                            if ( !cPatternFound ) {
-                                    badLines++;
-                                    cRun = true;
+                            for(int j = 0; j < (int)cPattern_str.length(); j++) cPatternFound |= ((cPattern_str.substr(j, cPattern_str.length() - j) + cPattern_str.substr(0, j)) == cSubLine);
+                            if(!cPatternFound)
+                            {
+                                badLines++;
+                                cRun = true;
                             }
                         }
 
                         std::string recovered = "";
-                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) {
-                            recovered += cLine.substr(k, cPattern_str.length()) + "  ";
-                        }
-                        if(badLines > 2 ) //35
+                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
+                        if(badLines > 2) // 35
                         {
                             cBadLines[b] = 1;
-                            LOG(INFO) << "The pattern " << cPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                            LOG(INFO) << "The pattern " << cPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b
+                                      << "." << RESET;
                             std::string recovered = "";
-                            for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) {
-                                recovered += cLine.substr(k, cPattern_str.length()) + "  ";
-                            }
-                            LOG (INFO) << "Recovered:  " << recovered << RESET;
+                            for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
+                            LOG(INFO) << "Recovered:  " << recovered << RESET;
                             cParameter[cPatternId] = "";
                             cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
                             cValue[cPatternId]     = cLine;
                             CICinTree[cPatternId]->Fill();
-                        } 
-                        else {
+                        }
+                        else
+                        {
                             // cBadLines[b] = 0
-                            LOG(DEBUG) << "The pattern 0x" << cPattern_str_hex << " was" << BOLDGREEN <<" recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
-                            LOG (DEBUG) << "Recovered:  " << recovered << RESET;
+                            LOG(DEBUG) << "The pattern 0x" << cPattern_str_hex << " was" << BOLDGREEN << " recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "."
+                                       << RESET;
+                            LOG(DEBUG) << "Recovered:  " << recovered << RESET;
                         }
                     }
                 }
             }
             cRuns++;
-            for(int i = 0; i < 4 ; i++)
-                cPhyPortBadLines += cBadLines[i];
+            for(int i = 0; i < 4; i++) cPhyPortBadLines += cBadLines[i];
         }
         cTotalBadLines += cPhyPortBadLines;
     }
     LOG(INFO) << BOLDYELLOW << "***************************************Bad CIC IN lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     fillSummaryTree("CIC IN bad lines", cTotalBadLines);
-    #endif
+#endif
 }
 void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
-{   
-    #ifdef __USE_ROOT__
-    TString  cParameter;  
-    TString  cValue;
+{
+#ifdef __USE_ROOT__
+    TString cParameter;
+    TString cValue;
     fResultFile->cd();
 
     TTree* PATree = nullptr;
-    if ( gROOT->FindObject("PATree") != nullptr ) {
-        PATree = static_cast<TTree*>(gROOT->FindObject("PATree"));
-    }
-    else {
-        PATree = new TTree( "PATree" ,"Phase alignment test" );
+    if(gROOT->FindObject("PATree") != nullptr) { PATree = static_cast<TTree*>(gROOT->FindObject("PATree")); }
+    else
+    {
+        PATree = new TTree("PATree", "Phase alignment test");
         PATree->Branch("Parameter", &cParameter);
         PATree->Branch("Value", &cValue);
     }
-    #endif
+#endif
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -487,34 +469,35 @@ void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
                 auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
                 if(cCic != NULL)
                 {
-                    for (int cPhyPort = 0; cPhyPort < 10; cPhyPort ++ )
+                    for(int cPhyPort = 0; cPhyPort < 10; cPhyPort++)
                     {
-                        fCicInterface->SelectMux(cCic, cPhyPort ); 
-                        //align lines 1,2,3 and 4 (first 4 stub lines from CIC )
-                        for( uint8_t cLineId=1; cLineId <5 ; cLineId++) 
+                        fCicInterface->SelectMux(cCic, cPhyPort);
+                        // align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+                        for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
                         {
-                            uint8_t cHybridId=0;
-                            uint8_t cChipId=0; 
-                            uint8_t cPatternPeriod=8;
-                            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning( cBoard, cHybridId , cChipId , cLineId , 0xAA, cPatternPeriod);
+                            uint8_t cHybridId      = 0;
+                            uint8_t cChipId        = 0;
+                            uint8_t cPatternPeriod = 8;
+                            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(cBoard, cHybridId, cChipId, cLineId, 0xAA, cPatternPeriod);
                         }
 
                         std::vector<std::vector<std::string>> cReadLines; // Container for the received lines
                         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4, cReadLines);
 
-                        #ifdef __USE_ROOT__
-                        for (int i = 0; i < (int)cReadLines.size(); i++ ){
+#ifdef __USE_ROOT__
+                        for(int i = 0; i < (int)cReadLines.size(); i++)
+                        {
                             cParameter.Clear();
                             cValue.Clear();
-                            for (int j = 0; j < (int)cReadLines[i].size(); j ++)
+                            for(int j = 0; j < (int)cReadLines[i].size(); j++)
                             {
                                 cParameter = "Phase_" + std::to_string(pPhase) + "_Phy_" + std::to_string(cPhyPort) + "_" + std::to_string(j);
-                                LOG(INFO) << cParameter << RESET; 
+                                LOG(INFO) << cParameter << RESET;
                                 cValue = cReadLines[i][j];
                                 PATree->Fill();
                             }
                         }
-                        #endif
+#endif
                     }
                 }
             }
@@ -538,12 +521,11 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 // add check for SSA
                 if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
-        		// uint8_t cPattern= (uint8_t)cReadoutChip->getId()+1;
+                // uint8_t cPattern= (uint8_t)cReadoutChip->getId()+1;
                 uint8_t cPattern = (cReadoutChip->getId() % 2 == 0) ? 0xFA : 0xF5;
 
-
                 // make sure SSA is configured to output a test pattern on SLVS out
-                if( cReadoutChip->getId() == (int)cSSAPairSel.at(1)-'0' || cReadoutChip->getId() == (int)cSSAPairSel.at(0)-'0'  )
+                if(cReadoutChip->getId() == (int)cSSAPairSel.at(1) - '0' || cReadoutChip->getId() == (int)cSSAPairSel.at(0) - '0')
                 {
                     LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
@@ -556,7 +538,8 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern6", cPattern);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
                 }
-                else{
+                else
+                {
                     cPattern = cReadoutChip->getId();
                     LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
@@ -569,108 +552,110 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern6", cPattern);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
                 }
-            }//chip
-	    }//hybrid
-    }//module 
+            } // chip
+        }     // hybrid
+    }         // module
     // now capture output on pogo sockets and store them
-    std::vector<std::vector<std::string>> cReadLines; // Container for the scoped lines
-    this->SSAOutputsPogoScope( cReadLines, cSSAPairSel, pBoard, false); //Recover Scoped lines
+    std::vector<std::vector<std::string>> cReadLines;                  // Container for the scoped lines
+    this->SSAOutputsPogoScope(cReadLines, cSSAPairSel, pBoard, false); // Recover Scoped lines
     std::string pPattern_str;
 
-    std::string  cParameter;  
-    std::string  cValue;
+    std::string cParameter;
+    std::string cValue;
     fResultFile->cd();
 
     TTree* SSATree = nullptr;
-    if ( gROOT->FindObject("SSATree") != nullptr ) {
-        SSATree = static_cast<TTree*>(gROOT->FindObject("SSATree"));
-    }
-    else {
-        SSATree = new TTree( "SSATree" , "Bad Lines in the SSA test" );
+    if(gROOT->FindObject("SSATree") != nullptr) { SSATree = static_cast<TTree*>(gROOT->FindObject("SSATree")); }
+    else
+    {
+        SSATree = new TTree("SSATree", "Bad Lines in the SSA test");
         SSATree->Branch("Parameter", &cParameter);
         SSATree->Branch("Value", &cValue);
     }
 
     // Process scoped lines
     for(int a = 0; a < (int)cReadLines.size(); a++)
+    {
+        if((((int)cSSAPairSel.at(0) - '0') % 2 == 0))
         {
-            if((((int)cSSAPairSel.at(0)-'0')%2==0)) {
-                pPattern_str = (((int)cSSAPairSel.at(a)-'0')%2==0) ? std::bitset<8>(0xF5).to_string() : std::bitset<8>(0xFA).to_string();
-                if ( (int)cSSAPairSel.at(1-a) - '0' == 3)
-                    pPattern_str = std::bitset<8>( 0x04 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
-       
-            }
-            else {
-                pPattern_str = (((int)cSSAPairSel.at(a)-'0')%2==0) ? std::bitset<8>(0xFA).to_string() : std::bitset<8>(0xF5).to_string();
-                if ( (int)cSSAPairSel.at(a) - '0' == 3)
-                    pPattern_str = std::bitset<8>( 0x04 ).to_string(); //SSA3 is configured to output the same pattern as SSA4
-    
-            }
-            // pPattern_str = ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) ? std::bitset<8>(  (int)cSSAPairSel.at(a) - '0' + 1  ).to_string() : std::bitset<8>(  (int)cSSAPairSel.at(1-a) - '0' + 1  ).to_string() ;
-            LOG(INFO) << "Checking for " << pPattern_str << RESET;
-            std::string cLine    = "";
-            float       distance = 0.0;
-            int         badLines = 0;
-            std::string cSubLine;
-            for(int b = 0; b < (int)cReadLines[a].size(); b++)
-            {
-                cLine = cReadLines[a][b]; //Get scoped line
-                LOG(DEBUG) << cLine << RESET;
-                bool ok = false;
-                // Go throught the read line and compare with pattern
-                for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length())
-                {
-                    cSubLine = cLine.substr(k, pPattern_str.length());
-                    LOG(DEBUG) << BOLDBLUE << cSubLine << RESET;
-                    // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
-                    // aux = k + 1;
-                    for ( int i = 0; i < (int)cSubLine.length()-1 ; i++) {
-                        bool cPatternFound = false;
-                        for ( int j = 0; j < (int)pPattern_str.length() ; j ++ )
-                            cPatternFound |= ((pPattern_str.substr(j, pPattern_str.length()-j) + pPattern_str.substr(0,j)) == cSubLine);
-                        // if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) && ( (cSubLine != pPattern_str.substr(2, 6) + pPattern_str.substr(0,2)) && (cSubLine != pPattern_str.substr(3,5) + pPattern_str.substr(0, 3)) && (cSubLine != pPattern_str.substr(4,4) + pPattern_str.substr(0, 4)) ) ) {
-                        if ( !cPatternFound){
-                            LOG (DEBUG) << BOLDRED << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << RESET;
-                        }
-                        else{
-                            ok = true;
-                            // LOG (INFO) << BOLDMAGENTA << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << " equals " << pPattern_str << RESET;
-                            LOG (INFO) << BOLDMAGENTA << pPattern_str << " pattern found." << RESET;
-                            break;
-                        }
-                    }
-                    if( ok )
-                        break;
-                }
-                if( !ok ) {
-                    cParameter = "";
-                    if((((int)cSSAPairSel.at(0)-'0')%2==0)) { //Check this
-                        cParameter = "FE" + std::to_string((int)cSSAPairSel.at(1-a)-'0') + "_" + std::to_string(b);
-                    }
-                    else {
-                        cParameter = "FE" + std::to_string((int)cSSAPairSel.at(a)-'0') + "_" + std::to_string(b);
-                    }
-                    cValue     = cLine;
-                    LOG(INFO) << cParameter << "  " << cValue << RESET;
-                    #ifdef __USE_ROOT__
-                        SSATree->Fill();
-                    #endif
-                    badLines++;
-                }
-            }
-            if((((int)cSSAPairSel.at(0)-'0')%2==0)) { //Check this
-                #ifdef __USE_ROOT__
-                    fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(1-a)-'0' ), badLines);
-                #endif
-            }
-            else {
-                #ifdef __USE_ROOT__
-                    fillSummaryTree( Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(a)-'0' ), badLines);
-                #endif
-            }
-            
+            pPattern_str = (((int)cSSAPairSel.at(a) - '0') % 2 == 0) ? std::bitset<8>(0xF5).to_string() : std::bitset<8>(0xFA).to_string();
+            if((int)cSSAPairSel.at(1 - a) - '0' == 3) pPattern_str = std::bitset<8>(0x04).to_string(); // SSA3 is configured to output the same pattern as SSA4
         }
-        // SSATree->Write();
+        else
+        {
+            pPattern_str = (((int)cSSAPairSel.at(a) - '0') % 2 == 0) ? std::bitset<8>(0xFA).to_string() : std::bitset<8>(0xF5).to_string();
+            if((int)cSSAPairSel.at(a) - '0' == 3) pPattern_str = std::bitset<8>(0x04).to_string(); // SSA3 is configured to output the same pattern as SSA4
+        }
+        // pPattern_str = ( ((int)cSSAPairSel.at(0)-'0')%2!=0 ) ? std::bitset<8>(  (int)cSSAPairSel.at(a) - '0' + 1  ).to_string() : std::bitset<8>(  (int)cSSAPairSel.at(1-a) - '0' + 1  ).to_string()
+        // ;
+        LOG(INFO) << "Checking for " << pPattern_str << RESET;
+        std::string cLine    = "";
+        float       distance = 0.0;
+        int         badLines = 0;
+        std::string cSubLine;
+        for(int b = 0; b < (int)cReadLines[a].size(); b++)
+        {
+            cLine = cReadLines[a][b]; // Get scoped line
+            LOG(DEBUG) << cLine << RESET;
+            bool ok = false;
+            // Go throught the read line and compare with pattern
+            for(int k = 0; (k + pPattern_str.length()) < cLine.length(); k += pPattern_str.length())
+            {
+                cSubLine = cLine.substr(k, pPattern_str.length());
+                LOG(DEBUG) << BOLDBLUE << cSubLine << RESET;
+                // distance += FuzzyCompareStrings(cSubLine, pPattern_str);
+                // aux = k + 1;
+                for(int i = 0; i < (int)cSubLine.length() - 1; i++)
+                {
+                    bool cPatternFound = false;
+                    for(int j = 0; j < (int)pPattern_str.length(); j++) cPatternFound |= ((pPattern_str.substr(j, pPattern_str.length() - j) + pPattern_str.substr(0, j)) == cSubLine);
+                    // if ( ( cSubLine != pPattern_str && cSubLine != (pPattern_str.substr(1, 7) + pPattern_str.front()) && cSubLine != pPattern_str.back() + pPattern_str.substr(0, 7) ) && ( (cSubLine
+                    // != pPattern_str.substr(2, 6) + pPattern_str.substr(0,2)) && (cSubLine != pPattern_str.substr(3,5) + pPattern_str.substr(0, 3)) && (cSubLine != pPattern_str.substr(4,4) +
+                    // pPattern_str.substr(0, 4)) ) ) {
+                    if(!cPatternFound) { LOG(DEBUG) << BOLDRED << cSubLine.substr(i, cSubLine.size() - i) + cSubLine.substr(0, i) << RESET; }
+                    else
+                    {
+                        ok = true;
+                        // LOG (INFO) << BOLDMAGENTA << cSubLine.substr(i, cSubLine.size()-i ) + cSubLine.substr(0,i) << " equals " << pPattern_str << RESET;
+                        LOG(INFO) << BOLDMAGENTA << pPattern_str << " pattern found." << RESET;
+                        break;
+                    }
+                }
+                if(ok) break;
+            }
+            if(!ok)
+            {
+                cParameter = "";
+                if((((int)cSSAPairSel.at(0) - '0') % 2 == 0))
+                { // Check this
+                    cParameter = "FE" + std::to_string((int)cSSAPairSel.at(1 - a) - '0') + "_" + std::to_string(b);
+                }
+                else
+                {
+                    cParameter = "FE" + std::to_string((int)cSSAPairSel.at(a) - '0') + "_" + std::to_string(b);
+                }
+                cValue = cLine;
+                LOG(INFO) << cParameter << "  " << cValue << RESET;
+#ifdef __USE_ROOT__
+                SSATree->Fill();
+#endif
+                badLines++;
+            }
+        }
+        if((((int)cSSAPairSel.at(0) - '0') % 2 == 0))
+        { // Check this
+#ifdef __USE_ROOT__
+            fillSummaryTree(Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(1 - a) - '0'), badLines);
+#endif
+        }
+        else
+        {
+#ifdef __USE_ROOT__
+            fillSummaryTree(Form("SSA_%s_%d", cSSAPairSel.c_str(), (int)cSSAPairSel.at(a) - '0'), badLines);
+#endif
+        }
+    }
+    // SSATree->Write();
 }
 void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPairSel)
 {
@@ -717,7 +702,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
     // this->SSAOutputsPogoDebug(pBoard, true);
     this->SSAOutputsPogoScope(pBoard, true);
 }
-void PSHybridTester::SetHybridVoltage( uint32_t pUsbBus, uint8_t pUsbDev )
+void PSHybridTester::SetHybridVoltage(uint32_t pUsbBus, uint8_t pUsbDev)
 {
 #ifdef __TCUSB__
     LOG(INFO) << "Setting hybrid voltage..." << RESET;
@@ -731,15 +716,16 @@ void PSHybridTester::SetHybridVoltage( uint32_t pUsbBus, uint8_t pUsbDev )
 
 void PSHybridTester::CheckI2C(BeBoard* pBoard)
 {
-    #ifdef __ROOT__
-    TH1I* fI2CTransactions = new TH1I("I2CTransactions","I2C transactions status");
-    #endif
+#ifdef __ROOT__
+    TH1I* fI2CTransactions = new TH1I("I2CTransactions", "I2C transactions status");
+#endif
 
-    int total = 0;               
+    int total = 0;
     int value = 0;
-    int bad = 0;
-    do{
-        for (int i = 0; i < 256; i++)
+    int bad   = 0;
+    do
+    {
+        for(int i = 0; i < 256; i++)
         {
             for(auto cOpticalReadout: *pBoard)
             {
@@ -752,26 +738,25 @@ void PSHybridTester::CheckI2C(BeBoard* pBoard)
                         if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
 
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", i);
-                            // fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
                         value = fReadoutChipInterface->ReadChipReg(cReadoutChip, "Threshold");
-                        if (value == i) {
-                            LOG (DEBUG) << "Successful read" << RESET;
-                        }
-                        else {
-                            LOG (INFO) << BOLDRED << "Failed read after " << total+1 << "tries. Real value: " << i << "Read value: " << value << RESET;
-                            bad ++;
+                        if(value == i) { LOG(DEBUG) << "Successful read" << RESET; }
+                        else
+                        {
+                            LOG(INFO) << BOLDRED << "Failed read after " << total + 1 << "tries. Real value: " << i << "Read value: " << value << RESET;
+                            bad++;
                             // TString parameter = Form("Bad I2C after ", total);
                             // parameter += Form("tries, for value", i);
                             // FillSummaryTree(parameter, value);
                         }
-                        total ++;
+                        total++;
                     }
                 } // hybrid
-            }     // board  
-        }     // value
-        LOG (INFO) << "Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET; 
-    }while(false);
-    LOG (INFO) << "FINAL. Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET; 
+            }     // board
+        }         // value
+        LOG(INFO) << "Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET;
+    } while(false);
+    LOG(INFO) << "FINAL. Out of " << +total << " transactions, a total of " << RED << +bad << " failed." << RESET;
 }
 void PSHybridTester::CheckCounters(BeBoard* pBoard)
 {
@@ -805,9 +790,8 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
             cNchips += cHybridData->size();
             for(auto cROCData: *cHybridData) // for on chip - begin
             {
-                ReadoutChip* cChip =
-                static_cast<ReadoutChip*>(fDetectorContainer->at(pBoard->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
-                auto cThreshold                  = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
+                ReadoutChip* cChip = static_cast<ReadoutChip*>(fDetectorContainer->at(pBoard->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                auto         cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                 // set threshold a little bit lower than 90% level
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
             } // for on chip - end
@@ -842,7 +826,7 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
                     auto    cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
                     uint8_t cNewValue = (cRegValue & 0xF) | (cEnable << 4);
                     LOG(DEBUG) << BOLDBLUE << "\t\t..ENGLAG reg on channel#" << +cChnl << " is set to " << std::bitset<5>(cRegValue) << " want to set injection to : " << +cEnable
-                                << " so new value would be " << std::bitset<5>(cNewValue) << RESET;
+                               << " so new value would be " << std::bitset<5>(cNewValue) << RESET;
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cNewValue);
                 }
             } // chip
@@ -851,8 +835,8 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
 
     int event_loop = 0;
     int bad_events = 0;
-    while(event_loop < 1500) 
-    {       
+    while(event_loop < 1500)
+    {
         this->ReadNEvents(pBoard, fEventsPerPoint);
         const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
         // iterate over FE objects and check occupancy
@@ -861,7 +845,7 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
             for(auto cOpticalReadout: *pBoard)
             {
                 for(auto cHybrid: *cOpticalReadout)
-                {   
+                {
                     int cTotalCountInjectedChnls = 0;
                     // set AMUX on all SSAs to highZ
                     for(auto cReadoutChip: *cHybrid)
@@ -878,31 +862,30 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
                             cChipCountInjectedChnls += cHitVector[cChnl];
                             cTotalCountInjectedChnls += cHitVector[cChnl];
                         } // chnl
-                        if(cChipCountInjectedChnls == 0)
-                            LOG(INFO) << BOLDMAGENTA << "All injected channels on chip " << +cReadoutChip->getId() << " have 0 hits." << RESET;
+                        if(cChipCountInjectedChnls == 0) LOG(INFO) << BOLDMAGENTA << "All injected channels on chip " << +cReadoutChip->getId() << " have 0 hits." << RESET;
                     } // chip
 
-                    if(cTotalCountInjectedChnls == 0) 
+                    if(cTotalCountInjectedChnls == 0)
                     {
                         LOG(DEBUG) << BOLDRED << "All injected channels on all chips have 0 hits." << RESET;
                         LOG(INFO) << BOLDRED << "Event number " << +event_loop << " is \'empty\'." << RESET;
-                        #ifdef __USE_ROOT__
-                        fillSummaryTree("Empty event",event_loop);
-                        #endif
+#ifdef __USE_ROOT__
+                        fillSummaryTree("Empty event", event_loop);
+#endif
                         bad_events++;
                     }
                     else
-                        LOG(INFO) << BOLDGREEN << "Event number " << +event_loop << " is not \'empty\'. Occupancy is: " << ((float)(cTotalCountInjectedChnls*100)/(fEventsPerPoint*6*cHybrid->at(0)->size())) << "%." << RESET;
-                    LOG(DEBUG) << fEventsPerPoint*6*cHybrid->at(0)->size()<<RESET;
-                    LOG(DEBUG) << cTotalCountInjectedChnls<< RESET;
+                        LOG(INFO) << BOLDGREEN << "Event number " << +event_loop
+                                  << " is not \'empty\'. Occupancy is: " << ((float)(cTotalCountInjectedChnls * 100) / (fEventsPerPoint * 6 * cHybrid->at(0)->size())) << "%." << RESET;
+                    LOG(DEBUG) << fEventsPerPoint * 6 * cHybrid->at(0)->size() << RESET;
+                    LOG(DEBUG) << cTotalCountInjectedChnls << RESET;
                     event_loop++;
                 } // hybrid
-            }   // module
-        }   // event loop
-    } // while
+            }     // module
+        }         // event loop
+    }             // while
     LOG(INFO) << "Out of " << +event_loop << " readouts, " << +bad_events << " were \'empty\'" << RESET;
 }
-
 
 /*!
     Checks the hybrid and test card measurements using the TC USB library, and compares the measurement to the nominal value, allowing for a percentage of variation, defined in the settings file.
@@ -912,56 +895,52 @@ void PSHybridTester::RunHybridETest()
 {
 #ifdef __TCUSB__
     TC_PSFE cTC_PSFE;
-    float result;
+    float   result;
 
-    double cAcceptancePercentage = this->findValueInSettings("EMeasurementAcceptance")/100;
-    LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " <<  +this->findValueInSettings("EMeasurementAcceptance") << " %" << RESET;
+    double cAcceptancePercentage = this->findValueInSettings("EMeasurementAcceptance") / 100;
+    LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " << +this->findValueInSettings("EMeasurementAcceptance") << " %" << RESET;
 
-    for (auto cMapIterator : fHybridVoltageMap)
+    for(auto cMapIterator: fHybridVoltageMap)
     {
-        auto cNominalValue = fHybridNominalValues.find(cMapIterator.first);
-        auto& cMeasurement = cMapIterator.second;
+        auto  cNominalValue = fHybridNominalValues.find(cMapIterator.first);
+        auto& cMeasurement  = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
         std::string cMeasurementName = (cMapIterator.first);
-        #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
         fillSummaryTree(cMeasurementName, result);
-        #endif
-        if( cNominalValue != fHybridNominalValues.end() )
+#endif
+        if(cNominalValue != fHybridNominalValues.end())
         {
-            if ( cNominalValue->second != 0 && cNominalValue->second != 1 )
+            if(cNominalValue->second != 0 && cNominalValue->second != 1)
             {
-                #ifdef __USE_ROOT__
-                fillSummaryTree(cMeasurementName+"dev", cNominalValue->second-result);
-                #endif
-                if( cAcceptancePercentage != 0 )
+#ifdef __USE_ROOT__
+                fillSummaryTree(cMeasurementName + "dev", cNominalValue->second - result);
+#endif
+                if(cAcceptancePercentage != 0)
                 {
-                    if( result < cNominalValue->second*(1+cAcceptancePercentage) && result > cNominalValue->second*(1-cAcceptancePercentage) ) 
-                    {
-                        LOG(INFO) << BOLDGREEN << "OK" << RESET;
-                    }
-                    else 
+                    if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage)) { LOG(INFO) << BOLDGREEN << "OK" << RESET; }
+                    else
                     {
                         LOG(INFO) << BOLDRED << "BAD" << RESET;
                     }
                 }
-                
             }
         }
     }
 
-    for (auto cMapIterator : fHybridCurrentMap)
+    for(auto cMapIterator: fHybridCurrentMap)
     {
         auto& cMeasurement = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
-        #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
         fillSummaryTree(cMapIterator.first, result);
-        #endif
-        
-        if( cMapIterator.first == "Hybrid1V00_current" || cMapIterator.first == "Hybrid1V25_current" ) 
+#endif
+
+        if(cMapIterator.first == "Hybrid1V00_current" || cMapIterator.first == "Hybrid1V25_current")
         {
-            if ( result == 0 ) 
+            if(result == 0)
             {
                 LOG(ERROR) << BOLDRED << "Hybrid is not connected! Check the jumper cable between hybrid and test card" << RESET;
                 exit(-6);
@@ -969,18 +948,18 @@ void PSHybridTester::RunHybridETest()
         }
     }
 
-    for (auto cMapIterator : fHybridOtherMap)
+    for(auto cMapIterator: fHybridOtherMap)
     {
         auto& cMeasurement = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
-        #ifdef __USE_ROOT_
+#ifdef __USE_ROOT_
         fillSummaryTree(cMapIterator.first, result);
-        #endif
+#endif
     }
 #endif
 }
-void PSHybridTester::ReadHybridVoltage(const std::string & pVoltageName )
+void PSHybridTester::ReadHybridVoltage(const std::string& pVoltageName)
 {
 #ifdef __TCUSB__
     auto cMapIterator = fHybridVoltageMap.find(pVoltageName);
@@ -994,7 +973,7 @@ void PSHybridTester::ReadHybridVoltage(const std::string & pVoltageName )
             std::this_thread::sleep_for(std::chrono::milliseconds(fVoltageMeasurementWait_ms));
             cTC_PSFE.adc_get(cMeasurement, cMeasurements[cIndex]);
             LOG(INFO) << BOLDBLUE << "\t\t..After waiting for " << (cIndex + 1) * 1e-3 * fVoltageMeasurementWait_ms << " seconds ..."
-                       << " reading from test card  : " << cMeasurements[cIndex] << " mV." << RESET;
+                      << " reading from test card  : " << cMeasurements[cIndex] << " mV." << RESET;
         }
         fVoltageMeasurement = this->getStats(cMeasurements);
     }
@@ -1048,55 +1027,45 @@ void PSHybridTester::CheckHybridCurrents()
 }
 void PSHybridTester::CheckHybridVoltages()
 {
-    #ifdef __TCUSB__
-    #ifdef __USE_ROOT__
+#ifdef __TCUSB__
+#ifdef __USE_ROOT__
     ReadHybridVoltage("TC_GND");
     LOG(INFO) << BOLDBLUE << "Test card ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
-    fillSummaryTree("TestCardGroundavg", fVoltageMeasurement.first );
-    fillSummaryTree("TestCardGroundrms", fVoltageMeasurement.second );
-
+    fillSummaryTree("TestCardGroundavg", fVoltageMeasurement.first);
+    fillSummaryTree("TestCardGroundrms", fVoltageMeasurement.second);
 
     ReadHybridVoltage("ROH_GND");
     LOG(INFO) << BOLDBLUE << "ROH connector ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
-    fillSummaryTree("PanasonicGroundavg", fVoltageMeasurement.first );
-    fillSummaryTree("PanasonicGroundrms", fVoltageMeasurement.second );
-
+    fillSummaryTree("PanasonicGroundavg", fVoltageMeasurement.first);
+    fillSummaryTree("PanasonicGroundrms", fVoltageMeasurement.second);
 
     ReadHybridVoltage("Hybrid3V3");
     LOG(INFO) << BOLDBLUE << "Hybrid 3V30 : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
-    fillSummaryTree("Hybrid3V3avg", fVoltageMeasurement.first );
-    fillSummaryTree("Hybrid3V3rms", fVoltageMeasurement.second );
-
+    fillSummaryTree("Hybrid3V3avg", fVoltageMeasurement.first);
+    fillSummaryTree("Hybrid3V3rms", fVoltageMeasurement.second);
 
     ReadHybridVoltage("Hybrid1V00");
     LOG(INFO) << BOLDBLUE << "Hybrid 1V00 : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
-    fillSummaryTree("Hybrid1V00avg", fVoltageMeasurement.first );
-    fillSummaryTree("Hybrid1V00rms", fVoltageMeasurement.second );
-
+    fillSummaryTree("Hybrid1V00avg", fVoltageMeasurement.first);
+    fillSummaryTree("Hybrid1V00rms", fVoltageMeasurement.second);
 
     ReadHybridVoltage("Hybrid1V25");
-    LOG (INFO) << BOLDBLUE << "Hybrid 1V25 : "
-        << fVoltageMeasurement.first << " mV on average " 
-        << fVoltageMeasurement.second << " mV rms. " << RESET;
+    LOG(INFO) << BOLDBLUE << "Hybrid 1V25 : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
-    fillSummaryTree("Hybrid1V25avg", fVoltageMeasurement.first );
-    fillSummaryTree("Hybrid1V25rms", fVoltageMeasurement.second );
- 
+    fillSummaryTree("Hybrid1V25avg", fVoltageMeasurement.first);
+    fillSummaryTree("Hybrid1V25rms", fVoltageMeasurement.second);
 
-    if( fVoltageMeasurement.first*1e-3 >= PSHYBRIDMAXV)
-    {    
-        throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH"));
-    }
-    #endif
-    #endif
+    if(fVoltageMeasurement.first * 1e-3 >= PSHYBRIDMAXV) { throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH")); }
+#endif
+#endif
 }
 void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
 {
-    #ifdef __TCUSB__
+#ifdef __TCUSB__
     TC_PSFE cTC_PSFE;
     // now cycle through chips one at a time ..
     for(auto cOpticalReadout: *pBoard)
@@ -1104,14 +1073,14 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalReadout)
         {
             // First set the AMUX on every chip to HiZ to avoid shorts
-            for(auto cReadoutChip: *cHybrid)
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1);
+            for(auto cReadoutChip: *cHybrid) fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1);
             std::this_thread::sleep_for(std::chrono::microseconds(50));
 
             for(auto cReadoutChip: *cHybrid)
             {
-                LOG(INFO) << BOLDMAGENTA << "----------------------------------------------------- Calibrating bias DACs on SSA #" << +cReadoutChip->getId() << "-----------------------------------------------------" << RESET;
-                
+                LOG(INFO) << BOLDMAGENTA << "----------------------------------------------------- Calibrating bias DACs on SSA #" << +cReadoutChip->getId()
+                          << "-----------------------------------------------------" << RESET;
+
                 // Measure GND on the chip
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "GND", 1);
                 float ground;
@@ -1120,31 +1089,29 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
                 float result;
 
                 // Iterate over the bias DACs that need to be calibrated.
-                for (auto cDAC : fDACsCalibrationMap)
+                for(auto cDAC: fDACsCalibrationMap)
                 {
                     std::string cAdjustmentRegister = cDAC.second;
-                    auto cTargetIterator = fDACsCalibrationTargetMap.find(cDAC.first);
-                    float cAdjustmentTarget = cTargetIterator->second;
+                    auto        cTargetIterator     = fDACsCalibrationTargetMap.find(cDAC.first);
+                    float       cAdjustmentTarget   = cTargetIterator->second;
 
-                    LOG(INFO) << BOLDMAGENTA     << "Setting " << cDAC.first << "." << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "Setting " << cDAC.first << "." << RESET;
 
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cDAC.first, 1);
                     std::this_thread::sleep_for(std::chrono::microseconds(50));
                     cTC_PSFE.adc_get(TC_PSFE::measurement::AMUX, result);
-                    LOG(INFO) << BOLDBLUE << "Value before calibrating " << result-ground << "mV. Target value: " << cAdjustmentTarget << "mV." << RESET;
+                    LOG(INFO) << BOLDBLUE << "Value before calibrating " << result - ground << "mV. Target value: " << cAdjustmentTarget << "mV." << RESET;
                     bool cCalibrated = false;
-                    int iterations = 0;
-                    while (!cCalibrated && iterations < 25)
+                    int  iterations  = 0;
+                    while(!cCalibrated && iterations < 25)
                     {
-                        if( result-ground > cAdjustmentTarget+1 )
+                        if(result - ground > cAdjustmentTarget + 1)
+                        { fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) - 1); }
+                        else if(result - ground < cAdjustmentTarget - 1)
                         {
-                            fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) - 1);
+                            fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) + 1);
                         }
-                        else if( result-ground < cAdjustmentTarget-1 )
-                        {
-                            fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister ,fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) + 1);
-                        }
-                        else if ( result - ground >= cAdjustmentTarget-1.1 && result - ground <= cAdjustmentTarget+1.1)
+                        else if(result - ground >= cAdjustmentTarget - 1.1 && result - ground <= cAdjustmentTarget + 1.1)
                         {
                             cCalibrated = true;
                         }
@@ -1152,8 +1119,7 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
                         cTC_PSFE.adc_get(TC_PSFE::measurement::AMUX, result);
                         iterations++;
                     }
-                    if (!cCalibrated)
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, 15);
+                    if(!cCalibrated) fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, 15);
                     // for(int cValue = 0; cValue < 32; cValue++)
                     // {
                     //     fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, cValue);
@@ -1162,21 +1128,20 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
                     //     if( cAdjustmentTarget - 1 < (result-ground) && (result-ground) < cAdjustmentTarget + 1 )
                     //         break;
                     // }
-                    LOG(INFO) << BOLDGREEN << "Value after calibrating " << result-ground << "mV. Target value: " << cAdjustmentTarget << "mV." << RESET;
-                    
+                    LOG(INFO) << BOLDGREEN << "Value after calibrating " << result - ground << "mV. Target value: " << cAdjustmentTarget << "mV." << RESET;
                 }
-                
+
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "AmuxHigh", 1); // Set the AMUX to Hiz again.
 
                 // fReadoutChipInterface->WriteChipReg(cReadoutChip, "GAINTRIMMING_S15", 2);
             }
         }
     }
-    #endif
+#endif
 }
 void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
 {
-    #ifdef __TCUSB__
+#ifdef __TCUSB__
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -1217,9 +1182,9 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
             }
         } // hybrid
     }     // board
-    #else
+#else
     LOG(ERROR) << BOLDRED << "Can't read SSA bias value, the TC USB library is not built. Check the installation."
-    #endif
+#endif
 }
 void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
 {
@@ -1229,7 +1194,7 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
         {
             // for( int i = 0; i < 16; i++)
             // {
-            //     LOG(INFO) << BOLDMAGENTA << "Value: " << +i << RESET; 
+            //     LOG(INFO) << BOLDMAGENTA << "Value: " << +i << RESET;
             //     for(auto cReadoutChip: *cHybrid)
             //     {
             //         for(uint32_t channel=0; channel < cReadoutChip->size(); channel++)
@@ -1263,23 +1228,22 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
             //         }
             //     }
             // }
-            
-            
+
             for(auto cReadoutChip: *cHybrid)
             {
                 for(auto cReadoutChip: *cHybrid)
                 {
-                    for(uint32_t channel=0; channel < cReadoutChip->size(); channel++)
+                    for(uint32_t channel = 0; channel < cReadoutChip->size(); channel++)
                     {
-                        std::string cRegName = Form("GAINTRIMMING_S%d", channel+1);
-                        int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                        std::string cRegName  = Form("GAINTRIMMING_S%d", channel + 1);
+                        int         cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 7);
                     }
                 }
-                
+
                 // fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", 1);
                 // fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", 7);
-                fReadoutChipInterface->WriteChipReg(cReadoutChip, "InjectedCharge", 100);    
+                fReadoutChipInterface->WriteChipReg(cReadoutChip, "InjectedCharge", 100);
                 fChannelGroupHandler = new SSAChannelGroupHandler();
                 fChannelGroupHandler->setChannelGroupParameters(16, 2);
                 this->bitWiseScan("Bias_THDAC", 1000, 0.56, -1);
@@ -1288,52 +1252,54 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
 
                 // int currentThreshold = 0;
                 // int previousThreshold = 0;
-                for(uint32_t channel=0; channel < cReadoutChip->size(); channel++)
+                for(uint32_t channel = 0; channel < cReadoutChip->size(); channel++)
                 {
                     bool cGainCalibrated = false;
                     while(!cGainCalibrated)
                     {
                         // for (int i = 0; i < 256; i++)
                         // {
-                            // fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", i); 
+                        // fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", i);
                         this->ReadNEvents(pBoard, 1000);
-                        const std::vector<Event *> &cEvents = this->GetEvents(pBoard);
-                        for (auto cEvent : cEvents)
+                        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+                        for(auto cEvent: cEvents)
                         {
-                            auto cNhits = cEvent->GetNHits(cHybrid->getId(), cReadoutChip->getId());
+                            auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cReadoutChip->getId());
                             auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
                             // uint32_t max_value = 0;
                             // uint32_t min_value = 1000;
                             // double avg_value = 0;
                             // double stdev_aux = 0;
 
-                            LOG(INFO) << "Threshold: " << cThresholdValue << " Occupancy: " << cHitVector[channel] ;
+                            LOG(INFO) << "Threshold: " << cThresholdValue << " Occupancy: " << cHitVector[channel];
 
-                            std::string cRegName = Form("GAINTRIMMING_S%d", channel+1);
-                            int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                            std::string cRegName  = Form("GAINTRIMMING_S%d", channel + 1);
+                            int         cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
 
-                            if ( cHitVector[channel]/1000 < 0.55 )
+                            if(cHitVector[channel] / 1000 < 0.55)
                             {
-                                if (cRegValue-1 >= 0)
-                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue-1);
-                                    else {
-                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 0);
-                                        cGainCalibrated = true;
-                                    }
+                                if(cRegValue - 1 >= 0)
+                                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue - 1);
+                                else
+                                {
+                                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 0);
+                                    cGainCalibrated = true;
+                                }
                             }
-                            else if ( cHitVector[channel]/1000 > 0.57 )
+                            else if(cHitVector[channel] / 1000 > 0.57)
                             {
-                                if (cRegValue+1 < 16)
-                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
-                                    else {
-                                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
-                                        cGainCalibrated = true;
-                                    }
+                                if(cRegValue + 1 < 16)
+                                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue + 1);
+                                else
+                                {
+                                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                                    cGainCalibrated = true;
+                                }
                             }
                             else
                                 cGainCalibrated = true;
                         }
-                        // }    
+                        // }
 
                         // if(channel !=0 )
                         // {
@@ -1357,70 +1323,71 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
                         //     }
                         // }
                         // previousThreshold = currentThreshold;
-                                // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
-                                // {
-                                //     avg_value += cHitVector[iChannel];
-                                //     if( max_value < cHitVector[iChannel] )
-                                //         max_value = cHitVector[iChannel];
-                                //     if( min_value > cHitVector[iChannel] )
-                                //         min_value = cHitVector[iChannel];
-                                // } //chnl
-                                // LOG(INFO) << "InjectedCharge: " << i*10+5 << ". Max value is: " << max_value << " , min value is " << min_value << " and avg is " << (avg_value/cReadoutChip->size()) << RESET;
-                                // // avg_value = avg_value/cReadoutChip->size();
-                                // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
-                                // {
-                                //     stdev_aux += (cHitVector[iChannel] - (avg_value/cReadoutChip->size()))*(cHitVector[iChannel] - (avg_value/cReadoutChip->size()));
-                                // } //chnl
+                        // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
+                        // {
+                        //     avg_value += cHitVector[iChannel];
+                        //     if( max_value < cHitVector[iChannel] )
+                        //         max_value = cHitVector[iChannel];
+                        //     if( min_value > cHitVector[iChannel] )
+                        //         min_value = cHitVector[iChannel];
+                        // } //chnl
+                        // LOG(INFO) << "InjectedCharge: " << i*10+5 << ". Max value is: " << max_value << " , min value is " << min_value << " and avg is " << (avg_value/cReadoutChip->size()) <<
+                        // RESET;
+                        // // avg_value = avg_value/cReadoutChip->size();
+                        // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
+                        // {
+                        //     stdev_aux += (cHitVector[iChannel] - (avg_value/cReadoutChip->size()))*(cHitVector[iChannel] - (avg_value/cReadoutChip->size()));
+                        // } //chnl
 
-                                // Double_t stdev = sqrt((double)stdev_aux);
+                        // Double_t stdev = sqrt((double)stdev_aux);
 
-                                // LOG(INFO) << BOLDMAGENTA << "stdev: " << +stdev << RESET;
+                        // LOG(INFO) << BOLDMAGENTA << "stdev: " << +stdev << RESET;
 
-                                // cGainCalibrated = true;
+                        // cGainCalibrated = true;
 
-                                // int badch = 0;
-                                // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
-                                // {
-                                //     // LOG(INFO) << "Channel " << +iChannel << ": " << cHitVector[iChannel] << RESET;
-                                //     std::string cRegName = Form("GAINTRIMMING_S%d", iChannel+1);
-                                //     int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
-                                //     // LOG(INFO) << "GainTrim " << +iChannel << ": " << cRegValue << RESET;
+                        // int badch = 0;
+                        // for (uint32_t iChannel = 0; iChannel < cReadoutChip->size(); ++iChannel)
+                        // {
+                        //     // LOG(INFO) << "Channel " << +iChannel << ": " << cHitVector[iChannel] << RESET;
+                        //     std::string cRegName = Form("GAINTRIMMING_S%d", iChannel+1);
+                        //     int cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
+                        //     // LOG(INFO) << "GainTrim " << +iChannel << ": " << cRegValue << RESET;
 
-                                //     // if( cHitVector[iChannel] < (avg_value/cReadoutChip->size())-50) {
-                                //     //     if (cRegValue-1 >= 0)
-                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue-1);
-                                //     //     else
-                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 0);
-                                //     //     cGainCalibrated = false;
-                                //     //     badch++;
-                                //     // }
-                                //     // else if( cHitVector[iChannel] > (avg_value/cReadoutChip->size())+50) {
-                                //     //     if (cRegValue+1 < 16)
-                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
-                                //     //     else
-                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
-                                //     //     cGainCalibrated = false;
-                                //     //     badch++;
-                                //     // }
-                                //     if( cHitVector[iChannel] < max_value ) {
-                                //     //     if (cRegValue+1 < 16)
-                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
-                                //     //     else
-                                //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
-                                //     //     cGainCalibrated = false;
-                                //     //     badch++;
-                                //         if (cRegValue+1 < 16)
-                                //             fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
-                                //         else
-                                //             fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
-                                //         cGainCalibrated = false;
-                                //         badch++;
-                                //     }
-                                // } //chnl
+                        //     // if( cHitVector[iChannel] < (avg_value/cReadoutChip->size())-50) {
+                        //     //     if (cRegValue-1 >= 0)
+                        //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue-1);
+                        //     //     else
+                        //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 0);
+                        //     //     cGainCalibrated = false;
+                        //     //     badch++;
+                        //     // }
+                        //     // else if( cHitVector[iChannel] > (avg_value/cReadoutChip->size())+50) {
+                        //     //     if (cRegValue+1 < 16)
+                        //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                        //     //     else
+                        //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                        //     //     cGainCalibrated = false;
+                        //     //     badch++;
+                        //     // }
+                        //     if( cHitVector[iChannel] < max_value ) {
+                        //     //     if (cRegValue+1 < 16)
+                        //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                        //     //     else
+                        //     //         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                        //     //     cGainCalibrated = false;
+                        //     //     badch++;
+                        //         if (cRegValue+1 < 16)
+                        //             fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cRegValue+1);
+                        //         else
+                        //             fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 15);
+                        //         cGainCalibrated = false;
+                        //         badch++;
+                        //     }
+                        // } //chnl
 
-                                // LOG(INFO) << +badch << RESET;
+                        // LOG(INFO) << +badch << RESET;
 
-                                // LOG(INFO) << "Max value is: " << max_value << " , min value is " << min_value << " and avg is " << (avg_value/cReadoutChip->size()) << RESET;
+                        // LOG(INFO) << "Max value is: " << max_value << " , min value is " << min_value << " and avg is " << (avg_value/cReadoutChip->size()) << RESET;
                     }
                 }
             }
@@ -1496,17 +1463,17 @@ void PSHybridTester::CheckHybridInputs(std::vector<std::string> pInputs, std::ve
     for(auto cBoard: *fDetectorContainer) { this->CheckHybridInputs(cBoard, pInputs, pCounters); }
 }
 
-void PSHybridTester::SetTrim(BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue) 
+void PSHybridTester::SetTrim(BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue)
 {
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
-        {   
+        {
             for(auto cReadoutChip: *cHybrid)
             {
-                for(uint cChannel = 0; cChannel < cReadoutChip->size() ; cChannel++ )
+                for(uint cChannel = 0; cChannel < cReadoutChip->size(); cChannel++)
                 {
-                    std::string cRegName = Form("%s_S%d", pTrimRegister.c_str(), cChannel+1);
+                    std::string cRegName = Form("%s_S%d", pTrimRegister.c_str(), cChannel + 1);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, pTrimValue);
                 }
             }

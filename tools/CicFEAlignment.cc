@@ -473,29 +473,24 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 // enable automatic phase aligner
                 fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerModule*>(cHybrid)->fCic, true);
                 auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
-    
-    
-                fCicInterface->ResetPhaseAligner(cCic, 0); //Reset CIC Phase Aligner with a 0 ms wait
+
+                fCicInterface->ResetPhaseAligner(cCic, 0); // Reset CIC Phase Aligner with a 0 ms wait
 
                 cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
- 
+
                 // 4 channels per phyPort ... 12 phyPorts per CIC
                 std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
                 // 8 FEs per CIC .... 6 SLVS lines per FE
                 std::vector<std::vector<uint8_t>> cPhaseTapsFEs(8, std::vector<uint8_t>(6, 0));
                 // read back phase aligner values
-                if(cLocked)
-                {
-                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
-                    
-                }
+                if(cLocked) { LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDRED << " FAILED to lock " << BOLDBLUE << " ... stopping procedure." << RESET;
                     // exit(1);
                 }
 
-                //Moving this here from "if (cLocked)" so that the static phase alignment is set everytime, even if one of the lines fails the phase alignment.
+                // Moving this here from "if (cLocked)" so that the static phase alignment is set everytime, even if one of the lines fails the phase alignment.
                 cPhaseTaps    = fCicInterface->GetOptimalTaps(cCic);
                 cPhaseTapsFEs = this->SortOptimalTaps(cPhaseTaps);
                 for(auto cChip: *cHybrid)
@@ -511,7 +506,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
                 }
                 // put phase aligner in static mode
                 fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
-                //End of moved part
+                // End of moved part
 
                 LOG(INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cHybrid->getId() << RESET;
                 // check if a resync is needed
@@ -532,14 +527,14 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 //             {
 //                 for (uint8_t value = 0; value < 0xF; value ++ ) {
 //                     std::vector<std::vector<uint8_t>> cPhaseTaps(4, std::vector<uint8_t>(12, 0));
-                    
+
 //                     for (uint8_t i = 0, i<4, i++ ) {
-//                         for (uint8_t j = 0; j<12; j++) 
+//                         for (uint8_t j = 0; j<12; j++)
 //                         {
 //                             cPhaseTaps[i][j] = value;
 //                         }
 //                     }
-//                     auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic; 
+//                     auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
 //                     fCicInterface->SetStaticPhaseAlignment(cCic, cPhaseTaps);
 
 //                     //Call to stubdebug!!

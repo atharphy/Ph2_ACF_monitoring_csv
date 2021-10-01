@@ -67,7 +67,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
     cmd.defineOption("ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
 
-
     cmd.defineOption("hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
 
     cmd.defineOption("pattern", "Data Player Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
@@ -83,18 +82,19 @@ int main(int argc, char* argv[])
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
 
-    // GUI support    
-    cmd.defineOption ( "USB", "USB iProduct string to identify the test card when using the USB functionalities.", ArgvParser::OptionRequiresValue );
-    cmd.defineOption ( "USBBus", "USB device bus number", ArgvParser::OptionRequiresValue );
-    cmd.defineOption ( "USBDev", "USB device device number", ArgvParser::OptionRequiresValue );
-    cmd.defineOption ( "useGui", "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false", ArgvParser::NoOptionAttribute );
+    // GUI support
+    cmd.defineOption("USB", "USB iProduct string to identify the test card when using the USB functionalities.", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("useGui",
+                     "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
+                     ArgvParser::NoOptionAttribute);
 
-    cmd.defineOption ( "output", "Output directory. Default: Results/", ArgvParser::OptionRequiresValue );
+    cmd.defineOption("output", "Output directory. Default: Results/", ArgvParser::OptionRequiresValue);
 
+    cmd.defineOption("antennaValue", "Antenna value for test.", ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption ( "antennaValue", "Antenna value for test.", ArgvParser::OptionRequiresValue );
-
-    int result = cmd.parse ( argc, argv );
+    int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
     {
@@ -106,36 +106,37 @@ int main(int argc, char* argv[])
     std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
     // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
     // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
-    bool batchMode = ( cmd.foundOption ( "batch" ) ) ? true : false;
-    std::string cDirectory = ( cmd.foundOption ( "output" ) ) ? cmd.optionValue ( "output" ) : "Results/";
-    std::string cHybridId = ( cmd.foundOption ( "hybridId" ) ) ? cmd.optionValue ( "hybridId" ) : "xxxx";
-    // uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0; 
-    const std::string cSSAPair = ( cmd.foundOption ( "ssapair" ) )   ?   cmd.optionValue ( "ssapair" ) : "";
-    cDirectory += Form("FEH_PS_%s",cHybridId.c_str());
+    bool        batchMode  = (cmd.foundOption("batch")) ? true : false;
+    std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
+    // uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0;
+    const std::string cSSAPair = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
+    cDirectory += Form("FEH_PS_%s", cHybridId.c_str());
 
-    std::string cUsbId = ( cmd.foundOption ("USB") ) ? cmd.optionValue ( "USB" ) : ""; //Default option?
-    uint32_t cUsbBus = ( cmd.foundOption ("USBBus") ) ? (uint32_t)(std::stoi(cmd.optionValue ( "USBBus" ))) : 0; //Default option?
-    uint8_t cUsbDev = ( cmd.foundOption ("USBDev") ) ? (uint32_t)(std::stoi(cmd.optionValue ( "USBDev" ))) : 0; //Default option?
-    bool cGui = ( cmd.foundOption ( "useGui" ) ) ;
-    
-    TApplication cApp ( "Root Application", &argc, argv );
-    
-    if ( batchMode ) 
-        gROOT->SetBatch ( true );
-    else 
-        TQObject::Connect ( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
+    std::string cUsbId  = (cmd.foundOption("USB")) ? cmd.optionValue("USB") : "";                             // Default option?
+    uint32_t    cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
+    uint8_t     cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
+    bool        cGui    = (cmd.foundOption("useGui"));
+
+    TApplication cApp("Root Application", &argc, argv);
+
+    if(batchMode)
+        gROOT->SetBatch(true);
+    else
+        TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
     std::string cResultfile = "Hybrid";
     Timer       t;
 
-    if ( cGui ){
-        //Initialize gui communication with named pipe
+    if(cGui)
+    {
+        // Initialize gui communication with named pipe
         gui::init(argv[argc - 1]);
 
         gui::status("Initializing test");
-        gui::progress(0 / 10.0);        
+        gui::progress(0 / 10.0);
     }
-    
+
     std::stringstream outp;
     // hybrid testing tool
     // going to use this because it also
@@ -144,47 +145,49 @@ int main(int argc, char* argv[])
     PSHybridTester cHybridTester;
     LOG(INFO) << "File " << cHWFile << RESET;
     LOG(INFO) << &cHWFile << RESET;
-    cHybridTester.InitializeHw ( cHWFile, outp);
-    cHybridTester.InitializeSettings ( cHWFile, outp );
-    cHybridTester.CreateResultDirectory ( cDirectory );
-    cHybridTester.InitResultFile ( cResultfile );    
+    cHybridTester.InitializeHw(cHWFile, outp);
+    cHybridTester.InitializeSettings(cHWFile, outp);
+    cHybridTester.CreateResultDirectory(cDirectory);
+    cHybridTester.InitResultFile(cResultfile);
     cHybridTester.bookSummaryTree();
-    //set voltage  on PS FEH 
-    if ( cGui ){
+    // set voltage  on PS FEH
+    if(cGui)
+    {
         gui::message("");
         gui::status("Setting voltage of the hybrid");
-        gui::progress(0.5 / 10.0);        
+        gui::progress(0.5 / 10.0);
 
         gui::data("ResultsDirectory", cHybridTester.getDirectoryName());
     }
 
-    if(cmd.foundOption( "USBBus" ) && cmd.foundOption( "USBDev" )){
-        #ifdef __TCUSB__
-            TC_PSFE cTC_PSFE( cUsbBus, cUsbDev );
-        #endif
+    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev"))
+    {
+#ifdef __TCUSB__
+        TC_PSFE cTC_PSFE(cUsbBus, cUsbDev);
+#endif
     }
 
-    cHybridTester.SetHybridVoltage( cUsbBus, cUsbDev );
-    //LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
+    cHybridTester.SetHybridVoltage(cUsbBus, cUsbDev);
+    // LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
-    //check voltage on PS FEH 
+    // check voltage on PS FEH
     // cHybridTester.CheckHybridVoltages();
     cHybridTester.RunHybridETest();
-    LOG (INFO) << outp.str() << RESET;
-    //select CIC readout 
-    //cHybridTester.SelectCIC(true);
+    LOG(INFO) << outp.str() << RESET;
+    // select CIC readout
+    // cHybridTester.SelectCIC(true);
 
-    if ( cGui ){
+    if(cGui)
+    {
         gui::message("Voltage set");
         gui::status("Configuring hardware");
-        gui::progress(1 / 10.0);        
+        gui::progress(1 / 10.0);
     }
 
-    cHybridTester.ConfigureHw ();
-    //LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
-    //cHybridTester.CheckHybridCurrents();
-    if( cmd.foundOption( "checkI2C" ) )
-        cHybridTester.CheckI2C();
+    cHybridTester.ConfigureHw();
+    // LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
+    // cHybridTester.CheckHybridCurrents();
+    if(cmd.foundOption("checkI2C")) cHybridTester.CheckI2C();
 
     // cHybridTester.ReadSSABias("MonitorGround");
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
@@ -192,97 +195,89 @@ int main(int argc, char* argv[])
 
     cHybridTester.CalibrateSSABias();
 
-
-    if ( cGui ){
+    if(cGui)
+    {
         gui::message("Hardware configured");
         gui::status("");
-        gui::progress(1.5 / 10.0);        
+        gui::progress(1.5 / 10.0);
     }
 
     // interface to data player
     DPInterface         cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(cHybridTester.fBeBoardFWMap.find(0)->second);
 
+    // // ***************** for dummy hybrid test ***********************
+    //     cHybridTester.SelectCIC(true);
+    //     //Configure and Start DataPlayer
+    //     uint8_t cDataPlayerPattern=0xAA;
+    //     cDPInterfacer.Configure(cInterface, cDataPlayerPattern);
+    //     cDPInterfacer.Start(cInterface);
+    //     if( cDPInterfacer.IsRunning(cInterface) )
+    //     {
+    //         LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+    //     }
+    //     else
+    //         LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-// // ***************** for dummy hybrid test ***********************
-//     cHybridTester.SelectCIC(true);
-//     //Configure and Start DataPlayer
-//     uint8_t cDataPlayerPattern=0xAA;
-//     cDPInterfacer.Configure(cInterface, cDataPlayerPattern);
-//     cDPInterfacer.Start(cInterface);
-//     if( cDPInterfacer.IsRunning(cInterface) )
-//     {
-//         LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-//     }
-//     else
-//         LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
-
-//     cDPInterfacer.Stop(cInterface);
-//     cDPInterfacer.CheckNPatterns(cInterface);
-// // ************************end dummy test************************************
-
+    //     cDPInterfacer.Stop(cInterface);
+    //     cDPInterfacer.CheckNPatterns(cInterface);
+    // // ************************end dummy test************************************
 
     // need to do this if
     // reading out CIC
     // or testing MPA
-    if ( cmd.foundOption ( "withCIC" ) || cmd.foundOption ( "mpaTest" ) )
+    if(cmd.foundOption("withCIC") || cmd.foundOption("mpaTest"))
     {
         cHybridTester.SelectCIC(true);
-        
-        bool cAligned = false;
-        double cAlignedDouble;
-        uint8_t cPhaseAlignmentPattern=0xAA;
-        for ( int i = 0; i<3 ; i++ )
+
+        bool    cAligned = false;
+        double  cAlignedDouble;
+        uint8_t cPhaseAlignmentPattern = 0xAA;
+        for(int i = 0; i < 3; i++)
         {
-            //Check if data player is running
-            if (cDPInterfacer.IsRunning(cInterface))
+            // Check if data player is running
+            if(cDPInterfacer.IsRunning(cInterface))
             {
-                LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
                 cDPInterfacer.Stop(cInterface);
             }
 
-            //Configure and Start DataPlayer
-            // to send phase alignment pattern 
+            // Configure and Start DataPlayer
+            // to send phase alignment pattern
             cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
             cDPInterfacer.Start(cInterface);
             // cDPInterfacer.StartSyncPlaying(cInterface);
-            if( cDPInterfacer.IsRunning(cInterface) )
-            {
-                LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-            }
+            if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
             else
-                LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+                LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-            // align CIC inputs 
+            // align CIC inputs
             CicFEAlignment cCicAligner;
-            cCicAligner.Inherit (&cHybridTester);
+            cCicAligner.Inherit(&cHybridTester);
 
-            LOG (INFO) << "Phase alignment MPA" << RESET;
-            cAligned = cCicAligner.PhaseAlignmentMPA(100);
-            cAlignedDouble = cAligned ? 1.0: 0.0;
-            #ifdef __USE_ROOT__
-            cHybridTester.fillSummaryTree( Form("MPA Alignment attemp %d", i+1), cAlignedDouble );
-            #endif
+            LOG(INFO) << "Phase alignment MPA" << RESET;
+            cAligned       = cCicAligner.PhaseAlignmentMPA(100);
+            cAlignedDouble = cAligned ? 1.0 : 0.0;
+#ifdef __USE_ROOT__
+            cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
+#endif
             // for (uint8_t value = 0; value < 16; value ++ ) {
             //     cAligned = cCicAligner.ManualPhaseAlignment(value);
-            //     if (cAligned) 
+            //     if (cAligned)
             //         LOG(INFO) << "Phase: " << +value << RESET;
             //     else
-            //         LOG(INFO) << BOLDRED << "Phase: " << +value << ". Not set correctly" << RESET;             
-                
+            //         LOG(INFO) << BOLDRED << "Phase: " << +value << ". Not set correctly" << RESET;
+
             //     cHybridTester.SweepPhaseAlignment(value);
             // }
-            if (cAligned)
-                break;
+            if(cAligned) break;
         }
-        
-        // and then re-align back-end just because 
+
+        // and then re-align back-end just because
         cHybridTester.AlignCICout(cPhaseAlignmentPattern);
 
         cDPInterfacer.Stop(cInterface);
         cDPInterfacer.CheckNPatterns(cInterface);
-
-        
     }
 
     if(cmd.foundOption("checkAsync"))
@@ -292,25 +287,26 @@ int main(int argc, char* argv[])
         cDataChecker.AsyncTest();
         // cDataChecker.resetPointers();
     }
-    
+
     OpenFinder cOpenFinder;
     cOpenFinder.Inherit(&cHybridTester);
     std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
-    cOpenFinder.SelectAntennaPosition("Disable", 512 );        
+    cOpenFinder.SelectAntennaPosition("Disable", 512);
     // cOpenFinder.SelectAntennaPosition("Enable", 550 );
-    if (cmd.foundOption("antennaValue")) 
+    if(cmd.foundOption("antennaValue"))
     {
-        cOpenFinder.SelectAntennaPosition("Enable", std::stoi(antennaValue) );
-        LOG(INFO) << "Setting antenna" <<RESET;
+        cOpenFinder.SelectAntennaPosition("Enable", std::stoi(antennaValue));
+        LOG(INFO) << "Setting antenna" << RESET;
     }
 
     // measure noise on FE chips before calibration
-    if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue") )
+    if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
     {
-        if ( cGui ){
-            gui::status("Measuring noise on front-end chips before calibration"); 
-            gui::message(""); 
-            gui::progress(3.5 / 10.0);     
+        if(cGui)
+        {
+            gui::status("Measuring noise on front-end chips before calibration");
+            gui::message("");
+            gui::progress(3.5 / 10.0);
         }
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
@@ -324,21 +320,19 @@ int main(int argc, char* argv[])
         cPedeNoise.dumpConfigFiles();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
-        if ( cGui ){
-            gui::message("Noise measured");
-        }
-        
-        // cOpenFinder.SelectAntennaPosition("Disable", 512);
+        if(cGui) { gui::message("Noise measured"); }
 
+        // cOpenFinder.SelectAntennaPosition("Disable", 512);
     }
     // cHybridTester.SetTrim("GAINTRIMMING",7);
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))
     {
-        if (cGui) {
-            gui::status("Calibrating front-end chips"); 
-            gui::message(""); 
-            gui::progress(2 / 10.0);     
+        if(cGui)
+        {
+            gui::status("Calibrating front-end chips");
+            gui::message("");
+            gui::progress(2 / 10.0);
         }
 
         t.start();
@@ -347,7 +341,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.Inherit(&cHybridTester);
         cPedestalEqualization.Initialise(true, true);
         cPedestalEqualization.FindVplus();
-        
+
         cHybridTester.ReadSSABias("CalLevel");
 
         cPedestalEqualization.FindOffsets();
@@ -355,9 +349,10 @@ int main(int argc, char* argv[])
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
         t.show("Time to tune the front-ends on the system: ");
-        if ( cGui ){
+        if(cGui)
+        {
             gui::message("Front-end chips calibrated successfully.");
-            gui::progress(3 / 10.0);        
+            gui::progress(3 / 10.0);
         }
     }
 
@@ -366,10 +361,11 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise"))
     {
-        if ( cGui ){
-            gui::status("Measuring noise on front-end chips"); 
-            gui::message(""); 
-            gui::progress(3.5 / 10.0);     
+        if(cGui)
+        {
+            gui::status("Measuring noise on front-end chips");
+            gui::message("");
+            gui::progress(3.5 / 10.0);
         }
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
@@ -382,110 +378,107 @@ int main(int argc, char* argv[])
         cPedeNoise.dumpConfigFiles();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
-        if ( cGui ){
-            gui::message("Noise measured");
-        }
-
+        if(cGui) { gui::message("Noise measured"); }
     }
 
-    if(cmd.foundOption("checkCountersRead"))
-    {
-        cHybridTester.CheckCounters();
-    }
+    if(cmd.foundOption("checkCountersRead")) { cHybridTester.CheckCounters(); }
     if(cmd.foundOption("findShorts"))
     {
-        if ( cGui ){
-            gui::status("Running short finding procedure..."); 
-            gui::message(""); 
-            gui::progress(5 / 10.0);     
-        }  
+        if(cGui)
+        {
+            gui::status("Running short finding procedure...");
+            gui::message("");
+            gui::progress(5 / 10.0);
+        }
         ShortFinder cShortFinder;
         cShortFinder.Inherit(&cHybridTester);
         cShortFinder.Initialise();
         cShortFinder.FindShorts();
 
-        if ( cGui ){
-            gui::message("Short finding done"); 
-            gui::progress(5.5 / 10.0);        
-        }    
+        if(cGui)
+        {
+            gui::message("Short finding done");
+            gui::progress(5.5 / 10.0);
+        }
     }
     if(cmd.foundOption("findOpens"))
     {
-        if ( cGui ){
-            gui::status("Running open finding procedure...");  
-            gui::message(""); 
-            gui::progress(6 / 10.0);     
+        if(cGui)
+        {
+            gui::status("Running open finding procedure...");
+            gui::message("");
+            gui::progress(6 / 10.0);
         }
 
         OpenFinder cOpenFinder;
         cOpenFinder.Inherit(&cHybridTester);
         cOpenFinder.FindOpensPS();
 
-        if ( cGui ){
-            gui::message("Open finding done"); 
-            gui::progress(7 / 10.0);        
-        }    
-
+        if(cGui)
+        {
+            gui::message("Open finding done");
+            gui::progress(7 / 10.0);
+        }
     }
     // test MPA outputs
-    // test MPA outputs 
-    if( cmd.foundOption ( "mpaTest" ) )
+    // test MPA outputs
+    if(cmd.foundOption("mpaTest"))
     {
-
-        if ( cGui ){
-            gui::status("Starting MPA input test");  
-            gui::message(""); 
-            gui::progress(7.5 / 10.0);     
-        }  
+        if(cGui)
+        {
+            gui::status("Starting MPA input test");
+            gui::message("");
+            gui::progress(7.5 / 10.0);
+        }
 
         cHybridTester.SelectCIC(true);
 
-        //Configure and Start DataPlayer
-        for( uint8_t cAttempt=0; cAttempt < 1; cAttempt++)
+        // Configure and Start DataPlayer
+        for(uint8_t cAttempt = 0; cAttempt < 1; cAttempt++)
         {
-            //Check if data player is running
-            if (cDPInterfacer.IsRunning(cInterface))
+            // Check if data player is running
+            if(cDPInterfacer.IsRunning(cInterface))
             {
-                LOG (INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
                 cDPInterfacer.Stop(cInterface);
             }
 
-            //Is this needed?
-            if( cAttempt == 0 )
-                LOG (INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
-            else if( cAttempt == 1 )
-                LOG (INFO) << BOLDGREEN << "Attempt " << +cAttempt << RESET;
-            else if( cAttempt == 2 )
-                LOG (INFO) << BOLDMAGENTA << "Attempt " << +cAttempt << RESET;
-            else if( cAttempt == 3 )
-                LOG (INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
+            // Is this needed?
+            if(cAttempt == 0)
+                LOG(INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
+            else if(cAttempt == 1)
+                LOG(INFO) << BOLDGREEN << "Attempt " << +cAttempt << RESET;
+            else if(cAttempt == 2)
+                LOG(INFO) << BOLDMAGENTA << "Attempt " << +cAttempt << RESET;
+            else if(cAttempt == 3)
+                LOG(INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
 
-            cHybridTester.MPATest();    //The pattern is not being set by the function anymore
+            cHybridTester.MPATest(); // The pattern is not being set by the function anymore
             cDPInterfacer.Stop(cInterface);
         }
 
-        if ( cGui ){
-            gui::message("MPA input test done."); 
-            gui::progress(8 / 10.0);     
-        }  
-
-    }  
+        if(cGui)
+        {
+            gui::message("MPA input test done.");
+            gui::progress(8 / 10.0);
+        }
+    }
     // ssa pair tests
     if(!cSSAPair.empty())
     {
-        
-        if ( cGui ){
-            gui::status("Testing SSA stubs..."); 
-            gui::progress(5 / 10.0);     
+        if(cGui)
+        {
+            gui::status("Testing SSA stubs...");
+            gui::progress(5 / 10.0);
         }
 
         LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
-        // configure SSA to output something on stub lines 
+        // configure SSA to output something on stub lines
         if(cSSAPair != "ALL") { cHybridTester.SSATestStubOutput(cSSAPair); }
         else
         {
             std::string current_pair;
-            for(int i = 0; i < 7; i+=2)
+            for(int i = 0; i < 7; i += 2)
             {
                 current_pair = std::to_string(i) + std::to_string(i + 1);
                 cHybridTester.SSATestStubOutput(current_pair);
@@ -524,24 +517,24 @@ int main(int argc, char* argv[])
         // }
     }
 
-    if ( cGui ){
-        gui::status("Saving test results..."); 
-        gui::progress(9 / 10.0);     
+    if(cGui)
+    {
+        gui::status("Saving test results...");
+        gui::progress(9 / 10.0);
     }
-
 
     cHybridTester.SaveResults();
     cHybridTester.WriteRootFile();
     cHybridTester.CloseResultFile();
     cHybridTester.Destroy();
 
-    if ( cGui ){
-        gui::message("Results saved"); 
-        gui::status("Test done"); 
-        gui::progress(10.0 / 10.0);        
-    }    
+    if(cGui)
+    {
+        gui::message("Results saved");
+        gui::status("Test done");
+        gui::progress(10.0 / 10.0);
+    }
 
-
-    if ( !batchMode ) cApp.Run();
+    if(!batchMode) cApp.Run();
     return 0;
 }

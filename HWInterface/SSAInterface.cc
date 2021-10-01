@@ -51,7 +51,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
         for(auto& cRegInMap: cSSARegMap)
         {
             LOG(DEBUG) << "Checking data written to " << cRegInMap.first << RESET;
-            
+
             uint8_t     cSSAId;
             bool        cFailed = false;
             bool        cRead;
@@ -59,7 +59,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
             fBoardFW->DecodeReg(cRegItem, cSSAId, cVec[cIndx], cRead, cFailed);
             if(cRegInMap.second.fValue != cRegItem.fValue)
             {
-                LOG(INFO) << " " << cRegInMap.second.fValue << " " << cRegItem.fValue << RESET; 
+                LOG(INFO) << " " << cRegInMap.second.fValue << " " << cRegItem.fValue << RESET;
                 throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
                 /*if( this->WriteChipSingleReg ( pSSA, cRegInMap.first, cRegInMap.second.fValue, pVerifLoop) )
                 {
@@ -73,7 +73,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
                 else
                 throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);*/
             }
-            else 
+            else
             {
                 LOG(DEBUG) << "Successfully written to " << cRegInMap.first << RESET;
             }
@@ -157,7 +157,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         return this->ConfigureAmux(pSSA, "DAC");
     }
-    else if( fAmuxMap.find(pRegName) != fAmuxMap.end() )
+    else if(fAmuxMap.find(pRegName) != fAmuxMap.end())
     {
         return this->ConfigureAmux(pSSA, pRegName);
     }

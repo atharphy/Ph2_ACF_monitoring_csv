@@ -602,15 +602,15 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "FMC1  " << +fmc1_card_type << " FMC2 " << +fmc2_card_type << RESET;
     LOG(INFO) << BOLDBLUE << "FMC1 Card: " << RESET << getFMCCardName(fmc1_card_type);
     LOG(INFO) << BOLDBLUE << "FMC2 Card: " << RESET << getFMCCardName(fmc2_card_type);
-    bool cWithBP_2S = (cFMC1name.find("2S_FMC") != std::string::npos) && (cFMC2name.find("2S_FMC") != std::string::npos) ;  
-    bool cWithBP_PS = (cFMC1name.find("PS_FMC") != std::string::npos) && (cFMC2name.find("PS_FMC") != std::string::npos) ;  
-    bool cWithBP_PS_ROH = (cFMC1name.find("FMC_FE_FOR_PS_ROH_FMC1") != std::string::npos); 
-    if(cWithBP_2S || cWithBP_PS || cWithBP_PS_ROH )
+    bool cWithBP_2S     = (cFMC1name.find("2S_FMC") != std::string::npos) && (cFMC2name.find("2S_FMC") != std::string::npos);
+    bool cWithBP_PS     = (cFMC1name.find("PS_FMC") != std::string::npos) && (cFMC2name.find("PS_FMC") != std::string::npos);
+    bool cWithBP_PS_ROH = (cFMC1name.find("FMC_FE_FOR_PS_ROH_FMC1") != std::string::npos);
+    if(cWithBP_2S || cWithBP_PS || cWithBP_PS_ROH)
     {
-        LOG (INFO) << BOLDBLUE << "Set-up with mux backplane" << RESET;
-        // check if the set-up has been scanned before 
+        LOG(INFO) << BOLDBLUE << "Set-up with mux backplane" << RESET;
+        // check if the set-up has been scanned before
         bool cSetupScanned = (this->ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
-        if( !cSetupScanned )
+        if(!cSetupScanned)
         {
             LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
             this->WriteReg("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
@@ -619,7 +619,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
     else
     {
-        LOG (INFO) << BOLDBLUE << "Set-up WITHOUT mux backplane" << RESET;
+        LOG(INFO) << BOLDBLUE << "Set-up WITHOUT mux backplane" << RESET;
         LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
         this->WriteReg("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -1169,29 +1169,30 @@ void D19cFWInterface::Start()
     // print out config
     this->TriggerConfiguration();
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;  
+    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
     // If the state machine did not start -> retry
-    if (ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") == 0) {
+    if(ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") == 0)
+    {
         LOG(INFO) << BOLDRED << "State machine didn't start. Retrying..." << RESET;
         this->Start();
         return;
     }
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;  
+    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
 }
 
 void D19cFWInterface::Stop()
 {
     // here close the shutter for the stub counter block
-    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x1);
-    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x0);
-    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    // LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
     WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;    
+    LOG(DEBUG) << BOLDGREEN << " Current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 }
 
@@ -1395,8 +1396,8 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
     this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
     this->ResetReadout();
 }
-void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, std::vector<std::vector<std::string>> &cReadLines) 
-    {
+void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, std::vector<std::vector<std::string>>& cReadLines)
+{
     // enable stub debug - allows you to 'scope' the stub output
     this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
 
@@ -1875,14 +1876,14 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
         }         // module loop
         // clear counters after they have been read
         this->PS_Clear_counters(fFastCommandDuration);
-      }
-      else
-      {
-        LOG (ERROR) << BOLDRED << "Trying to read MPA counters when EventType does not match..." << RESET;
-        throw std::runtime_error(std::string("Trying to read MPA counters when EventType does not match..."));
-      }
     }
-    
+    else
+    {
+        LOG(ERROR) << BOLDRED << "Trying to read MPA counters when EventType does not match..." << RESET;
+        throw std::runtime_error(std::string("Trying to read MPA counters when EventType does not match..."));
+    }
+}
+
 void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     // get event type
@@ -2326,7 +2327,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         // stop
         this->Stop();
     }
-    else  // Trigger source is 10
+    else // Trigger source is 10
     {
         fFastCommandDuration = 0;
         LOG(DEBUG) << BOLDBLUE << "Async SSA [trigger source == 10]" << RESET;
@@ -3891,7 +3892,7 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             c = true;
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
-            LOG (DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
         }
 
         while(!BackplanesDisconnected)
@@ -3900,7 +3901,7 @@ void D19cFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             b = true;
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
-            LOG (DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
         }
 
         if(CardsDisconnected && BackplanesDisconnected)
@@ -3971,7 +3972,7 @@ void D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, 
 
     if(SystemNotConfigured == true)
     {
-        bool SetupScanned = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
+        bool SetupScanned   = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         bool BackplaneValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_valid") == 1);
         bool CardValid      = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_valid") == 1);
         if(SetupScanned)
@@ -3989,7 +3990,8 @@ void D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, 
                 exit(0);
             }
         }
-        else LOG(ERROR) << RED << "First you must scan the setup! Map of present backplanes and cards is not available!" << RESET;
+        else
+            LOG(ERROR) << RED << "First you must scan the setup! Map of present backplanes and cards is not available!" << RESET;
 
         bool SetupConfigured = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_configured") == 1);
         bool c               = false;

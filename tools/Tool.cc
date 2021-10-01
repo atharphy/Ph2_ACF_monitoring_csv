@@ -21,10 +21,11 @@ Tool::Tool()
     : SystemController()
     ,
 #ifdef __USE_ROOT__
-	fCanvasMap                  (),
-	fChipHistMap                (),
-	fModuleHistMap              (),	
-	fSummaryTree				(nullptr),
+    fCanvasMap()
+    , fChipHistMap()
+    , fModuleHistMap()
+    , fSummaryTree(nullptr)
+    ,
 #endif
     fType()
     , fTestGroupChannelMap()
@@ -184,53 +185,48 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
-	TString Tool::fSummaryTreeParameter = ""; //Is this ok here?
-	Double_t Tool::fSummaryTreeValue = 0.0;
+TString  Tool::fSummaryTreeParameter = ""; // Is this ok here?
+Double_t Tool::fSummaryTreeValue     = 0.0;
 
-	/*!
-	* \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
-	*/
-	void Tool::bookSummaryTree() //MINE
-	{
-		fResultFile->cd();
-		fSummaryTreeParameter = "";
-		fSummaryTreeValue = 0;  
-		fSummaryTree = new TTree("summaryTree", "Most relevant results");
-		fSummaryTree->Branch("Parameter", &fSummaryTreeParameter);
-		fSummaryTree->Branch("Value", &fSummaryTreeValue);
-	}
+/*!
+ * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
+ */
+void Tool::bookSummaryTree() // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter = "";
+    fSummaryTreeValue     = 0;
+    fSummaryTree          = new TTree("summaryTree", "Most relevant results");
+    fSummaryTree->Branch("Parameter", &fSummaryTreeParameter);
+    fSummaryTree->Branch("Value", &fSummaryTreeValue);
+}
 
-	/*!
-	* \brief Insert data into the summary tree
-	* \param cParameter : Name of the measurement to be stored
-	* \param cValue: Value of the measurement to be stored
-	*/
-	void Tool::fillSummaryTree(std::string cParameter,	Double_t cValue) //MINE
-	{
-		fResultFile->cd();
-		fSummaryTreeParameter.Clear();
-        TString cParameter_TString(cParameter);
-		fSummaryTreeParameter = cParameter_TString;
-		fSummaryTreeValue = cValue;
-		if(fSummaryTree)
-			fSummaryTree->Fill();
-	}
+/*!
+ * \brief Insert data into the summary tree
+ * \param cParameter : Name of the measurement to be stored
+ * \param cValue: Value of the measurement to be stored
+ */
+void Tool::fillSummaryTree(std::string cParameter, Double_t cValue) // MINE
+{
+    fResultFile->cd();
+    fSummaryTreeParameter.Clear();
+    TString cParameter_TString(cParameter);
+    fSummaryTreeParameter = cParameter_TString;
+    fSummaryTreeValue     = cValue;
+    if(fSummaryTree) fSummaryTree->Fill();
+}
 
-	Double_t Tool::getSummaryParameter( std::string cParameter )
-	{
-		for(int i=0; i<fSummaryTree->GetEntries(); i++)
-		{
-			fSummaryTree->GetEntry(i);
-			if ( fSummaryTreeParameter == cParameter )
-				return fSummaryTreeValue;
-		}
-		return -1.0;
-	}
+Double_t Tool::getSummaryParameter(std::string cParameter)
+{
+    for(int i = 0; i < fSummaryTree->GetEntries(); i++)
+    {
+        fSummaryTree->GetEntry(i);
+        if(fSummaryTreeParameter == cParameter) return fSummaryTreeValue;
+    }
+    return -1.0;
+}
 
-	TString Tool::getDirectoryName() 
-	{
-		return fDirectoryName.c_str();
-	}
+TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
 
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {

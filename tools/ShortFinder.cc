@@ -299,7 +299,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 for(auto cROCData: *cHybridData) // for on chip - begin
                 {
                     ReadoutChip* cChip =
-                    static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
                     auto cThreshold                  = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                     cROCData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;
@@ -320,17 +320,16 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     // this is in the xml
     setSameDacBeBoard(pBoard, "InjectedCharge", fTestPulseAmplitude);
 
-
-    #ifdef __USE_ROOT__
-        // create TTree for shorts: shortsTree
-        auto fShortsTree = new TTree("shortsTree", "Shorted channels in the hybrid");
-        // create variables for TTree branches
-        TString fShortsTreeParameter = -1;
-        std::vector<uint8_t> fShortsTreeValue = {};
-        // create branches
-        fShortsTree->Branch("Chip", &fShortsTreeParameter);
-        fShortsTree->Branch("Value", &fShortsTreeValue);
-    #endif
+#ifdef __USE_ROOT__
+    // create TTree for shorts: shortsTree
+    auto fShortsTree = new TTree("shortsTree", "Shorted channels in the hybrid");
+    // create variables for TTree branches
+    TString              fShortsTreeParameter = -1;
+    std::vector<uint8_t> fShortsTreeValue     = {};
+    // create branches
+    fShortsTree->Branch("Chip", &fShortsTreeParameter);
+    fShortsTree->Branch("Value", &fShortsTreeValue);
+#endif
 
     // container to hold information on shorts found
     DetectorDataContainer cShortsContainer;
@@ -339,7 +338,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     int cInjectionPeriod = 4;
     // std::vector< std::vector< std::vector<uint8_t> > > cAllShorts (4, cOpticalReadout->at(0)->at(0)->size(),0);
     // std::vector< std::vector< std::vector<uint8_t> > > cAllShorts (cInjectionPeriod, std::vector< std::vector<uint8_t> >(8, std::vector<uint8_t>(0) ) );
-    std::vector< std::vector<uint8_t> > cAllShorts (8, std::vector<uint8_t>(0) );
+    std::vector<std::vector<uint8_t>> cAllShorts(8, std::vector<uint8_t>(0));
     for(int cInject = 0; cInject < cInjectionPeriod; cInject++)
     {
         LOG(INFO) << BOLDBLUE << "Looking for shorts in injection group#" << +cInject << RESET;
@@ -374,7 +373,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 
         bool retry = true;
 
-        for(int i = 0; i < 2 && retry; i++)  // 'Retry' to read events when the event returns with 0 on every channel of every chip.
+        for(int i = 0; i < 2 && retry; i++) // 'Retry' to read events when the event returns with 0 on every channel of every chip.
         {
             retry = false;
             // read back events
@@ -429,18 +428,19 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                                        << " total shorts found are " << +cShortsData->getSummary<uint16_t>() << RESET;
                         } // chip
 
-                        if(cTotalCountInjectedChnls == 0) {
+                        if(cTotalCountInjectedChnls == 0)
+                        {
                             LOG(INFO) << BOLDRED << "All injected channels on all chips have 0 hits." << RESET;
-                            #ifdef __USE_ROOT__
-                                fillSummaryTree("Empty readout (ShortFinder procedure)", 0.0);
-                            #endif
+#ifdef __USE_ROOT__
+                            fillSummaryTree("Empty readout (ShortFinder procedure)", 0.0);
+#endif
                             retry = true;
                         }
 
                     } // hybrid
                 }     // module
             }         // event loop
-        }            // retry loop
+        }             // retry loop
     }
 
     // std::vector<uint8_t> cShorts(0)
@@ -449,13 +449,14 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     //         cAllShorts.at(cInject).at((int)cReadoutChip->getId()) = cShorts;
     //     }
     // }
-    for( auto cReadoutChip: *pBoard->at(0)->at(0)){
-        #ifdef __USE_ROOT__
-            fShortsTreeParameter.Clear();
-            fShortsTreeParameter = "Chip_" + std::to_string(cReadoutChip->getId());
-            fShortsTreeValue     = cAllShorts.at(cReadoutChip->getId());
-            fShortsTree->Fill();
-        #endif
+    for(auto cReadoutChip: *pBoard->at(0)->at(0))
+    {
+#ifdef __USE_ROOT__
+        fShortsTreeParameter.Clear();
+        fShortsTreeParameter = "Chip_" + std::to_string(cReadoutChip->getId());
+        fShortsTreeValue     = cAllShorts.at(cReadoutChip->getId());
+        fShortsTree->Fill();
+#endif
     }
 
     // print summary
@@ -476,10 +477,10 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 else
                     LOG(INFO) << BOLDRED << "SSA" << +cReadoutChip->getId() << " found " << +cShortsData->getSummary<uint16_t>() << " shorts in total when injecting in every " << +cInjectionPeriod
                               << "th channel " << RESET;
-                #ifdef __USE_ROOT__
-                    std::string param = Form("Shorts_%d", cReadoutChip->getId());
-                    fillSummaryTree(param, (double_t)cShortsData->getSummary<uint16_t>());
-                #endif
+#ifdef __USE_ROOT__
+                std::string param = Form("Shorts_%d", cReadoutChip->getId());
+                fillSummaryTree(param, (double_t)cShortsData->getSummary<uint16_t>());
+#endif
             } // chip
         }     // hybrid
     }         // module

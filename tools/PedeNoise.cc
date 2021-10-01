@@ -472,55 +472,54 @@ void PedeNoise::extractPedeNoise()
 
 void PedeNoise::producePedeNoisePlots()
 {
-    LOG(INFO) << "ProducingPedePlots" << RESET; 
-    #ifdef __USE_ROOT__
-        if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
+    LOG(INFO) << "ProducingPedePlots" << RESET;
+#ifdef __USE_ROOT__
+    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
 
-        LOG(INFO) << "ProducingPedePlotsROOT" << RESET; 
-        //Storing noise and pedestal average and RMS values on the summaryTree. Probably not the best way.
-        for(auto board : fThresholdAndNoiseContainer) 
+    LOG(INFO) << "ProducingPedePlotsROOT" << RESET;
+    // Storing noise and pedestal average and RMS values on the summaryTree. Probably not the best way.
+    for(auto board: fThresholdAndNoiseContainer)
+    {
+        for(auto opticalGroup: *board)
         {
-            for ( auto opticalGroup : *board)
+            for(auto module: *opticalGroup)
             {
-                for(auto module: *opticalGroup)
-                {       
-                    for(auto chip: *module)
-                    {             
-                        delete gROOT->FindObject("auxPedestalDistribution");
-                        delete gROOT->FindObject("auxNoiseDistribution");
+                for(auto chip: *module)
+                {
+                    delete gROOT->FindObject("auxPedestalDistribution");
+                    delete gROOT->FindObject("auxNoiseDistribution");
 
-                        TH1F *chipPedestalHistogram = new TH1F("auxPedestalDistribution", "Pedestal Distribution", 2048, -0.5, 1023.5);
-                        TH1F *chipNoiseHistogram = new TH1F("auxNoiseDistribution", "Noise Distribution", 200, 0., 20.);
+                    TH1F* chipPedestalHistogram = new TH1F("auxPedestalDistribution", "Pedestal Distribution", 2048, -0.5, 1023.5);
+                    TH1F* chipNoiseHistogram    = new TH1F("auxNoiseDistribution", "Noise Distribution", 200, 0., 20.);
 
-                        for(uint8_t iChannel=0; iChannel<chip->size(); ++iChannel)
-                        {
-                            //Check if NaN, if its NaN fill with whatever 
-                            auto channelData = chip->getChannel<ThresholdAndNoise>(iChannel);
-                            chipPedestalHistogram->Fill(channelData.fThreshold);
-                            chipNoiseHistogram->Fill(channelData.fNoise);
-                        }
-                        LOG(DEBUG) << "Filling summary tree with noise measurements" << RESET;
-                        fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()) , Double_t(chipNoiseHistogram->GetMean() ) ); //For GUI summaryTree
-                        fillSummaryTree("RMSNoiseSSA" + std::to_string(chip->getId()) , Double_t(chipNoiseHistogram->GetRMS() ) ); //For GUI summaryTree
-                        fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()) , Double_t(chipNoiseHistogram->GetStdDev() ) ); //For GUI summaryTree
-                        fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()) , Double_t(chipPedestalHistogram->GetMean() ) ); //For GUI summaryTree
-                        fillSummaryTree("RMSPedeSSA" + std::to_string(chip->getId()) , Double_t(chipPedestalHistogram->GetRMS() ) ); //For GUI summaryTree
-                        fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()) , Double_t(chipPedestalHistogram->GetStdDev() ) ); //For GUI summaryTree
+                    for(uint8_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                    {
+                        // Check if NaN, if its NaN fill with whatever
+                        auto channelData = chip->getChannel<ThresholdAndNoise>(iChannel);
+                        chipPedestalHistogram->Fill(channelData.fThreshold);
+                        chipNoiseHistogram->Fill(channelData.fNoise);
                     }
+                    LOG(DEBUG) << "Filling summary tree with noise measurements" << RESET;
+                    fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()), Double_t(chipNoiseHistogram->GetMean()));      // For GUI summaryTree
+                    fillSummaryTree("RMSNoiseSSA" + std::to_string(chip->getId()), Double_t(chipNoiseHistogram->GetRMS()));       // For GUI summaryTree
+                    fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()), Double_t(chipNoiseHistogram->GetStdDev()));   // For GUI summaryTree
+                    fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()), Double_t(chipPedestalHistogram->GetMean()));    // For GUI summaryTree
+                    fillSummaryTree("RMSPedeSSA" + std::to_string(chip->getId()), Double_t(chipPedestalHistogram->GetRMS()));     // For GUI summaryTree
+                    fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()), Double_t(chipPedestalHistogram->GetStdDev())); // For GUI summaryTree
                 }
             }
         }
-        delete gROOT->FindObject("auxPedestalDistribution");
-        delete gROOT->FindObject("auxNoiseDistribution");
+    }
+    delete gROOT->FindObject("auxPedestalDistribution");
+    delete gROOT->FindObject("auxNoiseDistribution");
 
-
-    #else
-        auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
-        for(auto board : fThresholdAndNoiseContainer )
-        {
-            if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
-        }
-    #endif
+#else
+    auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
+    for(auto board: fThresholdAndNoiseContainer)
+    {
+        if(fStreamerEnabled) theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
 }
 
 void PedeNoise::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
