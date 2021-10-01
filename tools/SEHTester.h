@@ -62,7 +62,7 @@ class SEHTester : public OTHybridTester
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
-    void CheckClocks();
+    bool CheckClocks();
     void ClearBRAM(const std::string& sBRAMToReset = "ref");
     void ReadCheckAddrBRAM(int iCheckBRAMAddr = 0);
     void ReadRefAddrBRAM(int iRefBRAMAddr = 0);
