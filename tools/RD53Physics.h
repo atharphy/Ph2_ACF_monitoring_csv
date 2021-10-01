@@ -71,6 +71,8 @@ class Physics : public Tool
     size_t colStop;
     size_t nTRIGxEvent;
 
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     DetectorDataContainer                    theOccContainer;
     DetectorDataContainer                    theBCIDContainer;

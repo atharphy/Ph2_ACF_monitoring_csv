@@ -26,6 +26,8 @@ void Physics::ConfigureCalibration()
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
+    frontEnd = RD53::getMajorityFE(colStart, colStop);
+
     // ################################
     // # Custom channel group handler #
     // ################################
@@ -158,6 +160,11 @@ void Physics::run()
     {
         RD53Event::decodedEvents.clear();
         Physics::analyze();
+
+        if(strcmp(frontEnd->name, "SYNC") == 0)
+            for(const auto cBoard: *fDetectorContainer)
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+
         theGuard.lock();
         genericEvtConverter(RD53Event::decodedEvents);
         numberOfEventsPerRun += RD53Event::decodedEvents.size();
