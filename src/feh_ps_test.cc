@@ -128,8 +128,6 @@ int main(int argc, char* argv[])
     std::string cResultfile = "Hybrid";
     Timer       t;
 
-#ifdef __TCUSB__
-
     if ( cGui ){
         //Initialize gui communication with named pipe
         gui::init(argv[argc - 1]);
@@ -160,8 +158,11 @@ int main(int argc, char* argv[])
         gui::data("ResultsDirectory", cHybridTester.getDirectoryName());
     }
 
-    if(cmd.foundOption( "USBBus" ) && cmd.foundOption( "USBDev" ))
-        TC_PSFE cTC_PSFE( cUsbBus, cUsbDev );
+    if(cmd.foundOption( "USBBus" ) && cmd.foundOption( "USBDev" )){
+        #ifdef __TCUSB__
+            TC_PSFE cTC_PSFE( cUsbBus, cUsbDev );
+        #endif
+    }
 
     cHybridTester.SetHybridVoltage( cUsbBus, cUsbDev );
     //LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
@@ -543,6 +544,4 @@ int main(int argc, char* argv[])
 
     if ( !batchMode ) cApp.Run();
     return 0;
-
-    #endif
 }
