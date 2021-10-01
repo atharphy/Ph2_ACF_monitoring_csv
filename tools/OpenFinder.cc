@@ -880,14 +880,6 @@ void OpenFinder::FindOpensPS()
         }
     }
   }
-
-  #ifdef __USE_ROOT__
-              fResultFile->cd();
-              fOpensTree->Write();
-  #endif
-  //std::this_thread::sleep_for (std::chrono::milliseconds (10000) );
-  // fParameters.potentiometer = 512;
-  // SelectAntennaPosition("Disable");  
   #endif
 }
 void OpenFinder::FindOpens() {}
