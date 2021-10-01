@@ -810,11 +810,11 @@ bool OTHybridTester::LpGBTTestResetLines()
             LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
     }
 #endif
-    if(cValid) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
-    else
-    {
-        LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
-    }
+    // if(cValid) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
+    // else
+    // {
+    //     LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+    // }
     // cResetTree->Write();
     // cResetTree->Fill();
     return cValid;
