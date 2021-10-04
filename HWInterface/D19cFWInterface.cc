@@ -13,8 +13,8 @@
 #include "D19cFWInterface.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
-#include "../Utils/D19cSSAEvent.h"
 #include "../Utils/D19cSSA2Event.h"
+#include "../Utils/D19cSSAEvent.h"
 #include "D19cFpgaConfig.h"
 #include "GbtInterface.h"
 #include <chrono>
@@ -1762,7 +1762,8 @@ bool D19cFWInterface::PhaseTuning(BeBoard* pBoard, uint8_t pFeId, uint8_t pChipI
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);
-    if(pLineId == 1 && (fFirmwareFrontEndType == FrontEndType::CBC3 || fFirmwareFrontEndType == FrontEndType::SSA2 || fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA))
+    if(pLineId == 1 &&
+       (fFirmwareFrontEndType == FrontEndType::CBC3 || fFirmwareFrontEndType == FrontEndType::SSA2 || fFirmwareFrontEndType == FrontEndType::SSA || fFirmwareFrontEndType == FrontEndType::MPA))
     {
         uint8_t cEnableL1 = 0;
         LOG(INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
@@ -1977,20 +1978,24 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                     {
                         // MSB
                         ChipRegItem cReg_Counters_MSB;
-                        cReg_Counters_MSB.fPage    = 0x00;
-                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-			else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
-                        cReg_Counters_MSB.fValue   = 0x00;
+                        cReg_Counters_MSB.fPage = 0x00;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                        else
+                            cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
+                        cReg_Counters_MSB.fValue = 0x00;
                         this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
                         // this->ReadChipBlockReg( cVec );
                         // cReplies.push_back(cVec[0]);
                         // cVec.clear();
                         // LSB
                         ChipRegItem cReg_Counters_LSB;
-                        cReg_Counters_LSB.fPage    = 0x00;
-                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-			else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
-                        cReg_Counters_LSB.fValue   = 0x00;
+                        cReg_Counters_LSB.fPage = 0x00;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                        else
+                            cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
+                        cReg_Counters_LSB.fValue = 0x00;
                         this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
                         // this->ReadChipBlockReg( cVec );
                         // cReplies.push_back(cVec[0]);
@@ -2008,15 +2013,19 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         bool        cFailed = false;
                         bool        cRead;
                         ChipRegItem cReg_Counters_MSB;
-                        cReg_Counters_MSB.fPage    = 0x00;
-                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-			else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
-                        cReg_Counters_MSB.fValue   = 0x00;
+                        cReg_Counters_MSB.fPage = 0x00;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
+                        else
+                            cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
+                        cReg_Counters_MSB.fValue = 0x00;
                         ChipRegItem cReg_Counters_LSB;
-                        cReg_Counters_LSB.fPage    = 0x00;
-                        if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-			else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
-                        cReg_Counters_LSB.fValue   = 0x00;
+                        cReg_Counters_LSB.fPage = 0x00;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
+                        else
+                            cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
+                        cReg_Counters_LSB.fValue = 0x00;
                         this->DecodeReg(cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed);
                         this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
                         cIndx += 2;
@@ -2052,15 +2061,15 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
     bool      cWithMPA   = false;
     bool      cWithSSA   = false;
-    bool      cWithSSA2   = false;
+    bool      cWithSSA2  = false;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cFe: *cOpticalGroup)
         {
             for(auto cChip: *cFe)
             {
-                cWithMPA = cWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA);
-                cWithSSA = cWithSSA || (cChip->getFrontEndType() == FrontEndType::SSA);
+                cWithMPA  = cWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA);
+                cWithSSA  = cWithSSA || (cChip->getFrontEndType() == FrontEndType::SSA);
                 cWithSSA2 = cWithSSA2 || (cChip->getFrontEndType() == FrontEndType::SSA2);
             } // chips
         }     // hybrids
@@ -2084,7 +2093,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         while(pData.size() == 0 and its < 5)
         {
             if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
-            if(cWithSSA  or cWithSSA2)
+            if(cWithSSA or cWithSSA2)
                 this->ReadSSACounters(pBoard, pData);
             else
                 this->ReadMPACounters(pBoard, pData);
