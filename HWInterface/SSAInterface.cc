@@ -45,7 +45,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     std::vector<uint32_t> cVec;
     ChipRegMap            cSSARegMap = pSSA->getRegMap();
     // get register map
-    LOG(INFO) << BOLDMAGENTA << "Setting up SSA#" << +pSSA->getId() << " maps.." << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Setting up SSA#" << +pSSA->getId() << " maps.." << RESET;
     fMap.clear();
     fWriteErrorMap.clear();
     for(auto& cRegItem: cSSARegMap)
@@ -59,10 +59,25 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     cSSARegMap = pSSA->getRegMap();
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
     cRegs.clear();
+    std::vector<std::string> cRegsToConfig;
+    cRegsToConfig.push_back("THTRIMMING");
     for(auto& cMapItem: fMap)
     {
-        if(cMapItem.second.find("_S") != std::string::npos && cSkipLocalRegs) continue;
-
+        bool cSkip=(cSkipLocalRegs && (cMapItem.second.find("_S") != std::string::npos));
+        if(cSkip && cRegsToConfig.size() > 0 ) 
+        {
+            // check if this is one to skip 
+            bool cRegFound=false;
+            auto cIter = cRegsToConfig.begin(); 
+            do
+            {
+                cRegFound = cMapItem.second.find(*cIter) != std::string::npos ;
+                cIter++;
+            }while( cIter < cRegsToConfig.end() && !cRegFound);
+            cSkip = (!cRegFound);
+        }
+        if( cSkip ) continue;
+        //LOG (INFO) << BOLDCYAN << "Configuring SSA#" << +pSSA->getId()%8 << " : " << cMapItem.second << RESET;
         ChipRegItem& cItem = cSSARegMap[cMapItem.second];
         // create a register
         std::pair<uint16_t, uint16_t> cReg;

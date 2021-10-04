@@ -2530,12 +2530,6 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     // LOG(INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
-    if(pData.size())
-    {
-        LOG(INFO) << BOLDRED << "No data to retrieve .. fail!" << RESET;
-        throw Exception("No data to retrieve..stopping here");
-    }
-
     EventType cEventType = pBoard->getEventType();
     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
     bool      cWithMPA   = false;
@@ -2612,6 +2606,13 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     {
         pData = ReadBlockRegValue("fc7_daq_ctrl.readout_block.readout_fifo", cNWords);
     }
+
+    if(pData.size()==0)
+    {
+        LOG(INFO) << BOLDRED << "After GetData have " << +pData.size() << " 32-bit words in the readout .. fail!" << RESET;
+        //throw Exception("No data to retrieve..stopping here");
+    }
+
     return cNEvents;
 }
 // uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
@@ -4213,6 +4214,7 @@ void D19cFWInterface::ChipReSync()
     bool    cWithCIC = (fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2);
     uint8_t cBC0     = (cWithCIC && fIs2S) ? 1 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 void D19cFWInterface::ChipTestPulse()
 {

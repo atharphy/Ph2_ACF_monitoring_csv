@@ -464,7 +464,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
 
     uint8_t cStartPhaseL1 = 3; //to-do - set from xml 
     uint8_t cStopPhaseL1  = 5; //to-do - set from xml 
-    bool    cOnlyFirst    = true;
+    bool    cOnlyFirst    = false;
     for(uint8_t cPhase = cStartPhaseL1; cPhase < cStopPhaseL1; cPhase++)
     {
         if(cOnlyFirst && cGoodCombinations.size() > 0) continue; // for now .. only the first one
@@ -498,7 +498,9 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                     cFmatch      = cNmatch;
                     if(cNmatch)
                     {
-                        // check P-clusters 
+                        std::vector<SCluster> cMtchdSclstrs; 
+                        std::vector<PCluster> cMtchdPclstrs;
+                        // Check P-clusters  
                         for(auto cInjection : pInjections ) 
                         {
                             bool cMatchFound=false;
@@ -506,12 +508,13 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                             {
                                 if( cMatchFound ) continue;
                                 cMatchFound  = ( cPcluster.fAddress == cInjection.fRow ) && ( cPcluster.fZpos == cInjection.fColumn ) ;
-                            }
-                            if( cMatchFound )
-                            {
-                                LOG(DEBUG) << BOLDGREEN << "\t\t Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() 
-                                    << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() 
-                                    << "  exact match found " << BOLDYELLOW << " P-cluster in row " << +cInjection.fRow << " column " << +cInjection.fColumn << RESET; 
+                                if( cMatchFound )
+                                {
+                                    PCluster cMtchdPclstr;
+                                    cMtchdPclstr.fAddress = cPcluster.fAddress;
+                                    cMtchdPclstr.fZpos    = cPcluster.fZpos; 
+                                    cMtchdPclstrs.push_back( cMtchdPclstr );
+                                }
                             }
                             cFmatch = cFmatch && cMatchFound;
                         }
@@ -524,12 +527,12 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                             {
                                 if( cMatchFound ) continue;
                                 cMatchFound  = ( cScluster.fAddress == cInjection.fRow ) ;
-                            }
-                            if( cMatchFound )
-                            {
-                                LOG(DEBUG) << BOLDGREEN << "\t\t Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() 
-                                    << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() 
-                                    << "  exact match found " << BOLDYELLOW << " S-cluster in row " << +cInjection.fRow << RESET;
+                                if( cMatchFound )
+                                {
+                                    SCluster cMtchdSclstr;
+                                    cMtchdSclstr.fAddress = cInjection.fRow ; 
+                                    cMtchdSclstrs.push_back( cMtchdSclstr );
+                                }
                             }
                             cFmatch = cFmatch && cMatchFound;
                         }
@@ -540,6 +543,12 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                                     << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size() << " matched S clusters and "
                                     << cPclus.size() << " matched P clusters in L1 data.  L1 input sampling phase is  " 
                                     << +cPhase << " Rx40 delay is " << +cWord << RESET;
+                            for( uint8_t  cMatchId=0; cMatchId < cMtchdSclstrs.size() ; cMatchId++)
+                            {
+                                LOG(DEBUG) << BOLDGREEN << "\t\t\t Exact match found " << BOLDYELLOW << " S-cluster in row " << +cMtchdSclstrs[cMatchId].fAddress 
+                                    << " P-cluster in row " << +cMtchdPclstrs[cMatchId].fAddress << " column " << +cMtchdPclstrs[cMatchId].fZpos 
+                                    << RESET; 
+                            }
                         }
                     }
                     // if( cNmatch && cFmatch )
@@ -593,7 +602,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs( ReadoutChip* p
     uint8_t cEndPhase  = 7; //to-do - set from xml 
     bool    cOnlyFirst    = true;
     bool    cCheckL1      = true;
-    for(int cStubAddDelay = (cTriggerMult>0)?0:3 ; cStubAddDelay <= 5; cStubAddDelay++)
+    for(int cStubAddDelay = (cTriggerMult==0)?3:0 ; cStubAddDelay <= 5; cStubAddDelay++)
     {
         if(cOnlyFirst && cGoodCombinationsStubs.size() > 0) continue;
         auto   cStubOffset = (*cBoardIter)->getStubOffset() + cStubAddDelay;
@@ -601,7 +610,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs( ReadoutChip* p
         for(uint8_t cPhase = cStartPhase; cPhase < cEndPhase; cPhase++)
         {
             if(cOnlyFirst && cGoodCombinationsStubs.size() > 0) continue;
-            for(uint8_t cRetime = 0; cRetime < 8; cRetime++)
+            for(uint8_t cRetime = 3; cRetime < 8; cRetime++)//to-do - add range to xml
             {
                 if(cOnlyFirst && cGoodCombinationsStubs.size() > 0) continue;
                 size_t cStubDelay  = pLatency - cStubOffset - cRetime; // stub latency
@@ -883,12 +892,12 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     cInjection.fRow    = 20;
     cInjection.fColumn = 3;
     cInjections.push_back(cInjection);//1
-    cInjection.fRow    = 30;
-    cInjection.fColumn = 4;
-    cInjections.push_back(cInjection);//2
-    cInjection.fRow    = 40;
-    cInjection.fColumn = 5;
-    cInjections.push_back(cInjection);//3
+    // cInjection.fRow    = 30;
+    // cInjection.fColumn = 4;
+    // cInjections.push_back(cInjection);//2
+    // cInjection.fRow    = 40;
+    // cInjection.fColumn = 5;
+    // cInjections.push_back(cInjection);//3
     // cInjection.fRow    = 50;
     // cInjection.fColumn = 6;
     // cInjections.push_back(cInjection);//4
@@ -930,6 +939,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
         {
             for(auto cChip: *cHybrid)
             {
+                fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                 if( cChip->getId()%8 != pChipId ) continue;
 
                 // make sure L1 latency is configured
@@ -964,79 +974,94 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                 {
                     // testing if selecting edge per line works
                     std::vector<uint8_t> cEdgeSelsT1{1};
-                    std::vector<uint8_t> cEdgeSelsRaw{1}; 
+                    std::vector<uint8_t> cEdgeSelsRaw{0}; 
                     std::vector<uint8_t> cEdgeSelsInputs{1};
-                    for( auto cEdgeSelT1 : cEdgeSelsT1)
-                    {
-                        // L1 lines 
-                        fReadoutChipInterface->WriteChipReg(cChip, "SelectEdgeT1", cEdgeSelT1);
-                        std::vector<uint8_t> cRawEdge(0);
-                        std::vector<std::pair<uint8_t, uint8_t>> cAlParsL1; 
-                        for(auto cEdgeSelRaw: cEdgeSelsRaw)
+                    bool cAllFound=false;
+                    //do
+                    //{
+                        for( auto cEdgeSelT1 : cEdgeSelsT1)
                         {
-                            uint8_t           cLineId = 8;
-                            std::stringstream cRegName;
-                            cRegName << "SelectEdgeL" << +cLineId;
-                            LOG (INFO) << BOLDMAGENTA << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;
-                            LOG(INFO) << BOLDMAGENTA << "Edge-select for Raw strip input L" << +cLineId << " will be set to " << +cEdgeSelRaw << RESET;
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cEdgeSelRaw);
-                            auto cL1AlignmentPars = this->AlignL1( cChip, cInjections);
-                            for( auto cPar : cL1AlignmentPars )
+                            //if( cAllFound ) continue;
+                            // L1 lines 
+                            fReadoutChipInterface->WriteChipReg(cChip, "SelectEdgeT1", cEdgeSelT1);
+                            std::vector<uint8_t> cRawEdge(0);
+                            std::vector<std::pair<uint8_t, uint8_t>> cAlParsL1; 
+                            for(auto cEdgeSelRaw: cEdgeSelsRaw)
                             {
-                                cAlParsL1.push_back( cPar ); 
-                                cRawEdge.push_back( cEdgeSelRaw );
+                                //if( cAllFound ) continue;
+                                uint8_t           cLineId = 8;
+                                std::stringstream cRegName;
+                                cRegName << "SelectEdgeL" << +cLineId;
+                                LOG (INFO) << BOLDMAGENTA << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;
+                                LOG(INFO) << BOLDMAGENTA << "Edge-select for Raw strip input L" << +cLineId << " will be set to " << +cEdgeSelRaw << RESET;
+                                fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cEdgeSelRaw);
+                                auto cL1AlignmentPars = this->AlignL1( cChip, cInjections);
+                                LOG (INFO) << BOLDBLUE << "Found " << +cL1AlignmentPars.size() << " combinations of alignment parameters for L1 data from SSA" << RESET;
+                                for( auto cPar : cL1AlignmentPars )
+                                {
+                                    cAlParsL1.push_back( cPar ); 
+                                    cRawEdge.push_back( cEdgeSelRaw );
+                                }
                             }
-                            LOG (INFO) << BOLDBLUE << "Found " << +cL1AlignmentPars.size() << " combinations of alignment parameters for L1 data from SSA" << RESET;
-                        }
-                        // Stub lines + final parameters 
-                        std::vector<std::pair<uint8_t, uint8_t>> cAlParsStubData; 
-                        std::vector<std::pair<uint8_t, uint8_t>> cAlParsHitData; 
-                        std::vector<uint8_t> cRawEdgeL1(0);
-                        std::vector<uint8_t> cRawEdgeStubs(0);
-                        for( size_t cIndx=0; cIndx < cRawEdge.size() ; cIndx++)
-                        {
-                            // make sure L1 line is aligned 
-                            uint8_t           cLineId = 8;
-                            std::stringstream cRegName;
-                            cRegName << "SelectEdgeL" << +cLineId;
-                            LOG(INFO) << BOLDMAGENTA << "Edge-select for Raw strip input L" << +cLineId << " will be set to " << +cRawEdge[cIndx] << RESET;
-                            LOG(INFO) << BOLDMAGENTA << "L1InputPhase for Raw input L" << +cLineId << " will be set to " << +cAlParsL1[cIndx].first << RESET;
-                            LOG(INFO) << BOLDMAGENTA << "Edge-LatencyRx40 for Raw strip input L" << +cLineId << " will be set to " << +cAlParsL1[cIndx].second << RESET;
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cRawEdge[cIndx]);
-                            fReadoutChipInterface->WriteChipReg(cChip, "L1InputPhase", cAlParsL1[cIndx].first);
-                            fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cAlParsL1[cIndx].second);
-                            // stub lines 
-                            for( auto cEdgeSelsInput : cEdgeSelsInputs )
+                            
+                            // Stub lines + final parameters 
+                            std::vector<std::pair<uint8_t, uint8_t>> cAlParsStubData; 
+                            std::vector<std::pair<uint8_t, uint8_t>> cAlParsHitData; 
+                            std::vector<uint8_t> cRawEdgeL1(0);
+                            std::vector<uint8_t> cRawEdgeStubs(0);
+                            for( size_t cIndx=0; cIndx < cRawEdge.size() ; cIndx++)
                             {
-                                LOG (INFO) << BOLDGREEN << "Edge select for stub input is " << +cEdgeSelsInput << RESET;
-                                auto cStbOffset    = pBoard->getStubOffset();
-                                //each stub will appear on one of the lines 
-                                for( uint8_t cLine = 0; cLine < cInjections.size(); cLine++)
+                                //if( cAllFound ) continue;
+                                // make sure L1 line is aligned 
+                                uint8_t           cLineId = 8;
+                                std::stringstream cRegName;
+                                cRegName << "SelectEdgeL" << +cLineId;
+                                // LOG(INFO) << BOLDGREEN << "Edge-select for Raw strip input L" << +cLineId << " will be set to " << +cRawEdge[cIndx] << RESET;
+                                // LOG(INFO) << BOLDGREEN << "L1InputPhase for Raw input L" << +cLineId << " will be set to " << +cAlParsL1[cIndx].first << RESET;
+                                // LOG(INFO) << BOLDGREEN << "Edge-LatencyRx40 for Raw strip input L" << +cLineId << " will be set to " << +cAlParsL1[cIndx].second << RESET;
+                                fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cRawEdge[cIndx]);
+                                fReadoutChipInterface->WriteChipReg(cChip, "L1InputPhase", cAlParsL1[cIndx].first);
+                                fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cAlParsL1[cIndx].second);
+                                // stub lines 
+                                for( auto cEdgeSelsInput : cEdgeSelsInputs )
                                 {
-                                    std::stringstream cRegName;
-                                    cRegName << "SelectEdgeL" << +cLine;
-                                    fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cEdgeSelsInput);
+                                    //if( cAllFound ) continue;
+                                    LOG (INFO) << BOLDGREEN << "Edge select for stub input is " << +cEdgeSelsInput << RESET;
+                                    auto cStbOffset    = pBoard->getStubOffset();
+                                    //each stub will appear on one of the lines 
+                                    for( uint8_t cLine = 0; cLine < cInjections.size(); cLine++)
+                                    {
+                                        std::stringstream cRegName;
+                                        cRegName << "SelectEdgeL" << +cLine;
+                                        fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cEdgeSelsInput);
+                                    }
+                                    auto cStubAlignmentPars = this->AlignStubs( cChip, cInjections, cLatency);
+                                    cAllFound = cStubAlignmentPars.size() > 0; 
+                                    LOG (DEBUG) << BOLDMAGENTA << (int)cAllFound << RESET;
+                                    for( auto cPar : cStubAlignmentPars )
+                                    {
+                                        cAlParsStubData.push_back( cPar ); 
+                                        cAlParsHitData.push_back( cAlParsL1[cIndx] );
+                                        cRawEdgeL1.push_back( cRawEdge[cIndx] );
+                                        cRawEdgeStubs.push_back( cEdgeSelsInput );
+                                        LOG (INFO) << BOLDGREEN << "Edge-select T1 is " << +cEdgeSelT1 << "\tEdge-select for Raw strip input L1A will be set to " << +cRawEdge[cIndx] << RESET;
+                                        LOG (INFO) << BOLDGREEN << "Alignment parameters for L1 hit data : [" << +cAlParsL1[cIndx].first << "," << +cAlParsL1[cIndx].first << "]" << RESET;
+                                        LOG (INFO) << BOLDGREEN << "Alignment parameters for Stub data : [" << +cPar.first << "," << +cPar.second << "]" << RESET;
+                                    }
+                                    pBoard->setStubOffset(cStbOffset);
                                 }
-                                auto cStubAlignmentPars = this->AlignStubs( cChip, cInjections, cLatency);
-                                for( auto cPar : cStubAlignmentPars )
-                                {
-                                    cAlParsStubData.push_back( cPar ); 
-                                    cAlParsHitData.push_back( cAlParsL1[cIndx] );
-                                    cRawEdgeL1.push_back( cRawEdge[cIndx] );
-                                    cRawEdgeStubs.push_back( cEdgeSelsInput );
-                                }
-                                pBoard->setStubOffset(cStbOffset);
                             }
+                            // // print out summary 
+                            // for( size_t cIndx=0 ; cIndx < cAlParsStubData.size(); cIndx++)
+                            // {
+                            //     LOG (INFO) << BOLDBLUE << "Alignment parameters for L1 hit data : [" << +cAlParsHitData[cIndx].first << "," << +cAlParsStubData[cIndx].first << "]" << RESET;
+                            //     LOG (INFO) << BOLDBLUE << "Alignment parameters for Stub data : [" << +cAlParsStubData[cIndx].first << "," << +cAlParsStubData[cIndx].first << "]" << RESET;
+                            //     LOG (INFO) << BOLDBLUE << "Edge select L1 data is " << +cRawEdgeL1[cIndx] << RESET;
+                            //     LOG (INFO) << BOLDBLUE << "Edge select Stub data is " << +cRawEdgeStubs[cIndx] << RESET;
+                            // }
                         }
-                        // print out summary 
-                        for( size_t cIndx=0 ; cIndx < cAlParsStubData.size(); cIndx++)
-                        {
-                            LOG (INFO) << BOLDBLUE << "Alignment parameters for L1 hit data : [" << +cAlParsHitData[cIndx].first << "," << +cAlParsStubData[cIndx].first << "]" << RESET;
-                            LOG (INFO) << BOLDBLUE << "Alignment parameters for Stub data : [" << +cAlParsStubData[cIndx].first << "," << +cAlParsStubData[cIndx].first << "]" << RESET;
-                            LOG (INFO) << BOLDBLUE << "Edge select L1 data is " << +cRawEdgeL1[cIndx] << RESET;
-                            LOG (INFO) << BOLDBLUE << "Edge select Stub data is " << +cRawEdgeStubs[cIndx] << RESET;
-                        }
-                    }
+                    //}while(!cAllFound);
+
                 }
             } // chip
         }     // hybrid

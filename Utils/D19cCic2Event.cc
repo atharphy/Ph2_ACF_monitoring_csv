@@ -111,6 +111,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             // LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint32_t cFc7EvtId = (cEvntCntTag & (0x00FFFFFF));
             fTDC               = (cEvntCntTag & (0xFF << 24)) >> 24;
+            uint8_t cTDCShiftValue = 1;
+            if(fTDC < cTDCShiftValue)
+                fTDC += (8 - cTDCShiftValue);
+            else
+                fTDC -= cTDCShiftValue;
             //LOG (INFO) << BOLDMAGENTA << "\t... TDC is " << cFc7EvtId << " eventId is " << cFc7EvtId << RESET;
             // internal counters
             cEvntCntTag = (*(cEventIterator + 3));

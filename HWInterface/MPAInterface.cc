@@ -729,9 +729,25 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     cMPARegMap = pMPA->getRegMap();
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
     cRegs.clear();
+    std::vector<std::string> cRegsToConfig;
+    //cRegsToConfig.push_back("TrimDAC");
     for(auto& cMapItem: fMap)
     {
-        if(cMapItem.second.find("_P") != std::string::npos && cSkipLocalRegs) continue;
+        bool cSkip=(cSkipLocalRegs && (cMapItem.second.find("_P") != std::string::npos));
+        if(cSkip && cRegsToConfig.size() > 0 ) 
+        {
+            // check if this is one to skip 
+            bool cRegFound=false;
+            auto cIter = cRegsToConfig.begin(); 
+            do
+            {
+                cRegFound = cMapItem.second.find(*cIter) != std::string::npos ;
+                cIter++;
+            }while( cIter < cRegsToConfig.end() && !cRegFound);
+            cSkip = (!cRegFound);
+        }
+        if( cSkip ) continue;
+        // LOG (INFO) << BOLDMAGENTA << "Configuring MPA#" << +pMPA->getId()%8 << " : " << cMapItem.second << RESET;
         // create a register
         ChipRegItem&                  cItem = cMPARegMap[cMapItem.second];
         std::pair<uint16_t, uint16_t> cReg;
