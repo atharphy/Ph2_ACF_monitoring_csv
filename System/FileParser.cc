@@ -489,7 +489,6 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
     pBoard->addConditionDataSet(cSet);
 }
 
-
 void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -501,7 +500,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
        << ", File: " << expandEnvironmentVariables(pSSAnode.attribute("configfile").value()) << RESET << std::endl;
 
     // Get ID of SSA then add to the Hybrid!
-    uint32_t    cChipId = pSSAnode.attribute("Id").as_int();
+    uint32_t    cChipId    = pSSAnode.attribute("Id").as_int();
     uint32_t    cPartnerId = pSSAnode.attribute("partid").as_int();
     std::string cFileName;
     if(!cFilePrefix.empty())
@@ -528,7 +527,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
        << ", File: " << expandEnvironmentVariables(pSSAnode.attribute("configfile").value()) << RESET << std::endl;
 
     // Get ID of SSA then add to the Hybrid!
-    uint32_t    cChipId = pSSAnode.attribute("Id").as_int();
+    uint32_t    cChipId    = pSSAnode.attribute("Id").as_int();
     uint32_t    cPartnerId = pSSAnode.attribute("partid").as_int();
     std::string cFileName;
     if(!cFilePrefix.empty())
@@ -707,7 +706,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName == "SSA2")
                     {
-			LOG (INFO) << BOLDBLUE << "Implement for SSA2" << RESET;
+                        LOG(INFO) << BOLDBLUE << "Implement for SSA2" << RESET;
                         pBoard->setFrontEndType(FrontEndType::SSA2);
                         this->parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                     }

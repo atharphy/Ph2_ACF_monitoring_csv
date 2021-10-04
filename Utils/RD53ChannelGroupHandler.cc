@@ -40,7 +40,10 @@ void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup(ChannelGrou
         }
 }
 
-RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>& customChannelGroup, uint8_t groupType, uint8_t hitPerCol, uint8_t onlyNGroups)
+RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>& customChannelGroup,
+                                                 uint8_t                                                                       groupType,
+                                                 uint8_t                                                                       hitPerCol,
+                                                 uint8_t                                                                       onlyNGroups)
 {
     if(groupType == RD53GroupType::AllPixels)
     {

@@ -74,6 +74,14 @@ void SystemController::Destroy()
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
 
+    // #######################################
+    // # Disable all channels before exiting #
+    // #######################################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
+
     RD53Event::JoinDecodingThreads();
 
     delete fDetectorMonitor;
@@ -380,7 +388,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                             }
                             // if SSA + ASYNC
                             // make sure ROCs are configured for that
-                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA || theReadoutChip->getFrontEndType() == FrontEndType::SSA2) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
+                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA || theReadoutChip->getFrontEndType() == FrontEndType::SSA2)
+                            { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                         }
                     }
                 }
