@@ -91,7 +91,7 @@ void Latency::Stop()
     RD53RunProgress::reset();
 }
 
-void Latency::localConfigure(const std::string fileRes_, int currentRun)
+void Latency::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -106,7 +106,7 @@ void Latency::localConfigure(const std::string fileRes_, int currentRun)
     Latency::initializeFiles(fileRes_, currentRun);
 }
 
-void Latency::initializeFiles(const std::string fileRes_, int currentRun)
+void Latency::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

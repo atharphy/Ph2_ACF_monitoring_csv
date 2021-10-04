@@ -87,7 +87,7 @@ void ThrMinimization::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
+void ThrMinimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos             = nullptr;
@@ -103,7 +103,7 @@ void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }
 
-void ThrMinimization::initializeFiles(const std::string fileRes_, int currentRun)
+void ThrMinimization::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     // ##############################
     // # Initialize sub-calibration #

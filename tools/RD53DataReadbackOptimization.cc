@@ -97,7 +97,7 @@ void DataReadbackOptimization::Stop()
     RD53RunProgress::reset();
 }
 
-void DataReadbackOptimization::localConfigure(const std::string fileRes_, int currentRun)
+void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -112,7 +112,7 @@ void DataReadbackOptimization::localConfigure(const std::string fileRes_, int cu
     DataReadbackOptimization::initializeFiles(fileRes_, currentRun);
 }
 
-void DataReadbackOptimization::initializeFiles(const std::string fileRes_, int currentRun)
+void DataReadbackOptimization::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 

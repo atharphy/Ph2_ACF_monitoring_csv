@@ -39,7 +39,7 @@ std::string composeFileName(const std::string& configFileName, const std::string
 size_t      countBitsOne(size_t num);
 void        resetDefaultFloat();
 
-constexpr size_t setBits(size_t nBit2Set) { return (1 << nBit2Set) - 1; }
+constexpr size_t setBits(size_t nBit2Set) { return (1L << nBit2Set) - 1; }
 
 template <typename T>
 inline void myMove(std::vector<T> source, std::vector<T>& destination)

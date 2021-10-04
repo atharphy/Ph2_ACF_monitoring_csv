@@ -22,11 +22,11 @@
 namespace Ph2_HwDescription
 { // open namespace
 
-SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide,  const std::string& filename) : ReadoutChip(pFeDesc, pSSAId)
+SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pSSAId)
 {
     fMaxRegValue      = 255; // 8 bit registers in SSA2
     fChipOriginalMask = new ChannelGroup<120>;
-    fPartnerId = pPartnerId;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA2);
 }
@@ -35,7 +35,7 @@ SSA2::SSA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t
 {
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = new ChannelGroup<120>;
-    fPartnerId = pPartnerId;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA2);
 }
@@ -73,7 +73,7 @@ void SSA2::loadfRegMap(const std::string& filename)
                 fRegItem.fAddress  = strtoul(fAddress_str.c_str(), 0, 16);
                 fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, 16);
                 fRegItem.fValue    = strtoul(fValue_str.c_str(), 0, 16);
-                fRegMap[fName] = fRegItem;
+                fRegMap[fName]     = fRegItem;
                 cLineCounter++;
             }
         }
@@ -86,7 +86,6 @@ void SSA2::loadfRegMap(const std::string& filename)
         exit(1);
     }
 } // end loadfRegMap
-
 
 void SSA2::saveRegMap(const std::string& filename)
 { // start saveRegMap
@@ -129,6 +128,5 @@ void SSA2::saveRegMap(const std::string& filename)
     else
         LOG(ERROR) << "Error opening file";
 } // end saveRegMap
-
 
 } // namespace Ph2_HwDescription
