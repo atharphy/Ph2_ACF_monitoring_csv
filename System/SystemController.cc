@@ -77,7 +77,7 @@ void SystemController::Destroy()
     // #######################################
     // # Disable all channels before exiting #
     // #######################################
-    if(SystemController::findValueInSettings<bool>("DisableChannelsAtExit", false) == true)
+    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
