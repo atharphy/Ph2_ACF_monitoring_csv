@@ -1082,7 +1082,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             cReplies.clear();
             if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
             {
-                if(cOuterTrackerHybrid->fCic == nullptr) continue;
+                if(cOuterTrackerHybrid->fCic == nullptr) { hybrid_enable |= 1 << cFe->getId(); continue; }
                 auto& cCic = cOuterTrackerHybrid->fCic;
                 LOG(INFO) << BOLDBLUE << "CIC " << +cCic->getId() << " on FE" << +cFe->getId() << RESET;
                 size_t cIndex       = 0;

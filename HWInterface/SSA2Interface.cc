@@ -38,56 +38,138 @@ SSA2Interface::~SSA2Interface() {}
 	}
 	bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
 	{
-		this->WriteChipSingleReg(pSSA2, "mask_strip", 255, pVerifLoop);
-		this->WriteChipSingleReg(pSSA2, "mask_peri_A", 255, pVerifLoop);
-		this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
-		LOG (INFO) << BOLDBLUE << "SSA2 --->" << RESET;
+	    //fTrackRegisters = false;
+	    this->WriteChipSingleReg(pSSA2, "mask_strip", 255, false);
+	    this->WriteChipSingleReg(pSSA2, "mask_peri_A", 255, false);
+	    this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
+	    LOG(INFO) << BOLDBLUE << "Configuring SSA2 " << RESET;
 	    setBoard(pSSA2->getBeBoardId());
 	    std::vector<uint32_t> cVec;
 	    ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
-	    bool                  cWrite     = true;
-	    bool                  cSuccess   = true;
-	    std::map<uint16_t, ChipRegItem> cMap;
-	    cMap.clear();
-	    for(auto& cRegInMap: cSSA2RegMap)
+	    bool                  cWrite      = true;
+	    bool                  cSuccess    = true;
+	    // do not overwrite these registers..
+	    std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
+	    for(auto& cRegItem: cSSA2RegMap)
 	    {
-		cMap[cRegInMap.second.fAddress] = cRegInMap.second;
-	    }
-	    for(auto& cRegItem: cMap)
-	    {
-		fBoardFW->EncodeReg(cRegItem.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite);
+	        if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cRegItem.first) != cRegsToSkip.end()) continue;
+	        if(cRegItem.first.find("SEUcnt") != std::string::npos) continue;
+	        if(cRegItem.first.find("Ring_oscillator") != std::string::npos) continue;
+	        if(cRegItem.first.find("ADC_out") != std::string::npos) continue;
+	        if(cRegItem.first.find("bist_output") != std::string::npos) continue;
+
+	        LOG(DEBUG) << BOLDGREEN << "Encoding register " << cRegItem.first << " with address " << +cRegItem.second.fAddress << RESET;
+	        fBoardFW->EncodeReg(cRegItem.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite);
 	    }
 	    uint8_t cWriteAttempts = 0;
 	    cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 	    if(pVerifLoop && cSuccess)
 	    {
-		cWrite = false;
-		cVec.clear();
-		for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite); }
-		fBoardFW->ReadChipBlockReg(cVec);
-		uint16_t cIndx = 0;
-		for(auto& cRegInMap: cSSA2RegMap)
-		{
-		    uint8_t     cSSA2Id;
-		    bool        cFailed = false;
-		    bool        cRead;
-		    ChipRegItem cRegItem;
-		    fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVec[cIndx], cRead, cFailed);
-			if (cRegInMap.first != "ADC_out_H" and cRegInMap.first != "ADC_VREF" and cRegInMap.first != "THTRIMMING" and cRegInMap.first != "status_reg" and cRegInMap.first != "StripControl2"){
-			    if(cRegInMap.second.fValue != cRegItem.fValue)
-			    {	LOG (INFO) << RED << cRegInMap.first <<"(0x"<<std::hex << cRegInMap.second.fAddress <<")  should be 0x" << cRegInMap.second.fValue <<", is 0x"<<cRegItem.fValue<< std::dec << "(SSA2:" << (int)pSSA2->getId() <<")"<< RESET;
-				//throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
-			    }
-			}
-		    //LOG (INFO) << BLUE << cRegInMap.first <<"(0x"<<std::hex << cRegInMap.second.fAddress <<")  should be 0x" << cRegInMap.second.fValue <<", is 0x"<<cRegItem.fValue<< std::dec << "(SSA2:" << (int)pSSA2->getId() <<")"<< RESET;
-		    cIndx++;
-		}
+	        cWrite = false;
+	        cVec.clear();
+	        for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite); }
+	        fBoardFW->ReadChipBlockReg(cVec);
+	        uint16_t                 cIndx = 0;
+	        std::vector<std::string> cReadOnlyRegs{
+	            "AC_ReadCounterLSB", "AC_ReadCounterMSB", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L", "THTRIMMING", "status_reg", "StripControl2", "mask_strip", "mask_peri_A", "mask_peri_D"};
+	        for(auto& cRegInMap: cSSA2RegMap)
+	        {
+	            uint8_t     cSSA2Id;
+	            bool        cFailed = false;
+	            bool        cRead;
+	            ChipRegItem cRegItem;
+	            fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVec[cIndx], cRead, cFailed);
+	            if(std::find(cReadOnlyRegs.begin(), cReadOnlyRegs.end(), cRegInMap.first) == cReadOnlyRegs.end() && cRegInMap.first.find("SEUcnt") == std::string::npos &&
+	               cRegInMap.first.find("Ring_oscillator") == std::string::npos && cRegInMap.first.find("ADC_out") == std::string::npos && cRegInMap.first.find("bist_output") == std::string::npos)
+	            {
+
+	                if(cRegInMap.second.fValue != cRegItem.fValue)
+	                {
+	                    LOG(INFO) << RED << "!!!" << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue << std::dec
+	                              << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+	                }
+	                else
+	                    LOG(DEBUG) << BOLDGREEN << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue
+	                               << std::dec << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+	            }
+	            else
+	            {
+	                // check if _S is in the register name 
+	                if( cRegInMap.first.find("_S") != std::string::npos && cRegInMap.first.find("SEUcnt") == std::string::npos && cRegInMap.first.find("mask_strip") == std::string::npos )
+	                {
+	                    if(cRegInMap.second.fValue != cRegItem.fValue )
+	                    {
+	                        LOG(INFO) << RED << "----" << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue << std::dec
+	                                  << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+	                    }
+	                    else
+	                        LOG(DEBUG) << BOLDGREEN << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue
+	                                   << std::dec << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+	                        
+	                }
+	            }
+	            cIndx++;
+	        }
 	    }
-	    #ifdef COUNT_FLAG
-	    LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA2" << +pSSA2->getId() << " config." << RESET;
-	    #endif
+
+		#ifdef COUNT_FLAG
+		    LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA2" << +pSSA2->getId() << " config." << RESET;
+		#endif
+	    //fTrackRegisters=false;
 	    return cSuccess;
-	}
+  	}
+	// bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
+	// {
+	// 	this->WriteChipSingleReg(pSSA2, "mask_strip", 255, pVerifLoop);
+	// 	this->WriteChipSingleReg(pSSA2, "mask_peri_A", 255, pVerifLoop);
+	// 	this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
+	// 	LOG (INFO) << BOLDBLUE << "SSA2 --->" << RESET;
+	//     setBoard(pSSA2->getBeBoardId());
+	//     std::vector<uint32_t> cVec;
+	//     ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
+	//     bool                  cWrite     = true;
+	//     bool                  cSuccess   = true;
+	//     std::map<uint16_t, ChipRegItem> cMap;
+	//     cMap.clear();
+	//     for(auto& cRegInMap: cSSA2RegMap)
+	//     {
+	// 	cMap[cRegInMap.second.fAddress] = cRegInMap.second;
+	//     }
+	//     for(auto& cRegItem: cMap)
+	//     {
+	// 	fBoardFW->EncodeReg(cRegItem.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite);
+	//     }
+	//     uint8_t cWriteAttempts = 0;
+	//     cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+	//     if(pVerifLoop && cSuccess)
+	//     {
+	// 	cWrite = false;
+	// 	cVec.clear();
+	// 	for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite); }
+	// 	fBoardFW->ReadChipBlockReg(cVec);
+	// 	uint16_t cIndx = 0;
+	// 	for(auto& cRegInMap: cSSA2RegMap)
+	// 	{
+	// 	    uint8_t     cSSA2Id;
+	// 	    bool        cFailed = false;
+	// 	    bool        cRead;
+	// 	    ChipRegItem cRegItem;
+	// 	    fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVec[cIndx], cRead, cFailed);
+	// 		if (cRegInMap.first != "ADC_out_H" and cRegInMap.first != "ADC_VREF" and cRegInMap.first != "THTRIMMING" and cRegInMap.first != "status_reg" and cRegInMap.first != "StripControl2"){
+	// 		    if(cRegInMap.second.fValue != cRegItem.fValue)
+	// 		    {	LOG (INFO) << RED << cRegInMap.first <<"(0x"<<std::hex << cRegInMap.second.fAddress <<")  should be 0x" << cRegInMap.second.fValue <<", is 0x"<<cRegItem.fValue<< std::dec << "(SSA2:" << (int)pSSA2->getId() <<")"<< RESET;
+	// 			//throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
+	// 		    }
+	// 		}
+	// 	    //LOG (INFO) << BLUE << cRegInMap.first <<"(0x"<<std::hex << cRegInMap.second.fAddress <<")  should be 0x" << cRegInMap.second.fValue <<", is 0x"<<cRegItem.fValue<< std::dec << "(SSA2:" << (int)pSSA2->getId() <<")"<< RESET;
+	// 	    cIndx++;
+	// 	}
+	//     }
+	//     #ifdef COUNT_FLAG
+	//     LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA2" << +pSSA2->getId() << " config." << RESET;
+	//     #endif
+	//     return cSuccess;
+	// }
 //	// READ REGISTER ON CHIP:
 //////////
 	uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
@@ -279,6 +361,8 @@ SSA2Interface::~SSA2Interface() {}
 //////////
 	bool SSA2Interface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 	{
+		std::vector<std::string> cReadOnlyRegs{
+	            "AC_ReadCounterLSB", "AC_ReadCounterMSB", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L", "THTRIMMING", "status_reg", "StripControl2", "mask_strip", "mask_peri_A", "mask_peri_D"};
 	    setBoard(pChip->getBeBoardId());
 	    std::vector<uint32_t> cVec;
 	    ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
@@ -293,13 +377,16 @@ SSA2Interface::~SSA2Interface() {}
 		{
 		    if(pRegNode != "ENFLAGS" && pRegNode != "DigCalibPattern_L" && pRegNode != "DigCalibPattern_H")
 		    {
-		        auto cReadBack = ReadChipReg(pChip, pRegNode);
-		        if(cReadBack != pValue)
-		        {
-		            LOG(INFO) << BOLDRED << "Read back value ("<<cReadBack<<") from " << pRegNode << BOLDBLUE << " at I2C address " << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
-		                      << std::hex << +cRegItem.fValue << std::dec << RESET;
-		            return false;
-		        }
+		    	if(std::find(cReadOnlyRegs.begin() , cReadOnlyRegs.end(), pRegNode) == cReadOnlyRegs.end()) 
+		    	{
+					auto cReadBack = ReadChipReg(pChip, pRegNode);
+			        if(cReadBack != pValue)
+			        {
+			            LOG(DEBUG) << BOLDRED << "Read back value ("<<cReadBack<<") from " << pRegNode << BOLDBLUE << " at I2C address 0x" << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
+			                      << std::hex << +cRegItem.fValue << std::dec << RESET;
+			            return false;
+			        }
+			    }
 		    }
 		}
 	    }

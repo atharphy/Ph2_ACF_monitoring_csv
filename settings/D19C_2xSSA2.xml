@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="SSA2">
-      <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+    <!-- <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.79:50001" address_table="file://settings/address_tables/uDTC_OT_address_table_v2.xml" />  -->
     <OpticalGroup Id="0" FMCId="0" >
+	<lpGBT_Interface useOpticalLink="0" useCPB="0"/>
         <Hybrid Id="0" Status="1">
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA2 Id="0" side="0" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="0" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="1" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="2" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="3" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="4" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="5" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="6" configfile="SSA2_template_v2.txt" />
+            <SSA2 Id="7" configfile="SSA2_template_v2.txt" />
+	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+	    <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
     </OpticalGroup>
 
@@ -24,14 +35,14 @@
             <Register name="fast_command_block">
                 <Register name="triggers_to_accept"> 0 </Register>
                 <Register name="trigger_source"> 6 </Register>
-                <Register name="user_trigger_frequency"> 200 </Register>
+                <Register name="user_trigger_frequency"> 100 </Register>
     		<Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 0 </Register>
                     <Register name="stub_trigger_veto_length"> 0 </Register>
     		<Register name="test_pulse">
     			<Register name="delay_after_fast_reset"> 50 </Register>
-    			<Register name="delay_after_test_pulse"> 200 </Register>
+    			<Register name="delay_after_test_pulse"> 15 </Register>
     			<Register name="delay_before_next_pulse"> 1000 </Register>
     			<Register name="en_fast_reset"> 0 </Register>
     			<Register name="en_test_pulse"> 1 </Register>
@@ -46,7 +57,7 @@
                             <Register name="stubOR"> 1 </Register>
                             <Register name="initial_fast_reset_enable"> 0 </Register>
     			<Register name="trigger_timeout_enable"> 0 </Register>
-    			<Register name="trigger_multiplicity"> 1 </Register>
+    			<Register name="trigger_multiplicity"> 7 </Register>
                     </Register>
             </Register>
     	<!-- I2C manager -->
