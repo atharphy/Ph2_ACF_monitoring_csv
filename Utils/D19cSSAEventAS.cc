@@ -36,7 +36,7 @@ D19cSSAEventAS::D19cSSAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
             cROCIds.clear();
             for(auto cChip: *cFe)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     RocCounterData cRocData;
                     cRocData.clear();
@@ -64,7 +64,7 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
             // loop over chips
             for(auto cChip: *cFe)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     auto& cChipCounterData = cHybridCounterData[cRocIndex];
                     for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)

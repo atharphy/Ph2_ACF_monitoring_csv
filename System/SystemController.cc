@@ -712,7 +712,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
 
             if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
-            if(fEventType == EventType::SSA2AS) { fEventList.push_back(new D19cSSA2EventAS(pBoard, pData)); }
+            else if(fEventType == EventType::SSA2AS) { fEventList.push_back(new D19cSSA2EventAS(pBoard, pData)); }
             else if(fEventType == EventType::MPAAS)
             {
                 fEventList.push_back(new D19cMPAEventAS(pBoard, pData));

@@ -738,8 +738,6 @@ void Tool::setFWTestPulse()
     for(auto cBoard: *fDetectorContainer)
     {
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        // uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS || cBoard->getEventType() == EventType::MPAAS )
-        // ? 1 : 0;
         switch(cBoard->getBoardType())
         {
         case BoardType::D19C:
@@ -749,14 +747,15 @@ void Tool::setFWTestPulse()
 
             if(!cAsync)
             {
+                LOG(INFO) << BOLDBLUE << "Not in ASYNC mode .. set trigger source to 6" << RESET;
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                //cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;

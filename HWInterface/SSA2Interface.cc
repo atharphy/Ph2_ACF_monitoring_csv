@@ -311,6 +311,7 @@ SSA2Interface::~SSA2Interface() {}
 	    }
 	    else
 		LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
+	    
 	    return cSuccess;
 	}
 //	// WRITE REGISTER (SIMPLE):
@@ -372,24 +373,35 @@ SSA2Interface::~SSA2Interface() {}
 	    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 	    if(cSuccess)
 	    {
-		pChip->setReg(pRegNode, pValue);
-		if(pVerifLoop)
-		{
-		    if(pRegNode != "ENFLAGS" && pRegNode != "DigCalibPattern_L" && pRegNode != "DigCalibPattern_H")
-		    {
-		    	if(std::find(cReadOnlyRegs.begin() , cReadOnlyRegs.end(), pRegNode) == cReadOnlyRegs.end()) 
-		    	{
-					auto cReadBack = ReadChipReg(pChip, pRegNode);
-			        if(cReadBack != pValue)
-			        {
-			            LOG(DEBUG) << BOLDRED << "Read back value ("<<cReadBack<<") from " << pRegNode << BOLDBLUE << " at I2C address 0x" << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
-			                      << std::hex << +cRegItem.fValue << std::dec << RESET;
-			            return false;
-			        }
+			pChip->setReg(pRegNode, pValue);
+			if(pVerifLoop)
+			{
+			    if(pRegNode != "ENFLAGS" && pRegNode != "DigCalibPattern_L" && pRegNode != "DigCalibPattern_H")
+			    {
+			    	if(std::find(cReadOnlyRegs.begin() , cReadOnlyRegs.end(), pRegNode) == cReadOnlyRegs.end()) 
+			    	{
+						auto cReadBack = ReadChipReg(pChip, pRegNode);
+				        if(cReadBack != pValue)
+				        {
+				            LOG(DEBUG) << BOLDRED << "Read back value ("<<cReadBack<<") from " << pRegNode << BOLDBLUE << " at I2C address 0x" << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
+				                      << std::hex << +cRegItem.fValue << std::dec << RESET;
+				            return false;
+				        }
+				    }
 			    }
+			}
+			// then write mask registers 
+			std::vector<uint32_t> cVec;
+			std::vector<std::string> cMasks{"mask_strip","mask_peri_D","mask_peri_A"};
+			for( auto cMaskReg : cMasks )
+			{
+			    ChipRegItem           cRegItem = pChip->getRegItem(cMaskReg);
+			    cRegItem.fValue = 0xFF;
+			    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, false, true);
 		    }
+		    uint8_t cWriteAttempts = 0;
+		    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, false);
 		}
-	    }
 	#ifdef COUNT_FLAG
 	    fRegisterCount++;
 	    fTransactionCount++;
@@ -534,10 +546,10 @@ SSA2Interface::~SSA2Interface() {}
 	    else if(pRegName == "InjectedCharge")
 	    {
 		LOG(INFO) << BOLDBLUE << "Setting "
-		          << " bias calDac to " << +pValue << " on SSA2" << +pSSA2->getId() << RESET;
+		          << " bias calDac to " << +pValue << " on SSA2 " << +pSSA2->getId() << RESET;
 		return WriteChipSingleReg(pSSA2, "Bias_CALDAC", pValue, pVerifLoop);
 	    }
-	    else if(pRegName == "Threshold")
+	    else if(pRegName == "Threshold" || pRegName == "Bias_THDAC" )
 	    {
 		LOG(DEBUG) << BOLDRED << "Setting threshold to " << +pValue << RESET;
 		return WriteChipSingleReg(pSSA2, "Bias_THDAC", (pValue), pVerifLoop);

@@ -169,7 +169,8 @@ enum class EventType
     MPAAS = 6,
     SSA2   = 7,
     SSA2AS = 8,
-    PSAS   = 9
+    PSAS   = 9,
+    Async  = 10
 };
 
 #endif

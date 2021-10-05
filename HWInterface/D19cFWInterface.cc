@@ -1967,7 +1967,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
             {
                 for(auto cChip: *cFe)
                 {
-                    LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from SSA" << +cChip->getId() << RESET;
+                    LOG(INFO) << BOLDBLUE << "Directly reading back counters from SSA#" << +cChip->getId() << RESET;
                     bool                  cWrite = false;
                     std::vector<uint32_t> cVec;
                     cVec.clear();
@@ -1979,7 +1979,8 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         ChipRegItem cReg_Counters_MSB;
                         cReg_Counters_MSB.fPage    = 0x00;
                         if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-			else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
+                        //else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_MSB.fAddress = 0x0600 + cChnl;
+                        else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
                         cReg_Counters_MSB.fValue   = 0x00;
                         this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
                         // this->ReadChipBlockReg( cVec );
@@ -1989,7 +1990,8 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         ChipRegItem cReg_Counters_LSB;
                         cReg_Counters_LSB.fPage    = 0x00;
                         if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-			else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
+                        //else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_LSB.fAddress = 0x0500 + cChnl;
+			            else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
                         cReg_Counters_LSB.fValue   = 0x00;
                         this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
                         // this->ReadChipBlockReg( cVec );
@@ -2010,12 +2012,14 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         ChipRegItem cReg_Counters_MSB;
                         cReg_Counters_MSB.fPage    = 0x00;
                         if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-			else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
+                        //else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_MSB.fAddress = 0x0600 + cChnl;
+			            else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
                         cReg_Counters_MSB.fValue   = 0x00;
                         ChipRegItem cReg_Counters_LSB;
                         cReg_Counters_LSB.fPage    = 0x00;
                         if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-			else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
+                        //else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_LSB.fAddress = 0x0500 + cChnl;
+			            else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
                         cReg_Counters_LSB.fValue   = 0x00;
                         this->DecodeReg(cReg_Counters_MSB, cSSAId, cVec[cIndx], cRead, cFailed);
                         this->DecodeReg(cReg_Counters_LSB, cSSAId, cVec[cIndx + 1], cRead, cFailed);
@@ -2023,7 +2027,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
                         if(cChnl < 10)
                         {
-                            LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                            LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
                                        << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
                         }
                         cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
@@ -2085,9 +2089,15 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         {
             if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
             if(cWithSSA  or cWithSSA2)
+            {
+                LOG (INFO) << BOLDBLUE << "Reading SSA counters..." << RESET;
                 this->ReadSSACounters(pBoard, pData);
+            }
             else
+            {
+                LOG (INFO) << BOLDBLUE << "Reading MPA counters..." << RESET;
                 this->ReadMPACounters(pBoard, pData);
+            }
             its += 1;
         }
         cNEvents = 1;

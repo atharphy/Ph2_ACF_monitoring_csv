@@ -42,7 +42,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
 
     cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
     cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
