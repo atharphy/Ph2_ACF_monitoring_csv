@@ -286,7 +286,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
-            uint8_t cAsync = (cBoard->getEventType() == EventType::SSAAS || cBoard->getEventType() == EventType::SSA2AS) ? 1 : 0;
+            auto cEventType = cBoard->getEventType();
+            uint8_t cAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async ) ? 1 : 0;
 
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
@@ -711,8 +712,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
-            if(fEventType == EventType::SSAAS) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
-            else if(fEventType == EventType::SSA2AS) { fEventList.push_back(new D19cSSA2EventAS(pBoard, pData)); }
+            if(fEventType == EventType::SSAAS || fEventType == EventType::Async ) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
+            else if(fEventType == EventType::SSA2AS || fEventType == EventType::Async ) { fEventList.push_back(new D19cSSA2EventAS(pBoard, pData)); }
             else if(fEventType == EventType::MPAAS)
             {
                 fEventList.push_back(new D19cMPAEventAS(pBoard, pData));

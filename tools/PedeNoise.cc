@@ -77,6 +77,28 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+
+    // enable ASYNC mode for PS asics 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto cEventType = cBoard->getEventType();
+        bool cWithAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                if( !cWithAsync ) continue;
+                // set all SSAs + MPAs to output data in async mode
+                for(auto cROC: *cHybrid)
+                {
+                    if( cROC->getFrontEndType() == FrontEndType::CBC3 ) continue;
+                    
+                    // TBC - what about MPA here?
+                    fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                }
+            }
+        }
+    }
 }
 
 void PedeNoise::disableStubLogic()
@@ -200,7 +222,7 @@ void PedeNoise::sweepSCurves()
     {
         this->enableTestPulse(false);
         if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
-        if(cWithMPA)
+        else if(cWithMPA)
         {
             setSameGlobalDac("CalDAC0", 0);
             setSameGlobalDac("CalDAC1", 0);
@@ -424,7 +446,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
                 cValue += cSign;
                 cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
                 if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
-                if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
+                else if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
             }
             else
             {

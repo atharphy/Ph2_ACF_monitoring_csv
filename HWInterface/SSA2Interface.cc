@@ -464,11 +464,7 @@ SSA2Interface::~SSA2Interface() {}
 			return cReadoutMode;
 		}
 	    else if(pRegName == "AnalogueAsync")
-		//cTool.fReadoutChipInterface->WriteChipReg(theSSA, "control_1", 0x1);
-      //  cTool.fReadoutChipInterface->WriteChipReg(theSSA, "mask_strip", 0xff);
-	//	cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS", 0x15);
-	    {
-	//	uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
+		{
 		this->WriteChipSingleReg(pSSA2, "mask_strip", 0xff, pVerifLoop);
 		bool    cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x15, pVerifLoop);
 		this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xff, pVerifLoop);

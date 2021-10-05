@@ -2,18 +2,18 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="Async">
     <!-- B598 skeleton, direct powering -->
-    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
     <!-- B14 skeleton, POH -->
     <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
      <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0">
-        <lpGBT_Interface useOpticalLink="1" useCPB="0"/>
+        <!-- <lpGBT_Interface useOpticalLink="0" useCPB="0"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
           <Settings
           />
-        </lpGBT>
+        </lpGBT> -->
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
@@ -159,7 +159,7 @@
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">120</Setting>
-    <Setting name="PedeNoisePulseAmplitude">8</Setting>
+    <Setting name="PedeNoisePulseAmplitude">120</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 

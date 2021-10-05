@@ -1958,7 +1958,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
 {
     // get event type
     EventType cEventType = pBoard->getEventType();
-    if(cEventType == EventType::SSAAS or cEventType == EventType::SSA2AS)
+    if(cEventType == EventType::SSAAS or cEventType == EventType::SSA2AS or cEventType == EventType::Async )
     {
         pData.clear();
         for(auto cOpticalGroup: *pBoard)
@@ -1967,7 +1967,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
             {
                 for(auto cChip: *cFe)
                 {
-                    LOG(INFO) << BOLDBLUE << "Directly reading back counters from SSA#" << +cChip->getId() << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from SSA#" << +cChip->getId() << RESET;
                     bool                  cWrite = false;
                     std::vector<uint32_t> cVec;
                     cVec.clear();
@@ -1979,7 +1979,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         ChipRegItem cReg_Counters_MSB;
                         cReg_Counters_MSB.fPage    = 0x00;
                         if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_MSB.fAddress = 0x0801 + cChnl;
-                        //else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_MSB.fAddress = 0x0600 + cChnl;
+                        else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_MSB.fAddress = 0x0600 + cChnl;
                         else cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
                         cReg_Counters_MSB.fValue   = 0x00;
                         this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
@@ -1990,7 +1990,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         ChipRegItem cReg_Counters_LSB;
                         cReg_Counters_LSB.fPage    = 0x00;
                         if (cChip->getFrontEndType() == FrontEndType::SSA) cReg_Counters_LSB.fAddress = 0x0901 + cChnl;
-                        //else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_LSB.fAddress = 0x0500 + cChnl;
+                        else if( cChip->getFrontEndType() == FrontEndType::SSA2) cReg_Counters_LSB.fAddress = 0x0500 + cChnl;
 			            else  cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
                         cReg_Counters_LSB.fValue   = 0x00;
                         this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
@@ -2027,7 +2027,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                         uint16_t cCounterValue = ((cReg_Counters_MSB.fValue & 0xFF) << 8) | (cReg_Counters_LSB.fValue & 0xFF);
                         if(cChnl < 10)
                         {
-                            LOG(INFO) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
+                            LOG(DEBUG) << BOLDMAGENTA << "Strip#" << +cChnl << " : " << +cCounterValue << " hits."
                                        << " LSB " << +(cReg_Counters_LSB.fValue & 0xFF) << " MSB " << +(cReg_Counters_MSB.fValue & 0xFF) << RESET;
                         }
                         cDataWord = (cDataWord) | (cCounterValue << (cWordCounter & 0x1) * 16);
@@ -2053,7 +2053,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
     bool      cWithMPA   = false;
     bool      cWithSSA   = false;
     bool      cWithSSA2   = false;
@@ -2090,7 +2090,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
             if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
             if(cWithSSA  or cWithSSA2)
             {
-                LOG (INFO) << BOLDBLUE << "Reading SSA counters..." << RESET;
+                LOG (DEBUG) << BOLDBLUE << "Reading SSA counters..." << RESET;
                 this->ReadSSACounters(pBoard, pData);
             }
             else
@@ -2116,7 +2116,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     bool      pFailed    = false;
     int       cCounter   = 0;
     EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
 
     while(cNWords == 0 && cCounter < 1000 && !cAsync)
     {
@@ -2314,7 +2314,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     auto     cMultiplicity         = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
 
     EventType                                     cEventType = pBoard->getEventType();
-    bool                                          cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+    bool                                          cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents * (cMultiplicity + 1)});
 
