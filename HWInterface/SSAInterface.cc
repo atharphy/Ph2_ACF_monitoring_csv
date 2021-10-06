@@ -279,7 +279,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "EnableSLVSTestOutput")
     {
-        LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA#" << +pSSA->getId() << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Enabling SLVS test output on SSA#" << +pSSA->getId() << RESET;
         uint8_t cRegValue = ReadChipReg(pSSA, "ReadoutMode");
         cRegValue         = (cRegValue & 0x4) | (pValue << 1);
         return WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
@@ -321,7 +321,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "InjectedCharge")
     {
-        LOG(INFO) << BOLDBLUE << "Setting "
+        LOG(DEBUG) << BOLDBLUE << "Setting "
                   << " bias calDac to " << +pValue << " on SSA" << +pSSA->getId() << RESET;
         return WriteChipSingleReg(pSSA, "Bias_CALDAC", pValue, pVerifLoop);
     }

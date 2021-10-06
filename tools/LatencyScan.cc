@@ -177,7 +177,7 @@ void LatencyScan::ScanLatency()
             // LOG (INFO) << BOLDRED << "Reading events in scan latency.." << RESET;
             this->ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
-            float cNormalizationFactor = ( cIsPS && cTriggerMult == 0 ) ? (cEvents.size() -1 ) : cEvents.size();
+            float cNormalizationFactor = ( cIsPS && cTriggerMult == 0 ) ? (cEvents.size() -1 ) : cEvents.size()/(1+cTriggerMult);
             // loop over triggers in the burst
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
@@ -258,8 +258,9 @@ void LatencyScan::ScanLatency()
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
                                     if( cPclstrs.size() > 0 || cSclstrs.size() > 0 )
-                                        LOG (DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "ROC#" << +cChip->getId()%8 << " "
-                                         << +cPclstrs.size() << " P-clusters " 
+                                        LOG (DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId 
+                                        << " ROC#" << +cChip->getId()%8 << " "
+                                        << +cPclstrs.size() << " P-clusters " 
                                         << +cSclstrs.size() << " S-clusters." 
                                         << RESET;
                                     for(auto& cPclstr: cPclstrs)

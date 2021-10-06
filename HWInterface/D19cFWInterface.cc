@@ -4296,7 +4296,7 @@ bool D19cFWInterface::Bx0Alignment()
     cSuccess          = false;
     // reset decoder
     size_t cMaxAttempts = 20;
-    size_t cWaitTime    = fWait_us * 10; // was 100
+    size_t cWaitTime    = fWait_us * 1; // was 100
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
     do {

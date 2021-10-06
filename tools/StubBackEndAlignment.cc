@@ -113,7 +113,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Trying to align CIC decoder in the back-end" << RESET;
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
-    uint32_t cNevents      = 1;
+    uint32_t cNevents      = 10;
     uint16_t cMaxBxCounter = 3564;
     bool    cCorrectDelay = false;
     std::vector<uint8_t> cFeEnableRegs(0);
@@ -533,7 +533,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             cNHitsPerHybrid += cNHitsThisFE;
                             cNHits += cNHitsThisFE;
                             if( cNHitsThisFE > 0 )
-                                LOG(INFO) << BOLDBLUE << "\t.. ROC" << +cChip->getId() << " found "   
+                                LOG(DEBUG) << BOLDBLUE << "\t.. ROC" << +cChip->getId() << " found "   
                                     << +cNHitsThisFE << " hits .." << RESET;
                         }
                         LOG (DEBUG) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;

@@ -141,6 +141,12 @@ class CbcInterface : public ReadoutChipInterface
     void                 resetPageMap(){fPageMap.clear();}
     
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
+    /*!
+     * \brief Read CBC ID eFuse
+     * \param pChip: pointer to Chip object
+     */
+    uint32_t ReadCbcIDeFuse(Ph2_HwDescription::Chip* pCbc);
+    
   private:
 
     std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0xBC, 0xD4, 0x31, 0x81 };
@@ -148,11 +154,6 @@ class CbcInterface : public ReadoutChipInterface
     std::map<uint32_t, uint8_t> fPageMap;
     bool                        fWithlpGBT = false;
     std::bitset<NCHANNELS>      fActiveChannels;
-    /*!
-     * \brief Read CBC ID eFuse
-     * \param pChip: pointer to Chip object
-     */
-    uint32_t ReadCbcIDeFuse(Ph2_HwDescription::Chip* pCbc);
     // void ReadAllCbc ( const Hybrid* pHybrid );
     // void CbcCalibrationTrigger(const Cbc* pCbc );
     void output();

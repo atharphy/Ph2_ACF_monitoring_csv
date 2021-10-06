@@ -702,12 +702,11 @@ int main(int argc, char* argv[])
             if( cInjectionSource.find("digital") != std::string::npos )
             {
                 // configure trigger 
-                uint8_t                  cMult            = 0;
                 uint8_t                  cTriggerSource   = 6;
                 uint16_t                 cDelayAfterReset = 100;
                 uint16_t                 cDelayTillNext   = 400;
-                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse", "misc.trigger_multiplicity"};
-                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext, cMult};
+                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse" };
+                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext};
                 std::vector<uint16_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
                 std::vector<std::pair<std::string, uint32_t>> cRegVec;
                 cRegVec.clear();
@@ -756,12 +755,11 @@ int main(int argc, char* argv[])
             else if( cInjectionSource.find("analogue") != std::string::npos )
             {
                 // configure trigger 
-                uint8_t                  cMult            = 0;
                 uint8_t                  cTriggerSource   = 6;
                 uint16_t                 cDelayAfterReset = 100;
                 uint16_t                 cDelayTillNext   = 400;
-                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse", "misc.trigger_multiplicity"};
-                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext, cMult};
+                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse" };
+                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext};
                 std::vector<uint16_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
                 std::vector<std::pair<std::string, uint32_t>> cRegVec;
                 cRegVec.clear();
@@ -781,6 +779,10 @@ int main(int argc, char* argv[])
                 int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
                 cSetting            = cTool.fSettingsMap.find("PSOccupancyPulseAmplitude");
                 int cInjectionAmpl  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0xFF;
+                cSetting            = cTool.fSettingsMap.find("SamplingModeSSA");
+                int cSamplingSSA  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                cSetting            = cTool.fSettingsMap.find("SamplingModeMPA");
+                int cSamplingMPA  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
                 // analogue injection 
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "InjectedCharge", cInjectionAmpl);
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 1);
@@ -804,17 +806,17 @@ int main(int argc, char* argv[])
                 uint16_t cFirstRow=10; 
                 uint16_t cNCols=2;
                 uint16_t cNRows=1;
+                std::vector<uint16_t> cStrps;
                 for( uint16_t cNRow=0; cNRow < cNRows; cNRow++)
                 {
                     uint16_t cRow = cFirstRow + cNRow*2; 
+                    cStrps.push_back( cRow );
                     for( uint16_t cCol=0; cCol < cNCols; cCol++)
                     {
                         cPxls.push_back( (uint32_t)(cCol) * NSSACHANNELS + (uint32_t)cRow );
                     }
                 }
-                LOG (INFO) << BOLDBLUE << "Enabling analogue injection in " << cPxls.size() << " pixels." << RESET;
-                //{10,20,50,100,200,500,1000};
-                std::vector<uint16_t> cStrps{1,2,5,10,20,50,100};
+                LOG (INFO) << BOLDBLUE << "Enabling analogue injection in " << cPxls.size() << " pixels and " << cStrps.size() << " strips." << RESET;
                 for(auto opticalGroup: *board)
                 {
                     for(auto hybrid: *opticalGroup)
@@ -831,7 +833,6 @@ int main(int argc, char* argv[])
                                     std::stringstream cRegNameTrim;
                                     cRegNameTrim << "TrimDAC_P" << +cPxl; 
                                     cTool.fReadoutChipInterface->WriteChipReg(chip,cRegNameTrim.str(), 0x0); 
-                                       
                                 }
                             }
                             if(chip->getFrontEndType() == FrontEndType::SSA)
@@ -840,7 +841,7 @@ int main(int argc, char* argv[])
                                 {
                                     std::stringstream cRegName;
                                     cRegName << "ENFLAGS_S" << +sStrp; 
-                                    cTool.fReadoutChipInterface->WriteChipReg(chip,cRegName.str(), 0x11, false); 
+                                    cTool.fReadoutChipInterface->WriteChipReg(chip,cRegName.str(), 0x13, false); 
                                 }
                             }
                         }
@@ -856,10 +857,12 @@ int main(int argc, char* argv[])
                             if(chip->getFrontEndType() == FrontEndType::SSA)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth); 
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth); 
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
                             }
                         }
                     }

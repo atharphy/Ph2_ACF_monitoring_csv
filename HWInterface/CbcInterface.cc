@@ -877,10 +877,6 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
         return (cRegValue & 0x0F);
     }
-    else if(pRegNode == "ChipId")
-    {
-        return ReadCbcIDeFuse(pCbc);
-    }
     else if(pRegNode == "TriggerLatency")
     {
         auto     cRegValueFirst  = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
@@ -1038,7 +1034,7 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 uint32_t CbcInterface::ReadCbcIDeFuse(Chip* pCbc)
 {
     // make fuse read-able
-    WriteChipReg(pCbc, "ChipIDFuse3", 8);
+    WriteChipReg(pCbc, "ChipIDFuse3", 8, false);
     uint8_t  IDa     = ReadChipReg(pCbc, "ChipIDFuse1");
     uint8_t  IDb     = ReadChipReg(pCbc, "ChipIDFuse2");
     uint8_t  IDc     = ReadChipReg(pCbc, "ChipIDFuse3");
