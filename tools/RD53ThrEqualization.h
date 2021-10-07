@@ -52,8 +52,9 @@ class ThrEqualization : public PixelAlive
         uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
         uint16_t moreIterationsTDAC = 1;
         return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) +
-               ((RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * (nIterationsTDAC + moreIterationsTDAC)) +
-                nIterationsTDAC) *
+               (((RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * (nIterationsTDAC + moreIterationsTDAC)) +
+                 nIterationsTDAC) +
+                RD53ChannelGroupHandler::getNumberOfGroups(RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups) * nIterationsVCal) *
                    nEvents / nEvtsBurst;
     }
     void saveChipRegisters(int currentRun);

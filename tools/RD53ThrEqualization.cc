@@ -152,6 +152,8 @@ void ThrEqualization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrEqualization::run()
 {
+    ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, theOccContainer);
+
     // #########################
     // # Find global threshold #
     // #########################
@@ -163,12 +165,11 @@ void ThrEqualization::run()
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
 
-    this->fDetectorDataContainer = &theOccContainer;
-    ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
 
+    this->fDetectorDataContainer = &theOccContainer;
     this->fChannelGroupHandler = theChnGroupHandler.get();
-    this->SetTestPulse(true);
+    this->SetTestPulse(PixelAlive::injType);
     this->fMaskChannelsFromOtherGroups = true;
     ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents * nSteps, TARGETEFF, nEvtsBurst * nSteps);
 
@@ -235,8 +236,10 @@ void ThrEqualization::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    float avgTDAC = 0;
-                    int   counter = 0;
+                    float avgTDAC       = 0;
+                    int   counter       = 0;
+                    int   counterMinBin = 0;
+                    int   counterMaxBin = 0;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
@@ -247,6 +250,15 @@ void ThrEqualization::analyze()
 
                                 avgTDAC += theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
                                 counter++;
+
+                                counterMinBin +=
+                                    (theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) == 0 ? 1
+                                                                                                                                                                                                 : 0);
+                                counterMaxBin +=
+                                    (theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) ==
+                                             RD53Shared::setBits(RD53Constants::NBIT_TDAC)
+                                         ? 1
+                                         : 0);
                             }
 
                     avgTDAC /= counter;
@@ -259,6 +271,12 @@ void ThrEqualization::analyze()
                         LOG(WARNING) << BOLDRED << "Average TDAC distribution not centered around " << BOLDYELLOW << TDACcenter << BOLDRED << " (i.e. " << std::setprecision(1) << BOLDYELLOW << avgTDAC
                                      << BOLDRED << " - center > " << BOLDYELLOW << maxTDACdistance << BOLDRED << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << std::setprecision(-1) << RESET;
+                    }
+                    else if(((RD53Shared::setBits(RD53Constants::NBIT_TDAC) * counterMaxBin / (counterMinBin + counterMaxBin)) - TDACcenter) > maxTDACdistance)
+                    {
+                        LOG(WARNING) << BOLDRED << "Min and Max TDAC bins are not balanced (i.e. low TDAC value with " << std::setprecision(1) << BOLDYELLOW << counterMinBin << BOLDRED
+                                     << " entries and high TDAC value with " << BOLDYELLOW << counterMaxBin << BOLDRED << " entries) for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW
+                                     << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << std::setprecision(-1) << RESET;
                     }
 
                     static_cast<RD53*>(cChip)->copyMaskToDefault();
@@ -295,6 +313,19 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
+
+    // ################################
+    // # Custom channel group handler #
+    // ################################
+    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroupNoise;
+    customChannelGroupNoise.disableAllChannels();
+
+    for(auto row = rowStart; row <= rowStop; row++)
+        for(auto col = colStart; col <= colStop; col++) customChannelGroupNoise.enableChannel(row, col);
+
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandlerNoise;
+    theChnGroupHandlerNoise = std::make_shared<RD53ChannelGroupHandler>(customChannelGroupNoise, RD53GroupType::AllPixels, nHITxCol);
+    theChnGroupHandlerNoise->setCustomChannelGroup(customChannelGroupNoise);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -348,6 +379,17 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
         // ##############################################
         PixelAlive::sendData();
 
+        // #################
+        // # Measure noise #
+        // #################
+        this->fDetectorDataContainer = &theOccContainer;
+        this->fChannelGroupHandler = theChnGroupHandlerNoise.get();
+        this->SetTestPulse(PixelAlive::INJtype::None);
+        this->measureData(nEvents, nEvtsBurst);
+        this->fChannelGroupHandler = theChnGroupHandler.get();
+        this->SetTestPulse(PixelAlive::injType);
+        theOccContainer.normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+
         // #####################
         // # Compute next step #
         // #####################
@@ -359,7 +401,9 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
                         // #######################
                         // # Build discriminator #
                         // #######################
-                        float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                        float newValue =
+                            fabs(cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy -
+                                 theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy);
 
                         // ########################
                         // # Save best DAC values #
@@ -383,6 +427,15 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
 
                             minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+
+                        // ###################
+                        // # Reset container #
+                        // ###################
+                        theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<OccupancyAndPh>().fOccupancy = 0;
+                        for(auto row = 0u; row < RD53::nRows; row++)
+                            for(auto col = 0u; col < RD53::nCols; col++)
+                                theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy =
+                                    0;
                     }
     }
 

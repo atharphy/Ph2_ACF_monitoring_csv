@@ -35,7 +35,8 @@ class ThrEqualizationHistograms : public DQMHistogramBase
     DetectorDataContainer DetectorData;
 
     DetectorDataContainer ThrEqualization;
-    DetectorDataContainer TDAC;
+    DetectorDataContainer TDAC1D;
+    DetectorDataContainer TDAC2D;
 
     size_t nEvents;
     size_t VCalHnsteps;
