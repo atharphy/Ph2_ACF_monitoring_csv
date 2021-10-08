@@ -523,6 +523,19 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         cMask.fBitShift = PIXEL_ENABLE_TABLE.find("AnalogueInjection")->second; 
         cMask.fNbits = 1; 
         pMPA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+        // hit counter- enable 
+        cMask.fBitShift = PIXEL_ENABLE_TABLE.find("CounterEnable")->second; 
+        cMask.fNbits = 1; 
+        pMPA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+        // edge BR - enable 
+        cMask.fBitShift = PIXEL_ENABLE_TABLE.find("EnEdgeBR")->second; 
+        cMask.fNbits = 1; 
+        pMPA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+        // un-mask all pixels  - pixel enable 
+        cMask.fBitShift = PIXEL_ENABLE_TABLE.find("PixelMask")->second; 
+        cMask.fNbits = 1; 
+        pMPA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+        // 
         if(pValue == 1)
             LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         else

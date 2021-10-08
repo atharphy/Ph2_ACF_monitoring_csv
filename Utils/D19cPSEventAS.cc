@@ -55,6 +55,55 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async MPA " << RESET;
     auto    cDataIterator = pData.begin();
+    do
+    {
+        //uint32_t cPSModuleId = (pBoard->getId() << 16) | (cOpticalGroup->getId() << 8 ) | cHybrid->getId(); 
+        uint8_t cBoardId   = (*cDataIterator >> 16) & 0xFF ;
+        uint8_t cOpticalId = (*cDataIterator >> 8) & 0xFF ; 
+        uint8_t cHybridId  = (*cDataIterator >> 0) & 0xFF ; 
+        cDataIterator++;
+        auto cCicFeId = ( (*cDataIterator) >> 16 ) & 0xFF ;
+        uint8_t cIsSSA = (cCicFeId & (0x1 << 7)) >> 7 ; 
+        auto cCounterInfo = ( (*cDataIterator) & 0xFFFF );
+        if( cBoardId == pBoard->getId() )
+        {
+            for(auto cOpticalGroup: *pBoard)
+            {
+                if( cOpticalGroup->getId() != cOpticalId ) continue;
+                for(auto cFe: *cOpticalGroup)
+                {
+                    if( cFe->getId() != cOpticalId ) continue;
+                    for(auto cChip: *cFe)
+                    {
+                        auto cMappedId = getChipIdMapped( cFe->getId(), cChip->getId() );
+                        if( cMappedId != ( cCicFeId & 0x7 ) ) continue;
+                        if( cChip->getId() > 7 &&  cIsSSA == 1 ) continue; 
+
+                        LOG (INFO) << BOLDBLUE <<  "BeBoard" << +cBoardId << " OG" << +cOpticalId << " Hybrid" << +cHybridId 
+                            << " CicFE" << +cCicFeId << " HybridFE" << +cChip->getId()
+                            << " : " << cCounterInfo << RESET; 
+
+                    }
+                }
+            }
+        }
+        /*
+        auto  cBoardId= pChip->getBeBoardId();
+        auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+        auto  cBoard  = (*cBoardIter); 
+        //
+        auto  cOGId= pChip->getOpticalId();
+        auto cOpticalGroupIter = std::find_if(fDetectorContainer->at(cBoard->getIndex())->begin(), fDetectorContainer->at(cBoard->getIndex())->end(), [&cOGId](Ph2_HwDescription::OpticalGroup* x) { return x->getId() == cOGId; });
+        auto  cOG  = (*cOpticalGroupIter); 
+        //
+        auto  cHybridId= pChip->getHybridId();
+        auto cHybridIter = std::find_if(fDetectorContainer->at(cBoard->getIndex())->at(cOG->getIndex())->begin(), fDetectorContainer->at(cBoard->getIndex())->at(cOG->getIndex())->end(), [&cHybridId](Ph2_HwDescription::Hybrid* x) { return x->getId() ==  cHybridId; });
+        auto  cHybrid  = (*cHybridIter); 
+        */
+
+        cDataIterator++;
+    }while( cDataIterator < pData.end() );
+    /*
     uint8_t cFeIndex      = 0;
     for(auto cOpticalGroup: *pBoard)
     {
@@ -87,7 +136,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             } // chips
             cFeIndex++;
         } // hybrids
-    }     // opticalGroup
+    }// opticalGroup*/
 }
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)

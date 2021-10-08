@@ -16,6 +16,11 @@
 #include "ReadoutChipInterface.h"
 #include <vector>
 
+// pixelEnable bits
+const std::map<std::string, uint8_t> STRIP_ENABLE_TABLE =
+    {{"StripMask", 0}, {"Polarity", 1}, {"CounterEnable", 2}, {"DigitalInjection", 3}, {"AnalogueInjection", 4}};
+
+
 namespace Ph2_HwInterface
 { // start namespace
 

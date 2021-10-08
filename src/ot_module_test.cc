@@ -970,17 +970,15 @@ int main(int argc, char* argv[])
         for(auto cBoard: *cTool.fDetectorContainer)
         {
             if(cForcePSasync) cBoard->setEventType(EventType::PSAS);
-            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", 0xFF);
-            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", 0xFF);
-            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", 40);
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", 20);
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 0x1);
         }
 
         // TP set + readout 
         for(auto cBoard: *cTool.fDetectorContainer)
         {
             cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
-            //cTool.enableTestPulse(true);
-            cTool.setFWTestPulse();
             cTool.ReadNEvents(cBoard, cNevents);
             //const std::vector<Event*>& cPh2Events   = cTool.GetEvents();
             //LOG (DEBUG) << +cPh2Events.size() << RESET;

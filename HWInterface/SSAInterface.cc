@@ -199,13 +199,36 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "AnalogueAsync")
     {
-        uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
-        bool    cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
-        bool    cEnableFECal    = WriteChipSingleReg(pSSA, "FE_Calibration", 1, pVerifLoop);
-        cRegValue               = ReadChipReg(pSSA, "ReadoutMode");
-        cRegValue               = (cRegValue & 0x4) | (1);
+        auto cRegValue               = ReadChipReg(pSSA, "ReadoutMode");
+        cRegValue = (cRegValue & 0x4) | pValue;
         bool cReadoutMode       = WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
-        return cEnableAnalogue && cEnableFECal && cReadoutMode;
+        // enable calibration pulse 
+        bool    cEnableFECal    = WriteChipSingleReg(pSSA, "FE_Calibration", pValue, pVerifLoop);
+        
+        // configure strip mode 
+        // readout mode 1 -- ASYNC counter
+        ChipRegMask cMask; 
+        cMask.fBitShift = STRIP_ENABLE_TABLE.find("AnalogueInjection")->second; 
+        cMask.fNbits = 1; 
+        pSSA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+        // hit counter- enable 
+        cMask.fBitShift = STRIP_ENABLE_TABLE.find("CounterEnable")->second; 
+        cMask.fNbits = 1; 
+        pSSA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+        // un-mask all strips  - strip enable 
+        cMask.fBitShift = STRIP_ENABLE_TABLE.find("StripMask")->second; 
+        cMask.fNbits = 1; 
+        pSSA->setRegBits( "ENFLAGS_ALL", cMask , pValue );
+
+        if(pValue == 1)
+            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on SSA by setting register ENFLAGS_ALL to 0x" << std::hex << +pSSA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+        else
+            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on SSA by setting register ENFLAGS_ALL to 0x" << std::hex << +pSSA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+        
+        /*uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
+        bool    cEnableAnalogue = WriteChipSingleReg(pSSA, "ENFLAGS_ALL", cRegValue, false);
+        cRegValue               = ReadChipReg(pSSA, "ReadoutMode");*/
+        return cReadoutMode && WriteChipSingleReg(pSSA, "ENFLAGS_ALL", pSSA->getRegItem("ENFLAGS_ALL").fValue, false) && cEnableFECal;
     }
     else if(pRegName == "AnalogueSync")
     {

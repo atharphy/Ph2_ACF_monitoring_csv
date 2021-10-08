@@ -68,7 +68,6 @@ const uint16_t HITS_CBC     = 254;
 
 using RawFeData    = std::vector<uint32_t>;
 using RawBoardData = std::vector<RawFeData>;
-
 // ################
 // # Event status #
 // ################
@@ -90,6 +89,11 @@ class D19cFpgaConfig;
 class D19cSSAEvent;
 class D19clpGBTInterface;
 
+
+#ifndef PSCounterData
+    typedef std::map<uint8_t, std::vector<uint16_t>> PSCounterData;
+    typedef std::map<uint32_t, PSCounterData> PSModuleCounterData;
+#endif
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -141,6 +145,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint8_t> fBeL1Delays;
     std::vector<uint8_t> fBeL1Bitslips;
     std::vector<uint8_t> fStubBuffer;
+    PSModuleCounterData  fPSModulesCounterData; 
   public:
     /*!
      *
@@ -287,7 +292,6 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
     bool PSAsyncCounterData(uint8_t pRawMode=1);
-    void FastAsyncRead(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pRawMode);
     void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pFast = false, bool pRawMode = false);
 
 
@@ -772,7 +776,8 @@ class D19cFWInterface : public BeBoardFWInterface
     void SetForceStart(bool bStart) {}
 
     bool CheckStartPattern();
-    bool GetCounterData(uint8_t pRawMode);
+    bool DecodeRawCounterDataPS(PSCounterData &pFeCounters); 
+    bool GetCounterData(uint8_t pRawMode, size_t pChipId, size_t pHybridId ); 
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////

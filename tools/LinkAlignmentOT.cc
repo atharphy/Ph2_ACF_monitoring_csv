@@ -520,7 +520,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
     {
         if(cCorrectDelay) continue;
 
-        LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
         fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
         cInterface->Bx0Alignment();
 
@@ -529,7 +529,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         // LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
         ReadNEvents((*cBoardIter), cNevents);
         const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
-        LOG(INFO) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
 
         // now ... check for incrementing BxIds
         int              cNRollOvers = 0;
@@ -551,7 +551,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
                     // LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
                 }
                 cBxIds.push_back(cBx);
-                LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
             } // hybrids or CICs
         } // events
@@ -563,13 +563,13 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         // all elements are equal
         if(cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()))
         {
-            LOG(INFO) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
+            LOG(DEBUG) << BOLDGREEN << "Found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
             LOG(INFO) << BOLDGREEN << "Going to fix the manual package delay to " << +cPackageDelay << RESET;
             cFinalDelay   = cPackageDelay;
             cCorrectDelay = true;
         }
         else
-            LOG(INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
+            LOG(DEBUG) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
 
     } // pkg delay
     

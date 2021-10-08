@@ -49,6 +49,19 @@ class D19cPSEventAS : public Event
     std::vector<uint8_t>              fFeIds;
     std::vector<std::vector<uint8_t>> fROCIds;
     CounterData                       fCounterData;
+
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
+    // mapped id
+    // takes chip id on the hybrid
+    // returns chip id in the CIC
+    uint8_t getChipIdMapped(uint8_t pFeId, uint8_t pReadoutChipId) const
+    {
+        pReadoutChipId = pReadoutChipId % 8;
+        // assign front-end mapping
+        std::vector<uint8_t> cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+        return cFeMapping[pReadoutChipId]; // std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
+    }
 };
 
 } // namespace Ph2_HwInterface
