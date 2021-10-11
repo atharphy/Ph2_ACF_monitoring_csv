@@ -183,13 +183,14 @@
 
   <Settings>
     <!-- === Calibration parameters ===
-         INJtype       = 0: no injection;                             INJtype         = 1: analog;                      INJtype = 2: digital
-         ResetMask     = 0: do not enable masked pixels;              ResetMask       = 1: enable all pixels
-         ResetTDAC     = 0: do not reset TDAC;                        ResetTDAC       = 1: reset TDAC to range midpoint
-         DoFast        = 0: run on all pixels in the selected region; DoFast          = 1: run on a subset
-         DoOnlyNGroups = 0: do not consider this option;              DoOnlyNGroups   = n: run only on the specified number of groups
-         DisplayHisto  = 0: don't display;                            DisplayHisto    = 1: display
-         UpdateChipCfg = 0: don't update;                             UpdateChipCfg   = 1: update
+         INJtype               = 0: no injection;                             INJtype               = 1: analog;                                    INJtype = 2: digital
+         ResetMask             = 0: do not enable masked pixels;              ResetMask             = 1: enable all pixels
+         ResetTDAC             = 0: do not reset TDAC;                        ResetTDAC             = 1: reset TDAC to range midpoint
+         DoFast                = 0: run on all pixels in the selected region; DoFast                = 1: run on a subset
+         DoOnlyNGroups         = 0: do not consider this option;              DoOnlyNGroups         = n: run only on the specified number of groups
+         DisplayHisto          = 0: don't display;                            DisplayHisto          = 1: display
+         UpdateChipCfg         = 0: don't update;                             UpdateChipCfg         = 1: update
+         DisableChannelsAtExit = 0: don't disable all channels at exit        DisableChannelsAtExit = 1: disable all channels at exit
 
          TargetCharge  (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
          TargetOcc     (thrmin):           average pixel occupancy
@@ -200,74 +201,75 @@
          byTime        (bertest,datarbopt) = 0: give n. frames; byTime = 1: give time in [s]
          framesORtime  (bertest,datarbopt):time in [s] or number of frames
     -->
-    <Setting name="nEvents">            100 </Setting>
-    <Setting name="nEvtsBurst">         100 </Setting>
+    <Setting name="nEvents">             100 </Setting>
+    <Setting name="nEvtsBurst">          100 </Setting>
     <!-- For Noise and Threshold Minimization
-    <Setting name="nEvents">     10000000 </Setting>
-    <Setting name="nEvtsBurst">     10000 </Setting>
+    <Setting name="nEvents">        10000000 </Setting>
+    <Setting name="nEvtsBurst">        10000 </Setting>
     -->
 
-    <Setting name="VDDDTrimTarget">    1.30 </Setting>
-    <Setting name="VDDATrimTarget">    1.20 </Setting>
-    <Setting name="VDDDTrimTolerance"> 0.02 </Setting>
-    <Setting name="VDDATrimTolerance"> 0.02 </Setting>
+    <Setting name="VDDDTrimTarget">     1.30 </Setting>
+    <Setting name="VDDATrimTarget">     1.20 </Setting>
+    <Setting name="VDDDTrimTolerance">  0.02 </Setting>
+    <Setting name="VDDATrimTolerance">  0.02 </Setting>
 
-    <Setting name="nTRIGxEvent">         10 </Setting>
-    <Setting name="INJtype">              1 </Setting>
-    <Setting name="ResetMask">            0 </Setting>
-    <Setting name="ResetTDAC">            0 </Setting>
+    <Setting name="nTRIGxEvent">          10 </Setting>
+    <Setting name="INJtype">               1 </Setting>
+    <Setting name="ResetMask">             0 </Setting>
+    <Setting name="ResetTDAC">             0 </Setting>
 
-    <Setting name="ROWstart">             0 </Setting>
-    <Setting name="ROWstop">            191 </Setting>
-    <Setting name="COLstart">           128 </Setting>
-    <Setting name="COLstop">            263 </Setting>
+    <Setting name="ROWstart">              0 </Setting>
+    <Setting name="ROWstop">             191 </Setting>
+    <Setting name="COLstart">            128 </Setting>
+    <Setting name="COLstop">             263 </Setting>
 
-    <Setting name="LatencyStart">         0 </Setting>
-    <Setting name="LatencyStop">        511 </Setting>
+    <Setting name="LatencyStart">          0 </Setting>
+    <Setting name="LatencyStop">         511 </Setting>
 
-    <Setting name="VCalHstart">         100 </Setting>
-    <Setting name="VCalHstop">          600 </Setting>
-    <Setting name="VCalHnsteps">         50 </Setting>
-    <Setting name="VCalMED">            100 </Setting>
+    <Setting name="VCalHstart">          100 </Setting>
+    <Setting name="VCalHstop">           600 </Setting>
+    <Setting name="VCalHnsteps">          50 </Setting>
+    <Setting name="VCalMED">             100 </Setting>
 
-    <Setting name="TargetCharge">     20000 </Setting>
-    <Setting name="KrumCurrStart">        0 </Setting>
-    <Setting name="KrumCurrStop">       127 </Setting>
+    <Setting name="TargetCharge">      20000 </Setting>
+    <Setting name="KrumCurrStart">         0 </Setting>
+    <Setting name="KrumCurrStop">        127 </Setting>
 
-    <Setting name="ThrStart">           340 </Setting>
-    <Setting name="ThrStop">            440 </Setting>
-    <Setting name="TargetThr">         2000 </Setting>
-    <Setting name="TargetOcc">         1e-6 </Setting>
-    <Setting name="UnstuckPixels">        0 </Setting>
+    <Setting name="ThrStart">            340 </Setting>
+    <Setting name="ThrStop">             440 </Setting>
+    <Setting name="TargetThr">          2000 </Setting>
+    <Setting name="TargetOcc">          1e-6 </Setting>
+    <Setting name="UnstuckPixels">         0 </Setting>
 
-    <Setting name="TAP0Start">            0 </Setting>
-    <Setting name="TAP0Stop">          1023 </Setting>
-    <Setting name="TAP1Start">            0 </Setting>
-    <Setting name="TAP1Stop">           511 </Setting>
-    <Setting name="InvTAP1">              1 </Setting>
-    <Setting name="TAP2Start">            0 </Setting>
-    <Setting name="TAP2Stop">           511 </Setting>
-    <Setting name="InvTAP2">              0 </Setting>
+    <Setting name="TAP0Start">             0 </Setting>
+    <Setting name="TAP0Stop">           1023 </Setting>
+    <Setting name="TAP1Start">             0 </Setting>
+    <Setting name="TAP1Stop">            511 </Setting>
+    <Setting name="InvTAP1">               1 </Setting>
+    <Setting name="TAP2Start">             0 </Setting>
+    <Setting name="TAP2Stop">            511 </Setting>
+    <Setting name="InvTAP2">               0 </Setting>
 
-    <Setting name="chain2Test">           0 </Setting>
-    <Setting name="byTime">               1 </Setting>
-    <Setting name="framesORtime">        10 </Setting>
+    <Setting name="chain2Test">            0 </Setting>
+    <Setting name="byTime">                1 </Setting>
+    <Setting name="framesORtime">         10 </Setting>
 
-    <Setting name="TargetBER">         1e-5 </Setting>
+    <Setting name="TargetBER">          1e-5 </Setting>
 
-    <Setting name="RegNameDAC1">  VCAL_HIGH </Setting>
-    <Setting name="StartValueDAC1">     250 </Setting>
-    <Setting name="StopValueDAC1">      600 </Setting>
-    <Setting name="StepDAC1">            50 </Setting>
+    <Setting name="RegNameDAC1">   VCAL_HIGH </Setting>
+    <Setting name="StartValueDAC1">      250 </Setting>
+    <Setting name="StopValueDAC1">       600 </Setting>
+    <Setting name="StepDAC1">             50 </Setting>
     <Setting name="RegNameDAC2"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
-    <Setting name="StartValueDAC2">      28 </Setting>
-    <Setting name="StopValueDAC2">       50 </Setting>
-    <Setting name="StepDAC2">             1 </Setting>
+    <Setting name="StartValueDAC2">       28 </Setting>
+    <Setting name="StopValueDAC2">        50 </Setting>
+    <Setting name="StepDAC2">              1 </Setting>
 
-    <Setting name="DoFast">               0 </Setting>
-    <Setting name="DoOnlyNGroups">        0 </Setting>
-    <Setting name="DisplayHisto">         0 </Setting>
-    <Setting name="UpdateChipCfg">        1 </Setting>
+    <Setting name="DoFast">                0 </Setting>
+    <Setting name="DoOnlyNGroups">         0 </Setting>
+    <Setting name="DisplayHisto">          0 </Setting>
+    <Setting name="UpdateChipCfg">         1 </Setting>
+    <Setting name="DisableChannelsAtExit"> 1 </Setting>
 
     <!-- === Expert settings ===
          SaveBinaryData = 0: do not save raw data in binary format; SaveBinaryData = 1: save raw data in binary format
@@ -275,10 +277,10 @@
          InjLatency:    controls the latency of the injection in terms of 100ns period (up to 4095)
          nClkDelays:    controls the delay between two consecutive injections in terms of 100ns period (up to 4095)
     -->
-    <Setting name="SaveBinaryData">       0 </Setting>
-    <Setting name="nHITxCol">             1 </Setting>
-    <Setting name="InjLatency">          32 </Setting>
-    <Setting name="nClkDelays">         280 </Setting>
+    <Setting name="SaveBinaryData">        0 </Setting>
+    <Setting name="nHITxCol">              1 </Setting>
+    <Setting name="InjLatency">           32 </Setting>
+    <Setting name="nClkDelays">          280 </Setting>
   </Settings>
 
   <!-- === Monitoring parameters ===
