@@ -2113,7 +2113,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
         pData.clear();
         if(pRawMode && cEventType == EventType ::PSAS ) 
         {
-            LOG (INFO) << BOLDMAGENTA << "Decoding fast counter readout from uDTC" << RESET;
+            LOG (DEBUG) << BOLDMAGENTA << "Decoding fast counter readout from uDTC" << RESET;
             for(auto cOpticalGroup: *pBoard)
             {   
                 for(auto cHybrid: *cOpticalGroup)
@@ -2423,7 +2423,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         //     if(cWithMPA or cWithSSA) this->ReadPSCounters(pBoard, pData, false);
         //     its += 1;
         // }
-        cNEvents = 1;
+        cNEvents = 1;//this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     }
     else
     {
@@ -3082,7 +3082,7 @@ bool D19cFWInterface::CheckStartPattern()
                         cShft += cFld.second;
                     }
                     if( cStartPatternFound )
-                        LOG (INFO) << BOLDGREEN << "D19cFWInterface::CheckStartPattern CheckForStartPattern from PS counters - Bx " << std::stoi(cHdrVals[2],0,2) << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
+                        LOG (DEBUG) << BOLDGREEN << "D19cFWInterface::CheckStartPattern CheckForStartPattern from PS counters - Bx " << std::stoi(cHdrVals[2],0,2) << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
                     else 
                         LOG (DEBUG) << BOLDRED << "Bx " << std::stoi(cHdrVals[2],0,2) << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
                     cStartFound = cStartPatternFound;
@@ -3194,7 +3194,103 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents * (cMultiplicity + 1)});
 
-    if(cAsync  && cTriggerSource == 3)
+    if( cEventType == EventType::PSAS )
+    {
+        for(auto cOpticalGroup: *pBoard)
+        {   
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                uint32_t cPSModuleId = (pBoard->getId() << 16) | (cOpticalGroup->getId() << 8 ) | cHybrid->getId(); 
+                auto cPSModuleIter = fPSModulesCounterData.find(cPSModuleId); 
+                if( cPSModuleIter != fPSModulesCounterData.end() ) 
+                {
+                    PSCounterData cDummy; cDummy.clear(); 
+                    fPSModulesCounterData[cPSModuleId]=cDummy;
+                }
+                else cPSModuleIter->second.clear();
+
+                LOG (DEBUG) << BOLDBLUE << "Capturing RAW PS counter data in uDTC for hybrid#" << +cHybrid->getId() << RESET;
+                // clear stub buffer 
+                fStubBuffer.clear();
+                // count number of chips expected 
+                this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+                this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0 );
+                
+                // make sure uDTC vetos fast commands to CIC in this mode 
+                auto cVetoCIC = this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
+                this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
+                
+                uint8_t cTriggerForPS=12;
+                LOG (DEBUG) << BOLDMAGENTA << "CIC fast command VETO set to " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto") << RESET;
+                LOG (DEBUG) << BOLDMAGENTA << "Injecting " << +cNevents << " times." << RESET;
+                LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity was set to " << +cMultiplicity << RESET;
+                cVecReg.clear();
+                
+                ResetTriggerFSM();
+                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 0});
+                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents});
+                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
+                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_timeout_enable", 0});
+                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerForPS});
+                this->ReconfigureTriggerFSM(cVecReg);
+                cVecReg.clear();
+                
+                this->Stop();
+                ResetReadout();
+                // configure DDR3 readout for counters 
+                this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x1);
+                this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
+                // configure raw mode 
+                this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
+                
+                bool cCounterReadoutSuccess=true;
+                size_t cAttempt=0;
+                uint32_t cStartReceived;
+                do
+                {
+                    auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+                    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                    LOG(DEBUG) << BOLDBLUE << "Attempt#" << +cAttempt << " Async SSA [trigger source == " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source")  
+                        << " ] [ number of injections is " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") << " ]" 
+                        << "Trigger state before start is " << +cTriggerState << RESET;
+                    
+                    this->Start();
+                    uint32_t cIteration = 0; 
+                    do {
+                        auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                        cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+                        LOG (DEBUG) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
+                            << +cIteration
+                            << " ... received "
+                            << +cNtriggers 
+                            << " triggers."
+                            << RESET;
+                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                        cIteration++;
+                    } while(cTriggerState && cIteration < 1000);
+                    uint32_t cNInjections  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                    LOG (DEBUG) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << " - fast command core counted " << cNInjections << " injections." << RESET;
+                    
+                    cStartReceived =  this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.received_start");
+                    cCounterReadoutSuccess = (GetCounterData(1, cHybrid->getId(), 0 ));
+                    if( !cCounterReadoutSuccess ) LOG (DEBUG) << BOLDRED << "Counter readout failed.. will try again..." << RESET;
+                    cAttempt++;
+                }while( !cCounterReadoutSuccess );
+                LOG (DEBUG) << BOLDMAGENTA << "PS data capture block received start signal after " << +cStartReceived << " 40 MHz clock cycles." 
+                        << " [ readout attempt#" << +(cAttempt-1) << " ]" << RESET;
+                    
+                // reconfigure original veto
+                this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cVetoCIC);
+                // disable DDR3 dump of counters
+                this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
+                this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
+
+                // decode raw counter data
+                DecodeRawCounterDataPS(cPSModuleIter->second);
+            }
+        }
+    }
+    else if(cAsync  && cTriggerSource == 3)
     {
         this->ReconfigureTriggerFSM(cVecReg);
         cVecReg.clear();
@@ -3386,111 +3482,35 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     }
     else
     {
-        for(auto cOpticalGroup: *pBoard)
-        {   
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                uint32_t cPSModuleId = (pBoard->getId() << 16) | (cOpticalGroup->getId() << 8 ) | cHybrid->getId(); 
-                auto cPSModuleIter = fPSModulesCounterData.find(cPSModuleId); 
-                if( cPSModuleIter != fPSModulesCounterData.end() ) 
-                {
-                    PSCounterData cDummy; cDummy.clear(); 
-                    fPSModulesCounterData[cPSModuleId]=cDummy;
-                }
-                else cPSModuleIter->second.clear();
-
-                LOG (INFO) << BOLDBLUE << "Capturing RAW PS counter data in uDTC for hybrid#" << +cHybrid->getId() << RESET;
-                // clear stub buffer 
-                fStubBuffer.clear();
-                // count number of chips expected 
-                this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-                this->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0 );
-                
-                // make sure uDTC vetos fast commands to CIC in this mode 
-                auto cVetoCIC = this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
-                this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
-                
-                uint8_t cTriggerForPS=12;
-                LOG (INFO) << BOLDMAGENTA << "CIC fast command VETO set to " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto") << RESET;
-                LOG (INFO) << BOLDMAGENTA << "Injecting " << +cNevents << " times." << RESET;
-                LOG (INFO) << BOLDMAGENTA << "Trigger multiplicity was set to " << +cMultiplicity << RESET;
-                cVecReg.clear();
-                
-                ResetTriggerFSM();
-                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1});
-                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents});
-                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_timeout_enable", 0});
-                cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerForPS});
-                this->ReconfigureTriggerFSM(cVecReg);
-                cVecReg.clear();
-                
-                this->Stop();
-                ResetReadout();
-                // configure DDR3 readout for counters 
-                this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x1);
-                this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
-                // configure raw mode 
-                this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
-                
-                bool cCounterReadoutSuccess=true;
-                size_t cAttempt=0;
-                do
-                {
-                    auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-                    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                    LOG(INFO) << BOLDBLUE << "Attempt#" << +cAttempt << " Async SSA [trigger source == " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source")  
-                        << " ] [ number of injections is " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") << " ]" 
-                        << "Trigger state before start is " << +cTriggerState << RESET;
-                    
-                    this->Start();
-                    uint32_t cIteration = 0; 
-                    do {
-                        auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                        cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-                        LOG (INFO) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
-                            << +cIteration
-                            << " ... received "
-                            << +cNtriggers 
-                            << " triggers."
-                            << RESET;
-                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                        cIteration++;
-                    } while(cTriggerState && cIteration < 1000);
-                    uint32_t cNInjections  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                    LOG (INFO) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << " - fast command core counted " << cNInjections << " injections." << RESET;
-                    
-                    // this->ChipReSync();
-                    // this->PS_Clear_counters(fFastCommandDuration);
-                    // this->PS_Open_shutter(fFastCommandDuration);
-                    // for( size_t cAttempt=0; cAttempt<cNevents; cAttempt++)
-                    // {
-                    //     this->ChipTestPulse();
-                    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                    // }
-                    // this->PS_Close_shutter(fFastCommandDuration);
-                    // this->PS_Start_counters_read(fFastCommandDuration); // start signal for readout block 
-                    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    
-                    auto cStartReceived =  this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.received_start");
-                    LOG (DEBUG) << BOLDMAGENTA << "PS data capture block eceived start signal after " << +cStartReceived << " 40 MHz clock cycles." 
-                        << RESET;
-                    cCounterReadoutSuccess = (GetCounterData(1, cHybrid->getId(), 0 ));
-                    if( !cCounterReadoutSuccess ) LOG (INFO) << BOLDRED << "Counter readout failed.. will try again..." << RESET;
-                    cAttempt++;
-                }while( !cCounterReadoutSuccess );
-
-                // reconfigure original veto
-                this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cVetoCIC);
-                // disable DDR3 dump of counters
-                this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
-                this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
-
-                // decode raw counter data
-                DecodeRawCounterDataPS(cPSModuleIter->second);
-            }
-        }
-        //cFailed = cCounterReadoutFailed;
+        this->Start();
+        auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+        uint32_t cIteration = 0; 
+        do {
+            auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+            cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+            LOG (INFO) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
+                << +cIteration
+                << " ... received "
+                << +cNtriggers 
+                << " triggers."
+                << RESET;
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            cIteration++;
+        } while(cTriggerState && cIteration < 1000);
+        uint32_t cNInjections  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        LOG (INFO) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << " - fast command core counted " << cNInjections << " injections." << RESET;
+        
+        // this->ChipReSync();
+        // this->PS_Clear_counters(fFastCommandDuration);
+        // this->PS_Open_shutter(fFastCommandDuration);
+        // for( size_t cAttempt=0; cAttempt<cNevents; cAttempt++)
+        // {
+        //     this->ChipTestPulse();
+        //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        // }
+        // this->PS_Close_shutter(fFastCommandDuration);
+        // this->PS_Start_counters_read(fFastCommandDuration); // start signal for readout block 
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return cFailed;
 }

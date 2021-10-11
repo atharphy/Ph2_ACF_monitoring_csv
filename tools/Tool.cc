@@ -1092,8 +1092,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     }
                     else
                     {
-                        // LOG (INFO) << BOLDBLUE <<
-                        // "globalocc"<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<RESET;
+                        LOG (INFO) << BOLDBLUE <<
+                        "globalocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<RESET;
 
                         if(currentStepOccupancyContainer->at(boardIndex)
                                ->at(cOpticalGroup->getIndex())
@@ -1288,7 +1288,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
-    if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS)
+    if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS  || fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS )
     {
         numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     }
@@ -1297,6 +1297,17 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
         numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
     }
     fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+    // for(auto opticalGroup: *fDetectorDataContainer)
+    // {
+    //     for(auto hybrid: *opticalGroup)
+    //     {
+    //         for(auto chip: *hybrid)
+    //         {
+    //             LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << chip->getSummary<Occupancy>().fOccupancy 
+    //                         << RESET;
+    //         }
+    //     }
+    // }
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
