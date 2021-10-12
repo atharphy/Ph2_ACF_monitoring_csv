@@ -66,6 +66,9 @@ class MPAInterface : public ReadoutChipInterface
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode) override;
 
+    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
+    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
+
     void                  Pix_write(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
     uint32_t              Pix_read(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
     void                  activate_I2C_chip();
@@ -78,7 +81,7 @@ class MPAInterface : public ReadoutChipInterface
     void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_pp(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_ss(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_ps(Ph2_HwDescription::Chip* pMPA);
+    void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win = 8);
 
     void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
     void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);

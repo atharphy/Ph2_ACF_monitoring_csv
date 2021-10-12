@@ -34,7 +34,7 @@ void PSHybridTester::CheckCounters()
 void PSHybridTester::ReadAntennaVoltage() { this->ReadHybridVoltage("AntennaPullUp"); }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else
@@ -77,7 +77,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 
 void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& cReadLines, std::string pSSAPairSel, BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else
@@ -127,7 +127,7 @@ void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& 
 
 void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else
@@ -236,7 +236,7 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     fCicInterface->SelectMux(cCic, 6 + cTries);
                 } // hybrid
             }     // module
@@ -318,7 +318,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SelectMux(cCic, cPhyPort);
             } // hybrid
         }     // module
@@ -466,7 +466,7 @@ void PSHybridTester::SweepPhaseAlignment(uint8_t pPhase)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic != NULL)
                 {
                     for(int cPhyPort = 0; cPhyPort < 10; cPhyPort++)
@@ -697,7 +697,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
        */
             } // chip
         }     // hybrid
-    }         // module
+    }         // opticalGroup
     // now capture output on pogo sockets
     // this->SSAOutputsPogoDebug(pBoard, true);
     this->SSAOutputsPogoScope(pBoard, true);
@@ -760,7 +760,7 @@ void PSHybridTester::CheckI2C(BeBoard* pBoard)
 }
 void PSHybridTester::CheckCounters(BeBoard* pBoard)
 {
-    int fEventsPerPoint = this->findValueInSettings("Nevents");
+    int fEventsPerPoint = this->findValueInSettings<double>("Nevents");
 
     auto cSetting            = fSettingsMap.find("ShortsPulseAmplitude");
     auto fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
@@ -773,9 +773,9 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // make sure async mode is enabled
-    setSameDacBeBoard(pBoard, "AnalogueAsync", 1);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "AnalogueAsync", 1);
     // first .. set injection amplitude to 0 and find pedestal
-    setSameDacBeBoard(pBoard, "InjectedCharge", 0);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "InjectedCharge", 0);
 
     // find pedestal
     float cOccTarget = 0.5;
@@ -802,7 +802,7 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
     // now configure injection amplitude to
     // whatever will be used for short finding
     // this is in the xml
-    setSameDacBeBoard(pBoard, "InjectedCharge", fTestPulseAmplitude);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "InjectedCharge", boost::any_cast<int>(fTestPulseAmplitude) );
 
     // configure injection
     for(auto cOpticalReadout: *pBoard)
@@ -838,7 +838,8 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
     while(event_loop < 1500)
     {
         this->ReadNEvents(pBoard, fEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
+        // const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
         // iterate over FE objects and check occupancy
         for(auto cEvent: cEvents)
         {
@@ -897,8 +898,8 @@ void PSHybridTester::RunHybridETest()
     TC_PSFE cTC_PSFE;
     float   result;
 
-    double cAcceptancePercentage = this->findValueInSettings("EMeasurementAcceptance") / 100;
-    LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " << +this->findValueInSettings("EMeasurementAcceptance") << " %" << RESET;
+    double cAcceptancePercentage = this->findValueInSettings<double>("EMeasurementAcceptance") / 100;
+    LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " << +this->findValueInSettings<double>("EMeasurementAcceptance") << " %" << RESET;
 
     for(auto cMapIterator: fHybridVoltageMap)
     {
@@ -1183,7 +1184,7 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
         } // hybrid
     }     // board
 #else
-    LOG(ERROR) << BOLDRED << "Can't read SSA bias value, the TC USB library is not built. Check the installation."
+    LOG(ERROR) << BOLDRED << "Can't read SSA bias value, the TC USB library is not built. Check the installation." << RESET;
 #endif
 }
 void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
@@ -1261,7 +1262,8 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
                         // {
                         // fReadoutChipInterface->WriteChipReg(cReadoutChip, "Threshold", i);
                         this->ReadNEvents(pBoard, 1000);
-                        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+                        const std::vector<Event*>& cEvents = this->GetEvents();
+                        // const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
                         for(auto cEvent: cEvents)
                         {
                             auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cReadoutChip->getId());
@@ -1451,8 +1453,8 @@ void PSHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string>
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        char cBuffer[20];
+        sprintf(cBuffer, "debug_blk_counter%02d", (cIndex & 0x63)); // max value can be 99, to avoid GCC 8 warning
         std::string cRegName = cBuffer;
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
@@ -1509,8 +1511,8 @@ void PSHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        char cBuffer[20];
+        sprintf(cBuffer, "debug_blk_counter%02d", (cIndex & 0x63)); // max value can be 99, to avoid GCC 8 warning
         std::string cRegName = cBuffer;
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
@@ -1555,7 +1557,7 @@ void PSHybridTester::CheckFastCommands(const std::string& pFastCommand, uint8_t 
     for(auto cBoard: *fDetectorContainer) { this->CheckFastCommands(cBoard, pFastCommand, pDuartion); }
 }
 // State machine control functions
-void PSHybridTester::Start(int currentRun)
+void PSHybridTester::Running()
 {
     LOG(INFO) << BOLDBLUE << "Starting PS Hybrid tester" << RESET;
     Initialise();

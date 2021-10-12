@@ -1,8 +1,8 @@
-# YAML script for CI of Ph2_ACF Software/Middleware
-# Author: Emery Nibigira (IPHC-Strasbourg)
-#         emery.nibigira@cern.ch
+## YAML script for CI of Ph2_ACF Software/Middleware
+## Author: Emery Nibigira (IPHC-Strasbourg)
+##         emery.nibigira@cern.ch
 
-# The pipeline starts when a merge request is created
+## The pipeline starts when a merge request is created
 
 workflow:
   rules:
@@ -10,6 +10,9 @@ workflow:
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  
 stages:
   - compile
   - run
@@ -18,18 +21,60 @@ stages:
 build:
   stage: compile
   before_script:
-    - cat setup.sh | sed -e "s/source/#source/" > ci_setup.sh
-    - source ./ci_setup.sh
+    - source ./setup.sh
   script:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
   artifacts:
     paths:
-      - ci_setup.sh
-      - bin/calibrate
+      - bin/feh_2s_test
+      - bin/commission
+      - bin/CMSITminiDAQ
     expire_in: 1 week
 
+## IT hybrid
+run_on_IT:
+  stage: run
+  dependencies:
+    - build
+  before_script:
+    - printf $USER_PASS | base64 -d | kinit $USER_NAME
+    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+  script:
+    - source ./setup.sh
+    - cd ci_tools
+    - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
+    - CMSITminiDAQ -f CMSIT.xml -r
+    - CMSITminiDAQ -f CMSIT.xml -c pixelalive
+    - CMSITminiDAQ -f CMSIT.xml -c threqu
+    - CMSITminiDAQ -f CMSIT.xml -c scurve
+  after_script:
+    - cp ci_tools/Results/Run000000_PixelAlive.root .
+    - cp ci_tools/Results/Run000001_ThrEqualization.root .
+    - cp ci_tools/Results/Run000002_SCurve.root .
+  artifacts:
+    paths:
+      - Run000000_PixelAlive.root
+      - Run000001_ThrEqualization.root
+      - Run000002_SCurve.root
+      - ci_tools/plot_canvas.py
+      - ci_tools/CMSIT*
+    expire_in: 1 week
+
+check_run_on_IT:
+  stage: check
+  needs: [run_on_IT]
+  script:
+    - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
+  artifacts:
+    paths:
+      - plots
+    expire_in: 1 week
+
+## 2S hybrid
 run_on_2S:
   stage: run
   dependencies:
@@ -37,26 +82,26 @@ run_on_2S:
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
-    - python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+   #- python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
   script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
-    - source ./ci_setup.sh
-    - calibrate -b -f ci_tools/CMS2S.xml -n -o Results_2S/
+    - source ./setup.sh
+    - cd ci_tools
+    - feh_2s_test -f CMS2S.xml -t -m -a --findShorts -b
   after_script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 0
+    - cp ci_tools/Results/*/Hybrid.root .
   artifacts:
     paths:
-      - Results_2S
-      - ci_tools
+      - Hybrid.root
+      - ci_tools/plot_hist.py
     expire_in: 1 week
 
 check_run_on_2S:
   stage: check
-  dependencies:
-    - run_on_2S
+  needs: [run_on_2S]
   script:
-    - cp Results_2S/*/*.root .
-    - python ci_tools/plot_hist.py PedestalEqualizationResults.root "Detector/Board_0/OpticalGroup_0/Module_0/D_B(0)_O(0)_ModuleNoiseDistribution_Module(0)" -o plots
+    - python ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
   artifacts:
     paths:
       - plots

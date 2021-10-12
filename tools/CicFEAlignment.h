@@ -42,7 +42,7 @@ class CicFEAlignment : public Tool
     bool                              WordAlignmentMPA(uint16_t pWait_ms);
     std::vector<std::vector<uint8_t>> SortOptimalTaps(std::vector<std::vector<uint8_t>> pOptimalTaps);
     std::vector<std::vector<uint8_t>> SortWordAlignmentValues(std::vector<std::vector<uint8_t>> pWordAlignmentValue);
-    void                              Start(int currentRun) override;
+    void                              Running() override;
     void                              Stop() override;
     void                              Pause() override;
     void                              Resume() override;
@@ -52,8 +52,8 @@ class CicFEAlignment : public Tool
     // injection
     void WordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, std::vector<uint8_t> pAlignmentPatterns);
     // get alignment results
-    uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine);
-    uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Module* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine);
+    uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine);
+    uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine);
     bool    getStatus() const { return fSuccess; }
 
   protected:

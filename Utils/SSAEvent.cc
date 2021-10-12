@@ -10,7 +10,7 @@
  */
 
 #include "../Utils/SSAEvent.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 
 using namespace Ph2_HwDescription;
 
@@ -41,7 +41,7 @@ SSAEvent::SSAEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uin
 //     for ( uint8_t cFeId = 0; cFeId < cNFe; cFeId++ )
 //     {
 //         uint32_t cNSSA;
-//         cNSSA = static_cast<uint32_t> ( static_cast<OuterTrackerModule*>(pBoard->getModule ( cFeId ))->getNSSA() );
+//         cNSSA = static_cast<uint32_t> ( static_cast<OuterTrackerHybrid*>(pBoard->getHybrid ( cFeId ))->getNSSA() );
 
 //         for ( uint8_t cSSAId = 0; cSSAId < cNSSA; cSSAId++ )
 //         {

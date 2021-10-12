@@ -85,14 +85,15 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorStripPedestalHistograms;
     DetectorDataContainer fDetectorStripNoiseEvenHistograms;
     DetectorDataContainer fDetectorStripNoiseOddHistograms;
-    DetectorDataContainer fDetectorModuleNoiseHistograms;
-    DetectorDataContainer fDetectorModuleStripNoiseHistograms;
-    DetectorDataContainer fDetectorModuleStripNoiseEvenHistograms;
-    DetectorDataContainer fDetectorModuleStripNoiseOddHistograms;
+    DetectorDataContainer fDetectorHybridNoiseHistograms;
+    DetectorDataContainer fDetectorHybridStripNoiseHistograms;
+    DetectorDataContainer fDetectorHybridStripNoiseEvenHistograms;
+    DetectorDataContainer fDetectorHybridStripNoiseOddHistograms;
     DetectorDataContainer fDetectorData;
 
     bool cWithCBC = true;
     bool cWithSSA = false;
+    bool cWithMPA = false;
 
     bool fPlotSCurves{false};
     bool fFitSCurves{false};

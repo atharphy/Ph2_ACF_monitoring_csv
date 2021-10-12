@@ -11,7 +11,7 @@ using TestType = decltype(ContainerFactory::copyAndInitStructure(std::declval<co
                                                                                                                                                                             Ts&...);
 
 template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
-void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, SC& chipSummary, SM& moduleSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
+void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, SC& chipSummary, SM& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
 {
     theDataContainer->resetSummary<SD, SB>(detectorSummary);
     for(auto board: *theDataContainer)
@@ -20,10 +20,10 @@ void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, 
         for(auto opticalGroup: *board)
         {
             opticalGroup->resetSummary<SO, SM>(opticalGroupSummary);
-            for(auto module: *opticalGroup)
+            for(auto hybrid: *opticalGroup)
             {
-                module->resetSummary<SM, SC>(moduleSummary);
-                for(auto chip: *module)
+                hybrid->resetSummary<SM, SC>(hybridSummary);
+                for(auto chip: *hybrid)
                 {
                     chip->resetSummary<SC, T>(chipSummary);
                     chip->resetChannels<T>(channel);
@@ -57,7 +57,9 @@ class ContainerRecycleBin
     ContainerRecycleBin& operator=(const ContainerRecycleBin&) = delete;
     ContainerRecycleBin& operator=(ContainerRecycleBin&&) = delete;
 
-    ~ContainerRecycleBin()
+    ~ContainerRecycleBin() { clean(); }
+
+    void clean()
     {
         for(auto container: fRecycleBin)
         {

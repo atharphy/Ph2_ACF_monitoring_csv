@@ -16,7 +16,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-ChipInterface::ChipInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), prevBoardIdentifier(65535), fRegisterCount(0), fTransactionCount(0)
+ChipInterface::ChipInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535), fRegisterCount(0), fTransactionCount(0)
 {
 #ifdef COUNT_FLAG
     LOG(DEBUG) << "Counting number of Transactions!";
@@ -34,16 +34,16 @@ void ChipInterface::output()
 
 void ChipInterface::setBoard(uint16_t pBoardIdentifier)
 {
-    if(prevBoardIdentifier != pBoardIdentifier)
+    if(fPrevBoardIdentifier != pBoardIdentifier)
     {
         BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
 
         if(i == fBoardMap.end())
-            LOG(INFO) << "The Board: " << +(pBoardIdentifier >> 8) << "  doesn't exist";
+            LOG(INFO) << "The Board: " << +pBoardIdentifier << "  doesn't exist";
         else
         {
-            fBoardFW            = i->second;
-            prevBoardIdentifier = pBoardIdentifier;
+            fBoardFW             = i->second;
+            fPrevBoardIdentifier = pBoardIdentifier;
         }
     }
 }

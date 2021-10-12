@@ -19,17 +19,17 @@ SSASCurve::~SSASCurve() {}
 
 void SSASCurve::Initialise(void)
 {
-    StartTHDAC = this->findValueInSettings("StartTHDAC");
-    StopTHDAC  = this->findValueInSettings("StopTHDAC");
-    NMsec      = this->findValueInSettings("NMsec");
-    NMpulse    = this->findValueInSettings("NMpulse");
-    Res        = this->findValueInSettings("Res");
-    Nlvl       = this->findValueInSettings("Nlvl");
-    Mrms       = this->findValueInSettings("Mrms");
-    Vfac       = this->findValueInSettings("Vfac");
-    SyncDebug  = this->findValueInSettings("SyncDebug");
+    StartTHDAC = this->findValueInSettings<double>("StartTHDAC");
+    StopTHDAC  = this->findValueInSettings<double>("StopTHDAC");
+    NMsec      = this->findValueInSettings<double>("NMsec");
+    NMpulse    = this->findValueInSettings<double>("NMpulse");
+    Res        = this->findValueInSettings<double>("Res");
+    Nlvl       = this->findValueInSettings<double>("Nlvl");
+    Mrms       = this->findValueInSettings<double>("Mrms");
+    Vfac       = this->findValueInSettings<double>("Vfac");
+    SyncDebug  = this->findValueInSettings<double>("SyncDebug");
 
-    TestPulsePotentiometer = this->findValueInSettings("TestPulsePotentiometer");
+    TestPulsePotentiometer = this->findValueInSettings<double>("TestPulsePotentiometer");
 #ifdef __USE_ROOT__
     fDQMHistogramSSASCurveAsync.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -92,6 +92,7 @@ void SSASCurve::run(void)
         // 	,cEnableFastReset,cEnableTP,1cEnableL1A);
         std::vector<std::pair<std::string, uint32_t>> cVecReg;
         // configure trigger
+        cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", NMpulse});
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", cDelayAfterFastReset});
         cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cDelayAfterTP});
@@ -142,7 +143,7 @@ void SSASCurve::run(void)
             {
                 Nstrip = 0.0;
 
-                LOG(INFO) << BOLDRED << "THDAC " << thd << RESET;
+                LOG(INFO) << BOLDBLUE << "THDAC " << thd << RESET;
 
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -166,7 +167,7 @@ void SSASCurve::run(void)
                             channelNumber++;
                         } // ROC
                     }     // hybrid
-                }         // module
+                }         // opticalGroup
 
                 // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
                 // if (SyncDebug)
@@ -176,7 +177,7 @@ void SSASCurve::run(void)
                 // now ReadNEvents takes care of all of this
                 // for both MPA and SSA
                 this->ReadNEvents(theBeBoard, NMpulse);
-                const std::vector<Event*>& cEvents = this->GetEvents(theBeBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
 
                 for(auto opticalGroup: *cBoard)
                 {
@@ -221,7 +222,7 @@ void SSASCurve::run(void)
                             }     // events
                         }         // ROC
                     }             // hybrid
-                }                 // module
+                }                 // opticalGroup
 #ifdef __USE_ROOT__
                 fDQMHistogramSSASCurveAsync.fillSSASCurveAsyncPlots(theHitContainer, thd);
 #endif
@@ -243,7 +244,7 @@ void SSASCurve::run(void)
                         } // chn;
                     }     // ROC
                 }         // hybrid
-            }             // module
+            }             // opticalGroup
 
             mean /= Nmeans;
 

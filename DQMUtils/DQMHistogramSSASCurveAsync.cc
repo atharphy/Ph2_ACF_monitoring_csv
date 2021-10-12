@@ -81,7 +81,7 @@ void DQMHistogramSSASCurveAsync::fillSSASCurveAsyncPlots(DetectorDataContainer& 
                     } // for on channel - end
                 }
             } // for on chip - end
-        }     // for on module - end
+        }     // for on hybrid - end
     }         // for on boards - end
 }
 
@@ -96,19 +96,19 @@ void DQMHistogramSSASCurveAsync::process()
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
             size_t opticalGroupIndex = opticalGroup->getIndex();
-            for(auto module: *opticalGroup) // for on hybrid - begin
+            for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t moduleIndex = module->getIndex();
+                size_t hybridIndex = hybrid->getIndex();
 
                 // Create a canvas do draw the plots
-                TCanvas* cValidation = new TCanvas(("Hits_module_" + std::to_string(module->getId())).data(), ("Hits module " + std::to_string(module->getId())).data(), 0, 0, 650, 650);
-                cValidation->Divide(module->size());
-                for(auto chip: *module) // for on chip - begin
+                TCanvas* cValidation = new TCanvas(("Hits_hybrid_" + std::to_string(hybrid->getId())).data(), ("Hits hybrid " + std::to_string(hybrid->getId())).data(), 0, 0, 650, 650);
+                cValidation->Divide(hybrid->size());
+                for(auto chip: *hybrid) // for on chip - begin
                 {
                     size_t chipIndex = chip->getIndex();
                     cValidation->cd(chipIndex + 1);
                     // Retreive the corresponging chip histogram:
-                    TH2F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(moduleIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)
                     chipHitHistogram->SetStats(false);
@@ -116,7 +116,7 @@ void DQMHistogramSSASCurveAsync::process()
                     chipHitHistogram->DrawCopy();
                 }
             } // for on chip - end
-        }     // for on module - end
+        }     // for on hybrid - end
     }         // for on boards - end
 }
 

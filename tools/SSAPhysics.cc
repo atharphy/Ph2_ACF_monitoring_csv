@@ -18,9 +18,8 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData", true);
     doLocal     = false;
-    keepRunning = true;
 
     // ###########################################
     // # Initialize directory and data container #
@@ -32,26 +31,25 @@ void SSAPhysics::ConfigureCalibration()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 }
 
-void SSAPhysics::Start(int currentRun)
+void SSAPhysics::Running()
 {
     LOG(INFO) << GREEN << "[SSAPhysics::Start] Starting" << RESET;
 
     if(saveRawData == true)
     {
-        char runString[6];
-        sprintf(runString, "%06d", currentRun);
+        char runString[7];
+        sprintf(runString, "%06d", (fRunNumber & 0xF423F)); // max value can be 999999, to avoid GCC 8 warning
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getBeBoardId()])->ChipReSync();
-    SystemController::Start(currentRun);
+    for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
+    SystemController::Start(fRunNumber);
 
-    keepRunning = true;
-    thrRun      = std::thread(&SSAPhysics::run, this);
+    SSAPhysics::run();
 }
 
-void SSAPhysics::sendData(BoardContainer* const& cBoard)
+void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
@@ -62,9 +60,7 @@ void SSAPhysics::Stop()
 {
     LOG(INFO) << GREEN << "[SSAPhysics::Stop] Stopping" << RESET;
 
-    SystemController::Stop();
-    keepRunning = false;
-    if(thrRun.joinable() == true) thrRun.join();
+    Tool::Stop();
 
     // ################
     // # Error report #
@@ -98,7 +94,7 @@ void SSAPhysics::run()
 {
     unsigned int totalDataSize = 0;
 
-    while(keepRunning == true)
+    while(fKeepRunning)
     {
         for(const auto cBoard: *fDetectorContainer)
         {
@@ -106,12 +102,12 @@ void SSAPhysics::run()
             if(dataSize != 0)
             {
                 SSAPhysics::fillDataContainer(cBoard);
-                SSAPhysics::sendData(cBoard);
+                SSAPhysics::sendBoardData(cBoard);
             }
             totalDataSize += dataSize;
         }
 
-        std::this_thread::sleep_for(std::chrono::microseconds(READOUTSLEEP));
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
     }
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;
@@ -158,8 +154,8 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Clear container #
     // ###################
     for(const auto cOpticalGroup: *fOccContainer.at(cBoard->getIndex()))
-        for(const auto cModule: *cOpticalGroup)
-            for(const auto cChip: *cModule)
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
                 for(auto& channel: *cChip->getChannelContainer<Occupancy>())
                 {
                     channel.fOccupancy      = 0;
@@ -169,7 +165,7 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents(static_cast<BeBoard*>(cBoard));
+    const std::vector<Event*>& events = SystemController::GetEvents();
     for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); }
 }
 

@@ -14,10 +14,11 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/ChipRegItem.h"
 #include "../HWDescription/Definition.h"
+#include "../HWDescription/Hybrid.h"
 #include "../HWDescription/MPA.h"
-#include "../HWDescription/Module.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/SSA.h"
+#include "../NetworkUtils/TCPClient.h"
 #include "../Utils/Exception.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
@@ -60,15 +61,23 @@ class BeBoardFWInterface : public RegManager
      * \param puHalConfigFileName : path of the uHal Config File*/
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+
+    void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
+#ifdef __TCP_SERVER__
+    void       setTestcardClient(TCPClient* theTestcardClient) { fTestcardClient = theTestcardClient; };
+    TCPClient* getTestcardClient() { return fTestcardClient; };
+#endif
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
     // void setFileHandler (FileHandler* pHandler);
     virtual void setFileHandler(FileHandler* pHandler) = 0;
+
     /*!
      * \brief Destructor of the BeBoardFWInterface class
      */
     virtual ~BeBoardFWInterface() {}
+
     /*!
      * \brief enable the file handler temporarily
      */
@@ -82,6 +91,7 @@ class BeBoardFWInterface : public RegManager
      * \brief Get the board type
      */
     virtual std::string readBoardType();
+
     /*!
      * \brief Get the board infos
      */
@@ -89,27 +99,28 @@ class BeBoardFWInterface : public RegManager
 
     /*! \brief Upload a configuration in a board FPGA */
     virtual void FlashProm(const std::string& strConfig, const char* pstrFile) {}
+
     /*! \brief Jump to an FPGA configuration */
     virtual void JumpToFpgaConfig(const std::string& strConfig) {}
 
     virtual void DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest) {}
+
     /*! \brief Current FPGA configuration*/
     virtual const FpgaConfig* GetConfiguringFpga() { return nullptr; }
     virtual void              ProgramCdce() {}
+
     // this is temporary until the modified command processor block is in place
-    virtual void selectLink(uint8_t pLinkId, uint32_t pWait_ms = 100) {}
+    virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
     /*! \brief Get the list of available FPGA configuration (or firmware images)*/
     virtual std::vector<std::string> getFpgaConfigList() { return std::vector<std::string>(); }
+
     /*! \brief Delete one Fpga configuration (or firmware image)*/
     virtual void DeleteFpgaConfig(const std::string& strId) {}
 
-    // virtual uint16_t ParseEvents(const std::vector<uint32_t>& pData)
-    // {
-    //   LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent"
-    //   << RESET; return 0;
-    // }
-    // Encode/Decode Chip values
+    /*! \brief Run Bit Error Rate test */
+    virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
+
     /*!
      * \brief Encode a/several word(s) readable for a Chip
      * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
@@ -120,6 +131,7 @@ class BeBoardFWInterface : public RegManager
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
+
     /*!< Encode a/several word(s) readable for a Chip*/
     /*!
      * \brief Encode a/several word(s) readable for a Chip
@@ -131,6 +143,7 @@ class BeBoardFWInterface : public RegManager
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
+
     /*!< Encode a/several word(s) readable for a Chip*/
     /*!
      * \brief Encode a/several word(s) for Broadcast write to Chips
@@ -142,6 +155,7 @@ class BeBoardFWInterface : public RegManager
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
+
     /*!< Encode a/several word(s) readable for a Chip*/
     /*!
      * \brief Decode a word from a read of a register of the Chip
@@ -175,43 +189,32 @@ class BeBoardFWInterface : public RegManager
      * \brief Send a Chip trigger
      */
     virtual void ChipTrigger() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
+
     /*!
      * \brief Send a Chip trigger
      */
     virtual void ChipTestPulse() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
-    /*!
-     * \brief Start an acquisition in a separate thread
-     * \param pBoard Board running the acquisition
-     * \param uNbAcq Number of acquisition iterations (each iteration will get Chip_DATA_PACKET_NUMBER + 1 events)
-     * \param visitor override the visit() method of this object to process each event
-     */
-    // virtual void StartThread ( BeBoard* pBoard, uint32_t uNbAcq, HwInterfaceVisitor* visitor ) = 0;
-    /*! \brief Stop a running parallel acquisition
-     */
-    // virtual void StopThread();
-    //[>! \brief Get the parallel acquisition iteration number <]
-    // int getNumAcqThread();
-    //[>! \brief Is a parallel acquisition running ? <]
-    // bool isRunningThread() const
-    //{
-    // return runningAcquisition;
-    //}
+
     /*!
      * \brief Start a DAQ
      */
     virtual void Start() = 0;
+
     /*!
      * \brief Stop a DAQ
      */
     virtual void Stop() = 0;
+
     /*!
      * \brief Pause a DAQ
      */
     virtual void Pause() = 0;
+
     /*!
      * \brief Resume a DAQ
      */
     virtual void Resume() = 0;
+
     /*!
      * \brief Read data from DAQ
      * \param pBoard
@@ -219,6 +222,7 @@ class BeBoardFWInterface : public RegManager
      * \return fNpackets: the number of packets read
      */
     virtual uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) = 0;
+
     /*!
      * \brief Read data for pNEvents
      * \param pBoard : the pointer to the BeBoard
@@ -249,36 +253,56 @@ class BeBoardFWInterface : public RegManager
     /*!
      * Activate power on and off sequence
      */
-
     virtual void PowerOn();
     virtual void PowerOff();
 
     /*!
      * Read the firmware version
      */
-
     virtual void ReadVer();
 
     virtual BoardType getBoardType() const = 0;
+
     /*! \brief Reboot the board */
     virtual void RebootBoard() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
+
     /*! \brief Set or reset the start signal */
     virtual void SetForceStart(bool bStart) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(Ph2_HwDescription::Chip* pChip, uint32_t& isReady, uint32_t& isFIFOempty)                          = 0;
-    virtual void     ResetOptoLink(Ph2_HwDescription::Chip* pChip)                                                                     = 0;
-    virtual bool     WriteOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress, uint32_t pData, bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(Ph2_HwDescription::Chip* pChip, uint32_t pAddress)                                           = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                                                 = 0;
+    virtual void     ResetOptoLink()                                                                                                                                             = 0;
+    virtual bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
+    virtual uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress)                                                       = 0;
+
+    // ##########################################
+    // # Read/Write new Command Processor Block #
+    // ##########################################
+    // functions for new Command Processor Block
+    virtual void                  ResetCPB() {}
+    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) {}
+    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) { return {}; }
+    // function to read/write lpGBT registers
+    virtual bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
+    virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress) { return 0; }
+    // function for I2C transactions using lpGBT I2C Masters
+    virtual bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) { return true; }
+    virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) { return 0; }
+    // function for front-end slow control
+    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
+    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
 
   protected:
-    uint32_t fBlockSize{0};
-    uint32_t fNPackets{0};
-    uint32_t numAcq{0};
-    uint32_t nbMaxAcq{0};
-
+    uint32_t   fBlockSize{0};
+    uint32_t   fNPackets{0};
+    uint32_t   numAcq{0};
+    uint32_t   nbMaxAcq{0};
+    TCPClient* fPowerSupplyClient;
+#ifdef __TCP_SERVER__
+    TCPClient* fTestcardClient;
+#endif
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison
     template <typename T, class BinaryPredicate>

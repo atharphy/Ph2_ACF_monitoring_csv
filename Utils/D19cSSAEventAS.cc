@@ -24,9 +24,9 @@ D19cSSAEventAS::D19cSSAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
     fROCIds.clear();
     fCounterData.clear();
     // assuming that FEIds aren't shared between links
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cOpticalGroup)
         {
             fFeIds.push_back(cFe->getId());
             fNSSA += cFe->size();
@@ -47,7 +47,7 @@ D19cSSAEventAS::D19cSSAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
             fCounterData.push_back(cHybridCounterData);
             fROCIds.push_back(cROCIds);
         } // hybrids
-    }     // modules
+    }     // opticalGroup
     this->Set(pBoard, list);
 }
 void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
@@ -55,9 +55,9 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async SSA " << RESET;
     auto    cDataIterator = pData.begin();
     uint8_t cFeIndex      = 0;
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cOpticalGroup)
         {
             auto&   cHybridCounterData = fCounterData[cFeIndex];
             uint8_t cRocIndex          = 0;
@@ -83,7 +83,7 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
             }     // chips
             cFeIndex++;
         } // hybrids
-    }     // modules
+    }     // opticalGroup
 }
 
 // required by event but not sure if makes sense for AS

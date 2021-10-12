@@ -34,7 +34,7 @@ class TPCalibration : public PedeNoise
     void  SaveResults();
     float ConvertAmpToElectrons(float pTPAmp, bool pOffset);
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;

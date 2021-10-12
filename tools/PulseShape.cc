@@ -31,7 +31,7 @@ void PulseShape::Initialize()
                 LOG(INFO) << "Certain board()";
                 uint32_t cFeId = cFe->getId();
                 std::cerr << "cFeId = " << cFeId;
-                fType = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
+                fType = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
 
                 for(auto cCbc: *cFe)
                 {
@@ -136,7 +136,7 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
         uint32_t cNthAcq = 0;
         int      cNHits  = 0;
 
-        // Take Data for all Modules
+        // Take Data for all Hybrids
         for(auto pBoard: *fDetectorContainer)
         {
             BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
@@ -145,14 +145,14 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
                 for(auto cFe: *cOpticalGroup)
                 {
                     cVisitor.setThreshold(cVcth);
-                    static_cast<OuterTrackerModule*>(cFe)->accept(cVisitor);
+                    static_cast<OuterTrackerHybrid*>(cFe)->accept(cVisitor);
                 }
             }
 
             // LOG(INFO) << "Reading N Events";
             ReadNEvents(theBoard, fNevents);
             // LOG(INFO) << "End Reading N Events";
-            const std::vector<Event*>& events = GetEvents(theBoard);
+            const std::vector<Event*>& events = GetEvents();
             if(events.empty()) LOG(INFO) << " EMPTY EVENT VECTOR !!!";
             // LOG (INFO) <<"events size, VCTH value " << events.size()<< "  "<< (uint16_t) cVcth;
             // int iii=0;
@@ -243,7 +243,7 @@ void PulseShape::fitGraph(int pLow)
     {
         for(auto& cChannel: cCbc.second)
         {
-            TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getFeId(), static_cast<ReadoutChip*>(cCbc.first)->getChipId(), cChannel->fChannelId);
+            TString  cName = Form("f_cbc_pulse_Fe%dCbc%d_Channel%d", static_cast<ReadoutChip*>(cCbc.first)->getHybridId(), static_cast<ReadoutChip*>(cCbc.first)->getId(), cChannel->fChannelId);
             TObject* cObj  = gROOT->FindObject(cName);
 
             if(cObj) delete cObj;
@@ -423,52 +423,52 @@ void PulseShape::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 1;
 
     cSetting = fSettingsMap.find("Vplus");
 
     if(cSetting != std::end(fSettingsMap))
-        fVplus = cSetting->second;
+        fVplus = boost::any_cast<double>(cSetting->second);
     else
         fVplus = 0x6F;
 
     cSetting = fSettingsMap.find("TestPulsePotentiometer");
 
     if(cSetting != std::end(fSettingsMap))
-        fTPAmplitude = cSetting->second;
+        fTPAmplitude = boost::any_cast<double>(cSetting->second);
     else
         fTPAmplitude = 0x20;
 
     cSetting = fSettingsMap.find("ChannelOffset");
 
-    //  if ( cSetting != std::end ( fSettingsMap ) ) fOffset = cSetting->second;
+    //  if ( cSetting != std::end ( fSettingsMap ) ) fOffset = boost::any_cast<double>(cSetting->second);
     //  else fOffset = 0x5;
 
     cSetting = fSettingsMap.find("TestGroup");
 
     if(cSetting != std::end(fSettingsMap))
-        fTestGroup = cSetting->second;
+        fTestGroup = boost::any_cast<double>(cSetting->second);
     else
         fTestGroup = 0;
 
     cSetting = fSettingsMap.find("StepSize");
 
     if(cSetting != std::end(fSettingsMap))
-        fStepSize = cSetting->second;
+        fStepSize = boost::any_cast<double>(cSetting->second);
     else
         fStepSize = 5;
 
     cSetting = fSettingsMap.find("FitSCurves");
-    fFitHist = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fFitHist = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     LOG(INFO) << "Parsed the following settings:";
     LOG(INFO) << "	Nevents = " << fNevents;

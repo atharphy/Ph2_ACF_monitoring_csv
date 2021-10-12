@@ -14,7 +14,6 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
@@ -32,19 +31,24 @@ class SCurve : public Tool
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
+#ifdef __USE_ROOT__
+        if(saveData == true) this->WriteRootFile();
+        this->CloseResultFile();
+#endif
     }
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void                                   sendData();
-    void                                   localConfigure(const std::string fileRes_, int currentRun);
-    void                                   initializeFiles(const std::string fileRes_, int currentRun);
+    void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void                                   run();
-    void                                   draw(int currentRun);
+    void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
+    void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     SCurveHistograms* histos;
@@ -71,15 +75,16 @@ class SCurve : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-    void chipErrorReport();
-    void saveChipRegisters(int currentRun);
+    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
+    bool        saveData;
 };
 
 #endif

@@ -19,7 +19,7 @@ std::string RD53Shared::fromInt2Str(int val)
 std::string RD53Shared::composeFileName(const std::string& configFileName, const std::string& fName2Add)
 {
     std::string output = configFileName;
-    output.insert(output.find(RD53Shared::NAMESEARCHinPATH), fName2Add);
+    output.insert(output.find_last_of("/\\") + 1, fName2Add);
     return output;
 }
 
@@ -33,3 +33,5 @@ size_t RD53Shared::countBitsOne(size_t num)
     }
     return count;
 }
+
+void RD53Shared::resetDefaultFloat() { std::cout.setf(std::ios_base::fmtflags(0), std::ios_base::floatfield); }

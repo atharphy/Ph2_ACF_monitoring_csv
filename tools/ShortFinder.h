@@ -36,7 +36,7 @@ class ShortFinder : public Tool
     void FindShorts();
     void Print();
     void Reset();
-    void Start(int currentRun = 0) override;
+    void Running() override;
     void Stop() override;
 
   private:

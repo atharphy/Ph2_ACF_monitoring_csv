@@ -33,15 +33,16 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise() {}
 //========================================================================================================================
 void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
+    std::cout << __PRETTY_FUNCTION__ << " " << theDetectorStructure.at(0)->at(0)->at(0)->size() << std::endl;
     uint32_t NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
     // if
     // (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType()
     // == FrontEndType::SSA) NCH = NSSACHANNELS;
 
     auto cSetting = pSettingsMap.find("PlotSCurves");
-    fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
+    fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     cSetting      = pSettingsMap.find("FitSCurves");
-    fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
+    fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     if(fFitSCurves) fPlotSCurves = true;
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
@@ -52,7 +53,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& 
         uint16_t nYbins = 1024;
         float    minY   = -0.5;
         float    maxY   = 1023.5;
-        if(cWithSSA)
+        if(cWithSSA or cWithMPA)
         {
             nYbins = 255;
             minY   = -0.5;
@@ -94,21 +95,21 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& 
     HistContainer<TH1F> theTH1FStripNoiseOddContainer("StripNoiseOddDistribution", "Strip Noise Odd", NCH / 2, -0.5, 126.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripNoiseOddHistograms, theTH1FStripNoiseOddContainer);
 
-    // Module Noise
-    HistContainer<TH1F> theTH1FModuleNoiseContainer("ModuleNoiseDistribution", "Module Noise Distribution", 200, 0., 20.);
-    RootContainerFactory::bookModuleHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorModuleNoiseHistograms, theTH1FModuleNoiseContainer);
+    // Hybrid Noise
+    HistContainer<TH1F> theTH1FHybridNoiseContainer("HybridNoiseDistribution", "Hybrid Noise Distribution", 200, 0., 20.);
+    RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridNoiseHistograms, theTH1FHybridNoiseContainer);
 
-    // Module Strip Noise
-    HistContainer<TH1F> theTH1FModuleStripNoiseContainer("ModuleStripNoiseDistribution", "Module Strip Noise", NCH * 8, -0.5, float(NCH) * 8 - 0.5);
-    RootContainerFactory::bookModuleHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorModuleStripNoiseHistograms, theTH1FModuleStripNoiseContainer);
+    // Hybrid Strip Noise
+    HistContainer<TH1F> theTH1FHybridStripNoiseContainer("HybridStripNoiseDistribution", "Hybrid Strip Noise", NCH * 8, -0.5, float(NCH) * 8 - 0.5);
+    RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseHistograms, theTH1FHybridStripNoiseContainer);
 
-    // Module Strip Even Noise
-    HistContainer<TH1F> theTH1FModuleStripNoiseEvenContainer("ModuleStripNoiseEvenDistribution", "Module Strip Noise Even", NCH * 4, -0.5, float(NCH) * 4 - 0.5);
-    RootContainerFactory::bookModuleHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorModuleStripNoiseEvenHistograms, theTH1FModuleStripNoiseEvenContainer);
+    // Hybrid Strip Even Noise
+    HistContainer<TH1F> theTH1FHybridStripNoiseEvenContainer("HybridStripNoiseEvenDistribution", "Hybrid Strip Noise Even", NCH * 4, -0.5, float(NCH) * 4 - 0.5);
+    RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseEvenHistograms, theTH1FHybridStripNoiseEvenContainer);
 
-    // Module Strip Odd Noise
-    HistContainer<TH1F> theTH1FModuleStripNoiseOddContainer("ModuleStripNoiseOddDistribution", "Module Strip Noise Odd", NCH * 4, -0.5, float(NCH) * 4 - 0.5);
-    RootContainerFactory::bookModuleHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorModuleStripNoiseOddHistograms, theTH1FModuleStripNoiseOddContainer);
+    // Hybrid Strip Odd Noise
+    HistContainer<TH1F> theTH1FHybridStripNoiseOddContainer("HybridStripNoiseOddDistribution", "Hybrid Strip Noise Odd", NCH * 4, -0.5, float(NCH) * 4 - 0.5);
+    RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseOddHistograms, theTH1FHybridStripNoiseOddContainer);
 
     // Validation
     HistContainer<TH1F> theTH1FValidationContainer("Occupancy", "Occupancy", NCH, -0.5, float(NCH) - 0.5);
@@ -118,14 +119,14 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, const DetectorContainer& 
 //========================================================================================================================
 bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-    ModuleContainerStream<Occupancy, Occupancy, Occupancy> theOccupancy("PedeNoise");
+    HybridContainerStream<Occupancy, Occupancy, Occupancy> theOccupancy("PedeNoise");
     ChannelContainerStream<Occupancy, uint16_t>            theSCurve("PedeNoiseSCurve");
     ChannelContainerStream<ThresholdAndNoise>              theThresholdAndNoiseStream("PedeNoise");
 
     if(theOccupancy.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched PedeNoise Occupancy!!!!!\n";
-        theOccupancy.decodeModuleData(fDetectorData);
+        theOccupancy.decodeHybridData(fDetectorData);
         fillValidationPlots(fDetectorData);
 
         fDetectorData.cleanDataStored();
@@ -164,18 +165,18 @@ void DQMHistogramPedeNoise::process()
         {
             for(auto hybrid: *opticalGroup)
             {
-                TH1F* moduleStripNoiseEvenHistogram =
-                    fDetectorModuleStripNoiseEvenHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* moduleStripNoiseOddHistogram =
-                    fDetectorModuleStripNoiseOddHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                moduleStripNoiseEvenHistogram->SetLineColor(kBlue);
-                moduleStripNoiseEvenHistogram->SetMaximum(20);
-                moduleStripNoiseEvenHistogram->SetMinimum(0);
-                moduleStripNoiseOddHistogram->SetLineColor(kRed);
-                moduleStripNoiseOddHistogram->SetMaximum(20);
-                moduleStripNoiseOddHistogram->SetMinimum(0);
-                moduleStripNoiseEvenHistogram->SetStats(false);
-                moduleStripNoiseOddHistogram->SetStats(false);
+                TH1F* hybridStripNoiseEvenHistogram =
+                    fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridStripNoiseOddHistogram =
+                    fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                hybridStripNoiseEvenHistogram->SetLineColor(kBlue);
+                hybridStripNoiseEvenHistogram->SetMaximum(20);
+                hybridStripNoiseEvenHistogram->SetMinimum(0);
+                hybridStripNoiseOddHistogram->SetLineColor(kRed);
+                hybridStripNoiseOddHistogram->SetMaximum(20);
+                hybridStripNoiseOddHistogram->SetMinimum(0);
+                hybridStripNoiseEvenHistogram->SetStats(false);
+                hybridStripNoiseOddHistogram->SetStats(false);
 
                 TCanvas* cValidation =
                     new TCanvas(("Validation_hybrid_" + std::to_string(hybrid->getId())).data(), ("Validation hybrid " + std::to_string(hybrid->getId())).data(), 0, 0, 650, fPlotSCurves ? 900 : 650);
@@ -276,39 +277,39 @@ void DQMHistogramPedeNoise::process()
                         ->SetRangeUser(0., 20.);
                 }
 
-                fDetectorModuleStripNoiseHistograms.at(board->getIndex())
+                fDetectorHybridStripNoiseHistograms.at(board->getIndex())
                     ->at(opticalGroup->getIndex())
                     ->at(hybrid->getIndex())
                     ->getSummary<HistContainer<TH1F>>()
                     .fTheHistogram->GetXaxis()
                     ->SetRangeUser(-0.5, NCHANNELS * hybrid->size() - 0.5);
-                fDetectorModuleStripNoiseHistograms.at(board->getIndex())
+                fDetectorHybridStripNoiseHistograms.at(board->getIndex())
                     ->at(opticalGroup->getIndex())
                     ->at(hybrid->getIndex())
                     ->getSummary<HistContainer<TH1F>>()
                     .fTheHistogram->GetYaxis()
                     ->SetRangeUser(0., 20.);
 
-                fDetectorModuleStripNoiseEvenHistograms.at(board->getIndex())
+                fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())
                     ->at(opticalGroup->getIndex())
                     ->at(hybrid->getIndex())
                     ->getSummary<HistContainer<TH1F>>()
                     .fTheHistogram->GetXaxis()
                     ->SetRangeUser(-0.5, NCHANNELS * hybrid->size() - 0.5);
-                fDetectorModuleStripNoiseEvenHistograms.at(board->getIndex())
+                fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())
                     ->at(opticalGroup->getIndex())
                     ->at(hybrid->getIndex())
                     ->getSummary<HistContainer<TH1F>>()
                     .fTheHistogram->GetYaxis()
                     ->SetRangeUser(0., 20.);
 
-                fDetectorModuleStripNoiseOddHistograms.at(board->getIndex())
+                fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())
                     ->at(opticalGroup->getIndex())
                     ->at(hybrid->getIndex())
                     ->getSummary<HistContainer<TH1F>>()
                     .fTheHistogram->GetXaxis()
                     ->SetRangeUser(-0.5, NCHANNELS * hybrid->size() - 0.5);
-                fDetectorModuleStripNoiseOddHistograms.at(board->getIndex())
+                fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())
                     ->at(opticalGroup->getIndex())
                     ->at(hybrid->getIndex())
                     ->getSummary<HistContainer<TH1F>>()
@@ -331,7 +332,7 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
         {
             for(auto hybrid: *opticalGroup)
             {
-                // std::cout << __PRETTY_FUNCTION__ << " The Module Occupancy = " <<
+                // std::cout << __PRETTY_FUNCTION__ << " The Hybrid Occupancy = " <<
                 // hybrid->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
                 for(auto chip: *hybrid)
                 {
@@ -365,13 +366,13 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
             for(auto hybrid: *opticalGroup)
             {
                 TH1F* hybridNoiseHistogram =
-                    fDetectorModuleNoiseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    fDetectorHybridNoiseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TH1F* hybridStripNoiseHistogram =
-                    fDetectorModuleStripNoiseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    fDetectorHybridStripNoiseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TH1F* hybridStripNoiseEvenHistogram =
-                    fDetectorModuleStripNoiseEvenHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TH1F* hybridStripNoiseOddHistogram =
-                    fDetectorModuleStripNoiseOddHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                 for(auto chip: *hybrid)
                 {
@@ -405,7 +406,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                                                            .fTheHistogram;
 
                     if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr) continue;
-                    uint8_t channelNumber = 0;
+                    uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>())
                     {
                         chipPedestalHistogram->Fill(channel.fThreshold);
@@ -457,7 +458,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
                         fDetectorSCurveHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
-                    uint8_t channelNumber = 0;
+                    uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
                         float tmpOccupancy      = channel.fOccupancy;

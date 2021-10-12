@@ -81,6 +81,8 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                                  const SB&                boardSummary,
                                  const SD&                detectorSummary)
 {
+    copy.reset();
+
     std::string detectorFolder = "Detector";
     createAndOpenRootFileFolder(theOutputFile, detectorFolder);
     std::string channelHistogramGenericName             = getPlotName(&channel);
@@ -137,22 +139,22 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                            &opticalGroupSummary);
             copyOpticalGroup->getSummary<SO, SM>() = std::move(theOpticalGroupSummary);
 
-            // Modules
-            for(const ModuleContainer* hybrid: *opticalGroup)
+            // Hybrids
+            for(const HybridContainer* hybrid: *opticalGroup)
             {
-                std::string hybridFolder     = "/Module_" + std::to_string(hybrid->getId());
-                std::string fullModuleFolder = detectorFolder + boardFolder + opticalGroupFolder + hybridFolder;
-                createAndOpenRootFileFolder(theOutputFile, fullModuleFolder);
+                std::string hybridFolder     = "/Hybrid_" + std::to_string(hybrid->getId());
+                std::string fullHybridFolder = detectorFolder + boardFolder + opticalGroupFolder + hybridFolder;
+                createAndOpenRootFileFolder(theOutputFile, fullHybridFolder);
 
-                ModuleDataContainer* copyModule = copyOpticalGroup->addModuleDataContainer(hybrid->getId());
-                copyModule->initialize<SM, SC>();
+                HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
+                copyHybrid->initialize<SM, SC>();
 
-                SM theModuleSummary;
-                initializePlot(&theModuleSummary,
-                               Form("D_B(%d)_O(%d)_%s_Module(%d)", board->getId(), opticalGroup->getId(), hybridSummaryHistogramGenericName.data(), hybrid->getId()),
-                               Form("D_B(%d)_O(%d)_%s_Module(%d)", board->getId(), opticalGroup->getId(), hybridSummaryHistogramGenericTitle.data(), hybrid->getId()),
+                SM theHybridSummary;
+                initializePlot(&theHybridSummary,
+                               Form("D_B(%d)_O(%d)_%s_Hybrid(%d)", board->getId(), opticalGroup->getId(), hybridSummaryHistogramGenericName.data(), hybrid->getId()),
+                               Form("D_B(%d)_O(%d)_%s_Hybrid(%d)", board->getId(), opticalGroup->getId(), hybridSummaryHistogramGenericTitle.data(), hybrid->getId()),
                                &hybridSummary);
-                copyModule->getSummary<SM, SC>() = std::move(theModuleSummary);
+                copyHybrid->getSummary<SM, SC>() = std::move(theHybridSummary);
 
                 // Chips
                 for(const ChipContainer* chip: *hybrid)
@@ -161,13 +163,13 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                     std::string fullChipFolder = detectorFolder + boardFolder + opticalGroupFolder + hybridFolder + chipFolder;
                     createAndOpenRootFileFolder(theOutputFile, fullChipFolder);
 
-                    ChipDataContainer* copyChip = copyModule->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
+                    ChipDataContainer* copyChip = copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
                     copyChip->initialize<SC, T>();
 
                     SC theChipSummary;
                     initializePlot(&theChipSummary,
-                                   Form("D_B(%d)_O(%d)_M(%d)_%s_Chip(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chipSummaryHistogramGenericName.c_str(), chip->getId()),
-                                   Form("D_B(%d)_O(%d)_M(%d)_%s_Chip(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chipSummaryHistogramGenericTitle.c_str(), chip->getId()),
+                                   Form("D_B(%d)_O(%d)_H(%d)_%s_Chip(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chipSummaryHistogramGenericName.c_str(), chip->getId()),
+                                   Form("D_B(%d)_O(%d)_H(%d)_%s_Chip(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chipSummaryHistogramGenericTitle.c_str(), chip->getId()),
                                    &chipSummary);
                     copyChip->getSummary<SC, T>() = std::move(theChipSummary);
 
@@ -188,13 +190,13 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                                 if(chip->getNumberOfCols() == 1)
                                 {
                                     histogramName = Form(
-                                        "D_B(%d)_O(%d)_M(%d)_C(%d)_%s_Channel(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId(), channelHistogramGenericName.data(), row);
+                                        "D_B(%d)_O(%d)_H(%d)_C(%d)_%s_Channel(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId(), channelHistogramGenericName.data(), row);
                                     histogramTitle = Form(
-                                        "D_B(%d)_O(%d)_M(%d)_C(%d)_%s_Channel(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId(), channelHistogramGenericTitle.data(), row);
+                                        "D_B(%d)_O(%d)_H(%d)_C(%d)_%s_Channel(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId(), channelHistogramGenericTitle.data(), row);
                                 }
                                 else
                                 {
-                                    histogramName  = Form("D_B(%d)_O(%d)_M(%d)_C(%d)_%s_Row(%d)_Col(%d)",
+                                    histogramName  = Form("D_B(%d)_O(%d)_H(%d)_C(%d)_%s_Row(%d)_Col(%d)",
                                                          board->getId(),
                                                          opticalGroup->getId(),
                                                          hybrid->getId(),
@@ -202,7 +204,7 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                                                          channelHistogramGenericName.data(),
                                                          row,
                                                          col);
-                                    histogramTitle = Form("D_B(%d)_O(%d)_M(%d)_C(%d)_%s_Row(%d)_Col(%d)",
+                                    histogramTitle = Form("D_B(%d)_O(%d)_H(%d)_C(%d)_%s_Row(%d)_Col(%d)",
                                                           board->getId(),
                                                           opticalGroup->getId(),
                                                           hybrid->getId(),
@@ -253,7 +255,7 @@ void bookChipHistograms(TFile* theOutputFile, const DetectorContainer& original,
 }
 
 template <typename T>
-void bookModuleHistograms(TFile* theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& hybridSummary)
+void bookHybridHistograms(TFile* theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& hybridSummary)
 {
     EmptyContainer theEmpty;
     bookHistogramsFromStructure<EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer, EmptyContainer>(

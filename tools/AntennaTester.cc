@@ -13,13 +13,13 @@ struct HistogramFiller : public HwDescriptionVisitor
 
     void visit(Chip& pCbc)
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector(pCbc.getFeId(), pCbc.getChipId());
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector(pCbc.getHybridId(), pCbc.getId());
 
         for(uint32_t cId = 0; cId < NCHANNELS; cId++)
         {
             if(cDataBitVector.at(cId))
             {
-                uint32_t globalChannel = (pCbc.getChipId() * 254) + cId;
+                uint32_t globalChannel = (pCbc.getId() * 254) + cId;
 
                 // find out why histograms are not filling!
                 if(globalChannel % 2 == 0)
@@ -88,7 +88,7 @@ void AntennaTester::InitialiseSettings()
     fDecisionThreshold = 10.0;
     // figure out whether the hybrid was configured to run in hole/electron mode
     auto cSetting = fSettingsMap.find("HoleMode");
-    fHoleMode     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : true;
+    fHoleMode     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : true;
 
     // figure out how many CBCs you're working with
     Counter cCbcCounter;
@@ -97,14 +97,10 @@ void AntennaTester::InitialiseSettings()
 
     // figure out what the number of events to take is
     cSetting     = fSettingsMap.find("Nevents");
-    fTotalEvents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 999;
+    fTotalEvents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 999;
 
     cSetting = fSettingsMap.find("TriggerSource");
-    //         if ( cSetting != std::end ( fSettingsMap ) ) trigSource = cSetting->second;
 
-    /// fBeBoardInterface->ReadBoardReg (cBoard, getDelAfterTPString ( cBoard->getBoardType() ) );
-    // trigSource =ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
-    //         LOG (INFO)  <<int (trigSource);
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
@@ -257,13 +253,13 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
             uint32_t cN      = 1;
             uint32_t cNthAcq = 0;
 
-            this->Start(pBoard);
+            this->StartBoard(pBoard);
 
             while(cN <= fTotalEvents)
             {
                 // Run( pBoard, cNthAcq );
                 ReadData(pBoard);
-                const std::vector<Event*>& events = GetEvents(pBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -279,7 +275,7 @@ void AntennaTester::Measure(uint8_t pDigiPotentiometer)
                 cNthAcq++;
             }
 
-            this->Stop(pBoard);
+            this->StopBoard(pBoard);
 
             /*Here the reconstruction of histograms happens*/
             for(uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++)

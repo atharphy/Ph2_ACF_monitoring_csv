@@ -8,7 +8,7 @@
     </GBT_Links>
     
 
-    <Module FeId="0" FMCId="0" Status="1" LinkId="0">
+    <Hybrid Id="0" Status="1" LinkId="0">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -30,9 +30,9 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE0CIC8.txt" />
-    </Module>
+    </Hybrid>
 
-    <Module FeId="1" FMCId="0" Status="1" LinkId="0">
+    <Hybrid Id="1" Status="1" LinkId="0">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -54,9 +54,9 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE1CIC8.txt" />
-    </Module>
+    </Hybrid>
 
-    <Module FeId="2" FMCId="0" Status="1" LinkId="1">
+    <Hybrid Id="2" Status="1" LinkId="1">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -78,9 +78,9 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE2CIC8.txt" />
-    </Module>
+    </Hybrid>
 
-    <Module FeId="3" FMCId="0" Status="1" LinkId="1">
+    <Hybrid Id="3" Status="1" LinkId="1">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -102,9 +102,9 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE3CIC8.txt" />
-    </Module>
+    </Hybrid>
 
-    <Module FeId="4" FMCId="0" Status="1" LinkId="2">
+    <Hybrid Id="5" Status="1" LinkId="2">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -126,9 +126,9 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE4CIC8.txt" />
-    </Module>
+    </Hybrid>
 
-    <Module FeId="5" FMCId="0" Status="1" LinkId="2">
+    <Hybrid Id="5" Status="1" LinkId="2">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -150,9 +150,9 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE5CIC8.txt" />
-    </Module>
+    </Hybrid>
 
-    <Module FeId="6" FMCId="0" Status="1" LinkId="3">
+    <Hybrid Id="6" Status="1" LinkId="3">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -174,9 +174,9 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE6CIC8.txt" />
-    </Module>
+    </Hybrid>
 
-    <Module FeId="7" FMCId="0" Status="1" LinkId="3">
+    <Hybrid Id="7" Status="1" LinkId="3">
         <Global>
             <Settings threshold="550" latency="19"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -198,7 +198,7 @@
 
         <CIC_Files path="./Results/Offsets_300V/" />
         <CIC Id="8" configfile="FE7CIC8.txt" />
-    </Module>
+    </Hybrid>
 
    
  

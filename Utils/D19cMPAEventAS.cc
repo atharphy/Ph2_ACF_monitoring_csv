@@ -4,6 +4,7 @@
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/Occupancy.h"
+#include <numeric>
 
 using namespace Ph2_HwDescription;
 
@@ -22,12 +23,12 @@ D19cMPAEventAS::D19cMPAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
     fROCIds.clear();
     fCounterData.clear();
     // assuming that FEIds aren't shared between links
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cOpticalGroup)
         {
             fFeIds.push_back(cFe->getId());
-            fNSSA += cFe->size();
+            fNSSA += cFe->fullSize();
             HybridCounterData cHybridCounterData;
             cHybridCounterData.clear();
             std::vector<uint8_t> cROCIds(0);
@@ -45,7 +46,7 @@ D19cMPAEventAS::D19cMPAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
             fCounterData.push_back(cHybridCounterData);
             fROCIds.push_back(cROCIds);
         } // hybrids
-    }     // modules
+    }     // opticalGroup
     this->Set(pBoard, list);
 }
 void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
@@ -53,9 +54,9 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async MPA " << RESET;
     auto    cDataIterator = pData.begin();
     uint8_t cFeIndex      = 0;
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cOpticalGroup)
         {
             auto&   cHybridCounterData = fCounterData[cFeIndex];
             uint8_t cRocIndex          = 0;
@@ -67,21 +68,17 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
                     auto& cChipCounterData = cHybridCounterData[cRocIndex];
                     for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
-                        if(cChnl % 2 != 0)
-                        {
-                            auto cWord = *(cDataIterator);
-                            cChipCounterData.push_back((cWord & 0xFFFF));
-                            cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
-                            LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
-                            cDataIterator++;
-                        } //
-                    }     // chnl loop
+                        auto cWord = *(cDataIterator);
+                        cChipCounterData.push_back(cWord);
+                        LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
+                        cDataIterator++;
+                    }
                     cRocIndex++;
                 } //[if MPA]
             }     // chips
             cFeIndex++;
         } // hybrids
-    }     // modules
+    }     // opticalGroup
 }
 // required by event but not sure if makes sense for AS
 void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
@@ -97,7 +94,7 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
 
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
-                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += hVec[i]; }
+                    if(cTestChannelGroup->isChannelEnabled(i)) channel->fOccupancy += hVec[i];
                 }
             }
         }

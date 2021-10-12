@@ -42,7 +42,7 @@ class ExtraChecks : public PedeNoise
     void                       FindOpens();
     void                       OccupancyCheck(uint16_t pTriggerRate, bool pDisableStubs);
     std::pair<uint16_t, float> ReadAmux(uint8_t pFeId, uint8_t pChipId, std::string pValueToRead, bool pOptical = true);
-    void                       Start(int currentRun) override;
+    void                       Running() override;
     void                       Stop() override;
     void                       Pause() override;
     void                       Resume() override;

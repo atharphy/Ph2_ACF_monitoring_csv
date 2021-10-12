@@ -2,7 +2,7 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"

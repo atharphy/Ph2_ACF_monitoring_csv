@@ -62,13 +62,13 @@ void BiasSweep::Initialize()
 {
     // now read the settings from the map
     auto cSetting = fSettingsMap.find("SweepTimeout");
-    fSweepTimeout = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fSweepTimeout = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     cSetting      = fSettingsMap.find("KePort");
-    fKePort       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8083;
+    fKePort       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 8083;
     cSetting      = fSettingsMap.find("HMPPort");
-    fHMPPort      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8082;
+    fHMPPort      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 8082;
     cSetting      = fSettingsMap.find("StepSize");
-    fStepSize     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    fStepSize     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 1;
 
     LOG(INFO) << "\tSettings for BiasSweep parsed:";
     LOG(INFO) << "\t\tSweepTimeout: " << fSweepTimeout;
@@ -119,7 +119,7 @@ void BiasSweep::Initialize()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                Module* theHybrid = static_cast<Module*>(cHybrid);
+                Hybrid* theHybrid = static_cast<Hybrid*>(cHybrid);
                 fType             = theHybrid->getFrontEndType();
 
                 for(auto cCbc: *cHybrid)
@@ -171,8 +171,8 @@ void BiasSweep::MeasureMinPower(BeBoard* pBoard, ReadoutChip* pCbc)
     TTree*      cTmpTree  = static_cast<TTree*>(getHist(pCbc, "DataTree"));
     fData->fBias          = "MinimalPower";
     fData->fTimestamp     = static_cast<long int>(cTime);
-    fData->fFeId          = pCbc->getFeId();
-    fData->fCbcId         = pCbc->getChipId();
+    fData->fFeId          = pCbc->getHybridId();
+    fData->fCbcId         = pCbc->getId();
     fData->fUnit[0]       = 'I';
     fData->fUnit[1]       = 0;
     fData->fInitialXValue = 0;
@@ -278,7 +278,7 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         // just create objects, sweep and fill and forget about them again!
 
         std::time_t cTime = std::time(nullptr);
-        TString     cName = Form("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getFeId(), pCbc->getChipId(), static_cast<int>(cTime));
+        TString     cName = Form("g_BiasSweep_%s_Fe%d_Cbc%d_TS%d", pBias.c_str(), pCbc->getHybridId(), pCbc->getId(), static_cast<int>(cTime));
 
         TObject* cObj = gROOT->FindObject(cName);
 
@@ -301,8 +301,8 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         TTree* cTmpTree       = static_cast<TTree*>(getHist(pCbc, "DataTree"));
         fData->fBias          = pBias.c_str();
         fData->fTimestamp     = static_cast<long int>(cTime);
-        fData->fFeId          = pCbc->getFeId();
-        fData->fCbcId         = pCbc->getChipId();
+        fData->fFeId          = pCbc->getHybridId();
+        fData->fCbcId         = pCbc->getId();
         fData->fUnit[0]       = (cCurrent) ? 'I' : 'V';
         fData->fUnit[1]       = 0;
         fData->fInitialXValue = 0;
@@ -723,7 +723,7 @@ void BiasSweep::StartDAQ()
 {
     // 1st method
     this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(fDetectorContainer->at(0)), "cbc_system_cnfg.global.misc.trigger_master_external", 0x1);
-    this->Start(static_cast<BeBoard*>(fDetectorContainer->at(0)));
+    SystemController::StartBoard(static_cast<BeBoard*>(fDetectorContainer->at(0)));
 
     // 2nd method
     // if (!fDAQrunning.load() )
@@ -739,7 +739,7 @@ void BiasSweep::StartDAQ()
 void BiasSweep::StopDAQ()
 {
     // 1st method
-    this->Stop(static_cast<BeBoard*>(fDetectorContainer->at(0)));
+    SystemController::StopBoard(static_cast<BeBoard*>(fDetectorContainer->at(0)));
     this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(fDetectorContainer->at(0)), "cbc_system_cnfg.global.misc.trigger_master_external", 0x0);
 
     // 2nd method

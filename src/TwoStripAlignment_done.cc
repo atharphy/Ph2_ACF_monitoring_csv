@@ -2,7 +2,7 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -35,7 +35,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     LOG(INFO) << BOLDRED << "=============" << RESET;
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/D19C_2xSSA_onechip.xml";
     std::stringstream outp;
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
     cTool.setFWTestPulse(); // turns on injections (in either mode)
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    ModuleContainer* ChipVec = pBoard->at(0)->at(0);
+    HybridContainer* ChipVec = pBoard->at(0)->at(0);
     TH1I*            h1      = new TH1I("h1", "S-CURVE (strip 12);THDAC;number of hits", 80, 20, 100);
     TH1I*            h2      = new TH1I("h2", "S-CURVE (strip 88);THDAC;number of hits", 80, 20, 100);
     for(int thd = 20; thd <= 75; thd++)
@@ -78,9 +78,9 @@ int main(int argc, char* argv[])
             }
         }
         IB->PS_Clear_counters();
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA  = static_cast<ReadoutChip*>(cSSA);

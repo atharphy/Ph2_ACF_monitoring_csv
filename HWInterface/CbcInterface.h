@@ -59,6 +59,9 @@ class CbcInterface : public ReadoutChipInterface
 
     bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = true) override;
 
+    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
+    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
+
     /*!
      * \brief Reapply the stored mask for the CBC, use it after group masking is applied
      * \param pCbc: pointer to CBC object
@@ -99,19 +102,19 @@ class CbcInterface : public ReadoutChipInterface
 
     /*!
      * \brief Write same register in all Cbcs and then UpdateCbc
-     * \param pModule : Module containing vector of Cbcs
+     * \param pHybrid : Hybrid containing vector of Cbcs
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    void WriteModuleBroadcastChipReg(const Ph2_HwDescription::Module* pModule, const std::string& pRegNode, uint16_t pValue);
+    void WriteHybridBroadcastChipReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::string& pRegNode, uint16_t pValue);
 
     /*!
      * \brief Write same register in all Cbcs and then UpdateCbc
-     * \param pModule : Module containing vector of Cbcs
+     * \param pHybrid : Hybrid containing vector of Cbcs
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    void WriteBroadcastCbcMultiReg(const Ph2_HwDescription::Module* pModule, const std::vector<std::pair<std::string, uint8_t>> pVecReg);
+    void WriteBroadcastCbcMultiReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::vector<std::pair<std::string, uint8_t>> pVecReg);
 
     /*!
      * \brief Write all Local registers on Cbc and Cbc Config File (able to recognize local parameter names such as
@@ -145,7 +148,7 @@ class CbcInterface : public ReadoutChipInterface
      * \param pChip: pointer to Chip object
      */
     uint32_t ReadCbcIDeFuse(Ph2_HwDescription::Chip* pCbc);
-    // void ReadAllCbc ( const Module* pModule );
+    // void ReadAllCbc ( const Hybrid* pHybrid );
     // void CbcCalibrationTrigger(const Cbc* pCbc );
     void output();
 

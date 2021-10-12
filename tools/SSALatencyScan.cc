@@ -120,7 +120,7 @@ void SSALatencyScan::run(void)
             // this->enableTestPulse( true );
             // setFWTestPulse();
             this->ReadNEvents(theBeBoard, 200);
-            const std::vector<Event*>& eventVector = this->GetEvents(theBeBoard);
+            const std::vector<Event*>& eventVector = this->GetEvents();
             unsigned int               thiscount   = 0;
 
             for(auto& event: eventVector) // for on events - begin

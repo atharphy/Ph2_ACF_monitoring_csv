@@ -3,6 +3,7 @@
 
 #include "../NetworkUtils/TCPServer.h"
 #include "../System/SystemController.h"
+#include "../tools/Tool.h"
 
 #include <string>
 
@@ -30,7 +31,7 @@ class MiddlewareController : public TCPServer
     bool        paused_     = false;
 
   private:
-    Ph2_System::SystemController* theSystemController_;
+    Tool* theSystemController_;
 };
 
 #endif

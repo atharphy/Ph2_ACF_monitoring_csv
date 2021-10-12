@@ -13,6 +13,7 @@
 #define __DATA_CONTAINER_H__
 
 #include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/easylogging++.h"
@@ -447,36 +448,59 @@ class ChipDataContainer
     }
 };
 
-class ModuleDataContainer : public DataContainer<ChipDataContainer>
+class HybridDataContainer : public DataContainer<ChipDataContainer>
 {
   public:
-    ModuleDataContainer(uint16_t id) : DataContainer<ChipDataContainer>(id) {}
-    ModuleDataContainer(const ModuleDataContainer&) = delete;
-    ModuleDataContainer(ModuleDataContainer&& theCopyContainer) : DataContainer<ChipDataContainer>(std::move(theCopyContainer)) {}
+    HybridDataContainer(uint16_t id) : DataContainer<ChipDataContainer>(id) {}
+    HybridDataContainer(const HybridDataContainer&) = delete;
+    HybridDataContainer(HybridDataContainer&& theCopyContainer) : DataContainer<ChipDataContainer>(std::move(theCopyContainer)) {}
 
     template <typename T>
     T* addChipDataContainer(uint16_t id, T* chip)
     {
         return static_cast<T*>(DataContainer<ChipDataContainer>::addObject(id, chip));
     }
-    ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col = 1) { return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col)); }
+    ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col = 1)
+    {
+        try
+        {
+            DataContainer<ChipDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col));
+        }
+        return DataContainer<ChipDataContainer>::getObject(id);
+    }
 
   private:
 };
 
-class OpticalGroupDataContainer : public DataContainer<ModuleDataContainer>
+class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
 {
   public:
-    OpticalGroupDataContainer(uint16_t id) : DataContainer<ModuleDataContainer>(id) {}
+    OpticalGroupDataContainer(uint16_t id) : DataContainer<HybridDataContainer>(id) {}
     OpticalGroupDataContainer(const OpticalGroupDataContainer&) = delete;
-    OpticalGroupDataContainer(OpticalGroupDataContainer&& theCopyContainer) : DataContainer<ModuleDataContainer>(std::move(theCopyContainer)) {}
+    OpticalGroupDataContainer(OpticalGroupDataContainer&& theCopyContainer) : DataContainer<HybridDataContainer>(std::move(theCopyContainer)) {}
 
     template <class T>
-    T* addModuleDataContainer(uint16_t id, T* module)
+    T* addHybridDataContainer(uint16_t id, T* hybrid)
     {
-        return static_cast<T*>(DataContainer<ModuleDataContainer>::addObject(id, module));
+        return static_cast<T*>(DataContainer<HybridDataContainer>::addObject(id, hybrid));
     }
-    ModuleDataContainer* addModuleDataContainer(uint16_t id) { return DataContainer<ModuleDataContainer>::addObject(id, new ModuleDataContainer(id)); }
+    HybridDataContainer* addHybridDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<HybridDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id));
+        }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        return DataContainer<HybridDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -493,7 +517,19 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
     {
         return static_cast<T*>(DataContainer<OpticalGroupDataContainer>::addObject(id, opticalGroup));
     }
-    OpticalGroupDataContainer* addOpticalGroupDataContainer(uint16_t id) { return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id)); }
+    OpticalGroupDataContainer* addOpticalGroupDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<OpticalGroupDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));
+        }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        return DataContainer<OpticalGroupDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -511,7 +547,19 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
     {
         return static_cast<T*>(DataContainer<BoardDataContainer>::addObject(id, board));
     }
-    BoardDataContainer* addBoardDataContainer(uint16_t id) { return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id)); }
+    BoardDataContainer* addBoardDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<BoardDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));
+        }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        return DataContainer<BoardDataContainer>::getObject(id);
+    }
 
   private:
 };

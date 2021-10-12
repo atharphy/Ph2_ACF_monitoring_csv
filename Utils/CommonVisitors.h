@@ -112,9 +112,9 @@ class Counter : public HwDescriptionVisitor
     void visitChip(Ph2_HwDescription::Chip& pCbc)
     {
         fNCbc++;
-        fCbcMask |= (1 << pCbc.getChipId());
+        fCbcMask |= (1 << pCbc.getId());
     }
-    void     visitModule(Ph2_HwDescription::Module& pModule) { fNFe++; }
+    void     visitHybrid(Ph2_HwDescription::Hybrid& pHybrid) { fNFe++; }
     void     visitBeboard(Ph2_HwDescription::BeBoard& pBoard) { fNBe++; }
     uint32_t getNChip() const { return fNCbc; }
     uint32_t getNFe() const { return fNFe; }
@@ -134,12 +134,12 @@ class Configurator : public HwDescriptionVisitor
     void visitBeBoard(Ph2_HwDescription::BeBoard& pBoard)
     {
         fBeBoardInterface->ConfigureBoard(&pBoard);
-        LOG(INFO) << "Successfully configured Board " << +pBoard.getBeId();
+        LOG(INFO) << "Successfully configured Board " << +pBoard.getId();
     }
     void visitChip(Ph2_HwDescription::Chip& pCbc)
     {
         fCbcInterface->ConfigureChip(&pCbc);
-        LOG(INFO) << "Successfully configured Chip " << +pCbc.getChipId();
+        LOG(INFO) << "Successfully configured Chip " << +pCbc.getId();
     }
 };
 
@@ -163,7 +163,7 @@ struct CbcRegReader : public HwDescriptionVisitor
         fReadRegValue = pCbc.getReg(fRegName);
 
         if(fOutput)
-            LOG(INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getChipId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec;
+            LOG(INFO) << "Reading Reg " << RED << fRegName << RESET << " on CBC " << +pCbc.getId() << " memory value: " << std::hex << +fRegValue << " read value: " << +fReadRegValue << std::dec;
     }
     uint16_t getMemoryValue() { return fRegValue; }
     uint16_t getHWValue() { return fReadRegValue; }
@@ -282,6 +282,35 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             else
                 LOG(ERROR) << "Unknown option " << fOption;
         }
+        else if(pCbc.getFrontEndType() == FrontEndType::MPA)
+        {
+            if(fOption == 'w')
+            {
+                if(fThreshold > 255)
+                    LOG(ERROR) << "Error, Threshold for MPA can only be 10 bit max (255)!"; // h
+                else
+                {
+                    std::vector<std::pair<std::string, uint16_t>> cRegVec;
+                    uint16_t                                      cVCth1 = fThreshold & 0x00FF;
+                    cRegVec.emplace_back("ThDAC0", cVCth1);
+                    cRegVec.emplace_back("ThDAC1", cVCth1);
+                    cRegVec.emplace_back("ThDAC2", cVCth1);
+                    cRegVec.emplace_back("ThDAC3", cVCth1);
+                    cRegVec.emplace_back("ThDAC4", cVCth1);
+                    cRegVec.emplace_back("ThDAC5", cVCth1);
+                    cRegVec.emplace_back("ThDAC6", cVCth1);
+                    fInterface->WriteChipMultReg(&pCbc, cRegVec);
+                }
+            }
+            else if(fOption == 'r')
+            {
+                fInterface->ReadChipReg(&pCbc, "ThDAC0");
+                uint16_t cVCth1 = pCbc.getReg("ThDAC0");
+                fThreshold      = cVCth1 & 0xFF;
+            }
+            else
+                LOG(ERROR) << "Unknown option " << fOption;
+        }
         else
             LOG(ERROR) << "Not a valid chip type!";
     }
@@ -333,6 +362,37 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 fLatency = ((pCbc.getReg("FeCtrl&TrgLat2") & 0x01) << 8) | (pCbc.getReg("TriggerLatency1") & 0xFF);
             }
         }
+
+        else if(pCbc.getFrontEndType() == FrontEndType::SSA)
+        {
+            if(fOption == 'w')
+            {
+                std::vector<std::pair<std::string, uint16_t>> cRegVec;
+                cRegVec.emplace_back("L1-Latency_LSB", (0x00FF & fLatency) >> 0);
+                cRegVec.emplace_back("L1-Latency_MSB", (0x0100 & fLatency) >> 8);
+                fInterface->WriteChipMultReg(&pCbc, cRegVec);
+            }
+            else
+            {
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8);
+            }
+        }
+
+        else if(pCbc.getFrontEndType() == FrontEndType::MPA)
+        {
+            if(fOption == 'w')
+            {
+                std::vector<std::pair<std::string, uint16_t>> cRegVec;
+                cRegVec.emplace_back("L1Offset_1_ALL", (0x00FF & fLatency) >> 0);
+                cRegVec.emplace_back("L1Offset_2_ALL", (0x0100 & fLatency) >> 8);
+                fInterface->WriteChipMultReg(&pCbc, cRegVec);
+            }
+            else
+            {
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1") | (fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1") << 8);
+            }
+        }
+
         else
             LOG(ERROR) << "Not a valid chip type!";
     }

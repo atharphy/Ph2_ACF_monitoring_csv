@@ -17,20 +17,20 @@ void SCurve::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    startValue     = this->findValueInSettings("VCalHstart");
-    stopValue      = this->findValueInSettings("VCalHstop");
-    nSteps         = this->findValueInSettings("VCalHnsteps");
-    offset         = this->findValueInSettings("VCalMED");
-    nHITxCol       = this->findValueInSettings("nHITxCol");
-    doFast         = this->findValueInSettings("DoFast");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    startValue     = this->findValueInSettings<double>("VCalHstart");
+    stopValue      = this->findValueInSettings<double>("VCalHstop");
+    nSteps         = this->findValueInSettings<double>("VCalHnsteps");
+    offset         = this->findValueInSettings<double>("VCalMED");
+    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
+    doFast         = this->findValueInSettings<double>("DoFast");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ########################
     // # Custom channel group #
@@ -63,22 +63,23 @@ void SCurve::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "SCurve");
 }
 
-void SCurve::Start(int currentRun)
+void SCurve::Running()
 {
-    LOG(INFO) << GREEN << "[SCurve::Start] Starting" << RESET;
+    theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[SCurve::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     SCurve::run();
     SCurve::analyze();
-    SCurve::saveChipRegisters(currentRun);
+    SCurve::saveChipRegisters(theCurrentRun);
     SCurve::sendData();
 }
 
@@ -93,20 +94,25 @@ void SCurve::sendData()
         for(const auto theOccContainer: detectorContainerVector)
         {
             theOccStream.setHeaderElement(dacList[index] - offset);
-
             for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-
             index++;
         }
 
-        for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        if(theThresholdAndNoiseContainer != nullptr)
+            for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
 
 void SCurve::Stop()
 {
     LOG(INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
+
+    Tool::Stop();
+
+    SCurve::draw();
     this->closeFileHandler();
+
+    RD53RunProgress::reset();
 }
 
 void SCurve::localConfigure(const std::string fileRes_, int currentRun)
@@ -115,6 +121,11 @@ void SCurve::localConfigure(const std::string fileRes_, int currentRun)
     histos = nullptr;
 #endif
 
+    if(currentRun >= 0)
+    {
+        theCurrentRun = currentRun;
+        LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    }
     SCurve::ConfigureCalibration();
     SCurve::initializeFiles(fileRes_, currentRun);
 }
@@ -123,7 +134,7 @@ void SCurve::initializeFiles(const std::string fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
-    if(saveBinaryData == true)
+    if((currentRun >= 0) && (saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
         this->initializeWriteFileHandler();
@@ -140,10 +151,7 @@ void SCurve::run()
     // ##########################
     // # Set new VCAL_MED value #
     // ##########################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_MED", offset, true);
+    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "VCAL_MED", offset);
 
     for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     detectorContainerVector.clear();
@@ -160,8 +168,8 @@ void SCurve::run()
     // #########################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
@@ -169,7 +177,7 @@ void SCurve::run()
                                     detectorContainerVector[i]
                                         ->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
                                         .fOccupancy = RD53Shared::ISDISABLED;
@@ -180,24 +188,25 @@ void SCurve::run()
     SCurve::chipErrorReport();
 }
 
-void SCurve::draw(int currentRun)
+void SCurve::draw(bool doSaveData)
 {
-    SCurve::saveChipRegisters(currentRun);
+    if(doSaveData == true) SCurve::saveChipRegisters(theCurrentRun);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
-    LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
+    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    {
+        this->InitResultFile(fileRes);
+        LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     SCurve::fillHisto();
     histos->process();
-
-    this->WriteRootFile();
-    this->CloseResultFile();
+    saveData = doSaveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -209,17 +218,17 @@ void SCurve::draw(int currentRun)
     {
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
-                for(const auto cModule: *cOpticalGroup)
-                    for(const auto cChip: *cModule)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
                     {
                         std::stringstream myString;
                         myString.clear();
                         myString.str("");
-                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve_"
-                                 << "B" << std::setfill('0') << std::setw(2) << cBoard->getId() << "_"
-                                 << "O" << std::setfill('0') << std::setw(2) << cOpticalGroup->getId() << "_"
-                                 << "M" << std::setfill('0') << std::setw(2) << cModule->getId() << "_"
-                                 << "C" << std::setfill('0') << std::setw(2) << cChip->getId() << ".dat";
+                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve_"
+                                 << "B" << std::setfill('0') << std::setw(2) << +cBoard->getId() << "_"
+                                 << "O" << std::setfill('0') << std::setw(2) << +cOpticalGroup->getId() << "_"
+                                 << "M" << std::setfill('0') << std::setw(2) << +cHybrid->getId() << "_"
+                                 << "C" << std::setfill('0') << std::setw(2) << +cChip->getId() << ".dat";
                         std::ofstream fileOutID(myString.str(), std::ios::out);
                         for(auto i = 0u; i < dacList.size(); i++)
                         {
@@ -231,7 +240,7 @@ void SCurve::draw(int currentRun)
                                                   << detectorContainerVector[i]
                                                              ->at(cBoard->getIndex())
                                                              ->at(cOpticalGroup->getIndex())
-                                                             ->at(cModule->getIndex())
+                                                             ->at(cHybrid->getIndex())
                                                              ->at(cChip->getIndex())
                                                              ->getChannel<OccupancyAndPh>(row, col)
                                                              .fOccupancy *
@@ -240,7 +249,7 @@ void SCurve::draw(int currentRun)
                                                   << detectorContainerVector[i]
                                                          ->at(cBoard->getIndex())
                                                          ->at(cOpticalGroup->getIndex())
-                                                         ->at(cModule->getIndex())
+                                                         ->at(cHybrid->getIndex())
                                                          ->at(cChip->getIndex())
                                                          ->getChannel<OccupancyAndPh>(row, col)
                                                          .fPh
@@ -264,59 +273,58 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
                             {
-                                for(auto i = 1u; i < dacList.size(); i++)
+                                for(auto i = 0u; i < dacList.size(); i++)
                                     measurements[i] = fabs(detectorContainerVector[i]
                                                                ->at(cBoard->getIndex())
                                                                ->at(cOpticalGroup->getIndex())
-                                                               ->at(cModule->getIndex())
-                                                               ->at(cChip->getIndex())
-                                                               ->getChannel<OccupancyAndPh>(row, col)
-                                                               .fOccupancy -
-                                                           detectorContainerVector[i - 1]
-                                                               ->at(cBoard->getIndex())
-                                                               ->at(cOpticalGroup->getIndex())
-                                                               ->at(cModule->getIndex())
+                                                               ->at(cHybrid->getIndex())
                                                                ->at(cChip->getIndex())
                                                                ->getChannel<OccupancyAndPh>(row, col)
                                                                .fOccupancy);
 
                                 SCurve::computeStats(measurements, offset, nHits, mean, rms);
 
-                                if((rms > 0) && (nHits > 0) && (isnan(rms) == false))
+                                if((mean > 0) && (rms > 0) && (nHits > 0) && (std::isnormal(rms) == true))
                                 {
                                     theThresholdAndNoiseContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fThreshold = mean;
                                     theThresholdAndNoiseContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fThresholdError = rms / sqrt(nHits);
                                     theThresholdAndNoiseContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoise = rms;
+                                    theThresholdAndNoiseContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<ThresholdAndNoise>(row, col)
+                                        .fNoiseError = (nHits > 1 ? rms / sqrt(nHits) * sqrt(sqrt(2 / (nHits - 1))) : 0);
 
-                                    if(mean > theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>())
-                                        theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() = mean;
+                                    if(mean > theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>())
+                                        theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = mean;
                                 }
                                 else
                                     theThresholdAndNoiseContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
-                                        ->at(cModule->getIndex())
+                                        ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoise = RD53Shared::FITERROR;
@@ -329,14 +337,16 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
 
     for(const auto cBoard: *theThresholdAndNoiseContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Average threshold for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cModule->getId() << "/"
-                              << cChip->getId() << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1) << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold << RESET
-                              << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW
-                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cModule->getIndex())->at(cChip->getIndex())->getSummary<float>() << RESET;
+                    LOG(INFO) << GREEN << "Average threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1)
+                              << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
+                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << BOLDBLUE
+                              << " (Delta_VCal)" << std::setprecision(-1) << RESET;
+                    RD53Shared::resetDefaultFloat();
                 }
 
     return theThresholdAndNoiseContainer;
@@ -350,23 +360,33 @@ void SCurve::fillHisto()
 #endif
 }
 
-void SCurve::computeStats(const std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
+void SCurve::computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms)
 {
     float mean2  = 0;
     float weight = 0;
     mean         = 0;
 
-    for(auto i = 0u; i < dacList.size(); i++)
-    {
-        mean += measurements[i] * (dacList[i] - offset);
-        weight += measurements[i];
+    std::reverse(measurements.begin(), measurements.end());
+    auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
 
-        mean2 += measurements[i] * (dacList[i] - offset) * (dacList[i] - offset);
+    std::reverse(measurements.begin(), measurements.end());
+    auto itLow = std::max_element(measurements.begin(), measurements.end()) - measurements.begin();
+
+    auto stop = std::min<int>((itHigh + itLow) / 2, dacList.size() - 1);
+
+    for(auto i = 0; i < stop; i++)
+    {
+        auto measurement = measurements[i + 1] - measurements[i];
+        auto dacCenter   = (dacList[i] + dacList[i + 1]) / 2.;
+
+        mean += measurement * (dacCenter - offset);
+        weight += measurement;
+        mean2 += measurement * (dacCenter - offset) * (dacCenter - offset);
     }
 
     nHits = weight * nEvents;
 
-    if(weight != 0)
+    if((weight > 0) && (mean > 0))
     {
         mean /= weight;
         rms = sqrt((mean2 / weight - mean * mean) * weight / (weight - 1. / nEvents));
@@ -378,49 +398,34 @@ void SCurve::computeStats(const std::vector<float>& measurements, int offset, fl
     }
 }
 
-void SCurve::chipErrorReport()
+void SCurve::chipErrorReport() const
 {
-    auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
-
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << GREEN << "]" << RESET;
-                    LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CMDERR_CNT") << std::setfill(' ') << std::setw(8)
-                              << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "SKIPPED_TRIGGER_CNT") << std::setfill(' ')
-                              << std::setw(8) << "" << RESET;
-                    LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "BCID_CNT") << std::setfill(' ') << std::setw(8) << ""
-                              << RESET;
-                    LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "TRIG_CNT") << std::setfill(' ') << std::setw(8) << ""
-                              << RESET;
+                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
                 }
 }
 
 void SCurve::saveChipRegisters(int currentRun)
 {
-    std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
-            for(const auto cModule: *cOpticalGroup)
-                for(const auto cChip: *cModule)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/opticalGroup/module/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cModule->getId() << "/" << cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
 }

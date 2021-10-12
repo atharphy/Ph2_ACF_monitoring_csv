@@ -27,7 +27,7 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
 
     std::vector<uint32_t> cVecReq;
 
-    fBoardFW->EncodeReg(cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVecReq, true, false);
+    fBoardFW->EncodeReg(cRegItem, pMPA->getHybridId(), pMPA->getId(), cVecReq, true, false);
     fBoardFW->ReadChipBlockReg(cVecReq);
 
     // bools to find the values of failed and read
@@ -44,11 +44,17 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
     setBoard(pMPA->getBeBoardId());
+    // need to or success
+    if(pRegNode == "ThDAC_ALL")
+    {
+        this->Set_threshold(pMPA, pValue);
+        return true;
+    }
     ChipRegItem cRegItem = pMPA->getRegItem(pRegNode);
     cRegItem.fValue      = pValue & 0xFF;
     std::vector<uint32_t> cVec;
-    // std::cout<<pMPA->getFeId()<<" , "<<pMPA->getChipId()<<std::endl;
-    fBoardFW->EncodeReg(cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true);
+    // std::cout<<pMPA->getHybridId()<<" , "<<pMPA->getId()<<std::endl;
+    fBoardFW->EncodeReg(cRegItem, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true);
     uint8_t cWriteAttempts = 0;
     bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 
@@ -80,7 +86,7 @@ bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std:
         }
         cRegItem        = pMPA->getRegItem(cReg.first);
         cRegItem.fValue = cReg.second;
-        fBoardFW->EncodeReg(cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true);
 
         // HACK! take out
         this->WriteChipReg(pMPA, cReg.first, cReg.second, pVerifLoop);
@@ -120,57 +126,27 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
     setBoard(pMPA->getBeBoardId());
     assert(localRegValues.size() == pMPA->getNumberOfChannels());
     std::string dacTemplate;
-    bool        isMask = false;
 
     if(dacName == "TrimDAC_P")
         dacTemplate = "TrimDAC_P%d";
-    else if(dacName == "Mask")
-        isMask = true;
+    else if(dacName == "ThresholdTrim")
+        dacTemplate = "TrimDAC_P%d";
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
-
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    // std::vector<uint32_t> listOfChannelToUnMask;
-    ChannelGroup<NMPACHANNELS, 1> channelToEnable;
-
-    std::vector<uint32_t> cVec;
+    ChannelGroup<NMPACHANNELS, 1>                 channelToEnable;
+    std::vector<uint32_t>                         cVec;
     cVec.clear();
-    for(uint8_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
+    bool cSuccess = true;
+
+    for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
     {
-        if(isMask)
-        {
-            if(localRegValues.getChannel<uint16_t>(iChannel))
-            {
-                channelToEnable.enableChannel(iChannel);
-                // listOfChannelToUnMask.emplace_back(iChannel);
-            }
-        }
-        else
-        {
-            char dacName1[20];
-
-            sprintf(dacName1, dacTemplate.c_str(), iChannel + 1);
-            // fBoardFW->EncodeReg ( cRegItem, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true );
-            // #ifdef COUNT_FLAG
-            //     fRegisterCount++;
-            // #endif
-            cRegVec.emplace_back(dacName1, localRegValues.getChannel<uint16_t>(iChannel));
-        }
+        char dacName1[20];
+        sprintf(dacName1, dacTemplate.c_str(), 1 + iChannel);
+        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
+        cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F), pVerifLoop);
     }
-
-    if(isMask) { return maskChannelsGroup(pMPA, &channelToEnable, pVerifLoop); }
-    else
-    {
-        // uint8_t cWriteAttempts = 0 ;
-        // bool cSuccess = fBoardFW->WriteChipBlockReg ( cVec, cWriteAttempts, pVerifLoop);
-        // #ifdef COUNT_FLAG
-        //     fTransactionCount++;
-        // #endif
-        // return cSuccess;
-        // fReadoutChipInterface->WriteChipReg(theChip, "THTRIMMING_S" + std::to_string(istrip), THtowrite);
-
-        return WriteChipMultReg(pMPA, cRegVec, pVerifLoop);
-    }
+    return cSuccess;
 }
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
@@ -188,15 +164,18 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         fRegisterCount++;
 #endif
         // LOG (INFO) << BOLDRED << "Write "<<cRegItem.first<< RESET;
-        fBoardFW->EncodeReg(cRegItem.second, pMPA->getFeId(), pMPA->getChipId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem.second, pMPA->getHybridId(), pMPA->getId(), cVec, pVerifLoop, true);
+
         bool cSuccess = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
         if(cSuccess)
         {
             auto cReadBack = ReadChipReg(pMPA, cRegItem.first);
+            // LOG(INFO) << BOLDRED << cRegItem.first<<" "<<cReadBack<<","<<cRegItem.second.fValue << RESET;
             if(cReadBack != cRegItem.second.fValue)
             {
-                std::size_t found = (cRegItem.first).find("ReadCounter");
-                if(found == std::string::npos)
+                std::size_t found  = (cRegItem.first).find("ReadCounter");
+                std::size_t found1 = (cRegItem.first).find("_ALL");
+                if((found == std::string::npos) and (found1 == std::string::npos))
                 {
                     LOG(INFO) << BOLDRED << "Read back value from " << cRegItem.first << BOLDBLUE << " at I2C address " << std::hex << pMPA->getRegItem(cRegItem.first).fAddress << std::dec
                               << " not equal to write value of " << std::hex << +cRegItem.second.fValue << std::dec << RESET;
@@ -233,7 +212,7 @@ void MPAInterface::Pix_write(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_t r
     rowreg.fValue      = data;
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    fBoardFW->EncodeReg(rowreg, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, true);
+    fBoardFW->EncodeReg(rowreg, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, true);
     fBoardFW->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
 }
 
@@ -244,7 +223,7 @@ uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_
 
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    fBoardFW->EncodeReg(cRegItem, cMPA->getFeId(), cMPA->getChipId(), cVecReq, false, false);
+    fBoardFW->EncodeReg(cRegItem, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, false);
     fBoardFW->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
     std::chrono::milliseconds cShort(1);
 
@@ -305,7 +284,7 @@ L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1, bool verbose)
     L1data  formL1data;
 
     std::vector<uint16_t> strip_data, pixel_data;
-    uint16_t              curdata;
+    uint16_t              curdata = 0;
 
     for(int i = 1; i < 200; i++)
     {
@@ -391,7 +370,7 @@ void MPAInterface::Activate_pp(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x8
 
 void MPAInterface::Activate_ss(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x41); }
 
-void MPAInterface::Activate_ps(Chip* pMPA) { this->WriteChipReg(pMPA, "ECM", 0x8); }
+void MPAInterface::Activate_ps(Chip* pMPA, uint8_t win) { this->WriteChipReg(pMPA, "ECM", win); }
 
 void MPAInterface::Pix_Smode(ReadoutChip* pMPA, uint32_t p, std::string smode = "edge")
 {
@@ -518,10 +497,8 @@ bool MPAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifL
     // if(inject) enwrite=17;
 
     uint32_t enwrite = 0x17;
-    if(inject) enwrite = 0x47;
-
-    // std::cout<<"enwrite "<<enwrite<<std::endl;
-    for(uint32_t i = 1; i <= pChip->getNumberOfChannels(); i++) this->WriteChipReg(pChip, "ENFLAGS_P" + std::to_string(i), enwrite);
+    if(inject) enwrite = 0x53;
+    this->WriteChipReg(pChip, "ENFLAGS_ALL", enwrite);
     return true;
 }
 

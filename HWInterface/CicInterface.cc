@@ -32,7 +32,7 @@ CicInterface::~CicInterface() {}
 
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
 {
-    LOG(INFO) << BOLDBLUE << "Configuring CIC" << +pCic->getChipId() << " on FE" << +pCic->getFeId() << RESET;
+    LOG(INFO) << BOLDBLUE << "Configuring CIC" << +pCic->getId() << " on FE" << +pCic->getHybridId() << RESET;
     // first, identify the correct BeBoardFWInterface
     setBoard(pCic->getBeBoardId());
 
@@ -46,7 +46,7 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
     for(auto& cRegItem: cCicRegMap)
     {
         LOG(DEBUG) << BOLDBLUE << cRegItem.first << " , Value: 0x" << std::hex << +cRegItem.second.fValue << std::dec << RESET;
-        fBoardFW->EncodeReg(cRegItem.second, pCic->getFeId(), pCic->getChipId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem.second, pCic->getHybridId(), pCic->getId(), cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
         fRegisterCount++;
 #endif
@@ -68,7 +68,7 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
     cRegItem.fValue                = pValue;
     LOG(DEBUG) << BOLDBLUE << pRegNode << " , Value: 0x" << std::hex << cRegItem.fValue << std::dec << RESET;
-    fBoardFW->EncodeReg(cRegItem, pChip->getFeId(), pChip->getChipId(), cVec, pVerifLoop, true);
+    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
     // now write the registers
     uint8_t cWriteAttempts = 0;
     bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
@@ -83,7 +83,7 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 
     std::vector<uint32_t> cVecReq;
 
-    fBoardFW->EncodeReg(cRegItem, pChip->getFeId(), pChip->getChipId(), cVecReq, true, false);
+    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
     fBoardFW->ReadChipBlockReg(cVecReq);
 
     // bools to find the values of failed and read
@@ -99,7 +99,7 @@ std::pair<bool, uint16_t> CicInterface::ReadChipReg(Chip* pChip, ChipRegItem pRe
 {
     setBoard(pChip->getBeBoardId());
     std::vector<uint32_t> cVecReq;
-    fBoardFW->EncodeReg(pRegItem, pChip->getFeId(), pChip->getChipId(), cVecReq, true, false);
+    fBoardFW->EncodeReg(pRegItem, pChip->getHybridId(), pChip->getId(), cVecReq, true, false);
     fBoardFW->ReadChipBlockReg(cVecReq);
     // bools to find the values of failed and read
     bool    cFailed = false;
@@ -184,7 +184,7 @@ bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0x7F) | (0x01 << 7));
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Manually settomg BX0 delay value in CIC on FE" << +pChip->getFeId() << " to " << +pBx0delay << " clock cycles." << RESET;
+    LOG(INFO) << BOLDBLUE << "Manually settomg BX0 delay value in CIC on FE" << +pChip->getHybridId() << " to " << +pBx0delay << " clock cycles." << RESET;
     bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess) return cSuccess;
     cSuccess = cSuccess && this->WriteChipReg(pChip, "EXT_BX0_DELAY", pBx0delay);
@@ -195,7 +195,7 @@ bool CicInterface::ConfigureBx0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
 {
     std::vector<uint8_t> cFeMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
     setBoard(pChip->getBeBoardId());
-    LOG(DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getFeId() << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getHybridId() << RESET;
     LOG(DEBUG) << BOLDBLUE << "Configuring word alignment patterns on CIC" << RESET;
     bool cSuccess = ConfigureAlignmentPatterns(pChip, pAlignmentPatterns);
 
@@ -273,7 +273,7 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
 bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, int pWait_ms)
 {
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getFeId() << RESET;
+    LOG(INFO) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getHybridId() << RESET;
     LOG(INFO) << BOLDBLUE << "Configuring word alignment patterns on CIC" << RESET;
     bool cSuccess = ConfigureAlignmentPatterns(pChip, pAlignmentPatterns);
     if(!cSuccess)
@@ -546,7 +546,7 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, std::vector<std::vector<
 }
 bool CicInterface::SetStaticWordAlignment(Chip* pChip, uint8_t pValue)
 {
-    LOG(INFO) << BOLDBLUE << "Setting word alignment value of CIC on FE" << +pChip->getFeId() << " to " << +pValue << RESET;
+    LOG(INFO) << BOLDBLUE << "Setting word alignment value of CIC on FE" << +pChip->getHybridId() << " to " << +pValue << RESET;
 
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
@@ -829,7 +829,7 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
 // with the BE or the other readout ASICs on the chip
 bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegEdge)
 {
-    std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getFeId());
+    std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getHybridId());
     if(pChip->getFrontEndType() == FrontEndType::CIC)
         cOut += " for CIC1.";
     else

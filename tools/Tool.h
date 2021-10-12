@@ -48,7 +48,7 @@ class Tool : public Ph2_System::SystemController
 {
 #ifdef __USE_ROOT__
     using ChipHistogramMap    = std::map<ChipContainer*, std::map<std::string, TObject*>>;
-    using ModuleHistogramMap  = std::map<ModuleContainer*, std::map<std::string, TObject*>>;
+    using HybridHistogramMap  = std::map<HybridContainer*, std::map<std::string, TObject*>>;
     using BeBoardHistogramMap = std::map<BoardContainer*, std::map<std::string, TObject*>>;
     using CanvasMap           = std::map<BaseContainer*, TCanvas*>;
 #endif
@@ -56,16 +56,6 @@ class Tool : public Ph2_System::SystemController
     using TestGroupChannelMap = std::map<int, std::vector<uint8_t>>;
 
   public:
-    // using ChannelOccupancy                    = std::vector<float>; //strip        : occupancy
-    // using ChipOccupancyPerChannelMap           = std::map<uint8_t,ChannelOccupancy             >; //cbc          : {
-    // strip  : occupancy } using ModuleOccupancyPerChannelMap        = std::map<uint8_t,ChipOccupancyPerChannelMap >;
-    // //module       : { cbc    : { strip : occupancy } }
-
-    // using ChipGlobalOccupancyMap               = std::map<uint8_t,float>; //cbc          : { strip  : occupancy }
-    // using ModuleGlobalOccupancyMap            = std::map<uint8_t,ChipGlobalOccupancyMap    >; //module       : { cbc
-    // : { strip : occupancy } } using BackEndBoardOccupancyMap  = std::map<uint8_t,ModuleOccupancyPerChannelMap >;
-    // //backEndBoard : { module : { cbc   : { strip : occupancy } } }
-
     Tool();
 #ifdef __USE_ROOT__
 #ifdef __HTTP__
@@ -82,8 +72,6 @@ class Tool : public Ph2_System::SystemController
     void SoftDestroy();
 
 #ifdef __USE_ROOT__
-    void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
-
     /*!
      * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
      */
@@ -100,19 +88,27 @@ class Tool : public Ph2_System::SystemController
 
     TString getDirectoryName();
 
-    void bookHistogram(ModuleContainer* pModule, std::string pName, TObject* pObject);
-
+    void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
+    void bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject);
     void bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject);
 
     TObject* getHist(ChipContainer* pChip, std::string pName);
-
-    TObject* getHist(ModuleContainer* pModule, std::string pName);
-
+    TObject* getHist(HybridContainer* pHybrid, std::string pName);
     TObject* getHist(BoardContainer* pBeBoard, std::string pName);
 
     void WriteRootFile();
 #endif
 
+    virtual void sendData(){};
+    virtual void ConfigureCalibration(){};
+    virtual void Running(){};
+    virtual bool GetRunningStatus();
+
+    void Configure(std::string cHWFile, bool enableStream = false) override;
+    void Start(int runNumber) override;
+    void Stop() override;
+
+    void waitForRunToBeCompleted();
     void SaveResults();
 
     /*!
@@ -120,7 +116,7 @@ class Tool : public Ph2_System::SystemController
      * \param pDirectoryname : the name of the directory to create
      * \param pDate : apend the current date and time to the directoryname
      */
-    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true);
+    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true, const std::string& whichCalib = "");
 
 /*!
  * \brief Initialize the result Root file
@@ -134,20 +130,19 @@ class Tool : public Ph2_System::SystemController
 #endif
 
     void dumpConfigFiles();
-    // general stuff that can be useful
+    // General stuff that can be useful
     void setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState = false, bool pHoleMode = false);
-    // enable test pulse
+    // Enable test pulse
     void enableTestPulse(bool enableTP);
-
-    // enable commissioning loops and Test Pulse
+    // Enable commissioning loops and Test Pulse
     void setFWTestPulse();
-    // make test groups for everything Test pulse or Calibration
+    // Make test groups for everything Test pulse or Calibration
     void SetTestAllChannels(bool pAllChan) { fAllChan = pAllChan; }
     void SetTestPulse(bool pTestPulse) { fTestPulse = pTestPulse; }
-    void SetModuleBroadcast(bool pDoBroadcast) { fDoModuleBroadcast = pDoBroadcast; }
+    void SetHybridBroadcast(bool pDoBroadcast) { fDoHybridBroadcast = pDoBroadcast; }
     void SetBoardBroadcast(bool pDoBroadcast) { fDoBoardBroadcast = pDoBroadcast; }
     void SetSkipMaskedChannels(bool pSkipMaskedChannels) { fSkipMaskedChannels = pSkipMaskedChannels; }
-    // for hybrid testing
+    // For hybrid testing
     void CreateReport();
     void AmmendReport(std::string pString);
 
@@ -168,9 +163,7 @@ class Tool : public Ph2_System::SystemController
     }
 
     void setRegBit(uint16_t& pRegValue, uint8_t pPos, bool pValue) { pRegValue ^= (-pValue ^ pRegValue) & (1 << pPos); }
-
     void toggleRegBit(uint16_t& pRegValue, uint8_t pPos) { pRegValue ^= 1 << pPos; }
-
     bool getBit(uint16_t& pRegValue, uint8_t pPos) { return (pRegValue >> pPos) & 1; }
 
     /*!
@@ -187,6 +180,7 @@ class Tool : public Ph2_System::SystemController
         // " << +pDelay << " " << std::bitset<8>( pDelay ) ;
         return cValue;
     }
+
     /*!
      * \brief reverse the byte
      * \param n:the number to be reversed
@@ -225,24 +219,21 @@ class Tool : public Ph2_System::SystemController
         {24, "MaskChannel-200-to-193"}, {25, "MaskChannel-208-to-201"}, {26, "MaskChannel-216-to-209"}, {27, "MaskChannel-224-to-217"}, {28, "MaskChannel-232-to-225"}, {29, "MaskChannel-240-to-233"},
         {30, "MaskChannel-248-to-241"}, {31, "MaskChannel-254-to-249"}};
 
-    // statistical methods
+    // Statistical methods
     std::pair<float, float>                           getStats(std::vector<float> pData);
     std::pair<float, float>                           evalNoise(std::vector<float> pData, std::vector<float> pWeights, bool pIgnoreNegative = true);
     std::pair<std::vector<float>, std::vector<float>> getDerivative(std::vector<float> pData, std::vector<float> pWeights, bool pIgnoreNegative = true);
 
-    // decode bend LUT for a given CBC
+    // Decode bend LUT for a given CBC
     std::map<uint8_t, double> decodeBendLUT(Ph2_HwDescription::Chip* pChip);
 
-    // method to unmask a channel group
-    // void maskChannelFromOtherGroups (Chip* pChip, int pTestGroup);
-
-    // then a method to un-mask pairs of channels on a given CBC
+    // Un-mask pairs of channels on a given CBC
     void unmaskPair(Ph2_HwDescription::Chip* cChip, std::pair<uint8_t, uint8_t> pPair);
 
-    // select the group of channels for injecting the pulse
+    // Select the group of channels for injecting the pulse
     void selectGroupTestPulse(Ph2_HwDescription::Chip* cChip, uint8_t pTestGroup);
 
-    // // Two dimensional dac scan
+    // Two dimensional dac scan
     void scanDacDac(const std::string&                               dac1Name,
                     const std::vector<uint16_t>&                     dac1List,
                     const std::string&                               dac2Name,
@@ -250,7 +241,8 @@ class Tool : public Ph2_System::SystemController
                     uint32_t                                         numberOfEvents,
                     std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector,
                     int32_t                                          numberOfEventsPerBurst = -1);
-    // // Two dimensional dac scan per BeBoard
+
+    // Two dimensional dac scan per BeBoard
     void scanBeBoardDacDac(uint16_t                                         boardIndex,
                            const std::string&                               dac1Name,
                            const std::vector<uint16_t>&                     dac1List,
@@ -259,12 +251,14 @@ class Tool : public Ph2_System::SystemController
                            uint32_t                                         numberOfEvents,
                            std::vector<std::vector<DetectorDataContainer*>> detectorContainerVector,
                            int32_t                                          numberOfEventsPerBurst = -1);
+
     // One dimensional dac scan
     void scanDac(const std::string&                  dacName,
                  const std::vector<uint16_t>&        dacList,
                  uint32_t                            numberOfEvents,
                  std::vector<DetectorDataContainer*> detectorContainerVector,
                  int32_t                             numberOfEventsPerBurst = -1);
+
     // One dimensional dac scan per BeBoard
     void scanBeBoardDac(uint16_t                             boardIndex,
                         const std::string&                   dacName,
@@ -272,21 +266,21 @@ class Tool : public Ph2_System::SystemController
                         uint32_t                             numberOfEvents,
                         std::vector<DetectorDataContainer*>& detectorContainerVector,
                         int32_t                              numberOfEventsPerBurst = -1);
-    // bit wise scan
+    // Bit wise scan
     void bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
-    // bit wise scan per BeBoard
+    // Bit wise scan per BeBoard
     void bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
-    // set dac and measure data
+    // Set dac and measure data
     void setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
-    // set dac and measure data per BeBoard
+    // Set dac and measure data per BeBoard
     void setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
-    // measure data
+    // Measure data
     void measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
-    // measure data per BeBoard
+    // Measure data per BeBoard
     void measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
-    // measure data per BeBoard and per group
-    // void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase
-    // *cTestChannelGroup); set global DAC for all CBCs in the BeBoard
+    // Measure data per BeBoard and per group
+    // void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
+    // Set global DAC for all CBCs in the BeBoard
     void setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer);
     // Set global DAC for all Chips in the BeBoard
     void setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer);
@@ -318,86 +312,21 @@ class Tool : public Ph2_System::SystemController
     }
 
     template <typename T, typename C, typename M, typename... H>
-    ModuleContainerStream<T, C, M, H...> prepareModuleContainerStreamer(std::string appendName = "")
+    HybridContainerStream<T, C, M, H...> prepareHybridContainerStreamer(std::string appendName = "")
     {
-        ModuleContainerStream<T, C, M, H...> theContainerStreamer(getCalibrationName() + appendName);
+        HybridContainerStream<T, C, M, H...> theContainerStreamer(getCalibrationName() + appendName);
         return theContainerStreamer;
     }
 
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 
-    // Old scans without Detector Containers
-
-    // // Two dimensional dac scan
-    // void scanDacDac(const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const std::string &dac2Name,
-    // const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t, std::map<uint16_t,
-    // std::map<uint16_t, ModuleOccupancyPerChannelMap> > > &backEndOccupancyPerChannelMap, std::map<uint16_t,
-    // std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > > &backEndChipOccupanyMap);
-
-    // // Two dimensional dac scan per BeBoard
-    // void scanBeBoardDacDac(BeBoard* pBoard, const std::string &dac1Name, const std::vector<uint16_t> &dac1List, const
-    // std::string &dac2Name, const std::vector<uint16_t> &dac2List, const uint16_t &numberOfEvents, std::map<uint16_t,
-    // std::map<uint16_t, ModuleOccupancyPerChannelMap> > &moduleOccupancyPerChannelMap, std::map<uint16_t,
-    // std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndChipOccupanyMap);
-
-    // // One dimensional dac scan
-    // void scanDac(const std::string &dacName, const std::vector<uint16_t> &dacList, const uint16_t &numberOfEvents,
-    // std::map<uint16_t, std::map<uint16_t, ModuleOccupancyPerChannelMap> > &backEndOccupancyPerChannelMap,
-    // std::map<uint16_t, std::map<uint16_t, ModuleGlobalOccupancyMap > > &backEndChipOccupanyMap);
-
-    // // One dimensional dac scan per BeBoard
-    // void scanBeBoardDac(BeBoard* pBoard, const std::string &dacName, const std::vector<uint16_t> &dacList, const
-    // uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &moduleOccupancyPerChannelMap,
-    // std::map<uint16_t, ModuleGlobalOccupancyMap > &moduleChipOccupanyMap);
-
-    // // bit wise scan
-    // void bitWiseScan(const std::string &dacName, const uint16_t &numberOfEvents, const float &targetOccupancy, bool
-    // isOccupancyTheMaximumAccepted, std::map<uint16_t, ModuleOccupancyPerChannelMap>
-    // &backEndOccupanyPerChannelAtTargetMap, std::map<uint16_t, ModuleGlobalOccupancyMap> &backEndOccupanyAtTargetMap);
-
-    // // bit wise scan per BeBoard
-    // void bitWiseScanBeBoard(BeBoard* pBoard, const std::string &dacName, const uint16_t &numberOfEvents, const float
-    // &targetOccupancy, bool &isOccupancyTheMaximumAccepted, ModuleOccupancyPerChannelMap
-    // &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &moduleOccupancyMap);
-
-    // // set dac and measure occupancy
-    // void setDacAndMeasureOccupancy(const std::string &dacName, const uint16_t &dacValue, const uint16_t
-    // &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap> &backEndOccupancyPerChannelMap,
-    // std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndChipOccupanyMap, float &globalOccupancy);
-
-    // // set dac and measure occupancy per BeBoard
-    // void setDacAndMeasureBeBoardOccupancy(BeBoard* pBoard, const std::string &dacName, const uint16_t &dacValue,
-    // const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap,
-    // ModuleGlobalOccupancyMap &cbcOccupanyMap, float &globalOccupancy);
-
-    // // measure occupancy
-    // void measureOccupancy(const uint16_t &numberOfEvents, std::map<uint16_t, ModuleOccupancyPerChannelMap>
-    // &backEndOccupancyPerChannelMap, std::map<uint16_t, ModuleGlobalOccupancyMap > &backEndChipOccupanyMap, float
-    // &globalOccupancy);
-
-    // // measure occupancy
-    // void measureBeBoardOccupancy(BeBoard* pBoard, const uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap
-    // &moduleOccupancyPerChannelMap, ModuleGlobalOccupancyMap &cbcOccupanyMap, float &globalOccupancy);
-
-    // // measure occupancy per group
-    // void measureBeBoardOccupancyPerGroup(const std::vector<uint8_t> &cTestGrpChannelVec, BeBoard* pBoard, const
-    // uint16_t &numberOfEvents, ModuleOccupancyPerChannelMap &moduleOccupancyPerChannelMap);
-
-    // //Set global DAC for all Chips in the BeBoard
-    // void setAllGlobalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t,
-    // std::map<uint8_t, uint16_t> > &dacList);
-
-    // //Set local DAC list for all Chips in the BeBoard
-    // void setAllLocalDacBeBoard(BeBoard* pBoard, const std::string &dacName, const std::map<uint8_t, std::map<uint8_t,
-    // std::vector<uint16_t> > > &dacList);
-
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
     ChipHistogramMap    fChipHistMap;
-    ModuleHistogramMap  fModuleHistMap;
+    HybridHistogramMap  fHybridHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static TString      fSummaryTreeParameter;
@@ -418,12 +347,15 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
+    std::atomic<bool>    fKeepRunning;
+    int                  fRunNumber;
+    std::future<void>    fRunningFuture;
     bool                 fSkipMaskedChannels;
     bool                 fAllChan;
     bool                 fMaskChannelsFromOtherGroups;
     bool                 fTestPulse;
-    bool                 fDoModuleBroadcast;
     bool                 fDoBoardBroadcast;
+    bool                 fDoHybridBroadcast;
     ChannelGroupHandler* fChannelGroupHandler;
 
     std::string getCalibrationName();

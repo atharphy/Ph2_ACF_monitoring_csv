@@ -7,41 +7,66 @@
 - A C++ object-based library describing the system components (CBCs, RD53, Hybrids, Boards) and their properties (values, status)
 
 
-## Middleware for the Inner-Tracker (IT) system
-```diff
-+ Last change made to this section: 22/06/2020
+###  A short guide to write the GoldenImage to the SD card
+
+1. Connect the SD card
+2. Download the golden firmware from the [cms-tracker-daq webpage](https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img)
+3. `sudo fdisk -l` - find the name of the SD card (for example, /dev/mmcblk0)
+4. `sudo chmod 744 /dev/sd_card_name` - to be able to play with it
+5. Go to the folder were you saved the sdgoldenimage.img file
+6. `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512` - to write the image to the SD card.
+If the SD card is partitioned (formatted), pay attention to write on the block device (e.g. `/dev/mmcblk0`) and not inside the partition (e.g. `/dev/mmcblk0p1`)
+7. Once the previous command is done, you can list the SD card: `./imgtool /dev/sd_card_name list` - there should be a GoldenImage.bin, with 20MB block size
+8. Insert the SD card into the FC7
+
+Alternatively, instead of the `dd` command above, to only copy the needed bytes you can do:
+```bash
+imageName=sdgoldenimage.img
+dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --block-size=1 $imageName | awk '{print $1}')
 ```
 
-Suggested software and firmware versions:
-- Software git branch / tag : `master` / `IT-v3.8`
-- Firmware tag: `3.3`
+If you installed the command `pv` (`sudo yum install -y pv`), then the best way is the following (replacing `/dev/mmcblk0` with your target device):
+```bash
+pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
+```
+<hr>
+
+
+## Middleware for the Inner-Tracker (IT) system
+```diff
++ Last change made to this section: 30/08/2021
+```
+
+**Suggested software and firmware versions:**
+- Software git branch / tag : `Dev` / `v4-02`
+- Firmware tag: `4.2`
 - Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
 
-FC7 setup:
+**FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
-4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://centos.pkgs.org/6/epel-x86_64/rarpd-ss981107-42.el6.x86_64.rpm.html
-5. Start the rarpd daemon: `sudo systemctl start rarpd` or `rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
+5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
-More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
+More details on the hardware needed to setup the system can be bound [here](https://indico.cern.ch/event/1014295/contributions/4257334/attachments/2200045/3728440/Low-resoution%202021_02%20DAQ%20School.pdf)
 
-Firmware setup:
+**Firmware setup:**
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
 2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to understand to which dev it's attached to (`/dev/sd_card_name`)
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
 4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/-/releases
 5. Plug the microSD card in the FC7
-6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `Setup and run the IT-DAQ` before running this command)
+6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `IT-DAQ setup and run` before running this command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
-A golden firmware can be downloaded from here: https://cernbox.cern.ch/index.php/s/5tUCio08PEfTf0a <br />
+A golden firmware can be downloaded from here: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img <br />
 A detailed manual about the firmware can be found here: https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf
 
-IT-DAQ setup and run:
+**IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
@@ -51,7 +76,9 @@ IT-DAQ setup and run:
 10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
-Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):
+**N.B.:** a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
+
+**Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
 - Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
 - Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
@@ -71,7 +98,11 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 9. Threshold adjustment
 10. Injection delay scan
 11. Clock delay scan
-12. Physics
+12. Bit Error Rate test
+13. Data read back optimisation
+14. Chip internal voltage tuning
+15. Generic DAC-DAC scan
+16. Physics
 ```
 Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
@@ -155,6 +186,7 @@ else
     echo "Argument not recognized: $1"
 fi
 ```
+**N.B.:** steps **4** and **5** are meant to measure the so called "in-time threshold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 <hr>
 
@@ -165,9 +197,12 @@ Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is d
 You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
 For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
 
+
 ### Gitlab CI setup for Developers (required to submit merge requests!!!)
 
-1. Add predefined variables
+1. Make sure you are subscribed to the cms-tracker-phase2-DAQ e-group
+
+2. Add predefined variables
 
     i. from your fork go to `Ph2_ACF > settings > CI/CD`
 
@@ -183,15 +218,48 @@ For more information on the firmware, please check the doc directory of https://
         - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
-2. Enable shared Runners (if not enabled)
+3. Enable shared Runners (if not enabled)
 
     i. from `settings > CI/CD` expand the `Runners` section
 
     ii. click the `Allow shared Runners` button
 
+
+
+### Setup on CentOs8
+
+The following procedure will install (in order):
+1. the `boost` and `pugixml` libraries
+2. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+3. `root` with all its needed libraries
+4. `cmake`, tools for clang, including `clang-format` and `git-extras`
+
+```bash
+# Libraries needed by Ph2_ACF
+sudo yum install -y boost-devel pugixml-devel
+
+# uHAL libraries (cactus)
+sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
+  -o /etc/yum.repos.d/ipbus-sw.repo
+sudo yum-config-manager --enable powertools
+sudo yum clean all
+sudo yum groupinstall uhal
+
+# ROOT
+sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
+  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+
+# Build tools and some nice git extras
+sudo yum install -y cmake
+sudo yum install -y clang-tools-extra
+sudo yum install -y git-extras
+```
+
 ### clang-format (required to submit merge requests!!!)
+
 1. install 7.0 llvm toolset:
 
+        $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
@@ -199,7 +267,7 @@ For more information on the firmware, please check the doc directory of https://
         $> formatAll
 
 
-### Setup on CC7 (Scroll down for instructions on setting up on SLC6)
+### Setup on CC7 (scroll down for instructions on setting up on SLC6)
 
 1. Check which version of gcc is installed on your CC7, it should be > 4.8 (could be the default on CC7):
 
@@ -274,23 +342,23 @@ For more information on the firmware, please check the doc directory of https://
         $> sudo yum install cmake
 
 
-### The Ph2_ACF Software : 
+### The Ph2_ACF software
 
 Follow these instructions to install and compile the libraries:
 (provided you installed the latest version of gcc, µHal,  mentioned above).
 
 1. Clone the GitHub repo and run cmake
   
-        $> git clone https://:@gitlab.cern.ch:8443/fravera/Ph2_ACF.git
+        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
         $> cd Ph2_ACF
         $> source setup.sh
+        $> mkdir build 
         $> cd build 
         $> cmake ..
 
 2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
 
 3. Don't forget to `source setup.sh` to set all the environment variables correctly.
-
 
 4. Launch 
 
@@ -351,7 +419,7 @@ Follow these instructions to install and compile the libraries:
     to run the DQM code from the June '15 beamtest
 
 
-### Nota Bene:
+### Nota Bene
 
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
 
@@ -362,12 +430,12 @@ Register values are:
 For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in RegManager.cc.
 
 
-### External Clock and Trigger:
+### External clock and trigger
 
 Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
 
 
-### Example HWDescription.xml File with DIO5 support:
+### Example HWDescription.xml file with DIO5 support
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -375,7 +443,7 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
   <BeBoard Id="0" boardType="D19C" eventType="VR">
       <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.81:50001" address_table="file://settings/address_tables/d19c_address_table.xml" />
 
-    <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+    <Hybrid FeId="0" FMCId="0" HybridId="0" Status="1">
         <Global>
             <Settings threshold="550" latency="26"/>
             <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -386,7 +454,7 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
         <CBC_Files path="./settings/CbcFiles/" />
         <CBC Id="0" configfile="CBC3_default.txt" />
         <CBC Id="1" configfile="CBC3_default.txt" />
-    </Module>
+    </Hybrid>
 
     <SLink>
         <DebugMode type="FULL"/>
@@ -512,7 +580,7 @@ Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-f
 ```
 
 
-### Known Issues:
+### Known issues
 
 uHAL exceptions and UDP timeouts when reading larger packet sizes from the GLIB board: this can happen for some users (cause not yet identified) but can be circumvented by changing the line
 
@@ -529,10 +597,10 @@ and then launching the CACTUS control hub by the command:
 This uses TCP protocol instead of UDP which accounts for packet loss but decreases the performance.
 
 
-### Support, Suggestions ?
+### Support, suggestions?
 
 For any support/suggestions, mail to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
 
 
-### Firmware repository for OT tracker
+### Firmware repository for OT tracker:
 https://udtc-ot-firmware.web.cern.ch/

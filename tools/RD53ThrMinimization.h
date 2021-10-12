@@ -22,22 +22,31 @@
 class ThrMinimization : public PixelAlive
 {
   public:
-    void Start(int currentRun) override;
+    ~ThrMinimization()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void   sendData();
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void   run();
-    void   draw(int currentRun);
+    void   draw();
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nBitThr        = floor(log2(ThrStop - ThrStart + 1) + 1);
+        uint16_t nIterationsThr = floor(log2(ThrStop - ThrStart + 1) + 2);
         uint16_t moreIterations = 1;
-        return PixelAlive::getNumberIterations() * (nBitThr + moreIterations);
+        return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     ThresholdHistograms* histos;
@@ -48,7 +57,6 @@ class ThrMinimization : public PixelAlive
     size_t rowStop;
     size_t colStart;
     size_t colStop;
-    size_t nEvents;
     float  targetOccupancy;
     size_t ThrStart;
     size_t ThrStop;
@@ -58,12 +66,12 @@ class ThrMinimization : public PixelAlive
     DetectorDataContainer theThrContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-    void chipErrorReport();
-    void saveChipRegisters(int currentRun);
+    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

@@ -92,8 +92,8 @@ void StubQuickCheck::Initialise()
                         TString cTitle  = Form("BxId from 2 CICs [%d and %d] on links [%d and %d]; Bx Id [CIC %d]; BxId [CIC%d]",
                                               cFe->getId(),
                                               cOtherFe->getId(),
-                                              static_cast<OuterTrackerModule*>(cFe)->getLinkId(),
-                                              static_cast<OuterTrackerModule*>(cOtherFe)->getLinkId(),
+                                              static_cast<OuterTrackerHybrid*>(cFe)->getLinkId(),
+                                              static_cast<OuterTrackerHybrid*>(cOtherFe)->getLinkId(),
                                               cFe->getId(),
                                               cOtherFe->getId());
                         TH2D*   cHist2D = new TH2D(cName, cTitle, 3565, 0, 3565, 3565, 0, 3565);
@@ -208,14 +208,14 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                         if(cHit % 2 == 0)
                         {
                             auto cStripHit    = cChip->getId() * 127 + std::floor(cHit / 2.0);
-                            auto cModuleStrip = (cFe->getId() % 2 == 0) ? cStripHit : (8 * 127 - 1 - cStripHit);
+                            auto cHybridStrip = (cFe->getId() % 2 == 0) ? cStripHit : (8 * 127 - 1 - cStripHit);
                             for(auto cStub: cStubs)
                             {
                                 auto cStripSeed       = cChip->getId() * 127 + cStub.getPosition() * 0.5;
-                                auto cSeedModuleStrip = (cFe->getId() % 2 == 0) ? cStripSeed : (8 * 127 - 1 - cStripSeed);
-                                cStubHitCorrelation->Fill(cModuleStrip, cSeedModuleStrip);
+                                auto cSeedHybridStrip = (cFe->getId() % 2 == 0) ? cStripSeed : (8 * 127 - 1 - cStripSeed);
+                                cStubHitCorrelation->Fill(cHybridStrip, cSeedHybridStrip);
                             }
-                            if(cStubs.size() == 0) cStubHitCorrelation->Fill(cModuleStrip, -1); // fill underflow bin if no stubs are present in the event
+                            if(cStubs.size() == 0) cStubHitCorrelation->Fill(cHybridStrip, -1); // fill underflow bin if no stubs are present in the event
                         }
                     }
 
@@ -238,14 +238,14 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                             auto cBendSign    = std::pow(-1, (cStub.getBend() & 0x8) >> 3);
                             auto cBendDefLUT  = (cBendSign < 0) ? cBendValue * cBendSign : cBendValue * cBendSign * 0.5;
                             auto cStrip       = cChip->getId() * 127 + cStub.getPosition() * 0.5;
-                            auto cModuleStrip = (cFe->getId() % 2 == 0) ? cStrip : (8 * 127 - 1 - cStrip);
+                            auto cHybridStrip = (cFe->getId() % 2 == 0) ? cStrip : (8 * 127 - 1 - cStrip);
                             // LOG(DEBUG) << BOLDGREEN << "Stub seed " << +cStub.getPosition() << " - bend code " <<
                             // std::bitset<4>(cStub.getBend()) << " -- bend value " << +cBendValue << " sign is " <<
                             // +cBendSign << " --- " << +cBendDefLUT << RESET; LOG(DEBUG) << BOLDGREEN << ">>>event " <<
                             // +cEventCount << "\t..FE" << +cFe->getId() << "CBC" << +cChip->getId() << "\t.. MATCH
                             // FOUND! Stub seed " << +cStub.getPosition() << "-- TDC phase " << +cTDC << RESET;
                             cBendHistogram->Fill(cBendDefLUT);
-                            cStubInformation->Fill(cBendDefLUT, cModuleStrip);
+                            cStubInformation->Fill(cBendDefLUT, cHybridStrip);
                             cNstubs += 1;
                             cMatchesHist->Fill(cTDC);
                         }
@@ -271,7 +271,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
     LOG(INFO) << BOLDBLUE << "Found " << cNstubs << " stubs in " << +cNevents << " events with a stub and a hit in the same CBC. " << cSyncLoss << " events with a sync loss between CICs." << RESET;
 }
 // State machine control functions
-void StubQuickCheck::Start(int currentRun) { Initialise(); }
+void StubQuickCheck::Running() { Initialise(); }
 
 void StubQuickCheck::Stop()
 {

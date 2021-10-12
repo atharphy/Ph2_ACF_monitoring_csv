@@ -12,7 +12,7 @@
 #include "../Utils/D19cCic2Event.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
@@ -20,7 +20,7 @@
 
 using namespace Ph2_HwDescription;
 
-const unsigned N2SMODULES = 12;
+const unsigned N2SHYBRIDS = 12;
 
 namespace Ph2_HwInterface
 {
@@ -35,13 +35,13 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     fROCIds.clear();
     fNCbc = 0;
     // assuming that FEIds aren't shared between links
-    for(auto cModule: *pBoard)
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cOpticalGroup)
         {
-            auto  cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-            auto& cCic                = cOuterTrackerModule->fCic;
-            fNCbc += (cCic == NULL) ? cFe->size() : 1;
+            auto  cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+            auto& cCic                = cOuterTrackerHybrid->fCic;
+            fNCbc += (cCic == NULL) ? cFe->fullSize() : 1;
             FeData cFeData;
             fEventStubList.push_back(cFeData);
             fFeIds.push_back(cFe->getId());
@@ -56,8 +56,8 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
                 fEventRawList.push_back(cRawFeData);
             }
         } // hybrids
-    }     // modules
-    fBeId        = pBoard->getBeId();
+    }     // opticalGroup
+    fBeId        = pBoard->getId();
     fBeFWType    = 0;
     fCBCDataType = 0;
     fBeStatus    = 0;
@@ -91,13 +91,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
-            for(auto cModule: *pBoard)
+            for(auto cOpticalGroup: *pBoard)
             {
-                for(auto cFe: *cModule)
+                for(auto cFe: *cOpticalGroup)
                 {
-                    auto   cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-                    auto&  cCic                = cOuterTrackerModule->fCic;
-                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->size() : 1;
+                    auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                    auto&  cCic                = cOuterTrackerHybrid->fCic;
+                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
                     for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
                     {
                         uint8_t  cStatusWord    = 0x00;
@@ -134,18 +134,18 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 fEventRawList[cFe->getIndex()].second.clear();
                                 if(cWithCIC2)
                                 {
-                                    const size_t                            cNblocks = RAW_L1_CBC * cFe->size() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
+                                    const size_t                            cNblocks = RAW_L1_CBC * cFe->fullSize() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                                     std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                                     this->splitStream(pData, cL1Words, cL1Offset,
                                                       cNblocks); // split 32 bit words in  blocks of 11 bits
                                     // now try and arrange them by CBC again ...
-                                    for(size_t cChipIndex = 0; cChipIndex < cFe->size(); cChipIndex++)
+                                    for(size_t cChipIndex = 0; cChipIndex < cFe->fullSize(); cChipIndex++)
                                     {
                                         std::bitset<RAW_L1_CBC> cBitset(0);
                                         size_t                  cPosition = 0;
                                         for(size_t cBlockIndex = 0; cBlockIndex < RAW_L1_CBC / L1_BLOCK_SIZE; cBlockIndex++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
                                         {
-                                            auto  cIndex   = cChipIndex + cFe->size() * cBlockIndex;
+                                            auto  cIndex   = cChipIndex + cFe->fullSize() * cBlockIndex;
                                             auto& cL1block = cL1Words[cIndex];
                                             LOG(DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
                                             for(size_t cNbit = 0; cNbit < cL1block.size(); cNbit++)
@@ -160,12 +160,12 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 }
                                 else
                                 {
-                                    const size_t                     cNblocks = cFe->size(); // 274 bits per chip ..
+                                    const size_t                     cNblocks = cFe->fullSize(); // 274 bits per chip ..
                                     const size_t                     cRawL1   = RAW_L1_CBC - 1;
                                     std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
                                     this->splitStream(pData, cL1Words, cL1Offset,
                                                       cNblocks); // split 32 bit words in  blocks of 274 bits
-                                    for(int cIndex = 0; cIndex < (int)(cFe->size()); cIndex++)
+                                    for(int cIndex = 0; cIndex < (int)(cFe->fullSize()); cIndex++)
                                     {
                                         LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
                                         fEventRawList[cFe->getIndex()].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
@@ -218,7 +218,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         cIterator += cHitInfoSize + cStubInfoSize;
                     }
                 } // hybrid loop
-            }     // module loop
+            }     // hybrid loop
         }
         cEventIterator += cEventSize;
         cNEvents++;
@@ -246,14 +246,14 @@ void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
 void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list)
 {
     // get the first CIC
-    auto theFirstCIC = static_cast<OuterTrackerModule*>(pBoard->at(0)->at(0))->fCic;
+    auto theFirstCIC = static_cast<OuterTrackerHybrid*>(pBoard->at(0)->at(0))->fCic;
     bool cWithCIC2   = (theFirstCIC->getFrontEndType() == FrontEndType::CIC2);
 
     fIsSparsified = pBoard->getSparsification();
 
     fEventHitList.clear();
     fEventStubList.clear();
-    for(size_t cFeIndex = 0; cFeIndex < N2SMODULES * 2; cFeIndex++)
+    for(size_t cFeIndex = 0; cFeIndex < N2SHYBRIDS * 2; cFeIndex++)
     {
         FeData cFeData;
         fEventStubList.push_back(cFeData);
@@ -264,7 +264,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             fEventRawList.push_back(cRawFeData);
         }
     }
-    fBeId        = pBoard->getBeId();
+    fBeId        = pBoard->getId();
     fBeFWType    = 0;
     fCBCDataType = 0;
     fBeStatus    = 0;
@@ -342,36 +342,36 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             // for( uint32_t cIndex=EVENT_HEADER_SIZE+3; cIndex < cL1DataSize; cIndex++)
             //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
 
-            size_t cHybridIndex = 0;
-            size_t cModuleIndex = 0;
+            size_t cOpticalGroupIndex = 0;
+            size_t cHybridIndex       = 0;
             for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     if(cHybrid->getId() == cFeId)
                     {
-                        cModuleIndex = cOpticalGroup->getIndex();
-                        cHybridIndex = cHybrid->getIndex();
+                        cOpticalGroupIndex = cOpticalGroup->getIndex();
+                        cHybridIndex       = cHybrid->getIndex();
                     }
                 }
             }
 
-            auto   cReadoutChips = pBoard->at(cModuleIndex)->at(cHybridIndex);
+            auto   cReadoutChips = pBoard->at(cOpticalGroupIndex)->at(cHybridIndex);
             size_t cL1Offset     = cOffset + 2 + cWithCIC2;
             if(cWithCIC2)
             {
-                const size_t                            cNblocks = RAW_L1_CBC * cReadoutChips->size() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
+                const size_t                            cNblocks = RAW_L1_CBC * cReadoutChips->fullSize() / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                 std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                 this->splitStream(list, cL1Words, cL1Offset, cNblocks); // split 32 bit words in  blocks of 11 bits
 
                 // now try and arrange them by CBC again ...
-                for(size_t cChipIndex = 0; cChipIndex < cReadoutChips->size(); cChipIndex++)
+                for(size_t cChipIndex = 0; cChipIndex < cReadoutChips->fullSize(); cChipIndex++)
                 {
                     std::bitset<RAW_L1_CBC> cBitset(0);
                     size_t                  cPosition = 0;
                     for(size_t cBlockIndex = 0; cBlockIndex < RAW_L1_CBC / L1_BLOCK_SIZE; cBlockIndex++) // RAW_L1_CBC/L1_BLOCK_SIZE blocks per chip
                     {
-                        auto  cIndex   = cChipIndex + cReadoutChips->size() * cBlockIndex;
+                        auto  cIndex   = cChipIndex + cReadoutChips->fullSize() * cBlockIndex;
                         auto& cL1block = cL1Words[cIndex];
                         LOG(DEBUG) << BOLDBLUE << "\t\t... L1 block " << +cIndex << " -- " << std::bitset<L1_BLOCK_SIZE>(cL1block) << RESET;
                         for(size_t cNbit = 0; cNbit < cL1block.size(); cNbit++)
@@ -389,11 +389,11 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
                 // std::vector<uint32_t> cData(list.begin()+cOffset, list.begin()+cOffset+cL1DataSize);
                 // for(auto cWord : cData )
                 //     LOG (INFO) << BOLDMAGENTA << "L1 data : " << std::bitset<32>(cWord) << RESET;
-                const size_t                     cNblocks = cReadoutChips->size(); // 274 bits per chip
+                const size_t                     cNblocks = cReadoutChips->fullSize(); // 274 bits per chip
                 const size_t                     cRawL1   = RAW_L1_CBC - 1;
                 std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
                 this->splitStream(list, cL1Words, cL1Offset, cNblocks); // split 32 bit words in  blocks of 274 bits
-                for(int cIndex = 0; cIndex < (int)(cReadoutChips->size()); cIndex++)
+                for(int cIndex = 0; cIndex < (int)(cReadoutChips->fullSize()); cIndex++)
                 {
                     LOG(DEBUG) << BOLDMAGENTA << "L1 data : " << cL1Words[cIndex] << RESET;
                     fEventRawList[cFeId].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
@@ -583,7 +583,7 @@ bool D19cCic2Event::DataBit(uint8_t pFeId, uint8_t pReadoutChipId, uint32_t i) c
     if(fIsSparsified) { return (decodeClusters(pFeId, pReadoutChipId)[i] > 0); }
     else
     {
-        size_t cOffset = 2 + 9 + 9;
+        size_t cOffset = 0; // 2 + 9 + 9;
         return (getRawL1Word(pFeId, pReadoutChipId)[cOffset + i] > 0);
     }
 }
@@ -732,7 +732,7 @@ void D19cCic2Event::print(std::ostream& os) const
 {
     os << BOLDGREEN << "EventType: d19c CIC2" << RESET << std::endl;
     os << BOLDBLUE << "L1A Counter: " << this->GetEventCount() << RESET << std::endl;
-    os << "          Be Id: " << +this->GetBeId() << std::endl;
+    os << "          Be Id: " << +this->getBeBoardId() << std::endl;
     os << "Event Data size: " << +this->GetEventDataSize() << std::endl;
     os << "Bunch Counter: " << this->GetBunch() << std::endl;
     os << BOLDRED << "    TDC Counter: " << +this->GetTDC() << RESET << std::endl;

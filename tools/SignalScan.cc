@@ -21,14 +21,14 @@ void SignalScan::Initialize()
                 fCanvasMap[cFe] = ctmpCanvas;
 
                 // 1D Hist forlatency scan
-                TString  cName = Form("h_module_thresholdScan_Fe%d", cFeId);
+                TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cFeId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
 
                 TH2F* cSignalHist =
                     new TH2F(cName, Form("Signal threshold vs channel FE%d; Channel # ; Threshold; # of Hits", cFeId), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, 255, -.5, 255 - .5);
-                bookHistogram(cFe, "module_signal", cSignalHist);
+                bookHistogram(cFe, "hybrid_signal", cSignalHist);
             }
         }
     }
@@ -44,7 +44,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
     bool pTimedRun = false;
     auto cSetting  = fSettingsMap.find("Nevents");
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
@@ -130,7 +130,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                             continue;
                         }
 
-                        const std::vector<Event*>& events = GetEvents(theBoard);
+                        const std::vector<Event*>& events = GetEvents();
                         cTotalEventCounter += events.size();
                         for(auto& cEvent: events)
                         {
@@ -248,7 +248,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //     {
 //         LOG (INFO) << "Threshold: " << +cVCth << " - Iteration " << i << " - Taking " << fNevents ;
 
-//         // Take Data for all Modules
+//         // Take Data for all Hybrids
 //         for ( BeBoard* pBoard : fBoardVector )
 //         {
 //             // I need this to normalize the TDC values I get from the Strasbourg FW
@@ -263,15 +263,15 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //             {
 //                 ReadData ( pBoard );
 
-//                 const std::vector<Event*>& events = GetEvents ( pBoard );
+//                 const std::vector<Event*>& events = GetEvents();
 //                 cTotalEvents += events.size();
 
 //                 // Loop over Events from this Acquisition
 //                 for ( auto& cEvent : events )
 //                 {
-//                     for ( auto cFe : pBoard->fModuleVector )
+//                     for ( auto cFe : pBoard->fHybridVector )
 //                     {
-//                         TH2F* cSignalHist = static_cast<TH2F*> (getHist ( cFe, "module_signal") );
+//                         TH2F* cSignalHist = static_cast<TH2F*> (getHist ( cFe, "hybrid_signal") );
 //                         int cEventHits = 0;
 //                         int cEventClusters = 0;
 
@@ -283,18 +283,18 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                             //now loop the channels for this particular event and increment a counter
 //                             for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
 //                             {
-//                                 if ( cEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+//                                 if ( cEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), cId ) )
 //                                 {
-//                                     cSignalHist->Fill (cCbc->getChipId() *NCHANNELS + cId, cVCth );
+//                                     cSignalHist->Fill (cCbc->getId() *NCHANNELS + cId, cVCth );
 //                                     cEventHits++;
 //                                 }
 //                             }
 
 //                             //append HexDataString to cDataString
-//                             cDataString += cEvent->DataHexString (cCbc->getFeId(), cCbc->getChipId() );
+//                             cDataString += cEvent->DataHexString (cCbc->getHybridId(), cCbc->getId() );
 //                             cDataString += "-";
 
-//                             std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getFeId(), cCbc->getChipId()
+//                             std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getHybridId(), cCbc->getId()
 //                             ); cEventClusters += cClusters.size();
 
 //                             cClusterDataString += "-";
@@ -319,7 +319,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                 }
 
 //                 LOG (INFO) << "Recorded " << cTotalEvents << " Events" ;
-//                 updateHists ( "module_signal", false );
+//                 updateHists ( "hybrid_signal", false );
 //             }
 
 //             fBeBoardInterface->Stop (pBoard);
@@ -327,7 +327,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //         }
 
 //         // done counting hits for all FE's, now update the Histograms
-//         updateHists ( "module_signal", false );
+//         updateHists ( "hybrid_signal", false );
 //         // now I need to increment the threshold by cVCth+fVcthDirecton*fSignalScanStep
 //         cVCth += cVcthDirection * fSignalScanStep;
 //         cVisitor.setOption ('w');
@@ -346,10 +346,10 @@ void SignalScan::updateHists(std::string pHistName, bool pFinal)
     for(auto& cCanvas: fCanvasMap)
     {
         // maybe need to declare temporary pointers outside the if condition?
-        if(pHistName == "module_signal")
+        if(pHistName == "hybrid_signal")
         {
             cCanvas.second->cd();
-            TH2F* cTmpHist = dynamic_cast<TH2F*>(getHist(static_cast<Ph2_HwDescription::Module*>(cCanvas.first), pHistName));
+            TH2F* cTmpHist = dynamic_cast<TH2F*>(getHist(static_cast<Ph2_HwDescription::Hybrid*>(cCanvas.first), pHistName));
             cTmpHist->DrawCopy("colz");
             cCanvas.second->Update();
         }
@@ -378,28 +378,28 @@ void SignalScan::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 1;
 
     cSetting = fSettingsMap.find("PedestalStepBack");
 
     if(cSetting != std::end(fSettingsMap))
-        fStepback = cSetting->second;
+        fStepback = boost::any_cast<double>(cSetting->second);
     else
         fStepback = 1;
 
     cSetting = fSettingsMap.find("SignalScanStep");
 
     if(cSetting != std::end(fSettingsMap))
-        fSignalScanStep = cSetting->second;
+        fSignalScanStep = boost::any_cast<double>(cSetting->second);
     else
         fSignalScanStep = 1;
 

@@ -1,4 +1,5 @@
 #include "../tools/Tool.h"
+#include <iostream>
 
 #if __cplusplus < 201402
 namespace std
@@ -33,7 +34,12 @@ struct CombinedCalibration : public Tool
 
     CombinedCalibration() : current_tool(this) {}
 
-    void Start(int run) { start_impl(run, std::make_index_sequence<size>()); }
+    void Running()
+    {
+        runningCompleted = false;
+        start_impl(std::make_index_sequence<size>());
+        runningCompleted = true;
+    }
 
     void Configure(std::string cHWFile, bool enableStream = false) override
     {
@@ -41,28 +47,34 @@ struct CombinedCalibration : public Tool
         Tool::CreateResultDirectory("Results", false, false);
     }
 
+    bool GetRunningStatus() override { return runningCompleted; }
+
     void Stop() override
     {
         Tool::dumpConfigFiles();
         Tool::SaveResults();
-        Tool::Destroy();
+        /* Tool::Destroy(); */
     }
 
   private:
+    bool runningCompleted;
     template <size_t... Is>
-    void start_impl(int run, std::index_sequence<Is...>)
+    void start_impl(std::index_sequence<Is...>)
     {
-        __attribute__((unused)) auto _ = {(start_single(run, std::get<Is>(tools)), 0)...};
+        __attribute__((unused)) auto _ = {(start_single(std::get<Is>(tools)), 0)...};
     }
 
     template <class T>
-    void start_single(int run, T& tool)
+    void start_single(T& tool)
     {
+        std::cout << __PRETTY_FUNCTION__ << " Starting calibration" << std::endl;
         tool.Inherit(current_tool);
         tool.ConfigureCalibration();
-        tool.Start(run);
+        tool.Running();
+        tool.Stop();
         tool.resetPointers();
         current_tool = &tool;
+        std::cout << __PRETTY_FUNCTION__ << " Calibration done" << std::endl;
     }
 
     Tool*                current_tool;

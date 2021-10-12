@@ -15,7 +15,7 @@
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/Module.h"
+#include "../HWDescription/Hybrid.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../Utils/Timer.h"
@@ -407,7 +407,7 @@ void perform_AntennaOccupancyMeasurement(Tool* pTool)
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;

@@ -362,6 +362,7 @@
             <node id="bitslip_done_cbc1"        address="0x002" mask="0x00000040"/>
             <node id="state_tuning_cbc0"        address="0x002" mask="0x00F00000"/>
             <node id="state_tuning_cbc1"        address="0x002" mask="0x0F000000"/>
+            <node id="stat_slvs_debug_mpa_stub_0" address="0x0042" permission="r" mode="incremental" size="80"/>
 	    <node id="slvs_debug"               address="0x00F">
             	<node id="ps_counters_ready"        mask="0x00000004"/>
             	<node id="ps_counters_fsm_state"    mask="0x000000f0"/>

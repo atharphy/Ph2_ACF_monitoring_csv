@@ -27,7 +27,7 @@ namespace Ph2_HwDescription
 {
 class BeBoard;
 class OpticalGroup;
-class Module;
+class Hybrid;
 class Chip;
 class ReadoutChip;
 } // namespace Ph2_HwDescription
@@ -65,10 +65,10 @@ class HwDescriptionVisitor
      */
     virtual void visitOpticalGroup(Ph2_HwDescription::OpticalGroup& pOpticalGroup) {}
     /*!
-     * \brief Visitor for Module Class
-     * \param pModule
+     * \brief Visitor for Hybrid Class
+     * \param pHybrid
      */
-    virtual void visitModule(Ph2_HwDescription::Module& pModule) {}
+    virtual void visitHybrid(Ph2_HwDescription::Hybrid& pHybrid) {}
     /*!
      * \brief Visitor for Cbc Class
      * \param pCbc

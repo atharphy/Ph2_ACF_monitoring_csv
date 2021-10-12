@@ -36,7 +36,7 @@
 using namespace Ph2_System;
 
 typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>>   CbcHistogramMap;
-typedef std::map<Ph2_HwDescription::Module*, std::map<std::string, TObject*>> ModuleHistogramMap;
+typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
 
 /*!
  * \class SignalScanFit
@@ -52,7 +52,7 @@ class SignalScanFit : public Tool
     double fVCthMax;
     double fVCthNbins;
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;

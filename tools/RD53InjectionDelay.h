@@ -22,17 +22,30 @@
 class InjectionDelay : public PixelAlive
 {
   public:
-    void Start(int currentRun) override;
+    ~InjectionDelay()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void   sendData();
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void   run();
-    void   draw(int currentRun);
+    void   draw();
     void   analyze();
-    size_t getNumberIterations() { return PixelAlive::getNumberIterations() * (stopValue - startValue); }
+    size_t getNumberIterations()
+    {
+        return PixelAlive::getNumberIterations() *
+               (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     InjectionDelayHistograms* histos;
@@ -46,7 +59,6 @@ class InjectionDelay : public PixelAlive
     size_t  colStop;
     size_t  startValue;
     size_t  stopValue;
-    size_t  nEvents;
 
     std::vector<uint16_t> dacList;
 
@@ -54,12 +66,12 @@ class InjectionDelay : public PixelAlive
     DetectorDataContainer theInjectionDelayContainer;
 
     void fillHisto();
-    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
-    void chipErrorReport();
-    void saveChipRegisters(int currentRun);
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     size_t      saveInjection;
     size_t      maxDelay;
     bool        doUpdateChip;

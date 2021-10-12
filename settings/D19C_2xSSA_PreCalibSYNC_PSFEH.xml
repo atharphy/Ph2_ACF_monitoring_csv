@@ -4,7 +4,7 @@
         <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
         <!-- <connection id="board" uri="chtcp-2.0://localhost:10203?target=198.162.4.11:50001" address_table="file://settings/address_tables/d19c_MT_address_table.xml" /> -->
     <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <Global>
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
@@ -18,7 +18,7 @@
 	    <SSA Id="7" side="0" configfile="SSAPreCalibSYNC.txt" />
             <CIC_Files path="./settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
-        </Module>
+        </Hybrid>
     </OpticalGroup>
 
     <!--CONFIG-->

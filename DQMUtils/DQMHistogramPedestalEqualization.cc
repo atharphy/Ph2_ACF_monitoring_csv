@@ -46,14 +46,14 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, const Detector
 //========================================================================================================================
 bool DQMHistogramPedestalEqualization::fill(std::vector<char>& dataBuffer)
 {
-    ModuleContainerStream<EmptyContainer, uint16_t, EmptyContainer> theVcthStreamer("PedestalEqualization");
+    HybridContainerStream<EmptyContainer, uint16_t, EmptyContainer> theVcthStreamer("PedestalEqualization");
     ChannelContainerStream<Occupancy>                               theOccupancyStream("PedestalEqualization");
     ChannelContainerStream<uint8_t>                                 theOffsetStream("PedestalEqualization");
 
     if(theVcthStreamer.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched PedestalEqualization Vcth!!!!!\n";
-        theVcthStreamer.decodeModuleData(fDetectorData);
+        theVcthStreamer.decodeHybridData(fDetectorData);
         fillVplusPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;

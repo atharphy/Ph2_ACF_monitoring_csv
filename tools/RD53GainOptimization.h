@@ -19,7 +19,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define NSTDEV 1. // Number of standard deviations for gain tolerance
+#define NSTDEV 4. // Number of standard deviations for gain tolerance
 
 // ################################
 // # Gain optimization test suite #
@@ -27,22 +27,31 @@
 class GainOptimization : public Gain
 {
   public:
-    void Start(int currentRun) override;
+    ~GainOptimization()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void   sendData();
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void   run();
     void   analyze();
-    void   draw(int currentRun);
+    void   draw();
     size_t getNumberIterations()
     {
-        uint16_t nBitKrumCurr   = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
-        uint16_t moreIterations = 1;
-        return Gain::getNumberIterations() * (nBitKrumCurr + moreIterations);
+        uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 2);
+        uint16_t moreIterations      = 1;
+        return Gain::getNumberIterations() * (nIterationsKrumCurr + moreIterations);
     }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     GainOptimizationHistograms* histos;
@@ -53,7 +62,6 @@ class GainOptimization : public Gain
     size_t rowStop;
     size_t colStart;
     size_t colStop;
-    size_t nEvents;
     size_t startValue;
     size_t stopValue;
     float  targetCharge;
@@ -66,12 +74,12 @@ class GainOptimization : public Gain
     DetectorDataContainer theKrumCurrContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
-    void chipErrorReport();
-    void saveChipRegisters(int currentRun);
+    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
+    void chipErrorReport() const;
 
   protected:
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;

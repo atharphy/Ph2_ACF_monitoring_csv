@@ -2,7 +2,7 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -37,7 +37,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     LOG(INFO) << BOLDRED << "=============" << RESET;
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/D19C_2xSSA_PreCalibSYNC.xml";
     std::stringstream outp;
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     cBackEndAligner.resetPointers();
 
     BeBoard*         pBoard           = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    ModuleContainer* ChipVec          = pBoard->at(0)->at(0);
+    HybridContainer* ChipVec          = pBoard->at(0)->at(0);
     TH2I*            strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 360, -60, 300, 25, 0, 25);
     strip_v_thdac_31->SetStats(0);
     for(auto cSSA: *ChipVec)
@@ -80,35 +80,35 @@ int main(int argc, char* argv[])
             cTool.fReadoutChipInterface->WriteChipReg(theSSA, "Bias_THDAC", thd);
         }
         cTool.ReadNEvents(pBoard, 500);
-        const std::vector<Event*>& eventVector = cTool.GetEvents(pBoard);
+        const std::vector<Event*>& eventVector = cTool.GetEvents();
         for(auto& event: eventVector) // for on events - begin
         {
             LOG(INFO) << BOLDRED << "L1N: " << static_cast<D19cSSAEvent*>(event)->GetL1Number() << RESET;
             LOG(INFO) << BOLDRED << "L1T: " << static_cast<D19cSSAEvent*>(event)->GetTrigID() << RESET;
-            for(auto opt: *pBoard) // for on module - begin
+            for(auto opt: *pBoard) // for on hybrid - begin
             {
-                for(auto module: *opt) // for on module - begin
+                for(auto hybrid: *opt) // for on hybrid - begin
                 {
-                    for(auto chip: *module) // for on chip - begin
+                    for(auto chip: *hybrid) // for on chip - begin
                     {
                         unsigned int channelNumber = 0;
                         for(int i = 0; i <= 120; i++) // loop over all strips
                         {
-                            // if (event->DataBit ( module->getId(), chip->getId(), channelNumber)) LOG (INFO) << RED <<
+                            // if (event->DataBit ( hybrid->getId(), chip->getId(), channelNumber)) LOG (INFO) << RED <<
                             // i << ", " << int(chip->getId()) <<  RESET;
-                            strip_v_thdac_31->Fill(channelNumber + (120 * int(chip->getId())), thd, event->DataBit(module->getId(), chip->getId(), channelNumber));
+                            strip_v_thdac_31->Fill(channelNumber + (120 * int(chip->getId())), thd, event->DataBit(hybrid->getId(), chip->getId(), channelNumber));
                             channelNumber++;
                         } // for on channel - end
 
-                        LOG(INFO) << BOLDRED << "L1C " << module->getId() << "," << chip->getId() << " : " << static_cast<D19cSSAEvent*>(event)->GetSSAL1Counter(module->getId(), chip->getId())
+                        LOG(INFO) << BOLDRED << "L1C " << hybrid->getId() << "," << chip->getId() << " : " << static_cast<D19cSSAEvent*>(event)->GetSSAL1Counter(hybrid->getId(), chip->getId())
                                   << RESET;
-                        // for (auto S: event->GetHits(module->getId(), chip->getId()))
+                        // for (auto S: event->GetHits(hybrid->getId(), chip->getId()))
                         //{
                         //	LOG(INFO) << BOLDRED << "stub: " << float(S)/2. << RESET;
                         //}
                     }
                 } // for on chip - end
-            }     // for on module - end
+            }     // for on hybrid - end
         }         // for on events - end
     }
     TLine* L1 = new TLine(120, 0, 120, 25);

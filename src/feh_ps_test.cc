@@ -39,7 +39,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -490,7 +490,7 @@ int main(int argc, char* argv[])
         // put it back in normal readout mode
         // and make sure we're in normal readout mode
         // i.e. synchronous
-        // auto cNevents  = 9;//cTool.findValueInSettings("Nevents" ,10);
+        // auto cNevents  = 9;//cTool.findValueInSettings<double>("Nevents" ,10);
         // for(auto cBoard : *cHybridTester.fDetectorContainer)
         // {
         //     BeBoard* cBeBoard = static_cast<BeBoard*>( cBoard );
@@ -507,7 +507,7 @@ int main(int argc, char* argv[])
         //                 0x3);
         //             }//chip
         //         }//hybrid
-        //     }// module
+        //     }// hybrid
         //     // check if i can read anything
         //     for( uint32_t cThreshold=0; cThreshold < 20; cThreshold++)
         //     {

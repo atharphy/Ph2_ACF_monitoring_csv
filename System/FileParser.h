@@ -18,11 +18,13 @@
 #include "../HWInterface/RD53FWInterface.h"
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Exception.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
 
 #include "pugixml.hpp"
+#include <boost/any.hpp>
 #include <iostream>
 #include <stdlib.h>
 #include <string>
@@ -37,7 +39,7 @@ namespace Ph2_System
 {
 using BeBoardVec   = std::vector<Ph2_HwDescription::BeBoard*>;                 /*!< Vector of Board pointers */
 using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
-using SettingsMap  = std::unordered_map<std::string, double>;                  /*!< Maps the settings */
+using SettingsMap  = std::unordered_map<std::string, boost::any>;              /*!< Maps the settings */
 
 /*!
  * \class FileParser
@@ -49,8 +51,9 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
-    void parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
+    void        parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
+    void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
+    std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile);
 
   protected:
     /*!
@@ -58,7 +61,7 @@ class FileParser
      * \param pVoltage: the Voltage level
      * \return corresponding 8-bit DAC value
      */
-    uint32_t Vto8Bit(float pVoltage) { return static_cast<uint32_t>(pVoltage / 3.3 * 256 + 0.5); }
+    /* uint32_t Vto8Bit(float pVoltage) { return static_cast<uint32_t>(pVoltage / 3.3 * 256 + 0.5); } */
 
   private:
     /*!
@@ -75,27 +78,35 @@ class FileParser
      */
     void parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
 
+    std::string parseMonitorxml(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile);
+
     void parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, uint32_t& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
+    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseSLink(pugi::xml_node pSLinkNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
-    void parseModuleContainer(pugi::xml_node pModuleNode, Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os, Ph2_HwDescription::BeBoard* pBoard);
-    void parseCbcContainer(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os);
+    void parseHybridContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os, Ph2_HwDescription::BeBoard* pBoard);
+    void parseCbcContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseCbcSettings(pugi::xml_node pCbcNode, Ph2_HwDescription::ReadoutChip* pCbc, std::ostream& os);
-    void parseGlobalCbcSettings(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* pModule, std::ostream& os);
+    void parseGlobalCbcSettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
-    void parseSSAContainer(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os);
-    void parseSSASettings(pugi::xml_node pModuleNode, Ph2_HwDescription::ReadoutChip* cSSA);
+    void parseSSAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
     //
-    void parseMPA(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix);
-    void parseMPASettings(pugi::xml_node pModuleNode, Ph2_HwDescription::ReadoutChip* cMPA);
+
+    void parseSSA2Container(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA2);
+    //
+    void parseMPA(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix);
+    void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cMPA);
+    //
+    void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
 
     // ########################
     // # RD53 specific parser #
     // ########################
-    void parseRD53(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* cModule, std::string cFilePrefix, std::ostream& os);
+    void parseRD53(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseRD53Settings(pugi::xml_node pRd53Node, Ph2_HwDescription::ReadoutChip* pRD53, std::ostream& os);
-    void parseGlobalRD53Settings(pugi::xml_node pModuleNode, Ph2_HwDescription::Module* pModule, std::ostream& os);
+    void parseGlobalRD53Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     // ########################
 
     std::map<uint8_t, std::string> ChannelMaskMapCBC2 = {

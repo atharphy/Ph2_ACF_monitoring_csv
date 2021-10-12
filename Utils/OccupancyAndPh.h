@@ -68,7 +68,7 @@ inline void OccupancyAndPh::makeChannelAverage<OccupancyAndPh>(const ChipContain
                 numberOfEnabledChannels++;
             }
 
-    fOccupancy /= numberOfEnabledChannels;
+    fOccupancy /= (numberOfEnabledChannels > 0 ? numberOfEnabledChannels : 1);
 
     if(fPhError > 0)
     {

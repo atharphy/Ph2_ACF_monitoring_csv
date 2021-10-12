@@ -4,15 +4,15 @@
       <!-- <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
       <!-- <connection id="board" uri="ipbusudp-2.0://192.168.13.207:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      \ -->
       <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-      <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.8:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+      <connection id="board" uri="chtcp-2.0://sbgat231.in2p3.fr:10203?target=192.168.7.230:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> 
       <!-- <connection id="board" uri="chtcp-2.0://jadsdesktop.cern.ch:10203?target=192.168.2.100:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
       
     <CDCE configure="0" clockRate="120"/>
 
     <!-- RHS -->
     <OpticalGroup Id="0" FMCId="0" >
-      <GBT phaseTap="8" enable="0"/>
-        <Module FeId="0" FMCId="0" ModuleId="0" Status="1" LinkId="0" >
+      <GBT phaseTap="7" enable="1"/>
+        <Hybrid Id="0" Status="1" LinkId="0" >
             <Global>
                 <Settings threshold="500" latency="74"/>
                 <TestPulse enable="1" polarity="0" amplitude="0x3F" channelgroup="0" delay="0" groundothers="0"/>
@@ -22,7 +22,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-            <CBC_Files path="./settings/CbcFiles/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
@@ -32,12 +32,12 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="./settings/CicFiles/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Module>
+        </Hybrid>
 
         <!-- LHS -->
-    <!--    <Module FeId="1" FMCId="0" ModuleId="0" Status="1" LinkId="0">
+	<Hybrid Id="1" Status="1" LinkId="0">
             <Global>
                 <Settings threshold="550" latency="19"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
@@ -47,7 +47,7 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
-            <CBC_Files path="./settings/CbcFiles/" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
@@ -57,10 +57,10 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
 
-            <CIC_Files path="./settings/CicFiles/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Module>
-    -->
+        </Hybrid>
+    
     </OpticalGroup>
 
     <SLink>

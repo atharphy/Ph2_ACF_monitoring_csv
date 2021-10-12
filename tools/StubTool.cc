@@ -43,7 +43,7 @@ void StubTool::Initialize()
     // We need this?---------------------------
     // this->fReadoutChipInterface->WriteChipReg (fCbc, Form ("Channel%03d", fChan + 1), (fHoleMode) ? 0xaa : 0x50 );
 
-    // fChannel = new Channel (fBoard->getBeId(), fCbc->getFeId(), fCbc->getChipId(), fChan );
+    // fChannel = new Channel (fBoard->getId(), fCbc->getHybridId(), fCbc->getId(), fChan );
     // fChannel->initializeHist (0, "VCth");
 
     // std::vector<Channel> fChannelVector;
@@ -51,7 +51,7 @@ void StubTool::Initialize()
     for(uint8_t iCh = 0; iCh < nChan; iCh++)
     {
         this->fReadoutChipInterface->WriteChipReg(fCbc, Form("Channel%03d", iCh + 1), (fHoleMode) ? 0xaa : 0x50);
-        fChannelVector.push_back(new Channel(fBoard->getId(), fBoard->at(0)->getId(), fCbc->getFeId(), fCbc->getId(), iCh));
+        fChannelVector.push_back(new Channel(fBoard->getId(), fBoard->at(0)->getId(), fCbc->getHybridId(), fCbc->getId(), iCh));
         fChannelVector.back()->initializeHist(0, "VCth");
     }
 
@@ -72,7 +72,7 @@ void StubTool::scanStubs()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { configureTestPulse(static_cast<ReadoutChip*>(static_cast<ReadoutChip*>(cCbcVector.at(iCBC))), 1); }
                 // Uncoment for Bend uncoding 2
@@ -165,7 +165,7 @@ void StubTool::scanStubs()
 
                                 // now read Events
                                 ReadNEvents(theBoard, fNevents);
-                                const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                const std::vector<Event*> cEvents    = GetEvents();
                                 int                       countEvent = 0;
                                 for(auto cEvent: cEvents)
                                 {
@@ -187,10 +187,10 @@ void StubTool::scanStubs()
                                             if(offset == 0 && (int)HIT % 2 != 0) hSTUB_SCAN_tg->Fill(STRIP + (iCBC * 127), tg + 0.5, 0.5);
                                         }
                                     }
-                                    if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                    if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                     {
                                         uint8_t stubCounter = 1;
-                                        for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                        for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                         {
                                             double stub_position = cStub.getPosition();
                                             double stub_bend     = Decoding_stub4(cStub.getBend());
@@ -246,7 +246,7 @@ void StubTool::scanStubs_wNoise()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
                 // hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -407,14 +407,14 @@ void StubTool::scanStubs_wNoise()
 
                                     // now read Events
                                     ReadNEvents(theBoard, fNevents);
-                                    const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                    const std::vector<Event*> cEvents    = GetEvents();
                                     int                       countEvent = 0;
                                     for(auto cEvent: cEvents)
                                     {
                                         ++countEvent;
                                         for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                                         {
-                                            std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId());
+                                            std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId());
                                             if(cHits.size() == nChan)
                                                 LOG(INFO) << RED << "CBC " << +iCBC << ": All channels firing!" << RESET;
                                             else
@@ -432,10 +432,10 @@ void StubTool::scanStubs_wNoise()
                                             {
                                                 if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
                                                 if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg - 1]) / 2) + (iCBC * 127) + (bend / 2) >= nChan) continue;
-                                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                 {
                                                     bool stubfinder = false;
-                                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                     {
                                                         if(((seedChan[smg] - 1) / 2) + (iCBC * 127) == (cStub.getCenter() + (iCBC * 127)))
                                                         {
@@ -461,10 +461,10 @@ void StubTool::scanStubs_wNoise()
                                                     hSTUB_SCAN_error->Fill(((seedChan[smg] - 1) / 2) + (iCBC * 127), (bend / 2));
                                                 }
                                             }
-                                            if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                            if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                             {
                                                 uint8_t stubCounter = 0;
-                                                for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                 {
                                                     stubCounter++;
                                                     double stub_position = cStub.getPosition();
@@ -519,7 +519,7 @@ void StubTool::scanStubs_swap()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
                 // hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -684,14 +684,14 @@ void StubTool::scanStubs_swap()
 
                                     // now read Events
                                     ReadNEvents(theBoard, fNevents);
-                                    const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                    const std::vector<Event*> cEvents    = GetEvents();
                                     int                       countEvent = 0;
                                     for(auto cEvent: cEvents)
                                     {
                                         ++countEvent;
                                         for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                                         {
-                                            std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId());
+                                            std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId());
                                             if(cHits.size() == nChan)
                                                 LOG(INFO) << RED << "CBC " << +iCBC << ": All channels firing!" << RESET;
                                             else
@@ -709,10 +709,10 @@ void StubTool::scanStubs_swap()
                                             {
                                                 if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
                                                 if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg - 1]) / 2) + (iCBC * 127) + (bend / 2) >= nChan) continue;
-                                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                 {
                                                     bool stubfinder = false;
-                                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                     {
                                                         if(((seedChan[smg] - 1) / 2) + (iCBC * 127) == (cStub.getCenter() + (iCBC * 127)))
                                                         {
@@ -738,10 +738,10 @@ void StubTool::scanStubs_swap()
                                                     hSTUB_SCAN_error->Fill(((seedChan[smg] - 1) / 2) + (iCBC * 127), (bend / 2));
                                                 }
                                             }
-                                            if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                            if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                             {
                                                 uint8_t stubCounter = 0;
-                                                for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                 {
                                                     stubCounter++;
                                                     double stub_position = cStub.getPosition();
@@ -802,7 +802,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId            = cFe->getId();
-                ModuleContainer& cCbcVector       = *cFe;
+                HybridContainer& cCbcVector       = *cFe;
                 const uint8_t    nCBC             = cCbcVector.size();
                 std::string      stubscanname_cw  = "StubsSCAN_ClusterWidth";
                 std::string      stubscanname_cbc = "StubsSCAN_ClusterWidth_vs_Strips";
@@ -885,14 +885,14 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
 
                         // now read Events
                         ReadNEvents(theBoard, fNevents);
-                        const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                        const std::vector<Event*> cEvents    = GetEvents();
                         int                       countEvent = 0;
                         for(auto cEvent: cEvents)
                         {
                             ++countEvent;
                             for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                             {
-                                std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId());
+                                std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId());
                                 if(cHits.size() == nChan)
                                     LOG(DEBUG) << RED << "CBC " << +iCBC << ": All channels firing!" << RESET;
                                 else
@@ -905,10 +905,10 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
                                         LOG(DEBUG) << BLUE << std::dec << cHit << " : " << HIT << " , " << STRIP << RESET;
                                     }
                                 }
-                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                 {
                                     uint8_t stubCounter = 0;
-                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                     {
                                         stubCounter++;
                                         double stub_strip = cStub.getCenter();
@@ -955,7 +955,7 @@ void StubTool::scanStubs_ptWidth()
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId      = cFe->getId();
-                ModuleContainer& cCbcVector = *cFe;
+                HybridContainer& cCbcVector = *cFe;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
                 // hSTUB_SCAN_tg = new TH2F(stubscanname_tg.c_str(),stubscanname_tg.c_str(),nChan,0,nChan,16,0,8);
@@ -1122,14 +1122,14 @@ void StubTool::scanStubs_ptWidth()
 
                                         // now read Events
                                         ReadNEvents(theBoard, fNevents);
-                                        const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                                        const std::vector<Event*> cEvents    = GetEvents();
                                         int                       countEvent = 0;
                                         for(auto cEvent: cEvents)
                                         {
                                             ++countEvent;
                                             for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                                             {
-                                                std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId());
+                                                std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId());
                                                 if(cHits.size() == nChan)
                                                     LOG(INFO) << RED << "CBC " << +iCBC << ": All channels firing!" << RESET;
                                                 else
@@ -1148,10 +1148,10 @@ void StubTool::scanStubs_ptWidth()
                                                     {
                                                         if(seedChan[smg] < 0 || seedChan[smg] > nChan) continue;
                                                         if(((seedChan[smg] - 1) / 2) + (iCBC * 127) + (bend / 2) < 0 || ((seedChan[smg] + 1) / 2) + (iCBC * 127) + (bend / 2) > nCBC * 127) continue;
-                                                        if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                        if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                         {
                                                             bool stubfinder = false;
-                                                            for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                            for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                             {
                                                                 if(((seedChan[smg] - 1) / 2) + (iCBC * 127) == (cStub.getCenter() + (iCBC * 127)))
                                                                 {
@@ -1177,10 +1177,10 @@ void StubTool::scanStubs_ptWidth()
                                                             hSTUB_SCAN_error->Fill(((seedChan[smg] - 1) / 2) + (iCBC * 127), (bend / 2));
                                                         }
                                                     }
-                                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                 {
                                                     uint8_t stubCounter = 1;
-                                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                                    for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                                     {
                                                         double stub_position = cStub.getPosition();
                                                         double stub_bend     = Decoding_stub4(cStub.getBend());
@@ -1248,7 +1248,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
             for(auto cFe: *cOpticalGroup)
             {
                 uint32_t         cFeId            = cFe->getId();
-                ModuleContainer& cCbcVector       = *cFe;
+                HybridContainer& cCbcVector       = *cFe;
                 const uint8_t    nCBC             = cCbcVector.size();
                 std::string      stubscanname_sof = "StubsSCAN_SoF";
                 std::string      stubscanname_cbc = "StubsSCAN_SoF_vs_Strips";
@@ -1325,14 +1325,14 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
 
                     // now read Events
                     ReadNEvents(theBoard, fNevents);
-                    const std::vector<Event*> cEvents    = GetEvents(theBoard);
+                    const std::vector<Event*> cEvents    = GetEvents();
                     int                       countEvent = 0;
                     for(auto cEvent: cEvents)
                     {
                         ++countEvent;
                         for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++)
                         {
-                            std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId());
+                            std::vector<uint32_t> cHits = cEvent->GetHits(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId());
                             if(cHits.size() == nChan)
                                 LOG(DEBUG) << RED << "CBC " << +iCBC << ": All channels firing!" << RESET;
                             else
@@ -1345,11 +1345,11 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
                                     LOG(DEBUG) << BLUE << std::dec << cHit << " : " << HIT << " , " << STRIP << RESET;
                                 }
                             }
-                            if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                            if(cEvent->StubBit(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                             {
                                 uint8_t stubCounter = 0;
-                                uint8_t nstub       = cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()).size();
-                                for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId()))
+                                uint8_t nstub       = cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()).size();
+                                for(auto& cStub: cEvent->StubVector(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId()))
                                 {
                                     stubCounter++;
                                     double stub_position = cStub.getPosition();
@@ -1357,7 +1357,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
                                     double stub_strip    = cStub.getCenter();
                                     LOG(DEBUG) << RED << "CBC" << +iCBC << " , Stub: " << +(stubCounter) << " | Position: " << stub_position << " | Bend: " << std::bitset<4>(cStub.getBend()) << " -> "
                                                << stub_bend << " || Strip: " << stub_strip << " , Filling STRIP: " << +(stub_strip + (iCBC * 127)) << RESET;
-                                    uint16_t                     cKey  = encodeId(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getChipId());
+                                    uint16_t                     cKey  = encodeId(cFeId, static_cast<ReadoutChip*>(cCbcVector.at(iCBC))->getId());
                                     EventDataMap::const_iterator cData = cEvent->fEventDataMap.find(cKey);
                                     if(cData != std::end(cEvent->fEventDataMap))
                                     {
@@ -1437,7 +1437,7 @@ void StubTool::parseSettings()
     auto cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 1;
     fHoleMode = 0;
@@ -1445,7 +1445,7 @@ void StubTool::parseSettings()
     cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 1;
     fNevents = 1;
@@ -1453,7 +1453,7 @@ void StubTool::parseSettings()
     cSetting = fSettingsMap.find("TestPulsePotentiometer");
 
     if(cSetting != std::end(fSettingsMap))
-        fTPAmplitude = cSetting->second;
+        fTPAmplitude = boost::any_cast<double>(cSetting->second);
     else
         fTPAmplitude = (fHoleMode) ? 50 : 200;
 }

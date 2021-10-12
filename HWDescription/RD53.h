@@ -29,16 +29,23 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t BROADCAST_CHIPID = 0x8; // Broadcast chip ID used to send the command to multiple chips
-const uint8_t NREGIONS_LONGCMD = 6;   // Number of regions to program with long write commands
-const uint8_t FIELDS_SHORTCMD  = 8;   // Number of fields for the short write command
-const uint8_t FIELDS_LONGCMD   = 24;  // Number of fields for the long write command
-const uint8_t NBIT_TDAC        = 4;   // Number of TDAC bits
-const uint8_t NBIT_MAXREG      = 16;  // Maximum number of bits for a chip register
-const uint8_t NPIX_REGION      = 4;   // Number of pixels in a region (1x4)
-const uint8_t NROW_CORE        = 8;   // Number of rows in a core
-const uint8_t NBIT_ADDR        = 9;   // Number of address bits
-const uint8_t NSYNC_WORS       = 32;  // Number of Sync words for synchronization
+const uint8_t  BROADCAST_CHIPID  = 0x08; // Broadcast chip ID used to send the command to multiple chips
+const uint8_t  NREGIONS_LONGCMD  = 6;    // Number of regions to program with long write commands
+const uint8_t  FIELDS_SHORTCMD   = 8;    // Number of fields for the short write command
+const uint8_t  FIELDS_LONGCMD    = 24;   // Number of fields for the long write command
+const uint8_t  NBIT_TDAC         = 4;    // Number of TDAC bits
+const uint8_t  NBIT_MAXREG       = 16;   // Maximum number of bits for a chip register
+const uint8_t  NPIX_REGION       = 4;    // Number of pixels in a region (1x4)
+const uint8_t  NROW_CORE         = 8;    // Number of rows in a core
+const uint8_t  NBIT_ADDR         = 9;    // Number of address bits
+const uint8_t  NSYNC_WORS        = 64;   // Number of Sync words for synchronization
+const uint16_t CDRCONFIG_1Gbit   = 1048; // Value for 1.28 Gbit/s
+const uint16_t CDRCONFIG_640Mbit = 1049; // Value for 640 Mbit/s
+const uint8_t  PATTERN_PRBS      = 0x02; // Start PRBS pattern
+const uint8_t  PATTERN_AURORA    = 0x01; // Start AURORA pattern
+const uint8_t  PATTERN_CLOCK     = 0x00; // Start clock pattern
+const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
+const uint16_t SET_SEL_OUT_ADDR  = 0x44; // SET_SEL_OUT regiser address
 } // namespace RD53Constants
 
 // ############
@@ -91,7 +98,7 @@ constexpr float cap    = 8.5;    // [fF]
 constexpr float ele    = 1.6;    // [e-19]
 constexpr float offset = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
 
-constexpr float VCAl2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
+constexpr float VCal2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
 
 constexpr float Charge2VCal(float Charge) { return (Charge - offset) / (cap * 1e4) * ele / (par0 / par1); }
 } // namespace RD53chargeConverter
@@ -131,7 +138,7 @@ class RD53 : public ReadoutChip
     static const FrontEnd*    frontEnds[];
     static const FrontEnd*    getMajorityFE(size_t colStart, size_t colStop);
 
-    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName);
+    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);
 
     void     loadfRegMap(const std::string& fileName) override;
@@ -144,17 +151,19 @@ class RD53 : public ReadoutChip
     std::vector<perColumnPixelData>* getPixelsMask() { return &fPixelsMask; }
     std::vector<perColumnPixelData>* getPixelsMaskDefault() { return &fPixelsMaskDefault; }
 
-    void    copyMaskFromDefault();
-    void    copyMaskToDefault();
-    void    resetMask();
-    void    enableAllPixels();
-    void    disableAllPixels();
-    size_t  getNbMaskedPixels();
-    void    enablePixel(unsigned int row, unsigned int col, bool enable);
-    void    injectPixel(unsigned int row, unsigned int col, bool inject);
-    void    setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
-    uint8_t getTDAC(unsigned int row, unsigned int col);
-    uint8_t getChipLane() const { return myChipLane; }
+    void        copyMaskFromDefault();
+    void        copyMaskToDefault();
+    void        resetMask();
+    void        enableAllPixels();
+    void        disableAllPixels();
+    size_t      getNbMaskedPixels();
+    void        enablePixel(unsigned int row, unsigned int col, bool enable);
+    void        injectPixel(unsigned int row, unsigned int col, bool inject);
+    void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
+    void        resetTDAC();
+    uint8_t     getTDAC(unsigned int row, unsigned int col);
+    uint8_t     getChipLane() const { return myChipLane; }
+    std::string getComment() const { return myComment; }
 
     struct HitData
     {
@@ -174,7 +183,7 @@ class RD53 : public ReadoutChip
         uint16_t             bc_id;
         std::vector<HitData> hit_data;
 
-        uint16_t evtStatus;
+        uint16_t eventStatus;
 
       private:
         void DecodeQuad(uint32_t data);
@@ -195,10 +204,30 @@ class RD53 : public ReadoutChip
         uint8_t cal_aux_delay;
     };
 
+    // #################
+    // # LpGBT mapping #
+    // #################
+    void    setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void    setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
+    void    setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
+    void    setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
+    uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
+    uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
+    uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
+
   private:
+    struct LpGBTmap
+    {
+        uint8_t RxGroup;
+        uint8_t RxChannel;
+        uint8_t TxGroup;
+        uint8_t TxChannel;
+    } fLpGBTmap;
     std::vector<perColumnPixelData> fPixelsMask;
     std::vector<perColumnPixelData> fPixelsMaskDefault;
     std::string                     configFileName;
+    std::string                     myComment;
     uint8_t                         myChipLane;
 };
 } // namespace Ph2_HwDescription
@@ -256,7 +285,7 @@ class Command
         frameVector.push_back(cmdCode);
 
         // Insert: chip id, address and data
-        for(auto i = 1u; i < nFields; i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
+        for(auto i = 1; i < static_cast<int>(nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
     }
 
     std::vector<uint16_t> getFrames() const
@@ -311,6 +340,7 @@ struct RdReg : public Command<RD53CmdEncoder::READ, 4>
 {
     RdReg(uint8_t chip_id, uint16_t address);
 };
+
 } // namespace RD53Cmd
 
 #endif

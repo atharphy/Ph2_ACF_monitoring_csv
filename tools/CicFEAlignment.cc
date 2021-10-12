@@ -77,23 +77,23 @@ void CicFEAlignment::Initialise()
         auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.at(cBoard->getIndex());
         auto& cWordAlignmentThisBoard  = fWordAlignmentValues.at(cBoard->getIndex());
 
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThresholdsThisModule     = cThresholdsThisBoard->at(cModule->getIndex());
-            auto& cLogicThisModule          = cLogicThisBoard->at(cModule->getIndex());
-            auto& cHIPsThisModule           = cHIPsThisBoard->at(cModule->getIndex());
-            auto& cPtCutThisModule          = cPtCutThisBoard->at(cModule->getIndex());
-            auto& cPhaseAlignmentThisModule = cPhaseAlignmentThisBoard->at(cModule->getIndex());
-            auto& cWordAlignmentThisModule  = cWordAlignmentThisBoard->at(cModule->getIndex());
+            auto& cThresholdsThisOpticalGroup     = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cLogicThisOpticalGroup          = cLogicThisBoard->at(cOpticalGroup->getIndex());
+            auto& cHIPsThisOpticalGroup           = cHIPsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cPtCutThisOpticalGroup          = cPtCutThisBoard->at(cOpticalGroup->getIndex());
+            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
+            auto& cWordAlignmentThisOpticalGroup  = cWordAlignmentThisBoard->at(cOpticalGroup->getIndex());
 
-            for(auto cHybrid: *cModule)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThresholdsThisHybrid     = cThresholdsThisModule->at(cHybrid->getIndex());
-                auto& cLogicThisHybrid          = cLogicThisModule->at(cHybrid->getIndex());
-                auto& cHIPsThisHybrid           = cHIPsThisModule->at(cHybrid->getIndex());
-                auto& cPtCutThisHybrid          = cPtCutThisModule->at(cHybrid->getIndex());
-                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisModule->at(cHybrid->getIndex());
-                auto& cWordAlignmentThisHybrid  = cWordAlignmentThisModule->at(cHybrid->getIndex());
+                auto& cThresholdsThisHybrid     = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLogicThisHybrid          = cLogicThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cHIPsThisHybrid           = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPtCutThisHybrid          = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cWordAlignmentThisHybrid  = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
 
                 // configure CBCs
                 for(auto cChip: *cHybrid)
@@ -147,7 +147,7 @@ void CicFEAlignment::writeObjects()
     fResultFile->Flush();
 }
 // State machine control functions
-void CicFEAlignment::Start(int currentRun)
+void CicFEAlignment::Running()
 {
     Initialise();
     bool cPhaseAligned = this->PhaseAlignment();
@@ -228,7 +228,7 @@ void CicFEAlignment::SetStubWindowOffsets(uint8_t pBendCode, int pBend)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     // read bend LUT
@@ -260,7 +260,7 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                OuterTrackerModule* theHybrid = static_cast<OuterTrackerModule*>(cHybrid);
+                OuterTrackerHybrid* theHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(theHybrid->getLinkId());
                 if(theHybrid->fCic != NULL)
                 {
@@ -323,10 +323,10 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThresholdsThisModule = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
-            auto& cLogicThisModule      = cLogicThisBoard->at(cOpticalGroup->getIndex());
-            auto& cHIPsThisModule       = cHIPsThisBoard->at(cOpticalGroup->getIndex());
-            auto& cPtCutThisModule      = cPtCutThisBoard->at(cOpticalGroup->getIndex());
+            auto& cThresholdsThisOpticalGroup = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cLogicThisOpticalGroup      = cLogicThisBoard->at(cOpticalGroup->getIndex());
+            auto& cHIPsThisOpticalGroup       = cHIPsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cPtCutThisOpticalGroup      = cPtCutThisBoard->at(cOpticalGroup->getIndex());
 
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -335,7 +335,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                 {
                     auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                     auto cReadoutChip          = static_cast<ReadoutChip*>(cChip);
-                    if(cReadoutChip->getChipId() != pFe) continue;
+                    if(cReadoutChip->getId() != pFe) continue;
 
                     std::vector<uint8_t> cBendLUT = cReadoutChipInterface->readLUT(cReadoutChip);
                     // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5
@@ -353,7 +353,7 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "TestPulse", 1);
                 }
                 // configure Bx0 alignment patterns in CIC
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
                 uint8_t              cSLVS3 = (cBendCode << 4) | cBendCode;
@@ -383,16 +383,16 @@ bool CicFEAlignment::Bx0Alignment(uint8_t pFe, uint8_t pLine, uint16_t pDelay, u
                     cSuccess = fCicInterface->ManualBx0Alignment(cCic, 8);
                 }
 
-                auto& cThresholdsThisHybrid = cThresholdsThisModule->at(cHybrid->getIndex());
-                auto& cLogicThisHybrid      = cLogicThisModule->at(cHybrid->getIndex());
-                auto& cHIPsThisHybrid       = cHIPsThisModule->at(cHybrid->getIndex());
-                auto& cPtCutThisHybrid      = cPtCutThisModule->at(cHybrid->getIndex());
+                auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPtCutThisHybrid      = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
 
                 // reset readout chip settings back to 'normal'
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cChip);
-                    if(theReadoutChip->getChipId() != pFe) continue;
+                    if(theReadoutChip->getId() != pFe) continue;
 
                     LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
                     fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
@@ -444,7 +444,7 @@ bool CicFEAlignment::ManualPhaseAlignment(uint16_t pPhase)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic != NULL)
                 {
                     fCicInterface->SetAutomaticPhaseAlignment(cCic, false);
@@ -466,13 +466,13 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure .... " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cHybrid: *cModule)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 // enable automatic phase aligner
-                fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerModule*>(cHybrid)->fCic, true);
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic, true);
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
 
                 fCicInterface->ResetPhaseAligner(cCic, 0); // Reset CIC Phase Aligner with a 0 ms wait
 
@@ -510,7 +510,7 @@ bool CicFEAlignment::PhaseAlignmentMPA(uint16_t pWait_ms)
 
                 LOG(INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cHybrid->getId() << RESET;
                 // check if a resync is needed
-                fCicInterface->CheckReSync(static_cast<OuterTrackerModule*>(cHybrid)->fCic);
+                fCicInterface->CheckReSync(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
             }
         }
     }
@@ -556,11 +556,11 @@ bool CicFEAlignment::WordAlignmentMPA(uint16_t pWait_ms)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
 
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cHybrid: *cModule)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
                 // now send a fast reset
@@ -611,19 +611,19 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
         cChannelMask.disableAllChannels();
         for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 10) cChannelMask.enableChannel(cChannel); // generate a hit in every Nth channel
 
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThresholdsThisModule     = cThresholdsThisBoard->at(cModule->getIndex());
-            auto& cLogicThisModule          = cLogicThisBoard->at(cModule->getIndex());
-            auto& cHIPsThisModule           = cHIPsThisBoard->at(cModule->getIndex());
-            auto& cPtCutThisModule          = cPtCutThisBoard->at(cModule->getIndex());
-            auto& cPhaseAlignmentThisModule = cPhaseAlignmentThisBoard->at(cModule->getIndex());
+            auto& cThresholdsThisOpticalGroup     = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cLogicThisOpticalGroup          = cLogicThisBoard->at(cOpticalGroup->getIndex());
+            auto& cHIPsThisOpticalGroup           = cHIPsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cPtCutThisOpticalGroup          = cPtCutThisBoard->at(cOpticalGroup->getIndex());
+            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(cOpticalGroup->getIndex());
 
-            for(auto cHybrid: *cModule)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 // enable automatic phase aligner
-                fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerModule*>(cHybrid)->fCic, true);
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                fCicInterface->SetAutomaticPhaseAlignment(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic, true);
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
 
                 // generate alignment pattern on all stub lines
                 LOG(INFO) << BOLDBLUE << "Generating STUB patterns needed for phase alignment on FE" << +cHybrid->getId() << RESET;
@@ -692,7 +692,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                 // read back phase aligner values
                 if(cLocked)
                 {
-                    auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisModule->at(cHybrid->getIndex());
+                    auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->at(cHybrid->getIndex());
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC " << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and swithcing to static phase " << RESET;
                     cPhaseTaps    = fCicInterface->GetOptimalTaps(cCic);
                     cPhaseTapsFEs = this->SortOptimalTaps(cPhaseTaps);
@@ -717,10 +717,10 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
                     exit(1);
                 }
 
-                auto& cThresholdsThisHybrid = cThresholdsThisModule->at(cHybrid->getIndex());
-                auto& cLogicThisHybrid      = cLogicThisModule->at(cHybrid->getIndex());
-                auto& cHIPsThisHybrid       = cHIPsThisModule->at(cHybrid->getIndex());
-                auto& cPtCutThisHybrid      = cPtCutThisModule->at(cHybrid->getIndex());
+                auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPtCutThisHybrid      = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
 
                 // reset readout chip settings back to 'normal'
                 for(auto cChip: *cHybrid)
@@ -737,7 +737,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_ms)
 
                 LOG(INFO) << BOLDBLUE << "Checking Reset/Resync for CIC on hybrid " << +cHybrid->getId() << RESET;
                 // check if a resync is needed
-                fCicInterface->CheckReSync(static_cast<OuterTrackerModule*>(cHybrid)->fCic);
+                fCicInterface->CheckReSync(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
             }
         }
     }
@@ -786,22 +786,22 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
         auto& cPtCutThisBoard         = fPtCuts.at(cBoard->getIndex());
         auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
 
-        for(auto cModule: *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThresholdsThisModule    = cThresholdsThisBoard->at(cModule->getIndex());
-            auto& cLogicThisModule         = cLogicThisBoard->at(cModule->getIndex());
-            auto& cHIPsThisModule          = cHIPsThisBoard->at(cModule->getIndex());
-            auto& cPtCutThisModule         = cPtCutThisBoard->at(cModule->getIndex());
-            auto& cWordAlignmentThisModule = cWordAlignmentThisBoard->at(cModule->getIndex());
+            auto& cThresholdsThisOpticalGroup    = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cLogicThisOpticalGroup         = cLogicThisBoard->at(cOpticalGroup->getIndex());
+            auto& cHIPsThisOpticalGroup          = cHIPsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cPtCutThisOpticalGroup         = cPtCutThisBoard->at(cOpticalGroup->getIndex());
+            auto& cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(cOpticalGroup->getIndex());
 
-            for(auto cHybrid: *cModule)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThresholdsThisHybrid    = cThresholdsThisModule->at(cHybrid->getIndex());
-                auto& cLogicThisHybrid         = cLogicThisModule->at(cHybrid->getIndex());
-                auto& cHIPsThisHybrid          = cHIPsThisModule->at(cHybrid->getIndex());
-                auto& cPtCutThisHybrid         = cPtCutThisModule->at(cHybrid->getIndex());
-                auto& cWordAlignmentThisHybrid = cWordAlignmentThisModule->at(cHybrid->getIndex());
-                auto& cCic                     = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cThresholdsThisHybrid    = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLogicThisHybrid         = cLogicThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cHIPsThisHybrid          = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cPtCutThisHybrid         = cPtCutThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
                 // now inject stubs that can generate word alignment pattern
@@ -849,18 +849,18 @@ bool CicFEAlignment::WordAlignment(uint16_t pWait_ms)
     }
     return cAligned;
 }
-uint8_t CicFEAlignment::getPhaseAlignmentValue(BeBoard* pBoard, OpticalGroup* pOpticalGroup, Module* pFe, ReadoutChip* pChip, uint8_t pLine)
+uint8_t CicFEAlignment::getPhaseAlignmentValue(BeBoard* pBoard, OpticalGroup* pOpticalGroup, Hybrid* pFe, ReadoutChip* pChip, uint8_t pLine)
 {
-    auto& cPhaseAlignmentThisBoard  = fPhaseAlignmentValues.at(pBoard->getIndex());
-    auto& cPhaseAlignmentThisModule = cPhaseAlignmentThisBoard->at(pOpticalGroup->getIndex());
-    auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisModule->at(pFe->getIndex());
+    auto& cPhaseAlignmentThisBoard        = fPhaseAlignmentValues.at(pBoard->getIndex());
+    auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->at(pOpticalGroup->getIndex());
+    auto& cPhaseAlignmentThisHybrid       = cPhaseAlignmentThisOpticalGroup->at(pFe->getIndex());
     return cPhaseAlignmentThisHybrid->at(pChip->getIndex())->getSummary<std::vector<uint8_t>>()[pLine];
 }
-uint8_t CicFEAlignment::getWordAlignmentValue(BeBoard* pBoard, OpticalGroup* pOpticalGroup, Module* pFe, ReadoutChip* pChip, uint8_t pLine)
+uint8_t CicFEAlignment::getWordAlignmentValue(BeBoard* pBoard, OpticalGroup* pOpticalGroup, Hybrid* pFe, ReadoutChip* pChip, uint8_t pLine)
 {
-    auto& cWordAlignmentThisBoard  = fWordAlignmentValues.at(pBoard->getIndex());
-    auto& cWordAlignmentThisModule = cWordAlignmentThisBoard->at(pOpticalGroup->getIndex());
-    auto& cWordAlignmentThisHybrid = cWordAlignmentThisModule->at(pFe->getIndex());
+    auto& cWordAlignmentThisBoard        = fWordAlignmentValues.at(pBoard->getIndex());
+    auto& cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(pOpticalGroup->getIndex());
+    auto& cWordAlignmentThisHybrid       = cWordAlignmentThisOpticalGroup->at(pFe->getIndex());
     return cWordAlignmentThisHybrid->at(pChip->getIndex())->getSummary<std::vector<uint8_t>>()[pLine];
 }
 void CicFEAlignment::Stop()

@@ -3,10 +3,10 @@
   <BeBoard Id="0" boardType="D19C" eventType="VR">
       <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.51:50001" address_table="file://settings/address_tables/d19c_address_table.xml" />
     <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" side="0" configfile="SSA_AllStrips.txt" />
-        </Module>
+        </Hybrid>
     </OpticalGroup>
 
     <!--CONFIG-->

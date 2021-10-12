@@ -14,13 +14,13 @@ struct HistogramFiller : public HwDescriptionVisitor
     void visit(ChipContainer* pCbc)
     {
         ReadoutChip*      theCbc         = static_cast<ReadoutChip*>(pCbc);
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector(theCbc->getFeId(), theCbc->getChipId());
+        std::vector<bool> cDataBitVector = fEvent->DataBitVector(theCbc->getHybridId(), theCbc->getId());
 
         for(uint32_t cId = 0; cId < NCHANNELS; cId++)
         {
             if(cDataBitVector.at(cId))
             {
-                uint32_t globalChannel = (theCbc->getChipId() * 254) + cId;
+                uint32_t globalChannel = (theCbc->getId() * 254) + cId;
 
                 //              LOG(INFO) << "Channel " << globalChannel << " VCth " << int(pCbc.getReg( "VCth" )) ;
                 // find out why histograms are not filling!
@@ -154,7 +154,7 @@ void HybridTester::InitializeHists()
             {
                 uint32_t cFeId     = cFe->getId();
                 uint16_t cMaxRange = 1023;
-                fType              = static_cast<OuterTrackerModule*>(cFe)->getFrontEndType();
+                fType              = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
 
                 for(auto cCbc: *cFe)
                 {
@@ -188,16 +188,16 @@ void HybridTester::InitializeHists()
 void HybridTester::InitialiseSettings()
 {
     auto cSetting       = fSettingsMap.find("Threshold_NSigmas");
-    fSigmas             = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 4;
+    fSigmas             = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 4;
     cSetting            = fSettingsMap.find("Nevents");
-    fTotalEvents        = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 999;
+    fTotalEvents        = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 999;
     cSetting            = fSettingsMap.find("HoleMode");
-    fHoleMode           = (cSetting != std::end(fSettingsMap)) ? cSetting->second : true;
+    fHoleMode           = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : true;
     cSetting            = fSettingsMap.find("TestPulsePotentiometer");
-    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0x7F;
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0x7F;
 
     // cSetting = fSettingsMap.find ( "TriggerSource" );
-    // if ( cSetting != std::end ( fSettingsMap ) ) trigSource = cSetting->second;
+    // if ( cSetting != std::end ( fSettingsMap ) ) trigSource = boost::any_cast<double>(cSetting->second);
     // LOG (INFO)  <<int (trigSource);
 
     for(auto cBoard: *fDetectorContainer)
@@ -223,7 +223,7 @@ void HybridTester::Initialize(bool pThresholdScan)
     fDataCanvas = new TCanvas("fDataCanvas", "SingleStripEfficiency", 10, 0, 500, 500);
     fDataCanvas->Divide(2);
 
-    fSummaryCanvas = new TCanvas("fSummaryCanvas", "Summarizing Module Efficiency", 10, 0, 500, 500);
+    fSummaryCanvas = new TCanvas("fSummaryCanvas", "Summarizing Hybrid Efficiency", 10, 0, 500, 500);
     fSummaryCanvas->Divide(2);
 
     if(fThresholdScan)
@@ -256,7 +256,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 uint32_t cbcEventCounter = 0;
                 for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                 {
-                    if ( pEvent->DataBit( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+                    if ( pEvent->DataBit( cCbc->getHybridId(), cCbc->getId(), cId ) )
                     {
                         sCurveHist->Fill( pValue );
                         cHitCounter++;
@@ -272,7 +272,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 {
                     // for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                     //{
-                    // if ( pEvent->DataBit ( cCbc->getFeId(), cCbc->getChipId(), cId ) )
+                    // if ( pEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), cId ) )
                     //{
                     // cScurve->second->Fill ( pValue );
                     // cHitCounter++;
@@ -328,7 +328,7 @@ void HybridTester::ScanThresholds()
             {
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -378,7 +378,7 @@ void HybridTester::ScanThresholds()
         {
             for ( auto cCbc : cFe->fReadoutChipVector )
             {
-                fSCurveCanvas->cd(cCbc->getChipId()+1);
+                fSCurveCanvas->cd(cCbc->getId()+1);
                 TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
                 sCurveHist->Scale(100./(NCHANNELS*fTotalEvents));
                 sCurveHist->GetYaxis()->SetTitle("Occupancy (%)");
@@ -386,7 +386,7 @@ void HybridTester::ScanThresholds()
                 sCurveHist->DrawCopy("P0");
 
                 sCurveHist->Write( sCurveHist->GetName(), TObject::kOverwrite );
-                fSCurveCanvas->cd(cCbc->getChipId()+1)->Update();
+                fSCurveCanvas->cd(cCbc->getId()+1)->Update();
             }
         }
     }*/
@@ -439,12 +439,12 @@ void HybridTester::ScanThreshold()
             {
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
                 {
-                    // loop over Modules & Cbcs and count hits separately
+                    // loop over Hybrids & Cbcs and count hits separately
                     cHitCounter += fillSCurves(theBoard, cEvent, cVcth);
                     cN++;
                 }
@@ -610,10 +610,10 @@ void HybridTester::updateSCurveCanvas(BeBoard* pBoard)
     {
         for ( auto cCbc : cFe->fReadoutChipVector )
         {
-            fSCurveCanvas->cd(cCbc->getChipId()+1);
+            fSCurveCanvas->cd(cCbc->getId()+1);
             TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
             sCurveHist->DrawCopy("P0");
-            fSCurveCanvas->cd(cCbc->getChipId()+1)->Update();
+            fSCurveCanvas->cd(cCbc->getId()+1)->Update();
         }
     }*/
 
@@ -973,7 +973,7 @@ void HybridTester::FindShorts()
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
                 // ReadNEvents ( theBoard, cNthAcq );
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -1068,7 +1068,7 @@ void HybridTester::Measure()
             // Run( theBoard, cNthAcq );
             ReadData(theBoard);
             // ReadNEvents ( theBoard, cNthAcq );
-            const std::vector<Event*>& events = GetEvents(theBoard);
+            const std::vector<Event*>& events = GetEvents();
 
             // Loop over Events from this Acquisition
             for(auto& cEvent: events)
@@ -1216,14 +1216,14 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
             uint32_t cN       = 1;
             uint32_t cNthAcq  = 0;
 
-            this->Start(theBoard);
+            this->StartBoard(theBoard);
 
             while(cN <= fTotalEvents)
             {
                 // Run( theBoard, cNthAcq );
                 ReadData(theBoard);
 
-                const std::vector<Event*>& events = GetEvents(theBoard);
+                const std::vector<Event*>& events = GetEvents();
 
                 // Loop over Events from this Acquisition
                 for(auto& cEvent: events)
@@ -1239,7 +1239,7 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
                 cNthAcq++;
             }
 
-            this->Stop(theBoard);
+            this->StopBoard(theBoard);
 
             /*Here the reconstruction of histograms happens*/
             for(uint16_t channel_id = 1; channel_id < fNCbc * 127 + 1; channel_id++)

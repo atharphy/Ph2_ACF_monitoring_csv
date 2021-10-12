@@ -6,7 +6,7 @@
 <!-- <connection id="board" uri="chtcp-2.0://teledaq002.cern.ch:10203?target=192.168.4.102:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <CDCE configure="0" clockRate="120"/>
     <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" ModuleId="0" Status="1">
+        <Hybrid FeId="0" ModuleId="0" Status="1">
             <Global>
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320" edgeSelect="1"/>
             </Global>
@@ -22,10 +22,10 @@
             <SSA Id="7" configfile="SSA.txt" />
             
             <CIC_Files path="./settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
-        </Module>
+            <CIC1 Id="8" configfile="CIC_default.txt" />
+        </Hybrid>
     </OpticalGroup>
-
+    
     <!--CONFIG-->
     <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="fc7_daq_cnfg">
@@ -198,4 +198,3 @@
     <Setting name="EMeasurementAcceptance">15</Setting>
 </Settings>
 </HwDescription>
-

@@ -18,8 +18,9 @@ void MultiplexingSetup::Initialise()
     // If I do this here.. DLL does not lock
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         auto     cBeBoard   = static_cast<BeBoard*>(cBoard);
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         fBeBoardInterface->setBoard(theBoardId);
         bool cSetupScanned = (fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         // if its not been scanned.. then send a reset
@@ -39,7 +40,8 @@ void MultiplexingSetup::Scan()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Scanning all available backplanes and cards on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
         fBeBoardInterface->getBoardInfo(static_cast<BeBoard*>(cBoard));
@@ -54,7 +56,8 @@ void MultiplexingSetup::Disconnect()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Disconnecting all backplanes and cards on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
         fBeBoardInterface->getBoardInfo(static_cast<BeBoard*>(cBoard));
@@ -65,7 +68,8 @@ void MultiplexingSetup::ConfigureSingleCard(uint8_t pBackPlaneId, uint8_t pCardI
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Configuring backplane " << +pBackPlaneId << " card " << +pCardId << " on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureMultiplexingSetup(pBackPlaneId, pCardId);
@@ -77,7 +81,8 @@ void MultiplexingSetup::ConfigureAll()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Configuring all cards on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
         fAvailableCards = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ScanMultiplexingSetup();
@@ -95,7 +100,8 @@ void MultiplexingSetup::Power(bool pEnable)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getBeBoardId();
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Powering FMCs on " << +theBoardId << RESET;
         // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitFMCPower();
     }
@@ -121,7 +127,7 @@ std::map<int, std::vector<int>> MultiplexingSetup::getAvailableCards(bool filter
 }
 
 // State machine control functions
-void MultiplexingSetup::Start(int currentRun)
+void MultiplexingSetup::Running()
 {
     LOG(INFO) << "Starting Multiplexing set-up";
     Initialise();

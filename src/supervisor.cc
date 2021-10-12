@@ -2,7 +2,7 @@
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/Module.h"
+#include "../HWDescription/Hybrid.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../Utils/MiddlewareInterface.h"
@@ -76,12 +76,12 @@ bool checkExitStatus(int status, std::string programName)
 
 int main(int argc, char* argv[])
 {
-    if(getenv("BASE_DIR") == nullptr)
+    if(std::getenv("PH2ACF_BASE_DIR") == nullptr)
     {
-        std::cout << "You must source setup.sh or export the BASE_DIR environmental variable. Exiting..." << std::endl;
+        std::cout << "You must source setup.sh or export the PH2ACF_BASE_DIR environmental variable. Exiting..." << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::string baseDir = std::string(getenv("BASE_DIR")) + "/";
+    std::string baseDir = std::string(std::getenv("PH2ACF_BASE_DIR")) + "/";
     std::string binDir  = baseDir + "bin/";
 
     // configure the logger
@@ -253,8 +253,9 @@ int main(int argc, char* argv[])
             case HALTED:
             {
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                theMiddlewareInterface.configure(cmd.optionValue("calibration"), baseDir + cmd.optionValue("file"));
-                std::string configurationFile = baseDir + cmd.optionValue("file");
+                theMiddlewareInterface.configure(cmd.optionValue("calibration"), cmd.optionValue("file"));
+                // std::string configurationFile = baseDir + cmd.optionValue("file");
+                std::string configurationFile = cmd.optionValue("file");
                 std::string calibrationName   = cmd.optionValue("calibration");
                 theDQMInterface.configure(calibrationName, configurationFile);
                 stateMachineStatus = CONFIGURED;
@@ -271,6 +272,7 @@ int main(int argc, char* argv[])
             }
             case RUNNING:
             {
+                while(theMiddlewareInterface.status() != "Done") usleep(5e5);
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
                 usleep(2e6);
                 theMiddlewareInterface.stop();

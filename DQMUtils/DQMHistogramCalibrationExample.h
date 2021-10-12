@@ -35,7 +35,7 @@ class DQMHistogramCalibrationExample : public DQMHistogramBase
      * \brief Book histograms
      * \param theOutputFile : where histograms will be saved
      * \param theDetectorStructure : Detector container as obtained after file parsing, used to create histograms for
-     * all board/chip/module/channel \param pSettingsMap : setting as for Tool setting map in case coe informations are
+     * all board/chip/hybrid/channel \param pSettingsMap : setting as for Tool setting map in case coe informations are
      * needed (i.e. FitSCurve)
      */
     void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;

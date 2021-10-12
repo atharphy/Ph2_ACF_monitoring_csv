@@ -29,13 +29,13 @@ void SignalScanFit::Initialize()
                 fCanvasMap[cFe]     = ctmpCanvas;
 
                 // Histograms
-                TString  cName = Form("h_module_thresholdScan_Fe%d", cFeId);
+                TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cFeId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
 
                 // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
-                cName             = Form("h_module_thresholdScan_SingleStripClusters_S0_Fe%d", cFeId);
+                cName             = Form("h_hybrid_thresholdScan_SingleStripClusters_S0_Fe%d", cFeId);
                 TH2D* cSignalEven = new TH2D(cName,
                                              "Signal threshold vs channel [half strips] ; Even Sensor Strip [half "
                                              "strips] ; Threshold; # of Hits",
@@ -47,7 +47,7 @@ void SignalScanFit::Initialize()
                                              fVCthMax);
                 bookHistogram(cFe, "SingleStripClusters_S0", cSignalEven);
 
-                cName            = Form("h_module_thresholdScan_SingleStripClusters_S1_Fe%d", cFeId);
+                cName            = Form("h_hybrid_thresholdScan_SingleStripClusters_S1_Fe%d", cFeId);
                 TH2D* cSignalOdd = new TH2D(cName,
                                             "Signal threshold vs channel [half strips] ; Odd Sensor Strip [half strips] ; Threshold; # of Hits",
                                             fNCbc * NCHANNELS,
@@ -59,22 +59,22 @@ void SignalScanFit::Initialize()
                 bookHistogram(cFe, "SingleStripClusters_S1", cSignalOdd);
 
                 // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
-                cName             = Form("h_module_thresholdScan_Fe%d", cFeId);
+                cName             = Form("h_hybrid_thresholdScan_Fe%d", cFeId);
                 TH2D* cSignalHist = new TH2D(cName, "Signal threshold vs channel ; Channel # ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax);
-                bookHistogram(cFe, "module_signal", cSignalHist);
+                bookHistogram(cFe, "hybrid_signal", cSignalHist);
 
                 // 2D-plot with cluster width on the x-axis, Vcth on y-axis, counts of certain clustersize on z-axis.
                 TH2D* cVCthClusterSizeHist = new TH2D(
-                    Form("h_module_clusterSize_per_Vcth_Fe%d", cFeId), "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax);
+                    Form("h_hybrid_clusterSize_per_Vcth_Fe%d", cFeId), "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax);
                 bookHistogram(cFe, "vcth_ClusterSize", cVCthClusterSizeHist);
 
                 // 1D-plot with the number of triggers per VCth
                 TProfile* cNumberOfTriggers =
-                    new TProfile(Form("h_module_totalNumberOfTriggers_Fe%d", cFeId), Form("Total number of triggers received ; Threshold [Vcth] ; Number of triggers"), fVCthNbins, fVCthMin, fVCthMax);
+                    new TProfile(Form("h_hybrid_totalNumberOfTriggers_Fe%d", cFeId), Form("Total number of triggers received ; Threshold [Vcth] ; Number of triggers"), fVCthNbins, fVCthMin, fVCthMax);
                 bookHistogram(cFe, "number_of_triggers", cNumberOfTriggers);
 
                 // 1D-plot with the timeout value per VCth
-                TH1D* cNclocks = new TH1D(Form("h_module_nClocks_Fe%d", cFeId),
+                TH1D* cNclocks = new TH1D(Form("h_hybrid_nClocks_Fe%d", cFeId),
                                           Form("Number of clock cycles spent at each Vcth value ; Threshold [Vcth] ; "
                                                "Number of clocks to wait"),
                                           fVCthNbins,
@@ -193,7 +193,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                 cTimeout = 10e-3;
                 cTime    = fNevents * 1e-3;
             }
-            const std::vector<Event*>& cEvents      = GetEvents(theBoard); // Get the events and play with them
+            const std::vector<Event*>& cEvents      = GetEvents(); // Get the events and play with them
             double                     cTriggerRate = (cEvents.size()) / cTime;
             cTotalEvents                            = cEvents.size();
             LOG(INFO) << BOLDBLUE << "Vcth: " << +cVCth << ". Recorded " << cTotalEvents << " Events [ average trigger rate " << cTriggerRate << " ]" << RESET;
@@ -213,7 +213,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                         TH1D*     cClocksHist   = static_cast<TH1D*>(getHist(cFe, "number_of_clocks"));
                         TH2D*     cClustersS0   = static_cast<TH2D*>(getHist(cFe, "SingleStripClusters_S0"));
                         TH2D*     cClustersS1   = static_cast<TH2D*>(getHist(cFe, "SingleStripClusters_S1"));
-                        TH2D*     cSignalHist   = static_cast<TH2D*>(getHist(cFe, "module_signal"));
+                        TH2D*     cSignalHist   = static_cast<TH2D*>(getHist(cFe, "hybrid_signal"));
                         TH2D*     cVcthClusters = static_cast<TH2D*>(getHist(cFe, "vcth_ClusterSize"));
                         TProfile* cEventsHist   = static_cast<TProfile*>(getHist(cFe, "number_of_triggers"));
                         if(cEventCounter == 0)
@@ -301,10 +301,10 @@ void SignalScanFit::updateHists(std::string pHistName, bool pFinal)
     for(auto& cCanvas: fCanvasMap)
     {
         // maybe need to declare temporary pointers outside the if condition?
-        if(pHistName == "module_signal")
+        if(pHistName == "hybrid_signal")
         {
             cCanvas.second->cd();
-            TH2D* cTmpHist = dynamic_cast<TH2D*>(getHist(static_cast<Ph2_HwDescription::Module*>(cCanvas.first), pHistName));
+            TH2D* cTmpHist = dynamic_cast<TH2D*>(getHist(static_cast<Ph2_HwDescription::Hybrid*>(cCanvas.first), pHistName));
             cTmpHist->DrawCopy("colz");
             cCanvas.second->Update();
         }
@@ -317,35 +317,35 @@ void SignalScanFit::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 0;
 
     cSetting = fSettingsMap.find("SignalScanStep");
 
     if(cSetting != std::end(fSettingsMap))
-        fSignalScanStep = cSetting->second;
+        fSignalScanStep = boost::any_cast<double>(cSetting->second);
     else
         fSignalScanStep = 1;
 
     cSetting = fSettingsMap.find("InitialVcth");
 
     if(cSetting != std::end(fSettingsMap))
-        fInitialThreshold = cSetting->second;
+        fInitialThreshold = boost::any_cast<double>(cSetting->second);
     else
         fInitialThreshold = 0x78;
 
     cSetting = fSettingsMap.find("FitSignal"); // In this case we fit the signal which is an s curve with charge sharing (???)
 
     if(cSetting != std::end(fSettingsMap))
-        fFit = cSetting->second;
+        fFit = boost::any_cast<double>(cSetting->second);
     else
         fFit = 0;
 
@@ -360,7 +360,7 @@ void SignalScanFit::parseSettings()
 
 // void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
 //{
-//    for ( auto cFe : pBoard->fModuleVector )
+//    for ( auto cFe : pBoard->fHybridVector )
 //    {
 //        for ( auto cCbc : cFe->fReadoutChipVector )
 //        {
@@ -621,7 +621,7 @@ void SignalScanFit::ConfigureCalibration()
     InitResultFile("SignalScanFitResults");
 }
 
-void SignalScanFit::Start(int currentRun) {}
+void SignalScanFit::Running() {}
 
 void SignalScanFit::Stop() {}
 

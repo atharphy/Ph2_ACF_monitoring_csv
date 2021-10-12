@@ -45,4 +45,5 @@ std::string BeBoardFWInterface::readBoardType()
 void BeBoardFWInterface::PowerOn() {}
 void BeBoardFWInterface::PowerOff() {}
 void BeBoardFWInterface::ReadVer() {}
+
 } // namespace Ph2_HwInterface

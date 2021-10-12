@@ -11,7 +11,7 @@
 
 #include "../Utils/D19cCbc3Event.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
@@ -27,13 +27,13 @@ D19cCbc3Event::D19cCbc3Event(const BeBoard* pBoard, const std::vector<uint32_t>&
 {
     fEventDataVector.clear();
     uint8_t cNROCs = 0;
-    for(auto cModule: *pBoard)
+    for(auto cHybrid: *pBoard)
     {
-        for(auto cFe: *cModule)
+        for(auto cFe: *cHybrid)
         {
-            auto   cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-            auto&  cCic                = cOuterTrackerModule->fCic;
-            size_t cNReadoutChips      = (cCic == NULL) ? cFe->size() : 1;
+            auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+            auto&  cCic                = cOuterTrackerHybrid->fCic;
+            size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
             for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
             {
                 std::vector<uint32_t> cEmpty(0);
@@ -41,7 +41,7 @@ D19cCbc3Event::D19cCbc3Event(const BeBoard* pBoard, const std::vector<uint32_t>&
                 cNROCs += cNReadoutChips;
             }
         } // hybrids loop
-    }     // module loop
+    }     // hybrid loop
     fNCbc = cNROCs;
     Set(pBoard, list);
     // SetEvent (pBoard, fNCbc, list );
@@ -90,13 +90,13 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
-            for(auto cModule: *pBoard)
+            for(auto cOpticalGroup: *pBoard)
             {
-                for(auto cFe: *cModule)
+                for(auto cFe: *cOpticalGroup)
                 {
-                    auto   cOuterTrackerModule = static_cast<OuterTrackerModule*>(cFe);
-                    auto&  cCic                = cOuterTrackerModule->fCic;
-                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->size() : 1;
+                    auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                    auto&  cCic                = cOuterTrackerHybrid->fCic;
+                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
                     LOG(DEBUG) << BOLDBLUE << "Number of ROCs is " << +cNReadoutChips << RESET;
                     for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
                     {
@@ -132,7 +132,7 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         cRocIndex++;
                     }
                 } // hybrid loop
-            }     // module loop
+            }     // opticalGroup loop
             cNEvents++;
         }
         cEventIterator += cEventSize;
@@ -158,7 +158,7 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
     fEventCount = 0x00FFFFFF & list.at(2);
     fBunch      = 0xFFFFFFFF & list.at(3);
 
-    fBeId          = pBoard->getBeId();
+    fBeId          = pBoard->getId();
     fBeFWType      = 0;
     fCBCDataType   = 0;
     fBeStatus      = 0;
@@ -209,12 +209,12 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             }
             auto                  cReadoutChips = pBoard->at(0)->at(cHybridIndex);
             std::vector<uint32_t> cCbcData(cIterator, cIterator + cDataSize);
-            fEventDataVector[encodeVectorIndex(cFeId, cCbcId, cReadoutChips->size())] = cCbcData;
+            fEventDataVector[encodeVectorIndex(cFeId, cCbcId, cReadoutChips->fullSize())] = cCbcData;
         }
         cIterator += cL1DataSize + cStubDataSize;
     } while(cIterator < list.end() - fDummySize);
 
-    // not iterate through modules
+    // not iterate through hybrids
     // uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_CBC3;
     // while(address_offset < fEventSize-fDummySize)
     // {
@@ -509,7 +509,7 @@ void D19cCbc3Event::print(std::ostream& os) const
 {
     os << BOLDGREEN << "EventType: d19c CBC3" << RESET << std::endl;
     os << BOLDBLUE << "L1A Counter [FW]: " << this->GetEventCount() << RESET << std::endl;
-    os << "          Be Id: " << +this->GetBeId() << std::endl;
+    os << "          Be Id: " << +this->getBeBoardId() << std::endl;
     // os << "          Be FW: " << +this->GetFWType() << std::endl;
     // os << "      Be Status: " << +this->GetBeStatus() << std::endl;
     // os << "  Cbc Data type: " << +this->GetCbcDataType() << std::endl;
@@ -530,7 +530,7 @@ void D19cCbc3Event::print(std::ostream& os) const
     /*for( auto cPacket : fEventDataVector )
     {
         uint32_t cL1Header = cPacket[0];
-        uint8_t cFeId = getFeIdFromVectorIndex(vectorIndex,fNCbc);
+        uint8_t cFeId = getHybridIdFromVectorIndex(vectorIndex,fNCbc);
         uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
         os << BOLDCYAN << "FE" << +cFeId << " CBC" << +cCbcId << RESET << std::endl;
         os << BOLDCYAN << "L1 Header " << std::bitset<32>(cPacket[0]) << std::endl;
@@ -539,7 +539,7 @@ void D19cCbc3Event::print(std::ostream& os) const
     }*/
     for(__attribute__((unused)) auto const& hitVector: fEventDataVector)
     {
-        uint8_t cFeId  = getFeIdFromVectorIndex(vectorIndex, fNCbc);
+        uint8_t cFeId  = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
         uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++, fNCbc);
         this->printCbcHeader(os, cFeId, cCbcId);
         os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << std::endl;

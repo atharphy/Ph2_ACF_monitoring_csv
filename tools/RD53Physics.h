@@ -28,25 +28,36 @@
 // #######################
 class Physics : public Tool
 {
-    using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>&)>;
+    using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53Event>&)>;
 
   public:
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
+    ~Physics()
+    {
+#ifdef __USE_ROOT__
+        this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void sendData(const BoardContainer* cBoard);
-    void localConfigure(const std::string fileRes_, int currentRun);
-    void initializeFiles(const std::string fileRes_, int currentRun);
+    void sendBoardData(const BoardContainer* cBoard);
+    void localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void run();
     void draw();
     void analyze(bool doReadBinary = false);
-    void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
-    void monitor();
+    void saveChipRegisters(int currentRun);
+    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
 
-    void setGenericEvtConverter(evtConvType arg) { genericEvtConverter = std::move(arg); }
+    void setGenericEvtConverter(evtConvType arg)
+    {
+        std::lock_guard<std::mutex> theGuard(theMtx);
+        genericEvtConverter = std::move(arg);
+    }
 
 #ifdef __USE_ROOT__
     PhysicsHistograms* histos;
@@ -66,25 +77,23 @@ class Physics : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport();
-    void saveChipRegisters(int currentRun);
+    void chipErrorReport() const;
+    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
   protected:
     struct RD53dummyEvtConverter
     {
-        void operator()(const std::vector<Ph2_HwInterface::RD53FWInterface::Event>& RD53EvtList){};
+        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList){};
     };
 
-    std::string       fileRes;
-    int               theCurrentRun;
-    size_t            numberOfEventsPerRun;
-    bool              doUpdateChip;
-    bool              doDisplay;
-    bool              saveBinaryData;
-    std::atomic<bool> keepRunning;
-    std::thread       thrRun;
-    std::thread       thrMonitor;
-    evtConvType       genericEvtConverter;
+    std::string fileRes;
+    int         theCurrentRun;
+    size_t      numberOfEventsPerRun;
+    bool        doUpdateChip;
+    bool        doDisplay;
+    bool        saveBinaryData;
+    std::mutex  theMtx;
+    evtConvType genericEvtConverter;
 };
 
 #endif

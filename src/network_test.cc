@@ -1,6 +1,6 @@
 //#include <cstring>
 //#include "../HWDescription/Chip.h"
-//#include "../HWDescription/Module.h"
+//#include "../HWDescription/Hybrid.h"
 //#include "../HWDescription/BeBoard.h"
 //#include "../HWInterface/ChipInterface.h"
 //#include "../HWInterface/BeBoardInterface.h"
@@ -89,12 +89,12 @@ bool checkExitStatus(int status, std::string programName)
 //========================================================================================================================
 int main(int argc, char* argv[])
 {
-    if(getenv("BASE_DIR") == nullptr)
+    if(std::getenv("PH2ACF_BASE_DIR") == nullptr)
     {
-        std::cout << "You must source setup.sh or export the BASE_DIR environmental variable. Exiting..." << std::endl;
+        std::cout << "You must source setup.sh or export the PH2ACF_BASE_DIR environmental variable. Exiting..." << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::string baseDir = std::string(getenv("BASE_DIR")) + "/";
+    std::string baseDir = std::string(std::getenv("PH2ACF_BASE_DIR")) + "/";
     std::string binDir  = baseDir + "bin/";
 
     int networkServerPidStatus = 0;

@@ -43,7 +43,7 @@ using CommentMap  = std::map<int, std::string>;
 class Chip : public FrontEndDescription
 {
   public:
-    // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
+    // C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
     Chip(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue = 255);
 
     // C'tors with object FE Description
@@ -109,7 +109,7 @@ class Chip : public FrontEndDescription
      * \brief Get the Chip Id
      * \return The Chip ID
      */
-    uint8_t getChipId() const { return fChipId; }
+    virtual uint8_t getId() const { return fChipId; }
 
     /*!
      * \brief Set the Chip Id

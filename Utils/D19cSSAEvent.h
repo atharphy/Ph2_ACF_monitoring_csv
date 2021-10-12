@@ -60,7 +60,7 @@ class D19cSSAEvent : public Event
     static constexpr uint32_t calculateChannelWordPosition(uint32_t channel) { return (channel - channel % 32) / 32; }
     static constexpr uint32_t calculateChannelBitPosition(uint32_t channel) { return 31 - channel % 32; }
     static constexpr uint8_t  getSSAIdFromVectorIndex(const size_t vectorIndex, const uint8_t numberOfSSAs) { return vectorIndex / numberOfSSAs; }
-    static constexpr uint8_t  getFeIdFromVectorIndex(const size_t vectorIndex, const uint8_t numberOfSSAs) { return vectorIndex % numberOfSSAs; }
+    static constexpr uint8_t  getHybridIdFromVectorIndex(const size_t vectorIndex, const uint8_t numberOfSSAs) { return vectorIndex % numberOfSSAs; }
     SLinkEvent                GetSLinkEvent(Ph2_HwDescription::BeBoard* pBoard) const override;
 };
 

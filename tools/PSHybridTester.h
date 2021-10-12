@@ -47,7 +47,7 @@ class PSHybridTester : public Tool
     void SelectCIC(bool pSelect);
     void AlignCICout(uint8_t pPattern = 0xAA);
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;

@@ -14,7 +14,6 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -28,21 +27,30 @@
 class PixelAlive : public Tool
 {
   public:
-    void Start(int currentRun) override;
+    ~PixelAlive()
+    {
+#ifdef __USE_ROOT__
+        if(saveData == true) this->WriteRootFile();
+        this->CloseResultFile();
+#endif
+    }
+
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
+    void sendData() override;
 
-    void                                   sendData();
-    void                                   localConfigure(const std::string fileRes_, int currentRun);
-    void                                   initializeFiles(const std::string fileRes_, int currentRun);
+    void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
     void                                   run();
-    void                                   draw(int currentRun);
+    void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations()
     {
         return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) *
                nEvents / nEvtsBurst;
     }
+    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     PixelAliveHistograms* histos;
@@ -55,15 +63,9 @@ class PixelAlive : public Tool
     size_t colStop;
     size_t nEvents;
     size_t nEvtsBurst;
-    size_t injType;
     size_t nHITxCol;
     float  thrOccupancy;
-    enum INJtype
-    {
-        None,
-        Analog,
-        Digital
-    };
+    bool   unstuckPixels;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     std::shared_ptr<DetectorDataContainer>   theOccContainer;
@@ -71,15 +73,24 @@ class PixelAlive : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport();
-    void saveChipRegisters(int currentRun);
+    void chipErrorReport() const;
 
   protected:
+    size_t injType;
+    enum INJtype
+    {
+        None,
+        Analog,
+        Digital
+    };
+
     std::string fileRes;
+    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        doFast;
     bool        saveBinaryData;
+    bool        saveData;
 };
 
 #endif

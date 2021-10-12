@@ -145,11 +145,11 @@ void CMTester::Initialize()
                     bookHistogram(cCbc, "nocm", cNoCM);
                 }
 
-                // PER MODULE PLOTS
+                // PER Hybrid PLOTS
                 uint32_t cNCbc = cHybrid->size();
 
                 // 2D profile for the combined odccupancy
-                TString  cName = Form("p_module_combinedoccupancy_Fe%d", cHybridId);
+                TString  cName = Form("p_hybrid_combinedoccupancy_Fe%d", cHybridId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
@@ -162,10 +162,10 @@ void CMTester::Initialize()
                                                         cNCbc * NCHANNELS + 1,
                                                         -.5,
                                                         cNCbc * NCHANNELS + 0.5);
-                bookHistogram(cHybrid, "module_combinedoccupancy", c2DProfile);
+                bookHistogram(cHybrid, "hybrid_combinedoccupancy", c2DProfile);
 
                 // 2D Hist for correlation coefficient
-                cName = Form("p_module_correlation_Fe%d", cHybridId);
+                cName = Form("p_hybrid_correlation_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
@@ -178,10 +178,10 @@ void CMTester::Initialize()
                                          cNCbc * NCHANNELS + 1,
                                          -.5,
                                          cNCbc * NCHANNELS + 0.5);
-                bookHistogram(cHybrid, "module_correlation", c2DHist);
+                bookHistogram(cHybrid, "hybrid_correlation", c2DHist);
 
                 // 1D projection of the combined odccupancy
-                cName = Form("p_module_occupancyprojection_Fe%d", cHybridId);
+                cName = Form("p_hybrid_occupancyprojection_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
@@ -189,10 +189,10 @@ void CMTester::Initialize()
                 TProfile* cProfile = new TProfile(cName, Form("Projection of combined Occupancy FE%d;  NNeighbors; Probability", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
                 cProfile->SetLineColor(9);
                 cProfile->SetLineWidth(2);
-                bookHistogram(cHybrid, "module_occupancyprojection", cProfile);
+                bookHistogram(cHybrid, "hybrid_occupancyprojection", cProfile);
 
                 // 1D projection of the uncorrelated occupancy
-                cName = Form("p_module_uncorr_occupancyprojection_Fe%d", cHybridId);
+                cName = Form("p_hybrid_uncorr_occupancyprojection_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
@@ -200,10 +200,10 @@ void CMTester::Initialize()
                 cProfile = new TProfile(cName, Form("Projection of uncorrelated Occupancy FE%d;  NNeighbors; Probability", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
                 cProfile->SetLineColor(2);
                 cProfile->SetLineWidth(2);
-                bookHistogram(cHybrid, "module_uncorr_occupancyprojection", cProfile);
+                bookHistogram(cHybrid, "hybrid_uncorr_occupancyprojection", cProfile);
 
                 // 1D projection of the correlation
-                cName = Form("p_module_correlationprojection_Fe%d", cHybridId);
+                cName = Form("p_hybrid_correlationprojection_Fe%d", cHybridId);
                 cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
@@ -211,7 +211,7 @@ void CMTester::Initialize()
                 cProfile = new TProfile(cName, Form("Projection of Correlation FE%d;  NNeighbors; Correlation", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
                 cProfile->SetLineColor(9);
                 cProfile->SetLineWidth(2);
-                bookHistogram(cHybrid, "module_correlationprojection", cProfile);
+                bookHistogram(cHybrid, "hybrid_correlationprojection", cProfile);
             }
         }
     }
@@ -237,7 +237,7 @@ void CMTester::ScanNoiseChannels()
         //{
         BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
         ReadNEvents(theBoard, cTotalEvents);
-        const std::vector<Event*>& events = GetEvents(theBoard);
+        const std::vector<Event*>& events = GetEvents();
 
         // Loop over Events from this Acquisition
         for(auto& cEvent: events)
@@ -340,7 +340,7 @@ void CMTester::TakeData()
         // Run( theBoard, cNthAcq );
         // ReadData (theBoard);
         ReadNEvents(theBoard, fNevents);
-        const std::vector<Event*>& events = GetEvents(theBoard);
+        const std::vector<Event*>& events = GetEvents();
 
         // Loop over Events from this Acquisition
 
@@ -399,10 +399,10 @@ void CMTester::FinishRun()
         float CMnoiseFrac    = fabs(cNHitsFit->GetParameter(1));
         float CMnoiseFracErr = fabs(cNHitsFit->GetParError(1));
         if(fTotalNoise[iCbc] > 0)
-            LOG(INFO) << BOLDRED << "Average noise on FE " << +static_cast<ReadoutChip*>(cCbc.first)->getFeId() << " CBC " << +cCbc.first->getId() << " : " << fTotalNoise[iCbc] << " . At Vcth "
+            LOG(INFO) << BOLDRED << "Average noise on FE " << +static_cast<ReadoutChip*>(cCbc.first)->getHybridId() << " CBC " << +cCbc.first->getId() << " : " << fTotalNoise[iCbc] << " . At Vcth "
                       << cVcth << " CM is " << CMnoiseFrac << "+/-" << CMnoiseFracErr << "%, so " << CMnoiseFrac * fTotalNoise[iCbc] << " VCth." << RESET;
         else
-            LOG(INFO) << BOLDRED << "FE " << +static_cast<ReadoutChip*>(cCbc.first)->getFeId() << " CBC " << +cCbc.first->getId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-"
+            LOG(INFO) << BOLDRED << "FE " << +static_cast<ReadoutChip*>(cCbc.first)->getHybridId() << " CBC " << +cCbc.first->getId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-"
                       << CMnoiseFracErr << "%" << RESET;
 
         // now compute the correlation coefficient and the uncorrelated probability
@@ -435,18 +435,18 @@ void CMTester::FinishRun()
     }
 
     LOG(INFO) << " done!";
-    LOG(INFO) << "per module ... ";
+    LOG(INFO) << "per hybrid ... ";
 
-    // now module wise
-    for(auto& cFe: fModuleHistMap)
+    // now hybrid wise
+    for(auto& cFe: fHybridHistMap)
     {
         TString cName = Form("FE%d", cFe.first->getId());
 
         // get histograms
-        TProfile2D* cTmpOccProfile  = dynamic_cast<TProfile2D*>(getHist(cFe.first, "module_combinedoccupancy"));
-        TProfile*   cUncorrHitProb  = dynamic_cast<TProfile*>(getHist(cFe.first, "module_uncorr_occupancyprojection"));
-        TH2F*       cCorrelation2D  = dynamic_cast<TH2F*>(getHist(cFe.first, "module_correlation"));
-        TProfile*   cCorrProjection = dynamic_cast<TProfile*>(getHist(cFe.first, "module_correlationprojection"));
+        TProfile2D* cTmpOccProfile  = dynamic_cast<TProfile2D*>(getHist(cFe.first, "hybrid_combinedoccupancy"));
+        TProfile*   cUncorrHitProb  = dynamic_cast<TProfile*>(getHist(cFe.first, "hybrid_uncorr_occupancyprojection"));
+        TH2F*       cCorrelation2D  = dynamic_cast<TH2F*>(getHist(cFe.first, "hybrid_correlation"));
+        TProfile*   cCorrProjection = dynamic_cast<TProfile*>(getHist(cFe.first, "hybrid_correlationprojection"));
 
         for(int cIdx = 0; cIdx < cTmpOccProfile->GetNbinsX(); cIdx++)
         {
@@ -486,7 +486,7 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            std::vector<bool> cModuleData; // use this to store data for all CBCs....
+            std::vector<bool> cHybridData; // use this to store data for all CBCs....
 
             for(auto cCbc: *cHybrid)
             {
@@ -524,8 +524,8 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
                     else
                         chit = pEvent->DataBit(cHybrid->getId(), cCbc->getId(), cChan);
 
-                    // move the CBC data in a vector that has data for the whole module
-                    cModuleData.push_back(chit);
+                    // move the CBC data in a vector that has data for the whole hybrid
+                    cHybridData.push_back(chit);
 
                     //  count hits/event
                     if(chit && !isMasked(static_cast<ReadoutChip*>(cCbc), cChan)) cNHits++;
@@ -566,19 +566,19 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
                 cTmpNHits->Fill(cNHits);
             }
 
-            // Here deal with per-module Histograms
-            TProfile2D* cTmpOccProfile  = dynamic_cast<TProfile2D*>(getHist(cHybrid, "module_combinedoccupancy"));
-            TProfile*   cTmpCombinedOcc = dynamic_cast<TProfile*>(getHist(cHybrid, "module_occupancyprojection"));
+            // Here deal with per-hybrid Histograms
+            TProfile2D* cTmpOccProfile  = dynamic_cast<TProfile2D*>(getHist(cHybrid, "hybrid_combinedoccupancy"));
+            TProfile*   cTmpCombinedOcc = dynamic_cast<TProfile*>(getHist(cHybrid, "hybrid_occupancyprojection"));
 
             uint32_t cChanCt1 = 0;
 
-            // since I use the module bool vector i constructed myself this already includes simulation results if
+            // since I use the hybrid bool vector i constructed myself this already includes simulation results if
             // simulation flag is set!
-            for(auto cChan1: cModuleData)
+            for(auto cChan1: cHybridData)
             {
                 uint32_t cChanCt2 = 0;
 
-                for(auto cChan2: cModuleData)
+                for(auto cChan2: cHybridData)
                 {
                     int fillvalue = 0;
 
@@ -762,21 +762,21 @@ void CMTester::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = 10 * cSetting->second;
+        fNevents = 10 * boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("doSimulate");
 
     if(cSetting != std::end(fSettingsMap))
-        fDoSimulate = cSetting->second;
+        fDoSimulate = boost::any_cast<double>(cSetting->second);
     else
         fDoSimulate = false;
 
     cSetting = fSettingsMap.find("SimOccupancy");
 
     if(cSetting != std::end(fSettingsMap))
-        fSimOccupancy = cSetting->second;
+        fSimOccupancy = boost::any_cast<double>(cSetting->second);
     else
         fSimOccupancy = 50;
 

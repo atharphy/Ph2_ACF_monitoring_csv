@@ -16,7 +16,7 @@ void GainOptimizationHistograms::book(TFile* theOutputFile, const DetectorContai
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    uint16_t rangeKrumCurr = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("KRUM_CURR_LIN")) + 1;
+    const uint16_t rangeKrumCurr = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("KRUM_CURR_LIN")) + 1;
 
     auto hKrumCurr = CanvasContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
     bookImplementer(theOutputFile, theDetectorStructure, KrumCurr, hKrumCurr, "Krummenacher Current", "Entries");
@@ -46,7 +46,12 @@ void GainOptimizationHistograms::fill(const DetectorDataContainer& DataContainer
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* hKrumCurr = KrumCurr.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hKrumCurr = KrumCurr.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<CanvasContainer<TH1F>>()
+                                          .fTheHistogram;
 
                     hKrumCurr->Fill(cChip->getSummary<uint16_t>());
                 }

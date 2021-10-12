@@ -35,7 +35,7 @@ class PedestalEqualization : public Tool
     void FindOffsets();
     void writeObjects();
 
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;
@@ -59,6 +59,7 @@ class PedestalEqualization : public Tool
     DetectorDataContainer fHIPCountCointainer;
     bool                  cWithCBC = true;
     bool                  cWithSSA = false;
+    bool                  cWithMPA = false;
 
 #ifdef __USE_ROOT__
     DQMHistogramPedestalEqualization fDQMHistogramPedestalEqualization;

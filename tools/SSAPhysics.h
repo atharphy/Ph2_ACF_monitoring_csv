@@ -17,8 +17,6 @@
 // #include "../Utils/SSASharedConstants.h"
 // #include "../HWInterface/SSAFWInterface.h"
 
-#include <thread>
-
 #ifdef __USE_ROOT__
 #include "../DQMUtils/SSAPhysicsHistograms.h"
 #include "TApplication.h"
@@ -35,11 +33,11 @@
 class SSAPhysics : public Tool
 {
   public:
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void sendData(BoardContainer* const& cBoard);
+    void sendBoardData(BoardContainer* const& cBoard);
     void initialize(const std::string fileRes_, const std::string fileReg_);
     void run();
     void draw();
@@ -62,14 +60,12 @@ class SSAPhysics : public Tool
 #endif
 
   protected:
-    std::string       fileRes;
-    std::string       fileReg;
-    bool              doUpdateChip;
-    bool              doDisplay;
-    bool              saveRawData;
-    bool              doLocal;
-    std::atomic<bool> keepRunning;
-    std::thread       thrRun;
+    std::string fileRes;
+    std::string fileReg;
+    bool        doUpdateChip;
+    bool        doDisplay;
+    bool        saveRawData;
+    bool        doLocal;
 };
 
 #endif

@@ -3,7 +3,7 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -34,7 +34,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/D19C_2xSSA_onechip.xml";
     std::stringstream outp;
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     cTool.ConfigureHw();
 
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    ModuleContainer* ChipVec = pBoard->at(0)->at(0);
+    HybridContainer* ChipVec = pBoard->at(0)->at(0);
     cTool.setFWTestPulse();
     TH1I* h1 = new TH1I("h1", "S-CURVE", 256, 0, 256);
     for(int thd = 0; thd <= 256; thd++)
@@ -68,9 +68,9 @@ int main(int argc, char* argv[])
             cTool.fReadoutChipInterface->WriteChipReg(theSSA, "L1-Latency_MSB", 0x0);
         }
 
-        cTool.Start(0);
+        cTool.SystemController::Start(0);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        cTool.Stop();
+        cTool.SystemController::Stop();
         for(auto cSSA: *ChipVec)
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
@@ -87,17 +87,17 @@ int main(int argc, char* argv[])
 
         for ( auto &event : eventVector ) //for on events - begin
         {
-            for(auto module: *pBoard) // for on module - begin
+            for(auto hybrid: *pBoard) // for on hybrid - begin
             {
-                for(auto chip: *module) // for on chip - begin
+                for(auto chip: *hybrid) // for on chip - begin
                 {
                     unsigned int channelNumber = 0;
                     for (int i = 1; i<=120;i++ ) // loop over all strips
                     {
-                        h1->Fill(thd, event->DataBit ( module->getId(), chip->getId(), channelNumber));
+                        h1->Fill(thd, event->DataBit ( hybrid->getId(), chip->getId(), channelNumber));
                         LOG (INFO) << BOLDBLUE << "hits on channel "<<channelNumber<< " = " << event->DataBit (
-        module->getId(), chip->getId(), channelNumber) <<RESET; channelNumber++; } // for on channel - end } // for on
-        chip - end } // for on module - end } // for on events - end*/
+        hybrid->getId(), chip->getId(), channelNumber) <<RESET; channelNumber++; } // for on channel - end } // for on
+        chip - end } // for on hybrid - end } // for on events - end*/
     }
     TCanvas* c1 = new TCanvas("c", "c", 600, 600);
     c1->cd();

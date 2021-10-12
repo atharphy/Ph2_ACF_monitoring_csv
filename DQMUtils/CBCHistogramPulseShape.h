@@ -35,7 +35,7 @@ class CBCHistogramPulseShape : public DQMHistogramBase
      * \brief Book histograms
      * \param theOutputFile : where histograms will be saved
      * \param theDetectorStructure : Detector container as obtained after file parsing, used to create histograms for
-     * all board/chip/module/channel \param pSettingsMap : setting as for Tool setting map in case coe informations are
+     * all board/chip/hybrid/channel \param pSettingsMap : setting as for Tool setting map in case coe informations are
      * needed (i.e. FitSCurve)
      */
     void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
@@ -63,17 +63,21 @@ class CBCHistogramPulseShape : public DQMHistogramBase
      * \param theHitContainer : Container with the hits you want to plot
      */
     void fillCBCPulseShapePlots(uint16_t delay, DetectorDataContainer& theOccupancyContainer);
+    void fillSCurvePlots(uint16_t vcthr, uint16_t latency, uint16_t delay, DetectorDataContainer& fSCurveOccupancy);
 
   private:
-    DetectorDataContainer fDetectorChannelPulseShapeHistograms;
-    DetectorDataContainer fDetectorChipPulseShapeHistograms;
-    DetectorDataContainer fDetectorData;
-    float                 fInitialVcth{0};
-    float                 fFinalVcth{0};
-    float                 fVcthStep{0};
-    float                 fInitialDelay{0};
-    float                 fFinalDelay{0};
-    float                 fDelayStep{0};
-    float                 fEffectiveFinalDelay{0};
+    DetectorDataContainer                                           fDetectorChannelPulseShapeHistograms;
+    DetectorDataContainer                                           fDetectorChipPulseShapeHistograms;
+    DetectorDataContainer                                           fDetectorData;
+    std::map<std::tuple<uint16_t, uint16_t>, DetectorDataContainer> fDetectorSCurveHistogramMap;
+    float                                                           fInitialVcth{0};
+    float                                                           fInitialLatency{0};
+    float                                                           fFinalVcth{0};
+    float                                                           fVcthStep{0};
+    float                                                           fInitialDelay{0};
+    float                                                           fFinalDelay{0};
+    float                                                           fDelayStep{0};
+    float                                                           fEffectiveFinalDelay{0};
+    bool                                                            fPlotPulseShapeSCurves{false};
 };
 #endif

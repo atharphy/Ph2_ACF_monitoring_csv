@@ -43,7 +43,7 @@ class ReadoutChip
     , public ChipContainer
 {
   public:
-    // C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
+    // C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
     ReadoutChip(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue = 255);
 
     // C'tors with object FE Description
@@ -53,6 +53,8 @@ class ReadoutChip
     ReadoutChip(const ReadoutChip& chipObj);
 
     ~ReadoutChip();
+
+    uint8_t getId() const override { return ChipContainer::getId(); }
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor

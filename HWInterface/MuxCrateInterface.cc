@@ -24,20 +24,20 @@ MuxCrateInterface::~MuxCrateInterface() {}
 
 void MuxCrateInterface::ScanCrate(BeBoard* pBoard)
 {
-    LOG(INFO) << BOLDBLUE << "Scanning all available backplanes and cards on BeBoard " << +pBoard->getBeBoardId() << RESET;
+    LOG(INFO) << BOLDBLUE << "Scanning all available backplanes and cards on BeBoard " << +pBoard->getId() << RESET;
     fAvailableCards = this->ScanMultiplexingSetup(pBoard);
     this->parseAvailable(false);
 }
 void MuxCrateInterface::DisconnectCrate(BeBoard* pBoard)
 {
-    LOG(INFO) << BOLDBLUE << "Disconnecting all backplanes and cards on BeBoard " << +pBoard->getBeBoardId() << RESET;
+    LOG(INFO) << BOLDBLUE << "Disconnecting all backplanes and cards on BeBoard " << +pBoard->getId() << RESET;
     this->DisconnectMultiplexingSetup(pBoard);
     fAvailableCards = this->ScanMultiplexingSetup(pBoard);
     this->parseAvailable(false);
 }
 void MuxCrateInterface::SelectCard(BeBoard* pBoard, int pBackplaneNum, int pCardNum)
 {
-    LOG(INFO) << BOLDBLUE << "Configuring backplane " << +pBackplaneNum << " card " << +pCardNum << " on BeBoard " << +pBoard->getBeBoardId() << RESET;
+    LOG(INFO) << BOLDBLUE << "Configuring backplane " << +pBackplaneNum << " card " << +pCardNum << " on BeBoard " << +pBoard->getId() << RESET;
     fBackplaneNum = pBackplaneNum;
     fCardNum      = pCardNum;
     this->ConfigureMultiplexingSetup(pBoard);

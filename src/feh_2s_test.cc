@@ -39,7 +39,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -174,6 +174,7 @@ int main(int argc, char* argv[])
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
     // reset all chip and board registers
     // to what they were before this tool was called
     cBackEndAligner.Reset();
@@ -184,6 +185,7 @@ int main(int argc, char* argv[])
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
         // reset all chip and board registers
         // to what they were before this tool was called
         cCicAligner.Reset();
@@ -235,10 +237,14 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         // second parameter disables stub logic on CBC3
+        // auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==0);};
+        // auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
+        // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
+        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
@@ -331,7 +337,7 @@ int main(int argc, char* argv[])
         cOpenFinder.Inherit(&cTool);
         cOpenFinder.Initialise(cOfp);
         LOG(INFO) << BOLDBLUE << "Starting open finding measurement [antenna potentiometer set to 0x" << std::hex << cOfp.potentiometer << std::dec << " written to the potentiometer" << RESET;
-        cOpenFinder.FindOpens();
+        cOpenFinder.FindOpens2S();
         // TODO: write this one from cLatencyScan.writeObjects();
         // cOpenFinder.writeObjects();
 #endif
@@ -342,7 +348,8 @@ int main(int argc, char* argv[])
         ShortFinder cShortFinder;
         cShortFinder.Inherit(&cTool);
         cShortFinder.Initialise();
-        cShortFinder.Start();
+        cShortFinder.Start(0);
+        cShortFinder.waitForRunToBeCompleted();
         cShortFinder.Stop();
     }
 
@@ -350,6 +357,8 @@ int main(int argc, char* argv[])
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+
+    // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
 
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();

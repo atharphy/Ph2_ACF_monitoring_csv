@@ -2,6 +2,8 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+
+#include <boost/any.hpp>
 #include <math.h>
 
 using namespace Ph2_HwDescription;
@@ -14,7 +16,7 @@ CalibrationExample::~CalibrationExample() {}
 void CalibrationExample::Initialise(void)
 {
     auto cSetting   = fSettingsMap.find("Nevents");
-    fEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    fEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -40,7 +42,7 @@ void CalibrationExample::runCalibrationExample(void)
         ReadNEvents(theBeBoard, fEventsPerPoint);
         // Get the event vector (as it was in the past)
 
-        const std::vector<Event*>& eventVector = GetEvents(theBeBoard);
+        const std::vector<Event*>& eventVector = GetEvents();
 
         for(auto& event: eventVector) // for on events - begin
         {
@@ -90,7 +92,7 @@ void CalibrationExample::writeObjects()
 }
 
 // For system on chip compatibility
-void CalibrationExample::Start(int currentRun)
+void CalibrationExample::Running()
 {
     LOG(INFO) << "Starting calibration example measurement.";
     Initialise();

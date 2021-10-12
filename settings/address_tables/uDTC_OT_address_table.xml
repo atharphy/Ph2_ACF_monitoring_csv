@@ -133,10 +133,8 @@
             </node>
             
             <node id="slvs_debug" address = "0x000">
-                <!--<node id="hybrid_select"                   mask="0x000F0000"/>
-                <node id="chip_select"                     mask="0x00F00000"/>
-            --> <!-- for firmware with multiple hybrids -->
                 <node id="chip_select"                     mask="0x000F0000"/>
+                <node id="hybrid_select"                   mask="0x0F000000"/>        
             </node>
 
             <!-- line debug -->
@@ -276,7 +274,14 @@
                     </node>
                     <node id="command_fifo"             address="0x002" permission="w" mode="non-incremental" description="command fifo(write i2c commands here)"/>
                     <node id="reply_fifo"               address="0x003" permission="r" mode="non-incremental" description="reply fifo(read i2c replies here)"/>
+ 
             </node>
+            <node id="cpb_command_fifo"         address="0x004" permission="w" mode="non-incremental" description="command fifo to new cpb"/>
+            <node id="cpb_reply_fifo"         address="0x005" permission="r" mode="non-incremental" description="reply fifo to new cpb"/>
+            <node id="cpb_ctrl_reg"         address="0x006"/>
+                <node id="command_fifo_reset"         mask="0x00000001" description="reset command fifo of new cpb"/>
+                <node id="reply_fifo_reset"         mask="0x00000002" description="reset reply fifo of new cpb"/>
+                <node id="core_reset"         mask="0x00000004" description="core reset of the new cpb"/>
         </node>
 
         <node id="fast_command_block"           address="0x2000">
@@ -301,12 +306,16 @@
                 <node id="cbc3_tune_again"                  mask="0x00000002"/>
                 <node id="cic_hard_reset"                   mask="0x00000004"/>
                 <node id="decoder_reset"                    mask="0x00000008"/>
+                <node id="stub_debug"                    mask="0x00000010"/>
             </node>
             <node id="phase_tuning_ctrl"            address="0x015" mask="0xFFFFFFFF"/>
             <node id="cic_decoder"                  address="0x017">
                 <node id="start_bx0_alignment"              mask="0x00000001"/>
                 <node id="backend_alignment_pattern_disable"              mask="0x00000002"/>
             </node>
+	       <node id="fifo1_data"                address="0x001" permission="r" mode="non-incremental"/>
+	       <node id="fifo2_data"                address="0x002" permission="r" mode="non-incremental"/>
+
             <node id="multiplexing_bp"              address="0x018">
                 <node id="setup_configure"                  mask="0x00000001"/>
                 <node id="setup_disconnect"                 mask="0x00000002"/>
@@ -332,6 +341,13 @@
                 <node id="stop_output"                mask="0x00008000"/>
             </node>
         </node>
+
+        <node id="fine_phase_tune"     address="0x3003">
+            <node id="control"                      address="0x000">
+                <node id="toggle_phase"             mask="0x000000FF"/>
+            </node>
+        </node>
+
 
         <node id="readout_block"                address="0x5000">
             <node id="control"                          address="0x000">
@@ -434,6 +450,9 @@
                 </node>
                 <node id="nreplies"                     address="0x004" description="nreplies present in reply fifo"/>
             </node>
+            <node id="worker">
+                <node id="lpgbtsc_fsm_state"    address="0x005" mask="0x000000ff"/>
+            </node>
         </node>
 
         <node id="fast_command_block"           address="0x2000">
@@ -501,6 +520,12 @@
                 <node id="cic_r"                  mask="0xFFFFFFFF"/>
             </node>
 
+	    <node id="slvs_debug"               address="0x00F">
+            	<node id="ps_counters_ready"        mask="0x00000004"/>
+            	<node id="ps_counters_fsm_state"    mask="0x000000f0"/>
+            </node>
+
+
             <node id="fcmd_debug_ssa_l"                address="0x0B4" mask="0xFFFFFFFF" description="scope ssa_l for 4 clock cycles"/>
             <node id="fcmd_debug_ssa_r"                address="0x0B5" mask="0xFFFFFFFF" description="scope ssa_r for 4 clock cycles"/>
             <node id="fcmd_debug_cic_l"                address="0x0B6" mask="0xFFFFFFFF" description="scope cic_l for 4 clock cycles"/>
@@ -539,6 +564,7 @@
             </node>
             <node id="stub_debug"                address="0x042" description="stub scoping " mode="incremental" size="80"/>
             <node id="l1a_debug"                address="0x010" description="l1a scoping " mode="incremental" size="50"/>
+
 
             
             <!-- debug counters -->

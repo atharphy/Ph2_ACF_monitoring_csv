@@ -123,21 +123,37 @@ class ReadoutChipInterface : public ChipInterface
     virtual bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) = 0;
 
     /*!
+     * \brief Start Pseudo Random Number generator Sequence from the specified chip
+     */
+    virtual void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) = 0;
+
+    /*!
+     * \brief Stop Pseudo Random Number generator Sequence from the specified chip, and return to normal data encoded output
+     */
+    virtual void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) = 0;
+
+    /*!
      * \brief Monitorign memeber functions
      */
-    virtual float ReadHybridTemperature(Ph2_HwDescription::Chip* pChip)
+    virtual float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
     }
 
-    virtual float ReadHybridVoltage(Ph2_HwDescription::Chip* pChip)
+    virtual float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
     }
 
-    virtual float ReadChipMonitor(Ph2_HwDescription::Chip* pChip, const char* observableName)
+    virtual float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    virtual int CheckChipID(Ph2_HwDescription::Chip* pChip, const int chipIDfromDB)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;

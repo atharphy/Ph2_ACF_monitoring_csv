@@ -25,7 +25,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char* argv[])
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     ArgvParser cmd;
@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
                 }
             }
             cExtra.ReadNEvents(theBoard, 1);
-            const std::vector<Event*>& cEvents = cExtra.GetEvents(theBoard);
+            const std::vector<Event*>& cEvents = cExtra.GetEvents();
             uint32_t                   cN      = 0;
             for(auto& cEvent: cEvents)
             {

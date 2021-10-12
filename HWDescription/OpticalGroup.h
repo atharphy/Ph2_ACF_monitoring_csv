@@ -13,7 +13,7 @@
 #include "../Utils/Container.h"
 #include "../Utils/Visitor.h"
 #include "FrontEndDescription.h"
-#include "Module.h"
+#include "Hybrid.h"
 #include "lpGBT.h"
 
 #include <vector>
@@ -51,7 +51,7 @@ class OpticalGroup
     {
         pVisitor.visitOpticalGroup(*this);
 
-        for(auto* cHybrid: *this) static_cast<Module*>(cHybrid)->accept(pVisitor);
+        for(auto* cHybrid: *this) static_cast<Hybrid*>(cHybrid)->accept(pVisitor);
     }
 
     uint8_t getOpticalGroupId() const { return fOpticalGroupId; };

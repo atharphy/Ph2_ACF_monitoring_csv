@@ -22,6 +22,11 @@
 #include <stdexcept>
 #include <vector>
 
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+
 // template<class T>
 // class VTableInfo
 // {
@@ -237,4 +242,7 @@ class ObjectStream
     }
 };
 
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
+#pragma GCC diagnostic pop
+#endif
 #endif

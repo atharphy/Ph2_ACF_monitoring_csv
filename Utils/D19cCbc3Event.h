@@ -66,7 +66,7 @@ class D19cCbc3Event : public Event
     uint32_t GetEventCountCBC() const override { return fEventCountCBC; }
 
     // private members of cbc3 events only
-    uint32_t GetBeId() const { return fBeId; }
+    uint32_t getBeBoardId() const { return fBeId; }
     uint8_t  GetFWType() const { return fBeFWType; }
     uint32_t GetCbcDataType() const { return fCBCDataType; }
     uint32_t GetNCbc() const { return fNCbc; }
@@ -220,7 +220,7 @@ class D19cCbc3Event : public Event
     static constexpr uint32_t calculateChannelBitPosition(uint32_t channel) { return 31 - channel % 32; }
     static constexpr size_t   encodeVectorIndex(const uint8_t pFeId, const uint8_t pCbcId, const uint8_t numberOfCBCs) { return pCbcId + pFeId * numberOfCBCs; }
     static constexpr uint8_t  getCbcIdFromVectorIndex(const size_t vectorIndex, const uint8_t numberOfCBCs) { return vectorIndex % numberOfCBCs; }
-    static constexpr uint8_t  getFeIdFromVectorIndex(const size_t vectorIndex, const uint8_t numberOfCBCs) { return vectorIndex / numberOfCBCs; }
+    static constexpr uint8_t  getHybridIdFromVectorIndex(const size_t vectorIndex, const uint8_t numberOfCBCs) { return vectorIndex / numberOfCBCs; }
 
     EventDataVector fEventDataVector;
 

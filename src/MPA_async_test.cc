@@ -4,9 +4,9 @@
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/FrontEndDescription.h"
+#include "../HWDescription/Hybrid.h"
 #include "../HWDescription/MPA.h"
-#include "../HWDescription/Module.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
     LOG(INFO) << BOLDRED << "=============" << RESET;
 
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     std::string       cHWFile = "settings/D19C_MPA_PreCalib.xml";
     std::stringstream outp;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     LOG(INFO) << BOLDRED << "3" << RESET;
 
-    ModuleContainer* ChipVec = pBoard->at(0)->at(0);
+    HybridContainer* ChipVec = pBoard->at(0)->at(0);
 
     LOG(INFO) << BOLDRED << "4" << RESET;
 
@@ -117,8 +117,9 @@ int main(int argc, char* argv[])
             scurvecsv << ith << ",";
 
             // FIFO readout
-            countersfifo = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ReadoutCounters_MPA(0);
-
+            // TURNED OFF
+            // countersfifo = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ReadoutCounters_MPA(0);
+            // countersfifo = [0];
             // Randomly the counters fail
             // this fixes the issue but this needs to be looked at further
             totalevents = std::accumulate(countersfifo.begin() + 1, countersfifo.end(), 0);

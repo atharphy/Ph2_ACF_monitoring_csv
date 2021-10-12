@@ -16,7 +16,7 @@ void ThresholdHistograms::book(TFile* theOutputFile, const DetectorContainer& th
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    uint16_t rangeThreshold = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
+    const uint16_t rangeThreshold = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
 
     auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
     bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
@@ -46,8 +46,12 @@ void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* hThrehsold =
-                        Threhsold.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hThrehsold = Threhsold.getObject(cBoard->getId())
+                                           ->getObject(cOpticalGroup->getId())
+                                           ->getObject(cHybrid->getId())
+                                           ->getObject(cChip->getId())
+                                           ->getSummary<CanvasContainer<TH1F>>()
+                                           .fTheHistogram;
 
                     hThrehsold->Fill(cChip->getSummary<uint16_t>());
                 }

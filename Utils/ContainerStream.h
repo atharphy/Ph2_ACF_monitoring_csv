@@ -26,6 +26,11 @@
 #include <type_traits>
 #include <vector>
 
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+
 // workaround missing "is_trivially_copyable" in g++ < 5.0
 // #if __cplusplus < 201402
 // namespace std
@@ -62,12 +67,12 @@ class ContainerCarried
 
     void carryChannelContainer() { fContainerCarried |= (1 << 0); }
     void carryChipContainer() { fContainerCarried |= (1 << 1); }
-    void carryModuleContainer() { fContainerCarried |= (1 << 2); }
+    void carryHybridContainer() { fContainerCarried |= (1 << 2); }
     void carryBoardContainer() { fContainerCarried |= (1 << 3); }
 
     bool isChannelContainerCarried() { return (fContainerCarried >> 0) & 1; }
     bool isChipContainerCarried() { return (fContainerCarried >> 1) & 1; }
-    bool isModuleContainerCarried() { return (fContainerCarried >> 2) & 1; }
+    bool isHybridContainerCarried() { return (fContainerCarried >> 2) & 1; }
     bool isBoardContainerCarried() { return (fContainerCarried >> 3) & 1; }
 
     uint8_t fContainerCarried;
@@ -170,7 +175,7 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
     enum HeaderId
     {
         OpticalGroupId,
-        ModuleId,
+        HybridId,
         ChipId
     };
     static constexpr size_t getEnumSize() { return ChipId + 1; }
@@ -187,7 +192,7 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
             {
                 for(auto chip: *hybrid)
                 {
-                    retrieveChipData(board->getIndex(), opticalGroup->getIndex(), hybrid->getIndex(), chip);
+                    retrieveChipData(board->getId(), opticalGroup->getId(), hybrid->getId(), chip);
                     const std::vector<char>& stream = this->encodeStream();
                     this->incrementStreamPacketNumber();
                     /* std::cout << __PRETTY_FUNCTION__ << "SENDING STREAM!" << std::endl; */
@@ -201,7 +206,7 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
     {
         detectorContainer.getObject(this->fHeaderStream.fBoardId)
             ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>())
-            ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ModuleId>())
+            ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>())
             ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>())
             ->setChannelContainer(this->fDataStream.fChannelContainer);
         this->fDataStream.fChannelContainer = nullptr;
@@ -223,12 +228,12 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
     }
 
   protected:
-    void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t moduleId, ChipDataContainer* chip)
+    void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, ChipDataContainer* chip)
     {
         this->fHeaderStream.fBoardId = boardId;
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
-        this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(moduleId);
-        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
+        this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybridId);
+        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getId());
         this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
     }
 };
@@ -316,7 +321,7 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
     enum HeaderId
     {
         OpticalGroupId,
-        ModuleId,
+        HybridId,
         ChipId
     };
     static constexpr size_t getEnumSize() { return ChipId + 1; }
@@ -329,11 +334,11 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
     {
         for(auto opticalGroup: *board)
         {
-            for(auto module: *opticalGroup)
+            for(auto hybrid: *opticalGroup)
             {
-                for(auto chip: *module)
+                for(auto chip: *hybrid)
                 {
-                    retrieveChipData(board->getIndex(), opticalGroup->getIndex(), module->getIndex(), chip);
+                    retrieveChipData(board->getId(), opticalGroup->getId(), hybrid->getId(), chip);
                     const std::vector<char>& stream = this->encodeStream();
                     this->incrementStreamPacketNumber();
                     networkStreamer->broadcast(stream);
@@ -346,11 +351,11 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
     {
         uint16_t boardId        = this->fHeaderStream.fBoardId;
         uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
-        uint16_t moduleId       = this->fHeaderStream.template getHeaderInfo<HeaderId::ModuleId>();
+        uint16_t hybridId       = this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>();
         uint16_t chipId         = this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>();
 
-        detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId)->at(chipId)->setChannelContainer(this->fDataStream.fChannelContainer);
-        detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId)->at(chipId)->setSummaryContainer(this->fDataStream.fChipSummaryContainer);
+        detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->setChannelContainer(this->fDataStream.fChannelContainer);
+        detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->setSummaryContainer(this->fDataStream.fChipSummaryContainer);
         this->fDataStream.fChannelContainer     = nullptr;
         this->fDataStream.fChipSummaryContainer = nullptr;
     }
@@ -371,12 +376,12 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
     }
 
   protected:
-    void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t moduleId, ChipDataContainer* chip)
+    void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, ChipDataContainer* chip)
     {
         this->fHeaderStream.fBoardId = boardId;
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
-        this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(moduleId);
-        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
+        this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybridId);
+        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getId());
         if(chip->getChannelContainer<T>() != nullptr)
         {
             this->fDataStream.fContainerCarried.carryChannelContainer();
@@ -390,18 +395,18 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
     }
 };
 
-// ------------------------------------------- ModuleContainerStream ------------------------------------------- //
+// ------------------------------------------- HybridContainerStream ------------------------------------------- //
 
 template <typename T, typename C, typename M>
-class DataStreamModuleContainer : public DataStreamBase
+class DataStreamHybridContainer : public DataStreamBase
 {
   public:
-    DataStreamModuleContainer() : fModuleSummaryContainer(nullptr)
+    DataStreamHybridContainer() : fHybridSummaryContainer(nullptr)
     {
         check_if_retrivable<C>();
         check_if_retrivable<M>();
     }
-    ~DataStreamModuleContainer()
+    ~DataStreamHybridContainer()
     {
         for(auto element: fChannelContainerVector)
         {
@@ -423,17 +428,17 @@ class DataStreamModuleContainer : public DataStreamBase
         }
         fChipSummaryContainerVector.clear();
 
-        if(fModuleSummaryContainer == nullptr)
+        if(fHybridSummaryContainer == nullptr)
         {
-            delete fModuleSummaryContainer;
-            fModuleSummaryContainer = nullptr;
+            delete fHybridSummaryContainer;
+            fHybridSummaryContainer = nullptr;
         }
     }
 
     uint32_t size(void) override
     {
         fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried) + sizeof(fNumberOfChips);
-        if(fModuleSummaryContainer != nullptr) { fDataSize += sizeof(M); }
+        if(fHybridSummaryContainer != nullptr) { fDataSize += sizeof(M); }
         fDataSize += sizeOfChipContainer();
         fDataSize += sizeOfChannelContainer();
 
@@ -446,18 +451,21 @@ class DataStreamModuleContainer : public DataStreamBase
 
         memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
         bufferWritingPosition += sizeof(fDataSize);
+        std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
 
         memcpy(&bufferBegin[bufferWritingPosition], &fContainerCarried, sizeof(fContainerCarried));
         bufferWritingPosition += sizeof(fContainerCarried);
+        std::cout << __PRETTY_FUNCTION__ << "fContainerCarried = " << +fContainerCarried.fContainerCarried << std::endl;
 
         memcpy(&bufferBegin[bufferWritingPosition], &fNumberOfChips, sizeof(fNumberOfChips));
         bufferWritingPosition += sizeof(fNumberOfChips);
+        std::cout << __PRETTY_FUNCTION__ << "fNumberOfChips = " << +fNumberOfChips << std::endl;
 
-        if(fContainerCarried.isModuleContainerCarried())
+        if(fContainerCarried.isHybridContainerCarried())
         {
-            memcpy(&bufferBegin[bufferWritingPosition], &(fModuleSummaryContainer->theSummary_), sizeof(M));
+            memcpy(&bufferBegin[bufferWritingPosition], &(fHybridSummaryContainer->theSummary_), sizeof(M));
             bufferWritingPosition += sizeof(M);
-            fModuleSummaryContainer = nullptr;
+            fHybridSummaryContainer = nullptr;
         }
 
         if(fContainerCarried.isChipContainerCarried())
@@ -476,6 +484,7 @@ class DataStreamModuleContainer : public DataStreamBase
             {
                 memcpy(&bufferBegin[bufferWritingPosition], &(channelContainer->at(0)), channelContainer->size() * sizeof(T));
                 bufferWritingPosition += channelContainer->size() * sizeof(T);
+                std::cout << __PRETTY_FUNCTION__ << "vectorSize = " << +channelContainer->size() << std::endl;
                 channelContainer = nullptr;
             }
         }
@@ -497,10 +506,10 @@ class DataStreamModuleContainer : public DataStreamBase
         bufferReadingPosition += sizeof(fNumberOfChips);
         std::cout << __PRETTY_FUNCTION__ << "fNumberOfChips = " << +fNumberOfChips << std::endl;
 
-        if(fContainerCarried.isModuleContainerCarried())
+        if(fContainerCarried.isHybridContainerCarried())
         {
-            fModuleSummaryContainer = new Summary<M, C>();
-            memcpy(&(fModuleSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(M));
+            fHybridSummaryContainer = new Summary<M, C>();
+            memcpy(&(fHybridSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(M));
             bufferReadingPosition += sizeof(M);
         }
         if(fContainerCarried.isChipContainerCarried())
@@ -552,30 +561,30 @@ class DataStreamModuleContainer : public DataStreamBase
     uint8_t                           fNumberOfChips;
     std::vector<ChannelContainer<T>*> fChannelContainerVector;
     std::vector<Summary<C, T>*>       fChipSummaryContainerVector;
-    Summary<M, C>*                    fModuleSummaryContainer;
+    Summary<M, C>*                    fHybridSummaryContainer;
 };
 
 template <typename T, typename C, typename M, typename... I>
-class ModuleContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamModuleContainer<T, C, M>>
+class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, M>>
 {
     enum HeaderId
     {
         OpticalGroupId,
-        ModuleId
+        HybridId
     };
-    static constexpr size_t getEnumSize() { return ModuleId + 1; }
+    static constexpr size_t getEnumSize() { return HybridId + 1; }
 
   public:
-    ModuleContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamModuleContainer<T, C, M>>(creatorName) { ; }
-    ~ModuleContainerStream() { ; }
+    HybridContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, M>>(creatorName) { ; }
+    ~HybridContainerStream() { ; }
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
     {
         for(auto opticalGroup: *board)
         {
-            for(auto module: *opticalGroup)
+            for(auto hybrid: *opticalGroup)
             {
-                retrieveModuleData(board->getIndex(), opticalGroup->getIndex(), module);
+                retrieveHybridData(board->getId(), opticalGroup->getId(), hybrid);
                 const std::vector<char>& stream = this->encodeStream();
                 this->incrementStreamPacketNumber();
                 networkStreamer->broadcast(stream);
@@ -583,16 +592,16 @@ class ModuleContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
         }
     }
 
-    void decodeModuleData(DetectorDataContainer& detectorContainer)
+    void decodeHybridData(DetectorDataContainer& detectorContainer)
     {
         uint16_t boardId        = this->fHeaderStream.fBoardId;
         uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
-        uint16_t moduleId       = this->fHeaderStream.template getHeaderInfo<HeaderId::ModuleId>();
+        uint16_t hybridId       = this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>();
 
-        detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId)->setSummaryContainer(this->fDataStream.fModuleSummaryContainer);
-        this->fDataStream.fModuleSummaryContainer = nullptr;
+        detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->setSummaryContainer(this->fDataStream.fHybridSummaryContainer);
+        this->fDataStream.fHybridSummaryContainer = nullptr;
 
-        for(auto chip: *detectorContainer.at(boardId)->at(opticalGroupId)->at(moduleId))
+        for(auto chip: *detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId))
         {
             if(this->fDataStream.fContainerCarried.isChipContainerCarried())
             {
@@ -623,20 +632,20 @@ class ModuleContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
     }
 
   protected:
-    void retrieveModuleData(uint16_t boardId, uint16_t opticalGroupId, ModuleDataContainer* module)
+    void retrieveHybridData(uint16_t boardId, uint16_t opticalGroupId, HybridDataContainer* hybrid)
     {
         this->fHeaderStream.fBoardId = boardId;
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
-        this->fHeaderStream.template setHeaderInfo<HeaderId::ModuleId>(module->getIndex());
-        this->fDataStream.fNumberOfChips = module->size();
+        this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybrid->getId());
+        this->fDataStream.fNumberOfChips = hybrid->size();
         this->fDataStream.fChipSummaryContainerVector.clear();
         this->fDataStream.fChannelContainerVector.clear();
-        if(module->getSummaryContainer<M, C>() != nullptr)
+        if(hybrid->getSummaryContainer<M, C>() != nullptr)
         {
-            this->fDataStream.fContainerCarried.carryModuleContainer();
-            this->fDataStream.fModuleSummaryContainer = module->getSummaryContainer<M, C>();
+            this->fDataStream.fContainerCarried.carryHybridContainer();
+            this->fDataStream.fHybridSummaryContainer = hybrid->getSummaryContainer<M, C>();
         }
-        for(auto chip: *module)
+        for(auto chip: *hybrid)
         {
             if(chip->getSummaryContainer<C, T>() != nullptr)
             {
@@ -652,4 +661,7 @@ class ModuleContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
     }
 };
 
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
+#pragma GCC diagnostic pop
+#endif
 #endif

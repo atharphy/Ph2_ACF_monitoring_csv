@@ -21,13 +21,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     cmake_minimum_required(VERSION 2.8)
     project(Ph2_ACF)
 
-    #set the output directory
+   # Set the output directory
     if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
        MESSAGE( STATUS "${BoldRed}" )
        MESSAGE( FATAL_ERROR "${Reset}In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -53,8 +53,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
        )
     # ---------- Setup output Directories -------------------------
 
-
-    # Set the cmakeL module path
+    # Set the cmake module path
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
     set(CompileForShep "$ENV{CompileForShep}")
@@ -78,6 +77,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
     #set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
       EXECUTE_PROCESS( COMMAND gcc -dumpversion OUTPUT_VARIABLE GCC_VERSION )
@@ -90,14 +90,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       if(NOT (GCC_VERSION VERSION_LESS 8))
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_8_NOERROR_FLAGS}")
       endif()
+      if(NOT (GCC_VERSION VERSION_LESS 9))
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
+      endif()
     endif ()
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O4 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
 
 
-    #check for external dependences
+    # Check for external dependences
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
     if(CompileForShep OR NoDataShipping)
@@ -116,43 +119,47 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         endif(ROOT_FOUND)
     endif()
 
+    # AMC13
     find_package(CACTUS)      #========================================================
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    Enabling AMC13 component")
     endif(${CACTUS_AMC13_FOUND})
 
+    # Antenna
     find_package(PH2_ANTENNA) #========================================================
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    find_package(PH2_POWERSUPPLY) #========================================================
-    if(PH2_POWERSUPPLY_FOUND)
-        message(STATUS "    Building the PowerSupply components")
-    endif(PH2_POWERSUPPLY_FOUND)
-
     # Ph2_TCUSB [USB control of hybrids]
-    find_package(PH2_TCUSB)  
-    if(PH2_TCUSB_FOUND)
-        message(STATUS "    Building the TestCards USB components")
-    endif(PH2_TCUSB_FOUND)
+    if ($ENV{CompileWithTCUSB})
+      find_package(PH2_TCUSB)
+      if(PH2_TCUSB_FOUND)
+        if($ENV{UseTCUSBforROH})
+            message(STATUS "    Building the ROH TestCards USB components")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
+        else($ENV{UseTCUSBforROH})
+            message(STATUS "    Building the SEH TestCards USB components")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+        endif($ENV{UseTCUSBforROH})
+        if($ENV{UseTCUSBTcpServer})
+            message(STATUS "    Building the components to use the TCP Server")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+        endif($ENV{UseTCUSBTcpServer})
+      endif(PH2_TCUSB_FOUND)
+    endif($ENV{CompileWithTCUSB})
 
     # EUDAQ
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+        include_directories($ENV{EUDAQDIR}/include)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} EUDAQ)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
 
-    
-
-
-
-
-    # ZeroMQ optional
+    # ZeroMQ
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -161,11 +168,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
+    set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
+    set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
+    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
-    #all the subdirs
+    # All the subdirs
     if(${CACTUS_AMC13_FOUND})
         add_subdirectory(AMC13)
     endif()
@@ -173,6 +182,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS " ")
     if(CompileForHerd OR NoDataShipping)
         add_subdirectory(tools)
+        add_subdirectory(ProductionTools)
         add_subdirectory(HWDescription)
         add_subdirectory(HWInterface)
         add_subdirectory(System)
@@ -203,7 +213,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #set(ENV{LD_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/lib:$ENV(LD_LIBRARY_PATH)")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package done.")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
@@ -213,7 +223,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
@@ -226,16 +236,18 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         set(NoDataShipping false)
     endif()
 
+    # AMC13
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    Enabling AMC13 component")
     endif(${CACTUS_AMC13_FOUND})
 
+    # Antenna
     find_package(PH2_ANTENNA) #========================================================
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
-    # ZeroMQ optional
+    # ZeroMQ
     find_package(ZMQ)         #========================================================
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -256,15 +268,13 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
-    #all the subdirs
+    # All the subdirs
     if(${CACTUS_AMC13_FOUND})
         add_subdirectory(AMC13)
     endif()
 
-
-
     add_subdirectory(tools)
-##    add_subdirectory(RootWeb)
+    add_subdirectory(ProductionTools)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)
@@ -275,7 +285,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")

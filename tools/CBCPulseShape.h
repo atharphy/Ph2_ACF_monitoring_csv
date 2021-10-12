@@ -30,7 +30,7 @@ class CBCPulseShape : public PedeNoise
     void writeObjects(void);
 
     // State machine
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop(void) override;
 
   private:
@@ -40,6 +40,7 @@ class CBCPulseShape : public PedeNoise
     uint16_t fDelayStep{0};
     uint16_t fPulseAmplitude{0};
     int8_t   fChannelGroup{-1};
+    bool     fPlotPulseShapeSCurves{false};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

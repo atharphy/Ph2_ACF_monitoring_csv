@@ -26,7 +26,7 @@ class StubQuickCheck : public PedeNoise
 
     void Initialise();
     void StubCheck(BeBoard* pBoard, std::vector<Event*> pEvents);
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;

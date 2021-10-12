@@ -60,7 +60,7 @@ class DataChecker : public Tool
     void HitCheck();
     void zeroContainers();
     void print(std::vector<uint8_t> pChipIds);
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;

@@ -1,10 +1,12 @@
-#include <cstring>
+#include <cstdlib>
 #include <inttypes.h>
+#include <string>
+#include <vector>
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/Module.h"
+#include "../HWDescription/Hybrid.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../System/SystemController.h"
@@ -17,7 +19,6 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 using namespace CommandLineProcessing;
-using namespace std;
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -35,7 +36,7 @@ class AcqVisitor : public HwInterfaceVisitor
     }
 };
 
-void verifyImageName(const string& strImage, const vector<string>& lstNames)
+void verifyImageName(const std::string& strImage, const std::vector<std::string>& lstNames)
 {
     if(lstNames.empty())
     {
@@ -68,9 +69,14 @@ void verifyImageName(const string& strImage, const vector<string>& lstNames)
 
 int main(int argc, char* argv[])
 {
-    std::string loggerConfigFile = std::getenv("BASE_DIR");
-    loggerConfigFile += "/settings/logger.conf";
-    el::Configurations conf(loggerConfigFile);
+    auto* baseDirChar_p = std::getenv("PH2ACF_BASE_DIR");
+    if(baseDirChar_p == nullptr)
+    {
+        LOG(ERROR) << "Error, the environment variable PH2ACF_BASE_DIR is not initialized (hint: source setup.sh)";
+        exit(1);
+    }
+
+    el::Configurations conf(std::string(baseDirChar_p) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
     SystemController cSystemController;
@@ -98,11 +104,11 @@ int main(int argc, char* argv[])
     cmd.defineOption("config", "Hw Description File . Default value: settings/HWDescription_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("config", "c");
 
-    cmd.defineOption("image",
-                     "Without -f: load image from SD card to FPGA\nWith -f: name of image written to SD card (-f "
-                     "specified the source filename)",
-                     ArgvParser::OptionRequiresValue);
+    cmd.defineOption("image", "Without -f: load image from SD card to FPGA\nWith    -f: name of image written to SD card\n-f specifies the source filename", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("image", "i");
+
+    cmd.defineOption("board", "In case of multiple boards in the same file, specify board Id", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("board", "b");
 
     int result = cmd.parse(argc, argv);
 
@@ -115,10 +121,10 @@ int main(int argc, char* argv[])
     std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     std::ostringstream cStr;
     cSystemController.InitializeHw(cHWFile, cStr);
-    BeBoard*       pBoard   = cSystemController.fDetectorContainer->at(0);
-    vector<string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
-    std::string    cFWFile;
-    string         strImage("1");
+    BeBoard*                 pBoard   = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
+    std::vector<std::string> lstNames = cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
+    std::string              cFWFile;
+    std::string              strImage("1");
 
     if(cmd.foundOption("list"))
     {
@@ -165,7 +171,7 @@ int main(int argc, char* argv[])
         if(!cmd.foundOption("file"))
         {
             verifyImageName(strImage, lstNames);
-            LOG(INFO) << ">>> Done <<<";
+            LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
         }
     }
     else if(!lstNames.empty())
@@ -193,11 +199,11 @@ int main(int argc, char* argv[])
         if(progress == 100)
         {
             cDone = 1;
-            LOG(INFO) << "\n 100% Done";
+            LOG(INFO) << BOLDBLUE << ">>> 100% Done <<<" << RESET;
         }
         else
         {
-            LOG(INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressString() << "                 \r" << flush;
+            LOG(INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressString() << "                 \r" << std::flush;
             sleep(1);
         }
     }

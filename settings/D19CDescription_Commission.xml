@@ -4,7 +4,7 @@
         <connection id="board" uri="chtcp-2.0://127.0.0.1:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/d19c_address_table.xml" /> 
 
     <OpticalGroup Id="0" FMCId="0" >
-        <Module FeId="0" FMCId="0" ModuleId="0" Status="1">
+        <Hybrid Id="0" Status="1">
             <Global>
                 <Settings threshold="540" latency="199"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="7" groundothers="1"/>
@@ -23,7 +23,7 @@
             <CBC Id="6" configfile="CBC3_default.txt" />
             <CBC Id="7" configfile="CBC3_default.txt" />
             <CIC Id="8" configfile="CIC_default.txt" /> -->
-        </Module>
+        </Hybrid>
     </OpticalGroup>
 
     <SLink>

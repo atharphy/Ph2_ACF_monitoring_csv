@@ -40,7 +40,7 @@ class D19cMPAEvent : public Event
     uint32_t GetEventCountCBC() const override { return fEventCount; }
 
     // private members of MPA events only
-    uint32_t GetBeId() const { return fBeId; }
+    uint32_t getBeBoardId() const { return fBeId; }
     uint8_t  GetFWType() const { return fBeFWType; }
     uint32_t GetCBCDataType() const { return fCBCDataType; }
     uint32_t GetNC() const { return fNCbc; }
@@ -88,6 +88,8 @@ class D19cMPAEvent : public Event
      * \param pMPAId : MPA Id
      * \return vector with hit channels
      */
+    uint8_t GetNStubs(uint8_t pFeId, uint8_t pMPAId) const;
+
     std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pMPAId) const override;
     /*!
      * \brief Function to get pipeline address
@@ -177,7 +179,7 @@ class D19cMPAEvent : public Event
 
     uint32_t DivideBy2RoundUp(uint32_t value) const;
 
-    uint32_t GetCluster(std::vector<uint32_t> lvec, uint8_t nclus, uint8_t cClusterSize, uint8_t deltaword) const;
+    uint32_t GetCluster(std::vector<uint32_t> lvec, uint8_t nclus, uint8_t cClusterSize, uint32_t nbits) const;
 
     void                    print(std::ostream& out) const override;
     static constexpr size_t encodeVectorIndex(const uint8_t pFeId, const uint8_t pSSAId, const uint8_t numberOfSSAs) { return pSSAId + pFeId * numberOfSSAs; }

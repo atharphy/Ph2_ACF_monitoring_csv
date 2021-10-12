@@ -20,11 +20,11 @@ void DataChecker::Initialise()
 {
     // get threshold range
     auto     cSetting   = fSettingsMap.find("PulseShapeInitialVcth");
-    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 400;
+    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 400;
     cSetting            = fSettingsMap.find("PulseShapeFinalVcth");
-    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 600;
+    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 600;
     cSetting            = fSettingsMap.find("PulseShapeVCthStep");
-    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 5;
+    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 5;
     int      cSteps     = std::ceil((cFinalTh - cInitialTh) / (float)cThStep);
     LOG(INFO) << BOLDMAGENTA << "pulse shape will be scanned from " << +cInitialTh << " to " << +cFinalTh << " in " << +cThStep << " steps." << RESET;
 
@@ -45,12 +45,12 @@ void DataChecker::Initialise()
         auto& cMismatches = fDataMismatches.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cInjectionsModule = cInjections->at(cOpticalGroup->getIndex());
-            auto& cMismatchesModule = cMismatches->at(cOpticalGroup->getIndex());
+            auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
+            auto& cMismatchesOpticalGroup = cMismatches->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjectionsHybrid = cInjectionsModule->at(cHybrid->getIndex());
-                auto& cMismatchesHybrid = cMismatchesModule->at(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+                auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
@@ -273,7 +273,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 
     // get number of events from xml
     auto   cSetting        = fSettingsMap.find("Nevents");
-    size_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    size_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     uint8_t cSeed = pExpectedStub.first;
     int     cBend = pExpectedStub.second;
@@ -281,18 +281,18 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
     auto& cThisHitCheckContainer  = fHitCheckContainer.at(pBoard->getIndex());
     auto& cThisStubCheckContainer = fStubCheckContainer.at(pBoard->getIndex());
 
-    const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+    const std::vector<Event*>& cEvents = this->GetEvents();
     LOG(DEBUG) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from board." << RESET;
 
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cThisModuleHitCheck  = cThisHitCheckContainer->at(cOpticalGroup->getIndex());
-        auto& cThisModuleStubCheck = cThisStubCheckContainer->at(cOpticalGroup->getIndex());
+        auto& cThisOpticalGroupHitCheck  = cThisHitCheckContainer->at(cOpticalGroup->getIndex());
+        auto& cThisOpticalGroupStubCheck = cThisStubCheckContainer->at(cOpticalGroup->getIndex());
 
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cHybridHitCheck  = cThisModuleHitCheck->at(cHybrid->getIndex());
-            auto& cHybridStubCheck = cThisModuleStubCheck->at(cHybrid->getIndex());
+            auto& cHybridHitCheck  = cThisOpticalGroupHitCheck->at(cHybrid->getIndex());
+            auto& cHybridStubCheck = cThisOpticalGroupStubCheck->at(cHybrid->getIndex());
 
             auto  cHybridId     = cHybrid->getId();
             TH2D* cMatchedStubs = static_cast<TH2D*>(getHist(cHybrid, "MatchedStubs"));
@@ -456,8 +456,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 }
 void DataChecker::AsyncTest()
 {
-    uint8_t           cSweepThreshold = this->findValueInSettings("AsyncSweepTh");
-    uint8_t           cThreshold      = this->findValueInSettings("cThreshold");
+    uint8_t           cSweepThreshold = this->findValueInSettings<double>("AsyncSweepTh");
+    uint8_t           cThreshold      = this->findValueInSettings<double>("cThreshold");
     uint8_t           cThresholdStart = (cSweepThreshold == 0) ? cThreshold : 0;
     uint8_t           cThresholdStop  = (cSweepThreshold == 0) ? cThreshold + 5 : 200;
     std::stringstream outp;
@@ -474,7 +474,7 @@ void DataChecker::AsyncTest()
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
                         fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", this->findValueInSettings("AsyncCalDac"));
+                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", this->findValueInSettings<double>("AsyncCalDac"));
                     }
                 }
             }
@@ -482,8 +482,8 @@ void DataChecker::AsyncTest()
             // read counters
             BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
             LOG(INFO) << BOLDRED << "Reading counters .. " << RESET;
-            this->ReadNEvents(theBoard, this->findValueInSettings("Nevents"));
-            const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+            this->ReadNEvents(theBoard, this->findValueInSettings<double>("Nevents"));
+            const std::vector<Event*>& cEvents = this->GetEvents();
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -500,7 +500,7 @@ void DataChecker::AsyncTest()
             }
             LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadNEvents" << RESET;
         }
-        // const std::vector<Event*>& cEvents = this->GetEvents ( theBoard );
+        // const std::vector<Event*>& cEvents = this->GetEvents();
     }
     LOG(INFO) << BOLDBLUE << "Done!" << RESET;
 }
@@ -538,7 +538,7 @@ void DataChecker::ReadDataTest()
         // }while( std::cin.get()!='\n');
         LOG(INFO) << BOLDRED << "Reading data .. " << RESET;
         this->ReadData(theBoard, true);
-        const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
 
         uint32_t cN = 0;
@@ -561,7 +561,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
     FileHandler* cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
 
     auto              cSetting = fSettingsMap.find("Nevents");
-    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     std::stringstream outp;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -574,7 +574,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                    if(cReadoutChip->getChipId() % 2 == 0)
+                    if(cReadoutChip->getId() % 2 == 0)
                     {
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cTh1);
                         static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {10, 244}, {0, 0}, true);
@@ -590,7 +590,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
 
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
         this->ReadNEvents(cBeBoard, cNevents);
-        const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
         uint32_t cN = 0;
         for(auto& cEvent: cEvents)
@@ -616,7 +616,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
 }
 void DataChecker::CollectEvents()
 {
-    uint32_t cNevents    = this->findValueInSettings("Nevents");
+    uint32_t cNevents    = this->findValueInSettings<double>("Nevents");
     uint32_t cMaxNevents = 65535;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -627,7 +627,7 @@ void DataChecker::CollectEvents()
         {
             int cEventsToRead = (cBurst == (cNBursts - 1)) ? (cNevents % cMaxNevents) : cMaxNevents;
             this->ReadNEvents(cBeBoard, cEventsToRead);
-            const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+            const std::vector<Event*>& cEvents = this->GetEvents();
             LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
             cNrecordedEvents += cEvents.size();
         }
@@ -657,7 +657,7 @@ void DataChecker::ReadNeventsTest()
         }
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
         this->ReadNEvents(cBeBoard, 1);
-        const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
 
         uint32_t cN = 0;
@@ -685,17 +685,17 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
     // get number of events from xml
     auto     cSetting        = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // get trigger multiplicity from xml
     cSetting                       = fSettingsMap.find("TriggerMultiplicity");
     bool     cConfigureTriggerMult = (cSetting != std::end(fSettingsMap));
-    uint16_t cTriggerMult          = cConfigureTriggerMult ? cSetting->second : 0;
+    uint16_t cTriggerMult          = cConfigureTriggerMult ? boost::any_cast<double>(cSetting->second) : 0;
 
     // get stub delay scan range from xml
     cSetting                  = fSettingsMap.find("StubDelay");
     bool cModifyStubScanRange = (cSetting != std::end(fSettingsMap));
-    int  cStubDelay           = cModifyStubScanRange ? cSetting->second : 48;
+    int  cStubDelay           = cModifyStubScanRange ? boost::any_cast<double>(cSetting->second) : 48;
 
     // get target threshold
     cSetting = fSettingsMap.find("Threshold");
@@ -704,7 +704,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     cSetting = fSettingsMap.find("Attempts");
     // get mode
     cSetting      = fSettingsMap.find("Mode");
-    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     // get latency offset
     cSetting = fSettingsMap.find("LatencyOffset");
     // resync between attempts
@@ -712,33 +712,33 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
     // if TP is used - enable it
     cSetting              = fSettingsMap.find("PulseShapePulseAmplitude");
-    fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // get TP amplitude range
     // get threshold range
 
     // get threshold range
     cSetting            = fSettingsMap.find("PulseShapeInitialVcth");
-    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 400;
+    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 400;
     cSetting            = fSettingsMap.find("PulseShapeFinalVcth");
-    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 600;
+    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 600;
     cSetting            = fSettingsMap.find("PulseShapeVCthStep");
-    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 5;
+    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 5;
 
     // get TP delay range
     cSetting                 = fSettingsMap.find("PulseShapeInitialDelay");
-    uint16_t cInitialTPdleay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint16_t cInitialTPdleay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     cSetting                 = fSettingsMap.find("PulseShapeFinalDelay");
-    uint16_t cFinalTPdleay   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 25;
+    uint16_t cFinalTPdleay   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 25;
     cSetting                 = fSettingsMap.find("PulseShapeDelayStep");
-    uint16_t cTPdelayStep    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 3;
+    uint16_t cTPdelayStep    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 3;
 
     // get injected stub from xmls
     std::pair<uint8_t, int> cStub;
     cSetting     = fSettingsMap.find("StubSeed");
-    cStub.first  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    cStub.first  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
     cSetting     = fSettingsMap.find("StubBend");
-    cStub.second = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    cStub.second = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     LOG(DEBUG) << BOLDBLUE << "Injecting a stub in position " << +cStub.first << " with bend " << cStub.second << " to test data integrity..." << RESET;
 
     // set-up for TP
@@ -756,7 +756,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 // configure CBCs
                 for(auto cChip: *cHybrid)
                 {
@@ -873,7 +873,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 fBeBoardInterface->Stop(theBoard);
                 // this->ReadNEvents ( theBoard , cEventsPerPoint);
                 this->ReadData(theBoard, true);
-                const std::vector<Event*>& cEvents = this->GetEvents(theBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
                 // matching
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -995,7 +995,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //             for( int cOffset=cInitialWindowOffset; cOffset <= cFinalWindowOffset; cOffset++)
         //             {
         //                 LOG (INFO) << BOLDMAGENTA << "Correlation window offset set to " << +cOffset << RESET;
-        //                 for (auto& cHybrid : cBoard->fModuleVector)
+        //                 for (auto& cHybrid : cBoard->fHybridVector)
         //                 {
         //                     for (auto& cChip : cHybrid->fReadoutChipVector)
         //                     {
@@ -1029,9 +1029,9 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //                     //if( cResync)
         //                     //    fBeBoardInterface->ChipReSync ( cBoard );
         //                     this->ReadNEvents ( cBoard , cEventsPerPoint);
-        //                     const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        //                     const std::vector<Event*>& cEvents = this->GetEvents();
         //                     // matching
-        //                     for (auto& cHybrid : cBoard->fModuleVector)
+        //                     for (auto& cHybrid : cBoard->fHybridVector)
         //                     {
         //                         auto cHybridId = cHybrid->getId();
         //                         for (auto& cChip : cHybrid->fReadoutChipVector)
@@ -1177,7 +1177,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //         //     for( int cOffset=cInitialWindowOffset; cOffset <= cFinalWindowOffset; cOffset++)
         //         //     {
         //         //         LOG (INFO) << BOLDMAGENTA << "Correlation window offset set to " << +cOffset << RESET;
-        //         //         for (auto& cHybrid : cBoard->fModuleVector)
+        //         //         for (auto& cHybrid : cBoard->fHybridVector)
         //         //         {
         //         //             for (auto& cChip : cHybrid->fReadoutChipVector)
         //         //             {
@@ -1215,9 +1215,9 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         //         //             if( cResync)
         //         //                 fBeBoardInterface->ChipReSync ( cBoard );
         //         //             this->ReadNEvents ( cBoard , cEventsPerPoint);
-        //         //             const std::vector<Event*>& cEvents = this->GetEvents ( cBoard );
+        //         //             const std::vector<Event*>& cEvents = this->GetEvents();
         //         //             // matching
-        //         //             for (auto& cHybrid : cBoard->fModuleVector)
+        //         //             for (auto& cHybrid : cBoard->fHybridVector)
         //         //             {
         //         //                 auto cHybridId = cHybrid->getId();
         //         //                 for (auto& cChip : cHybrid->fReadoutChipVector)
@@ -1383,7 +1383,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1418,40 +1418,40 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
     // use xml to figure out whether to use noise or charge injection
     bool pWithNoise = true; // default is to use noise
     auto cSetting   = fSettingsMap.find("UseNoise");
-    if(cSetting != std::end(fSettingsMap)) pWithNoise = (cSetting->second == 1);
+    if(cSetting != std::end(fSettingsMap)) pWithNoise = (boost::any_cast<double>(cSetting->second) == 1);
 
     // get number of events from xml
     cSetting                 = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // get trigger rate from xml
     cSetting                   = fSettingsMap.find("TriggerRate");
     bool     cConfigureTrigger = (cSetting != std::end(fSettingsMap));
-    uint16_t cTriggerRate      = cConfigureTrigger ? cSetting->second : 100;
+    uint16_t cTriggerRate      = cConfigureTrigger ? boost::any_cast<double>(cSetting->second) : 100;
     // get trigger multiplicity from xml
     cSetting                       = fSettingsMap.find("TriggerMultiplicity");
     bool     cConfigureTriggerMult = (cSetting != std::end(fSettingsMap));
-    uint16_t cTriggerMult          = cConfigureTriggerMult ? cSetting->second : 0;
+    uint16_t cTriggerMult          = cConfigureTriggerMult ? boost::any_cast<double>(cSetting->second) : 0;
 
     // get stub delay scan range from xml
     cSetting                  = fSettingsMap.find("StubDelay");
     bool cModifyStubScanRange = (cSetting != std::end(fSettingsMap));
-    int  cStubDelay           = cModifyStubScanRange ? cSetting->second : 48;
+    int  cStubDelay           = cModifyStubScanRange ? boost::any_cast<double>(cSetting->second) : 48;
 
     // get injected stub from xmls
     cSetting     = fSettingsMap.find("StubSeed");
-    cStub.first  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    cStub.first  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
     cSetting     = fSettingsMap.find("StubBend");
-    cStub.second = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    cStub.second = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     LOG(DEBUG) << BOLDBLUE << "Injecting a stub in position " << +cStub.first << " with bend " << cStub.second << " to test data integrity..." << RESET;
 
     // get target threshold
     cSetting                  = fSettingsMap.find("Threshold");
-    uint16_t cTargetThreshold = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 580;
+    uint16_t cTargetThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 580;
 
     // get number of attempts
     cSetting         = fSettingsMap.find("Attempts");
-    size_t cAttempts = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    size_t cAttempts = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
 
     // get injected stub from xmls
     cSetting = fSettingsMap.find("ManualPhaseAlignment");
@@ -1464,7 +1464,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
             //     {
             //         for (auto cHybrid : *cOpticalGroup)
             //         {
-            //             auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            //             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             //             if( cCic != NULL )
             //             {
             //                 for(auto cChipId : pChipIds )
@@ -1481,15 +1481,15 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
 
     // get number of attempts
     cSetting      = fSettingsMap.find("Mode");
-    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     // get latency offset
     cSetting           = fSettingsMap.find("LatencyOffset");
-    int cLatencyOffset = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int cLatencyOffset = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     // resync between attempts
     cSetting     = fSettingsMap.find("ReSync");
-    bool cResync = (cSetting != std::end(fSettingsMap)) ? (cSetting->second == 1) : false;
+    bool cResync = (cSetting != std::end(fSettingsMap)) ? (boost::any_cast<double>(cSetting->second) == 1) : false;
 
     uint16_t cTPdelay = 0;
 
@@ -1497,11 +1497,11 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
     if(!pWithNoise)
     {
         cSetting              = fSettingsMap.find("PulseShapePulseAmplitude");
-        fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+        fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
         // get TP delay
         cSetting = fSettingsMap.find("PulseShapePulseDelay");
-        cTPdelay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+        cTPdelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
         // set-up for TP
         fAllChan                     = true;
@@ -1667,7 +1667,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
                 auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cOpticalGroup->getIndex());
                 auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cOpticalGroup->getIndex());
                 auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cOpticalGroup->getIndex());
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerModule*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -1713,13 +1713,13 @@ void DataChecker::L1Eye(std::vector<uint8_t> pChipIds)
             // {
             //     for (auto& cHybrid : *cOpticalGroup)
             //     {
-            //         auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+            //         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             //         //fCicInterface->ResetPhaseAligner(cCic);
             //         for(auto cChipId : pChipIds )
             //         {
             //             // bool cConfigured = fCicInterface->SetStaticPhaseAlignment(  cCic , cChipId ,  0 , cPhase);
             //             // check if a resync is needed
-            //             //fCicInterface->CheckReSync( static_cast<OuterTrackerModule*>(cHybrid)->fCic);
+            //             //fCicInterface->CheckReSync( static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
             //         }
             //     }
             // }
@@ -1741,11 +1741,11 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
     std::string  cDAQFileName    = "StubCheck.daq";
     FileHandler* cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
 
-    uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay");
-    uint8_t cSweepStubDelay    = this->findValueInSettings("SweepStubDelay");
+    uint8_t cSweepPackageDelay = this->findValueInSettings<double>("SweepPackageDelay");
+    uint8_t cSweepStubDelay    = this->findValueInSettings<double>("SweepStubDelay");
 
-    uint8_t cFirmwareTPdelay      = this->findValueInSettings("StubFWTestPulseDelay");
-    uint8_t cFirmwareTriggerDelay = this->findValueInSettings("StubFWTriggerDelay");
+    uint8_t cFirmwareTPdelay      = this->findValueInSettings<double>("StubFWTestPulseDelay");
+    uint8_t cFirmwareTriggerDelay = this->findValueInSettings<double>("StubFWTriggerDelay");
 
     // set-up for TP
     fAllChan                     = true;
@@ -1761,7 +1761,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
     // set threshold
     uint8_t  cTestPulseAmplitude = 0xFF - 100;
-    uint16_t cThreshold          = this->findValueInSettings("StubThreshold");
+    uint16_t cThreshold          = this->findValueInSettings<double>("StubThreshold");
     uint8_t  cTPgroup            = 0;
     // enable TP and set TP amplitude
     fTestPulse = true;
@@ -1794,7 +1794,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 cWithCIC   = cWithCIC || (cCic != NULL);
                 for(auto cChip: *cHybrid)
                 {
@@ -1826,7 +1826,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
             }
         }
 
-        for(int cAttempt = 0; cAttempt < this->findValueInSettings("StubAttempts"); cAttempt++)
+        for(int cAttempt = 0; cAttempt < this->findValueInSettings<double>("StubAttempts"); cAttempt++)
         {
             LOG(INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << RESET;
             auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
@@ -1851,7 +1851,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                     LOG(INFO) << BOLDBLUE << "\t..L1A latency set to " << +cDelay << " stub latency set to " << +cStubDelay << " so delay is " << +(cDelay - cStubDelay) << RESET;
 
                     this->ReadNEvents(cBeBoard, 5);
-                    const std::vector<Event*>& cEventsWithStubs = this->GetEvents(cBeBoard);
+                    const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
                     LOG(INFO) << BOLDBLUE << +cEventsWithStubs.size() << " events read back from FC7 with ReadData" << RESET;
                     for(auto& cEvent: cEventsWithStubs)
                     {
@@ -1882,7 +1882,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
                                 } // chip
                             }     // hybrid
-                        }         // modules
+                        }         // opticalGroup
                         SLinkEvent cSLev    = cEvent->GetSLinkEvent(cBeBoard);
                         auto       cPayload = cSLev.getData<uint32_t>();
                         cDAQFileHandler->setData(cPayload);
@@ -1900,8 +1900,8 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
 void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
 {
-    uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay");
-    uint8_t cSweepStubDelay    = this->findValueInSettings("SweepStubDelay");
+    uint8_t cSweepPackageDelay = this->findValueInSettings<double>("SweepPackageDelay");
+    uint8_t cSweepStubDelay    = this->findValueInSettings<double>("SweepStubDelay");
     bool    cWithCIC           = false;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1909,7 +1909,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 cWithCIC   = cWithCIC || (cCic != NULL);
                 for(auto cChip: *cHybrid)
                 {
@@ -1932,7 +1932,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                     }
                 } // chip
             }     // hybrid
-        }         // module
+        }         // hybrid
 
         // now want to see the CIC output
         (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
@@ -1960,7 +1960,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                 LOG(INFO) << BOLDBLUE << "Stub latency set to " << +cStubDelay << RESET;
 
                 this->ReadNEvents(cBeBoard, 5);
-                const std::vector<Event*>& cEventsWithStubs = this->GetEvents(cBeBoard);
+                const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
                 LOG(INFO) << BOLDBLUE << +cEventsWithStubs.size() << " events read back from FC7 with ReadData" << RESET;
                 for(auto& cEvent: cEventsWithStubs)
                 {
@@ -2006,7 +2006,7 @@ void DataChecker::writeObjects()
     fResultFile->Flush();
 }
 // State machine control functions
-void DataChecker::Start(int currentRun) { Initialise(); }
+void DataChecker::Running() { Initialise(); }
 
 void DataChecker::Stop()
 {
@@ -2036,10 +2036,10 @@ void DataChecker::MaskForStubs(BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer)
         auto& cInjThisBoard = fInjections.at(pBoard->getIndex());
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getId() != cChipId) continue;
@@ -2066,7 +2066,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
 
     // get number of events from xml
     auto     cSetting        = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     LOG(INFO) << BOLDBLUE << "Injecting hits to verify data quality in the back-end" << RESET;
     // bool cUseNoiseInjection=true;
@@ -2115,10 +2115,10 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // lower threshold and mask
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjThisChip = cInjThisHybrid->at(cChip->getIndex());
@@ -2144,17 +2144,17 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
 
         // read events
         this->ReadNEvents(pBoard, cEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+        const std::vector<Event*>& cEvents = this->GetEvents();
         LOG(DEBUG) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
         // check for matches
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule        = cInjThisBoard->at(cOpticalGroup->getIndex());
-            auto& cMismatchesThisModule = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup        = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cMismatchesThisOpticalGroup = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid        = cInjThisModule->at(cHybrid->getIndex());
-                auto& cMismatchesThisHybrid = cMismatchesThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid        = cInjThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cMismatchesThisHybrid = cMismatchesThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjThisChip        = cInjThisHybrid->at(cChip->getIndex());
@@ -2226,12 +2226,12 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // return threshold to normal
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisModule = cInjThisBoard->at(cOpticalGroup->getIndex());
-            auto& cThThisModule  = cThThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cThThisOpticalGroup  = cThThisBoard->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisModule->at(cHybrid->getIndex());
-                auto& cThThisHybrid  = cThThisModule->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cThThisHybrid  = cThThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cInjThisChip = cInjThisHybrid->at(cChip->getIndex());
@@ -2257,10 +2257,10 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
     // summary
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cMismatchesModule = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
+        auto& cMismatchesOpticalGroup = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cMismatchesHybrid = cMismatchesModule->at(cHybrid->getIndex());
+            auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getIndex());
@@ -2279,7 +2279,7 @@ void DataChecker::HitCheck()
     {
         auto cBeBoard = static_cast<BeBoard*>(cBoard);
 
-        OuterTrackerModule* cFirstHybrid = static_cast<OuterTrackerModule*>(cBoard->at(0)->at(0));
+        OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->at(0)->at(0));
         // bool cWithCIC = cFirstHybrid->fCic != NULL;
         // if( cWithCIC )
         //     cAligned = this->CICAlignment(theBoard);
@@ -2297,7 +2297,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
     for(auto cChannel: pChannels) fCBCMask.enableChannel(cChannel);
 
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
@@ -2306,7 +2306,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerModule*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SetSparsification(cCic, true);
                 for(auto cChip: *cHybrid)
                 {
@@ -2315,7 +2315,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
                     fReadoutChipInterface->maskChannelsGroup(cChip, &fCBCMask);
                 }
                 this->ReadNEvents(cBoard, cNevents);
-                const std::vector<Event*>& cEvents = this->GetEvents(cBoard);
+                const std::vector<Event*>& cEvents = this->GetEvents();
                 LOG(INFO) << BOLDBLUE << +cEvents.size() << " events read back from FC7 with ReadData" << RESET;
                 for(auto cChip: *cHybrid)
                 {

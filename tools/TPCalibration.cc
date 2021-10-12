@@ -241,7 +241,7 @@ void TPCalibration::ConfigureCalibration()
     InitResultFile("TPCalibrationResults");
 }
 
-void TPCalibration::Start(int currentRun) {}
+void TPCalibration::Running() {}
 
 void TPCalibration::Stop() {}
 

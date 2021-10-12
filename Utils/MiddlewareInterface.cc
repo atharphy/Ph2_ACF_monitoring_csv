@@ -57,6 +57,13 @@ void MiddlewareInterface::start(std::string runNumber)
 }
 
 //========================================================================================================================
+std::string MiddlewareInterface::status()
+{
+    std::string readBuffer = sendCommand("Status?");
+    std::cout << __PRETTY_FUNCTION__ << "Status: " << readBuffer << std::endl;
+    return readBuffer;
+}
+//========================================================================================================================
 void MiddlewareInterface::stop(void)
 {
     std::cout << __PRETTY_FUNCTION__ << "Sending Stop!" << std::endl;

@@ -32,7 +32,7 @@ class CalibrationExample : public Tool
     void writeObjects(void);
 
     // State machine
-    void Start(int currentRun) override;
+    void Running() override;
     void Stop(void) override;
 
   private:

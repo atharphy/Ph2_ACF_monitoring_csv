@@ -22,7 +22,7 @@ namespace Ph2_HwDescription
 // C'tors with object FE Description
 Chip::Chip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue) : FrontEndDescription(pFeDesc), fChipId(pChipId), fMaxRegValue(pMaxRegValue) {}
 
-// C'tors which take Board ID, Frontend ID/Module ID, FMC ID, Chip ID
+// C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
 Chip::Chip(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue) : FrontEndDescription(pBeId, pFMCId, pFeId), fChipId(pChipId), fMaxRegValue(pMaxRegValue) {}
 
 // Copy C'tor
@@ -72,21 +72,21 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
         LOG(ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg;
     else
     {
-        i->second.fValue    = psetValue & fMaxRegValue;
-        i->second.fPrmptCfg = pPrmptCfg;
+        i->second.fValue = psetValue & fMaxRegValue;
+        i->second.fPrmptCfg |= pPrmptCfg;
     }
 }
 
 bool ChipComparer::operator()(const Chip& chip1, const Chip& chip2) const
 {
-    if(chip1.getBeId() != chip2.getBeId())
-        return chip1.getBeId() < chip2.getBeId();
+    if(chip1.getBeBoardId() != chip2.getBeBoardId())
+        return chip1.getBeBoardId() < chip2.getBeBoardId();
     else if(chip1.getFMCId() != chip2.getFMCId())
         return chip1.getFMCId() < chip2.getFMCId();
-    else if(chip1.getFeId() != chip2.getFeId())
-        return chip1.getFeId() < chip2.getFeId();
+    else if(chip1.getHybridId() != chip2.getHybridId())
+        return chip1.getHybridId() < chip2.getHybridId();
     else
-        return chip1.getChipId() < chip2.getChipId();
+        return chip1.getId() < chip2.getId();
 }
 
 bool RegItemComparer::operator()(const ChipRegPair& pRegItem1, const ChipRegPair& pRegItem2) const

@@ -9,13 +9,14 @@ class MiddlewareInterface : public TCPClient
   public:
     MiddlewareInterface(std::string serverIP, int serverPort);
     virtual ~MiddlewareInterface(void);
-    void initialize(void);
-    void configure(std::string const& calibrationName, std::string const& configurationFilePath);
-    void halt(void);
-    void pause(void);
-    void resume(void);
-    void start(std::string runNumber);
-    void stop(void);
+    void        initialize(void);
+    void        configure(std::string const& calibrationName, std::string const& configurationFilePath);
+    void        halt(void);
+    void        pause(void);
+    void        resume(void);
+    void        start(std::string runNumber);
+    void        stop(void);
+    std::string status(void);
 
   protected:
     std::string currentRun_ = "0";

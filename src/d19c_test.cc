@@ -23,7 +23,7 @@ INITIALIZE_EASYLOGGINGPP
 int main(int argc, char** argv)
 {
     // configure the logger
-    el::Configurations conf("settings/logger.conf");
+    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
     ArgvParser cmd;
     // init
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     if(cHardReset) { cTool.fBeBoardInterface->RebootBoard(pBoard); }
     else if(cDDR3SelfTest)
     {
-        cTool.fBeBoardInterface->setBoard(pBoard->getBeBoardId());
+        cTool.fBeBoardInterface->setBoard(pBoard->getId());
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->DDR3SelfTest();
         //(D19cFWInterface*)(cTool.fBeBoardInterface->fBoardFW)->DDR3SelfTest();
     }
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         if(cTestPulse)
         {
             auto    cSetting            = cTool.fSettingsMap.find("TestPulsePotentiometer");
-            uint8_t cTestPulseAmplitude = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0x7F;
+            uint8_t cTestPulseAmplitude = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0x7F;
 
             uint32_t cNGroups = 8;
             uint32_t cN       = 0;
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
                 cTool.setSystemTestPulse(cTestPulseAmplitude, i, true, false);
                 cTool.ReadNEvents(pBoard, 1);
 
-                const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+                const std::vector<Event*>& events = cTool.GetEvents();
                 for(auto& ev: events)
                 {
                     LOG(INFO) << ">>> Event #" << cN++;
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
             uint32_t cNEventsToCollect = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10000;
 
             // be careful works only for one hybrid
-            ModuleContainer* cCbcVector = pBoard->at(0)->at(0);
+            HybridContainer* cCbcVector = pBoard->at(0)->at(0);
             /*for( auto cCbc : cCbcVector )
             {
                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->enableHipSuppression( cCbc, false, true,0);
@@ -171,11 +171,11 @@ int main(int argc, char** argv)
             Timer t;
             t.start();
 
-            cTool.Start(pBoard);
+            cTool.SystemController::StartBoard(pBoard);
             while(cN < cNEventsToCollect)
             {
                 cTool.ReadData(pBoard);
-                const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+                const std::vector<Event*>& events = cTool.GetEvents();
                 for(auto& ev: events)
                 {
                     count++;
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
                     if(count % 10000 == 0) LOG(INFO) << ">>> Recorded Event #" << count;
                 }
             }
-            cTool.Stop(pBoard);
+            cTool.StopBoard(pBoard);
 
             t.stop();
             LOG(INFO) << "Average Occupancy for Hybrid#0: " << (double)cAvgOccupancy / cN << " hits/(event*CBC)";
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
                 cTool.fBeBoardInterface->ReadBlockBoardReg(pBoard, "fc7_daq_ctrl.readout_block.readout_fifo", cPackageSize * cEvtSize);
                 cN += cPackageSize;
             }
-            cTool.Stop(pBoard);
+            cTool.StopBoard(pBoard);
 
             t.stop();
             LOG(INFO) << "Measured maximal IPBus readout rate: " << (double)(cN / t.getElapsedTime()) / 1000 << "kHz (based on " << +cN << " events, avg package size: " << +cPackageSize
@@ -294,7 +294,7 @@ int main(int argc, char** argv)
                     else
                     {
                         cTool.ReadNEvents(pBoard, cNEventsToCollect);
-                        const std::vector<Event*>& events = cTool.GetEvents(pBoard);
+                        const std::vector<Event*>& events = cTool.GetEvents();
                         for(auto& ev: events)
                         {
                             for(auto cOpticalGroup: *pBoard)
@@ -343,7 +343,7 @@ int main(int argc, char** argv)
         // if nothing else
         /*       uint32_t cNEventsToCollect = ( cmd.foundOption ( "events" ) ) ? convertAnyInt ( cmd.optionValue (
            "events" ).c_str() ) : 10000; cTool.ReadNEvents( pBoard, cNEventsToCollect ); const std::vector<Event*>&
-           events = cTool.GetEvents ( pBoard ); int cNevents=0; for( auto& cEvent : events )
+           events = cTool.GetEvents(); int cNevents=0; for( auto& cEvent : events )
                {
                    LOG (INFO) << ">>> Event #" << cNevents ;
                    LOG (INFO) << *cEvent;

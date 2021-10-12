@@ -12,7 +12,7 @@
 #include "../Utils/D19cCicEvent.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerModule.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
@@ -72,7 +72,7 @@ void D19cCicEvent::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::v
     // mapping of FEs for CIC
     std::vector<uint8_t> cFeMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
 
-    fBeId        = pBoard->getBeId();
+    fBeId        = pBoard->getId();
     fBeFWType    = 0;
     fCBCDataType = 0;
     fBeStatus    = 0;
@@ -487,7 +487,7 @@ void D19cCicEvent::print(std::ostream& os) const
 {
     os << BOLDGREEN << "EventType: d19c CIC" << RESET << std::endl;
     os << BOLDBLUE << "L1A Counter: " << this->GetEventCount() << RESET << std::endl;
-    os << "          Be Id: " << +this->GetBeId() << std::endl;
+    os << "          Be Id: " << +this->getBeBoardId() << std::endl;
     os << "Event Data size: " << +this->GetEventDataSize() << std::endl;
     os << "Bunch Counter: " << this->GetBunch() << std::endl;
     os << BOLDRED << "    TDC Counter: " << +this->GetTDC() << RESET << std::endl;
@@ -654,7 +654,7 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
     std::set<uint8_t>    cEnabledFe;
     for(auto cFe: *pBoard->at(0))
     {
-        uint8_t linkId = static_cast<OuterTrackerModule*>(cFe)->getLinkId();
+        uint8_t linkId = static_cast<OuterTrackerHybrid*>(cFe)->getLinkId();
         if(std::find(cLinkIds.begin(), cLinkIds.end(), linkId) == cLinkIds.end())
         {
             cEnabledFe.insert(linkId);
@@ -683,7 +683,7 @@ SLinkEvent D19cCicEvent::GetSLinkEvent(BeBoard* pBoard) const
         auto     cPositionHits    = cHitString.length();
         for(auto cFe: *pBoard->at(0))
         {
-            uint8_t linkId = static_cast<OuterTrackerModule*>(cFe)->getLinkId();
+            uint8_t linkId = static_cast<OuterTrackerHybrid*>(cFe)->getLinkId();
             if(linkId != cLinkId) continue;
 
             uint8_t cFeId = cFe->getId();

@@ -22,18 +22,20 @@ namespace Ph2_HwDescription
 {
 // C'tors which take BeId, FMCId, FeID, MPAId
 
-MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
+MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
 {
     fMaxRegValue      = 255;
     fChipOriginalMask = new ChannelGroup<1920>;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
 }
 
-MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
+MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
 {
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = new ChannelGroup<1920>;
+    fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
 }
