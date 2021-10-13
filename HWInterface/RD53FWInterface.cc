@@ -878,12 +878,10 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         if(RD53FWInterface::localCfgFastCmd.trigger_source != TriggerSource::FastCMDFSM)
             RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::UserDefined;
         else
-        {
-            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
-            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
-        }
+            RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
     }
     else
         RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Disabled;
