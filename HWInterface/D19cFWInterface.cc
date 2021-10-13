@@ -418,8 +418,9 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.l12_pwr_en", (int)pEnable);
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
 }
-bool D19cFWInterface::ResetLink(uint8_t pLinkId)
+void D19cFWInterface::ResetLink(uint8_t pLinkId)
 {
+    LOG (INFO) << BOLDBLUE << "Resetting Link#" << +pLinkId << RESET;
     // reset here for good measure
     uint32_t cCommand = (0x0 << 22) | ((pLinkId & 0x3f) << 26);
     this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
@@ -428,6 +429,9 @@ bool D19cFWInterface::ResetLink(uint8_t pLinkId)
     cCommand = (0x1 << 22) | ((pLinkId & 0x3f) << 26);
     this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
+}
+bool D19cFWInterface::GetLinkStatus(uint8_t pLinkId)
+{
     bool cGBTxLocked = true;
     // read back status register
     LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
@@ -450,12 +454,6 @@ bool D19cFWInterface::ResetLink(uint8_t pLinkId)
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
     std::lock_guard<std::mutex> theGuard(fMutex);
-    // reset lpGBT core
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     // check links are up
     std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
     bool                     cLinksLocked = true;
@@ -463,11 +461,13 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     uint8_t                  cAttempCount = 0;
     do {
         cLinksLocked = true;
-        LOG(INFO) << BOLDBLUE << "RESET APPLIED" << RESET;
         for(auto cOpticalReadout: *pBoard)
         {
             uint8_t cLinkId = cOpticalReadout->getId();
-            bool cLocked = ResetLink(cLinkId); 
+            if( cOpticalReadout->getReset() == 1 ) ResetLink(cLinkId); 
+            else LOG (INFO) << BOLDYELLOW << "\t... will not reset Link#" << cOpticalReadout->getId() << " on BeBoard#" << +pBoard->getId() << RESET;
+        
+            bool cLocked = GetLinkStatus(cLinkId); 
             cLinksLocked = cLinksLocked && cLocked;
         }
         if(cLinksLocked)
@@ -713,18 +713,22 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     std::string cFMC2name = fFMCMap[fmc2_card_type];
     bool        cWithDIO5 = (cFMC1name == "DIO5" || cFMC2name == "DIO5"); // DIO5 in either slot
 
-    LOG(INFO) << BOLDBLUE << "FMC1  " << +fmc1_card_type << " FMC2 " << +fmc2_card_type << RESET;
     LOG(INFO) << BOLDBLUE << "FMC1 Card: " << RESET << getFMCCardName(fmc1_card_type);
     LOG(INFO) << BOLDBLUE << "FMC2 Card: " << RESET << getFMCCardName(fmc2_card_type);
-    if(getFMCCardName(fmc1_card_type) != "2S_FMC1" && getFMCCardName(fmc1_card_type) != "PS_FMC1")
+    if( pBoard->getReset() == 1 )
     {
-        if(getFMCCardName(fmc1_card_type) != "FMC_FE_FOR_PS_ROH_FMC1")
+        if(getFMCCardName(fmc1_card_type) != "2S_FMC1" && getFMCCardName(fmc1_card_type) != "PS_FMC1")
         {
-            LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
-            WriteReg("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            if(getFMCCardName(fmc1_card_type) != "FMC_FE_FOR_PS_ROH_FMC1")
+            {
+                LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
+                WriteReg("fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
         }
     }
+    else LOG (INFO) << BOLDYELLOW << "Not sending a reset to BeBoard#" << +pBoard->getId() << RESET;
+
     // power on FMCs
     this->InitFMCPower();
 
@@ -850,19 +854,32 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         bool cSkip = (pBoard->getLinkReset() == 0);
         if(!cSkip)
         {
-            LOG(INFO) << BOLDMAGENTA << "Configuring optical link with lpGBT" << RESET;
+            LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
+            // reset lpGBT core
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
             bool clpGBTlock = LinkLock(pBoard);
             if(!clpGBTlock)
             {
                 LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
                 exit(0);
             }
+            //ResetCPB();
         }
         else
         {
             LOG(INFO) << BOLDMAGENTA << "Skipping lpGBT link reset.." << RESET;
+            bool cLinksLocked=true;
+            for(auto cOpticalReadout: *pBoard)
+            {
+                uint8_t cLinkId = cOpticalReadout->getId();
+                bool cLocked = GetLinkStatus(cLinkId); 
+                cLinksLocked = cLinksLocked && cLocked;
+            }
         }
-        ResetCPB();
     }
 
     if((fI2CVersion >= 1 || cWithGBTx) && !cWithlpGBT)
@@ -1241,7 +1258,7 @@ void D19cFWInterface::InitFMCPower()
         if(cFMC1name == "DIO5" || cFMC2name == "DIO5") this->PowerOnDIO5(cFMCIds[cIndx]);
     }
 
-    if(!(cWithDIO5 || cPSMux || c2SMux || cWithIB)) LOG(ERROR) << "Enabling of FMC power for this setup is not required, check configuration file..";
+    //if(!(cWithDIO5 || cPSMux || c2SMux || cWithIB)) LOG(ERROR) << "Enabling of FMC power for this setup is not required, check configuration file..";
     if(cWithIB)
     {
         LOG(INFO) << BOLDBLUE << "Enabling Interface board for MPA-SSA communication" << RESET;
@@ -4114,7 +4131,7 @@ void D19cFWInterface::ChipReSync()
     bool    cWithCIC = (fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2);
     uint8_t cBC0     = (cWithCIC && fIs2S) ? 1 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 void D19cFWInterface::ChipTestPulse()
 {
@@ -4183,6 +4200,8 @@ void D19cFWInterface::Trigger(uint8_t pDuration)
 // }
 bool D19cFWInterface::Bx0Alignment()
 {
+    auto cCicVeto = this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
     bool     cSuccess   = false;
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
@@ -4191,20 +4210,21 @@ bool D19cFWInterface::Bx0Alignment()
         this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x00);
     }
     // send a resync and reset readout
-    bool    cWait     = true;
+    bool    cWait     = false;
     uint8_t cAttempts = 0;
     cSuccess          = false;
     // reset decoder
-    size_t cMaxAttempts = 20;
-    size_t cWaitTime    = fWait_us * 1; // was 100
+    size_t cMaxAttempts = 100;
+    size_t cWaitTime_us = 1000;//1000 was working 
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-    this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
-    do {
-        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
+    //this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
+    do 
+    {
+        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime_us));
         // pause after reset
         // send a resync then wait
         this->ChipReSync();
-        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
+        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime_us));
         // check state of bx0 alignment block
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
@@ -4227,13 +4247,13 @@ bool D19cFWInterface::Bx0Alignment()
         {
             LOG(INFO) << BOLDBLUE << "Resetting decoder in back-end " << BOLDRED << " FAILED!" << RESET;
             this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-            this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
+            //this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
         }
         cAttempts++;
     } while(cAttempts < cMaxAttempts && !cSuccess);
     if(!cSuccess) LOG(INFO) << BOLDRED << "Could not re-set decoder ..." << RESET;
     this->ResetReadout();
-        
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cCicVeto);
     return cSuccess;
 }
 // reconfigure trigger
@@ -5598,6 +5618,7 @@ uint32_t D19cFWInterface::ReadOptoLpGBTRegister(const uint32_t linkNumber, const
 // #########################################
 void D19cFWInterface::ResetCPB()
 {
+    LOG (DEBUG) << BOLDBLUE << "Resetting CPB" << RESET;
     // Soft reset the GBT-SC worker
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -5649,7 +5670,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::WriteLpGBTRegister" << RESET;
     size_t cExpectedReplySize = 10 * 1;
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    ResetCPB();
+    //ResetCPB();
     // Use new Command Processor Block
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
@@ -5701,7 +5722,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAd
 {
     size_t cExpectedReplySize = 10 * 1;
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    ResetCPB();
+    //ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
@@ -5756,7 +5777,7 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pC
 bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
 {
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    ResetCPB();
+    //ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C write to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
@@ -5770,21 +5791,6 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;  
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
     {
-        // // reset link
-        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-        // ResetLink(pLinkId);
-    
-        // // reset I2C master 
-        // std::vector<uint8_t> cBitPosition = {2, 1, 0};
-        // uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
-        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
-        // WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
-        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
-
         if(fI2Cstatus != 4)
             LOG(DEBUG) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
                        << " transaction was to write " << +pNBytes << " to slave address " << +pSlaveAddress << " with data 0x" << std::hex << pSlaveData << std::dec << RESET;
@@ -5811,7 +5817,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
 uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    ResetCPB();
+    //ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C Read to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
@@ -5834,21 +5840,6 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     cFail               = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
     while(cFail)
     {
-        // // reset link
-        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-        // ResetLink(pLinkId);
-        
-        // // reset I2C master 
-        // std::vector<uint8_t> cBitPosition = {2, 1, 0};
-        // uint8_t              cResetMask   = (1 << cBitPosition[pMasterId]);
-        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
-        // WriteLpGBTRegister(pLinkId, 0x12c, cResetMask, true);
-        // WriteLpGBTRegister(pLinkId, 0x12c, 0, true);
-        
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         ResetCPB();
         std::this_thread::sleep_for(std::chrono::microseconds(50));

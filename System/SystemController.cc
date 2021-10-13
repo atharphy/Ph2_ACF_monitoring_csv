@@ -248,6 +248,42 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fDetectorMonitor->forkMonitor();
     }
 
+    // set module type
+    for(const auto cBoard: *fDetectorContainer)
+    { 
+        if(cBoard->getBoardType() != BoardType::D19C) continue;
+        
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
+
+            bool cWithPSmodule = false;
+            bool cWith2Smodule = false;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto cType     = FrontEndType::MPA;
+                auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType          = FrontEndType::SSA;
+                auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+                cType          = FrontEndType::CBC3;
+                auto cCBCfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+
+                cWith2Smodule = cWith2Smodule || cCBCfound;
+                cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
+            }
+            if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
+            else if(cWith2Smodule)
+            {
+                cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
+            }
+            else
+                LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
+
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
+        }
+    }
+
+
 // turn on the SEH here - moved from the lpGBT interface
 // I think it makes more sense to have it in the initialization step
 #ifdef __SEH_USB__
@@ -384,50 +420,64 @@ void SystemController::InitializeOT(BeBoard* pBoard)
     bool cSparsified = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
     pBoard->setSparsification(cSparsified);
 
-    // Configure CPB
-    // Optical link start-up
-    // first configure lpGBT
+    // // Configure CPB
+    // // Optical link start-up
+    // // first configure lpGBT
+    // for(auto cOpticalGroup: *pBoard)
+    // {
+    //     if(cOpticalGroup->flpGBT == nullptr) continue;
+
+    //     bool cWithPSmodule = false;
+    //     bool cWith2Smodule = false;
+    //     for(auto cHybrid: *cOpticalGroup)
+    //     {
+    //         auto cType     = FrontEndType::MPA;
+    //         auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+    //         cType          = FrontEndType::SSA;
+    //         auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+    //         cType          = FrontEndType::CBC3;
+    //         auto cCBCfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+
+    //         cWith2Smodule = cWith2Smodule || cCBCfound;
+    //         cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
+    //     }
+    //     if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
+    //     else if(cWith2Smodule)
+    //     {
+    //         cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
+    //     }
+    //     else
+    //         LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
+
+    //     static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
+    // }
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
 
         LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << int(pBoard->getId()) << RESET;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+        if( cOpticalGroup->getReset() == 0 ){ 
+            LOG (INFO) << BOLDYELLOW << "Will not re-configure lpGBT on Link#" << +cOpticalGroup->getId() << RESET;
+            continue;
+        }
+
         if(!clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT))
         {
             LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
             continue;
         }
-
-        bool cWithPSmodule = false;
-        bool cWith2Smodule = false;
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto cType     = FrontEndType::MPA;
-            auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-            cType          = FrontEndType::SSA;
-            auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-            cType          = FrontEndType::CBC3;
-            auto cCBCfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-
-            cWith2Smodule = cWith2Smodule || cCBCfound;
-            cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
-        }
-        if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
-        else if(cWith2Smodule)
-        {
-            cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
-        }
-        else
-            LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
-
-        static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
     }
 
     // module start-up
     // depends on module type
     for(auto cOpticalGroup: *pBoard)
     {
+        if( cOpticalGroup->getReset() == 0 ){ 
+            LOG (INFO) << BOLDYELLOW << "Will not re-configure lpGBT for specific module type.." << RESET;
+            continue;
+        }
+        
         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
         {
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTracker2S module " << RESET;
@@ -438,27 +488,41 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             LOG(INFO) << BOLDMAGENTA << "Configuring an OuterTrackerPS module " << RESET;
             ModuleStartUpPS(cOpticalGroup);
         }
+    }
 
+    // CIC reset 
+    for(auto cOpticalGroup: *pBoard)
+    {
         auto& clpGBT = cOpticalGroup->flpGBT;
-        // CIC configuration part .. first configure
+        if(clpGBT == nullptr) continue;
+
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
             uint8_t cSide = cHybrid->getId() % 2;
-            // if(clpGBT != nullptr) static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
-            if(clpGBT != nullptr)
+            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
+            else if(!cBrokenPS)
             {
-                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
-                else if(!cBrokenPS)
-                {
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
-                }
-                else
-                {
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
-                }
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
             }
+            else
+            {
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
+            }
+        }
+    }
+
+    // CIC start-up  
+    for(auto cOpticalGroup: *pBoard)
+    {
+        auto& clpGBT = cOpticalGroup->flpGBT;
+        if(clpGBT == nullptr) continue;
+        // CIC configuration part .. first configure
+        for(auto cHybrid: *cOpticalGroup)
+        {    
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            if(cCic == NULL) continue;
 
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalId() << " on hybrid " << +cHybrid->getId() << RESET;
             fCicInterface->ConfigureChip(cCic);
@@ -525,6 +589,10 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             uint8_t cSide       = cHybrid->getId() % 2;
             LOG (DEBUG) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
 
+            if( cHybrid->getReset() == 0 ){ 
+                LOG (INFO) << BOLDYELLOW << "Will not send a hard-reset to ROCs on Hybrid#" << +cHybrid->getId() << RESET;
+                continue;
+            }
             // cWithLpGBT=true;
             // no SSA because I don't want to reset it here. . already done earlier
             if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS )

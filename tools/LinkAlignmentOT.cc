@@ -84,19 +84,13 @@ bool LinkAlignmentOT::Align()
                 LOG (INFO) << BOLDRED << "BE word alignment failed" << RESET;
                 throw std::runtime_error(std::string("Could not word align BE data in LinkAlignmentOT..."));
             }
-
-            try
-            {
-                AlignStubPackage(cOpticalGroup);
-            }
-            catch(const std::exception& e)
-            {
-                fSuccess=false;
-                LOG (INFO) << BOLDRED << "BE stub package alignment failed" << RESET;
-                throw std::runtime_error(std::string("Could not find stub package delay in LinkAlignmentOT..."));
-            }
         }
-    }
+    }// align BE 
+
+    for( auto cBoard: *fDetectorContainer )
+    {
+        AlignStubPackage( cBoard );
+    }// align stubs 
     fSuccess=true;
     return fSuccess;
 }
@@ -465,6 +459,287 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
         cIndx++;
     }
     return cAligned;
+}
+bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
+{
+    // set board and get interface 
+    fBeBoardInterface->setBoard(pBoard->getId());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    // make sure you're only sending one trigger at a time here
+    LOG(INFO) << GREEN << "Trying to align CIC stub decoder in the back-end" << RESET;
+    // sparsification of
+    bool cSparsified = pBoard->getSparsification();
+    std::vector<uint8_t> cFeEnableRegs(0);
+    // disable FEs for all hybrids 
+    if(cSparsified)
+        LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::AlignStubPackage Sparsification on " << RESET;
+    else
+        LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::AlignStubPackage Sparsification off " << RESET;
+
+    for( auto cOpticalGroup : *pBoard )
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+            // disable all FEs. . not needed here
+            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+        }
+    }
+    
+    // check trigger source
+    // and reload
+    uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    uint16_t cOriginalTriggerSrc = cTriggerSrc;
+    uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
+    cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0x0});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+
+    // want to check what stubs look like 
+    // fBeBoardInterface->WriteBoardReg(pBoard,"fc7_daq_cnfg.ddr3_debug.stub_enable", 0x1); 
+    // cInterface->ResetReadout();
+    // fBeBoardInterface->ChipReSync(pBoard);
+    // auto cWords = fBeBoardInterface->ReadBlockBoardReg(pBoard, "fc7_daq_ddr3", 100); 
+    // LOG (INFO) << BOLDMAGENTA << "Read back " << cWords.size() << " from DDR3" << RESET;
+    // for(auto cWord : cWords ) 
+    // {
+    //     LOG (INFO) << BOLDRED << "|" << std::bitset<32>(cWord) << "|" << RESET;
+    // }
+    // fBeBoardInterface->WriteBoardReg(pBoard,"fc7_daq_cnfg.ddr3_debug.stub_enable", 0x0); 
+    
+    bool cSkip=false;
+    uint8_t cPackageDelay = 7;
+    uint8_t cFinalDelay   = cPackageDelay;
+    if( !cSkip )
+    {
+        // gethybrid IDs 
+        std::vector<uint8_t> cHybridIds(0);
+        std::map<uint8_t, std::vector<uint8_t>> cHybridIdsMap;
+        for( auto cOpticalGroup : *pBoard ) 
+        {
+            auto cIter = cHybridIdsMap.find(cOpticalGroup->getId());
+            if( cIter == cHybridIdsMap.end() )
+            {
+                std::vector<uint8_t> cDummy; cDummy.clear();
+                cHybridIdsMap[cOpticalGroup->getId()]=cDummy;
+                cIter = cHybridIdsMap.find(cOpticalGroup->getId());
+            }
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                cHybridIds.push_back(cHybrid->getId());    
+                cIter->second.push_back(cHybrid->getId());
+            }
+        }
+        // unique ids for each hybrid 
+        bool    cCorrectDelay = false;
+        // now try and find correct package delay
+        uint16_t cMaxBxCounter = 3564;
+        uint32_t cNevents      = 10;
+        auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+        LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
+        LOG (DEBUG) << cMaxBxCounter << RESET;
+        size_t  cAttempt      = 0; 
+        do
+        {
+            LOG (INFO) << BOLDMAGENTA << "Package delay alignment attempt#" << +cAttempt << RESET;
+            for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+            {
+                if(cCorrectDelay) continue;
+
+                LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+                cInterface->Bx0Alignment();
+
+                ReadNEvents(pBoard, cNevents);
+                const std::vector<Event*>& cEvents = this->GetEvents();
+                LOG(DEBUG) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the FC7 ..." << RESET;
+                
+                // fill map of BxIds for this hybrid
+                std::map<uint8_t, std::vector<int> > cBxIds;
+                for(auto& cEvent: cEvents)
+                {
+                    for( auto cId : cHybridIds )
+                    {
+                        auto cIter = cBxIds.find(cId);
+                        if( cIter == cBxIds.end() )
+                        {
+                            std::vector<int> cDummy; cDummy.clear();
+                            cBxIds[cId]=cDummy;
+                            cIter = cBxIds.find(cId);
+                        }
+                        cIter->second.push_back(cEvent->BxId(cId)); 
+                    }
+                }
+
+                // check that BxIds ae synchronous across singline links 
+                std::vector<uint8_t> cIdsToCompare(0);
+                for( auto cIter : cHybridIdsMap ) 
+                {
+                    LOG (INFO) << BOLDBLUE << "Checking BxIds for Link#" << +cIter.first << RESET;
+                    bool cSyncThisLink = true;
+                    if( cIter.second.size() > 1 ) //either 1 or 2 hybrids per link
+                    {
+                        //check if the two hybrids are synchronous 
+                        LOG (INFO) << BOLDYELLOW << "\t.. checking sync between " << +cIter.second[0] << " and " << +cIter.second[1] << RESET;
+                        auto& cBxIdsFirst = cBxIds[cIter.second[0]];
+                        auto& cBxIdsSecond = cBxIds[cIter.second[1]];
+                        cSyncThisLink = (cBxIdsFirst == cBxIdsSecond); 
+                        // for( size_t cIndx=0; cIndx < cBxIdsFirst.size() ; cIndx++)
+                        // {
+                        //     if( cSyncThisLink ) LOG (INFO) << BOLDGREEN << "\t\t..First BxId is " << cBxIdsFirst[cIndx] << " second is " << cBxIdsSecond[cIndx] << RESET;
+                        //     else LOG (INFO) << BOLDRED << "\t\t..First BxId is " << cBxIdsFirst[cIndx] << " second is " << cBxIdsSecond[cIndx] << RESET;
+                        // }
+                    }
+                    // if in sync.. add hybrid id to list 
+                    if( cSyncThisLink ) 
+                    {
+                        cIdsToCompare.push_back(cIter.second[0]);
+                    } 
+                }
+                if( cIdsToCompare.size() == cHybridIdsMap.size() ) 
+                {
+                    std::vector<uint16_t> cPairsCompared;
+                    std::vector<uint8_t>  cMatchesFound;
+                    // compare ids from all links 
+                    for( auto cIdFirst : cIdsToCompare ) 
+                    {
+                        for( auto cIdSecond : cIdsToCompare ) 
+                        {
+                            if( cIdFirst == cIdSecond ) continue; 
+                            uint16_t cPairId = ( std::max( cIdFirst, cIdSecond ) << 8 ) | std::min(cIdFirst, cIdSecond);
+                            if( std::find( cPairsCompared.begin(), cPairsCompared.end(), cPairId) != cPairsCompared.end() ) continue; 
+                            cPairsCompared.push_back( cPairId );
+                            uint8_t cMatchFound = ( cBxIds[cIdFirst] == cBxIds[cIdSecond] );
+                            cMatchesFound.push_back( cMatchFound ); 
+                            if( cMatchFound ) LOG (DEBUG) << BOLDGREEN << "Checking BxIds between " << +cIdFirst << " and " << +cIdSecond << "[" << cPairId << "]" << RESET;
+                            else LOG (DEBUG) << BOLDRED << "Checking BxIds between " << +cIdFirst << " and " << +cIdSecond << "[" << cPairId << "]" << RESET;
+                        }
+                    }
+                    // for those that match.. check BxId difference 
+                    for( size_t cIndx=0; cIndx < cMatchesFound.size(); cIndx++)
+                    {
+                        uint8_t cFirst = cPairsCompared[cIndx] & 0xFF;
+                        uint8_t cScnd  = (cPairsCompared[cIndx] << 8 ) & 0xFF;
+                        std::vector<uint8_t> cIdsToCheck{ cFirst, cScnd};
+                        for( auto cIdToCheck : cIdsToCheck )
+                        {
+                            std::vector<int> cBxDifferences(0);
+                            size_t cNRollOvers = 0 ; 
+                            LOG(INFO) << BOLDBLUE << "Hybrid#" << +cIdToCheck << RESET;
+                            size_t cCounter=0; 
+                            for( auto cBxId : cBxIds[cIdToCheck] ) 
+                            {
+                                if( cCounter > 0 )
+                                {
+                                    auto cPreviousBxId = cBxIds[cIdToCheck][cCounter-1];
+                                    int cBxDifference = (cNRollOvers)*cMaxBxCounter + ( cPreviousBxId % cMaxBxCounter);
+                                    cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
+                                    cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
+                                    cBxDifferences.push_back(cBxDifference);
+                                    LOG(INFO) << BOLDBLUE << "\t BxID " << +cBxId << " - BxDifference is " << +cBxDifference << RESET;  
+                                }
+                                cCounter++;                
+                            }
+                        }
+                    }
+
+                }// Ids are synchronous across each link
+
+                // std::vector<uint8_t> cFoundDelays(0);
+                // for( auto cOpticalGroup : *pBoard )
+                // {
+                //     std::vector<int> cBxIds(0);
+                //     std::vector<int> cBxDifferences(0);
+                //     int              cNRollOvers = 0;
+
+                //     // std::vector<uint8_t> cIds(0);
+                //     // for(auto cHybrid: *cOpticalGroup)
+                //     // {
+                //     //     cIds.push_back( cHybrid->getId() ); 
+                //     // }
+                //     for(auto& cEvent: cEventsWithStubs)
+                //     {
+                //         for(auto cHybrid: *cOpticalGroup)
+                //         {
+                //             // only look at the first hybrid in an OG 
+                //             //if( cHybrid->getId() != cIds[0] ) continue;
+                            
+                //             auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                //             if(cBxIds.size() > 0)
+                //             {
+                //                 int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
+                //                 cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
+                //                 cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
+                //                 cBxDifferences.push_back(cBxDifference);
+                //                 LOG(INFO) << BOLDBLUE << "\t\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx 
+                //                     <<  "\t.....BxDifference is " << +cBxDifference << RESET;
+                //             }
+                //             cBxIds.push_back(cBx);
+                //         } // hybrids or CICs
+                //     }//events 
+
+                //     auto cFirstDifference = cBxDifferences[0];
+                //     std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
+                //     cBxDifferences.erase(cBxDifferences.begin()); // erase the first element
+                //     for(auto cDifference: cBxDifferences) LOG(DEBUG) << BOLDBLUE << "\t..." << +cDifference << RESET;
+                //     // all elements are equal
+                //     if(cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()))
+                //     {
+                //         cFoundDelays.push_back(1);
+                //         LOG(INFO) << BOLDGREEN << "\t\t..OG#" << +cOpticalGroup->getId() 
+                //             << " found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
+                //     }
+                // }//OGs
+                // if( std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0) == pBoard->size() )
+                // {
+                //     LOG(INFO) << BOLDGREEN << "\tFound a package delay that works for " << std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0) 
+                //         << "/" << pBoard->size()  << " links." << RESET;
+                //     cFinalDelay   = cPackageDelay; 
+                //     cCorrectDelay = true;
+                // }
+                // else LOG(INFO) << BOLDRED << "\tFound a package delay that works for " << std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0) 
+                //         << "/" << pBoard->size()  << " links." << RESET;
+
+            } // pkg delay
+            cAttempt++;
+        }while( cAttempt < 1 && !cCorrectDelay);
+    }
+    // set everything back to original values .. like I wasn't here
+    // reset fast command registers
+    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
+    cRegVec.clear();
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+
+    // reconfigure sparsification + FEs enabled in this CIC
+    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting Sparsification" << RESET;
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    size_t cIndx = 0;
+    for( auto cOpticalGroup : *pBoard )
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            fCicInterface->SetSparsification(cCic, cSparsified);
+            fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+            cIndx++;
+        }
+    }
+    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    return cFinalDelay;
+
+    
+
 }
 bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
 {

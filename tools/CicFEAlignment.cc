@@ -469,7 +469,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
     
     return cAligned;
 }
-bool CicFEAlignment::WordAlignment(uint16_t pWait_us)
+bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
 {
     LOG(INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
 

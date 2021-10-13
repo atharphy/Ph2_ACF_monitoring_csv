@@ -1039,7 +1039,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                             currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
 
-                        // LOG (INFO) << BOLDBLUE <<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                        //LOG (INFO) << BOLDBLUE <<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
@@ -1092,7 +1092,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     }
                     else
                     {
-                        LOG (INFO) << BOLDBLUE <<
+                        LOG (DEBUG) << BOLDBLUE <<
                         "globalocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<RESET;
 
                         if(currentStepOccupancyContainer->at(boardIndex)
@@ -1266,9 +1266,19 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
-            fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
+            if( fTool->ifUseReadNEvents() ) fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
+            else 
+            {
+                LOG (INFO) << BOLDYELLOW << "Will use measureBeBoardData with ReadData " << RESET;
+                fTool->fBeBoardInterface->Start(fDetectorContainer->at(fBoardIndex));
+                std::this_thread::sleep_for(std::chrono::milliseconds(fTool->getWait()));
+                fTool->fBeBoardInterface->Stop(fDetectorContainer->at(fBoardIndex));
+                fTool->ReadData(fDetectorContainer->at(fBoardIndex), false);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents();
+            fTool->setNReadbackEvents( events.size() ); 
             for(auto& event: events) event->fillDataContainer((fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
             --burstNumbers;
         }
@@ -1296,6 +1306,8 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     {
         numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
     }
+    if( !fUseReadNEvents ) numberOfEvents = fNReadbackEvents;
+
     fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
     // for(auto opticalGroup: *fDetectorDataContainer)
     // {

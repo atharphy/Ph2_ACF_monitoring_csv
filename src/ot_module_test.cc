@@ -363,17 +363,17 @@ int main(int argc, char* argv[])
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
         cPedestalEqualization.Inherit(&cTool);
-        std::vector<FrontEndType> cTypes{FrontEndType::SSA};
-        for(auto cType: cTypes)
-        {
-            auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
-            cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+        //std::vector<FrontEndType> cTypes{FrontEndType::SSA};
+        //for(auto cType: cTypes)
+        //{
+            //auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
+            //cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
             cPedestalEqualization.Inherit(&cTool);
             cPedestalEqualization.Initialise(cAllChan, true);
             cPedestalEqualization.FindVplus();
             cPedestalEqualization.FindOffsets();
-            cTool.fDetectorContainer->resetReadoutChipQueryFunction();
-        }
+            //cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        //}
         cPedestalEqualization.Reset();
         // second parameter disables stub logic on CBC3
         cPedestalEqualization.writeObjects();

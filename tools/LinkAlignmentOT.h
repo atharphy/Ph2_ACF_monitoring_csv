@@ -66,6 +66,7 @@ class LinkAlignmentOT : public Tool
     bool PhaseAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool AlignStubPackage(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
     bool Align();
 };
 #endif

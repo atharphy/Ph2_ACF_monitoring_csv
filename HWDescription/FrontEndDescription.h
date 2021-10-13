@@ -99,6 +99,9 @@ class FrontEndDescription
     bool         isOptical() { return fOptical; }
     FrontEndType getFrontEndType() const { return fType; }
 
+    void setReset(uint8_t pReset){ fReset = pReset;}
+    uint8_t getReset(){ return fReset;}
+
   protected:
     // BIO Board Id that the FE is connected to
     uint8_t fBeId;
@@ -108,6 +111,8 @@ class FrontEndDescription
     uint8_t fFeId;
     // Id of the Optical group (link # , etc.. )
     uint8_t fOpticalId;
+    // Enable reset 
+    uint8_t fReset{0};
 
     // status (true=active, false=disabled)
     bool fStatus;

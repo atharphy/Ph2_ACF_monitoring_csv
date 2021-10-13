@@ -167,6 +167,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setEventType(EventType::VR);
     }
 
+    uint8_t cBoardReset = convertAnyInt(pBeBordNode.attribute("boardReset").value());
+    cBeBoard->setReset(cBoardReset);
+
+
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute("linkReset").value());
     cBeBoard->setLinkReset(cReset);
 
@@ -302,6 +306,9 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     pBoard->setOptical(cWithOptical);
     theOpticalGroup->setOptical(cWithOptical);
     theOpticalGroup->setOpticalId(cOpticalGroupId);
+
+    uint8_t cLinkReset = convertAnyInt(pOpticalGroupNode.attribute("reset").value());
+    theOpticalGroup->setReset(cLinkReset);
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
         if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
@@ -638,6 +645,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             // probably this can be removed now
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
         }
+        uint8_t cHybridReset = convertAnyInt(pHybridNode.attribute("reset").value());
+        cHybrid->setReset(cHybridReset);
+    
         cHybrid->setOptical(pBoard->isOptical());
         cHybrid->setOpticalId(pOpticalGroup->getOpticalId());
         os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalId() << RESET;

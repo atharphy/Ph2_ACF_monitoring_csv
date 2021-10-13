@@ -1238,6 +1238,7 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pFeId, uint8_t pReadoutC
     std::vector<Cluster>   cClusters(0);
     auto&                  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     std::bitset<NCHANNELS> cBitSet(0);
+    size_t cClusterId=0;
     for(auto cClusterWord: cClusterWords)
     {
         uint8_t cChipId       = (cClusterWord & (0x3 << 11)) >> 11;
@@ -1245,13 +1246,20 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pFeId, uint8_t pReadoutC
         // auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
         if(cChipIdMapped != pReadoutChipId) continue;
 
+        uint8_t cLayerId      = ((cClusterWord & (0xFF << 3)) >> 3) & 0x01;        // LSB is the layer
+        uint8_t cStrip        = (((cClusterWord & (0xFF << 3)) >> 3) & 0xFE) >> 1; // strip id
+        uint8_t cWidth        = 1 + (cClusterWord & 0x7);
+        uint8_t cFirstChannel = 2 * cStrip + cLayerId;
+
+        LOG(DEBUG) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
+                   << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
+
         Cluster cCluster;
-        uint8_t cFirst         = ((cClusterWord & (0xFF << 3)) >> 3) & 0x7F;
-        uint8_t cSensorId      = (((cClusterWord & (0xFF << 3)) >> 3) & (0x1 << 8)) >> 8;
-        cCluster.fFirstStrip   = pReadoutChipId * 127 + std::floor(cFirst / 2.); // I think the MSB is the layer ...
-        cCluster.fClusterWidth = 1 + (cClusterWord & 0x7);
-        cCluster.fSensor       = cSensorId;
-        cClusters.push_back(cCluster);
+        cCluster.fSensor = cLayerId;
+        cCluster.fFirstStrip = pReadoutChipId*127 + cStrip;
+        cCluster.fClusterWidth = cWidth;
+        cClusters.push_back( cCluster ); 
+        cClusterId++;
     }
     return cClusters;
 }

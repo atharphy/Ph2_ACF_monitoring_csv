@@ -345,6 +345,10 @@ class Tool : public Ph2_System::SystemController
         return cStatsSum;
     }
 
+    bool    ifUseReadNEvents(){return fUseReadNEvents;}
+    int     getWait(){return fWait_ms;}
+    size_t  getNReadbackEvents(){ return fNReadbackEvents;}
+    void    setNReadbackEvents(size_t pNEvents){ fNReadbackEvents = pNEvents;}
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 
@@ -385,7 +389,9 @@ class Tool : public Ph2_System::SystemController
     bool                 fDoBoardBroadcast;
     bool                 fDoHybridBroadcast;
     ChannelGroupHandler* fChannelGroupHandler;
-
+    bool                 fUseReadNEvents{1};
+    int                  fWait_ms{100}; 
+    size_t               fNReadbackEvents{0}; 
     std::string getCalibrationName();
 };
 

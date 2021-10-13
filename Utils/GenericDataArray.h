@@ -22,6 +22,7 @@ class GenericDataArray
     GenericDataArray() {}
     ~GenericDataArray() {}
 
+    size_t getSize(){ return size;} 
     T& operator[](size_t position) { return data[position]; }
 
     T data[size];
