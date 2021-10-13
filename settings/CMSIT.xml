@@ -176,6 +176,11 @@
           <Register name="triggers_to_accept"> 10 </Register>
         </Register>
 
+        <Register name="fast_cmd_reg_7">
+          <Register name="autozero_freq"> 1000 </Register>
+          <!-- In units of 10MHz clk cyles -->
+        </Register>
+
       </Register>
     </Register>
 

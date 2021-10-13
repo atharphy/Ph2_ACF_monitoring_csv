@@ -660,7 +660,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
     // @TMP@
-    if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
+    if(RD53FWInterface::localCfgFastCmd.autozero_source != AutozeroSource::Disabled)
         RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     do
@@ -726,8 +726,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
     // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+    if(cfg->autozero_source != AutozeroSource::Disabled) RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -876,11 +875,18 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     // @TMP@
     if(enableAutozero == true)
     {
-        RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        if(RD53FWInterface::localCfgFastCmd.trigger_source != TriggerSource::FastCMDFSM)
+            RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::UserDefined;
+        else
+        {
+            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        }
     }
+    else
+        RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Disabled;
 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
               << mainClock / ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
