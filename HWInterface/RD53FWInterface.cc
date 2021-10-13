@@ -660,8 +660,16 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
     // @TMP@
-    if(RD53FWInterface::localCfgFastCmd.autozero_source != AutozeroSource::Disabled)
+    if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
         RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+    else if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::UserDefined)
+    {
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+        RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+        std::this_thread::sleep_for(std::chrono::microseconds(2));
+        RD53FWInterface::WriteChipCommand(RD53Cmd::ECR().getFrames(), -1);
+        std::this_thread::sleep_for(std::chrono::microseconds(2));
+    }
 
     do
     {
