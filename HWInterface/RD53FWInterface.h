@@ -112,6 +112,7 @@ class RD53FWInterface : public BeBoardFWInterface
         IPBus = 1,
         FastCMDFSM,
         UserDefined, // --> Related to IPbus register "autozero_freq"
+        Software,
         Disabled = 0
     };
 

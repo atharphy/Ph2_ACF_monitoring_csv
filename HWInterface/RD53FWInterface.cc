@@ -662,13 +662,13 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // @TMP@
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
         RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
-    else if((RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::UserDefined) || (RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::Disabled))
+    else if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::Software)
     {
         RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
         RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
-        std::this_thread::sleep_for(std::chrono::microseconds(20));
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
         RD53FWInterface::WriteChipCommand(RD53Cmd::ECR().getFrames(), -1);
-        std::this_thread::sleep_for(std::chrono::microseconds(50));
+        std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
     do
@@ -884,13 +884,14 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     if(enableAutozero == true)
     {
         if(RD53FWInterface::localCfgFastCmd.trigger_source != TriggerSource::FastCMDFSM)
-            RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Disabled;
-            // RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::UserDefined;
+            RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Software;
         else
-            RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::FastCMDFSM;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        {
+            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        }
     }
     else
         RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Disabled;
