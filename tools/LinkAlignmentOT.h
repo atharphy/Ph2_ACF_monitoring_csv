@@ -49,6 +49,7 @@ class LinkAlignmentOT : public Tool
         auto& cBeBitSlipHybrd = cBeBitSlipOG->at(pHybridIndx);
         return cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
     }
+    void AlignStubPackage(); 
   protected:
     
   private:

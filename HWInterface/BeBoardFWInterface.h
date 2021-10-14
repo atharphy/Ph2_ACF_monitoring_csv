@@ -43,6 +43,7 @@ struct CPBconfig
     uint32_t fWait_us      = 50;
     uint16_t fMaxAttempts  = 500;
     uint8_t  fI2CFrequency = 3;
+    uint8_t  fResetEn      = 1;
 };
 
 /*!

@@ -67,6 +67,14 @@ void LinkAlignmentOT::Reset()
 }
 
 // Processing 
+void LinkAlignmentOT::AlignStubPackage()
+{
+    for( auto cBoard: *fDetectorContainer )
+    {
+        AlignStubPackage( cBoard );
+    }// align stubs 
+      
+}
 bool LinkAlignmentOT::Align()
 {
     for( auto cBoard: *fDetectorContainer )
@@ -87,10 +95,7 @@ bool LinkAlignmentOT::Align()
         }
     }// align BE 
 
-    for( auto cBoard: *fDetectorContainer )
-    {
-        AlignStubPackage( cBoard );
-    }// align stubs 
+    AlignStubPackage();
     fSuccess=true;
     return fSuccess;
 }
@@ -185,6 +190,8 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
     bool cAligned=true;
+    std::vector<uint8_t> cEportGroups;
+    std::vector<uint8_t> cEportChnls;
     for(auto cHybrid: *pOpticalGroup)
     {
         std::vector<uint8_t> cGroups;
@@ -215,8 +222,16 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
                 cChannels = {2, 0, 2, 0, 2, 0, 2};
             }
         }
-        cAligned = cAligned && flpGBTInterface->AutoPhaseAlignRx(clpGBT, cGroups, cChannels);
+        for( auto cGrp:  cGroups) cEportGroups.push_back( cGrp );
+        for( auto cChnl:  cChannels) cEportChnls.push_back( cChnl );
     }
+    auto cMode = flpGBTInterface->AutoPhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
+    cAligned = cAligned && (cMode != 15);
+    for( size_t cIndx=0; cIndx < cEportGroups.size(); cIndx++)
+    {
+        flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode);
+    }
+
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx=0;
     for(auto cHybrid: *pOpticalGroup)
@@ -324,7 +339,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
         std::vector<uint8_t> cBitSlipHist(15,0);
         for( auto cItem : cThisBeBitSlip) cBitSlipHist[cItem]++;
         auto cMode = std::max_element( cBitSlipHist.begin(), cBitSlipHist.end() ) - cBitSlipHist.begin() ;
-        LOG (INFO) << BOLDMAGENTA << "Most frequent bitslip is " << +cMode ;
+        LOG (INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << " most frequent bitslip is " << +cMode << RESET;
         // now if any line has a bit-slip that isn't the mode.. set it to the mode 
         // for( size_t cLineId =1 ; cLineId <= cNlines; cLineId++)
         // {
@@ -624,9 +639,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
                             if( cMatchFound )
                             {
                                 LOG (INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET;
-                                cMatchesFound.push_back( cMatchFound ); 
                             }
                             else LOG (INFO) << BOLDRED << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " DO NOT match.. " << RESET;
+                            cMatchesFound.push_back( cMatchFound ); 
                             cPairsCompared.push_back( cPairId );
                         }
                     }
@@ -639,7 +654,8 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
                     // for those that match.. check BxId difference 
                     std::vector<uint8_t> cFoundDelays(0);
                     for( size_t cIndx=0; cIndx < cMatchesFound.size(); cIndx++)
-                    {
+                    {   
+                        if( cMatchesFound[cIndx] == 0 ) continue;
                         uint8_t cFirst = cPairsCompared[cIndx] & 0xFF;
                         uint8_t cScnd  = (cPairsCompared[cIndx] >> 8 ) & 0xFF;
                         std::vector<uint8_t> cIdsToCheck(0);
