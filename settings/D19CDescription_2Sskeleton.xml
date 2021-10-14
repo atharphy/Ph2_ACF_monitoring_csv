@@ -25,15 +25,6 @@
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             
-            <!-- <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_333/" />
-            <CBC Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG0_FE0_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG0_FE0_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" /> -->
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -50,15 +41,6 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="1" configfile="CBC3_default.txt" />
-            <!-- <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_333/" />
-            <CBC Id="0" configfile="BE0_OG0_FE1_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG0_FE1_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG0_FE1_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG0_FE1_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG0_FE1_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG0_FE1_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG0_FE1_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG0_FE1_Chip7.txt" /> -->
          
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -86,20 +68,11 @@
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             
-            <!-- <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_333/" />
-            <CBC Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG0_FE0_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG0_FE0_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" /> -->
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="3" Status="1" reset="1">
+        <Hybrid Id="3" Status="0" reset="1">
             <Global>
                 <Settings threshold="550" latency="108"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
@@ -111,20 +84,53 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="1" configfile="CBC3_default.txt" />
-            <!-- <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_333/" />
-            <CBC Id="0" configfile="BE0_OG0_FE1_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG0_FE1_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG0_FE1_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG0_FE1_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG0_FE1_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG0_FE1_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG0_FE1_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG0_FE1_Chip7.txt" /> -->
          
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
     </OpticalGroup>
+
+   <!--  <OpticalGroup Id="2" FMCId="0" reset="1">
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
+        <lpGBT_Files path="./settings/lpGBTFiles/" />
+        <lpGBT Id="2" configfile="CMSOT_lpGBT.txt">
+          <Settings
+          />
+        </lpGBT>
+        <Hybrid Id="4" Status="1" reset="1">
+            <Global>
+                <Settings threshold="550" latency="108"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            
+
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+        </Hybrid>
+        <Hybrid Id="5" Status="1" reset="1">
+            <Global>
+                <Settings threshold="550" latency="108"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
+         
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+        </Hybrid>
+    </OpticalGroup> -->
 
     
     <!--CONFIG-->

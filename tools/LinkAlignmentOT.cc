@@ -490,6 +490,8 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
     // check trigger source
     // and reload
     uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+    uint16_t cOriginalTPdelay    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+    uint16_t cOriginalStubDelay  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
     uint16_t cOriginalTriggerSrc = cTriggerSrc;
     uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
@@ -499,6 +501,8 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0x0});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 400});
+    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", 200});
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
@@ -578,31 +582,31 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
                     }
                 }
 
-                // check that BxIds ae synchronous across singline links 
+                // check that BxIds ae synchronous across single links 
                 std::vector<uint8_t> cIdsToCompare(0);
                 for( auto cIter : cHybridIdsMap ) 
                 {
-                    LOG (INFO) << BOLDBLUE << "Checking BxIds for Link#" << +cIter.first << RESET;
-                    bool cSyncThisLink = true;
+                    LOG (INFO) << BOLDBLUE << "\t..Checking Sync for hybrids on Link#" << +cIter.first << RESET;
+                    bool cSyncThisLink = true;// if there's only one hybrid by definition you are in sync
                     if( cIter.second.size() > 1 ) //either 1 or 2 hybrids per link
                     {
                         //check if the two hybrids are synchronous 
-                        LOG (INFO) << BOLDYELLOW << "\t.. checking sync between " << +cIter.second[0] << " and " << +cIter.second[1] << RESET;
+                        LOG (DEBUG) << BOLDYELLOW << "\t.. checking sync between " << +cIter.second[0] << " and " << +cIter.second[1] << RESET;
                         auto& cBxIdsFirst = cBxIds[cIter.second[0]];
                         auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                         cSyncThisLink = (cBxIdsFirst == cBxIdsSecond); 
-                        // for( size_t cIndx=0; cIndx < cBxIdsFirst.size() ; cIndx++)
-                        // {
-                        //     if( cSyncThisLink ) LOG (INFO) << BOLDGREEN << "\t\t..First BxId is " << cBxIdsFirst[cIndx] << " second is " << cBxIdsSecond[cIndx] << RESET;
-                        //     else LOG (INFO) << BOLDRED << "\t\t..First BxId is " << cBxIdsFirst[cIndx] << " second is " << cBxIdsSecond[cIndx] << RESET;
-                        // }
+                        if( cSyncThisLink ) LOG (DEBUG) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                     }
-                    // if in sync.. add hybrid id to list 
+                    // if in sync.. add first hybrid id to list 
                     if( cSyncThisLink ) 
                     {
                         cIdsToCompare.push_back(cIter.second[0]);
-                    } 
+                    }
+                    else  LOG (INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
+                        
                 }
+                // if all the links are synchronous then.. check if we are 
+                // in sync across the multiple links  
                 if( cIdsToCompare.size() == cHybridIdsMap.size() ) 
                 {
                     std::vector<uint16_t> cPairsCompared;
@@ -615,25 +619,41 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
                             if( cIdFirst == cIdSecond ) continue; 
                             uint16_t cPairId = ( std::max( cIdFirst, cIdSecond ) << 8 ) | std::min(cIdFirst, cIdSecond);
                             if( std::find( cPairsCompared.begin(), cPairsCompared.end(), cPairId) != cPairsCompared.end() ) continue; 
+                            
+                            uint8_t cMatchFound = ( cBxIds[cIdFirst] == cBxIds[cIdSecond] ); 
+                            if( cMatchFound )
+                            {
+                                LOG (INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET;
+                                cMatchesFound.push_back( cMatchFound ); 
+                            }
+                            else LOG (INFO) << BOLDRED << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " DO NOT match.. " << RESET;
                             cPairsCompared.push_back( cPairId );
-                            uint8_t cMatchFound = ( cBxIds[cIdFirst] == cBxIds[cIdSecond] );
-                            cMatchesFound.push_back( cMatchFound ); 
-                            if( cMatchFound ) LOG (DEBUG) << BOLDGREEN << "Checking BxIds between " << +cIdFirst << " and " << +cIdSecond << "[" << cPairId << "]" << RESET;
-                            else LOG (DEBUG) << BOLDRED << "Checking BxIds between " << +cIdFirst << " and " << +cIdSecond << "[" << cPairId << "]" << RESET;
                         }
                     }
+                    if( cIdsToCompare.size() == 1 ) 
+                    {
+                        uint16_t cPairId = 0xFF << 8 | cIdsToCompare[0];
+                        cPairsCompared.push_back( cPairId ); 
+                        cMatchesFound.push_back(1);
+                    }
                     // for those that match.. check BxId difference 
+                    std::vector<uint8_t> cFoundDelays(0);
                     for( size_t cIndx=0; cIndx < cMatchesFound.size(); cIndx++)
                     {
                         uint8_t cFirst = cPairsCompared[cIndx] & 0xFF;
-                        uint8_t cScnd  = (cPairsCompared[cIndx] << 8 ) & 0xFF;
-                        std::vector<uint8_t> cIdsToCheck{ cFirst, cScnd};
+                        uint8_t cScnd  = (cPairsCompared[cIndx] >> 8 ) & 0xFF;
+                        std::vector<uint8_t> cIdsToCheck(0);
+                        cIdsToCheck.push_back(cFirst);
+                        // 0xFF marks the case where there is no second hybrid to c
+                        // compare against 
+                        if( cScnd != 0xFF ) cIdsToCheck.push_back(cScnd);
+                        //std::vector<uint8_t> cIdsToCheck{ cFirst, cScnd};
+                        size_t cNFound=0; 
                         for( auto cIdToCheck : cIdsToCheck )
                         {
                             std::vector<int> cBxDifferences(0);
                             size_t cNRollOvers = 0 ; 
-                            LOG(INFO) << BOLDBLUE << "Hybrid#" << +cIdToCheck << RESET;
-                            size_t cCounter=0; 
+                            size_t cCounter=0;
                             for( auto cBxId : cBxIds[cIdToCheck] ) 
                             {
                                 if( cCounter > 0 )
@@ -643,70 +663,27 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
                                     cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
                                     cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
                                     cBxDifferences.push_back(cBxDifference);
-                                    LOG(INFO) << BOLDBLUE << "\t BxID " << +cBxId << " - BxDifference is " << +cBxDifference << RESET;  
                                 }
                                 cCounter++;                
                             }
+                            if( std::adjacent_find( cBxDifferences.begin(), cBxDifferences.end(), std::not_equal_to<>() ) == cBxDifferences.end() )
+                            {
+                                LOG (INFO) << BOLDGREEN << "\t\t\t..Constant BxId difference of " << +cBxDifferences[0] << " 40 MHz clks on Hybrid#" << +cIdToCheck <<  RESET;
+                                cNFound++;
+                            }
                         }
+                        cFoundDelays.push_back( (cNFound==cIdsToCheck.size()) ? 1: 0 );
                     }
-
+                    auto cNFound = std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0);
+                    if( (size_t)cNFound == cMatchesFound.size() && cNFound != 0 )
+                    {
+                        LOG (INFO) << BOLDGREEN << "All hybrids match for a package delay of " << +cPackageDelay << RESET;
+                        cCorrectDelay=true;
+                    }
+                    else LOG (DEBUG) << BOLDRED << "For a package delay of " << +cPackageDelay << " found " 
+                            << +cNFound << "/" << cMatchesFound.size() << " pairs of hybrids with a constant difference in BxIds" << RESET;
                 }// Ids are synchronous across each link
-
-                // std::vector<uint8_t> cFoundDelays(0);
-                // for( auto cOpticalGroup : *pBoard )
-                // {
-                //     std::vector<int> cBxIds(0);
-                //     std::vector<int> cBxDifferences(0);
-                //     int              cNRollOvers = 0;
-
-                //     // std::vector<uint8_t> cIds(0);
-                //     // for(auto cHybrid: *cOpticalGroup)
-                //     // {
-                //     //     cIds.push_back( cHybrid->getId() ); 
-                //     // }
-                //     for(auto& cEvent: cEventsWithStubs)
-                //     {
-                //         for(auto cHybrid: *cOpticalGroup)
-                //         {
-                //             // only look at the first hybrid in an OG 
-                //             //if( cHybrid->getId() != cIds[0] ) continue;
-                            
-                //             auto cBx = (int)cEvent->BxId(cHybrid->getId());
-                //             if(cBxIds.size() > 0)
-                //             {
-                //                 int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
-                //                 cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
-                //                 cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
-                //                 cBxDifferences.push_back(cBxDifference);
-                //                 LOG(INFO) << BOLDBLUE << "\t\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx 
-                //                     <<  "\t.....BxDifference is " << +cBxDifference << RESET;
-                //             }
-                //             cBxIds.push_back(cBx);
-                //         } // hybrids or CICs
-                //     }//events 
-
-                //     auto cFirstDifference = cBxDifferences[0];
-                //     std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
-                //     cBxDifferences.erase(cBxDifferences.begin()); // erase the first element
-                //     for(auto cDifference: cBxDifferences) LOG(DEBUG) << BOLDBLUE << "\t..." << +cDifference << RESET;
-                //     // all elements are equal
-                //     if(cFirstDifference != 0 && std::equal(cBxDifferences.begin() + 1, cBxDifferences.end(), cBxDifferences.begin()))
-                //     {
-                //         cFoundDelays.push_back(1);
-                //         LOG(INFO) << BOLDGREEN << "\t\t..OG#" << +cOpticalGroup->getId() 
-                //             << " found differences between bxIds to always be the same : " << +cFirstDifference << RESET;
-                //     }
-                // }//OGs
-                // if( std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0) == pBoard->size() )
-                // {
-                //     LOG(INFO) << BOLDGREEN << "\tFound a package delay that works for " << std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0) 
-                //         << "/" << pBoard->size()  << " links." << RESET;
-                //     cFinalDelay   = cPackageDelay; 
-                //     cCorrectDelay = true;
-                // }
-                // else LOG(INFO) << BOLDRED << "\tFound a package delay that works for " << std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0) 
-                //         << "/" << pBoard->size()  << " links." << RESET;
-
+                else LOG (INFO) << BOLDRED << "For a pakcage delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
             } // pkg delay
             cAttempt++;
         }while( cAttempt < 1 && !cCorrectDelay);
@@ -718,6 +695,8 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cOriginalTPdelay});
+    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cOriginalStubDelay});
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
