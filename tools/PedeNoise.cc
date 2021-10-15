@@ -216,8 +216,8 @@ void PedeNoise::sweepSCurves()
     
     if(fDisableStubLogic) disableStubLogic();
     LOG (INFO) << BLUE <<  "Sweep of S-curves will start at an average threshold of " <<cStartValue<< RESET ;
-    measureSCurves(cStartValue);
-    //scanScurves();
+    //measureSCurves(cStartValue);
+    scanScurves();
 
 
     if(fDisableStubLogic) reloadStubLogic();
@@ -394,14 +394,17 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
 }
 void PedeNoise::scanScurves()
 {
-    float    cLimit         = 0.05;
+    float    cMaxOccupancy  = 4.; 
+    float    cLimit         = 0.01;
     int      cMinBreakCount =  5;//take from xml
     int      cStepSize      =  1;//take from xml 
     int      cInitialSign   = -1;
-    DetectorDataContainer cCounts, cSigns, cThresholds ;
+    DetectorDataContainer cCounts, cSigns, cThresholds , cStatus ;
+
     ContainerFactory::copyAndInitChip<std::pair<int,int>>(*fDetectorContainer, cCounts);
     ContainerFactory::copyAndInitChip<int>(*fDetectorContainer, cSigns);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cThresholds);
+    ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, cStatus);
     LOG (INFO) << BOLDYELLOW << "Starting S-curve scan" << RESET;
     // intialize containers to start value
     for(auto cBoard: *fDetectorContainer)
@@ -410,30 +413,35 @@ void PedeNoise::scanScurves()
         auto cSignThisBrd = cSigns.at(cBoard->getIndex());
         auto cThThisBrd = cThresholds.at(cBoard->getIndex());
         auto cCntThisBrd = cCounts.at(cBoard->getIndex());
+        auto cStatusThisBrd = cStatus.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             LOG (DEBUG) << BOLDYELLOW << "Initialising containers for OG" << +cOpticalGroup->getId() << RESET;
             auto& cSignThisOG = cSignThisBrd->at(cOpticalGroup->getIndex());
             auto& cThThisOG = cThThisBrd->at(cOpticalGroup->getIndex());
             auto& cCntThisOG = cCntThisBrd->at(cOpticalGroup->getIndex());
+            auto& cStatusThisOG = cStatusThisBrd->at(cOpticalGroup->getIndex());
             for(auto cFe: *cOpticalGroup)
             {
                 LOG (DEBUG) << BOLDYELLOW << "Initialising containers for Hybrid" << +cFe->getId() << RESET;
                 auto& cSignThisFE = cSignThisOG->at(cFe->getIndex());
                 auto& cThThisFE = cThThisOG->at(cFe->getIndex());
                 auto& cCntThisFE = cCntThisOG->at(cFe->getIndex());
+                auto& cStatusThisFE = cStatusThisOG->at(cFe->getIndex());
                 for(auto cROC: *cFe)
                 {
                     auto cThreshold = fReadoutChipInterface->ReadChipReg(cROC,"Threshold");
                     auto& cCntThisROC = cCntThisFE->at(cROC->getIndex());
                     auto& cSummary = cCntThisROC->getSummary<std::pair<int,int>>();
-                    cSummary.first = (cROC->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : 1; 
+                    cSummary.first = (cROC->getFrontEndType() == FrontEndType::CBC3 ) ? 0 : cMaxOccupancy; 
                     cSummary.second = 0;
                     auto& cThThisROC = cThThisFE->at(cROC->getIndex());
                     cThThisROC->getSummary<uint16_t>()=cThreshold;
                     auto& cSignThisROC = cSignThisFE->at(cROC->getIndex());
                     cSignThisROC->getSummary<int>()=cInitialSign;
-
+                    auto& cStatusThisROC = cStatusThisFE->at(cROC->getIndex());
+                    auto& cStatusSmry = cStatusThisROC->getSummary<uint8_t>();
+                    cStatusSmry=0; 
                     LOG (DEBUG) << BOLDYELLOW << "Initialising containers for Chip" << +cROC->getId() 
                         << " - current threshold is " << cThThisROC->getSummary<uint16_t>() 
                         << " current limit is " << cSummary.first 
@@ -457,57 +465,73 @@ void PedeNoise::scanScurves()
             auto& cSignThisBrd = cSigns.at(cBoard->getIndex());
             auto& cThThisBrd = cThresholds.at(cBoard->getIndex());
             auto& cCntThisBrd = cCounts.at(cBoard->getIndex());
+            auto cStatusThisBrd = cStatus.at(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
                 auto& cSignThisOG = cSignThisBrd->at(cOpticalGroup->getIndex());
                 auto& cThThisOG = cThThisBrd->at(cOpticalGroup->getIndex());
                 auto& cCntThisOG = cCntThisBrd->at(cOpticalGroup->getIndex());
+                auto& cStatusThisOG = cStatusThisBrd->at(cOpticalGroup->getIndex());
                 for(auto cFe: *cOpticalGroup)
                 {
                     auto& cSignThisFE = cSignThisOG->at(cFe->getIndex());
                     auto& cThThisFE = cThThisOG->at(cFe->getIndex());
                     auto& cCntThisFE = cCntThisOG->at(cFe->getIndex());
+                    auto& cStatusThisFE = cStatusThisOG->at(cFe->getIndex());
                     for(auto cROC: *cFe)
                     {
                         auto& cCntThisROC = cCntThisFE->at(cROC->getIndex());
                         auto& cCntSummary = cCntThisROC->getSummary<std::pair<int,int>>();
                         auto& cSignThisROC = cSignThisFE->at(cROC->getIndex())->getSummary<int>();
+                        auto& cStatusThisROC = cStatusThisFE->at(cROC->getIndex())->getSummary<uint8_t>();
+                
                         auto cThThisROC = cThThisFE->at(cROC->getIndex())->getSummary<uint16_t>();
                         uint16_t cMaxValue = (cROC->getFrontEndType() == FrontEndType::CBC3) ? ( 1 << 10 ) : (1 << 8); 
                         cMaxValue = cMaxValue - 1; 
-                        bool cBrkCntReached = (cCntSummary.second >= cMinBreakCount);
-                        bool cEndReached = (cROC->getFrontEndType() == FrontEndType::CBC3) ? ( cCntSummary.first == 1) : 0; 
-                        if( cBrkCntReached && cEndReached) continue;
-
                         bool cThLimitReached = (cThThisROC <= 0 || cThThisROC >= cMaxValue); 
                         if( cThLimitReached ) continue;
 
                         // switch sign and reset count once break count has been reached 
-                        if( cCntSummary.second == cMinBreakCount ){ 
-                            cSignThisROC = -1*cSignThisROC;
-                            cCntSummary.first = 1-cCntSummary.first;
-                            cCntSummary.second =0;
-                            LOG (DEBUG) << BOLDYELLOW << "ROC" << +cROC->getId() << " on hybrid" << +cFe->getId() 
+                        bool cEndReached = false;
+                        if( cCntSummary.second == cMinBreakCount )
+                        { 
+                            LOG (INFO) << BOLDYELLOW << "\t\t.. ROC" << +cROC->getId() << " on hybrid" << +cFe->getId() 
                                 << " break count reached, switching sign " 
                                 << " .... current sign is " << cSignThisROC
                                 << " current limit is " << cCntSummary.first 
                                 << " and current break count is " << cCntSummary.second
                                 << RESET;
-                        } 
+                            cEndReached = (cROC->getFrontEndType() == FrontEndType::CBC3) ? ( cCntSummary.first == 1) : ( cCntSummary.first == 0); 
+                            if( cEndReached )
+                            {
+                                cStatusThisROC = 1; 
+                                LOG (INFO) << BOLDYELLOW << "\t\t.. Finished scan for ROC#"  << +cROC->getId() << " on hybrid" << +cFe->getId()  << RESET;
+                            }
+                            else
+                            {
+                                cSignThisROC = -1*cSignThisROC;
+                                cCntSummary.second =0;
+                                cCntSummary.first = (cCntSummary.first == 1 ) ? 1-cCntSummary.first : 0;
+                            }
+                        }
+                        if( cEndReached ) continue; 
+                        //bool cBrkCntReached = (cCntSummary.second >= cMinBreakCount);
+                        //bool cEndReached = (cROC->getFrontEndType() == FrontEndType::CBC3) ? ( cCntSummary.first == 1) : 0; 
+                        //if( cBrkCntReached && cEndReached) continue;
 
                         // set threshold 
                         uint16_t cTh = cThThisROC + cSignThisROC*cStepSize;
-                        LOG (DEBUG) << BOLDBLUE << "Setting threshold on ROC" << +cROC->getId() << " on Hybrid" << +cROC->getHybridId() 
+                        LOG (DEBUG) << BOLDYELLOW << "Setting threshold on ROC" << +cROC->getId() << " on Hybrid" << +cROC->getHybridId() 
                             << " to " << cTh << RESET;
                         fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cTh);
-                        cNmodified++;
+                        if( cStatusThisROC == 0 ) cNmodified++;
                     }//ROC
                 }//FE
             }//OG
         }//board 
         // continue scan if at least one object isn't finished 
         cContinueScan = (cNmodified>0);
-        if( !cContinueScan ) { LOG (DEBUG) << BOLDMAGENTA << "Number of modified thresholds is " << +cNmodified << RESET; break;}
+        if( !cContinueScan ) { LOG (INFO) << BOLDMAGENTA << "Number of modified thresholds is " << +cNmodified << ".. will stop scan!" << RESET; continue;}
     
         // measure occupancy for all BeBoards
         DetectorDataContainer* cOccContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
@@ -516,8 +540,8 @@ void PedeNoise::scanScurves()
         {
             measureBeBoardData(cBoard->getIndex(), fEventsPerPoint, fNEventsPerBurst);
         }
-        float cGlbOcc = cOccContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-        LOG (INFO) << BOLDBLUE << "PedeNoise [Step#" << +cStepCounter << "] global occupancy is " << cGlbOcc << RESET;
+        float cGlbOcc = std::min( cMaxOccupancy, cOccContainer->getSummary<Occupancy, Occupancy>().fOccupancy );
+        if( cStepCounter%2 == 0 ) LOG (INFO) << BOLDBLUE << "PedeNoise [Step#" << +cStepCounter << "] global occupancy is " << cGlbOcc << RESET;
 
         // now check if the occupancy has reached the limit 
         // and update threshold 
@@ -542,8 +566,10 @@ void PedeNoise::scanScurves()
                         auto& cCntThisROC = cCntThisFE->at(cROC->getIndex());
                         auto& cCntSummary = cCntThisROC->getSummary<std::pair<int,int>>();
                         auto& cOccThisChip = cROC->getSummary<Occupancy, Occupancy>().fOccupancy;
-                        LOG (DEBUG) << BOLDBLUE << "\t.. Chip" << +cROC->getId() << " on Hybrid" << +cFe->getId() 
+                        auto  cDifference =  std::fabs( std::min(cMaxOccupancy,cOccThisChip)-cCntSummary.first);
+                        LOG (INFO) << BOLDBLUE << "\t.. Chip" << +cROC->getId() << " on Hybrid" << +cFe->getId() 
                             << " is " << cOccThisChip 
+                            << " difference is " << cDifference 
                             << " current limit has been found " << cCntSummary.second << " times."
                             << RESET;
                         int cIncrement = ( std::fabs(cOccThisChip-cCntSummary.first) <= cLimit )  ? 1 : 0;

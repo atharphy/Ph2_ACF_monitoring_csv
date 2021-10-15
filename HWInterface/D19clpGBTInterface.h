@@ -21,7 +21,24 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {
+        // configure during constructor now when configuring chip 
+        SetConfigMode(pUseOpticalLink, pUseCPB);
+        // configure CPB - do this here rather than in SystemController? Not sure
+        CPBconfig cCPBconfig;
+        cCPBconfig.fEnable       = pUseCPB;
+        cCPBconfig.fI2CFrequency = 3;
+        cCPBconfig.fWait_us      = 0;   // TO-DO - make configurable from xml
+        cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
+        cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
+        cCPBconfig.fMaxAttempts  = 1000; // TO-DO - make configurable from xml
+        cCPBconfig.fResetEn      = 0;    // TO-DO - make configurable from xml
+        // configure FW for all boards
+        for( auto cBoardMap : pBoardMap )
+        {
+            (cBoardMap.second)->ConfigureCPB(cCPBconfig);
+        }
+    }
     ~D19clpGBTInterface() {}
 
     // ###################################
@@ -45,7 +62,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // #endif
 
     // Sets the flag used to select which lpGBT configuration interface to use
-    void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
+    void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH

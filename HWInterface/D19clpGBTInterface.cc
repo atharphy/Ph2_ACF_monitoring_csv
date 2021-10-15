@@ -25,18 +25,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     pChip->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "]" << RESET;
     LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
-
-    SetConfigMode(pChip, pChip->isOptical(), fUseCPB);
-    // configure CPB - do this here rather than in SystemController? Not sure
-    CPBconfig cCPBconfig;
-    cCPBconfig.fEnable       = fUseCPB;
-    cCPBconfig.fI2CFrequency = 3;
-    cCPBconfig.fWait_us      = 0;   // TO-DO - make configurable from xml
-    cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
-    cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
-    cCPBconfig.fMaxAttempts  = 1000; // TO-DO - make configurable from xml
-    cCPBconfig.fResetEn      = 0;    // TO-DO - make configurable from xml
-    fBoardFW->ConfigureCPB(cCPBconfig);
+    
     // Configure High Speed Link Tx Rx Polarity
     // do this before doing anything else
     ConfigureHighSpeedPolarity(pChip, 1, 0);
@@ -78,7 +67,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /* OT specific functions */
 /*-----------------------*/
 
-void D19clpGBTInterface::SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC)
+void D19clpGBTInterface::SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC)
 {
     if(pUseOpticalLink)
     {
