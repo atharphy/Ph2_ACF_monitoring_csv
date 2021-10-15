@@ -2902,7 +2902,7 @@ void D19cFWInterface::ReadASEvent(BeBoard* pBoard, std::vector<uint32_t>& pData)
 
     if(fSaveToFile) fFileHandler->setData(pData);
 }
-bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters)
+bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, size_t pNFEs)
 {
     std::string cStartPattern="111111111111111";
     size_t cBxId=0;
@@ -2915,10 +2915,11 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters)
     // find first packet with more than 0 stubs 
     bool cStartPatternFound=true;
     size_t cNcountersDecoded = 0 ;
-    size_t cMaxCountersSize = (16*120 + 120 ) *8;
+    size_t cMaxCountersSize = (16*120 + 120 )*pNFEs;
+    bool cWithSSA=false;
     do
     {
-        if( cStubPktCounter == 1 ) cMaxCountersSize = ( cNFEs == 0 ) ? (16*120 + 120 ) *8 : (16*120 + 120 ) *cNFEs;
+        //if( cStubPktCounter == 1 ) cMaxCountersSize = ( cNFEs == 0 ) ? (16*120 + 120 ) *8 : (16*120 + 120 ) *cNFEs;
         for( size_t cClk=0; cClk < 8; cClk++)
         {
             LOG (DEBUG) << BOLDMAGENTA << "Bx" << +cBxId << " : " << std::bitset<6>( *cStubBufferIter & 0x3F ) << RESET; 
@@ -2954,59 +2955,67 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters)
                     cShft += cFld.second;
                 }
                 size_t cNstubs= std::stoi(cHdrVals[3],0,2); 
-                for( size_t cStubId=0; cStubId < cNstubs; cStubId++)
+                if( cNstubs == pNFEs ) 
                 {
-                    std::vector<std::pair<std::string,uint8_t>> cStubFlds;
-                    cStubFlds.push_back( std::make_pair("Offset",3) );
-                    cStubFlds.push_back( std::make_pair("FeId",3) );
-                    cStubFlds.push_back( std::make_pair("Stub",15) );
-                    std::stringstream cStubOutput; 
-                    int cFeId=-1; 
-                    int cDecodedFeId=cFeId;
-                    for( auto cFld : cStubFlds ) 
+                    LOG (DEBUG) << BOLDYELLOW << cStream.str() << " : " << RESET;
+                    for( size_t cStubId=0; cStubId < cNstubs; cStubId++)
                     {
-                        auto cSubStr = cStubPkt.substr(cShft,cFld.second);
-                        if( cFld.first == "FeId" )
+                        std::vector<std::pair<std::string,uint8_t>> cStubFlds;
+                        cStubFlds.push_back( std::make_pair("Offset",3) );
+                        cStubFlds.push_back( std::make_pair("FeId",3) );
+                        cStubFlds.push_back( std::make_pair("Stub",15) );
+                        std::stringstream cStubOutput; 
+                        int cFeId=-1; 
+                        int cDecodedFeId=cFeId;
+                        for( auto cFld : cStubFlds ) 
                         {
-                            cDecodedFeId = std::stoi( cSubStr, 0, 2 ); 
-                            cFeId = cDecodedFeId;
-                        }
-                        if( cFld.first == "Stub" )
-                        {
-                            if( cStubPktCounter == 0 )
-                            { 
-                                cStartPatternFound = cStartPatternFound && ( cSubStr == cStartPattern); // first stub needs to be all 1's
-                                cNFEs++; 
-                            }
-                            if( cStartPatternFound && cStubPktCounter > 0 ) 
+                            auto cSubStr = cStubPkt.substr(cShft,cFld.second);
+                            if( cFld.first == "FeId" )
                             {
-                                uint16_t cCounterValue = std::stoi( cSubStr.substr(8,6) + cSubStr.substr(0,7), 0 ,2 ) - 1 ; 
-                                auto cFindCounters = pFeCounters.find(cFeId); 
-                                if( cFindCounters == pFeCounters.end() )// for the MPA 
-                                {
-                                    std::vector<uint16_t> cCountersThisFe;   
-                                    cCountersThisFe.clear(); 
-                                    pFeCounters[cFeId]=cCountersThisFe;
+                                cDecodedFeId = std::stoi( cSubStr, 0, 2 ); 
+                                cFeId = cDecodedFeId;
+                            }
+                            if( cFld.first == "Stub" )
+                            {
+                                if( cStubPktCounter == 0 )
+                                { 
+                                    cStartPatternFound = cStartPatternFound && ( cSubStr == cStartPattern); // first stub needs to be all 1's
+                                    cNFEs++; 
                                 }
-                                // this FeId .. all MPA counters have been decoded 
-                                if( pFeCounters[cFeId].size() == 16*120 ) 
+                                if( cStartPatternFound && cStubPktCounter > 0 ) 
                                 {
-                                    // SSAId in counter array 
-                                    cFeId = cDecodedFeId | ( 1 << 3); 
-                                    cFindCounters = pFeCounters.find(cFeId); 
-                                    if( cFindCounters == pFeCounters.end() ) // for SSA 
-                                    {  
+                                    uint16_t cCounterValue = std::stoi( cSubStr.substr(8,6) + cSubStr.substr(0,7), 0 ,2 ) - 1 ; 
+                                    auto cFindCounters = pFeCounters.find(cFeId); 
+                                    if( cFindCounters == pFeCounters.end() )// for the MPA 
+                                    {
                                         std::vector<uint16_t> cCountersThisFe;   
                                         cCountersThisFe.clear(); 
                                         pFeCounters[cFeId]=cCountersThisFe;
+                                        cWithSSA=false;
                                     }
+                                    // this FeId .. all MPA counters have been decoded 
+                                    if( pFeCounters[cFeId].size() == 16*120 ) 
+                                    {
+                                        // SSAId in counter array 
+                                        cFeId = cDecodedFeId | ( 1 << 3); 
+                                        cFindCounters = pFeCounters.find(cFeId); 
+                                        if( cFindCounters == pFeCounters.end() ) // for SSA 
+                                        {  
+                                            std::vector<uint16_t> cCountersThisFe;   
+                                            cCountersThisFe.clear(); 
+                                            pFeCounters[cFeId]=cCountersThisFe;
+                                            cWithSSA=true;
+                                        }
+                                    }
+                                    if( cWithSSA ) LOG (DEBUG) << BOLDMAGENTA << "FEId[" << std::bitset<4>(cFeId) << "] : counter#" << pFeCounters[cFeId].size() << "\t" << cFld.first << "\t" << cSubStr << " [ " << cCounterValue << " ] " << RESET;
+                                    else LOG (DEBUG) << BOLDBLUE << "FEId[" << std::bitset<4>(cFeId) << "] : counter#" << pFeCounters[cFeId].size() << "\t" << cFld.first << "\t" << cSubStr << " [ " << cCounterValue << " ] " << RESET;
+                                    
+                                    pFeCounters[cFeId].push_back( cCounterValue );
+                                    cNcountersDecoded++;
                                 }
-                                LOG (DEBUG) << BOLDBLUE << "FEId[" << std::bitset<4>(cFeId) << "] : counter#" << pFeCounters[cFeId].size() << "\t" << cFld.first << "\t" << cSubStr << " [ " << cCounterValue << " ] " << RESET;
-                                pFeCounters[cFeId].push_back( cCounterValue );
-                                cNcountersDecoded++;
                             }
+                            cShft += cFld.second;
                         }
-                        cShft += cFld.second;
                     }
                 }
                 cStubPktCounter+= (cNstubs > 0 ) ? 1 : 0;
@@ -3303,7 +3312,13 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
 
                 // decode raw counter data
-                DecodeRawCounterDataPS(cPSModuleIter->second);
+                // expected number of stubs 
+                size_t cNFEs=0;
+                for(auto cChip: *cHybrid)
+                {
+                    cNFEs += (cChip->getFrontEndType()==FrontEndType::MPA)?1:0;
+                }
+                DecodeRawCounterDataPS(cPSModuleIter->second, cNFEs);
             }
         }
     }
