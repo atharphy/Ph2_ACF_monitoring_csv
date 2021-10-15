@@ -132,7 +132,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
 {
-    LOG (INFO) << cTestChannelGroup->getNumberOfRows() << " : " << cTestChannelGroup->getNumberOfCols() << RESET;
+    //LOG (INFO) << cTestChannelGroup->getNumberOfRows() << " : " << cTestChannelGroup->getNumberOfCols() << RESET;
     for(auto opticalGroup: *boardContainer)
     {
         for(auto hybrid: *opticalGroup)
@@ -149,10 +149,11 @@ void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const 
                     if(cTestChannelGroup->isChannelEnabled(cChnl)) { 
                         //LOG (INFO) << BOLDBLUE << cChnl << "[R" << cRow << ",C" << cCol << "]" << ":" << cHit << RESET;
                         chip->getChannelContainer<Occupancy>()->at(cChnl).fOccupancy += cHit; 
+                        cOcc += cHit;
                     }
                     cChnl++;
                 }
-                LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc << RESET;
+                //LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc/chip->size() << RESET;
             }
         }
     }

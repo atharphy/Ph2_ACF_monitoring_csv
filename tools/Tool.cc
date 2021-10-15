@@ -751,10 +751,7 @@ void Tool::setFWTestPulse()
             }
             else
             {
-                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                //#FIXME WHAT SHOULD I DO ??? 6 or 10 ?
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -1294,13 +1291,18 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
 {
     MeasureBeBoardDataPerGroup theScan(this);
     theScan.setDataContainer(fDetectorDataContainer);
-
+    // make sure async mode uses ReadNEvents 
+    bool cUseReadNEvents = fUseReadNEvents; 
+    if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS  || fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS )
+    {
+        fUseReadNEvents=true;
+    }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS  || fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS )
     {
-        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.triggers_to_accept");
+        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.trigger_in_counter");
     }
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
     {
@@ -1309,6 +1311,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     if( !fUseReadNEvents ) numberOfEvents = fNReadbackEvents;
 
     fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+    fUseReadNEvents=cUseReadNEvents;
     // for(auto opticalGroup: *fDetectorDataContainer)
     // {
     //     for(auto hybrid: *opticalGroup)

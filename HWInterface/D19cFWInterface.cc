@@ -3514,35 +3514,17 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
     }
     else
     {
-        this->Start();
-        auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-        uint32_t cIteration = 0; 
-        do {
-            auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-            cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-            LOG (INFO) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
-                << +cIteration
-                << " ... received "
-                << +cNtriggers 
-                << " triggers."
-                << RESET;
+        this->ChipReSync();
+        this->PS_Clear_counters(fFastCommandDuration);
+        this->PS_Open_shutter(fFastCommandDuration);
+        for( size_t cAttempt=0; cAttempt<cNevents; cAttempt++)
+        {
+            this->ChipTestPulse();
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-            cIteration++;
-        } while(cTriggerState && cIteration < 1000);
-        uint32_t cNInjections  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        LOG (INFO) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << " - fast command core counted " << cNInjections << " injections." << RESET;
-        
-        // this->ChipReSync();
-        // this->PS_Clear_counters(fFastCommandDuration);
-        // this->PS_Open_shutter(fFastCommandDuration);
-        // for( size_t cAttempt=0; cAttempt<cNevents; cAttempt++)
-        // {
-        //     this->ChipTestPulse();
-        //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        // }
-        // this->PS_Close_shutter(fFastCommandDuration);
-        // this->PS_Start_counters_read(fFastCommandDuration); // start signal for readout block 
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        this->PS_Close_shutter(fFastCommandDuration);
+        this->PS_Start_counters_read(fFastCommandDuration); // start signal for readout block 
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return cFailed;
 }
