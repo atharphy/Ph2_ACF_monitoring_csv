@@ -270,6 +270,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
+#ifdef __TCUSB__
+            for(const auto cBoard2: *fDetectorContainer)
+            {
+                if(cBoard2->at(0)->flpGBT == nullptr) continue;
+                D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                if(!cFWInterface->GetLinkLock()) { return; }
+            }
+#endif
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
             LOG(INFO) << BOLDBLUE << "Now going to configure chips on Board " << int(cBoard->getId()) << RESET;
 

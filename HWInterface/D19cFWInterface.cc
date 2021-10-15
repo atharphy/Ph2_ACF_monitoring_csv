@@ -418,7 +418,9 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.l12_pwr_en", (int)pEnable);
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
 }
-
+bool D19cFWInterface::GetLinkLock() { 
+    LOG(INFO) << BOLDGREEN << "Returning fLinkLockStatus: "<< fLinkLockStatus << RESET;
+    return fLinkLockStatus; }
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
     // reset lpGBT core
@@ -469,6 +471,8 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         if(cLinksLocked)
         {
             LOG(INFO) << BOLDGREEN << "All links locked." << RESET;
+            fLinkLockStatus = true;
+            LOG(INFO) << BOLDGREEN << "Set fLinkLockStatus true." << RESET;
             break;
         }
         else
@@ -959,8 +963,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
 #ifdef __TCUSB__
             // In the test system a run time error is undesired
-            // return false;
-            throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
+            return;
+            // throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
 #else
             throw std::runtime_error(std::string("lpGBT link failed to LOCK!"));
 #endif

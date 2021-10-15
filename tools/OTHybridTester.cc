@@ -891,6 +891,21 @@ bool OTHybridTester::LpGBTTestVTRx()
     return cSuccess;
 }
 
+bool OTHybridTester::LpGBTGetLinkLock()
+{
+    bool cStatus = false;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+            cStatus = cFWInterface->GetLinkLock();
+        }
+    }
+    return cStatus;
+}
 bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 {
     uint8_t  cMatch;

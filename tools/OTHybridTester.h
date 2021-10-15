@@ -78,6 +78,7 @@ class OTHybridTester : public Tool
     bool LpGBTTestFixedADCs();
     bool LpGBTTestGPILines();
     bool LpGBTTestVTRx();
+    bool LpGBTGetLinkLock();
     bool LpGBTFastCommandChecker(uint8_t pPattern);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
