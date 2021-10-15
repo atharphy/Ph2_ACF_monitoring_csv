@@ -252,6 +252,7 @@ void DQMHistogramPedeNoise::process()
                                                 .fTheHistogram;
                         TH1D* cTmp = cSCurveHist->ProjectionY();
                         cSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
+                        cSCurveHist->GetZaxis()->SetRangeUser(0,1.); 
                         delete cTmp;
                         cValidation->cd(chip->getIndex() + 1 + hybrid->size() * 2);
                         cSCurveHist->SetStats(false);

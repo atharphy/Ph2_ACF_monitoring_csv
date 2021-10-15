@@ -867,6 +867,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
                 exit(0);
             }
+            //ResetOptoLink();
             ResetCPB();
         }
         else
@@ -4148,57 +4149,9 @@ void D19cFWInterface::Trigger(uint8_t pDuration)
     uint8_t cBC0      = 0;
     this->Compose_fast_command(pDuration, cReSync, cL1A, cCalPulse, cBC0);
 }
-// bool D19cFWInterface::Bx0Alignment()
-// {
-//     auto     cStubPackageDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
-//     bool     cSuccess          = false;
-//     uint32_t cStubDebug        = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
-//     if(cStubDebug)
-//     {
-//         LOG(INFO) << BOLDBLUE << "Stub debug enable set to " << cStubDebug << "..... so disabling it!!." << RESET;
-//         this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x00);
-//     }
-//     // send a resync and reset readout
-//     uint8_t cAttempts = 0;
-//     cSuccess          = false;
-//     // reset decoder
-//     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-//     do
-//     {
-//         // pause after reset
-//         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-//         // send a resync then wait
-//         this->ChipReSync();
-//         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-//         // check state of bx0 alignment block
-//         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
-//         if(cValue == 8)
-//         {
-//             LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDGREEN << "SUCCEEDED!" << BOLDBLUE << "\t... Stub package delay set to : " << +cStubPackageDelay << RESET;
-//             cSuccess = true;
-//             // definitely works with
-//             // figure out which one of these is needed
-//             // resync after bx0 alignment worked
-//             //this->ChipReSync();
-//             //std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-//             // reset the readout as well
-//             this->ResetReadout();
-//             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-//             this->WriteReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cStubPackageDelay);
-//         }
-//         else
-//         {
-//             LOG(INFO) << BOLDBLUE << "Bx0 alignment in back-end " << BOLDRED << "FAILED! State of alignment : " << +cValue << RESET;
-//             this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-//         }
-//         cAttempts++;
-//     } while(cAttempts < 10 && !cSuccess);
-//     return cSuccess;
-// }
+
 bool D19cFWInterface::Bx0Alignment()
 {
-    auto cCicVeto = this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
     bool     cSuccess   = false;
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
@@ -4211,17 +4164,16 @@ bool D19cFWInterface::Bx0Alignment()
     uint8_t cAttempts = 0;
     cSuccess          = false;
     // reset decoder
-    size_t cMaxAttempts = 100;
-    size_t cWaitTime_us = 1000;//1000 was working 
+    size_t cMaxAttempts = 20;
+    size_t cWaitTime    = fWait_us * 1; // was 100
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-    //this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
-    do 
-    {
-        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime_us));
+    this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
+    do {
+        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // pause after reset
         // send a resync then wait
         this->ChipReSync();
-        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime_us));
+        if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // check state of bx0 alignment block
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
@@ -4244,15 +4196,16 @@ bool D19cFWInterface::Bx0Alignment()
         {
             LOG(INFO) << BOLDBLUE << "Resetting decoder in back-end " << BOLDRED << " FAILED!" << RESET;
             this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-            //this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
+            this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
         }
         cAttempts++;
     } while(cAttempts < cMaxAttempts && !cSuccess);
     if(!cSuccess) LOG(INFO) << BOLDRED << "Could not re-set decoder ..." << RESET;
     this->ResetReadout();
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cCicVeto);
+        
     return cSuccess;
 }
+
 // reconfigure trigger
 void D19cFWInterface::ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig)
 {
@@ -5564,7 +5517,7 @@ void D19cFWInterface::ResetOptoLink() { this->WriteStackReg({{"fc7_daq_ctrl.opti
 
 bool D19cFWInterface::WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
-    LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::WriteOptoLpGBTRegister" << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "D19cFWInterface::WriteOptoLpGBTRegister" << RESET;
     // Reset
     ResetOptoLink();
     selectLink(linkNumber);
@@ -5689,7 +5642,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
         if(fCPBConfig.fVerbose)
             LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts
                       << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks or failed parity check) from command processor block ... retrying" << RESET;
-        if(fCPBConfig.fResetEn) ResetCPB();
+        ResetCPB();
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector      = ReadReplyCPB(cExpectedReplySize);
@@ -5774,7 +5727,7 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pC
 bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
 {
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    ResetCPB();
+    if(fCPBConfig.fResetEn) ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C write to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
@@ -5813,7 +5766,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
 uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
 {
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    ResetCPB();
+    if(fCPBConfig.fResetEn) ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C Read to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;

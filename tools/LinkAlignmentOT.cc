@@ -678,11 +678,12 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
                                     int cBxDifference = (cNRollOvers)*cMaxBxCounter + ( cPreviousBxId % cMaxBxCounter);
                                     cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
                                     cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
+                                    LOG (INFO) << BOLDYELLOW << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]"<< RESET;
                                     cBxDifferences.push_back(cBxDifference);
                                 }
                                 cCounter++;                
                             }
-                            if( std::adjacent_find( cBxDifferences.begin(), cBxDifferences.end(), std::not_equal_to<>() ) == cBxDifferences.end() )
+                            if( std::adjacent_find( cBxDifferences.begin(), cBxDifferences.end(), std::not_equal_to<int>() ) == cBxDifferences.end() )
                             {
                                 LOG (INFO) << BOLDGREEN << "\t\t\t..Constant BxId difference of " << +cBxDifferences[0] << " 40 MHz clks on Hybrid#" << +cIdToCheck <<  RESET;
                                 cNFound++;

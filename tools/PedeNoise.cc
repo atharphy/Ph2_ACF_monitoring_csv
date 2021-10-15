@@ -568,6 +568,7 @@ void PedeNoise::scanScurves()
 void PedeNoise::measureSCurves(uint16_t pStartValue)
 {
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
+    float    cMaxOccupancy  = 1.0; 
     float    cLimit         = 0.05;
     int      cMinBreakCount = 10;
     uint16_t cValue         = pStartValue;
@@ -607,7 +608,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
 #endif
 
-            auto cDistanceFromTarget = std::fabs(globalOccupancy - (cLimits[cCounter]));
+            auto cDistanceFromTarget = std::fabs( std::min(globalOccupancy,cMaxOccupancy) - (cLimits[cCounter]));
             LOG(INFO) << BOLDMAGENTA << "Current value of threshold is  " << cValue << " Occupancy: " << std::setprecision(2) << std::fixed << globalOccupancy << "\t.. distance from target is "
                       << cDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                       << " -- current value is " << +cLimitCounter << RESET;

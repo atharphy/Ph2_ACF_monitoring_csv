@@ -1302,7 +1302,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     // normalize by the number of triggers to accept
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS  || fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS )
     {
-        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.trigger_in_counter");
+        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
     }
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
     {

@@ -363,17 +363,17 @@ int main(int argc, char* argv[])
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
         cPedestalEqualization.Inherit(&cTool);
-        //std::vector<FrontEndType> cTypes{FrontEndType::SSA};
-        //for(auto cType: cTypes)
-        //{
-            //auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
-            //cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+        std::vector<FrontEndType> cTypes{FrontEndType::MPA};
+        for(auto cType: cTypes)
+        {
+            auto cSelectFunction = [cType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == cType); };
+            cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
             cPedestalEqualization.Inherit(&cTool);
             cPedestalEqualization.Initialise(cAllChan, true);
             cPedestalEqualization.FindVplus();
             cPedestalEqualization.FindOffsets();
-            //cTool.fDetectorContainer->resetReadoutChipQueryFunction();
-        //}
+            cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        }
         cPedestalEqualization.Reset();
         // second parameter disables stub logic on CBC3
         cPedestalEqualization.writeObjects();
@@ -916,44 +916,6 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cMeasurePedeNoise)
     {
-        // auto cSetting       = cTool.fSettingsMap.find("Nevents");
-        // auto cNevents       = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 10;
-        
-        // // figure out what I want to do 
-        // bool cForcePSasync = true;
-        // for(auto cBoard: *cTool.fDetectorContainer)
-        // {
-        //     if(cForcePSasync) cBoard->setEventType(EventType::PSAS);
-        //     cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", 40);
-        //     cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", 20);
-        //     cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 0x1);
-        // }
-        // for(auto cBoard: *cTool.fDetectorContainer)
-        // {
-        //     for( uint8_t cAttempt=0; cAttempt < 10; cAttempt++)
-        //     {
-        //         LOG (INFO) << BOLDBLUE << "Attempt#" << +cAttempt << RESET;
-        //         cTool.ReadNEvents(cBoard, cNevents);
-        //         const std::vector<Event*>& cEvents = cTool.GetEvents();
-        //         for( auto cEvent : cEvents)
-        //         {
-        //             for(auto opticalGroup: *cBoard)
-        //             {
-        //                 for(auto hybrid: *opticalGroup)
-        //                 {
-        //                     for(auto chip: *hybrid)
-        //                     {
-        //                         auto cHits = cEvent->GetHits(chip->getHybridId(), chip->getId() );
-        //                         float cOcc=0;
-        //                         for(auto cHit : cHits) cOcc += cHit;
-        //                         LOG (INFO) << BOLDMAGENTA << "\t.. " << cOcc/chip->size() << "[ " << chip->size() << " ] " << RESET;
-        //                     }
-        //                 }
-        //             } 
-        //         }
-        //     }
-        // }
-
         LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
@@ -961,13 +923,13 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         //auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==15);};
-        //auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
-        //cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
+        auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
+        cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
-        //cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        cTool.fDetectorContainer->resetReadoutChipQueryFunction();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
