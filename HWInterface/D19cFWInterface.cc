@@ -418,9 +418,11 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.l12_pwr_en", (int)pEnable);
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
 }
-bool D19cFWInterface::GetLinkLock() { 
-    LOG(INFO) << BOLDGREEN << "Returning fLinkLockStatus: "<< fLinkLockStatus << RESET;
-    return fLinkLockStatus; }
+bool D19cFWInterface::GetLinkLock()
+{
+    LOG(INFO) << BOLDGREEN << "Returning fLinkLockStatus: " << fLinkLockStatus << RESET;
+    return fLinkLockStatus;
+}
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
     // reset lpGBT core

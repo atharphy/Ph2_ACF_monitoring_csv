@@ -788,11 +788,11 @@ bool OTHybridTester::LpGBTTestResetLines()
             float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
-            cStatus = cStatus && (cDifference_mV <= 100);
+            cStatus = cStatus && (cDifference_mV <= 200);
             cValid  = cValid && cStatus;
             // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
             // cValues.push_back(cMeasurement);
-            if(cDifference_mV > 100)
+            if(cDifference_mV > 200)
             {
                 LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 0);
@@ -865,6 +865,8 @@ bool OTHybridTester::LpGBTTestVTRx()
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
             auto cMapIterator = fVTRxplusDefaultRegisters.begin();
             do

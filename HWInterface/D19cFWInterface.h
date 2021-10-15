@@ -117,13 +117,12 @@ class D19cFWInterface : public BeBoardFWInterface
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
-    bool                       fOptical        = false;
-    bool                       fUseOpticalLink = false;
-    bool                       fUseCPB         = false;
-    bool                       fConfigureCDCE  = false;
+    bool fOptical        = false;
+    bool fUseOpticalLink = false;
+    bool fUseCPB         = false;
+    bool fConfigureCDCE  = false;
 
-    bool     fLinkLockStatus      = false;
-
+    bool fLinkLockStatus = false;
 
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;
@@ -763,8 +762,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    const uint8_t                   flpGBTAddress = 0x70;
-    const uint8_t                   fI2CFrequency = 3; // 1 MHz
+    const uint8_t flpGBTAddress = 0x70;
+    const uint8_t fI2CFrequency = 3; // 1 MHz
+
     std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}

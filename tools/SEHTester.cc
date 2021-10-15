@@ -622,6 +622,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
     fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
+    fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 

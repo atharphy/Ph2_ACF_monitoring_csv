@@ -203,10 +203,7 @@ int main(int argc, char* argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         cTool.ConfigureHw();
     }
-    if(!cSEHTester.LpGBTGetLinkLock())
-    {
-        return -1;
-    }
+    if(!cSEHTester.LpGBTGetLinkLock()) { return -1; }
     // Initialize BackEnd & Control LpGBT Tester
     // cSEHTester.exampleFit();
     // cSEHTester.DCDCOutputEvaluation();
@@ -282,6 +279,13 @@ int main(int argc, char* argv[])
         /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
+            // int counter = 0;
+
+            // for(int i = 0; i < 10; i++)
+            // {
+            //     if(!cSEHTester.LpGBTCheckULPattern(true, cExternalPattern)) counter += 1;
+            // }
+            // LOG(INFO) << BOLDRED << "CIC Out test failed " << +counter << " times" << RESET;
             // cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
             bool cStatus = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
 // cSEHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
@@ -404,7 +408,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("leak"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
-        cSEHTester.TestLeakageCurrent(cLeakVoltage, 150);
+        cSEHTester.TestLeakageCurrent(cLeakVoltage, 600);
     }
 
     if(cmd.foundOption("bias"))
