@@ -215,6 +215,7 @@ void LatencyScan::ScanLatency()
                 int cTotalHits = 0;
                 int cTotalHitsS0 = 0 ; 
                 int cTotalHitsS1 = 0 ; 
+                size_t cNEventsThisTriggerId=0; 
                 do 
                 {
                     if(cEventIter >= cEvents.end()) break;
@@ -310,6 +311,7 @@ void LatencyScan::ScanLatency()
                         }         // hybrid vector
                     }             // optical group vector
                     cEventIter += (1 + cTriggerMult);
+                    cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), cNormalizationFactor);
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
@@ -322,6 +324,7 @@ void LatencyScan::ScanLatency()
                             << "... on average have found " << std::setprecision(2) 
                             << cTotalHits /cNormalizationFactor << " hit(s) per event."
                             << "In S0 " << cTotalHitsS0/cNormalizationFactor  << " hit(s); in S1 = " << cTotalHitsS1/cNormalizationFactor  << " hit(s)."
+                            << " [Nevents = " << cNEventsThisTriggerId << " ]" 
                             << RESET;
                         cMaxHits = cTotalHits; 
                     }
@@ -330,6 +333,7 @@ void LatencyScan::ScanLatency()
                             << "... on average have found " << std::setprecision(2) 
                             << cTotalHits /cNormalizationFactor << " hit(s) per event."
                             << "In S0 " << cTotalHitsS0/cNormalizationFactor  << " hit(s); in S1 = " << cTotalHitsS1/cNormalizationFactor  << " hit(s)."
+                            << " [Nevents = " << cNEventsThisTriggerId << " ]" 
                             << RESET;
 
                 }
@@ -338,6 +342,7 @@ void LatencyScan::ScanLatency()
                     << "... on average have found " << std::setprecision(2) 
                     << cTotalHits /cNormalizationFactor << " hit(s) per event."
                     << "In S0 " << cTotalHitsS0/cNormalizationFactor  << " hit(s); in S1 = " << cTotalHitsS1/cNormalizationFactor  << " hit(s)."
+                    << " [Nevents = " << cNEventsThisTriggerId << " ]" 
                     << RESET;
 
 #ifdef __USE_ROOT__

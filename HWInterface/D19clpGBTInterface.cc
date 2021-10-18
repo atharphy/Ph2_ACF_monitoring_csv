@@ -24,7 +24,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     setBoard(pChip->getBeBoardId());
     pChip->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "]" << RESET;
-    LOG(INFO) << BOLDMAGENTA << "Configuring lpGBT" << RESET;
     
     // Configure High Speed Link Tx Rx Polarity
     // do this before doing anything else
