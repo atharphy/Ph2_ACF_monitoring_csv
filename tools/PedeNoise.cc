@@ -94,6 +94,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
                     if( cROC->getFrontEndType() == FrontEndType::CBC3 ) continue;
                     
                     // TBC - what about MPA here?
+                    LOG (INFO) << BOLDBLUE << "Setting up for analogue async injection in SSA/MPAs" << RESET;
                     fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
@@ -201,6 +202,7 @@ void PedeNoise::sweepSCurves()
     }
     else
     {
+        LOG (INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;
         this->enableTestPulse(false);
         forceAllChannels = true;
     }

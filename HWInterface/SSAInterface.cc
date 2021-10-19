@@ -142,6 +142,14 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         return this->ConfigureAmux(pSSA, "GND");
     }
+    else if(pRegName == "AsyncDelay")
+    {
+        uint8_t cLSB = pValue & 0xFF; 
+        uint8_t cMSB = (pValue << 8); 
+        WriteChipSingleReg(pSSA, "AsyncRead_StartDel_LSB", cLSB, pVerifLoop);
+        WriteChipSingleReg(pSSA, "AsyncRead_StartDel_MSB", cMSB, pVerifLoop);
+        return true;
+    }
     else if(pRegName == "AnalogueAsync")
     {
         uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);

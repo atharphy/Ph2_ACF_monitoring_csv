@@ -743,8 +743,7 @@ void Tool::setFWTestPulse()
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
-
+            bool      cAsync     = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
             if(!cAsync)
             {
                 LOG(INFO) << BOLDBLUE << "Not in ASYNC mode .. set trigger source to 6" << RESET;

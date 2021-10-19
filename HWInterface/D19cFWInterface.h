@@ -107,6 +107,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t                                 fFMCId;
 
     // number of chips and hybrids defined in firmware (compiled for)
+    uint8_t      fPSCounterDelay{29}; 
     uint32_t     fFWNHybrids;
     uint32_t     fFWNChips;
     FrontEndType fFirmwareFrontEndType;
@@ -243,6 +244,8 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
 
     void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+    void ReadSSACountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pSSAPair );
+    void SetPSCounterDelay(uint8_t pDelay){ fPSCounterDelay = pDelay;};
 
     /*!
      * \brief Read data for pNEvents
@@ -587,6 +590,24 @@ class D19cFWInterface : public BeBoardFWInterface
             cStatus = ParseStatus(pInterface);
             return cStatus;
         };
+        void TunePhase(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
+        {
+            SetLineMode(pInterface, pHybrid, pChip, pLine);
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
+        }
+        void AlignWord(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
+        {
+            if(pChangePattern)
+            {
+                SetLineMode(pInterface, pHybrid, pChip, pLine);
+                SetLinePattern(pInterface, pHybrid, pChip, pLine, pPattern, pPatternPeriod);
+            }
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
+        }
         bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
             LOG(INFO) << BOLDBLUE << "Tuning line " << +pLine << RESET;
@@ -676,6 +697,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
     void PS_Open_shutter(uint32_t duration = 0);
     void PS_Close_shutter(uint32_t duration = 0);
+    void PS_Inject(uint32_t duration = 0);
     void PS_Clear_counters(uint32_t duration = 0);
     void PS_Start_counters_read(uint32_t duration = 0);
 

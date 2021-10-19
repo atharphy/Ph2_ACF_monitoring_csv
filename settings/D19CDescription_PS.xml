@@ -64,7 +64,7 @@
     		</Register>
             <Register name="ps_async_delay">
                 <Register name="after_clear_counters"> 200 </Register>
-                <Register name="after_open_shutter"> 1 </Register>
+                <Register name="after_open_shutter"> 200 </Register>
                 <Register name="after_close_shutter"> 200 </Register>
                 <Register name="after_stop_antenna"> 200 </Register>
             </Register>
@@ -158,8 +158,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">120</Setting>
-    <Setting name="PedeNoisePulseAmplitude">120</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
+    <Setting name="PedeNoisePulseAmplitude">70</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 

@@ -44,6 +44,8 @@ class SSA2Interface : public ReadoutChipInterface
     void     StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override {}
     void     ReadASEvent(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0})); //FIXME
     void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA2, uint32_t n_pulse); //FIXME
+    uint16_t  ReadADC( Ph2_HwDescription::ReadoutChip* pSSA, uint8_t pInput ); 
+
 
   private:
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pChip); //FIXME

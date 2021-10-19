@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
     cAntenna.close();
 #endif
 
-    // align back-end
+    // // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
@@ -204,6 +204,31 @@ int main(int argc, char* argv[])
     // equalize thresholds on readout chips
     if(cTune)
     {
+        // for(auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     for(auto cOpticalGroup: *cBoard)
+        //     {
+        //         for(auto cHybrid: *cOpticalGroup)
+        //         {
+        //             // set all SSAs + MPAs to output data in async mode
+        //             for(auto cROC: *cHybrid)
+        //             {
+        //                 // TBC - what about MPA here?
+        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 ) 
+        //                 {
+        //                     cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueSync", 1);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     cTool.fBeBoardInterface->setBoard(cBoard->getId());
+        //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        //     cTool.fBeBoardInterface->WriteBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , 0) ;
+        //     cTool.fBeBoardInterface->WriteBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select" , 0) ;
+        //     cInterface->L1ADebug();
+        // }
+
+
         t.start();
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;

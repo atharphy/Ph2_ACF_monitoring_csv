@@ -286,8 +286,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
-            auto cEventType = cBoard->getEventType();
-            uint8_t cAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async ) ? 1 : 0;
+            //auto cEventType = cBoard->getEventType();
+            //uint8_t cAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async ) ? 1 : 0;
 
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
@@ -379,9 +379,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                                 LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
                                 fReadoutChipInterface->ConfigureChip(theReadoutChip);
                             }
-                            // if SSA + ASYNC
-                            // make sure ROCs are configured for that
-                            if(theReadoutChip->getFrontEndType() == FrontEndType::SSA || theReadoutChip->getFrontEndType() == FrontEndType::SSA2) { fReadoutChipInterface->WriteChipReg(cReadoutChip, "AnalogueAsync", cAsync); }
                         }
                     }
                 }

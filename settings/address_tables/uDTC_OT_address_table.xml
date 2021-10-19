@@ -107,6 +107,7 @@
 
         <node id="physical_interface_block"     address="0x3000">
             <node id="ps_counters_raw_en"               address="0x000" mask="0x00000001" description="enabling outputing raw counters data instead of already parsed"/>
+            <node id="first_counter_delay"              address="0x000" mask="0x0000FF00" description="enabling outputing raw counters data instead of already parsed"/>
             <node id="cic"				address="0x000" >
                 <node id="2s_sparsified_enable"		        mask="0x00000002"/>
                 <node id="clock_enable"                     mask="0x00000004"/>
@@ -134,7 +135,8 @@
             
             <node id="slvs_debug" address = "0x000">
                 <node id="chip_select"                     mask="0x000F0000"/>
-                <node id="hybrid_select"                   mask="0x0F000000"/>        
+                <node id="hybrid_select"                   mask="0x0F000000"/> 
+
             </node>
 
             <!-- line debug -->

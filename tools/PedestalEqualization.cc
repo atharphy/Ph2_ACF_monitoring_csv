@@ -61,23 +61,27 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
+    LOG (INFO) << BOLDBLUE << "PedestalEqualization::Initialise" << RESET;
     // enable ASYCN mode 
     for(auto cBoard: *fDetectorContainer)
     {
-        auto cEventType = cBoard->getEventType();
-        bool cWithAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
+        //auto cEventType = cBoard->getEventType();
+        //bool cWithAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                if( !cWithAsync ) continue;
                 // set all SSAs + MPAs to output data in async mode
                 for(auto cROC: *cHybrid)
                 {
                     if( cROC->getFrontEndType() == FrontEndType::CBC3 ) continue;
                     
                     // TBC - what about MPA here?
-                    fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                    if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 ) 
+                    {
+                        
+                        fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                    }
                 }
             }
         }
