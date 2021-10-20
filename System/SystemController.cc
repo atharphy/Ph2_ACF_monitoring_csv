@@ -74,6 +74,15 @@ void SystemController::Destroy()
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
 
+    // #######################################
+    // # Disable all channels before exiting #
+    // #######################################
+    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
+        for(const auto cBoard: *fDetectorContainer)
+            for(const auto cOpticalGroup: *cBoard)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
+
     RD53Event::JoinDecodingThreads();
 
     delete fDetectorMonitor;

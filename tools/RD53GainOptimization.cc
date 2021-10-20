@@ -91,7 +91,7 @@ void GainOptimization::Stop()
     RD53RunProgress::reset();
 }
 
-void GainOptimization::localConfigure(const std::string fileRes_, int currentRun)
+void GainOptimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos       = nullptr;
@@ -108,7 +108,7 @@ void GainOptimization::localConfigure(const std::string fileRes_, int currentRun
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }
 
-void GainOptimization::initializeFiles(const std::string fileRes_, int currentRun)
+void GainOptimization::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     // ##############################
     // # Initialize sub-calibration #

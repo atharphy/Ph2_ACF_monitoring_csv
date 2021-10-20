@@ -658,6 +658,9 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     int  nAttempts = 0;
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
+    // @TMP@
+    if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     do {
         nAttempts++;
@@ -716,12 +719,13 @@ void RD53FWInterface::SendBoardCommand(const std::string& cmd_reg)
 
 void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 {
-    const int GLOBAL_PULSE_WIDTH = 0x6; // @TMP@ @CONST@
+    const int GLOBAL_PULSE_WIDTH = 0x6; // @CONST@
 
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    // @TMP@
-    if(cfg->autozero_source == AutozeroSource::FastCMDFSM) RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, GLOBAL_PULSE_WIDTH).getFrames(), -1);
+    // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+    if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -872,8 +876,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     {
         RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 4095;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 1023;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
     }
 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
@@ -1304,7 +1308,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
+double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_lane, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1335,7 +1339,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
-                   {"user.ctrl_regs.PRBS_checker.chip_address", chip_id},
+                   {"user.ctrl_regs.PRBS_checker.chip_address", chip_lane},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
 

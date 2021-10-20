@@ -139,7 +139,14 @@ else()
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    include_directories($ENV{PH2ACF_BASE_DIR}/HWDescription)
+    include_directories($ENV{PH2ACF_BASE_DIR}/HWInterface)
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
+    include_directories($ENV{PH2ACF_BASE_DIR}/tools)
+    include_directories($ENV{PH2ACF_BASE_DIR}/ProductionTools)
+    include_directories($ENV{PH2ACF_BASE_DIR}/DQMUtils)
+    include_directories($ENV{PH2ACF_BASE_DIR}/System)
 
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
@@ -149,7 +156,6 @@ else()
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-            EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
             )
 
     install_headers()

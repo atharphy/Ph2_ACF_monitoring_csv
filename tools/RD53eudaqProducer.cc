@@ -9,7 +9,7 @@
 
 #include "RD53eudaqProducer.h"
 
-RD53eudaqProducer::RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl)
+RD53eudaqProducer::RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string& configFile, const std::string& producerName, const std::string& runControl)
     : eudaq::Producer(producerName, runControl), configFile(configFile)
 {
     try
