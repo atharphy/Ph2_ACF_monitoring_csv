@@ -160,7 +160,7 @@
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
-    <Setting name="Nevents">30</Setting>
+    <Setting name="Nevents">1000</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
 
