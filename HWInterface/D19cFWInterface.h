@@ -108,6 +108,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
     // number of chips and hybrids defined in firmware (compiled for)
     uint8_t      fPSCounterDelay{29}; 
+    uint8_t      fPSCounterFast{0};
     uint32_t     fFWNHybrids;
     uint32_t     fFWNChips;
     FrontEndType fFirmwareFrontEndType;
@@ -244,7 +245,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
 
     void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadSSACountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pSSAPair );
+    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pSSAPair=0 );
     void SetPSCounterDelay(uint8_t pDelay){ fPSCounterDelay = pDelay;};
 
     /*!
