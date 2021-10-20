@@ -264,8 +264,7 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
     {
         // Wait until channels lock
         LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
@@ -557,8 +556,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     // Check conversion status
     uint8_t cIter    = 0;
     bool    cSuccess = false;
-    do
-    {
+    do {
         LOG(INFO) << GREEN << "Waiting for ADC conversion to end" << RESET;
 
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
@@ -842,8 +840,7 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do
-    {
+    do {
         LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
         cIter++;
     } while(cIter < RD53Shared::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
@@ -882,8 +879,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do
-    {
+    do {
         LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
         cIter++;
     } while(cIter < RD53Shared::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));

@@ -107,8 +107,9 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t                                 fFMCId;
 
     // number of chips and hybrids defined in firmware (compiled for)
-    uint8_t      fPSCounterDelay{29}; 
+    uint8_t      fPSCounterDelay{29};
     uint8_t      fPSCounterFast{0};
+    uint8_t      fPairSelect{0};
     uint32_t     fFWNHybrids;
     uint32_t     fFWNChips;
     FrontEndType fFirmwareFrontEndType;
@@ -245,8 +246,10 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
 
     void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pSSAPair=0 );
-    void SetPSCounterDelay(uint8_t pDelay){ fPSCounterDelay = pDelay;};
+    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+    void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
+    void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
+    void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
 
     /*!
      * \brief Read data for pNEvents
@@ -362,7 +365,7 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pVecReq : Vector to stack the encoded words
      */
     void
-         EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
+    EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
     void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
         override; /*!< Encode a/several word(s) readable for a Chip*/
 
@@ -405,12 +408,12 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    void L1ADebug(uint8_t pWait_ms = 1);
-    void StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
-    bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    std::string L1ADebug(uint8_t pWait_ms = 1);
+    std::string StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
+    bool        L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool        L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool        L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool        StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     // bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
 
     // Optical readout specific functions - d19c [temporary]

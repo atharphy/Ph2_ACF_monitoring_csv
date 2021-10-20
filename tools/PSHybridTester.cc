@@ -74,8 +74,7 @@ void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1);
     // send N triggers
     uint8_t cTriggerCounter = 0;
-    do
-    {
+    do {
         if(pTrigger) fBeBoardInterface->ChipTrigger(pBoard);
         // fBeBoardInterface->ChipTestPulse(pBoard);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -83,15 +82,13 @@ void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
     } while(cTriggerCounter < cNtriggers);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.stop_input", 1);
     auto cDebugDone = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
-    do
-    {
+    do {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         cDebugDone = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
     } while(cDebugDone != 0xFFFFFFFF);
     LOG(INFO) << BOLDBLUE << "Input lines debug done: 0x" << std::hex << cDebugDone << std::dec << RESET;
     auto cMapIterator = fInputDebugMap.begin();
-    do
-    {
+    do {
         auto cRegisterName = cMapIterator->first;
         // only print out registers that are of interest
         bool cPrintMapItem = (cRegisterName.find("ssa") != std::string::npos);
@@ -192,18 +189,16 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
 
                 // make sure SSA is configured to output a test pattern on SLVS out
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
-                for(uint8_t cLineId = 1; cLineId <= 8; cLineId++)//stub lines - 1 to 8 
+                for(uint8_t cLineId = 1; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                 {
-                    std::stringstream cRegName; 
-                    cRegName << "OutPatternStubLine" << +(cLineId-1); 
+                    std::stringstream cRegName;
+                    cRegName << "OutPatternStubLine" << +(cLineId - 1);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cPattern);
                 }
-                for(uint8_t cLineId = 0; cLineId < 1; cLineId++)//L1 line - line 0 
+                for(uint8_t cLineId = 0; cLineId < 1; cLineId++) // L1 line - line 0
                 {
-                    if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ){ 
-                        continue;
-                    }
-                    std::stringstream cRegName; 
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) { continue; }
+                    std::stringstream cRegName;
                     cRegName << "OutPatternL1Line";
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cPattern);
                 }

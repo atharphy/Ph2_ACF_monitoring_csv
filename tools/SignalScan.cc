@@ -116,8 +116,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                     LOG(INFO) << BOLDBLUE << "Trying to read data from FEs .... " << RESET;
                     Timer t;
                     t.start();
-                    do
-                    {
+                    do {
                         int cHitCounter     = 0;
                         int cClusterCounter = 0;
 

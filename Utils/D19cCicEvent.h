@@ -198,8 +198,7 @@ class D19cCicEvent : public Event
             std::adjacent_difference(pHits.begin(), pHits.end(), cDifference.begin()); // difference between consecutive elements
             auto cIter  = cDifference.begin();
             auto cStart = cDifference.begin();
-            do
-            {
+            do {
                 cIter = std::find_if(cIter, cDifference.end(), [](int i) { return (i > 1); });
                 Cluster cCluster;
                 cCluster.fSensor       = pSensorId;

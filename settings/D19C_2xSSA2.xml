@@ -149,6 +149,8 @@
     <Setting name="PedestalEqualizationPulseAmplitude">40</Setting>
     <Setting name="PedeNoisePulseAmplitude">40</Setting>
     <Setting name="TestPulsePotentiometer">0x50</Setting>
+    <Setting name="EnableFastCounterReadout">1</Setting>
+    <Setting name="EnablePairSelect">1</Setting>
     <Setting name="SyncDebug">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
     

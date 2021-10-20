@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
         //             for(auto cROC: *cHybrid)
         //             {
         //                 // TBC - what about MPA here?
-        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 ) 
+        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 )
         //                 {
         //                     cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueSync", 1);
         //                 }
@@ -227,7 +227,6 @@ int main(int argc, char* argv[])
         //     cTool.fBeBoardInterface->WriteBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select" , 0) ;
         //     cInterface->L1ADebug();
         // }
-
 
         t.start();
         // now create a PedestalEqualization object

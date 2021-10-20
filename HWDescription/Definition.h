@@ -161,12 +161,12 @@ enum class SLinkDebugMode
 };
 enum class EventType
 {
-    ZS    = 1,
-    VR    = 2,
-    SSA   = 3,
-    MPA   = 4,
-    SSAAS = 5,
-    MPAAS = 6,
+    ZS     = 1,
+    VR     = 2,
+    SSA    = 3,
+    MPA    = 4,
+    SSAAS  = 5,
+    MPAAS  = 6,
     SSA2   = 7,
     SSA2AS = 8,
     PSAS   = 9,

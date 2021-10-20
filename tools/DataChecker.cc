@@ -865,8 +865,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 // start triggers
                 fBeBoardInterface->Start(theBoard);
                 auto cNtriggers = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                do
-                {
+                do {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     cNtriggers = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                 } while(cNtriggers < 100);
@@ -925,8 +924,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                         int    cLatency_eq = cLatencyDAC - (cPipeline - cPipeline_first);
                                         double cTime_ns    = -1 * (cLatency_eq - fTPconfig.tpDelay) * 25 + cDelayDAC;
                                         auto   cIterator   = cExpectedHits.begin();
-                                        do
-                                        {
+                                        do {
                                             bool cMatchFound = std::find(cHits.begin(), cHits.end(), *cIterator) != cHits.end();
                                             cHitMatches[std::distance(cExpectedHits.begin(), cIterator)] += cMatchFound;
                                             cMatched += cMatchFound;

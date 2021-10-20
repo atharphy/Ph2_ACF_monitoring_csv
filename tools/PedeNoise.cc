@@ -66,11 +66,12 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
     fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
 
-    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-
+    fNEventsPerBurst                  = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
+    uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
-
+    LOG(INFO) << " Fast Counter Readout [PS] " << +cEnableFastCounterReadout << RESET;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
 
@@ -78,23 +79,24 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-    // enable ASYNC mode for PS asics 
+    // enable ASYNC mode for PS asics
     for(auto cBoard: *fDetectorContainer)
     {
-        auto cEventType = cBoard->getEventType();
-        bool cWithAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async );
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        cInterface->SetPSCounterMode(cEnableFastCounterReadout);
+        cInterface->SetPSPairSelect(cEnablePairSelect);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                if( !cWithAsync ) continue;
                 // set all SSAs + MPAs to output data in async mode
                 for(auto cROC: *cHybrid)
                 {
-                    if( cROC->getFrontEndType() == FrontEndType::CBC3 ) continue;
-                    
+                    if(cROC->getFrontEndType() == FrontEndType::CBC3) continue;
+
                     // TBC - what about MPA here?
-                    LOG (INFO) << BOLDBLUE << "Setting up for analogue async injection in SSA/MPAs" << RESET;
+                    LOG(INFO) << BOLDBLUE << "Setting up for analogue async injection in SSA/MPAs" << RESET;
                     fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }
@@ -202,7 +204,7 @@ void PedeNoise::sweepSCurves()
     }
     else
     {
-        LOG (INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;
+        LOG(INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;
         this->enableTestPulse(false);
         forceAllChannels = true;
     }
@@ -223,7 +225,8 @@ void PedeNoise::sweepSCurves()
     if(fPulseAmplitude != 0)
     {
         this->enableTestPulse(false);
-        if(cWithSSA) setSameGlobalDac("InjectedCharge", 0);
+        if(cWithSSA)
+            setSameGlobalDac("InjectedCharge", 0);
         else if(cWithMPA)
         {
             setSameGlobalDac("CalDAC0", 0);
@@ -406,8 +409,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     {
         bool cLimitFound   = false;
         int  cLimitCounter = 0;
-        do
-        {
+        do {
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
@@ -448,7 +450,10 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
                 cValue += cSign;
                 cLimitFound = (cValue <= 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
                 if(cLimitFound && (cLimitCounter < cMinBreakCount)) { LOG(WARNING) << BOLDRED << "Running out of values to test without reaching the limit..." << RESET; }
-                else if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
+                else if(cLimitFound)
+                {
+                    LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET;
+                }
             }
             else
             {
