@@ -186,9 +186,6 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
             // set AMUX on all SSAs to highZ
             for(auto cReadoutChip: *cHybrid)
             {
-                // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
-
                 uint8_t cPattern = (cReadoutChip->getId() % 2 == 0) ? 0x01 : 0x05;
 
                 LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;

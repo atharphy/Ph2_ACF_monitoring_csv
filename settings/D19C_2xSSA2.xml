@@ -11,8 +11,8 @@
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
-            <SSA2 Id="0" configfile="SSA2_template_v2.txt" />
-            <SSA2 Id="1" configfile="SSA2_template_v2.txt" />
+            <SSA Id="0" configfile="SSA.txt" />
+            <SSA Id="1" configfile="SSA.txt" />
             
     	   <!--  <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
     	    <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
