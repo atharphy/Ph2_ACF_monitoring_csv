@@ -673,15 +673,35 @@ SSA2Interface::~SSA2Interface() {}
 	    }
 	    else if(pRegName == "EnableSLVSTestOutput")
 	    {
-			LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
-			uint8_t cRegValue = ReadChipReg(pSSA2, "ReadoutMode");
-			cRegValue         = (cRegValue & 0x4) | (pValue << 1);
-			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 2, pVerifLoop);
-			bool cReadoutMode    = WriteChipSingleReg(pSSA2, "control_1", pValue << 1, pVerifLoop);
-			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
-			return cReadoutMode;
+			uint8_t cReadoutMode = (pValue == 0x1) ? 0x2 : 0x0 ;  
+			// readout mode 
+			this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x7, pVerifLoop);
+			uint16_t cRegValue = this->ReadChipReg(pSSA2,"control_1");
+			LOG (DEBUG) << BOLDBLUE << "[pre-write ReadoutMode] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+    		this->WriteChipSingleReg(pSSA2, "control_1", cReadoutMode, false);
+    		cRegValue = this->ReadChipReg(pSSA2,"control_1");
+			LOG (DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+			return this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
 	    }
-	    else if(pRegName == "CalibrationPattern")
+	    else if( pRegName.find("OutPatternStubLine") != std::string::npos) // Stub Lines 
+	    {
+	    	int cLine;
+        	std::sscanf(pRegName.c_str(), "OutPatternStubLine%d", &cLine);
+        	std::vector<std::string>    cRegNames{"Shift_pattern_st_0",
+                                                  "Shift_pattern_st_1",
+                                                  "Shift_pattern_st_2",
+                                                  "Shift_pattern_st_3",
+                                                  "Shift_pattern_st_4_st_5",
+                                                  "Shift_pattern_st_4_st_5",
+                                                  "Shift_pattern_st_6_st_7",
+                                                  "Shift_pattern_st_6_st_7"};
+            return this->WriteChipSingleReg(pSSA2, cRegNames[cLine], pValue, pVerifLoop);
+		}
+		else if( pRegName.find("OutPatternL1Line") != std::string::npos) // Stub Lines 
+	    {
+	    	return this->WriteChipSingleReg(pSSA2, "Shift_pattern_L1", pValue, pVerifLoop);
+		}
+		else if(pRegName == "CalibrationPattern")
 	    {
 			uint8_t pAnalogueCalib  = 0;
 			uint8_t pDigitalCalib   = 1;

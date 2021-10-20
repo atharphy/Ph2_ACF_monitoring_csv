@@ -186,9 +186,10 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "EnableSLVSTestOutput")
     {
+        uint8_t cReadoutMode = (pValue == 0x1) ? 0x2 : 0x0 ;  
         LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA#" << +pSSA->getId() << RESET;
         uint8_t cRegValue = ReadChipReg(pSSA, "ReadoutMode");
-        cRegValue         = (cRegValue & 0x4) | (pValue << 1);
+        cRegValue         = (cRegValue & 0x4) | (cReadoutMode );
         return WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
     }
     else if(pRegName == "CalibrationPattern")
@@ -205,6 +206,24 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
             return WriteChipSingleReg(pSSA, "DigCalibPattern_L", pValue, pVerifLoop);
         else
             return cEnableAnalogue;
+    }
+    else if( pRegName.find("SLVS_pad_current") != std::string::npos ) 
+    {
+        return this->WriteChipSingleReg(pSSA,"SLVS_pad_current", pValue);
+    }
+    else if( pRegName.find("OutPatternStubLine") != std::string::npos) // Stub Lines 
+    {
+        int cLine;
+        std::sscanf(pRegName.c_str(), "OutPatternStubLine%d", &cLine);
+        std::stringstream cRegName;
+        if( cLine < 7 ) cRegName << "OutPattern" << +cLine;
+        else cRegName << "OutPattern7/FIFOconfig"; 
+        return this->WriteChipSingleReg(pSSA, cRegName.str(), pValue, pVerifLoop);
+    }
+    else if( pRegName.find("OutPatternL1Line") != std::string::npos) // Stub Lines 
+    {
+        LOG (INFO) << BOLDRED << "SSA1 - cannot send pattern on L1 line" << RESET;
+        return true;
     }
     else if(pRegName.find("CalibrationPattern") != std::string::npos)
     {
@@ -468,6 +487,17 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
     else if(pRegNode == "Threshold")
     {
         return this->ReadChipReg(pSSA, "Bias_THDAC");
+    }
+    else if( pRegNode.find("SLVS_pad_current") != std::string::npos ) 
+    {
+        cRegItem = pSSA->getRegItem("SLVS_pad_current");
+        fBoardFW->EncodeReg(cRegItem, pSSA->getHybridId(), pSSA->getId(), cVecReq, true, false);
+        fBoardFW->ReadChipBlockReg(cVecReq);
+
+        fBoardFW->DecodeReg(cRegItem, cSSAId, cVecReq[0], cRead, cFailed);
+
+        if(!cFailed) pSSA->setReg("SLVS_pad_current", cRegItem.fValue);
+        return cRegItem.fValue & 0xFF;
     }
     else
     {
