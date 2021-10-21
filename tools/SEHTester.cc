@@ -339,7 +339,8 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
 
     // for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
     double time_taken;
-    do {
+    do
+    {
         // iSecond = rand() % 2;
         // iMilli  = rand() % 1000;
         // LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
@@ -620,7 +621,8 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
     // for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
     double time_taken;
-    do {
+    do
+    {
         // iSecond = rand() % 2;
         // iMilli  = rand() % 1000;
         // LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
@@ -1052,7 +1054,8 @@ void SEHTester::TestCardVoltages()
 #ifdef __SEH_USB__
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do {
+    do
+    {
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + c2SSEHMapIterator->first);
 #else
@@ -1067,7 +1070,8 @@ void SEHTester::TestCardVoltages()
     // fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do {
+    do
+    {
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + d2SSEHMapIterator->first);
 #else
@@ -1100,7 +1104,8 @@ void SEHTester::DCDCOutputEvaluation()
     auto cStackedHistogramm = new THStack("cDCDCOutput", "DC/DC Output Voltages");
     int  cIt                = 0;
     // auto gRandom            = new TRandom3();
-    do {
+    do
+    {
         cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
         auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
         cHistogramm->SetFillColor(cIt + 1);
@@ -1548,7 +1553,8 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
     LOG(INFO) << GREEN << "============================" << RESET;
     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
 
-    do {
+    do
+    {
         cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
         LOG(INFO) << "Waiting for clock test";
         while(!cClkTestDone)

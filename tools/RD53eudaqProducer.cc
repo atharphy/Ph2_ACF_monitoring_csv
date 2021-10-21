@@ -173,7 +173,8 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // ##################################################
             // # Collect all hits that have same TLU trigger ID #
             // ##################################################
-            do {
+            do
+            {
                 for(const auto& frame: RD53EvtList[it].chip_frames_events)
                 {
                     std::string chipType = "unknown";

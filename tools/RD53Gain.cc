@@ -431,7 +431,8 @@ void Gain::computeStats(const std::vector<float>& x,
     for(auto i = 0u; i < x.size(); i++)
         if((e[i] != 0) && (o[i] == 1)) nData++;
 
-    do {
+    do
+    {
         chi2 = 0;
         DoF  = nData - nPar;
         for(auto c = 0; c < NGAINPAR; c++)

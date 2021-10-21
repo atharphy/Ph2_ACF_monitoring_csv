@@ -122,16 +122,15 @@ void D19cCicEvent::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::v
     cIterator         = list.begin() + 4;
     uint8_t cHybridId = 0;
     size_t  cOffset   = 4 + 3;
-    do {
+    do
+    {
         uint32_t cL1Header      = (*cIterator);
         uint8_t  cFeId          = (*cIterator & 0xFF0000) >> 16;
         uint32_t cL1DataSize    = (*cIterator & 0xFFF) * 4;
         uint8_t  cHeader        = (*cIterator & 0xF0000000) >> 28;
         bool     cValidL1Header = (cHeader == 10);
         if(!cValidL1Header) // cL1DataSize == 0 || cHeader != 10 || (cIterator +cL1DataSize) > list.end() )
-        {
-            LOG(INFO) << BOLDRED << "Weird L1 header for hybrid" << +cFeId << RESET;
-        }
+        { LOG(INFO) << BOLDRED << "Weird L1 header for hybrid" << +cFeId << RESET; }
         std::vector<uint32_t> cL1data(cIterator + 2, cIterator + cL1DataSize);
 
         // const size_t L1_BLOCK_SIZE=274;
