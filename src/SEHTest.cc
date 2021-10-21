@@ -372,8 +372,8 @@ int main(int argc, char* argv[])
         cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
 #endif
     }
-    int counter = 0;
-
+    int cFmcdCounter = 0;
+    int cFcmdTries   = 100;
     if(cmd.foundOption("scope-fcmd"))
     {
         // align lines in the back-end
@@ -383,11 +383,15 @@ int main(int argc, char* argv[])
         {
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            for(int i = 0; i < 100; i++)
+            for(int i = 0; i < cFcmdTries; i++)
             {
-                if(!cSEHTester.LpGBTFastCommandChecker(cFCMDPattern)) counter += 1;
+                if(!cSEHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
             }
-            LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +counter << " times" << RESET;
+            LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("fcmd_tries", cFcmdTries);
+            cTool.fillSummaryTree("fcmd_failures", cFmcdCounter);
+#endif
         }
         else
         {
