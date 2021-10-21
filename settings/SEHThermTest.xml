@@ -132,7 +132,7 @@
     ELECTRICAL FC7 
   ###############-->
   <BeBoard Id="1" boardType="D19C" eventType="SSA">
-        <connection id="board" uri="ipbusudp-2.0://192.168.2.180:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+        <connection id="board" uri="ipbusudp-2.0://192.168.0.135:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
         <!--  <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
 
         <CDCE configure="0" clockRate="320"/> 

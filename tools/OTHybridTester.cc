@@ -160,12 +160,13 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
                 cFWInterface->selectLink(cOpticalGroup->getId());
+                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                 // cFWInterface->StubDebug(true, 6);
                 // enable stub debug - allows you to 'scope' the stub output
 
                 cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
-                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                
                 cFWInterface->ChipTestPulse();
                 auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
                 std::vector<std::string> cLines(0);
@@ -239,8 +240,9 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->ResetReadout();
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                // cFWInterface->L1ADebug();
-                // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0xff);
+                //cFWInterface->L1ADebug();
+                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+               
                 cFWInterface->ConfigureTriggerFSM(0, 10, 3);
 
                 // disable back-pressure
@@ -270,6 +272,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
                 }
                 LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
+                cFWInterface->ResetReadout();
                 if((cMatch == 0))
                 {
                     LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
@@ -280,6 +283,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line"
                               << " for hybrid side " << +hybridNumber << RESET;
                     res = false;
+                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                    cFWInterface->L1ADebug(10);
                 }
 #ifdef __USE_ROOT__
                 // cLineNames.push_back(Form("L1A_hybrid_%d_match", hybridNumber));
@@ -298,7 +303,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 }
                 LOG(INFO) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
 
-                cFWInterface->ResetReadout();
+                
             }
         }
     }
@@ -899,6 +904,7 @@ bool OTHybridTester::LpGBTGetLinkLock()
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
+        fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
             D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
