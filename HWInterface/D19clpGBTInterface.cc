@@ -261,6 +261,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     }
 #ifdef __TCUSB__
     ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    //InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    //DpPhaseAlignRx(pChip, cRxGroups, cRxChannels);
 #endif
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
@@ -276,6 +278,37 @@ void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<u
     // Configure Rx Phase Shifter
 
     D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
+}
+void D19clpGBTInterface::DpPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+
+    D19clpGBTInterface::PhaseTrainRx(pChip, pGroups, true);
+    for(const auto& cGroup: pGroups)
+    {
+        std::vector<uint8_t> cChannels={0,2};
+ #ifdef __SEH_USB__
+        if(cGroup == 6 ) cChannels={0,};
+        if(cGroup == 3 ) cChannels={2,};
+#endif
+        // Wait until channels lock
+        LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
+        int cCounter=0;
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+            cCounter+=1;
+        } while((D19clpGBTInterface::IsRxLocked(pChip, cGroup, cChannels) == false) & (cCounter<10));
+        LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
+
+        // Set new phase
+        for(const auto& cChannel: pChannels)
+        {
+            uint8_t cCurrPhase = D19clpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+            LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
+            D19clpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
+        }
+    }
+    D19clpGBTInterface::PhaseTrainRx(pChip, pGroups, false);
 }
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)

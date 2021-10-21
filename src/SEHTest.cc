@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("leak"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
-        cSEHTester.TestLeakageCurrent(cLeakVoltage, 600);
+        cSEHTester.TestLeakageCurrent(cLeakVoltage, 150);
     }
 
     if(cmd.foundOption("bias"))

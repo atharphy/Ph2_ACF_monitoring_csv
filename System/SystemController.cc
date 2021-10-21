@@ -273,6 +273,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
 #ifdef __TCUSB__
             for(const auto cBoard2: *fDetectorContainer)
             {
+                fBeBoardInterface->setBoard(cBoard2->getId());
                 if(cBoard2->at(0)->flpGBT == nullptr) continue;
                 D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 if(!cFWInterface->GetLinkLock()) { return; }
