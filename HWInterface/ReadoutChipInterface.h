@@ -33,7 +33,7 @@ class ReadoutChipInterface : public ChipInterface
   protected:
     std::map<uint32_t, Ph2_HwDescription::ChipRegMap> fModifiedRegisters;
     std::map<uint16_t, std::string> fMap;
-    bool fTrackRegisters=false;
+    bool fTrackRegisters{true};
   public:
     /*!
      * \brief Constructor of the ReadoutChipInterface Class

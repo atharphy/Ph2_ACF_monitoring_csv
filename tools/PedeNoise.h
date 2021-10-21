@@ -71,6 +71,8 @@ class PedeNoise : public Tool
     std::vector<EventType> fEventTypes;
     DetectorDataContainer* fStubLogicValue;
     DetectorDataContainer* fHIPCountValue;
+    DetectorDataContainer fBoardRegContainer;
+    
     bool                   cWithCBC = true;
     bool                   cWithSSA = false;
     bool                   cWithMPA = false;

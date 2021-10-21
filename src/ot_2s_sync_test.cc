@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
     cmd.defineOptionAlternative("reconfigure", "r");
 
-    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
+    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
     cmd.defineOption("tuneOffsets", "Tune Offsets  ", ArgvParser::NoOptionAttribute);
@@ -119,6 +119,11 @@ int main(int argc, char* argv[])
     // injection source 
     cmd.defineOption("injectionSource", "Source for injection", ArgvParser::OptionRequiresValue);
     
+    cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("events", "Number of Events . Default value: 10", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("events", "e");
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -133,6 +138,8 @@ int main(int argc, char* argv[])
     bool cSaveToFile = cmd.foundOption("save");
     std::string   cInjectionSource = (cmd.foundOption("injectionSource")) ? cmd.optionValue("injectionSource") : "none";
     auto          cRunNumber = returnRunNumber("RunNumbers.dat");
+    auto cDisableStubs = (cmd.foundOption("measurePedeNoise")) ? convertAnyInt(cmd.optionValue("measurePedeNoise").c_str()) : 1;
+    
     std::ofstream cRunLog;
     cRunLog.open("RunNumbers.dat", std::fstream::app);
     cRunLog << cRunNumber << "\n";
@@ -168,9 +175,6 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory.str(), false, false);
     cTool.InitResultFile(cResultfile);
 
-    // for some reason this does not work
-    // error I get is new TRootSnifferFull("sniff");
-    // cTool.StartHttpServer();
     if( cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw();
@@ -193,6 +197,19 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
+        
+        // LinkAlignmentOT cLinkAlignment; 
+        // cLinkAlignment.Inherit(&cTool);
+        // cLinkAlignment.Initialise();
+        // cLinkAlignment.AlignStubPackage();    
+        // cLinkAlignment.Reset();
+        
+        // time align stubs with L1 data in the BE 
+        // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+        // StubBackEndAlignment cStubBackEndAligner;
+        // cStubBackEndAligner.Inherit(&cTool);
+        // cStubBackEndAligner.Start(0);
+        // cStubBackEndAligner.waitForRunToBeCompleted();
     }
 
     LinkAlignmentOT cLinkAlignment; 
@@ -200,14 +217,8 @@ int main(int argc, char* argv[])
     cLinkAlignment.Initialise();
     cLinkAlignment.AlignStubPackage();    
     cLinkAlignment.Reset();
-    
-    // // time align stubs with L1 data in the BE 
-    // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
-    // StubBackEndAlignment cStubBackEndAligner;
-    // cStubBackEndAligner.Inherit(&cTool);
-    // cStubBackEndAligner.Start(0);
-    // cStubBackEndAligner.waitForRunToBeCompleted();
-       
+
+   
     // Tune offsets
     if( cmd.foundOption("tuneOffsets"))
     {
@@ -222,6 +233,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
+        cPedestalEqualization.Reset();
         t.show("Time to tune the front-ends on the system: ");
     }
     
@@ -234,10 +246,11 @@ int main(int argc, char* argv[])
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
-        cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
+        cPedeNoise.Initialise(true, (cDisableStubs==1)); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
+        cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
@@ -249,6 +262,7 @@ int main(int argc, char* argv[])
     if( cInjectionSource.find("testPulse") != std::string::npos ) cCheck2S.CheckWithTP();
     else if( cInjectionSource.find("external") != std::string::npos )  cCheck2S.CheckWithExternal();
     cCheck2S.writeObjects();
+
 
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();

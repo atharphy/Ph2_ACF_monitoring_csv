@@ -532,7 +532,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             size_t cNHitsThisFE = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId()).size();
                             cNHitsPerHybrid += cNHitsThisFE;
                             cNHits += cNHitsThisFE;
-                            if( cNHitsThisFE > 0 )
+                            //if( cNHitsThisFE > 0 )
                                 LOG(DEBUG) << BOLDBLUE << "\t.. ROC" << +cChip->getId() << " found "   
                                     << +cNHitsThisFE << " hits .." << RESET;
                         }

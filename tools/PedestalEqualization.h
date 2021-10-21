@@ -57,8 +57,9 @@ class PedestalEqualization : public Tool
     float    fOccupancyAtPedestal{0.56};
 
     // to hold the original register values
-    DetectorDataContainer fStubLogicCointainer;
-    DetectorDataContainer fHIPCountCointainer;
+    // DetectorDataContainer fStubLogicCointainer;
+    // DetectorDataContainer fHIPCountCointainer;
+    DetectorDataContainer fBoardRegContainer;
     bool                  cWithCBC = true;
     bool                  cWithSSA = false;
     bool                  cWithMPA = false;

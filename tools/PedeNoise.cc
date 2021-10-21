@@ -30,9 +30,13 @@ void PedeNoise::cleanContainerMap()
 
 void PedeNoise::clearDataMembers()
 {
+    //delete fBoardRegContainer;
     delete fThresholdAndNoiseContainer;
-    delete fStubLogicValue;
-    delete fHIPCountValue;
+    if( fDisableStubLogic ) 
+    {
+        delete fStubLogicValue;
+        delete fHIPCountValue;
+    }
     cleanContainerMap();
 }
 
@@ -69,10 +73,17 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
 
+    ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
+        cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
+    }
+
     // for now.. force to use async mode here
     bool cForcePSasync = true;
     // event types
-
     fEventTypes.clear();
     for(auto cBoard: *fDetectorContainer)
     {
@@ -106,25 +117,61 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::Reset()
 {
-    size_t cIndx = 0;
+    LOG(INFO) << BOLDGREEN << "Resetting registers touched  by PedeNoise" << RESET;
+    // set everything back to original values .. like I wasn't here
+    bool cWithPS = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(fEventTypes[cIndx] == EventType::PSAS) continue;
-        cBoard->setEventType(fEventTypes[cIndx]);
+        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
+        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
+        cVecBeBoardRegs.clear();
+        for(auto cReg: cBeRegMap)
+        {
+            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        }
+        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
+
         for(auto cOpticalGroup: *cBoard)
         {
+            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto cType    = FrontEndType::SSA;
                 bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 cType         = FrontEndType::MPA;
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                if(!cWithSSA && !cWithMPA) continue;
+                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
+                cWithPS       = cWithPS || cIsPS;
+                LOG(INFO) << BOLDBLUE << "PedeNoise::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+                for(auto cChip: *cHybrid)
+                {
+                    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
+                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
+                    LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    for(auto cMapItem: cModMap)
+                    {
+                        auto cValueInMemory = cChip->getReg(cMapItem.first);
+                        // don't reconfigure the offsets .. whole point of this excercise 
+                        if( cMapItem.first.find("VCth") != std::string::npos ) continue;
+                        if( cMapItem.first.find("ThDAC") != std::string::npos ) continue; 
+                        if( cMapItem.first.find("Bias_THDAC") != std::string::npos ) continue; 
 
-                for(auto cROC: *cHybrid) { fReadoutChipInterface->WriteChipReg(cROC, "ReadoutMode", 0); }
+                        LOG(INFO) << BOLDBLUE << "PedeNoise::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                                   << cMapItem.second.fValue << RESET;
+                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
+                    }
+                }
             }
         }
     }
+    if(fReadoutChipInterface != nullptr)
+    {
+        fReadoutChipInterface->ClearModifiedRegisterMap();
+        if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
+    }
+    resetPointers();
 }
 void PedeNoise::disableStubLogic()
 {
@@ -144,12 +191,13 @@ void PedeNoise::disableStubLogic()
                     if(cROC->getFrontEndType() == FrontEndType::CBC3)
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(cROC, false, true, 0);
                         fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth");
                         fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cROC->getIndex())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cROC), "HIP&TestMode");
-                        fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
-                        fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
+                        //fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "Pipe&StubInpSel&Ptwidth", 0x23);
+                        //fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cROC), "HIP&TestMode", 0x00);
                     }
                 }
             }
@@ -216,33 +264,32 @@ void PedeNoise::sweepSCurves()
     
     if(fDisableStubLogic) disableStubLogic();
     LOG (INFO) << BLUE <<  "Sweep of S-curves will start at an average threshold of " <<cStartValue<< RESET ;
-    //measureSCurves(cStartValue);
-    scanScurves();
+    measureSCurves(cStartValue);
+    //scanScurves();
 
 
-    if(fDisableStubLogic) reloadStubLogic();
-
+    //if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);
-    if(fPulseAmplitude != 0)
-    {
-        this->enableTestPulse(false);
-        if(cWithSSA)
-            setSameGlobalDac("InjectedCharge", 0);
-        else if(cWithMPA)
-        {
-            setSameGlobalDac("CalDAC0", 0);
-            setSameGlobalDac("CalDAC1", 0);
-            setSameGlobalDac("CalDAC2", 0);
-            setSameGlobalDac("CalDAC3", 0);
-            setSameGlobalDac("CalDAC4", 0);
-            setSameGlobalDac("CalDAC5", 0);
-            setSameGlobalDac("CalDAC6", 0);
-        }
-        else
-            setSameGlobalDac("TestPulsePotNodeSel", 0);
+    // if(fPulseAmplitude != 0)
+    // {
+    //     this->enableTestPulse(false);
+    //     if(cWithSSA)
+    //         setSameGlobalDac("InjectedCharge", 0);
+    //     else if(cWithMPA)
+    //     {
+    //         setSameGlobalDac("CalDAC0", 0);
+    //         setSameGlobalDac("CalDAC1", 0);
+    //         setSameGlobalDac("CalDAC2", 0);
+    //         setSameGlobalDac("CalDAC3", 0);
+    //         setSameGlobalDac("CalDAC4", 0);
+    //         setSameGlobalDac("CalDAC5", 0);
+    //         setSameGlobalDac("CalDAC6", 0);
+    //     }
+    //     else
+    //         setSameGlobalDac("TestPulsePotNodeSel", 0);
 
-        LOG(INFO) << BLUE << "Disabled test pulse. " << RESET;
-    }
+    //     LOG(INFO) << BLUE << "Disabled test pulse. " << RESET;
+    // }
 
     LOG(INFO) << BOLDBLUE << "Finished sweeping SCurves..." << RESET;
     return;
@@ -822,11 +869,13 @@ void PedeNoise::Running()
     // HybridContainer::ResetQueryFunction();
     // Validate();
     LOG(INFO) << "Done with noise";
+    Reset();
 }
 
 void PedeNoise::Stop()
 {
     LOG(INFO) << "Stopping noise measurement";
+    Reset();
     writeObjects();
     dumpConfigFiles();
     SaveResults();

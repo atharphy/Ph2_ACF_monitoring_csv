@@ -5660,6 +5660,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
         cIter++;
     }
     // throw exception based on failure
+    if( cIter > 1 ) LOG (INFO) << BOLDYELLOW << "D19cFWInterface::WriteLpGBTRegister had to try " << cIter << "/" << fCPBConfig.fMaxAttempts << " possible attempts to complete transaction." << RESET;
     if(cParityCheck != 1) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - failed parity check"));
     if(pVerifLoop && cReadBack != pRegisterValue)
         throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register value"));

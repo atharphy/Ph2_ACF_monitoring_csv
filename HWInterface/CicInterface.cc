@@ -329,9 +329,18 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
 
 bool CicInterface::WriteReg(Chip* pChip, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
 {
-    // LOG (INFO) << BOLDMAGENTA << "CicInterface::WriteReg trying to write to register 0x"
-    //     << std::hex << +pRegisterAddress << std::dec
-    //     << RESET;
+    LOG (DEBUG) << BOLDMAGENTA << "CicInterface::WriteReg trying to write to register 0x"
+        << std::hex << +pRegisterAddress << std::dec
+        << RESET;
+
+    if( fMap.size() == 0 )
+    {
+        ChipRegMap cCicRegMap = pChip->getRegMap();
+        // get register map
+        LOG(INFO) << BOLDMAGENTA << "Setting up CIC maps.." << RESET;
+        fMap.clear();
+        for(auto& cRegItem: cCicRegMap) { fMap[cRegItem.second.fAddress] = cRegItem.first; }
+    }
 
     bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
@@ -417,8 +426,8 @@ bool     CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair
 uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());
-    // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register "
-    //     << pRegNode << RESET;
+    LOG (DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register "
+        << pRegNode << RESET;
 
     ChipRegMap cRegMap = pChip->getRegMap();
     if(cRegMap.find(pRegNode) == cRegMap.end()) { LOG(INFO) << BOLDRED << "Could not find CIC register " << pRegNode << RESET; }
@@ -1363,7 +1372,7 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     }
     if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
-    // LOG(INFO) << BOLDBLUE << "Setting FE enable register [" << cRegName << "] to " << std::bitset<8>(cValue) << RESET;
+    //LOG(INFO) << BOLDBLUE << "Setting FE enable register [" << cRegName << "] to " << std::bitset<8>(cValue) << RESET;
     return true;
 }
 bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)

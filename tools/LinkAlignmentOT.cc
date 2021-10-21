@@ -501,7 +501,6 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard )
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
     }
-    
     // check trigger source
     // and reload
     uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");

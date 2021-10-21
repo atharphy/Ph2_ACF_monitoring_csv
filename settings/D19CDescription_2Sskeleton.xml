@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="0">
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="0" boardReset="0">
     <!-- B598 skeleton -->
     <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
     <!-- skeleton --> 
-   <!--  <OpticalGroup Id="0" FMCId="0" reset="1">
+    <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="1" configfile="CMSOT_lpGBT.txt">
@@ -16,54 +16,53 @@
         <Hybrid Id="0" Status="1" reset="1">
             <Global>
                 <Settings threshold="550" latency="108"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
                 <ChannelMask disable=""/>
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
 
-            <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_521/" />
-            <CBC Id="0" configfile="BE0_OG1_FE2_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG1_FE2_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG1_FE2_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG1_FE2_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG1_FE2_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG1_FE2_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG1_FE2_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG1_FE2_Chip7.txt" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            <!-- <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" /> -->
             
-
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
         <Hybrid Id="1" Status="0" reset="1">
             <Global>
                 <Settings threshold="550" latency="108"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
+                <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
                 <ChannelMask disable=""/>
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
 
-            <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_521/" />
-            <CBC Id="0" configfile="BE0_OG1_FE3_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG1_FE3_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG1_FE3_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG1_FE3_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG1_FE3_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG1_FE3_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG1_FE3_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG1_FE3_Chip7.txt" />
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" />
          
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-    </OpticalGroup> -->
+    </OpticalGroup>
 
     <!-- KIT#3 --> 
-    <OpticalGroup Id="1" FMCId="0" reset="1">
+    <!-- <OpticalGroup Id="1" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="1" configfile="CMSOT_lpGBT.txt">
@@ -83,14 +82,14 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_523" />
             <CBC Id="0" configfile="BE0_OG2_FE4_Chip0.txt" />
-            <!-- <CBC Id="1" configfile="BE0_OG2_FE4_Chip1.txt" />
+            <CBC Id="1" configfile="BE0_OG2_FE4_Chip1.txt" />
             <CBC Id="2" configfile="BE0_OG2_FE4_Chip2.txt" />
             <CBC Id="3" configfile="BE0_OG2_FE4_Chip3.txt" />
             <CBC Id="4" configfile="BE0_OG2_FE4_Chip4.txt" />
             <CBC Id="5" configfile="BE0_OG2_FE4_Chip5.txt" />
             <CBC Id="6" configfile="BE0_OG2_FE4_Chip6.txt" />
             <CBC Id="7" configfile="BE0_OG2_FE4_Chip7.txt" />
-             -->
+            
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -107,19 +106,19 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_521/" />
             <CBC Id="0" configfile="BE0_OG2_FE5_Chip0.txt" />
-            <!-- <CBC Id="1" configfile="BE0_OG2_FE5_Chip1.txt" />
+            <CBC Id="1" configfile="BE0_OG2_FE5_Chip1.txt" />
             <CBC Id="2" configfile="BE0_OG2_FE5_Chip2.txt" />
             <CBC Id="3" configfile="BE0_OG2_FE5_Chip3.txt" />
             <CBC Id="4" configfile="BE0_OG2_FE5_Chip4.txt" />
             <CBC Id="5" configfile="BE0_OG2_FE5_Chip5.txt" />
             <CBC Id="6" configfile="BE0_OG2_FE5_Chip6.txt" />
             <CBC Id="7" configfile="BE0_OG2_FE5_Chip7.txt" />
-          -->
+         
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
     </OpticalGroup>
-
+ -->
     <!-- Perugia --> 
     <!-- <OpticalGroup Id="2" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
@@ -204,7 +203,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 5 </Register>
+    		<Register name="trigger_source"> 3 </Register>
     		<Register name="user_trigger_frequency"> 100 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
@@ -310,7 +309,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">1000</Setting>
+    <Setting name="Nevents">10000</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -319,7 +318,7 @@
     <Setting name="PedestalEqualizationPulseAmplitude">0</Setting>
     <Setting name="PedeNoisePulseAmplitude">0</Setting>
     <Setting name="TriggerRate">10</Setting>
-    <Setting name="StubAlignmentThreshold">550</Setting>
+    <Setting name="StubAlignmentThreshold">590</Setting>
     <Setting name="StubAlignmentScanStart">70</Setting>
 
 
