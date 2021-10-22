@@ -34,7 +34,10 @@ class BeamTestCheck2S : public Tool
     BeamTestCheck2S();
     ~BeamTestCheck2S();
 
+    void ReadDataFromFile(std::string pRawFileName);
+    void PrintData();
     void CheckWithTP();
+    void CheckWithInternal(uint8_t pContinousReadout=0);
     void CheckWithExternal();
     void Initialise();
     void Running() override;
@@ -43,6 +46,8 @@ class BeamTestCheck2S : public Tool
     void Resume() override;
     void Reset();
     void                                writeObjects();
+    void SetReadoutPause(uint32_t pReadoutPause){ fReadoutPause =pReadoutPause; }
+    void DisableAllFEs();
 
   protected:
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
@@ -78,13 +83,15 @@ class BeamTestCheck2S : public Tool
     uint16_t fLatencyRange{0};
     uint32_t fNevents{100};
     uint16_t fOptimalLatency; 
+    uint32_t fReadoutPause{100};
 
+    void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers=1);
     void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
     void ScanLatency(Ph2_HwDescription::BeBoard* pBoard);
     void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
-
+    void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard); 
     size_t fThStep{0};
 
 #ifdef __USE_ROOT__

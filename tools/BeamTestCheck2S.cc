@@ -146,9 +146,9 @@ void BeamTestCheck2S::Initialise()
     // pedestals 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fPedestalContainer);
 
-    #ifdef __USE_ROOT__
-        fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    #endif
+    // #ifdef __USE_ROOT__
+    //     fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    // #endif
 }
 
 // State machine control functions
@@ -159,6 +159,22 @@ void BeamTestCheck2S::Running()
     Reset();
 }
 
+void BeamTestCheck2S::DisableAllFEs()
+{
+    // disable all FEs 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                //cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+                fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+            }
+        }
+    }
+}
 // 
 void BeamTestCheck2S::CheckWithTP()
 {
@@ -177,7 +193,23 @@ void BeamTestCheck2S::CheckWithTP()
     #endif
 }
 // 
-void BeamTestCheck2S::CheckWithExternal()
+void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
+{
+    for(auto cBoard : *fDetectorContainer )
+    {
+        // prepare injection 
+        PrepareForInternal(cBoard);
+        if( pContinousReadout == 1 ) ContinousReadout(cBoard); 
+        else // collect events with ReadNEvents 
+        {
+            std::vector<Event*> cPh2Events;
+            ReadNEvents(cBoard, fNevents);
+            const std::vector<Event*>& cEvents = GetEvents();
+            LOG (INFO) << BOLDYELLOW << "BeamTestCheck2S::CheckWithInternal Read-back " << +cEvents.size() << " events from the FC7 when " <<  fNevents << " were requested" << RESET;
+        }
+    }  
+}
+void BeamTestCheck2S::CheckWithExternal() 
 {
     for(auto cBoard : *fDetectorContainer )
     {
@@ -697,6 +729,53 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     setSameDacBeBoard(pBoard, "Threshold", fThreshold);
  
 }
+void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers) 
+{
+    // configure trigger 
+    uint8_t                  cTriggerSource   = 3;
+    uint32_t cNtriggersToAccept = (pLimitTriggers == 0 ) ? 0 : (uint32_t)fNevents; 
+    std::vector<std::string> cFcmdRegs{"trigger_source" , "triggers_to_accept"};
+    std::vector<uint32_t>    cFcmdRegVals{cTriggerSource,cNtriggersToAccept};
+    std::vector<uint32_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.clear();
+    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+    {
+        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+        cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
+        cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
+    }
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
+    
+}
+void BeamTestCheck2S::ContinousReadout(BeBoard* pBoard)
+{
+    std::vector<uint32_t> cCompleteData(0);
+    fBeBoardInterface->Start(pBoard);
+    size_t   cCounter = 0;
+    uint32_t cNevents = 0;
+    bool     cBreak   = false;
+    bool     cWait    = false;
+    do {
+        std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
+        std::vector<uint32_t> cData(0);
+        cNevents += ReadData(pBoard, cData, cWait);
+        if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+        auto cTriggerCounter = fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        if( cCounter%100 == 0 ) LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounter << " triggers received and " << +cNevents << " events readout so far... " << RESET;
+        cCounter++;
+        cBreak = (cNevents >= fNevents);
+    } while(!cBreak);
+    fBeBoardInterface->Stop(pBoard);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::vector<uint32_t> cData(0);
+    cNevents += ReadData(pBoard, cData, false);
+    if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+    DecodeData(pBoard, cCompleteData, cNevents, fBeBoardInterface->getBoardType(pBoard));
+    LOG (INFO) << BOLDYELLOW << "BeamTestCheck2S::ContinousReadout readout " << cNevents << " when " << fNevents << " were requested." << RESET;
+}
 void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard) 
 {
     // configure trigger 
@@ -721,6 +800,43 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
     setSameDacBeBoard(pBoard, "Threshold", fThreshold);
+}
+void BeamTestCheck2S::ReadDataFromFile(std::string pRawFileName)
+{
+    this->addFileHandler ( pRawFileName, 'r');
+    std::vector<uint32_t> cData;
+    this->readFile (cData);
+    LOG (INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        size_t cNevents = 1; 
+        DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType (cBoard) );
+        //const std::vector<Event*>& cEvents = GetEvents ();
+        LOG (INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" <<  +cBoard->getId() << "]" << RESET;
+    }
+
+}
+void BeamTestCheck2S::PrintData()
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        const std::vector<Event*>& cEvents = GetEvents();
+        LOG (INFO) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the .raw file [BeBoard#" <<  +cBoard->getId() << "]" << RESET;
+        for(auto& cEvent: cEvents)
+        {
+            auto cEventId   = cEvent->GetEventCount();
+            auto cTriggerId = cEvent->GetExternalTriggerId();
+            for( auto cOpticalGroup : *cBoard )
+            {
+                for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
+                {
+                    auto cStatus    = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
+                    auto cL1Id = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cHybrid->getId(), 0);
+                    LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << " status is " << std::bitset<9>(cStatus) << RESET;
+                }
+            }
+        }//event loop           
+    }
 }
 void BeamTestCheck2S::Stop() {}
 

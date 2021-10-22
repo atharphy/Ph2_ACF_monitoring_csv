@@ -1119,7 +1119,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                     uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
                     if(cHeader != 0xFFFF)
                     {
-                        LOG(INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW" << RESET;
+                        int cPositionInData = (int)std::distance(pData.begin(), cEventIterator);
+                        // first part of data header
+                        if( fFileHandler != nullptr && cPositionInData > 12 ) LOG(INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW in position#" << cPositionInData << RESET;
+                        else if( fFileHandler == nullptr ) LOG(INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW in position#" << cPositionInData << RESET;
                         cEventIterator++;
                     }
                     else // valid event  // decode

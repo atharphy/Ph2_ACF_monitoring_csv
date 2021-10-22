@@ -100,10 +100,10 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("alignCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkData", "Check data..", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("scopeData", "Scope L1 data", ArgvParser::OptionRequiresValue);
 

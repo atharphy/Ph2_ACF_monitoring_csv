@@ -1447,7 +1447,7 @@ void D19cFWInterface::ResetReadout()
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    if(fIsDDR3Readout)
+    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {
         LOG(DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
         fDDR3Offset     = 0;
@@ -1468,7 +1468,7 @@ void D19cFWInterface::DDR3SelfTest()
     // opened issue: without this time delay the self-test doesn't examine entire 4Gb address space of the chip(reason
     // not obvious)
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    if(fIsDDR3Readout && fDDR3Calibrated)
+    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") && fDDR3Calibrated)
     {
         // trigger the self check
         WriteReg("fc7_daq_ctrl.ddr3_block.control.traffic_str", 0x1);
@@ -2388,7 +2388,8 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
     }         // opticalGroup
     uint32_t cNEvents = 0;
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    if(fIsDDR3Readout && !cAsync)
+    LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::GetData have " << +cNWords << " 32-bit words in the readout" << RESET;
+    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type") && !cAsync)
     {
         // this->Stop();
         if(ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") == 0x1)
@@ -2397,16 +2398,14 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
             auto   cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             do {
                 std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                // if(cCounter % 10 == 0)
-                // LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
+                if(cCounter % 10 == 0) LOG(DEBUG) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
                 cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
                 cCounter++;
             } while(cReadoutReq == 0 && cCounter < 100);
             if(cReadoutReq == 0) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... " << RESET; }
-            // else
-            //     LOG(INFO) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
+            else LOG(DEBUG) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
         }
-        // else LOG(INFO) << BOLDBLUE << "Data handshake not enabled" << RESET;
+        else LOG(DEBUG) << BOLDBLUE << "Data handshake not enabled" << RESET;
 
         // LOG(INFO) << BOLDRED << +cNWords << " words in the reaodut." << RESET;
         pData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, fDDR3Offset);
@@ -2694,7 +2693,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
         }
         cNEvents = this->GetData(pBoard, pData);
         // read all the words
-        if(fIsDDR3Readout)
+        if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
         {
             // readout_req high when buffer is almost full
             uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
@@ -3372,7 +3371,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             this->PS_Open_shutter(fFastCommandDuration);
         }
         // start triggering machine which will collect N events
-        // LOG(INFO) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Starting to send triggers with uDTC FSM" << RESET;
         this->Start();
         if(!cAsync)
         {
@@ -3394,7 +3393,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
                     cNtriggersPrev = cNtriggers;
-                    // if(cCounter % 100 == 0)  LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
+                    if(cCounter % 100 == 0)  LOG(DEBUG) << BOLDRED << "D19cFWInterface::WaitForData Number of triggers received is " << +cNtriggers << RESET;
                     cCounter++;
                 } while(cNtriggers < cNevents * (1 + cMultiplicity) && cFoundSame < cTimeoutValue);
                 cFailed = !(cNtriggers >= cNevents * (1 + cMultiplicity));
@@ -3441,7 +3440,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
                     cTimeoutCounter += ((cNWords == 0 || (cNWords - cNWords_previous) == 0)) ? 1 : 0;
                     if((cNWords == 0 || (cNWords - cNWords_previous) == 0))
-                        LOG(DEBUG) << MAGENTA << "Waiting for data.. attempt#" << +cAttempt << " ... ReadoutReq," << cReadoutReq << " Ntriggers," << cNtriggers << " NWords," << cNWords
+                        LOG(INFO) << MAGENTA << "Waiting for data.. attempt#" << +cAttempt << " ... ReadoutReq," << cReadoutReq << " Ntriggers," << cNtriggers << " NWords," << cNWords
                                    << " [ timeout ==  " << +cTimeoutValue << " ]" << RESET;
                     // cFailures += ((cNtriggers == 0));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
                     cNWords_previous = cNWords;
@@ -3467,7 +3466,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
             }
             else if(cNWords == 0)
             {
-                LOG(DEBUG) << BOLDRED << "\t...No data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << cNevents * (cMultiplicity + 1) << " events and have " << cNWords
+                LOG(INFO) << BOLDRED << "\t...No data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << cNevents * (cMultiplicity + 1) << " events and have " << cNWords
                            << " words in the readout... Re-trying point" << RESET;
             }
             else
@@ -3527,6 +3526,9 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
         this->PS_Start_counters_read(fFastCommandDuration); // start signal for readout block 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    if( cFailed ) LOG(INFO) << BOLDRED << "D19cFWInterface::WaitForData FAILED" << RESET;
+    else LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::WaitForData Succeeded" << RESET;
     return cFailed;
 }
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
@@ -3544,10 +3546,12 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     bool cFailed = WaitForData(pBoard);
     if(!cFailed)
     {
+        LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::ReadNEvents WaitForData Succeeded now going to try and GetData" << RESET;
         // if trigger multiplicity is not 0 check
         auto cMultiplicity   = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         pNEvents             = (cMultiplicity != 0) ? pNEvents * (cMultiplicity + 1) : pNEvents;
         auto      cNevents   = this->GetData(pBoard, pData);
+        LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvents GetData returned " << cNevents << RESET;
         EventType cEventType = pBoard->getEventType();
         bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
         if(cNevents != pNEvents && !cAsync)
@@ -3638,7 +3642,7 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
         if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
         if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
     }
-    if(fIsDDR3Readout)
+    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {
         uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
         if(!(cNEventSize32_divided_by_8 == cNEventSize32)) { cNEventSize32 = cNEventSize32_divided_by_8 + 8; }
@@ -3652,7 +3656,7 @@ std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue(const std::string
 {
     std::vector<uint32_t> vBlock = ReadBlockRegOffset(pRegNode, pBlocksize, pBlockOffset);
     LOG(DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
-    if(fIsDDR3Readout)
+    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {
         fDDR3Offset += pBlocksize;
         LOG(DEBUG) << BOLDGREEN << "\t... " << +fDDR3Offset << " current offset in DDR3 " << RESET;

@@ -17,6 +17,7 @@
 #include "tools/RegisterTester.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/LatencyScan.h"
+#include "tools/BeamTestCheck2S.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -138,7 +139,11 @@ int main(int argc, char* argv[])
     cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("manualScan", "Manual scan of threshold", ArgvParser::NoOptionAttribute);
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
-
+    //
+    cmd.defineOption("DataMonitor", "Data monitor" , ArgvParser::OptionRequiresValue);
+    cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
+    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -355,6 +360,7 @@ int main(int argc, char* argv[])
             cPSAlignment.Align();
         }
         cPSAlignment.dumpConfigFiles();
+        cPSAlignment.Reset();
     }
     // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets") && !cmd.foundOption("read"))
@@ -808,30 +814,34 @@ int main(int argc, char* argv[])
         cTool.CloseResultFile();
     }
 
-
-    if(!cmd.foundOption("read"))
+    if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
     {
         std::ofstream cGoodRuns;
         cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
+
+        uint8_t      cDisableFEs     = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        int          cReadoutPause   = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+        uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0 ;
+        BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.Inherit(&cTool);
+        cBeamTestCheck.Initialise();
+        if( cDisableFEs == 1 ) cBeamTestCheck.DisableAllFEs();
+        cBeamTestCheck.SetReadoutPause(cReadoutPause);
+        cBeamTestCheck.CheckWithInternal( cContinuousReadout );
+        cBeamTestCheck.Reset();
     }
-    else
+    else if(cmd.foundOption("read") )
     {
         std::string   cRawFileName       = cmd.foundOption("read")  ? cmd.optionValue("read") : "" ;
-        cTool.addFileHandler ( cRawFileName, 'r');
-        size_t cNevents = 1; 
-        std::vector<uint32_t> cData;
-        LOG (INFO) << BOLDBLUE << "Reading .raw file" << RESET;
-        cTool.readFile (cData);
-        LOG (INFO) << BOLDBLUE << "Read back " << +cData.size() << " 32 bit words from .raw file" << RESET;
-        for( auto cWord : cData ) LOG (INFO) << BOLDYELLOW << std::bitset<32>(cWord) << RESET;
-        for(auto cBoard: *cTool.fDetectorContainer)
-        {
-            cTool.DecodeData(cBoard, cData, cNevents, cTool.fBeBoardInterface->getBoardType (cBoard) );
-            const std::vector<Event*>& cEvents = cTool.GetEvents ();
-            LOG (INFO) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the .raw file [BeBoard#" <<  +cBoard->getId() << "]" << RESET;
-        }
+        
+        BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.Inherit(&cTool);
+        cBeamTestCheck.Initialise();
+        cBeamTestCheck.ReadDataFromFile(cRawFileName);
+        cBeamTestCheck.PrintData();
+        cBeamTestCheck.Reset();        
     }
 
     cTool.Destroy();
