@@ -284,9 +284,7 @@ uint8_t SSA2Interface::ReadChipId(Chip* pChip)
 {
     bool cVerifLoop = true;
     if(!this->WriteChipSingleReg(pChip, "Fuse_Mode", 0x0F, cVerifLoop)) // FIXME What is this even for? Do we really need this?
-    {
-        return 0;
-    }
+    { return 0; }
     else
         throw std::runtime_error(std::string("Failed to start e-fuse read operation from SSA2 ") + std::to_string(pChip->getId()));
 }

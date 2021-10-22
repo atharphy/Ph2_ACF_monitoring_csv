@@ -174,7 +174,8 @@ static void crc32c_zeros_op(uint32_t* even, size_t len)
     /* first square will put the operator for one zero byte (eight zero bits),
        in even -- next square puts operator for two zero bytes in odd, and so
        on, until len has been rotated down to zero */
-    do {
+    do
+    {
         gf2_matrix_square(even, odd);
         len >>= 1;
 
@@ -266,7 +267,8 @@ uint32_t crc32c_hw(uint32_t crc, const unsigned char* buf, size_t len)
         crc2 = 0;
         end  = next + LONG;
 
-        do {
+        do
+        {
             __asm__("crc32q\t"
                     "(%3), %0\n\t"
                     "crc32q\t" LONGx1 "(%3), %1\n\t"
@@ -290,7 +292,8 @@ uint32_t crc32c_hw(uint32_t crc, const unsigned char* buf, size_t len)
         crc2 = 0;
         end  = next + SHORT;
 
-        do {
+        do
+        {
             __asm__("crc32q\t"
                     "(%3), %0\n\t"
                     "crc32q\t" SHORTx1 "(%3), %1\n\t"
@@ -342,7 +345,8 @@ uint32_t crc32c_hw(uint32_t crc, const unsigned char* buf, size_t len)
    will fail on earlier x86 processors.  cpuid works on all Pentium and later
    processors. */
 #define SSE42(have)                                                                                                                                                                                    \
-    do {                                                                                                                                                                                               \
+    do                                                                                                                                                                                                 \
+    {                                                                                                                                                                                                  \
         uint32_t eax, ecx;                                                                                                                                                                             \
         eax = 1;                                                                                                                                                                                       \
         __asm__("cpuid" : "=c"(ecx) : "a"(eax) : "%ebx", "%edx");                                                                                                                                      \

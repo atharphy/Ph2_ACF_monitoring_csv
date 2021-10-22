@@ -352,7 +352,8 @@ void LatencyScan::ScanLatency2D()
                 uint32_t cNEvents_wStub = 0;
                 uint32_t cNEvents_wBoth = 0;
                 fBeBoardInterface->Start(theBoard);
-                do {
+                do
+                {
                     uint32_t cNeventsReadBack = ReadData(theBoard);
                     if(cNeventsReadBack == 0)
                     {

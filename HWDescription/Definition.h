@@ -166,8 +166,8 @@ enum class EventType
     SSA    = 3,
     MPA    = 4,
     SCAS   = 5,
-    SSA2   = 7,
-    PSAS   = 8
+    SSA2   = 6,
+    PSAS   = 7
 };
 
 #endif
