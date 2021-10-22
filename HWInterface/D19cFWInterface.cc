@@ -1787,8 +1787,8 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
     } while(cEventIterator < pData.end());
     return cNEvents;
 }
-// clean-up to ensure that a single data format is used for all counters 
-// method to read MPA counters over I2C 
+// clean-up to ensure that a single data format is used for all counters
+// method to read MPA counters over I2C
 void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     // get event type
@@ -1880,12 +1880,12 @@ void D19cFWInterface::ReadMPACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
         throw std::runtime_error(std::string("Trying to read MPA counters when EventType does not match..."));
     }
 }
-// method to read SSA counters over I2C 
+// method to read SSA counters over I2C
 void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     // get event type
     EventType cEventType = pBoard->getEventType();
-    if(cEventType == EventType::SCAS) 
+    if(cEventType == EventType::SCAS)
     {
         pData.clear();
         for(auto cOpticalGroup: *pBoard)
@@ -2002,7 +2002,8 @@ void D19cFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector<uint32_t
                 LOG(DEBUG) << BOLDBLUE << "Fast SSA counter readback... Chip#" << +cChip->getId() << " PS counters status [pre-start] is " << +cStatus << " [ offset is " << +fPSCounterDelay << "]"
                            << RESET;
                 PS_Start_counters_read();
-                do {
+                do
+                {
                     LOG(DEBUG) << BOLDBLUE << "PS counters status is " << +cStatus << RESET;
                     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
                     cStatus = this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
@@ -2013,12 +2014,12 @@ void D19cFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector<uint32_t
                 uint32_t cWordCounter = 0;
                 for(int cChannelId = 0; cChannelId < (int)cChip->size(); cChannelId++)
                 {
-                    if( pRawMode == 1 )// moved over from old MPA method .. needs to be checked/generatlized for both SSA/MPA case 
+                    if(pRawMode == 1) // moved over from old MPA method .. needs to be checked/generatlized for both SSA/MPA case
                     {
                         uint32_t cycle = 0;
-                        // MPA will output 16*120 + 120 counters 
-                        // SSA witll output 120 counters 
-                        size_t cNCounters = (cChip->getFrontEndType() == FrontEndType::MPA) ? 2040 : cChip->size(); 
+                        // MPA will output 16*120 + 120 counters
+                        // SSA witll output 120 counters
+                        size_t                cNCounters = (cChip->getFrontEndType() == FrontEndType::MPA) ? 2040 : cChip->size();
                         std::vector<uint16_t> count(cNCounters, 0);
                         for(int i = 0; i < 20000; i++)
                         {
@@ -2051,8 +2052,8 @@ void D19cFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector<uint32_t
                         cDataWord           = (cDataWord) | (fifo2_word << (cWordCounter & 0x1) * 16);
                         if(cChannelId < 5 || cChannelId > 115)
                         {
-                            LOG(INFO) << BOLDGREEN << "Chip#" << +cChip->getId() << " Pair#" << +cPairId << " Chnl#" << +cChannelId << "\t\t" << std::bitset<32>(fifo2_word) << " [ " << fifo2_word << " ] "
-                                       << RESET;
+                            LOG(INFO) << BOLDGREEN << "Chip#" << +cChip->getId() << " Pair#" << +cPairId << " Chnl#" << +cChannelId << "\t\t" << std::bitset<32>(fifo2_word) << " [ " << fifo2_word
+                                      << " ] " << RESET;
                         }
                         if((cWordCounter & 0x1) == 1)
                         {

@@ -114,10 +114,10 @@ class D19cFWInterface : public BeBoardFWInterface
     bool         fIsDDR3Readout;
     bool         fDDR3Calibrated;
     uint32_t     fDDR3Offset;
-    // PS counters 
-    uint8_t      fPSCounterDelay{29};
-    uint8_t      fPSCounterFast{0};
-    uint8_t      fPairSelect{0};
+    // PS counters
+    uint8_t fPSCounterDelay{29};
+    uint8_t fPSCounterFast{0};
+    uint8_t fPairSelect{0};
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
@@ -260,7 +260,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // vector of 32 bit words for ROC#pIndex [stubs]
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
 
-    // configure PS counter readout 
+    // configure PS counter readout
     void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
     void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
     void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
@@ -278,8 +278,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // read back SSA counters directly
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode=0);
-    
+    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
+
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
     bool WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast);

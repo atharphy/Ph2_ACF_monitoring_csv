@@ -54,8 +54,8 @@ void BackEndAlignment::Initialise()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
     // pair select for PS-FEHs
-    fPairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
-    
+    fPairSelect = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
+
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitChip<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);

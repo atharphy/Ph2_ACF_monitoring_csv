@@ -664,15 +664,18 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t  fNFe       = pBoard->getNFe();
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
-            fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+            fEventSize      = static_cast<uint32_t>((pData.size()) / pNevents);
             uint32_t maxind = 0;
             for(auto opticalGroup: *pBoard)
             {
                 for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
-            if(fEventType == EventType::SCAS ) { fEventList.push_back(new D19SCEventAS(pBoard, pData)); }
-            else if(fEventType == EventType::PSAS ) { LOG (INFO) << BOLDYELLOW << "Placeholder for PS ASYNC event decoding via CIC..." << RESET; }
+            if(fEventType == EventType::SCAS) { fEventList.push_back(new D19SCEventAS(pBoard, pData)); }
+            else if(fEventType == EventType::PSAS)
+            {
+                LOG(INFO) << BOLDYELLOW << "Placeholder for PS ASYNC event decoding via CIC..." << RESET;
+            }
             else if(fEventType != EventType::ZS)
             {
                 size_t cEventIndex    = 0;
@@ -681,8 +684,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 {
                     uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
                     auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-                    LOG (DEBUG) << BOLDYELLOW << "Event size is " << cEventSize << RESET;
-                    
+                    LOG(DEBUG) << BOLDYELLOW << "Event size is " << cEventSize << RESET;
+
                     // retrieve chunck of data vector belonging to this event
                     if(cEnd - cEventIterator == cEventSize)
                     {

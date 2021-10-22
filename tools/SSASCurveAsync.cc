@@ -52,7 +52,7 @@ void SSASCurve::run(void)
             LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
         else
             theBeBoard->setEventType(EventType::SCAS);
-    
+
         float rms  = 999.0;
         float vfac = Vfac;
         LOG(INFO) << BOLDBLUE << "VFAC " << vfac << RESET;

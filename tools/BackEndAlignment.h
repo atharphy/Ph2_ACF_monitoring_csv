@@ -51,9 +51,10 @@ class BackEndAlignment : public Tool
     bool getStatus() const { return fSuccess; }
 
   protected:
-    bool fL1Debug   = false;
-    bool fStubDebug = false;
+    bool    fL1Debug   = false;
+    bool    fStubDebug = false;
     uint8_t fPairSelect{0};
+
   private:
     // status
     bool fSuccess;
