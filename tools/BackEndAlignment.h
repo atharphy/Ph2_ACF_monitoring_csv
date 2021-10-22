@@ -53,7 +53,7 @@ class BackEndAlignment : public Tool
   protected:
     bool fL1Debug   = false;
     bool fStubDebug = false;
-
+    uint8_t fPairSelect{0};
   private:
     // status
     bool fSuccess;

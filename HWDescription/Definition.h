@@ -165,12 +165,9 @@ enum class EventType
     VR     = 2,
     SSA    = 3,
     MPA    = 4,
-    SSAAS  = 5,
-    MPAAS  = 6,
+    SCAS   = 5,
     SSA2   = 7,
-    SSA2AS = 8,
-    PSAS   = 9,
-    Async  = 10
+    PSAS   = 8
 };
 
 #endif

@@ -53,6 +53,9 @@ void BackEndAlignment::Initialise()
     fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
+    // pair select for PS-FEHs
+    fPairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
+    
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitChip<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
@@ -438,7 +441,7 @@ bool BackEndAlignment::Align()
             if(cWithCBC) { this->CBCAlignment(theBoard); }
             else if(cWithMPA or cWithSSA or cWithSSA2)
             {
-                this->PSAlignment(theBoard);
+                this->PSAlignment(theBoard, fPairSelect);
             }
             else
             {

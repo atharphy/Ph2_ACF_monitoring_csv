@@ -295,9 +295,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
     {
         if(cBoard->getBoardType() != BoardType::RD53)
         {
-            // auto cEventType = cBoard->getEventType();
-            // uint8_t cAsync = (cEventType == EventType::SSA2AS || cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::Async ) ? 1 : 0;
-
             // setting up back-end board
             fBeBoardInterface->ConfigureBoard(cBoard);
             LOG(INFO) << GREEN << "Successfully configured Board " << int(cBoard->getId()) << RESET;
@@ -631,42 +628,6 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vect
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
 }
 
-void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pulses, bool fast, bool fsm)
-{
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-
-    std::vector<uint32_t> cData;
-    if(fsm and (pulses > 0))
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses(pulses);
-    else
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
-        std::this_thread::sleep_for(std::chrono::microseconds(pNMsec));
-        for(uint32_t i = 0; i < pulses; i++) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse(); }
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
-    }
-
-    if(fast) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData); }
-    else
-    {
-        for(auto cOpticalGroup: *pBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                    if(cChip->getFrontEndType() == FrontEndType::SSA2) static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                }
-            }
-        }
-    }
-
-    this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
-}
-
 // #################
 // # Data decoding #
 // #################
@@ -704,37 +665,24 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             LOG(DEBUG) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
-            // uint32_t nmpa = 0;
             uint32_t maxind = 0;
-
-            // if(fEventType == EventType::SSAAS)
-            //   {
-            //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-            //   nSSA = pData.size() / 120;
-            //   }
-
             for(auto opticalGroup: *pBoard)
             {
                 for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
-            if(fEventType == EventType::SSAAS || fEventType == EventType::Async) { fEventList.push_back(new D19cSSAEventAS(pBoard, pData)); }
-            else if(fEventType == EventType::SSA2AS || fEventType == EventType::Async)
-            {
-                fEventList.push_back(new D19cSSA2EventAS(pBoard, pData));
-            }
-            else if(fEventType == EventType::MPAAS)
-            {
-                fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
-            }
+            if(fEventType == EventType::SCAS ) { fEventList.push_back(new D19SCEventAS(pBoard, pData)); }
+            else if(fEventType == EventType::PSAS ) { LOG (INFO) << BOLDYELLOW << "Placeholder for PS ASYNC event decoding via CIC..." << RESET; }
             else if(fEventType != EventType::ZS)
             {
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
-                do {
+                do
+                {
                     uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
                     auto     cEnd       = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-
+                    LOG (DEBUG) << BOLDYELLOW << "Event size is " << cEventSize << RESET;
+                    
                     // retrieve chunck of data vector belonging to this event
                     if(cEnd - cEventIterator == cEventSize)
                     {

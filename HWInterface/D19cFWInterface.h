@@ -107,9 +107,6 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t                                 fFMCId;
 
     // number of chips and hybrids defined in firmware (compiled for)
-    uint8_t      fPSCounterDelay{29};
-    uint8_t      fPSCounterFast{0};
-    uint8_t      fPairSelect{0};
     uint32_t     fFWNHybrids;
     uint32_t     fFWNChips;
     FrontEndType fFirmwareFrontEndType;
@@ -117,6 +114,10 @@ class D19cFWInterface : public BeBoardFWInterface
     bool         fIsDDR3Readout;
     bool         fDDR3Calibrated;
     uint32_t     fDDR3Offset;
+    // PS counters 
+    uint8_t      fPSCounterDelay{29};
+    uint8_t      fPSCounterFast{0};
+    uint8_t      fPairSelect{0};
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
@@ -245,12 +246,6 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
 
-    void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
-    void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
-    void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
-
     /*!
      * \brief Read data for pNEvents
      * \param pBoard : the pointer to the BeBoard
@@ -265,6 +260,11 @@ class D19cFWInterface : public BeBoardFWInterface
     // vector of 32 bit words for ROC#pIndex [stubs]
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
 
+    // configure PS counter readout 
+    void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
+    void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
+    void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
+
   private:
     uint8_t  fFastCommandDuration = 0;
     uint16_t fWait_us             = 10000; // 10 ms
@@ -277,8 +277,9 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast);
-
+    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode=0);
+    
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
     bool WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast);
@@ -365,7 +366,7 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pVecReq : Vector to stack the encoded words
      */
     void
-    EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
+         EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
     void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
         override; /*!< Encode a/several word(s) readable for a Chip*/
 
@@ -408,12 +409,12 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    std::string L1ADebug(uint8_t pWait_ms = 1);
-    std::string StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
-    bool        L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool        L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool        L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool        StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    void L1ADebug(uint8_t pWait_ms = 1);
+    void StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
+    bool L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
+    bool StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
     // bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
 
     // Optical readout specific functions - d19c [temporary]
@@ -600,7 +601,7 @@ class D19cFWInterface : public BeBoardFWInterface
             // perform phase alignment
             // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
             SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
-        }
+        };
         void AlignWord(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
             if(pChangePattern)
@@ -611,7 +612,7 @@ class D19cFWInterface : public BeBoardFWInterface
             // perform phase alignment
             // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
             SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
-        }
+        };
         bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
             LOG(INFO) << BOLDBLUE << "Tuning line " << +pLine << RESET;
@@ -701,7 +702,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
     void PS_Open_shutter(uint32_t duration = 0);
     void PS_Close_shutter(uint32_t duration = 0);
-    void PS_Inject(uint32_t duration = 0);
     void PS_Clear_counters(uint32_t duration = 0);
     void PS_Start_counters_read(uint32_t duration = 0);
 
