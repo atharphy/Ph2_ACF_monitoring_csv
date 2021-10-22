@@ -109,10 +109,10 @@ class RD53FWInterface : public BeBoardFWInterface
     // @TMP@
     enum class AutozeroSource : uint32_t
     {
-        IPBus = 1,
+        Software = 1,
         FastCMDFSM,
         UserDefined, // --> Related to IPbus register "autozero_freq"
-        Software,
+        IPBus,
         Disabled = 0
     };
 
