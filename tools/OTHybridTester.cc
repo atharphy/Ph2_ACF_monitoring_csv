@@ -873,11 +873,20 @@ bool OTHybridTester::LpGBTTestVTRx()
             clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
-            auto cMapIterator = fVTRxplusDefaultRegisters.begin();
+            cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, 0x15, 1);
+            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, 0x15, 1); }
+            cResult = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
+            std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
+            if(cResult==0x15){
+                cVTRxplusDefaultRegisters = fVTRxplusDefaultRegistersV13;
+                LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
+            }
+            else LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
+            auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
                 cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1);
-                for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1); }
+                //for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1); }
                 cResult = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -891,7 +900,7 @@ bool OTHybridTester::LpGBTTestVTRx()
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 cMapIterator++;
-            } while(cMapIterator != fVTRxplusDefaultRegisters.end());
+            } while(cMapIterator != cVTRxplusDefaultRegisters.end());
         }
     }
     fillSummaryTree("vtrxplusslowcontrol", cSuccess);

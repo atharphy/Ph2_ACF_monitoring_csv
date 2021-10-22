@@ -154,6 +154,7 @@ class OTHybridTester : public Tool
                                                             {"1V25_MONITOR_Nominal", 0.806},
                                                             {"2V55_MONITOR_Nominal", 0.808}};
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
+    std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegistersV13 = {{0x00, 0x01}, {0x02, 0x01}, {0x03, 0x30}, {0x04, 0xa0}, {0x05, 0x00}, {0x11, 0x07}};
     std::map<uint8_t, std::string>     fI2CStatusMap             = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
     std::map<std::string, uint8_t> fBackendAlignmentLineMap = {{"SSA_FCMD_L", 0}, {"SSA_FCMD_R", 1}, {"CIC_FCMD_L", 2}, {"CIC_FCMD_R", 3}, {"2S_R", 1}, {"2S_L", 2}};
