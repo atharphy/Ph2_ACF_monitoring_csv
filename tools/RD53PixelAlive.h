@@ -64,6 +64,7 @@ class PixelAlive : public Tool
     size_t colStop;
     size_t nEvents;
     size_t nEvtsBurst;
+    size_t nTRIGxEvent;
     size_t nHITxCol;
     float  thrOccupancy;
     bool   unstuckPixels;

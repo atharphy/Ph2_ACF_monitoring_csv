@@ -104,10 +104,10 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(cChip->getChannel<uint16_t>(row, col) != TDACsize)
-                              {
-                                  hTDAC1D->Fill(cChip->getChannel<uint16_t>(row, col));
-                                  hTDAC2D->SetBinContent(col + 1, row + 1, cChip->getChannel<uint16_t>(row, col));
-                              }
+                            {
+                                hTDAC1D->Fill(cChip->getChannel<uint16_t>(row, col));
+                                hTDAC2D->SetBinContent(col + 1, row + 1, cChip->getChannel<uint16_t>(row, col));
+                            }
                 }
 }
 
