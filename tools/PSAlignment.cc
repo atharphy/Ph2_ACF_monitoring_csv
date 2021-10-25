@@ -1168,7 +1168,6 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                         auto cL1AlignmentPars = this->AlignL1( cChip, cInjections, cEdgeSelRaw );
                         if( cL1AlignmentPars.size() > 0 ){ 
                             LOG (INFO) << BOLDYELLOW << "\t\tFound " << +cL1AlignmentPars.size() << " combinations of alignment parameters for L1 data from SSA" << RESET;
-                            cScanEdgeT1=false;
                         }
                         else 
                             LOG (INFO) << BOLDYELLOW << "\t\t no alignment parameters found for L1 data from SSA" << RESET;
@@ -1186,7 +1185,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                             cPars.fRetimePix=0; 
                             cPars.fStubOffset= pBoard->getStubOffset();
                             cMPAInL1Pars.push_back( cPars );
-                            LOG(INFO) << BOLDYELLOW << "\t\t L1Pars [ InputPhase = " << +cPars.fL1InputPhase 
+                            LOG(DEBUG) << BOLDYELLOW << "\t\t L1Pars [ InputPhase = " << +cPars.fL1InputPhase 
                                 << " LatencyRx40 " << +cPars.fLatencyRx40 
                                 << " ]" << RESET;
                         }
