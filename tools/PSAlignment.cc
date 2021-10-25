@@ -938,7 +938,7 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
     uint32_t cNevents =10; 
     uint16_t cHitLatency             = 0;
     uint16_t cDelay         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
+    //fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
     auto     cTriggerMult   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     int      cOptimalOffset = -1 + (2*(cTriggerMult > 1)); // want triggered event to be in trigger#2 of the burst 
     
@@ -1168,6 +1168,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                         auto cL1AlignmentPars = this->AlignL1( cChip, cInjections, cEdgeSelRaw );
                         if( cL1AlignmentPars.size() > 0 ){ 
                             LOG (INFO) << BOLDYELLOW << "\t\tFound " << +cL1AlignmentPars.size() << " combinations of alignment parameters for L1 data from SSA" << RESET;
+                            cScanEdgeT1=false;
                         }
                         else 
                             LOG (INFO) << BOLDYELLOW << "\t\t no alignment parameters found for L1 data from SSA" << RESET;
