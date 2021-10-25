@@ -98,10 +98,10 @@ void SSAInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
     LOG(INFO) << GREEN << "SSA Alignment" << RESET;
     this->WriteChipReg(pChip, "ReadoutMode", 2);
     uint8_t cAlignmentPattern = 0xAA;
-    for(uint8_t cLineId = 0; cLineId < 9; cLineId++)
+    for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
     {
         std::stringstream cRegName;
-        if( cLineId < 8 ) cRegName << "OutPattern" << +cLineId; 
+        if( cLineId < 7 ) cRegName << "OutPattern" << +cLineId; 
         else cRegName << "OutPattern7/FIFOconfig";
         this->WriteChipReg(pChip, cRegName.str(), cAlignmentPattern);
     }
