@@ -258,7 +258,7 @@ void LatencyScan::ScanLatency()
                                     std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
-                                    if( cPclstrs.size() > 0 || cSclstrs.size() > 0 )
+                                    if( cPclstrs.size() > 0 && cSclstrs.size() > 0 )
                                         LOG (DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId 
                                         << " ROC#" << +cChip->getId()%8 << " "
                                         << +cPclstrs.size() << " P-clusters " 
@@ -266,7 +266,7 @@ void LatencyScan::ScanLatency()
                                         << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
-                                        LOG (DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width " << +cPclstr.fWidth << RESET;
+                                        if( cSclstrs.size() > 0 ) LOG (DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width " << +cPclstr.fWidth << RESET;
                                         for( uint8_t cId=0; cId<(1+cPclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())
@@ -280,7 +280,7 @@ void LatencyScan::ScanLatency()
                                     }
                                     for(auto& cSclstr: cSclstrs)
                                     {
-                                        LOG (DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId()%8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
+                                        if( cPclstrs.size() > 0 )  LOG (DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId()%8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
                                         for( uint8_t cId=0; cId<(1+cSclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())

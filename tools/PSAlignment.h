@@ -40,7 +40,7 @@ class PSAlignment : public Tool
     bool                                     AlignInputs(Ph2_HwDescription::BeBoard* pBoard, uint8_t pChipId=0);
     void                                     MapMPAOutputs(std::string pSetupType = "PSModule");
     bool                                     Align();
-    std::vector<std::pair<uint8_t, uint8_t>> AlignL1(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections);
+    std::vector<std::pair<uint8_t, uint8_t>> AlignL1(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections, uint8_t pEdgeSelRaw = 1);
     std::vector<std::pair<uint8_t, uint8_t>> AlignStubs(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections, uint16_t pLatency);
     std::vector<std::pair<uint8_t, uint8_t>> AlignChip(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections, uint16_t pLatency);
     void                                     Running() override;
@@ -80,8 +80,10 @@ class PSAlignment : public Tool
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
     DetectorDataContainer fAlParsContainer;
+    DetectorDataContainer fStubAlParsContainer;
     DetectorDataContainer fL1AlParsContainer; 
 
+    bool FindLatency( Ph2_HwDescription::BeBoard* pBoard, uint8_t pChipId , std::vector<Ph2_HwInterface::Injection> pInjections, uint8_t pEdgeSelT1);
     void PrintAlignmentParameters(MPAInputAlignment pPar)
     {
         LOG (INFO) << BOLDGREEN << "########################" << RESET;
@@ -127,13 +129,12 @@ class PSAlignment : public Tool
         fReadoutChipInterface->WriteChipReg(pChip, "StubInputPhase", pPar.fStubInputPhase);
         fReadoutChipInterface->WriteChipReg(pChip, "RetimePix", pPar.fRetimePix);
     }
-    void ConfigureAllInputs(Ph2_HwDescription::ReadoutChip* pChip, MPAInputAlignment pPar)
+    void ConfigureAllInputs(Ph2_HwDescription::ReadoutChip* pChip, MPAInputAlignment pPar, uint8_t pPrint=0)
     {
-        uint8_t cPrint=0;
         LOG (INFO) << BOLDGREEN << "MPA#" << +pChip->getId() << " - configuring alignment inputs [L1 + Stubs]" << RESET;
         PrintAlignmentParameters(pPar);
-        ConfigureRawInputs(pChip, pPar,cPrint);
-        ConfigureStubInputs(pChip, pPar,cPrint);
+        ConfigureRawInputs(pChip, pPar,pPrint);
+        ConfigureStubInputs(pChip, pPar,pPrint);
     }
     
 

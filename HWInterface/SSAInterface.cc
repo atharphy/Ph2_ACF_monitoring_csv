@@ -585,23 +585,25 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     auto cRegItem = pChip->getRegMap().find(pRegNode)->second; 
     if( fTrackRegisters ) UpdateModifiedRegMap(pChip,  cRegItem.fAddress); 
     cRegItem.fValue = pValue & 0xFF;
+    bool cCheckReadback = (pRegNode.find("_ALL") != std::string::npos) ? false : pVerifLoop;
+    cCheckReadback = cCheckReadback && (cRegItem.fStatusReg == 0);
     if(!lpGBTFound())
     {
         std::vector<uint32_t> cVec;
-        fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId() % 8, cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId() % 8, cVec, cCheckReadback, true);
         uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, cCheckReadback);
     }
     else
     {
-        bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
-        cSuccess     = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue, cVerify);
+        // bool cVerify = cCheckReadback && (cRegItem.fStatusReg == 0);
+        cSuccess     = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue, cCheckReadback);
         if(cSuccess) pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
     }
     if(cSuccess && !lpGBTFound()) // check is done in lpGBTInterface for opto
     {
-        bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
-        cSuccess     = (cVerify) ? (ReadChipReg(pChip, pRegNode) == pValue) : true;
+        // bool cVerify = cCheckReadback && (cRegItem.fStatusReg == 0);
+        cSuccess     = (cCheckReadback) ? (ReadChipReg(pChip, pRegNode) == pValue) : true;
     }
     if(cSuccess)
     {

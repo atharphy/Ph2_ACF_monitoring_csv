@@ -28,8 +28,8 @@ BX0_ALIGNMENT_LINE                              0x00    0xA8    0x00    0x00
 *--------------------------------------------------------------------------------
 L1_INPUT_TIMEOUT_VALUE0                         0x00    0x7F    0xE0    0xFF
 L1_INPUT_TIMEOUT_VALUE1                         0x00    0x80    0x01    0xFF
-L1_OUTPUT_TIMEOUT_VALUE0                        0x00    0x81    0x00    0xFF
-L1_OUTPUT_TIMEOUT_VALUE1                        0x00    0x82    0x04    0xFF
+*L1_OUTPUT_TIMEOUT_VALUE0                        0x00    0x81    0x00    0xFF
+*L1_OUTPUT_TIMEOUT_VALUE1                        0x00    0x82    0x04    0xFF
 *--------------------------------------------------------------------------------
 * Word-aligner configuration 
 *--------------------------------------------------------------------------------

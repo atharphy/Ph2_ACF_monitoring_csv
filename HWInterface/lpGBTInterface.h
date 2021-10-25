@@ -199,6 +199,14 @@ class lpGBTInterface : public ChipInterface
     // }
     uint8_t AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    void ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
+                             const std::vector<uint8_t>& pGroups,
+                             const std::vector<uint8_t>& pChannels,
+                             uint8_t                     pDriveStr,
+                             uint8_t                     pPreEmphMode,
+                             uint8_t                     pPreEmphStr,
+                             uint8_t                     pPreEmphWidth,
+                             uint8_t                     pInvert);
     
   protected:
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
@@ -209,14 +217,6 @@ class lpGBTInterface : public ChipInterface
     void SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
     void ConfigureRxAlignmentMode(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode);
-    void ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
-                             const std::vector<uint8_t>& pGroups,
-                             const std::vector<uint8_t>& pChannels,
-                             uint8_t                     pDriveStr,
-                             uint8_t                     pPreEmphMode,
-                             uint8_t                     pPreEmphStr,
-                             uint8_t                     pPreEmphWidth,
-                             uint8_t                     pInvert);
     void ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
                          const std::vector<uint8_t>& pClock,
                          uint8_t                     pFreq,

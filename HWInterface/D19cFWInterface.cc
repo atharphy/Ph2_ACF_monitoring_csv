@@ -20,7 +20,7 @@
 #include <time.h>
 #include <uhal/uhal.hpp>
 #include <algorithm>
-uint8_t cLpGBTI2CHack = false;
+uint8_t cLpGBTI2CHack = true;
 // #pragma GCC diagnostic ignored "-Wpedantic"
 
 using namespace Ph2_HwDescription;
@@ -4133,7 +4133,7 @@ void D19cFWInterface::ChipReSync()
     bool    cWithCIC = (fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2);
     uint8_t cBC0     = (cWithCIC && fIs2S) ? 1 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
-    //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 void D19cFWInterface::ChipTestPulse()
 {

@@ -120,6 +120,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("allChan", "a");
 
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
+    cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
     
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
@@ -312,7 +313,8 @@ int main(int argc, char* argv[])
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Initialise();
         cPSAlignment.MapMPAOutputs();
-
+        cPSAlignment.Reset();
+        
         LinkAlignmentOT cLinkAlignment; 
         cLinkAlignment.Inherit(&cTool);
         try
@@ -338,7 +340,12 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
-        
+
+    }
+    
+    if(!cmd.foundOption("read") && cmd.foundOption("realign"))
+    {
+
         // time align stubs with L1 data in the BE 
         bool cSkipBEstubs = (cmd.foundOption("skipAlignment")) && ( cSkip.find("all") != std::string::npos || cSkip.find("beStubs") != std::string::npos );
         if( cSkipBEstubs ) LOG (INFO) << BOLDBLUE << "Will skip time alignment of stub data with L1 data in the BE " << RESET;
@@ -355,13 +362,25 @@ int main(int argc, char* argv[])
         bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && ( cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos );
         if( cSkipMPAin ) LOG (INFO) << BOLDBLUE << "Will skip alignment of SSA output data (L1+stubs) to MPAs " << RESET;
         else
-        { 
+        {
+            // map MPA outputs for PS module
+            PSAlignment cPSAlignment;
+            cPSAlignment.Inherit(&cTool);
+            cPSAlignment.Initialise();
+            cPSAlignment.MapMPAOutputs();
             LOG (INFO) << BOLDBLUE << "Performing alignment of SSA output data (L1+stubs) to MPAs " << RESET;
             cPSAlignment.Align();
+            cPSAlignment.Reset();
+            cPSAlignment.dumpConfigFiles();
         }
-        cPSAlignment.dumpConfigFiles();
-        cPSAlignment.Reset();
     }
+    
+    // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+    // StubBackEndAlignment cStubBackEndAligner;
+    // cStubBackEndAligner.Inherit(&cTool);
+    // cStubBackEndAligner.Start(0);
+    // cStubBackEndAligner.waitForRunToBeCompleted();
+    
     // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets") && !cmd.foundOption("read"))
     {
@@ -500,7 +519,7 @@ int main(int argc, char* argv[])
                 uint8_t                  cTriggerSource   = 6;
                 uint16_t                 cDelayAfterReset = 100;
                 uint16_t                 cDelayTillNext   = 400;
-                uint8_t                  cTriggerMult     = 3; 
+                uint8_t                  cTriggerMult     = 0; 
                 std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse" , "misc.trigger_multiplicity" };
                 std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext, cTriggerMult };
                 std::vector<uint16_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
