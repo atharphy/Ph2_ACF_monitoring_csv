@@ -147,8 +147,15 @@ void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const 
                     //uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows(); 
                     //uint32_t cCol = (cTestChannelGroup->getNumberOfCols() > 1 ) ? cChnl/cTestChannelGroup->getNumberOfRows() : 1; 
                     if(cTestChannelGroup->isChannelEnabled(cChnl)) { 
-                        //LOG (INFO) << BOLDBLUE << cChnl << "[R" << cRow << ",C" << cCol << "]" << ":" << cHit << RESET;
-                        chip->getChannelContainer<Occupancy>()->at(cChnl).fOccupancy += cHit; 
+                        uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows(); 
+                        uint32_t cCol;
+                        if( cTestChannelGroup->getNumberOfCols() == 0 ) cCol = 0; 
+                        else  cCol = cChnl/cTestChannelGroup->getNumberOfRows();
+                        if(cTestChannelGroup ->isChannelEnabled(cRow, cCol ))
+                        { 
+                            if( cChnl < 10 || cChnl > 15*120 + 110 ) LOG (INFO) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cHit << RESET;
+                        }
+                        chip->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
                         cOcc += cHit;
                     }
                     cChnl++;

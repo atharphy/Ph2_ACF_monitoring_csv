@@ -430,9 +430,15 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                         auto                           theChip = (*theHybrid)[chipIndex];
                         HybridContainer::QueryFunction theQueryFunctor;
                         if(theQueryFunctor(theChip))
+                        {
+                            std::cout << "Matched... index " << chipIndex << " new index " << theNewChipIndex << "\n";
                             theChip->setIndex(theNewChipIndex++);
+                        }
                         else
+                        {
+                            std::cout << "Did not match...\n";
                             theChip->setIndex(0xFFFF);
+                        }
                     }
                     theHybrid->size_ = theNewChipIndex;
                 }

@@ -24,6 +24,27 @@ PSInterface::PSInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(p
 }
 PSInterface::~PSInterface() {}
 
+bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+{
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
+        LOG (INFO) << BOLDMAGENTA << "Masking channels and setting injection schema MPA PS Interface" << RESET;
+        return theMPAInterface->maskChannelsAndSetInjectionSchema(pChip, group , mask, inject, pVerifLoop); 
+    }
+    else { 
+        return theSSAInterface->maskChannelsAndSetInjectionSchema(pChip, group , mask, inject, pVerifLoop); 
+    }
+}
+bool PSInterface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+{
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
+        LOG (INFO) << BOLDMAGENTA << "ConfigureChipOriginalMask MPA PS Interface" << RESET;
+        return theMPAInterface->ConfigureChipOriginalMask(pChip, pVerifLoop, pBlockSize);
+    }
+    else { 
+        return theSSAInterface->ConfigureChipOriginalMask(pChip, pVerifLoop, pBlockSize);
+    }
+}
+
 // To generalize
 uint16_t PSInterface::ReadChipReg(Chip* pPS, const std::string& pRegName)
 {

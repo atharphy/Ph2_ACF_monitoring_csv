@@ -69,6 +69,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     LOG(INFO) << BOLDRED << "I8" << RESET;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
+    LOG(INFO) << " Number of enabled channels " << fChannelGroupHandler->allChannelGroup()->getNumberOfEnabledChannels() << " " << +fChannelGroupHandler->allChannelGroup()->areAllChannelsEnabled() << RESET;
 
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
@@ -104,7 +105,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
                 // set all SSAs + MPAs to output data in async mode
                 for(auto cROC: *cHybrid)
                 {
-                    // TBC - what about MPA here?
                     fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
                 }
             }

@@ -144,7 +144,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("DataMonitor", "Data monitor" , ArgvParser::OptionRequiresValue);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
-    
+    //
+    cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::NoOptionAttribute);
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -203,6 +205,32 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
 
+    if(cmd.foundOption("readTemperatures"))
+    {
+        LOG(INFO) << BOLDBLUE << "Reading temperatures from lpGBT-ADCs.." << RESET;
+        for(const auto cBoard: *cTool.fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT = cOpticalGroup->flpGBT;
+                if(clpGBT == nullptr) continue;
+
+                std::vector<std::string> cTemperatures={"TEMP","ADC4"};
+                cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, 0xff);
+                for( auto cTempADC : cTemperatures )
+                {
+                    std::vector<float>   cMeasurements(0);
+                    for( uint8_t cIndx=0;cIndx<10; cIndx++)
+                    {
+                        cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC));
+                    }
+                    float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+                    LOG (INFO) << BOLDBLUE << cTempADC << " : " << cMean << RESET;
+                }
+                cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, 0x00);
+            } // configure lpGBT
+        }
+    }
     
     if(cmd.foundOption("calibrateADC"))
     {
@@ -519,9 +547,8 @@ int main(int argc, char* argv[])
                 uint8_t                  cTriggerSource   = 6;
                 uint16_t                 cDelayAfterReset = 100;
                 uint16_t                 cDelayTillNext   = 400;
-                uint8_t                  cTriggerMult     = 0; 
-                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse" , "misc.trigger_multiplicity" };
-                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext, cTriggerMult };
+                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse" };
+                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext };
                 std::vector<uint16_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
                 std::vector<std::pair<std::string, uint32_t>> cRegVec;
                 cRegVec.clear();
@@ -732,23 +759,102 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
     {
-        bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
-        LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
-        t.start();
-        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoise cPedeNoise;
-        cPedeNoise.Inherit(&cTool);
-        //auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==15);};
-        auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
-        cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
-        cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        cPedeNoise.measureNoise();
-        cPedeNoise.writeObjects();
-        cPedeNoise.dumpConfigFiles();
-        cTool.fDetectorContainer->resetReadoutChipQueryFunction();
-        t.stop();
-        t.show("Time to Scan Pedestals and Noise");
+
+        auto cSetting       = cTool.fSettingsMap.find("PedeNoisePulseAmplitude");
+        int  cInjectionAmpl = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 255;
+                
+        for(auto cBoard: *cTool.fDetectorContainer)
+        {
+            // for(auto cOpticalGroup: *cBoard)
+            // {
+            //     for(auto cHybrid: *cOpticalGroup)
+            //     {
+            //         for(auto cChip: *cHybrid)
+            //         {
+            //             if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
+            //             cTool.fReadoutChipInterface->WriteChipReg( cChip, "AnalogueAsync", 1 );
+            //         }
+            //         for(auto cChip: *cHybrid)
+            //         {
+            //             if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
+            //             cTool.fReadoutChipInterface->WriteChipReg( cChip, "AnalogueAsync", 1 );
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "ReadoutMode", 2 );
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine0", 0xFE ); // 
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine1", 0xAA ); // 
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine2", 0x00 );
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine3", 0x00 );
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine4", 0x00 );
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine5", 0x00 );
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine6", 0x00 );
+            //             // cTool.fReadoutChipInterface->WriteChipReg( cChip, "OutPatternStubLine7", 0x00 );
+            //             // auto cMode = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ReadoutMode");
+            //             // LOG (INFO) << BOLDBLUE << "Readout mode is " << +cMode << RESET;
+            //             // auto cOutPattern = cTool.fReadoutChipInterface->ReadChipReg( cChip, "OutPattern0");
+            //             // LOG (INFO) << BOLDBLUE << "OutPattern0  is " << +cOutPattern << RESET;
+            //         }
+            //     }
+            // }
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
+            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", cInjectionAmpl);
+        }
+        cTool.setFWTestPulse();
+        for(auto cBoard: *cTool.fDetectorContainer)
+        {
+            cBoard->setEventType(EventType::PSAS);
+            for( uint16_t cThreshold=190; cThreshold >= 190 ; cThreshold-=5)
+            {
+                cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", cThreshold);
+                LOG(INFO) << BOLDBLUE << "Threshold is " << cThreshold << "\t\t... measuring occupancy...." << RESET;
+                for( uint16_t cDelay=120*16*8-3*8+1; cDelay < 120*16*8-3*8+2; cDelay +=1)
+                { 
+                    LOG (INFO) << BOLDMAGENTA << "Async Delay SSA 0x" << std::hex << cDelay << std::dec << RESET;
+                    for(auto cOpticalGroup: *cBoard)
+                    {
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            for(auto cChip: *cHybrid)
+                            {
+                                if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
+                                cTool.fReadoutChipInterface->WriteChipReg( cChip, "AsyncDelay", cDelay );
+                                //cTool.fReadoutChipInterface->WriteChipReg( cChip, "ReadoutMode", 1 );
+                                auto cMode = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ReadoutMode");
+                                auto cCnfg = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ENFLAGS_S2");
+                                uint8_t cDly_LSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
+                                uint8_t cDly_MSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
+                                //uint16_t  cDly  = (cDly_MSB << 8 ) | cDly_LSB;
+                                LOG (DEBUG) << BOLDBLUE << "Readout mode is " << +cMode 
+                                    << " ENFLAGS_ALL is set to 0x" << std::hex << +cCnfg 
+                                    << std::dec
+                                    << " Delay value LSB is 0x" << std::hex << +cDly_LSB << std::dec 
+                                    << " Delay value MSB is 0x" << std::hex << +cDly_MSB << std::dec 
+                                    << RESET;
+                            }
+                        }
+                    }
+                    cTool.ReadNEvents(cBoard, 42);
+                }
+                //const std::vector<Event*>& cEvents = cTool.GetEvents();
+                //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->at(cBoard)), fTestChannelGroup);
+            }
+        }
+
+        // bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
+        // LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
+        // t.start();
+        // // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        // // tool provides an Inherit(Tool* pTool) for this purpose
+        // PedeNoise cPedeNoise;
+        // // auto myFunction = [](const ChipContainer *theChip){return theChip->getId() == 8;};
+        // // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
+        // cPedeNoise.Inherit(&cTool);
+        // cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
+        // cPedeNoise.measureSCurves(100);
+        // // cPedeNoise.measureNoise();
+        // cPedeNoise.writeObjects();
+        // cPedeNoise.dumpConfigFiles();
+        // // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
+        // t.stop();
+        // t.show("Time to Scan Pedestals and Noise");
     }
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))

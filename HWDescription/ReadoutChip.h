@@ -79,9 +79,11 @@ class ReadoutChip
         {
             cRow = cChnl%fChipOriginalMask->getNumberOfRows(); 
             cCol = cChnl/fChipOriginalMask->getNumberOfRows();
+            std::cout << cRow << " , " << cCol << "\n";
         }
         fChipOriginalMask->disableChannel(cRow, cCol);
       }
+      std::cout << "Channel mask has " << fChipOriginalMask->getNumberOfEnabledChannels() << " enabled channels\n";
     }
   
   protected:

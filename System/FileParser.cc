@@ -550,7 +550,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA->setOptical(pHybrid->isOptical());
     cSSA->setOpticalId(pHybrid->getOpticalId());
-    cSSA->setNumberOfChannels(120);
+    cSSA->setNumberOfChannels(NSSACHANNELS);
     cSSA->setClockFrequency(320);
     this->parseSSASettings(pSSAnode, cSSA);
 }
@@ -585,7 +585,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     ReadoutChip* cSSA2 = pHybrid->addChipContainer(cChipId, new SSA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA2->setOptical(pHybrid->isOptical());
     cSSA2->setOpticalId(pHybrid->getOpticalId());
-    cSSA2->setNumberOfChannels(120);
+    cSSA2->setNumberOfChannels(NSSACHANNELS);
     cSSA2->setClockFrequency(320);
     this->parseSSASettings(pSSAnode, cSSA2);
 }
@@ -611,7 +611,7 @@ void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::stri
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
     cMPA->setOptical(pHybrid->isOptical());
     cMPA->setOpticalId(pHybrid->getOpticalId());
-    cMPA->setNumberOfChannels(1920);
+    cMPA->setNumberOfChannels(NSSACHANNELS,NMPACOLS);
     cMPA->setClockFrequency(320);
     this->parseMPASettings(pHybridNode, cMPA);
 }
@@ -914,6 +914,16 @@ void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHyb
                 if( cROC->getId() != cFeId ) continue;
                 os << GREEN << "|\t|\t|\t|\t|\t   ---- Applying channel mask to ROC" << +cROC->getId() << "\n";
                 cROC->setChipOriginalMask( cMapOfMaks[cFeId] );
+            }
+        }
+        if( cMapOfMaks.size() == 0 )
+        {
+            os << BOLDCYAN << "\t|\t|\t| Nothing masked on hybrid#" << +pHybrid->getId() << "\n";
+            for( auto cROC : *pHybrid ) 
+            {
+                os << GREEN << "|\t|\t|\t|\t|\t   ---- Applying no channel mask to ROC" << +cROC->getId() << "\n";
+                std::vector<uint16_t> cEmptyList(0);
+                cROC->setChipOriginalMask( cEmptyList );
             }
         }
     }

@@ -39,6 +39,7 @@ class PSAlignment : public Tool
     bool                                     AlignStubInputs(Ph2_HwDescription::BeBoard* pBoard);
     bool                                     AlignInputs(Ph2_HwDescription::BeBoard* pBoard, uint8_t pChipId=0);
     void                                     MapMPAOutputs(std::string pSetupType = "PSModule");
+    void                                     ConfigureDefaultAlignmentParameters(std::string pSetupType = "PSModule");
     bool                                     Align();
     std::vector<std::pair<uint8_t, uint8_t>> AlignL1(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections, uint8_t pEdgeSelRaw = 1);
     std::vector<std::pair<uint8_t, uint8_t>> AlignStubs(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Ph2_HwInterface::Injection> pInjections, uint16_t pLatency);

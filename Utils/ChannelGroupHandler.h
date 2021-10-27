@@ -102,6 +102,8 @@ class ChannelGroup : public ChannelGroupBase
     {
         std::bitset<R * C> tmpBitset;
         tmpBitset = this->channelsBitset_ & static_cast<const ChannelGroup<R, C>*>(mask)->channelsBitset_;
+        //std::cout << tmpBitset << "\n";
+        // throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
         return tmpBitset.count();
     }
 

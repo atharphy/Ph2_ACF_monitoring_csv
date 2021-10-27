@@ -155,6 +155,34 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
         }         // optical group
     }
 }
+void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalReadout: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                // map MPA outputs
+                for(auto cChip: *cHybrid) // for each chip (makes sense)
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+
+                    // mapping for PS module
+                    // mapping for probe station/etc. can be different
+                    if(pSetupType.find("PSModule") != std::string::npos)
+                    {
+                        fReadoutChipInterface->WriteChipReg(cChip,"RetimePix",0x6);
+                        fReadoutChipInterface->WriteChipReg(cChip,"LatencyRx320",0x14);                       
+                        fReadoutChipInterface->WriteChipReg(cChip,"LatencyRx40",0x01);                       
+                        fReadoutChipInterface->WriteChipReg(cChip,"EdgeSelTrig",0xFF);                       
+                        fReadoutChipInterface->WriteChipReg(cChip,"EdgeSelT1Raw",0x03);                       
+                    }
+                } // chip
+            }     // hybrid
+        }         // optical group
+    }
+}
 bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
 {
     bool     cPhaseFound = true;
@@ -699,19 +727,25 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs( ReadoutChip* p
                             for( auto cInjection : pInjections )
                             {
                                 bool cMatchedStub=false;
+                                uint8_t cMatchedStubIndex=0;
                                 for(auto cStub: cStubs)
                                 {
                                     if( cMatchedStub ) continue;
                                     cMatchedStub = (2*cInjection.fRow == cStub.getPosition() && cInjection.fColumn == cStub.getRow() );
-
-                                    if( cMatchedStub ) 
-                                        LOG(INFO) << BOLDGREEN << "\t\tStub#" << +cStubCntr << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend()
-                                                  << RESET;
-                                    else
-                                        LOG(INFO) << BOLDRED << "\t\tStub#" << +cStubCntr << " Position " << +cStub.getPosition() << " - Row " << +cStub.getRow() << " - Bend " << +cStub.getBend()
-                                                  << RESET;
+                                    if( !cMatchedStub ) cMatchedStubIndex++;
                                     cStubCntr++;
                                 }
+                                if( cMatchedStub ) 
+                                    LOG(INFO) << BOLDGREEN << "\t\tStub#" << +cMatchedStubIndex << " Position " << +cStubs[cMatchedStubIndex].getPosition() 
+                                        << " - Row " << +cStubs[cMatchedStubIndex].getRow() 
+                                        << " - Bend " << +cStubs[cMatchedStubIndex].getBend()
+                                        << RESET;
+                                // else
+                                //     LOG(INFO) << BOLDRED << "\t\tStub#" << +cStubCntr << " Position " << +cStubs[cMatchedStubIndex].getPosition() 
+                                //         << " - Row " << +cStubs[cMatchedStubIndex].getRow() 
+                                //         << " - Bend " << +cStubs[cMatchedStubIndex].getBend()
+                                //         << RESET;
+                                
                                 cMatchedStubSeeds += (cMatchedStub)? 1 : 0; 
                             }
                             cNmatch = cNmatch && (cMatchedStubSeeds == pInjections.size());
@@ -938,7 +972,6 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
     uint32_t cNevents =10; 
     uint16_t cHitLatency             = 0;
     uint16_t cDelay         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    //fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
     auto     cTriggerMult   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     int      cOptimalOffset = -1 + (2*(cTriggerMult > 1)); // want triggered event to be in trigger#2 of the burst 
     
@@ -1051,12 +1084,12 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     cInjection.fRow    = 10;
     cInjection.fColumn = 2;
     cInjections.push_back(cInjection);//0
-    // cInjection.fRow    = 20;
-    // cInjection.fColumn = 3;
-    // cInjections.push_back(cInjection);//1
-    // cInjection.fRow    = 30;
-    // cInjection.fColumn = 4;
-    // cInjections.push_back(cInjection);//2
+    cInjection.fRow    = 20;
+    cInjection.fColumn = 3;
+    cInjections.push_back(cInjection);//1
+    cInjection.fRow    = 30;
+    cInjection.fColumn = 4;
+    cInjections.push_back(cInjection);//2
     // cInjection.fRow    = 40;
     // cInjection.fColumn = 5;
     // cInjections.push_back(cInjection);//3

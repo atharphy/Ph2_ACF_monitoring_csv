@@ -434,6 +434,10 @@ class ChipDataContainer
 
     uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
     {
+        std::cout << " Index " << theContainer->getIndex() 
+            << " # of enabled channels " << cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask()) 
+            << " # of events " << numberOfEvents 
+            << "\n";
         if(container_ != nullptr) container_->normalize(numberOfEvents);
         if(summary_ != nullptr) summary_->makeSummaryOfChannels(this, static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
         return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());

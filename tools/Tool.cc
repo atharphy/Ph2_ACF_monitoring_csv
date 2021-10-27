@@ -1036,7 +1036,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                             currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
 
-                        //LOG (INFO) << BOLDBLUE <<previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                        LOG (INFO) << BOLDBLUE << "\t.. current setting is " << currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
@@ -1202,7 +1202,9 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, group, fMaskChannelsFromOtherGroups, fTestPulse); }
+                        for(auto cChip: *cHybrid) { 
+                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, group, fMaskChannelsFromOtherGroups, fTestPulse); 
+                        }
                     }
                 }
             }
@@ -1224,6 +1226,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     }
     else
     {
+        LOG (INFO) << BOLDYELLOW << "Scan all channels..." << RESET;
         groupScan->setGroup(fChannelGroupHandler->allChannelGroup());
         (*groupScan)();
     }
@@ -1303,6 +1306,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS  || fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS )
     {
         numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+        fNReadbackEvents =numberOfEvents;
     }
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
     {
@@ -1310,7 +1314,39 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     }
     if( !fUseReadNEvents ) numberOfEvents = fNReadbackEvents;
 
-    fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+    LOG (INFO) << BOLDYELLOW << " Normalizing assuming " << +numberOfEvents << " events and " << fChannelGroupHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+    auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+    LOG (INFO) << BOLDYELLOW << cTmp << RESET;
+    // for(auto opticalGroup: *fDetectorDataContainer->at(boardIndex))
+    // {
+    //     for(auto hybrid: *opticalGroup)
+    //     {
+    //         for(auto chip: *hybrid)
+    //         {
+    //             float cOcc=0; 
+    //             for(uint16_t cChnl=0 ; cChnl < chip->size(); cChnl++)
+    //             {
+    //                 cOcc += chip->getChannelContainer<Occupancy>()->at(cChnl).fOccupancy ;
+                        
+    //             }
+    //             chip->getSummary<Occupancy>().fOccupancy = (cOcc/chip->size())/numberOfEvents;
+    //             LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy [from summary] " << chip->getSummary<Occupancy>().fOccupancy << RESET;
+    //             LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << (cOcc/chip->size()) << RESET;
+            
+                   
+    //         }
+    //     }
+    // }
+    for(auto opticalGroup: *fDetectorDataContainer->at(boardIndex))
+    {
+        for(auto hybrid: *opticalGroup)
+        {
+            for(auto chip: *hybrid)
+            {
+                LOG (INFO) << BOLDYELLOW << "ROC#" << +chip->getId() << " chip occupancy [from summary] " << chip->getSummary<Occupancy>().fOccupancy << RESET;
+            }
+        }
+    }
     fUseReadNEvents=cUseReadNEvents;
     // for(auto opticalGroup: *fDetectorDataContainer)
     // {
