@@ -208,13 +208,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     size_t nMaskedPixelsPerCalib = 0;
-
-                    theOccContainer->at(cBoard->getIndex())
-                        ->at(cOpticalGroup->getIndex())
-                        ->at(cHybrid->getIndex())
-                        ->at(cChip->getIndex())
-                        ->getSummary<GenericDataVector, OccupancyAndPh>()
-                        .fOccupancy /= nTRIGxEvent;
+                    if(injType == INJtype::None)
+                        theOccContainer->at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
+                            ->getSummary<GenericDataVector, OccupancyAndPh>()
+                            .fOccupancy /= nTRIGxEvent;
 
                     LOG(INFO) << GREEN << "Average occupancy for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
@@ -232,12 +232,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
                             {
-                                theOccContainer->at(cBoard->getIndex())
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
-                                    ->getChannel<OccupancyAndPh>(row, col)
-                                    .fOccupancy /= nTRIGxEvent;
+                                if(injType == INJtype::None)
+                                    theOccContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<OccupancyAndPh>(row, col)
+                                        .fOccupancy /= nTRIGxEvent;
 
                                 float occupancy = theOccContainer->at(cBoard->getIndex())
                                                       ->at(cOpticalGroup->getIndex())
