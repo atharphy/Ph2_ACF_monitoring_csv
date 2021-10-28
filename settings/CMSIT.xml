@@ -156,7 +156,7 @@
 
         <Register name="ext_tlu_reg1">
           <Register name="dio5_ch1_thr"> 128 </Register>
-          <Register name="dio5_ch2_thr"> 128 </Register>
+          <Register name="dio5_ch2_thr">  40 </Register>
         </Register>
 
         <Register name="ext_tlu_reg2">
