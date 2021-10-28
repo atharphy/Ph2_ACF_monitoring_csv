@@ -779,7 +779,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void SetForceStart(bool bStart) {}
 
     bool CheckStartPattern();
-    bool DecodeRawCounterDataPS(PSCounterData &pFeCounters, size_t pNFEs); 
+    bool DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::vector<uint8_t> pIds); 
     bool GetCounterData(uint8_t pRawMode, size_t pChipId, size_t pHybridId ); 
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //

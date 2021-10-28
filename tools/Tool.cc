@@ -14,6 +14,10 @@
 #include "../Utils/Occupancy.h"
 #include <future>
 
+
+#include "../Utils/SSAChannelGroupHandler.h"
+#include "../Utils/MPAChannelGroupHandler.h"
+
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -1036,7 +1040,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                             currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
 
-                        LOG (INFO) << BOLDBLUE << "\t.. current setting is " << currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                        LOG (DEBUG) << BOLDBLUE << "\t.. current setting is " << currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
@@ -1049,7 +1053,48 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
-
+        //TO-DO.. generalize so that I don't need the MPA/SSA 
+        if(fNormalize==0)
+        {
+            auto& cDataContainerThisBrd = fDetectorDataContainer->at(boardIndex);
+            for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
+            {
+                auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getIndex());
+                for(auto cFe: *cOpticalGroup)
+                {
+                    auto& cDataContainerThisFE = cDataContainerThisOG->at(cFe->getIndex());
+                    for(auto cROC: *cFe)
+                    {
+                        auto& cDataContainerThisROC = cDataContainerThisFE->at(cROC->getIndex());
+                        auto& cSummary = cDataContainerThisROC->getSummary<Occupancy,Occupancy>();
+                        ChannelGroupHandler* cHandler; 
+                        if( cROC->getFrontEndType() == FrontEndType::MPA ) cHandler = new MPAChannelGroupHandler();
+                        else cHandler = new SSAChannelGroupHandler();
+                        LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << fNReadbackEvents 
+                            << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+                        float cGlobalOcc=0; 
+                        float cMaxOcc=1.0;
+                        size_t cNenabled=0;
+                        for( uint16_t cChnl=0; cChnl < cDataContainerThisROC->size(); cChnl++)
+                        {
+                            uint32_t cRow = cChnl%cHandler->allChannelGroup()->getNumberOfRows(); 
+                            uint32_t cCol;
+                            if( cHandler->allChannelGroup()->getNumberOfCols() == 0 ) cCol = 0; 
+                            else  cCol = cChnl/cHandler->allChannelGroup()->getNumberOfRows();
+                            if(cHandler->allChannelGroup()->isChannelEnabled(cRow, cCol ))
+                            { 
+                                cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy /= fNReadbackEvents;
+                                cGlobalOcc += cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
+                                cNenabled++;
+                                if( cChnl < 10 || cChnl > 15*120 + 110 ) LOG (DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+                            }
+                        }
+                        cGlobalOcc /= cNenabled;   
+                        cSummary.fOccupancy = std::min(cMaxOcc, cGlobalOcc);
+                    }
+                }
+            }
+        }
         // Determine if it is better or not
         for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
         {
@@ -1057,12 +1102,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
             {
                 for(auto cChip: *cHybrid)
                 {
+                    std::stringstream cOut; 
+                    cOut << "Occupancy ROC#" << +cChip->getId(); 
                     if(localDAC)
                     {
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
-                            // LOG (INFO) << BOLDBLUE << "localocc
-                            // "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<RESET;
+                            cOut << "\t[ local ] " << currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<"\n";
 
                             if(currentStepOccupancyContainer->at(boardIndex)
                                    ->at(cOpticalGroup->getIndex())
@@ -1089,8 +1135,9 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     }
                     else
                     {
-                        LOG (DEBUG) << BOLDBLUE <<
-                        "globalocc "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy<<RESET;
+                        auto& cCurrentDAC = currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                        cOut << "\t[ global] " <<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
+                             << " for a DAC value of " << cCurrentDAC;
 
                         if(currentStepOccupancyContainer->at(boardIndex)
                                ->at(cOpticalGroup->getIndex())
@@ -1114,6 +1161,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                                   .fOccupancy;
                         }
                     }
+                    LOG (INFO) << BOLDBLUE << cOut.str() << RESET;
                 }
             }
         }
@@ -1226,7 +1274,6 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     }
     else
     {
-        LOG (INFO) << BOLDYELLOW << "Scan all channels..." << RESET;
         groupScan->setGroup(fChannelGroupHandler->allChannelGroup());
         (*groupScan)();
     }

@@ -6,9 +6,9 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/EmptyContainer.h"
-#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
@@ -303,11 +303,10 @@ void PedeNoise::sweepSCurves()
     }
     this->enableTestPulse(fPulseAmplitude != 0);
     cStartValue = this->findPedestal(fPulseAmplitude == 0 );
-    
     if(fDisableStubLogic) disableStubLogic();
     LOG (INFO) << BLUE <<  "Sweep of S-curves will start at an average threshold of " <<cStartValue<< RESET ;
-    measureSCurves(cStartValue);
-    //scanScurves();
+    //measureSCurves(cStartValue);
+    scanScurves();
 
 
     //if(fDisableStubLogic) reloadStubLogic();
@@ -446,6 +445,16 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
     bool originalAllChannelFlag = this->fAllChan;
     if(forceAllChannels) this->SetTestAllChannels(true);
 
+    // figure  out if you should normalize or not 
+    uint8_t cNormalizationOrig = getNormalization();
+    uint8_t cNormalize=0;
+    if( cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA) ){ 
+        cNormalize=1;
+    }
+    LOG (INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
+    setNormalization(cNormalize);
+
+
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -464,9 +473,9 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                 for(auto cROC: *cFe)
                 {
                     uint16_t tmpVthr = 0;
-                    if(cWithCBC) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
-                    if(cWithSSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
-                    if(cWithMPA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("ThDAC0");
+                    if(cROC->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
+                    if(cROC->getFrontEndType() == FrontEndType::SSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
+                    if(cROC->getFrontEndType() == FrontEndType::MPA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("ThDAC0");
 
                     cMean += tmpVthr;
                     ++nCbc;
@@ -478,7 +487,7 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
     cMean /= nCbc;
 
     LOG(INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << RESET;
-
+    setNormalization(cNormalizationOrig);
     return cMean;
 }
 void PedeNoise::scanScurves()
@@ -727,12 +736,10 @@ void PedeNoise::scanScurves()
         #endif
         // for the other case - I don't know what to do ask Fabio 
         cStepCounter++;
-    }while(cContinueScan && cStepCounter < 1);
+    }while(cContinueScan && cStepCounter < 10);
 
     // return normalization back to original value
     setNormalization(cNormalizationOrig);
-    
-
 }
 void PedeNoise::measureSCurves(uint16_t pStartValue)
 {
