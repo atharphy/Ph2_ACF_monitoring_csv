@@ -30,6 +30,7 @@ void PedeNoise::cleanContainerMap()
 
 void PedeNoise::clearDataMembers()
 {
+    return;
     //delete fBoardRegContainer;
     delete fThresholdAndNoiseContainer;
     if( fDisableStubLogic ) 
@@ -44,19 +45,60 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
 
-    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    auto cType        = FrontEndType::CBC3;
+    cWithCBC=false;
+    cWithSSA=false;
+    cWithMPA=false;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                if( !cWithCBC )
+                {
+                    cWithCBC  = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end());
+                }
+                if( !cWithSSA )
+                {
+                    cWithSSA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end());
+                }
+                if( !cWithMPA )
+                {
+                    cWithMPA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end());
+                }
+            }
+        }
+    }
+    if( cWithCBC ) LOG  (INFO) << BOLDBLUE << "PedeNoise with CBCs" << RESET;
+    if( cWithSSA && !cWithMPA ) LOG  (INFO) << BOLDBLUE << "PedeNoise with SSAs" << RESET;
+    if( cWithMPA && !cWithSSA ) LOG  (INFO) << BOLDBLUE << "PedeNoise with MPAs" << RESET;
+    if( cWithSSA && cWithMPA  ) LOG  (INFO) << BOLDBLUE << "PedeNoise with SSAs+MPAs" << RESET; 
 
-    if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
-    if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
-    if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
+    // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    // cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
+    // cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    // cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    if(cWithCBC){ 
+        fChannelGroupHandler = new CBCChannelGroupHandler();
+        fChannelGroupHandler->setChannelGroupParameters(16, 2);//16*2*8
+    }
+    if(cWithSSA && !cWithMPA ){ 
+        fChannelGroupHandler = new SSAChannelGroupHandler();
+        fChannelGroupHandler->setChannelGroupParameters(5, 3);//5*3*8
+    }
+    if(cWithMPA && !cWithSSA ){ 
+        fChannelGroupHandler = new MPAChannelGroupHandler();
+        fChannelGroupHandler->setChannelGroupParameters(15, 16);//15*16*8
+    }
+    if(cWithMPA && cWithSSA ){ 
+        fChannelGroupHandler = new MPAChannelGroupHandler();
+    }
 
     initializeRecycleBin();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    //fChannelGroupHandler->setChannelGroupParameters(16, 2);
     // For async only -- to fix
-    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(120, 16);
+    //if(!cWithCBC && !(cWithMPA && cWithSSA) ) fChannelGroupHandler->setChannelGroupParameters(120, 16);
     fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -441,12 +483,22 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
 }
 void PedeNoise::scanScurves()
 {
-    float    cMaxOccupancy  = 4.; 
+    float    cMaxOccupancy  = 1.; 
     float    cLimit         = 0.01;
     int      cMinBreakCount =  5;//take from xml
     int      cStepSize      =  1;//take from xml 
     int      cInitialSign   = -1;
     DetectorDataContainer cCounts, cSigns, cThresholds , cStatus ;
+
+    // figure  out if you should normalize or not 
+    uint8_t cNormalizationOrig = getNormalization();
+    uint8_t cNormalize=0;
+
+    if( cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA) ){ 
+        cNormalize=1;
+    }
+    LOG (INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
+    setNormalization(cNormalize);
 
     ContainerFactory::copyAndInitChip<std::pair<int,int>>(*fDetectorContainer, cCounts);
     ContainerFactory::copyAndInitChip<int>(*fDetectorContainer, cSigns);
@@ -583,11 +635,51 @@ void PedeNoise::scanScurves()
         // measure occupancy for all BeBoards
         DetectorDataContainer* cOccContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer                       = cOccContainer;
+        float cGlbOcc = 0; 
+        size_t cNormGlblOcc=0; 
         for( auto cBoard :*fDetectorContainer ) 
         {
+            setNormalization(0);
             measureBeBoardData(cBoard->getIndex(), fEventsPerPoint, fNEventsPerBurst);
+            if(cNormalize==0)
+            {
+                auto& cDataContainerThisBrd = fDetectorDataContainer->at(cBoard->getIndex());
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getIndex());
+                    for(auto cFe: *cOpticalGroup)
+                    {
+                        auto& cDataContainerThisFE = cDataContainerThisOG->at(cFe->getIndex());
+                        for(auto cROC: *cFe)
+                        {
+                            auto& cDataContainerThisROC = cDataContainerThisFE->at(cROC->getIndex());
+                            ChannelGroupHandler* cHandler; 
+                            if( cROC->getFrontEndType() == FrontEndType::MPA ) cHandler = new MPAChannelGroupHandler();
+                            else cHandler = new SSAChannelGroupHandler();
+                            LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << +getNReadbackEvents() 
+                                << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+                            for( uint16_t cChnl=0; cChnl < cDataContainerThisROC->size(); cChnl++)
+                            {
+                                uint32_t cRow = cChnl%cHandler->allChannelGroup()->getNumberOfRows(); 
+                                uint32_t cCol;
+                                if( cHandler->allChannelGroup()->getNumberOfCols() == 0 ) cCol = 0; 
+                                else  cCol = cChnl/cHandler->allChannelGroup()->getNumberOfRows();
+                                if(cHandler->allChannelGroup()->isChannelEnabled(cRow, cCol ))
+                                { 
+                                    cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy /= getNReadbackEvents();
+                                    cGlbOcc += cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
+                                    if( cChnl < 10 || cChnl > 15*120 + 110 ) LOG (DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+                                }
+                                cNormGlblOcc++;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        float cGlbOcc = std::min( cMaxOccupancy, cOccContainer->getSummary<Occupancy, Occupancy>().fOccupancy );
+        if( cNormalize == 1 ) cGlbOcc = std::min( cMaxOccupancy, cOccContainer->getSummary<Occupancy, Occupancy>().fOccupancy );
+        else cGlbOcc = cGlbOcc/cNormGlblOcc;
+
         if( cStepCounter%2 == 0 ) LOG (INFO) << BOLDBLUE << "PedeNoise [Step#" << +cStepCounter << "] global occupancy is " << cGlbOcc << RESET;
 
         // now check if the occupancy has reached the limit 
@@ -635,7 +727,11 @@ void PedeNoise::scanScurves()
         #endif
         // for the other case - I don't know what to do ask Fabio 
         cStepCounter++;
-    }while(cContinueScan);
+    }while(cContinueScan && cStepCounter < 1);
+
+    // return normalization back to original value
+    setNormalization(cNormalizationOrig);
+    
 
 }
 void PedeNoise::measureSCurves(uint16_t pStartValue)

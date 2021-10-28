@@ -48,9 +48,9 @@ class PedeNoise : public Tool
     void Resume() override;
     void Reset();
 
-    void     measureSCurves(uint16_t pStartValue = 0);
     
   protected:
+    void     measureSCurves(uint16_t pStartValue = 0);
     uint16_t findPedestal(bool forceAllChannels = false);
     void     extractPedeNoise();
     void     disableStubLogic();

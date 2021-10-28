@@ -349,6 +349,8 @@ class Tool : public Ph2_System::SystemController
     int     getWait(){return fWait_ms;}
     size_t  getNReadbackEvents(){ return fNReadbackEvents;}
     void    setNReadbackEvents(size_t pNEvents){ fNReadbackEvents = pNEvents;}
+    void    setNormalization(uint8_t pNorm){ fNormalize = pNorm;}
+    uint8_t getNormalization(){ return fNormalize;}
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 
@@ -392,6 +394,7 @@ class Tool : public Ph2_System::SystemController
     bool                 fUseReadNEvents{1};
     int                  fWait_ms{100}; 
     size_t               fNReadbackEvents{0}; 
+    uint8_t              fNormalize{1};
     std::string getCalibrationName();
 };
 

@@ -1314,9 +1314,12 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     }
     if( !fUseReadNEvents ) numberOfEvents = fNReadbackEvents;
 
-    LOG (INFO) << BOLDYELLOW << " Normalizing assuming " << +numberOfEvents << " events and " << fChannelGroupHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
-    auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
-    LOG (INFO) << BOLDYELLOW << cTmp << RESET;
+    if( fNormalize )
+    {
+        LOG (INFO) << BOLDYELLOW << " Normalizing assuming " << +numberOfEvents << " events and " << fChannelGroupHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+        auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
+        LOG (INFO) << BOLDYELLOW << cTmp << RESET;
+    }
     // for(auto opticalGroup: *fDetectorDataContainer->at(boardIndex))
     // {
     //     for(auto hybrid: *opticalGroup)
@@ -1337,28 +1340,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     //         }
     //     }
     // }
-    for(auto opticalGroup: *fDetectorDataContainer->at(boardIndex))
-    {
-        for(auto hybrid: *opticalGroup)
-        {
-            for(auto chip: *hybrid)
-            {
-                LOG (INFO) << BOLDYELLOW << "ROC#" << +chip->getId() << " chip occupancy [from summary] " << chip->getSummary<Occupancy>().fOccupancy << RESET;
-            }
-        }
-    }
     fUseReadNEvents=cUseReadNEvents;
-    // for(auto opticalGroup: *fDetectorDataContainer)
-    // {
-    //     for(auto hybrid: *opticalGroup)
-    //     {
-    //         for(auto chip: *hybrid)
-    //         {
-    //             LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << chip->getSummary<Occupancy>().fOccupancy 
-    //                         << RESET;
-    //         }
-    //     }
-    // }
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup

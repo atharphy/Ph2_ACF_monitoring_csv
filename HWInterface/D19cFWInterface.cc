@@ -3120,7 +3120,7 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, size_t 
                                     // SSA1 only sends 119 counters 
                                     if( cWithSSA && pFeCounters[cFeId].size() <= 120 - 1 ) 
                                     {
-                                        if( cCounterValue != 0 ) LOG (INFO) << BOLDMAGENTA << "FEId[" << std::bitset<4>(cFeId&0x7) << "] : counter#" << pFeCounters[cFeId].size() << "\t" << cFld.first << "\t" << cSubStr << " [ " << cCounterValue << " ] " << RESET;
+                                        if( cCounterValue != 0 ) LOG (DEBUG) << BOLDMAGENTA << "FEId[" << std::bitset<4>(cFeId&0x7) << "] : counter#" << pFeCounters[cFeId].size() << "\t" << cFld.first << "\t" << cSubStr << " [ " << cCounterValue << " ] " << RESET;
                                     }
                                     else if( pFeCounters[cFeId].size() < 10 ) LOG (DEBUG) << BOLDBLUE << "FEId[" << std::bitset<4>(cFeId&0x7) << "] : counter#" << pFeCounters[cFeId].size() << "\t" << cFld.first << "\t" << cSubStr << " [ " << cCounterValue << " ] " << RESET;
                                     
@@ -3434,10 +3434,61 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                     cNFEs += (cChip->getFrontEndType()==FrontEndType::MPA)?1:0;
                 }
                 DecodeRawCounterDataPS(cPSModuleIter->second, cNFEs);
+                // now add caveat for MPA1/SSA 1
+                std::vector<uint8_t> cFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
+                std::vector<uint8_t> cFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
+                std::vector<uint8_t> cMapping = (cHybrid->getId()%2 == 0 ) ? cFeMappingPSR : cFeMappingPSL;
+                for( auto cFECounters : cPSModuleIter->second ) 
+                {
+                    auto cFeId = cFECounters.first;
+                    uint8_t cFromSSA = (cFeId >> 3);
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto& cIdCIC = cMapping[ cChip->getId()%8 ];
+                        if( cFromSSA && cChip->getFrontEndType() == FrontEndType::MPA ) continue;
+                        if( !cFromSSA && cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                        if( (cFeId&0x7) != cIdCIC ) continue; 
+                        
+                        //SSA1 last strip is missing from the fast counter readout 
+                        //MPA1 first pixel is 0 when read over the fast counter readout 
+                        //MPA1 last pixel is missing when read over the fast counter readout 
+                        std::vector<uint16_t> cChnls(0);
+                        cChnls.push_back( (cChip->getFrontEndType() == FrontEndType::MPA ) ? 0 : 120 -1 );
+                        if( cChip->getFrontEndType() == FrontEndType::MPA ) cChnls.push_back(120*16-1);
+                        std::vector<uint16_t> cCounterValues(0);
+                        for(auto cChnl : cChnls )
+                        {
+                            int cRowNumber       = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? 1 + cChnl / 120 : 1;
+                            int cPixelNumber     = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? 1 + cChnl % 120 : 0;
+                            int cBaseRegisterLSB = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? ((cRowNumber << 11) | (9 << 7) | cPixelNumber) : 0x0901 + cChnl;
+                            int cBaseRegisterMSB = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? ((cRowNumber << 11) | (10 << 7) | cPixelNumber) : 0x0801 + cChnl;
+                            std::vector<int> cRegs{cBaseRegisterMSB, cBaseRegisterLSB};
+                            std::vector<int> cValues(0);
+                            for(auto cReg: cRegs)
+                            {
+                                ChipRegItem cReg_Counters_MSB;
+                                cReg_Counters_MSB.fPage    = 0x00;
+                                cReg_Counters_MSB.fAddress = cReg;
+                                cValues.push_back(ReadFERegister(cChip, cReg));
+                            }
+                            cCounterValues.push_back( ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF));
+                            LOG (DEBUG) << BOLDYELLOW << "Hit counter from Chnl#" << +cChnl << " read-back over I2C .. value is " << cCounterValues[cCounterValues.size()-1] << RESET;
+                        }
+                        
+                        //MPA1 first pixel is 0 when read over the fast counter readout 
+                        //MPA1 last pixel is missing when read over the fast counter readout 
+                        if( cChip->getFrontEndType() == FrontEndType::MPA )
+                        {
+                            cFECounters.second[0] = cCounterValues[0];
+                            cFECounters.second.push_back( cCounterValues[1] );
+                        }
+                        //SSA1 last strip is missing from the fast counter readout 
+                        else cFECounters.second.push_back( cCounterValues[0] );
+                        //LOG (DEBUG) << BOLDYELLOW << "ROC#" << +cChip->getId() << " Id in CIC should be " << +cIdCIC << " " << cFECounters.second.size() << " counters read back over stub lines" << RESET;
+                    }
+                }
             }
         }
-        std::vector<uint32_t> cDummyData;
-        ReadPSCounters(pBoard,cDummyData,false);
     }
     else if(cAsync  && cTriggerSource == 3)
     {
