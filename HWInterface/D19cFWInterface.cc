@@ -1053,6 +1053,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
+    // // reset readout 
+    // ResetReadout();
 }
 void D19cFWInterface::CheckChipControl(const BeBoard* pBoard)
 {
@@ -3072,8 +3074,9 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
                     cShft += cFld.second;
                 }
                 size_t cNstubs= std::stoi(cHdrVals[3],0,2); 
-                if( cNstubs >= pIds.size() && cNstubs < 8 ) //there should be at most 8 stubs here 
-                {
+                //if( cNstubs < 8 ) //there should be at most 8 stubs here 
+                //if( cNstubs >= pIds.size() && cNstubs < 8 ) //there should be at most 8 stubs here 
+                //{
                     LOG (DEBUG) << BOLDYELLOW << cStream.str() << " : " << RESET;
                     for( size_t cStubId=0; cStubId < cNstubs; cStubId++)
                     {
@@ -3147,7 +3150,7 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
                             cShft += cFld.second;
                         }
                     }
-                }
+                //}
                 cStubPktCounter+= (cNstubs > 0 ) ? 1 : 0;
                 cPktLength=0; 
                 cStubPkt="";
@@ -3177,13 +3180,13 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
             continue; 
         }
             
-        if( pFeCounters[(1<<3)|cId].size() != cMaxSSACounters ) 
-        {
-            LOG (INFO) << BOLDYELLOW << "FECounters from FeId" << +cId 
+        //if( pFeCounters[(1<<3)|cId].size() != cMaxSSACounters ) 
+        //{
+            LOG (DEBUG) << BOLDYELLOW << "FECounters from FeId" << +cId 
                 << " --  from MPA " << pFeCounters[cId].size() 
                 << " --  from SAA " << pFeCounters[(1<<3)|cId].size() 
                 << RESET;
-        }
+        //}
         cAllCountersReceived = cAllCountersReceived && (cMPAdoneMap[cId]==1 && cSSAdoneMap[cId] == 1 );
     }
     return cStartPatternFound && cAllCountersReceived;
@@ -3302,7 +3305,7 @@ bool D19cFWInterface::GetCounterData(uint8_t pRawMode, size_t pChipId, size_t pH
     LOG (DEBUG) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
 
     std::this_thread::sleep_for(std::chrono::microseconds(1500));
-    size_t cNbits = 140e3*8*6;
+    size_t cNbits = 200e3*8*6;
     size_t cNWords = cNbits/32; // number of 32-bit words to read from DDR3
     auto cData = ReadBlockRegOffsetValue("fc7_daq_ddr3", cNWords, 0);
     std::string cDataWord = ""; 
@@ -3395,7 +3398,6 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 
                 // make sure uDTC vetos fast commands to CIC in this mode 
                 auto cVetoCIC = this->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
-                this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
                 this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.select_even",0x1);
                 
                 uint8_t cTriggerForPS=12;
@@ -3411,16 +3413,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerForPS});
                 this->ReconfigureTriggerFSM(cVecReg);
                 cVecReg.clear();
-                
-                this->Stop();
-                ResetReadout();
-                // configure DDR3 readout for counters 
-                this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x1);
-                this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
-                // configure raw mode 
-                this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
-                
-                ResetTriggerFSM();
+                 
                 std::vector<uint8_t> cFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
                 std::vector<uint8_t> cFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
                 std::vector<uint8_t> cMapping = (cHybrid->getId()%2 == 0 ) ? cFeMappingPSR : cFeMappingPSL;
@@ -3428,101 +3421,98 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 auto cPSModuleIter = fPSModulesCounterData.find(cPSModuleId); 
                 //bool cAllCountersReceived=false;
                 //uint16_t cNominalOffset = 120*16*8-3*8+1; 
-                std::vector<int> cOffsets{0,-1,+1,-2,+2,-3,+3,-4,+4,-5,+5,-6,+6,-7,+7};
-                size_t cOffsetIndx=0;
-                //do
-                //{   
-                    // uint16_t cSSADelay = cNominalOffset + cOffsets[cOffsetIndx];
-                    // // configure SSA delay 
-                    // for(auto cChip: *cHybrid)
-                    // {
-                    //     if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
-                    //     // WriteFERegister(cChip, 0x1012, cSSADelay & 0xFF );
-                    //     // WriteFERegister(cChip, 0x1013, cSSADelay >> 8  ); 
-                    //     auto cLSBs=ReadFERegister(cChip, 0x1012);
-                    //     auto cMSBs=ReadFERegister(cChip, 0x1013); 
-                    //     cSSADelay = ( cMSBs << 8 ) | cLSBs;
-                           
-                    // }
-                    // LOG (INFO) << BOLDYELLOW << "Async delay in SSAs set to 0x" << std::hex << cSSADelay << std::dec << RESET;
+                uint8_t cReadoutAttempt=0; 
+                bool cCounterReadoutSuccess=false;
+                uint8_t cMaxReadoutAttempts=5; 
+                do
+                {
+                    if( cPSModuleIter != fPSModulesCounterData.end() ) 
+                    {
+                        PSCounterData cDummy; cDummy.clear(); 
+                        fPSModulesCounterData[cPSModuleId]=cDummy;
+                    }
 
-                    bool cCounterAttempt=false;
-                    uint8_t cReadoutAttempt=0; 
-                    uint8_t cMaxReadoutAttempts=0; 
+                    this->ResetTriggerFSM();
+                    this->Stop();
+
+                    this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",0x1);
+                    // configure DDR3 readout for counters 
+                    this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x1);
+                    this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
+                    // configure raw mode 
+                    this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
+                   
+                    size_t cAttempt=0;
+                    uint32_t cStartReceived;
                     do
                     {
-                        if( cPSModuleIter != fPSModulesCounterData.end() ) 
-                        {
-                            PSCounterData cDummy; cDummy.clear(); 
-                            fPSModulesCounterData[cPSModuleId]=cDummy;
-                        }
-
-                        bool cCounterReadoutSuccess=true;
-                        size_t cAttempt=0;
-                        uint32_t cStartReceived;
-                        do
-                        {
-                            auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+                        auto cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+                        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+                        LOG(DEBUG) << BOLDBLUE << "Attempt#" << +cAttempt << " Async SSA [trigger source == " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source")  
+                            << " ] [ number of injections is " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") << " ]" 
+                            << "Trigger state before start is " << +cTriggerState << RESET;
+                        
+                        this->Start();
+                        uint32_t cIteration = 0; 
+                        do {
+                            auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                            cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
+                            LOG (DEBUG) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
+                                << +cIteration
+                                << " ... received "
+                                << +cNtriggers 
+                                << " triggers."
+                                << RESET;
                             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                            LOG(DEBUG) << BOLDBLUE << "Attempt#" << +cAttempt << " Async SSA [trigger source == " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source")  
-                                << " ] [ number of injections is " << +this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") << " ]" 
-                                << "Trigger state before start is " << +cTriggerState << RESET;
-                            
-                            this->Start();
-                            uint32_t cIteration = 0; 
-                            do {
-                                auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                                cTriggerState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"); 
-                                LOG (DEBUG) << BOLDBLUE << "D19cFWInterface::WaitForData TriggerSource 12 Trigger State: " << +cTriggerState << "Running.. .Iteration#"
-                                    << +cIteration
-                                    << " ... received "
-                                    << +cNtriggers 
-                                    << " triggers."
-                                    << RESET;
-                                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-                                cIteration++;
-                            } while(cTriggerState && cIteration < 1000);
-                            uint32_t cNInjections  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                            LOG (DEBUG) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << " - fast command core counted " << cNInjections << " injections." << RESET;
-                            
-                            cStartReceived =  this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.received_start");
-                            cCounterReadoutSuccess = (GetCounterData(1, cHybrid->getId(), 0 ));
-                            if( !cCounterReadoutSuccess ) LOG (DEBUG) << BOLDRED << "Counter readout failed.. will try again..." << RESET;
-                            cAttempt++;
-                        }while( !cCounterReadoutSuccess );
-                        LOG (DEBUG) << BOLDMAGENTA << "PS data capture block received start signal after " << +cStartReceived << " 40 MHz clock cycles." 
-                                << " [ readout attempt#" << +(cAttempt-1) << " ]" << RESET;
-                            
-                        // reconfigure original veto
-                        this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cVetoCIC);
-                        // disable DDR3 dump of counters
-                        this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
-                        this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
+                            cIteration++;
+                        } while(cTriggerState && cIteration < 1000);
+                        uint32_t cNInjections  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                        LOG (DEBUG) << BOLDBLUE << "Trigger state after end is " << +cTriggerState << " - fast command core counted " << cNInjections << " injections." << RESET;
+                        
+                        cStartReceived =  this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.received_start");
+                        cCounterReadoutSuccess = (GetCounterData(1, cHybrid->getId(), 0 ));
+                        if( !cCounterReadoutSuccess ) LOG (DEBUG) << BOLDRED << "Counter readout failed.. to receive start pattern .. will try again..." << RESET;
+                        cAttempt++;
+                    }while( !cCounterReadoutSuccess && cAttempt < 10 );
+                    if( !cCounterReadoutSuccess ){ 
+                        LOG (INFO) << BOLDRED << "Failed to receive start pattern from Hybrid#" << +cHybrid->getId() << " after 10 attempts" << RESET;
+                        throw Exception("Too many failures when attempting to receive start pattern from MPAs..something is wrong!");
+                    }
+                    else LOG (DEBUG) << BOLDMAGENTA << "PS data capture block received start signal after " << +cStartReceived << " 40 MHz clock cycles." 
+                            << " [ readout attempt#" << +(cAttempt-1) << " ]" << RESET;
+                        
+                    // reconfigure original veto
+                    this->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto",cVetoCIC);
+                    // disable DDR3 dump of counters
+                    this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
+                    this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
 
-                        // decode raw counter data
-                        // expected number of stubs 
-                        std::vector<uint8_t> pIds(0);
-                        for(auto cChip: *cHybrid)
-                        {
-                            if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                            pIds.push_back( cMapping[cChip->getId()%8] );
-                            //cNFEs += (cChip->getFrontEndType()==FrontEndType::MPA)?1:0;
-                        }
-                        cPSModuleIter->second.clear();
-                        cCounterAttempt = DecodeRawCounterDataPS(cPSModuleIter->second, pIds);
-                        if( !cCounterAttempt ) LOG (INFO) << BOLDRED << "Not all counters have been received.. try again.." << RESET;
-                        cReadoutAttempt++;
-                    }while( !cCounterAttempt && cReadoutAttempt < cMaxReadoutAttempts ); 
-                    //cAllCountersReceived = cCounterAttempt;
-                    //if( !cAllCountersReceived ) LOG (INFO) << BOLDRED << "Not all counters have been received.. try again with a different offset" << RESET;
-                    cOffsetIndx++;
-                //}while( !cAllCountersReceived && cOffsetIndx == 0 );
-                
+                    // decode raw counter data
+                    // expected number of stubs 
+                    std::vector<uint8_t> pIds(0);
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
+                        pIds.push_back( cMapping[cChip->getId()%8] );
+                        //cNFEs += (cChip->getFrontEndType()==FrontEndType::MPA)?1:0;
+                    }
+                    cPSModuleIter->second.clear();
+                    cCounterReadoutSuccess = DecodeRawCounterDataPS(cPSModuleIter->second, pIds);
+                    if( !cCounterReadoutSuccess ) LOG (INFO) << BOLDRED << "Not all counters from all FEs have been received.. trying again.." << RESET;
+                    cReadoutAttempt++;
+                }while( !cCounterReadoutSuccess && cReadoutAttempt < cMaxReadoutAttempts ); 
+                if( !cCounterReadoutSuccess ) {
+                    LOG (INFO) << BOLDRED << "Failed to receive all counters from Hybrid#" << +cHybrid->getId() << " after " << +(1+cMaxReadoutAttempts) << " attempts" << RESET;
+                    //throw Exception("Too many failures when attempting to read-back all PS counters from a hybrid..something is wrong!");
+                }
+                    
                 // now add caveat for MPA1/SSA 1
                 for( auto &cFECounters : cPSModuleIter->second ) 
                 {
                     auto cFeId = cFECounters.first;
                     uint8_t cFromSSA = (cFeId >> 3);
+                    if( cFECounters.second.size() == 0 ) continue;
+
                     for(auto cChip: *cHybrid)
                     {
                         auto& cIdCIC = cMapping[ cChip->getId()%8 ];
@@ -3568,47 +3558,75 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                         //SSA1 last strip is missing from the fast counter readout 
                         else{ 
                             cFECounters.second.push_back( cCounterValues[0] );
-                            //LOG (INFO) << BOLDYELLOW << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
+                            LOG (DEBUG) << BOLDYELLOW << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() 
+                                << " hit counters - last counter (I2C) is " << cCounterValues[0] 
+                                << " - last counter stub lines is " << cFECounters.second[ cFECounters.second.size() - 1 ]
+                                <<  RESET;
                         }
                         //LOG (INFO) << BOLDBLUE << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
                         //LOG (DEBUG) << BOLDYELLOW << "ROC#" << +cChip->getId() << " Id in CIC should be " << +cIdCIC << " " << cFECounters.second.size() << " counters read back over stub lines" << RESET;
                     }
                 }
                 // now check SSA counters 
-                bool cCheckSSAs=true;
+                bool cCheckSSAs=false;
                 size_t cMaxSSACounters=NSSACHANNELS;
                 for( auto &cFECounters : cPSModuleIter->second ) 
                 {
                     auto cFeId = cFECounters.first & 0x7; 
+                    uint8_t cFromSSA = (cFECounters.first >> 3);
+                    if( cFECounters.second.size() == 0 ) continue;
+                    
+                    //only check SSAs 
+                    if( cFromSSA == 0 ) continue;
                     for(auto cChip: *cHybrid)
                     {
                         auto& cIdCIC = cMapping[ cChip->getId()%8 ];
                         if( cChip->getFrontEndType() == FrontEndType::MPA ) continue;
                         if( cFeId != cIdCIC ) continue; 
-                        
+
                         bool cReadI2C = cCheckSSAs || cFECounters.second.size() != cMaxSSACounters; 
                         if( !cReadI2C ) continue;
 
+
                         LOG (DEBUG) << BOLDYELLOW << "CIC FeId " << +cFeId << " SSA Id on hybrid" << +(cChip->getId()%8) << " -- id from map "  << +cIdCIC << RESET;
+                        std::vector<float> cDifference(0);
+                        std::vector<float> cI2C(0);
+                        std::vector<float> cSLVS(0);
+                        std::vector<std::pair<uint16_t,uint16_t>> cMissed(0);
                         for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
                             int cRowNumber       = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? 1 + cChnl / 120 : 1;
                             int cPixelNumber     = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? 1 + cChnl % 120 : 0;
                             int cBaseRegisterLSB = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? ((cRowNumber << 11) | (9 << 7) | cPixelNumber) : 0x0901 + cChnl;
                             int cBaseRegisterMSB = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? ((cRowNumber << 11) | (10 << 7) | cPixelNumber) : 0x0801 + cChnl;
-                            std::vector<int> cRegs{cBaseRegisterMSB, cBaseRegisterLSB};
-                            std::vector<int> cValues(0);
-                            for(auto cReg: cRegs)
+                            std::vector<uint16_t> cI2CVals(0);
+                            for( int cAttempt=0; cAttempt < 1; cAttempt++)
                             {
-                                ChipRegItem cReg_Counters_MSB;
-                                cReg_Counters_MSB.fPage    = 0x00;
-                                cReg_Counters_MSB.fAddress = cReg;
-                                cValues.push_back(ReadFERegister(cChip, cReg));
+                                std::vector<int> cRegs{cBaseRegisterMSB, cBaseRegisterLSB};
+                                std::vector<int> cValues(0);
+                                for(auto cReg: cRegs)
+                                {
+                                    ChipRegItem cReg_Counters_MSB;
+                                    cReg_Counters_MSB.fPage    = 0x00;
+                                    cReg_Counters_MSB.fAddress = cReg;
+                                    cValues.push_back(ReadFERegister(cChip, cReg));
+                                }
+                                cI2CVals.push_back( ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF ) );
+                                if( cChnl == 0 ) LOG (DEBUG) << BOLDYELLOW << cI2CVals[cI2CVals.size()-1] << RESET;
                             }
-                            uint16_t cCounterI2C = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF ) ;
+                            uint16_t cCounterI2C = cI2CVals[0];
+                            cI2C.push_back(cCounterI2C);
+                            cSLVS.push_back(cFECounters.second[cChnl]);
+                            if( cFECounters.second[cChnl] < cNevents ){ 
+                                std::pair<uint16_t,uint16_t> cPr; 
+                                cPr.first = cCounterI2C;
+                                cPr.second = cFECounters.second[cChnl];
+                                cMissed.push_back(cPr);
+                            }
                             if( cCounterI2C != cFECounters.second[cChnl] )
                             {
-                                LOG (INFO) << BOLDRED << "SSA#" << +cChip->getId() << " Mismatch in counter#" << +cChnl << " : " << cFECounters.second[cChnl] << " , " << cCounterI2C << RESET;
+                                LOG (DEBUG) << BOLDRED << "SSA#" << +cChip->getId() << " Mismatch in counter#" << +cChnl << " : " << cFECounters.second[cChnl] << " , " << cCounterI2C << RESET;
+                                cDifference.push_back( cCounterI2C - cFECounters.second[cChnl]);
                                 cFECounters.second[cChnl]=cCounterI2C;
                             }
                             else 
@@ -3616,6 +3634,22 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                                 LOG (DEBUG) << BOLDGREEN << "SSA#" << +cChip->getId() << " Match in counter#" << +cChnl << " : " << cFECounters.second[cChnl] << " , " << cCounterI2C << RESET;
                             }
                         }
+                        if( cDifference.size() > 0 ){ 
+                            float cMeanMismatch = std::accumulate( cDifference.begin(), cDifference.end() ,0.)/cDifference.size();
+                            float cI2CAvg = std::accumulate( cI2C.begin(), cI2C.end() ,0.)/cI2C.size();
+                            float cSLVSCAvg = std::accumulate( cSLVS.begin(), cSLVS.end() ,0.)/cSLVS.size();
+                            LOG (DEBUG) << BOLDRED << "\t\t..CIC FeId " << +cFeId << " SSA Id on hybrid" << +(cChip->getId()%8) 
+                                << " decoded " << cFECounters.second.size() << " counters from SLVS lines.."
+                                << " -- found "  << +cDifference.size() 
+                                << " mismatches between stub lines and I2C" 
+                                << " mean mismatch [I2C - SLVS] " << cMeanMismatch
+                                << " mean I2C value " << cI2CAvg 
+                                << " mean slvs value " << cSLVSCAvg
+                                << " number of times I've seen a count < Ninjected " << cMissed.size() 
+                                << RESET;
+                            for( auto cLowerVal : cMissed ) LOG (DEBUG) << BOLDRED << "\t\t.. counted [I2C] " << cLowerVal.first << " [SLVS] " << cLowerVal.second << " injected " << cNevents << RESET;
+                        }
+                        
                         
                     }
                 }
@@ -3626,6 +3660,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 {
                     auto cFeId = cFECounters.first;
                     uint8_t cFromSSA = (cFeId >> 3);
+
                     //if( !cAllFound ) continue;
                     for(auto cChip: *cHybrid)
                     {
@@ -3646,6 +3681,13 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                         }
                     }
                 }
+
+                // configure DDR3 readout for counters 
+                this->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",0x0);
+                this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0x0);
+                // configure raw mode 
+                this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 0);
+                
             }
         }
     }

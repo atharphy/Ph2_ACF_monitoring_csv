@@ -374,6 +374,10 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
+    else if(pRegName.find("ThresholdTrim_all"))
+    {
+        return   this->WriteChipSingleReg(pMPA,"TrimDAC_ALL",pValue,false);
+    }
     else if(pRegName == "EnablePhaseAlignmentPattern" ) 
     {
         this->producePhaseAlignmentPattern( static_cast<ReadoutChip*>(pMPA), pValue );

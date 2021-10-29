@@ -126,6 +126,7 @@ void PSAlignment::Initialise()
 }
 void PSAlignment::MapMPAOutputs(std::string pSetupType)
 {
+    LOG (INFO) << BOLDBLUE << "PSAlignment: mapping MPA outputs " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalReadout: *cBoard)

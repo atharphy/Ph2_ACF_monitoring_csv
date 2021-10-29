@@ -747,87 +747,105 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
     {
 
-        auto cSetting       = cTool.fSettingsMap.find("PedeNoisePulseAmplitude");
-        int  cInjectionAmpl = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 255;
-        for(auto cBoard: *cTool.fDetectorContainer)
-        {
-            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
-            cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", cInjectionAmpl);
-        }
-        cTool.setFWTestPulse();
-        for(auto cBoard: *cTool.fDetectorContainer)
-        {
-            cBoard->setEventType(EventType::PSAS);
+        // auto cSetting       = cTool.fSettingsMap.find("PedeNoisePulseAmplitude");
+        // int  cInjectionAmpl = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 255;
+        // for(auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
+        //     cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", cInjectionAmpl);
+        // }
+        // cTool.setFWTestPulse();
+        // for(auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cBoard->setEventType(EventType::PSAS);
+        //     std::vector<uint16_t> cThresholds{5,static_cast<uint16_t>(cInjectionAmpl+20)};//, 20, 40, 50, 100,200};
+        //     for( auto cThreshold : cThresholds )
+        //     //for( uint16_t cThreshold=10; cThreshold <= 15 ; cThreshold += 5)
+        //     {
+        //         // 
+        //         cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", 255);
+        //         LOG (INFO) << BOLDMAGENTA << "Threshold of " << +cThreshold << RESET;
+        //         for( uint8_t cNacitve=7; cNacitve < 8 ;cNacitve++)
+        //         {
+        //             for( size_t cAttempt = 0 ; cAttempt < 3; cAttempt++ )
+        //             {
+        //                 std::stringstream cOut;
+        //                 cOut << +cNacitve << " SSA-MPA pairs [Attempt# " << +cAttempt << " ]: ";
+        //                 for(auto cOpticalGroup: *cBoard)
+        //                 {
+        //                     for(auto cHybrid: *cOpticalGroup)
+        //                     {
+        //                         size_t cActive=0;
+        //                         for(auto cChip: *cHybrid)
+        //                         {
+        //                             if( cChip->getFrontEndType() == FrontEndType::MPA ) continue;
 
-            for( uint16_t cThreshold=110; cThreshold <= 125 ; cThreshold += 5)
-            {
-                cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", cInjectionAmpl-10);
-                // for(auto cOpticalGroup: *cBoard)
-                // {
-                //     for(auto cHybrid: *cOpticalGroup)
-                //     {
-                //         for(auto cChip: *cHybrid)
-                //         {
-                //             if( cChip->getId()%8 == 0 ) cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cInjectionAmpl-10);
-                //         }
-                //     }
-                // }
-                //cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", cThreshold+10);
-                // LOG(INFO) << BOLDBLUE << "Threshold is " << cThreshold << "\t\t... measuring occupancy...." << RESET;
-                cTool.ReadNEvents(cBoard, 42);
-                // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )
-                // {
-                //     //for( uint16_t cDelay=10;  cDelay < 11 ; cDelay++)
-                //     for( uint16_t cDelay=120*16*8-3*8+1; cDelay <= 120*16*8-3*8+1; cDelay +=1)
-                //     {
-                //         LOG (INFO) << BOLDMAGENTA << "Async Delay SSA 0x" << std::hex << (cDelay)  << std::dec << RESET;
-                //         for(auto cOpticalGroup: *cBoard)
-                //         {
-                //             for(auto cHybrid: *cOpticalGroup)
-                //             {
-                //                 for(auto cChip: *cHybrid)
-                //                 {
-                //                     if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
+        //                             if( cActive < cNacitve ){
+        //                                 cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
+        //                                 cOut << " SSA#" << +cChip->getId() << " [Th:" << +cThreshold << "] ";
+        //                                 cActive++;
+        //                             }
+        //                             else cOut << " SSA#" << +cChip->getId() << " [Th:255] ";
+        //                         }
+        //                     }
+        //                 }
+        //                 LOG (INFO) << BOLDBLUE << cOut.str() << RESET;
+        //                 cTool.ReadNEvents(cBoard, 42);
+        //             }
+        //         }
+        //         // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )
+        //         // {
+        //         //     //for( uint16_t cDelay=10;  cDelay < 11 ; cDelay++)
+        //         //     for( uint16_t cDelay=120*16*8-3*8+1; cDelay <= 120*16*8-3*8+1; cDelay +=1)
+        //         //     {
+        //         //         LOG (INFO) << BOLDMAGENTA << "Async Delay SSA 0x" << std::hex << (cDelay)  << std::dec << RESET;
+        //         //         for(auto cOpticalGroup: *cBoard)
+        //         //         {
+        //         //             for(auto cHybrid: *cOpticalGroup)
+        //         //             {
+        //         //                 for(auto cChip: *cHybrid)
+        //         //                 {
+        //         //                     if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
 
-                //                     cTool.fReadoutChipInterface->WriteChipReg( cChip, "AsyncDelay", cDelay );
-                //                     auto cDelayLSB = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
-                //                     auto cDelayMSB = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
-                //                     LOG (DEBUG) << BOLDBLUE << "Delay is 0x" << std::hex << (cDelayMSB << 8 | cDelayLSB) << std::dec << RESET;
-                //                     // //cTool.fReadoutChipInterface->WriteChipReg( cChip, "ReadoutMode", 1 );
-                //                     // auto cMode = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ReadoutMode");
-                //                     // auto cCnfg = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ENFLAGS_S2");
-                //                     // uint8_t cDly_LSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
-                //                     // uint8_t cDly_MSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
-                //                     // //uint16_t  cDly  = (cDly_MSB << 8 ) | cDly_LSB;
-                //                     // LOG (DEBUG) << BOLDBLUE << "Readout mode is " << +cMode 
-                //                     //     << " ENFLAGS_ALL is set to 0x" << std::hex << +cCnfg 
-                //                     //     << std::dec
-                //                     //     << " Delay value LSB is 0x" << std::hex << +cDly_LSB << std::dec 
-                //                     //     << " Delay value MSB is 0x" << std::hex << +cDly_MSB << std::dec 
-                //                     //     << RESET;
-                //                 }
-                //             }
-                //         }
-                //         cTool.ReadNEvents(cBoard, 42);
-                //     }
-                // }
-            }
-        }
+        //         //                     cTool.fReadoutChipInterface->WriteChipReg( cChip, "AsyncDelay", cDelay );
+        //         //                     auto cDelayLSB = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
+        //         //                     auto cDelayMSB = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
+        //         //                     LOG (DEBUG) << BOLDBLUE << "Delay is 0x" << std::hex << (cDelayMSB << 8 | cDelayLSB) << std::dec << RESET;
+        //         //                     // //cTool.fReadoutChipInterface->WriteChipReg( cChip, "ReadoutMode", 1 );
+        //         //                     // auto cMode = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ReadoutMode");
+        //         //                     // auto cCnfg = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ENFLAGS_S2");
+        //         //                     // uint8_t cDly_LSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
+        //         //                     // uint8_t cDly_MSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
+        //         //                     // //uint16_t  cDly  = (cDly_MSB << 8 ) | cDly_LSB;
+        //         //                     // LOG (DEBUG) << BOLDBLUE << "Readout mode is " << +cMode 
+        //         //                     //     << " ENFLAGS_ALL is set to 0x" << std::hex << +cCnfg 
+        //         //                     //     << std::dec
+        //         //                     //     << " Delay value LSB is 0x" << std::hex << +cDly_LSB << std::dec 
+        //         //                     //     << " Delay value MSB is 0x" << std::hex << +cDly_MSB << std::dec 
+        //         //                     //     << RESET;
+        //         //                 }
+        //         //             }
+        //         //         }
+        //         //         cTool.ReadNEvents(cBoard, 42);
+        //         //     }
+        //         // }
+        //     }
+        // }
 
-        // bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
-        // LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
-        // t.start();
-        // // if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        // // tool provides an Inherit(Tool* pTool) for this purpose
-        // PedeNoise cPedeNoise;
-        // cPedeNoise.Inherit(&cTool);
-        // cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        // //cPedeNoise.scanScurves();
-        // cPedeNoise.measureNoise();
-        // cPedeNoise.writeObjects();
-        // cPedeNoise.dumpConfigFiles();
-        // t.stop();
-        // t.show("Time to Scan Pedestals and Noise");
+        bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
+        LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
+        t.start();
+        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        // tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoise cPedeNoise;
+        cPedeNoise.Inherit(&cTool);
+        cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
+        //cPedeNoise.scanScurves();
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        t.stop();
+        t.show("Time to Scan Pedestals and Noise");
     }
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))

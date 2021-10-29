@@ -294,7 +294,8 @@ void PedestalEqualization::FindVplus()
 
     LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to mid-range value...0x" << std::hex << +fTargetOffset << std::dec << RESET;
     if(cWithCBC) setSameLocalDac("ChannelOffset", fTargetOffset);
-    else setSameLocalDac("ThresholdTrim", fTargetOffset);
+    else setSameGlobalDac("ThresholdTrim_all",fTargetOffset);
+    //else setSameLocalDac("ThresholdTrim", fTargetOffset);
 
     LOG(INFO) << BOLDBLUE << "Finding threshold at which to equalize offsets - searching for threshold where <Occupancy>/ROC is " << fOccupancyAtPedestal << RESET;
     this->SetTestAllChannels(true);
@@ -306,7 +307,8 @@ void PedestalEqualization::FindVplus()
 
     LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
     if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    else setSameLocalDac("ThresholdTrim", 0x1F);
+    else setSameGlobalDac("ThresholdTrim_all",0x1F);
+    //else setSameLocalDac("ThresholdTrim", 0x1F);
 
     // store thresholds 
     DetectorDataContainer theVcthContainer;

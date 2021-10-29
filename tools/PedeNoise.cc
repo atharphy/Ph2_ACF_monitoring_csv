@@ -649,7 +649,6 @@ void PedeNoise::scanScurves()
         size_t cNormGlblOcc=0; 
         for( auto cBoard :*fDetectorContainer ) 
         {
-            setNormalization(0);
             measureBeBoardData(cBoard->getIndex(), fEventsPerPoint, fNEventsPerBurst);
             if(cNormalize==0)
             {
@@ -880,6 +879,15 @@ void PedeNoise::extractPedeNoise()
     }
 
     // calculate the averages and ship
+    // figure  out if you should normalize or not 
+    uint8_t cNormalizationOrig = getNormalization();
+    uint8_t cNormalize=0;
+
+    if( cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA) ){ 
+        cNormalize=1;
+    }
+    LOG (INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
+    setNormalization(cNormalize);
 
     for(auto board: *fThresholdAndNoiseContainer)
     {
@@ -902,8 +910,49 @@ void PedeNoise::extractPedeNoise()
                 }
             }
         }
-        board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
+        if(cNormalize==0)
+        {
+            // auto& cDataContainerThisBrd = fDetectorDataContainer->at(cBoard->getIndex());
+            // for(auto cOpticalGroup: *cBoard)
+            // {
+            //     auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getIndex());
+            //     for(auto cFe: *cOpticalGroup)
+            //     {
+            //         auto& cDataContainerThisFE = cDataContainerThisOG->at(cFe->getIndex());
+            //         for(auto cROC: *cFe)
+            //         {
+            //             auto& cDataContainerThisROC = cDataContainerThisFE->at(cROC->getIndex());
+            //             auto& cSummary = cDataContainerThisROC->getSummary<Occupancy,Occupancy>();
+            //             ChannelGroupHandler* cHandler; 
+            //             if( cROC->getFrontEndType() == FrontEndType::MPA ) cHandler = new MPAChannelGroupHandler();
+            //             else cHandler = new SSAChannelGroupHandler();
+            //             LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << +getNReadbackEvents() 
+            //                 << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+            //             cSummary.fOccupancy = 0; 
+            //             for( uint16_t cChnl=0; cChnl < cDataContainerThisROC->size(); cChnl++)
+            //             {
+            //                 uint32_t cRow = cChnl%cHandler->allChannelGroup()->getNumberOfRows(); 
+            //                 uint32_t cCol;
+            //                 if( cHandler->allChannelGroup()->getNumberOfCols() == 0 ) cCol = 0; 
+            //                 else  cCol = cChnl/cHandler->allChannelGroup()->getNumberOfRows();
+            //                 if(cHandler->allChannelGroup()->isChannelEnabled(cRow, cCol ))
+            //                 { 
+            //                     cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy /= getNReadbackEvents();
+            //                     cGlbOcc += cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
+            //                     if( cChnl < 10 || cChnl > 15*120 + 110 ) LOG (DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+            //                     cSummary.fOccupancy+= cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
+            //                     cNormGlblOcc++;
+            //                 }
+            //             }
+            //             cSummary.fOccupancy = std::min(cMaxOccupancy, cSummary.fOccupancy/cHandler->allChannelGroup()->getNumberOfEnabledChannels());
+            //         }
+            //     }
+            // }
+        }
+        else board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
     }
+    setNormalization(cNormalizationOrig);
+
 }
 
 void PedeNoise::producePedeNoisePlots()
