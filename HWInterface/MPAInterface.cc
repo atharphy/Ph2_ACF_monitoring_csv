@@ -374,7 +374,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
-    else if(pRegName.find("ThresholdTrim_all") != std::string::npos )
+    else if(pRegName=="Offsets")
     {
         return this->WriteChipSingleReg(pMPA,"TrimDAC_ALL",pValue,false);
     }
@@ -654,7 +654,7 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     {
         pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
         cRegItem = pChip->getRegItem(pRegNode);
-        LOG (INFO) << BOLDGREEN << "\t\t... MPAInterface::WriteChipSingleReg written " << pValue << " to " << pRegNode << " Status flag is " << +cRegItem.fStatusReg << RESET;
+        LOG (DEBUG) << BOLDGREEN << "\t\t... MPAInterface::WriteChipSingleReg written " << cRegItem.fValue << " to " << pRegNode << " Status flag is " << +cRegItem.fStatusReg << RESET;
     }
 #ifdef COUNT_FLAG
     fRegisterCount++;
@@ -724,8 +724,6 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
     {
         if(pMPA->getFrontEndType() == FrontEndType::MPA)
             dacTemplate = "TrimDAC_P%d";
-        else if(pMPA->getFrontEndType() == FrontEndType::SSA)
-            dacTemplate = "THTRIMMING_S%d";
     }
 
     else
@@ -736,6 +734,19 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     bool cSuccess = true;
+
+    // check if all registers are the same 
+    std::vector<uint8_t> cVals(0);
+    for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel) cVals.push_back( localRegValues.getChannel<uint16_t>(iChannel) );
+    if ( std::adjacent_find( cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>() ) == cVals.end() )
+    {
+        LOG (INFO) << BOLDBLUE << "All elements of " << dacName << " are equal each other .. will use global register" << RESET;
+        if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
+        {
+            return this->WriteChipReg(pMPA,"TrimDAC_ALL", cVals[0]); 
+        }
+        // to-add .. add the rest
+    }
 
     for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
     {

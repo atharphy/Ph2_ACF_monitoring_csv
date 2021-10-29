@@ -294,8 +294,7 @@ void PedestalEqualization::FindVplus()
 
     LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to mid-range value...0x" << std::hex << +fTargetOffset << std::dec << RESET;
     if(cWithCBC) setSameLocalDac("ChannelOffset", fTargetOffset);
-    else setSameGlobalDac("ThresholdTrim_all",fTargetOffset);
-    //else setSameLocalDac("ThresholdTrim", fTargetOffset);
+    else setSameLocalDac("ThresholdTrim", fTargetOffset);
 
     LOG(INFO) << BOLDBLUE << "Finding threshold at which to equalize offsets - searching for threshold where <Occupancy>/ROC is " << fOccupancyAtPedestal << RESET;
     this->SetTestAllChannels(true);
@@ -307,9 +306,8 @@ void PedestalEqualization::FindVplus()
     // dumpConfigFiles();
 
     // LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
-    // if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    // else setSameGlobalDac("ThresholdTrim_all",0x1F);
-    //else setSameLocalDac("ThresholdTrim", 0x1F);
+    if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
+    else setSameLocalDac("ThresholdTrim", 0x1F);
 
     // store thresholds 
     DetectorDataContainer theVcthContainer;
@@ -328,29 +326,26 @@ void PedestalEqualization::FindVplus()
                 for(auto chip: *hybrid) // for on chip - begin
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
-                    auto cThreshold = fReadoutChipInterface->ReadChipReg(theChip,"Threshold");
-
-                    //uint16_t     tmpVthr = 0;
-                    // if(theChip->getFrontEndType()==FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
-                    // if(theChip->getFrontEndType()==FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
-                    // if(theChip->getFrontEndType()==FrontEndType::MPA)
-                    // {
-                    //     for( uint8_t cDAC=0; cDAC < 7; cDAC++ )
-                    //     {
-                    //         std::stringstream cRegName;
-                    //         cRegName << "ThDAC" << +cDAC;
-                    //         tmpVthr = theChip->getReg(cRegName.str());
-                    //         LOG(INFO) << GREEN << "tmpVthr " << tmpVthr << RESET;
-                    //     }
-                    // }
-                    chip->getSummary<uint16_t>() = cThreshold;
+                    uint16_t     tmpVthr = 0;
+                    if(theChip->getFrontEndType()==FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
+                    if(theChip->getFrontEndType()==FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
+                    if(theChip->getFrontEndType()==FrontEndType::MPA)
+                    {
+                        for( uint8_t cDAC=0; cDAC < 1; cDAC++ )
+                        {
+                            std::stringstream cRegName;
+                            cRegName << "ThDAC" << +cDAC;
+                            tmpVthr = theChip->getReg(cRegName.str());
+                        }
+                    }
+                    chip->getSummary<uint16_t>() = tmpVthr;
                     LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " ROC " << +chip->getId()
-                              << " = " << cThreshold << RESET;
+                              << " = " << tmpVthr << RESET;
                     uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
                     uint32_t TOTCHAN = chip->size();
                     // LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
                     nCbc += float(ENCHAN) / float(TOTCHAN);
-                    cMeanValue += cThreshold * (float(ENCHAN) / float(TOTCHAN));
+                    cMeanValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
                 } // for on chip - end
             }     // for on hybrid - end
         }         // for on opticalGroup - end

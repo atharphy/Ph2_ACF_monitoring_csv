@@ -1052,6 +1052,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
             setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
         fDetectorDataContainer = currentStepOccupancyContainer;
+        float cMaxOcc=1.0;
         measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
         //TO-DO.. generalize so that I don't need the MPA/SSA 
         if(fNormalize==0)
@@ -1073,7 +1074,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << fNReadbackEvents 
                             << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
                         float cGlobalOcc=0; 
-                        float cMaxOcc=1.0;
                         size_t cNenabled=0;
                         for( uint16_t cChnl=0; cChnl < cDataContainerThisROC->size(); cChnl++)
                         {
@@ -1103,41 +1103,30 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                 for(auto cChip: *cHybrid)
                 {
                     std::stringstream cOut; 
-                    cOut << "Occupancy ROC#" << +cChip->getId(); 
                     if(localDAC)
                     {
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
-                            //cOut << "\t[ local ] " << currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<"\n";
+                            auto& cOcc = currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy; 
+                            auto& cPrevOcc = previousStepOccupancyContainer->at(boardIndex) ->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
 
-                            if(currentStepOccupancyContainer->at(boardIndex)
-                                   ->at(cOpticalGroup->getIndex())
-                                   ->at(cHybrid->getIndex())
-                                   ->at(cChip->getIndex())
-                                   ->getChannel<Occupancy>(iChannel)
-                                   .fOccupancy <= targetOccupancy)
+                            if( iChannel == 0 ) cOut << "Occupancy ROC#" << +cChip->getId() << "\n";
+                            cOut << "\t[ local ] " << cOcc <<"\n";
+
+                            if( std::max(cMaxOcc,cOcc) <= targetOccupancy)
                             {
                                 previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
                                     currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
-                                previousStepOccupancyContainer->at(boardIndex)
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
-                                    ->getChannel<Occupancy>(iChannel)
-                                    .fOccupancy = currentStepOccupancyContainer->at(boardIndex)
-                                                      ->at(cOpticalGroup->getIndex())
-                                                      ->at(cHybrid->getIndex())
-                                                      ->at(cChip->getIndex())
-                                                      ->getChannel<Occupancy>(iChannel)
-                                                      .fOccupancy;
+                                cPrevOcc = cOcc;
                             }
                         }
                     }
                     else
                     {
                         auto& cCurrentDAC = currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-                        cOut << "\t[ global] " <<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
-                             << " for a DAC value of " << cCurrentDAC;
+                        cOut << "Occupancy ROC#" << +cChip->getId()
+                            << "\t[ global] " <<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
+                            << " for a DAC value of " << cCurrentDAC;
 
                         if(currentStepOccupancyContainer->at(boardIndex)
                                ->at(cOpticalGroup->getIndex())
@@ -1161,7 +1150,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                                   .fOccupancy;
                         }
                     }
-                    LOG (INFO) << BOLDBLUE << cOut.str() << RESET;
+                    LOG (DEBUG) << BOLDBLUE << cOut.str() << RESET;
                 }
             }
         }
