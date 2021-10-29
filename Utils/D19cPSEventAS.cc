@@ -132,6 +132,10 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
 {
+    if( cTestChannelGroup == nullptr ){ 
+        LOG (INFO) << BOLDRED << "!!!!" << RESET;
+        return;
+    }
     //LOG (INFO) << cTestChannelGroup->getNumberOfRows() << " : " << cTestChannelGroup->getNumberOfCols() << RESET;
     for(auto opticalGroup: *boardContainer)
     {

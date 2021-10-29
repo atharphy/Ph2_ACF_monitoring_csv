@@ -36,7 +36,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
 {
     fTrackRegisters=false;
     // for now ..
-    bool              cSkipLocalRegs = true;
+    bool              cConfigLocalRegs = false;
     std::stringstream cOutput;
     setBoard(pSSA->getBeBoardId());
     pSSA->printChipType(cOutput);
@@ -63,8 +63,12 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     cRegsToConfig.push_back("THTRIMMING");
     for(auto& cMapItem: fMap)
     {
-        bool cSkip=(cSkipLocalRegs && (cMapItem.second.find("_S") != std::string::npos));
-        if(cSkip && cRegsToConfig.size() > 0 ) 
+        bool cIsLocal = (cMapItem.second.find("_S") != std::string::npos) && cMapItem.second.find("AsyncRead") == std::string::npos; 
+        bool cSkip    = cIsLocal && !cConfigLocalRegs;
+        if( cIsLocal && cSkip ) LOG (DEBUG) << BOLDCYAN << "Skipping local register " << cMapItem.second << RESET;
+        if( cSkip ) continue;
+        
+        if(cRegsToConfig.size() > 0 && cConfigLocalRegs) 
         {
             // check if this is one to skip 
             bool cRegFound=false;
@@ -77,7 +81,9 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
             cSkip = (!cRegFound);
         }
         if( cSkip ) continue;
-        //LOG (INFO) << BOLDCYAN << "Configuring SSA#" << +pSSA->getId()%8 << " : " << cMapItem.second << RESET;
+        if( cIsLocal ) LOG (DEBUG) << BOLDCYAN << "Configuring local register " << cMapItem.second << RESET;
+        else LOG (DEBUG) << BOLDCYAN << "Configuring global register " << cMapItem.second << RESET;
+
         ChipRegItem& cItem = cSSARegMap[cMapItem.second];
         // create a register
         std::pair<uint16_t, uint16_t> cReg;
@@ -85,7 +91,7 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
         cReg.second = cItem.fValue;
         cRegs.push_back(cReg);
     }
-    if(cSkipLocalRegs)
+    if(!cConfigLocalRegs)
         LOG(INFO) << BOLDBLUE << "Configuring SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual strips]" << RESET;
     else
         LOG(INFO) << BOLDBLUE << "Complete configuration of SSA#" << +pSSA->getId() << " - write " << +cRegs.size() << " registers [configuring registers for individual strips]" << RESET;
@@ -482,7 +488,9 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
         LOG(DEBUG) << BOLDBLUE << "Writing address 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
         bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
         cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cVerify);
-        if(cSuccess && cFound) pChip->setReg(fMap[pRegisterAddress], pRegisterValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
+        if(cSuccess && cFound){ 
+            pChip->setReg(fMap[pRegisterAddress], pRegisterValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
+        }
         fRegisterWrites++;
     }
     return cSuccess;

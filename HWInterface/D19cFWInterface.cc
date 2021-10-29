@@ -3138,7 +3138,7 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
                                     if( cWithMPA == 0 &&  cMPAdoneMap[cDecodedFeId]  == 1 && cSSAdoneMap[cDecodedFeId] == 0 ) 
                                     {
                                         if( pFeCounters[cFeId].size() == 0 )//|| pFeCounters[cFeId].size() == cMaxSSACounters-1) 
-                                            LOG (INFO) << BOLDYELLOW << "SSA [FeId " << +cFeId << " ] counter#" << +pFeCounters[cFeId].size() << " --> " << cCounterValue << RESET;
+                                            LOG (DEBUG) << BOLDYELLOW << "SSA [FeId " << +cFeId << " ] counter#" << +pFeCounters[cFeId].size() << " --> " << cCounterValue << RESET;
                                         pFeCounters[cFeId].push_back( cCounterValue );
                                         if( pFeCounters[cFeId].size() == cMaxSSACounters ) cSSAdoneMap[cDecodedFeId]=1; 
                                     }  
@@ -3404,7 +3404,6 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 LOG (DEBUG) << BOLDMAGENTA << "Trigger multiplicity was set to " << +cMultiplicity << RESET;
                 cVecReg.clear();
                 
-                ResetTriggerFSM();
                 cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 0});
                 cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNevents});
                 cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
@@ -3421,30 +3420,32 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                 // configure raw mode 
                 this->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
                 
+                ResetTriggerFSM();
                 std::vector<uint8_t> cFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
                 std::vector<uint8_t> cFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
                 std::vector<uint8_t> cMapping = (cHybrid->getId()%2 == 0 ) ? cFeMappingPSR : cFeMappingPSL;
                 uint32_t cPSModuleId = (pBoard->getId() << 16) | (cOpticalGroup->getId() << 8 ) | cHybrid->getId(); 
                 auto cPSModuleIter = fPSModulesCounterData.find(cPSModuleId); 
                 //bool cAllCountersReceived=false;
-                uint16_t cNominalOffset = 120*16*8-3*8+1; 
+                //uint16_t cNominalOffset = 120*16*8-3*8+1; 
                 std::vector<int> cOffsets{0,-1,+1,-2,+2,-3,+3,-4,+4,-5,+5,-6,+6,-7,+7};
                 size_t cOffsetIndx=0;
                 //do
                 //{   
-                    uint16_t cSSADelay = cNominalOffset + cOffsets[cOffsetIndx];
-                    // configure SSA delay 
-                    for(auto cChip: *cHybrid)
-                    {
-                        if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
-                        // WriteFERegister(cChip, 0x1012, cSSADelay & 0xFF );
-                        // WriteFERegister(cChip, 0x1013, cSSADelay >> 8  ); 
-                        auto cLSBs=ReadFERegister(cChip, 0x1012);
-                        auto cMSBs=ReadFERegister(cChip, 0x1013); 
-                        cSSADelay = ( cMSBs << 8 ) | cLSBs;
+                    // uint16_t cSSADelay = cNominalOffset + cOffsets[cOffsetIndx];
+                    // // configure SSA delay 
+                    // for(auto cChip: *cHybrid)
+                    // {
+                    //     if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
+                    //     // WriteFERegister(cChip, 0x1012, cSSADelay & 0xFF );
+                    //     // WriteFERegister(cChip, 0x1013, cSSADelay >> 8  ); 
+                    //     auto cLSBs=ReadFERegister(cChip, 0x1012);
+                    //     auto cMSBs=ReadFERegister(cChip, 0x1013); 
+                    //     cSSADelay = ( cMSBs << 8 ) | cLSBs;
                            
-                    }
-                    LOG (INFO) << BOLDYELLOW << "Async delay in SSAs set to 0x" << std::hex << cSSADelay << std::dec << RESET;
+                    // }
+                    // LOG (INFO) << BOLDYELLOW << "Async delay in SSAs set to 0x" << std::hex << cSSADelay << std::dec << RESET;
+
                     bool cCounterAttempt=false;
                     uint8_t cReadoutAttempt=0; 
                     uint8_t cMaxReadoutAttempts=0; 
@@ -3553,6 +3554,7 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                             }
                             cCounterValues.push_back( ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF));
                             LOG (DEBUG) << BOLDYELLOW << "Hit counter from Chnl#" << +cChnl << " read-back over I2C .. value is " << cCounterValues[cCounterValues.size()-1] << RESET;
+
                         }
                         
                         //MPA1 first pixel is 0 when read over the fast counter readout 
@@ -3568,16 +3570,58 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                             cFECounters.second.push_back( cCounterValues[0] );
                             //LOG (INFO) << BOLDYELLOW << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
                         }
-
                         //LOG (INFO) << BOLDBLUE << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
                         //LOG (DEBUG) << BOLDYELLOW << "ROC#" << +cChip->getId() << " Id in CIC should be " << +cIdCIC << " " << cFECounters.second.size() << " counters read back over stub lines" << RESET;
+                    }
+                }
+                // now check SSA counters 
+                bool cCheckSSAs=true;
+                size_t cMaxSSACounters=NSSACHANNELS;
+                for( auto &cFECounters : cPSModuleIter->second ) 
+                {
+                    auto cFeId = cFECounters.first & 0x7; 
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto& cIdCIC = cMapping[ cChip->getId()%8 ];
+                        if( cChip->getFrontEndType() == FrontEndType::MPA ) continue;
+                        if( cFeId != cIdCIC ) continue; 
+                        
+                        bool cReadI2C = cCheckSSAs || cFECounters.second.size() != cMaxSSACounters; 
+                        if( !cReadI2C ) continue;
+
+                        LOG (DEBUG) << BOLDYELLOW << "CIC FeId " << +cFeId << " SSA Id on hybrid" << +(cChip->getId()%8) << " -- id from map "  << +cIdCIC << RESET;
+                        for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        {
+                            int cRowNumber       = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? 1 + cChnl / 120 : 1;
+                            int cPixelNumber     = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? 1 + cChnl % 120 : 0;
+                            int cBaseRegisterLSB = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? ((cRowNumber << 11) | (9 << 7) | cPixelNumber) : 0x0901 + cChnl;
+                            int cBaseRegisterMSB = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? ((cRowNumber << 11) | (10 << 7) | cPixelNumber) : 0x0801 + cChnl;
+                            std::vector<int> cRegs{cBaseRegisterMSB, cBaseRegisterLSB};
+                            std::vector<int> cValues(0);
+                            for(auto cReg: cRegs)
+                            {
+                                ChipRegItem cReg_Counters_MSB;
+                                cReg_Counters_MSB.fPage    = 0x00;
+                                cReg_Counters_MSB.fAddress = cReg;
+                                cValues.push_back(ReadFERegister(cChip, cReg));
+                            }
+                            uint16_t cCounterI2C = ((cValues[0] & 0xFF) << 8) | (cValues[1] & 0xFF ) ;
+                            if( cCounterI2C != cFECounters.second[cChnl] )
+                            {
+                                LOG (INFO) << BOLDRED << "SSA#" << +cChip->getId() << " Mismatch in counter#" << +cChnl << " : " << cFECounters.second[cChnl] << " , " << cCounterI2C << RESET;
+                                cFECounters.second[cChnl]=cCounterI2C;
+                            }
+                            else 
+                            {
+                                LOG (DEBUG) << BOLDGREEN << "SSA#" << +cChip->getId() << " Match in counter#" << +cChnl << " : " << cFECounters.second[cChnl] << " , " << cCounterI2C << RESET;
+                            }
+                        }
+                        
                     }
                 }
 
                 // check that counter information is correct 
                 //bool cAllFound=true;
-                //size_t cMaxSSACounters=NSSACHANNELS;
-                //size_t cMaxMPACounters=NMPACOLS*NSSACHANNELS;
                 for( auto cFECounters : cPSModuleIter->second ) 
                 {
                     auto cFeId = cFECounters.first;
@@ -3592,12 +3636,12 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
                         
                         if( cChip->getFrontEndType() == FrontEndType::MPA )
                         {
-                           LOG (INFO) << BOLDMAGENTA << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
+                           LOG (DEBUG) << BOLDMAGENTA << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
                            //if( cFECounters.second.size() != cMaxMPACounters ) cAllFound = false;
                         }
                         //SSA1 last strip is missing from the fast counter readout 
                         else{ 
-                            LOG (INFO) << BOLDYELLOW << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
+                            LOG (DEBUG) << BOLDYELLOW << "ROC#" << +cChip->getId() << " read-back " << cFECounters.second.size() << " hit counters." << RESET;
                             //if( cFECounters.second.size() != cMaxSSACounters ) cAllFound = false;
                         }
                     }

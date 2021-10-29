@@ -45,7 +45,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
     fDisableStubLogic = pDisableStubLogic;
 
-    auto cType        = FrontEndType::CBC3;
     cWithCBC=false;
     cWithSSA=false;
     cWithMPA=false;
@@ -57,15 +56,16 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
             {
                 if( !cWithCBC )
                 {
-                    cWithCBC  = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end());
+                    cWithCBC  = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end());
                 }
                 if( !cWithSSA )
                 {
-                    cWithSSA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end());
+
+                    cWithSSA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end());
                 }
                 if( !cWithMPA )
                 {
-                    cWithMPA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end());
+                    cWithMPA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end());
                 }
             }
         }
@@ -493,10 +493,11 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
 void PedeNoise::scanScurves()
 {
     float    cMaxOccupancy  = 1.; 
-    float    cLimit         = 0.01;
+    float    cLimit         = 0.05;
     int      cMinBreakCount =  5;//take from xml
     int      cStepSize      =  1;//take from xml 
     int      cInitialSign   = -1;
+    int      cPrintOutStep  =  5;
     DetectorDataContainer cCounts, cSigns, cThresholds , cStatus ;
 
     // figure  out if you should normalize or not 
@@ -592,7 +593,7 @@ void PedeNoise::scanScurves()
                         auto& cCntSummary = cCntThisROC->getSummary<std::pair<int,int>>();
                         auto& cSignThisROC = cSignThisFE->at(cROC->getIndex())->getSummary<int>();
                         auto& cStatusThisROC = cStatusThisFE->at(cROC->getIndex())->getSummary<uint8_t>();
-                
+                        
                         auto cThThisROC = cThThisFE->at(cROC->getIndex())->getSummary<uint16_t>();
                         uint16_t cMaxValue = (cROC->getFrontEndType() == FrontEndType::CBC3) ? ( 1 << 10 ) : (1 << 8); 
                         cMaxValue = cMaxValue - 1; 
@@ -600,8 +601,8 @@ void PedeNoise::scanScurves()
                         if( cThLimitReached ) continue;
 
                         // switch sign and reset count once break count has been reached 
-                        bool cEndReached = false;
-                        if( cCntSummary.second == cMinBreakCount )
+                        bool cEndReached = ( cStatusThisROC == 1 ) ? true : false ;
+                        if( cCntSummary.second == cMinBreakCount && !cEndReached )
                         { 
                             LOG (INFO) << BOLDYELLOW << "\t\t.. ROC" << +cROC->getId() << " on hybrid" << +cFe->getId() 
                                 << " break count reached, switching sign " 
@@ -629,7 +630,7 @@ void PedeNoise::scanScurves()
 
                         // set threshold 
                         uint16_t cTh = cThThisROC + cSignThisROC*cStepSize;
-                        LOG (DEBUG) << BOLDYELLOW << "Setting threshold on ROC" << +cROC->getId() << " on Hybrid" << +cROC->getHybridId() 
+                        if( cStepCounter%cPrintOutStep == 0 ) LOG (INFO) << BOLDYELLOW << "Setting threshold on ROC" << +cROC->getId() << " on Hybrid" << +cROC->getHybridId() 
                             << " to " << cTh << RESET;
                         fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cTh);
                         if( cStatusThisROC == 0 ) cNmodified++;
@@ -662,11 +663,13 @@ void PedeNoise::scanScurves()
                         for(auto cROC: *cFe)
                         {
                             auto& cDataContainerThisROC = cDataContainerThisFE->at(cROC->getIndex());
+                            auto& cSummary = cDataContainerThisROC->getSummary<Occupancy,Occupancy>();
                             ChannelGroupHandler* cHandler; 
                             if( cROC->getFrontEndType() == FrontEndType::MPA ) cHandler = new MPAChannelGroupHandler();
                             else cHandler = new SSAChannelGroupHandler();
                             LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << +getNReadbackEvents() 
                                 << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+                            cSummary.fOccupancy = 0; 
                             for( uint16_t cChnl=0; cChnl < cDataContainerThisROC->size(); cChnl++)
                             {
                                 uint32_t cRow = cChnl%cHandler->allChannelGroup()->getNumberOfRows(); 
@@ -678,9 +681,11 @@ void PedeNoise::scanScurves()
                                     cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy /= getNReadbackEvents();
                                     cGlbOcc += cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
                                     if( cChnl < 10 || cChnl > 15*120 + 110 ) LOG (DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+                                    cSummary.fOccupancy+= cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
+                                    cNormGlblOcc++;
                                 }
-                                cNormGlblOcc++;
                             }
+                            cSummary.fOccupancy = std::min(cMaxOccupancy, cSummary.fOccupancy/cHandler->allChannelGroup()->getNumberOfEnabledChannels());
                         }
                     }
                 }
@@ -689,7 +694,7 @@ void PedeNoise::scanScurves()
         if( cNormalize == 1 ) cGlbOcc = std::min( cMaxOccupancy, cOccContainer->getSummary<Occupancy, Occupancy>().fOccupancy );
         else cGlbOcc = cGlbOcc/cNormGlblOcc;
 
-        if( cStepCounter%2 == 0 ) LOG (INFO) << BOLDBLUE << "PedeNoise [Step#" << +cStepCounter << "] global occupancy is " << cGlbOcc << RESET;
+        if( cStepCounter%cPrintOutStep == 0 ) LOG (INFO) << BOLDBLUE << "PedeNoise [Step#" << +cStepCounter << "] global occupancy is " << cGlbOcc << RESET;
 
         // now check if the occupancy has reached the limit 
         // and update threshold 
@@ -715,7 +720,7 @@ void PedeNoise::scanScurves()
                         auto& cCntSummary = cCntThisROC->getSummary<std::pair<int,int>>();
                         auto& cOccThisChip = cROC->getSummary<Occupancy, Occupancy>().fOccupancy;
                         auto  cDifference =  std::fabs( std::min(cMaxOccupancy,cOccThisChip)-cCntSummary.first);
-                        LOG (INFO) << BOLDBLUE << "\t.. Chip" << +cROC->getId() << " on Hybrid" << +cFe->getId() 
+                        if( cStepCounter%cPrintOutStep == 0 ) LOG (DEBUG) << BOLDBLUE << "\t.. Chip" << +cROC->getId() << " on Hybrid" << +cFe->getId() 
                             << " is " << cOccThisChip 
                             << " difference is " << cDifference 
                             << " current limit has been found " << cCntSummary.second << " times."
@@ -736,7 +741,7 @@ void PedeNoise::scanScurves()
         #endif
         // for the other case - I don't know what to do ask Fabio 
         cStepCounter++;
-    }while(cContinueScan && cStepCounter < 10);
+    }while(cContinueScan);// && cStepCounter < 10);
 
     // return normalization back to original value
     setNormalization(cNormalizationOrig);

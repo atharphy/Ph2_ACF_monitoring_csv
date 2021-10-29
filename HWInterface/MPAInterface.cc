@@ -746,7 +746,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 {
     fTrackRegisters=false;
     // for now ...
-    bool              cSkipLocalRegs = true;
+    bool              cConfigLocalRegs = false;
     std::stringstream cOutput;
     setBoard(pMPA->getBeBoardId());
     pMPA->printChipType(cOutput);
@@ -772,8 +772,12 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     //cRegsToConfig.push_back("TrimDAC");
     for(auto& cMapItem: fMap)
     {
-        bool cSkip=(cSkipLocalRegs && (cMapItem.second.find("_P") != std::string::npos));
-        if(cSkip && cRegsToConfig.size() > 0 ) 
+        bool cIsLocal = (cMapItem.second.find("_P") != std::string::npos); 
+        bool cSkip    = cIsLocal && !cConfigLocalRegs;
+        if( cIsLocal && cSkip ) LOG (DEBUG) << BOLDCYAN << "Skipping local register " << cMapItem.second << RESET;
+        if( cSkip ) continue;
+        
+        if(cRegsToConfig.size() > 0 && cConfigLocalRegs) 
         {
             // check if this is one to skip 
             bool cRegFound=false;
@@ -786,7 +790,9 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
             cSkip = (!cRegFound);
         }
         if( cSkip ) continue;
-        // LOG (INFO) << BOLDMAGENTA << "Configuring MPA#" << +pMPA->getId()%8 << " : " << cMapItem.second << RESET;
+        if( cIsLocal ) LOG (DEBUG) << BOLDCYAN << "Configuring local register " << cMapItem.second << RESET;
+        else LOG (DEBUG) << BOLDCYAN << "Configuring global register " << cMapItem.second << RESET;
+        
         // create a register
         ChipRegItem&                  cItem = cMPARegMap[cMapItem.second];
         std::pair<uint16_t, uint16_t> cReg;
@@ -794,7 +800,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         cReg.second = cItem.fValue;
         cRegs.push_back(cReg);
     }
-    if(cSkipLocalRegs)
+    if(!cConfigLocalRegs)
         LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual pixels]" << RESET;
     else
         LOG(INFO) << BOLDBLUE << "Complete configuration of MPA#" << +pMPA->getId() << " - write " << +cRegs.size() << " registers [configuring registers for individual pixels]" << RESET;

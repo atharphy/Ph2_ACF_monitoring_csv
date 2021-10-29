@@ -55,6 +55,7 @@ class PedestalEqualization : public Tool
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
     float    fOccupancyAtPedestal{0.56};
+    uint8_t  fUseMean{0};
 
     // to hold the original register values
     // DetectorDataContainer fStubLogicCointainer;
