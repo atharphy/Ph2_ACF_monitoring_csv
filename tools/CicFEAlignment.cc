@@ -371,7 +371,7 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
 
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
 {
-    bool cDebug=true;
+    bool cDebug=false;
     bool cAligned = true;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
 

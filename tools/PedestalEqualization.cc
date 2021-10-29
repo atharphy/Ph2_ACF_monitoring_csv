@@ -303,11 +303,12 @@ void PedestalEqualization::FindVplus()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
-    dumpConfigFiles();
+    
+    // dumpConfigFiles();
 
-    LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
-    if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    else setSameGlobalDac("ThresholdTrim_all",0x1F);
+    // LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
+    // if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
+    // else setSameGlobalDac("ThresholdTrim_all",0x1F);
     //else setSameLocalDac("ThresholdTrim", 0x1F);
 
     // store thresholds 
@@ -327,23 +328,29 @@ void PedestalEqualization::FindVplus()
                 for(auto chip: *hybrid) // for on chip - begin
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
-                    uint16_t     tmpVthr = 0;
-                    if(theChip->getFrontEndType()==FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
-                    if(theChip->getFrontEndType()==FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
-                    if(theChip->getFrontEndType()==FrontEndType::MPA)
-                    {
-                        tmpVthr = theChip->getReg("ThDAC0");
-                        LOG(INFO) << GREEN << "tmpVthr " << tmpVthr << RESET;
-                    }
-                    chip->getSummary<uint16_t>() = tmpVthr;
+                    auto cThreshold = fReadoutChipInterface->ReadChipReg(theChip,"Threshold");
 
+                    //uint16_t     tmpVthr = 0;
+                    // if(theChip->getFrontEndType()==FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
+                    // if(theChip->getFrontEndType()==FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
+                    // if(theChip->getFrontEndType()==FrontEndType::MPA)
+                    // {
+                    //     for( uint8_t cDAC=0; cDAC < 7; cDAC++ )
+                    //     {
+                    //         std::stringstream cRegName;
+                    //         cRegName << "ThDAC" << +cDAC;
+                    //         tmpVthr = theChip->getReg(cRegName.str());
+                    //         LOG(INFO) << GREEN << "tmpVthr " << tmpVthr << RESET;
+                    //     }
+                    // }
+                    chip->getSummary<uint16_t>() = cThreshold;
                     LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " ROC " << +chip->getId()
-                              << " = " << tmpVthr << RESET;
+                              << " = " << cThreshold << RESET;
                     uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
                     uint32_t TOTCHAN = chip->size();
                     // LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
                     nCbc += float(ENCHAN) / float(TOTCHAN);
-                    cMeanValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
+                    cMeanValue += cThreshold * (float(ENCHAN) / float(TOTCHAN));
                 } // for on chip - end
             }     // for on hybrid - end
         }         // for on opticalGroup - end

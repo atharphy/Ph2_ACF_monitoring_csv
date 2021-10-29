@@ -374,9 +374,9 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         this->Set_threshold(pMPA, pValue);
         return true;
     }
-    else if(pRegName.find("ThresholdTrim_all"))
+    else if(pRegName.find("ThresholdTrim_all") != std::string::npos )
     {
-        return   this->WriteChipSingleReg(pMPA,"TrimDAC_ALL",pValue,false);
+        return this->WriteChipSingleReg(pMPA,"TrimDAC_ALL",pValue,false);
     }
     else if(pRegName == "EnablePhaseAlignmentPattern" ) 
     {
@@ -639,7 +639,8 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     else
     {
         cSuccess     = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue, cCheckReadback);
-        if(cSuccess){ 
+        if(cSuccess)
+        { 
             LOG (DEBUG) << BOLDMAGENTA << "Updating value of " << pRegNode << " in memory to " << +cRegItem.fValue << RESET;
             pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
         }
@@ -653,7 +654,7 @@ bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     {
         pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
         cRegItem = pChip->getRegItem(pRegNode);
-        // LOG (INFO) << BOLDGREEN << "\t\t... MPAInterface::WriteChipSingleReg written " << pValue << " to " << pRegNode << " Status flag is " << +cRegItem.fStatusReg << RESET;
+        LOG (INFO) << BOLDGREEN << "\t\t... MPAInterface::WriteChipSingleReg written " << pValue << " to " << pRegNode << " Status flag is " << +cRegItem.fStatusReg << RESET;
     }
 #ifdef COUNT_FLAG
     fRegisterCount++;

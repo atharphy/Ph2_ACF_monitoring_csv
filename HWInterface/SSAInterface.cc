@@ -196,7 +196,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
        LOG(DEBUG) << BOLDBLUE << "Setting strip mask to 0x" << std::hex << +cValue << std::dec << " on StripNum#" << cStripNum << RESET;
        return WriteChipSingleReg(pSSA, cRegName.str(), cValue, pVerifLoop);
     }
-    else if(pRegName.find("ThresholdTrim_all"))
+    else if(pRegName.find("ThresholdTrim_all") != std::string::npos )
     {
         return   this->WriteChipSingleReg(pSSA,"THTRIMMING_ALL",pValue,false);
     }

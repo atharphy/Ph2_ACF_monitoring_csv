@@ -494,7 +494,7 @@ void PedeNoise::scanScurves()
 {
     float    cMaxOccupancy  = 1.; 
     float    cLimit         = 0.05;
-    int      cMinBreakCount =  5;//take from xml
+    int      cMinBreakCount =  15;//take from xml
     int      cStepSize      =  1;//take from xml 
     int      cInitialSign   = -1;
     int      cPrintOutStep  =  5;
@@ -593,13 +593,11 @@ void PedeNoise::scanScurves()
                         auto& cCntSummary = cCntThisROC->getSummary<std::pair<int,int>>();
                         auto& cSignThisROC = cSignThisFE->at(cROC->getIndex())->getSummary<int>();
                         auto& cStatusThisROC = cStatusThisFE->at(cROC->getIndex())->getSummary<uint8_t>();
-                        
-                        auto cThThisROC = cThThisFE->at(cROC->getIndex())->getSummary<uint16_t>();
+
+                        auto& cThThisROC = cThThisFE->at(cROC->getIndex())->getSummary<uint16_t>();
                         uint16_t cMaxValue = (cROC->getFrontEndType() == FrontEndType::CBC3) ? ( 1 << 10 ) : (1 << 8); 
                         cMaxValue = cMaxValue - 1; 
-                        bool cThLimitReached = (cThThisROC <= 0 || cThThisROC >= cMaxValue); 
-                        if( cThLimitReached ) continue;
-
+                        
                         // switch sign and reset count once break count has been reached 
                         bool cEndReached = ( cStatusThisROC == 1 ) ? true : false ;
                         if( cCntSummary.second == cMinBreakCount && !cEndReached )
@@ -623,17 +621,21 @@ void PedeNoise::scanScurves()
                                 cCntSummary.first = (cCntSummary.first == 1 ) ? 1-cCntSummary.first : 0;
                             }
                         }
-                        if( cEndReached ) continue; 
                         //bool cBrkCntReached = (cCntSummary.second >= cMinBreakCount);
                         //bool cEndReached = (cROC->getFrontEndType() == FrontEndType::CBC3) ? ( cCntSummary.first == 1) : 0; 
                         //if( cBrkCntReached && cEndReached) continue;
 
                         // set threshold 
-                        uint16_t cTh = cThThisROC + cSignThisROC*cStepSize;
+                        int cTh = cThThisROC + cSignThisROC*cStepSize;
+                        bool cThLimitReached = (cTh <= 0 || cTh >= cMaxValue); 
+                        if( cThLimitReached ) cTh = (cTh <= 0 ) ? 0 : cMaxValue;
+                        //if( cROC->getFrontEndType() == FrontEndType::MPA ) cTh = 255; 
+                        cThThisROC = cTh;
+                        
                         if( cStepCounter%cPrintOutStep == 0 ) LOG (INFO) << BOLDYELLOW << "Setting threshold on ROC" << +cROC->getId() << " on Hybrid" << +cROC->getHybridId() 
-                            << " to " << cTh << RESET;
-                        fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cTh);
-                        if( cStatusThisROC == 0 ) cNmodified++;
+                            << " to " << cThThisROC << RESET;
+                        fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cThThisROC);
+                        if( cStatusThisROC == 0 && cROC->getFrontEndType() == FrontEndType::SSA ) cNmodified++;
                     }//ROC
                 }//FE
             }//OG
@@ -645,6 +647,7 @@ void PedeNoise::scanScurves()
         // measure occupancy for all BeBoards
         DetectorDataContainer* cOccContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer                       = cOccContainer;
+        fSCurveOccupancyMap[cStepCounter]                  = cOccContainer;
         float cGlbOcc = 0; 
         size_t cNormGlblOcc=0; 
         for( auto cBoard :*fDetectorContainer ) 
@@ -695,23 +698,26 @@ void PedeNoise::scanScurves()
 
         if( cStepCounter%cPrintOutStep == 0 ) LOG (INFO) << BOLDBLUE << "PedeNoise [Step#" << +cStepCounter << "] global occupancy is " << cGlbOcc << RESET;
 
+        #ifdef __USE_ROOT__
+            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cThresholds, *cOccContainer);
+        #endif
+
         // now check if the occupancy has reached the limit 
-        // and update threshold 
         for( auto cBoard : *fDetectorDataContainer )
         {
             auto& cCntThisBrd = cCounts.at(cBoard->getIndex());
-            auto& cThThisBrd = cThresholds.at(cBoard->getIndex());
-            auto& cSignThisBrd = cSigns.at(cBoard->getIndex());
+            //auto& cThThisBrd = cThresholds.at(cBoard->getIndex());
+            //auto& cSignThisBrd = cSigns.at(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
                 auto& cCntThisOG = cCntThisBrd->at(cOpticalGroup->getIndex());
-                auto& cSignThisOG = cSignThisBrd->at(cOpticalGroup->getIndex());
-                auto& cThThisOG = cThThisBrd->at(cOpticalGroup->getIndex());
+                //auto& cSignThisOG = cSignThisBrd->at(cOpticalGroup->getIndex());
+                //auto& cThThisOG = cThThisBrd->at(cOpticalGroup->getIndex());
                 for(auto cFe: *cOpticalGroup)
                 {
                     auto& cCntThisFE = cCntThisOG->at(cFe->getIndex());
-                    auto& cSignThisFE = cSignThisOG->at(cFe->getIndex());
-                    auto& cThThisFE = cThThisOG->at(cFe->getIndex());
+                    //auto& cSignThisFE = cSignThisOG->at(cFe->getIndex());
+                    //auto& cThThisFE = cThThisOG->at(cFe->getIndex());
                     for(auto cROC: *cFe)
                     {
                         // update counters 
@@ -726,18 +732,14 @@ void PedeNoise::scanScurves()
                             << RESET;
                         int cIncrement = ( std::fabs(cOccThisChip-cCntSummary.first) <= cLimit )  ? 1 : 0;
                         cCntSummary.second += cIncrement;
-                        // update threshold 
-                        auto& cThThisROC = cThThisFE->at(cROC->getIndex());
-                        auto& cSignThisROC = cSignThisFE->at(cROC->getIndex());
-                        cThThisROC->getSummary<uint16_t>() = cThThisROC->getSummary<uint16_t>() + cSignThisROC->getSummary<int>()*cStepSize;
+                        // // update threshold 
+                        // auto& cThThisROC = cThThisFE->at(cROC->getIndex());
+                        // auto& cSignThisROC = cSignThisFE->at(cROC->getIndex());
+                        // cThThisROC->getSummary<uint16_t>() = cThThisROC->getSummary<uint16_t>() + cSignThisROC->getSummary<int>()*cStepSize;
                     }//chip
                 }// hybrid
             }//OG
         }// board 
-
-        #ifdef __USE_ROOT__
-            if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cThresholds, *cOccContainer);
-        #endif
         // for the other case - I don't know what to do ask Fabio 
         cStepCounter++;
     }while(cContinueScan);// && cStepCounter < 10);
