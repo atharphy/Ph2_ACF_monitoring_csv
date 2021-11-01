@@ -27,7 +27,7 @@ class ChannelGroupBase
         : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols), customPatternSet_(false){};
     virtual ~ChannelGroupBase() { ; }
     virtual void
-    makeTestGroup(ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const = 0;
+                     makeTestGroup(ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const = 0;
     uint32_t         getNumberOfRows(void) const { return numberOfRows_; }
     uint32_t         getNumberOfCols(void) const { return numberOfCols_; }
     uint32_t         getNumberOfEnabledChannels(void) const { return numberOfEnabledChannels_; }
@@ -77,7 +77,7 @@ class ChannelGroup : public ChannelGroupBase
     }
     inline void disableChannel(uint16_t row, uint16_t col = 0) override
     {
-        std::cout<<"disableChannel "<<row<<" "<<col<<std::endl;
+        std::cout << "disableChannel " << row << " " << col << std::endl;
         channelsBitset_[row + numberOfRows_ * col] = false;
         numberOfEnabledChannels_                   = channelsBitset_.count();
     }
@@ -102,7 +102,7 @@ class ChannelGroup : public ChannelGroupBase
     {
         std::bitset<R * C> tmpBitset;
         tmpBitset = this->channelsBitset_ & static_cast<const ChannelGroup<R, C>*>(mask)->channelsBitset_;
-        //std::cout << tmpBitset << "\n";
+        // std::cout << tmpBitset << "\n";
         // throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
         return tmpBitset.count();
     }
@@ -156,9 +156,7 @@ class ChannelGroup : public ChannelGroupBase
                     for(uint16_t clusterRow = 0; clusterRow < numberOfRowsPerCluster; ++clusterRow)
                     {
                         for(uint16_t clusterCol = 0; clusterCol < numberOfColsPerCluster; ++clusterCol)
-                        {
-                            static_cast<ChannelGroup<R, C>*>(currentChannelGroup)->enableChannel(row + clusterRow, col + clusterCol);
-                        }
+                        { static_cast<ChannelGroup<R, C>*>(currentChannelGroup)->enableChannel(row + clusterRow, col + clusterCol); }
                     }
                 }
             }

@@ -207,7 +207,8 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                     uint8_t cAlignmentPattern = 0x80;
                     for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
                     {
-                        std::stringstream cBuffer; cBuffer << "OutPattern" << +cLineId; 
+                        std::stringstream cBuffer;
+                        cBuffer << "OutPattern" << +cLineId;
                         std::string cRegName = (cLineId == 8) ? "OutPattern7/FIFOconfig" : cBuffer.str();
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, cAlignmentPattern);
                         cTuned =
@@ -245,14 +246,14 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     LOG(INFO) << GREEN << "PS Phase tuning finished succesfully" << RESET;
     return cTuned;
 }
-// re-use function from link alignment 
+// re-use function from link alignment
 bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 {
     LinkAlignmentOT::Inherit(this);
     LinkAlignmentOT::Initialise();
-    
-    if( !PhaseAlignBEdata(pBoard) ) return false;
-    if( !WordAlignBEdata(pBoard) ) return false;
+
+    if(!PhaseAlignBEdata(pBoard)) return false;
+    if(!WordAlignBEdata(pBoard)) return false;
 
     LinkAlignmentOT::Reset();
 
@@ -261,19 +262,17 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         size_t cNlines = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
         for(auto cHybrid: *cOpticalGroup)
         {
-            for( size_t cLineId=0; cLineId < cNlines; cLineId++)
+            for(size_t cLineId = 0; cLineId < cNlines; cLineId++)
             {
-                auto cDelay = getBeSamplingDelay(pBoard->getIndex(), cOpticalGroup->getIndex(), cHybrid->getIndex(), cLineId);
+                auto cDelay   = getBeSamplingDelay(pBoard->getIndex(), cOpticalGroup->getIndex(), cHybrid->getIndex(), cLineId);
                 auto cBitslip = getBeBitSlip(pBoard->getIndex(), cOpticalGroup->getIndex(), cHybrid->getIndex(), cLineId);
-                if( cLineId == 0 )
-                    LOG (INFO) << BOLDMAGENTA << "Delay on L1A line is " << +cDelay 
-                        << "\t\t..Bitslip on Line#" << +cLineId << " is " << +cBitslip << RESET;
+                if(cLineId == 0)
+                    LOG(INFO) << BOLDMAGENTA << "Delay on L1A line is " << +cDelay << "\t\t..Bitslip on Line#" << +cLineId << " is " << +cBitslip << RESET;
                 else
-                    LOG (INFO) << BOLDMAGENTA << "Delay on Stub line#" << +cLineId << " is " << +cDelay 
-                        << "\t\t..Bitslip on Line#" << +cLineId << " is " << +cBitslip << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "Delay on Stub line#" << +cLineId << " is " << +cDelay << "\t\t..Bitslip on Line#" << +cLineId << " is " << +cBitslip << RESET;
             }
         } // hybrids
-    } // OGs
+    }     // OGs
     return true;
 }
 
@@ -288,7 +287,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
             for(auto cReadoutChip: *cHybrid)
             {
                 ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
-                fBeBoardInterface->WriteBoardReg (pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getId() );
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getId());
                 // original mask
                 const ChannelGroup<NCHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cReadoutChip->getChipOriginalMask());
                 // original threshold
@@ -351,8 +350,9 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                     cSuccess = cSuccess | (static_cast<uint8_t>(cTuned) << (cLineId - 1));
 
                 cAligned = (cAligned && cSuccess == 0x1F);
-                LOG(INFO) << BOLDBLUE  << "Success register for this chip is " << std::bitset<8>(cSuccess) << RESET;
-                LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeeds[0]) << ", " << std::bitset<8>(cSeeds[1]) << ", " << std::bitset<8>(cSeeds[2]) << " on stub lines  0, 1 and 2."<< RESET;
+                LOG(INFO) << BOLDBLUE << "Success register for this chip is " << std::bitset<8>(cSuccess) << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeeds[0]) << ", " << std::bitset<8>(cSeeds[1]) << ", " << std::bitset<8>(cSeeds[2]) << " on stub lines  0, 1 and 2."
+                          << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((cBendCode_phAlign << 4) | cBendCode_phAlign) << " on stub line  4." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((1 << 7) | cBendCode_phAlign) << " on stub line  5." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "After alignment of last stub line ... stub lines 0-5: " << RESET;
@@ -399,20 +399,19 @@ bool BackEndAlignment::Align()
                 } // ROcs
             }     // Hybrids
         }         // OGs
-        if(cWithCIC )
-        {
-            cAligned = this->CICAlignment(theBoard);
-        }
+        if(cWithCIC) { cAligned = this->CICAlignment(theBoard); }
         else if(cWithCBC)
         {
             cAligned = this->CBCAlignment(theBoard);
         }
-        else if(cWithMPA || cWithSSA ) 
+        else if(cWithMPA || cWithSSA)
             cAligned = this->PSAlignment(theBoard);
 
-        // check alignment 
-        if( cAligned ) LOG (INFO) << BOLDGREEN << "Back-end alignment worked..." << RESET;
-        else LOG (INFO) << BOLDRED << "Back-end alignment FAILED..." << RESET;
+        // check alignment
+        if(cAligned)
+            LOG(INFO) << BOLDGREEN << "Back-end alignment worked..." << RESET;
+        else
+            LOG(INFO) << BOLDRED << "Back-end alignment FAILED..." << RESET;
         // re-load configuration of fast command block from register map loaded from xml file
         LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(theBoard);

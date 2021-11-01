@@ -389,7 +389,8 @@ int main(int argc, char** argv)
             // #############################################
             int  evenORodd = 0;
             bool doTwice   = false;
-            do {
+            do
+            {
                 if(TESTSUBDETECTORY == true)
                 {
                     if(pa.fDetectorContainer->size() != 1)

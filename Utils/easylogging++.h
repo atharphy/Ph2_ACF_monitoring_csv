@@ -768,14 +768,14 @@ static const unsigned int kDefaultSubsecondPrecision = 3;
 #ifdef ELPP_DEFAULT_LOGGER
 static const char* kDefaultLoggerId = ELPP_DEFAULT_LOGGER;
 #else
-static const char* kDefaultLoggerId = "default";
+static const char*        kDefaultLoggerId   = "default";
 #endif
 
 #if defined(ELPP_FEATURE_ALL) || defined(ELPP_FEATURE_PERFORMANCE_TRACKING)
 #ifdef ELPP_DEFAULT_PERFORMANCE_LOGGER
 static const char* kPerformanceLoggerId = ELPP_DEFAULT_PERFORMANCE_LOGGER;
 #else
-static const char* kPerformanceLoggerId = "performance";
+static const char*                              kPerformanceLoggerId = "performance";
 #endif // ELPP_DEFAULT_PERFORMANCE_LOGGER
 #endif
 
@@ -786,7 +786,7 @@ static const char* kSysLogLoggerId = "syslog";
 #if ELPP_OS_WINDOWS
 static const char* kFilePathSeparator = "\\";
 #else
-static const char* kFilePathSeparator = "/";
+static const char*        kFilePathSeparator = "/";
 #endif // ELPP_OS_WINDOWS
 
 static const std::size_t kSourceFilenameMaxLength        = 100;
@@ -1065,7 +1065,7 @@ static std::string getCurrentThreadId(void)
 }
 #endif // !ELPP_USE_STD_THREADING
 #else
-static inline std::string getCurrentThreadId(void) { return std::string(); }
+static inline std::string                                               getCurrentThreadId(void) { return std::string(); }
 #endif // ELPP_THREADING_ENABLED
 } // namespace threading
 namespace utils
@@ -3432,9 +3432,7 @@ class DefaultPerformanceTrackingCallback : public PerformanceTrackingCallback
         m_data = data;
         base::type::stringstream_t ss;
         if(m_data->dataType() == PerformanceTrackingData::DataType::Complete)
-        {
-            ss << ELPP_LITERAL("Executed [") << m_data->blockName()->c_str() << ELPP_LITERAL("] in [") << *m_data->formattedTimeTaken() << ELPP_LITERAL("]");
-        }
+        { ss << ELPP_LITERAL("Executed [") << m_data->blockName()->c_str() << ELPP_LITERAL("] in [") << *m_data->formattedTimeTaken() << ELPP_LITERAL("]"); }
         else
         {
             ss << ELPP_LITERAL("Performance checkpoint");

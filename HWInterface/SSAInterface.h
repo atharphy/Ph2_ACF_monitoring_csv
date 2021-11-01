@@ -17,9 +17,7 @@
 #include <vector>
 
 // pixelEnable bits
-const std::map<std::string, uint8_t> STRIP_ENABLE_TABLE =
-    {{"StripMask", 0}, {"Polarity", 1}, {"CounterEnable", 2}, {"DigitalInjection", 3}, {"AnalogueInjection", 4}};
-
+const std::map<std::string, uint8_t> STRIP_ENABLE_TABLE = {{"StripMask", 0}, {"Polarity", 1}, {"CounterEnable", 2}, {"DigitalInjection", 3}, {"AnalogueInjection", 4}};
 
 namespace Ph2_HwInterface
 { // start namespace
@@ -47,7 +45,7 @@ class SSAInterface : public ReadoutChipInterface
     void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA, uint32_t n_pulse);
     void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
     void     Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
-    
+
     // std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
     // std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
     // void                              resetErrorSummary(){fWriteErrorMap.clear(); fReadBackErrorMap.clear(); fRegisterWrites=0; };
@@ -79,9 +77,9 @@ class SSAInterface : public ReadoutChipInterface
     void setRetryI2C(bool pRetry) { fRetryI2C = pRetry; }
     void setMaxI2CAttempts(uint8_t pMaxAttempts) { fMaxI2CAttempts = pMaxAttempts; }
 
-    void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
-    void     produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
-    
+    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+
   private:
     // I2C config
     bool    fRetryI2C       = false;
@@ -123,7 +121,6 @@ class SSAInterface : public ReadoutChipInterface
                                                {"Bandgap", 10},
                                                {"GND", 11},
                                                {"HighZ", 12}};
-
 
 }; // end class
 

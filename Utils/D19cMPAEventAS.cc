@@ -35,8 +35,8 @@ D19cMPAEventAS::D19cMPAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
             cROCIds.clear();
             for(auto cChip: *cFe)
             {
-                if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                
+                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+
                 RocCounterData cRocData;
                 cRocData.clear();
                 cHybridCounterData.push_back(cRocData);
@@ -67,12 +67,12 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
             // loop over chips
             for(auto cChip: *cFe)
             {
-                if( cChip->getFrontEndType() != FrontEndType::MPA ) continue;
-                
-                std::string cTypePrnt        = "Pxl";
-                //int         cDebugCnt        = (cChip->getFrontEndType() == FrontEndType::MPA) ? 250 : 25;
-                auto&       cChipCounterData = cHybridCounterData[cRocIndex];
-                
+                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+
+                std::string cTypePrnt = "Pxl";
+                // int         cDebugCnt        = (cChip->getFrontEndType() == FrontEndType::MPA) ? 250 : 25;
+                auto& cChipCounterData = cHybridCounterData[cRocIndex];
+
                 for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                 {
                     if(cChnl % 2 == 0)
@@ -82,8 +82,9 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
                         int  cNxtPxl  = cChnl + 1;
                         cChipCounterData.push_back((cWord & 0xFFFF));
                         cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
-                        //if(cFrstPxl % cDebugCnt == 0)
-                        if( cNxtPxl < 30 ) LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " [" << cTypePrnt << "#" << +cFrstPxl << " ," << cTypePrnt << "#" << cNxtPxl << " ]"
+                        // if(cFrstPxl % cDebugCnt == 0)
+                        if(cNxtPxl < 30)
+                            LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " [" << cTypePrnt << "#" << +cFrstPxl << " ," << cTypePrnt << "#" << cNxtPxl << " ]"
                                        << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                         cDataIterator++;
                     } // every 2 channels are packed into one 32 bit word
@@ -103,23 +104,24 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
         {
             for(auto chip: *hybrid)
             {
-                if( chip->size() != 16*120 ) continue;
-                
+                if(chip->size() != 16 * 120) continue;
+
                 std::vector<uint32_t> cHits = GetHits(hybrid->getId(), chip->getId());
-                float cOcc=0; 
-                size_t cChnl=0;
+                float                 cOcc  = 0;
+                size_t                cChnl = 0;
                 for(auto cHit: cHits)
                 {
-                    //uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows(); 
-                    //uint32_t cCol = (cTestChannelGroup->getNumberOfCols() > 1 ) ? cChnl/cTestChannelGroup->getNumberOfRows() : 1; 
-                    if(cTestChannelGroup->isChannelEnabled(cChnl)) { 
-                        if( cChnl < 10 ) LOG (INFO) << BOLDBLUE << cChnl << " found " << cHit << RESET;
-                        chip->getChannelContainer<Occupancy>()->at(cChnl).fOccupancy += cHit; 
+                    // uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows();
+                    // uint32_t cCol = (cTestChannelGroup->getNumberOfCols() > 1 ) ? cChnl/cTestChannelGroup->getNumberOfRows() : 1;
+                    if(cTestChannelGroup->isChannelEnabled(cChnl))
+                    {
+                        if(cChnl < 10) LOG(INFO) << BOLDBLUE << cChnl << " found " << cHit << RESET;
+                        chip->getChannelContainer<Occupancy>()->at(cChnl).fOccupancy += cHit;
                         cOcc += cHit;
                     }
                     cChnl++;
                 }
-                LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc/chip->size() << RESET;
+                LOG(INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc / chip->size() << RESET;
             }
         }
     }
@@ -136,7 +138,7 @@ void D19cMPAEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::
             uint32_t nc = 0;
             for(auto cChip: *cHybrid)
             {
-                fEventDataVector[encodeVectorIndex(cHybrid->getId(), cChip->getId()%8, pNMPA)] = std::vector<uint32_t>(list.begin() + nc * 1920, list.begin() + (nc + 1) * 1920);
+                fEventDataVector[encodeVectorIndex(cHybrid->getId(), cChip->getId() % 8, pNMPA)] = std::vector<uint32_t>(list.begin() + nc * 1920, list.begin() + (nc + 1) * 1920);
                 // std::cout<<fEventDataVector[encodeVectorIndex (cHybrid->getId(), cChip->getId(), pNMPA)
                 // ][5]<<std::endl;
 

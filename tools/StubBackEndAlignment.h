@@ -37,15 +37,13 @@ class StubBackEndAlignment : public Tool
     bool getStatus() const { return fSuccess; }
 
   protected:
-    
   private:
     // Containers
     DetectorDataContainer fBoardRegContainer;
-    bool fSuccess;
-    bool fWithCIC;
+    bool                  fSuccess;
+    bool                  fWithCIC;
 
     bool FindStubLatency(Ph2_HwDescription::BeBoard* pBoard);
     bool FindPackageDelay(Ph2_HwDescription::BeBoard* pBoard);
-    
 };
 #endif

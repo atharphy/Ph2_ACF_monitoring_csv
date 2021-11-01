@@ -87,8 +87,6 @@ class Cbc : public ReadoutChip
         else
             return 8;
     }
-
-    
 };
 } // namespace Ph2_HwDescription
 

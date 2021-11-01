@@ -105,7 +105,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
             auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
             std::vector<std::string> cLines(0);
             size_t                   cLine = 0;
-            do {
+            do
+            {
 #ifdef __SEH_USB__
                 if(cLine == 7) { continue; } // makeing sure missing stub line pair is skipped in 2S case
 #endif
@@ -432,7 +433,8 @@ bool OTHybridTester::LpGBTTestFixedADCs()
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             // Configure Temperature sensor
             clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0xff);
-            do {
+            do
+            {
                 cADCValueVect.clear();
                 cADCNameString = cADCsMapIterator->first;
                 cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
@@ -521,7 +523,8 @@ bool OTHybridTester::LpGBTTestResetLines()
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;
-        do {
+        do
+        {
 #ifdef __ROH_USB__
             fTCInterface.getInterface().adc_get(cMapIterator->second, cMeasurement);
 #elif __SEH_USB__
@@ -604,14 +607,13 @@ bool OTHybridTester::LpGBTTestVTRx()
         {
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
             auto cMapIterator = fVTRxplusDefaultRegisters.begin();
-            do {
+            do
+            {
                 cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1);
                 cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
                 if(cRecent && (cResult == cMapIterator->second))
-                {
-                    LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET;
-                }
+                { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Error in VTRx+ register " << cMapIterator->first << " ." << RESET;
@@ -649,7 +651,8 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
         auto cMapIterator = fFCMDLines.begin();
         LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
         res = true;
-        do {
+        do
+        {
             uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
             LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
 

@@ -54,46 +54,45 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async MPA " << RESET;
-    auto    cDataIterator = pData.begin();
+    auto cDataIterator = pData.begin();
     do
     {
-        //uint32_t cPSModuleId = (pBoard->getId() << 16) | (cOpticalGroup->getId() << 8 ) | cHybrid->getId(); 
-        uint8_t cBoardId   = (*cDataIterator >> 16) & 0xFF ;
-        uint8_t cOpticalId = (*cDataIterator >> 8) & 0xFF ; 
-        uint8_t cHybridId  = (*cDataIterator >> 0) & 0xFF ; 
+        // uint32_t cPSModuleId = (pBoard->getId() << 16) | (cOpticalGroup->getId() << 8 ) | cHybrid->getId();
+        uint8_t cBoardId   = (*cDataIterator >> 16) & 0xFF;
+        uint8_t cOpticalId = (*cDataIterator >> 8) & 0xFF;
+        uint8_t cHybridId  = (*cDataIterator >> 0) & 0xFF;
         cDataIterator++;
-        auto cCicFeId = ( (*cDataIterator) >> 16 ) & 0xFF ;
-        uint8_t cIsSSA = (cCicFeId & (0x1 << 3)) >> 3 ; 
-        auto cCounterInfo = ( (*cDataIterator) & 0xFFFF );
-        if( cBoardId == pBoard->getId() )
+        auto    cCicFeId     = ((*cDataIterator) >> 16) & 0xFF;
+        uint8_t cIsSSA       = (cCicFeId & (0x1 << 3)) >> 3;
+        auto    cCounterInfo = ((*cDataIterator) & 0xFFFF);
+        if(cBoardId == pBoard->getId())
         {
             for(auto cOpticalGroup: *pBoard)
             {
-                if( cOpticalGroup->getId() != cOpticalId ) continue;
+                if(cOpticalGroup->getId() != cOpticalId) continue;
                 for(auto cFe: *cOpticalGroup)
                 {
-                    if( cFe->getId() != cOpticalId ) continue;
+                    if(cFe->getId() != cOpticalId) continue;
 
                     auto cFeIndx = getFeIndex(cFe->getId());
                     for(auto cChip: *cFe)
                     {
-                        auto cMappedId = getChipIdMapped( cFe->getId(), cChip->getId() );
-                        if( cMappedId != ( cCicFeId & 0x7 ) ) continue;
-                        if( cChip->getId() > 7 &&  cIsSSA == 1 ) continue; 
-                        if( cChip->getId() < 8 &&  cIsSSA == 0 ) continue; 
-                        auto cChipIndx = getROCIndex(cFeIndx,cChip->getId());
+                        auto cMappedId = getChipIdMapped(cFe->getId(), cChip->getId());
+                        if(cMappedId != (cCicFeId & 0x7)) continue;
+                        if(cChip->getId() > 7 && cIsSSA == 1) continue;
+                        if(cChip->getId() < 8 && cIsSSA == 0) continue;
+                        auto cChipIndx = getROCIndex(cFeIndx, cChip->getId());
                         fCounterData[cFeIndx][cChipIndx].push_back(cCounterInfo);
-                        LOG (DEBUG) << BOLDBLUE <<  "BeBoard" << +cBoardId << " OG" << +cOpticalId << " Hybrid" << +cHybridId 
-                            << " CicFE" << +cCicFeId << " HybridFE" << +cChip->getId() << " : "
-                            << +cIsSSA << " , "
-                            << " : " << cCounterInfo << "[" <<  fCounterData[cFeIndx][cChipIndx].size() << "]" << RESET; 
+                        LOG(DEBUG) << BOLDBLUE << "BeBoard" << +cBoardId << " OG" << +cOpticalId << " Hybrid" << +cHybridId << " CicFE" << +cCicFeId << " HybridFE" << +cChip->getId() << " : "
+                                   << +cIsSSA << " , "
+                                   << " : " << cCounterInfo << "[" << fCounterData[cFeIndx][cChipIndx].size() << "]" << RESET;
                     }
                 }
             }
         }
 
         cDataIterator++;
-    }while( cDataIterator < pData.end() );
+    } while(cDataIterator < pData.end());
     /*
     uint8_t cFeIndex      = 0;
     for(auto cOpticalGroup: *pBoard)
@@ -132,11 +131,12 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
 {
-    if( cTestChannelGroup == nullptr ){ 
-        LOG (INFO) << BOLDRED << "!!!!" << RESET;
+    if(cTestChannelGroup == nullptr)
+    {
+        LOG(INFO) << BOLDRED << "!!!!" << RESET;
         return;
     }
-    //LOG (INFO) << cTestChannelGroup->getNumberOfRows() << " : " << cTestChannelGroup->getNumberOfCols() << RESET;
+    // LOG (INFO) << cTestChannelGroup->getNumberOfRows() << " : " << cTestChannelGroup->getNumberOfCols() << RESET;
     for(auto opticalGroup: *boardContainer)
     {
         for(auto hybrid: *opticalGroup)
@@ -144,23 +144,26 @@ void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const 
             for(auto chip: *hybrid)
             {
                 std::vector<uint32_t> cHits = GetHits(hybrid->getId(), chip->getId());
-                float cOcc=0; 
-                size_t cChnl=0;
+                float                 cOcc  = 0;
+                size_t                cChnl = 0;
                 for(auto cHit: cHits)
                 {
-                    //uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows(); 
-                    //uint32_t cCol = (cTestChannelGroup->getNumberOfCols() > 1 ) ? cChnl/cTestChannelGroup->getNumberOfRows() : 1; 
-                    if(cTestChannelGroup->isChannelEnabled(cChnl)) { 
-                        uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows(); 
+                    // uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows();
+                    // uint32_t cCol = (cTestChannelGroup->getNumberOfCols() > 1 ) ? cChnl/cTestChannelGroup->getNumberOfRows() : 1;
+                    if(cTestChannelGroup->isChannelEnabled(cChnl))
+                    {
+                        uint32_t cRow = cChnl % cTestChannelGroup->getNumberOfRows();
                         uint32_t cCol;
-                        if( cTestChannelGroup->getNumberOfCols() == 0 ) cCol = 0; 
-                        else  cCol = cChnl/cTestChannelGroup->getNumberOfRows();
+                        if(cTestChannelGroup->getNumberOfCols() == 0)
+                            cCol = 0;
+                        else
+                            cCol = cChnl / cTestChannelGroup->getNumberOfRows();
                         chip->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
                         cOcc += cHit;
                     }
                     cChnl++;
                 }
-                LOG (DEBUG) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc/chip->size() << RESET;
+                LOG(DEBUG) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc / chip->size() << RESET;
             }
         }
     }

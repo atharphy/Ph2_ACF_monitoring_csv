@@ -6,18 +6,18 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
-#include "tools/StubBackEndAlignment.h"
+#include "tools/BeamTestCheck2S.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/LatencyScan.h"
+#include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
-#include "tools/LinkAlignmentOT.h"
-#include "tools/LatencyScan.h"
-#include "tools/BeamTestCheck2S.h"
+#include "tools/StubBackEndAlignment.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
-    
+
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("manualScan", "Manual scan of threshold", ArgvParser::NoOptionAttribute);
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
     //
-    cmd.defineOption("DataMonitor", "Data monitor" , ArgvParser::OptionRequiresValue);
+    cmd.defineOption("DataMonitor", "Data monitor", ArgvParser::OptionRequiresValue);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     //
@@ -156,18 +156,18 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile           = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
-    bool        batchMode         = (cmd.foundOption("batch")) ? true : false;
-    bool        cCheckData        = (cmd.foundOption("checkData"));
-    bool cSaveToFile = cmd.foundOption("save");
-    std::string   cSkip       = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
-    std::string   cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
-    std::string   cSrcLnkTst  = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
-    std::string   cModuleId  = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    std::string   cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint16_t cRunNumber; 
+    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
+    bool        cCheckData       = (cmd.foundOption("checkData"));
+    bool        cSaveToFile      = cmd.foundOption("save");
+    std::string cSkip            = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
+    std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
+    std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
+    std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    uint16_t    cRunNumber;
     if(!cmd.foundOption("read"))
-    { 
+    {
         std::ofstream cRunLog;
         cRunNumber = returnRunNumber("RunNumbers.dat");
         cRunLog.open("RunNumbers.dat", std::fstream::app);
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
         cTool.addFileHandler(cRawFile, 'w');
         LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
     }
-        
+
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Reading temperatures from lpGBT-ADCs.." << RESET;
         auto cCurrentDAC = (cmd.foundOption("readTemperatures")) ? convertAnyInt(cmd.optionValue("readTemperatures").c_str()) : 0x10;
-    
+
         for(const auto cBoard: *cTool.fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -217,61 +217,56 @@ int main(int argc, char* argv[])
                 auto& clpGBT = cOpticalGroup->flpGBT;
                 if(clpGBT == nullptr) continue;
 
-                std::vector<std::string> cTemperatures={"TEMP","ADC4"};
+                std::vector<std::string> cTemperatures = {"TEMP", "ADC4"};
                 cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, cCurrentDAC);
-                std::vector<float> cTempADCReadings; 
-                for( auto cTempADC : cTemperatures )
+                std::vector<float> cTempADCReadings;
+                for(auto cTempADC: cTemperatures)
                 {
-                    std::vector<float>   cMeasurements(0);
-                    for( uint8_t cIndx=0;cIndx<10; cIndx++)
-                    {
-                        cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC));
-                    }
+                    std::vector<float> cMeasurements(0);
+                    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC)); }
                     float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                    LOG (INFO) << BOLDBLUE << cTempADC << " : " << cMean << RESET;
+                    LOG(INFO) << BOLDBLUE << cTempADC << " : " << cMean << RESET;
                     cTempADCReadings.push_back(cMean);
                 }
                 cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, 0x00);
 
-                std::vector<std::string> cReferenceADC={"ADC2"};
-                std::vector<float> cCorrections;
-                // change once we have a reference for PS 
-                if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS){ cReferenceADC[0] = "ADC2";}
-                float cExpected  = (10.4*0.49/10.)*1024;
-                if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS){ cExpected=0;}
-                 
-                for( auto cRefADC : cReferenceADC )
+                std::vector<std::string> cReferenceADC = {"ADC2"};
+                std::vector<float>       cCorrections;
+                // change once we have a reference for PS
+                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { cReferenceADC[0] = "ADC2"; }
+                float cExpected = (10.4 * 0.49 / 10.) * 1024;
+                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { cExpected = 0; }
+
+                for(auto cRefADC: cReferenceADC)
                 {
-                    std::vector<float>   cMeasurements(0);
-                    for( uint8_t cIndx=0;cIndx<10; cIndx++)
-                    {
-                        cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cRefADC));
-                    }
+                    std::vector<float> cMeasurements(0);
+                    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cRefADC)); }
                     float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                    LOG (INFO) << BOLDBLUE << cRefADC << " : " << cMean << RESET;
-                    cCorrections.push_back(cMean-cExpected);
+                    LOG(INFO) << BOLDBLUE << cRefADC << " : " << cMean << RESET;
+                    cCorrections.push_back(cMean - cExpected);
                 }
-                
+
                 // constants for different NTCs
-                std::vector<float> cCoefs{-177.029,267.091,-0.125408};
-                // change once we have a reference for PS 
-                if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS){ 
-                    std::vector<float> cCoefsPS={-177.029,267.091,-0.125408};
-                    cCoefs=cCoefsPS;
+                std::vector<float> cCoefs{-177.029, 267.091, -0.125408};
+                // change once we have a reference for PS
+                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+                {
+                    std::vector<float> cCoefsPS = {-177.029, 267.091, -0.125408};
+                    cCoefs                      = cCoefsPS;
                 }
-                float cVoltageDrop=cTempADCReadings[1]*1.0/1024;
-                float cCorrectedVoltageDrop = (cTempADCReadings[1]-cCorrections[0])*1.0/1024; 
-                float cCurrent = (0.9*cCurrentDAC/256)/1e3; 
-                float cTemperatureSensor        =  cCoefs[0]+cCoefs[1]*std::pow(cVoltageDrop*1e-3/cCurrent,cCoefs[2]); 
-                float cTemperatureSensorCorr    =  cCoefs[0]+cCoefs[1]*std::pow(cCorrectedVoltageDrop*1e-3/cCurrent,cCoefs[2]); 
-                LOG (DEBUG) << BOLDMAGENTA << "Corrected temperature reading [ADC units] " << cCorrectedVoltageDrop << RESET;
-                LOG (DEBUG) << BOLDMAGENTA << "Resistance " << cCorrectedVoltageDrop*1e-3/cCurrent << " kOhm" << RESET;
-                LOG (INFO) << BOLDMAGENTA << "Temperature of sensor [via NTC + lpGBT] is " << cTemperatureSensor << " [ corr is " <<  cTemperatureSensorCorr << " ] " << RESET;
-                
+                float cVoltageDrop           = cTempADCReadings[1] * 1.0 / 1024;
+                float cCorrectedVoltageDrop  = (cTempADCReadings[1] - cCorrections[0]) * 1.0 / 1024;
+                float cCurrent               = (0.9 * cCurrentDAC / 256) / 1e3;
+                float cTemperatureSensor     = cCoefs[0] + cCoefs[1] * std::pow(cVoltageDrop * 1e-3 / cCurrent, cCoefs[2]);
+                float cTemperatureSensorCorr = cCoefs[0] + cCoefs[1] * std::pow(cCorrectedVoltageDrop * 1e-3 / cCurrent, cCoefs[2]);
+                LOG(DEBUG) << BOLDMAGENTA << "Corrected temperature reading [ADC units] " << cCorrectedVoltageDrop << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Resistance " << cCorrectedVoltageDrop * 1e-3 / cCurrent << " kOhm" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Temperature of sensor [via NTC + lpGBT] is " << cTemperatureSensor << " [ corr is " << cTemperatureSensorCorr << " ] " << RESET;
+
             } // configure lpGBT
         }
     }
-    
+
     if(cmd.foundOption("calibrateADC"))
     {
         LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;
@@ -370,8 +365,7 @@ int main(int argc, char* argv[])
         cRegTester.RegisterTest();
     }
 
-    
-    // align CIC-lpGBT-BE 
+    // align CIC-lpGBT-BE
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw();
@@ -382,8 +376,8 @@ int main(int argc, char* argv[])
         cPSAlignment.Initialise();
         cPSAlignment.MapMPAOutputs();
         cPSAlignment.Reset();
-        
-        LinkAlignmentOT cLinkAlignment; 
+
+        LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
         try
         {
@@ -391,15 +385,15 @@ int main(int argc, char* argv[])
         }
         catch(const std::exception& e)
         {
-            LOG (INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-            return(666);
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
         }
         cLinkAlignment.waitForRunToBeCompleted();
         cLinkAlignment.dumpConfigFiles();
-        if( !cLinkAlignment.getStatus() ) 
+        if(!cLinkAlignment.getStatus())
         {
-            LOG (INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-            return(666);
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
         }
 
         // align FEs - CIC
@@ -408,18 +402,17 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
-
     }
-    
+
     if(!cmd.foundOption("read") && cmd.foundOption("realign"))
     {
-
-        // time align stubs with L1 data in the BE 
-        bool cSkipBEstubs = (cmd.foundOption("skipAlignment")) && ( cSkip.find("all") != std::string::npos || cSkip.find("beStubs") != std::string::npos );
-        if( cSkipBEstubs ) LOG (INFO) << BOLDBLUE << "Will skip time alignment of stub data with L1 data in the BE " << RESET;
+        // time align stubs with L1 data in the BE
+        bool cSkipBEstubs = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("beStubs") != std::string::npos);
+        if(cSkipBEstubs)
+            LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub data with L1 data in the BE " << RESET;
         else
-        { 
-            LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+        {
+            LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
             cStubBackEndAligner.Inherit(&cTool);
             cStubBackEndAligner.Start(0);
@@ -427,8 +420,9 @@ int main(int argc, char* argv[])
         }
 
         // now align data between SSA-MPA
-        bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && ( cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos );
-        if( cSkipMPAin ) LOG (INFO) << BOLDBLUE << "Will skip alignment of SSA output data (L1+stubs) to MPAs " << RESET;
+        bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos);
+        if(cSkipMPAin)
+            LOG(INFO) << BOLDBLUE << "Will skip alignment of SSA output data (L1+stubs) to MPAs " << RESET;
         else
         {
             // map MPA outputs for PS module
@@ -436,23 +430,23 @@ int main(int argc, char* argv[])
             cPSAlignment.Inherit(&cTool);
             cPSAlignment.Initialise();
             cPSAlignment.MapMPAOutputs();
-            LOG (INFO) << BOLDBLUE << "Performing alignment of SSA output data (L1+stubs) to MPAs " << RESET;
+            LOG(INFO) << BOLDBLUE << "Performing alignment of SSA output data (L1+stubs) to MPAs " << RESET;
             cPSAlignment.Align();
             cPSAlignment.Reset();
             cPSAlignment.dumpConfigFiles();
         }
     }
-    
+
     // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
     // StubBackEndAlignment cStubBackEndAligner;
     // cStubBackEndAligner.Inherit(&cTool);
     // cStubBackEndAligner.Start(0);
     // cStubBackEndAligner.waitForRunToBeCompleted();
-    
+
     // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets") && !cmd.foundOption("read"))
     {
-        bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
+        bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
         t.start();
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
@@ -470,35 +464,29 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
-    if( cmd.foundOption("linkTest") && !cmd.foundOption("read"))
+    if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
     {
         auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         for(auto cBoard: *cTool.fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
             {
-                if( cSrcLnkTst == "lpGBT" ) 
+                if(cSrcLnkTst == "lpGBT")
                 {
                     auto& clpGBT = cOpticalGroup->flpGBT;
-                    // configure lpGBT to produce constant pattern 
-                    cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0,1,2,3,4,5,6}, 4);
-                    cTool.flpGBTInterface->ConfigureDPPattern(clpGBT,0xE0E0E0E0);
+                    // configure lpGBT to produce constant pattern
+                    cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
+                    cTool.flpGBTInterface->ConfigureDPPattern(clpGBT, 0xE0E0E0E0);
                     D19cFWInterface::PhaseTuner cTuner;
-                    for(size_t cLineId=1; cLineId<=6;cLineId++)
+                    for(size_t cLineId = 1; cLineId <= 6; cLineId++)
                     {
-                        for(auto cHybrid: *cOpticalGroup)
-                        {
-                            cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true);
-                        }
+                        for(auto cHybrid: *cOpticalGroup) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true); }
                     }
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
                         cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                        for(size_t cAttempt=0; cAttempt<100; cAttempt++)
-                        {
-                            (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6);
-                        }
+                        for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
                     }
                     continue;
                 }
@@ -507,15 +495,15 @@ int main(int argc, char* argv[])
                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    if( cSrcLnkTst == "CIC" ) 
+                    if(cSrcLnkTst == "CIC")
                     {
-                        // CIC alignment pattern 
+                        // CIC alignment pattern
                         cTool.fCicInterface->SelectOutput(cCic, true);
                     }
                     else
                     {
                         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
-                        // MPA shift pattern 
+                        // MPA shift pattern
                         // enable MPA alignment pattern
                         LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
                         std::vector<uint8_t>     cOriginalValues;
@@ -533,50 +521,40 @@ int main(int argc, char* argv[])
                                 cRegs.push_back(cRegNames[cIndex]);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
                             } // loop over MPAs
-                        }// loop over registers
-                        for( uint8_t cPhyPort=8; cPhyPort<9; cPhyPort++)
+                        }     // loop over registers
+                        for(uint8_t cPhyPort = 8; cPhyPort < 9; cPhyPort++)
                         {
-                            LOG (INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
+                            LOG(INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
                             cTool.fCicInterface->SelectMux(cCic, cPhyPort);
                             // align line
                             D19cFWInterface::PhaseTuner cTuner;
-                            for(size_t cLineId=1; cLineId<=3;cLineId++)
-                            {
-                                cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId,cAlignmentPattern , 8, true);
-                            }
-                            for(size_t cAttempt=0; cAttempt<100; cAttempt++)
-                            {
-                                (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 3);
-                            }
+                            for(size_t cLineId = 1; cLineId <= 3; cLineId++) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, cAlignmentPattern, 8, true); }
+                            for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 3); }
                         }
                     }
-                    if( cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT" )
+                    if(cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT")
                     {
-                        for(size_t cAttempt=0; cAttempt<100; cAttempt++)
-                        {
-                            (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6);
-                        }
+                        for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
                     }
-                }//hybrid 
-            }//OG
-        }//board
+                } // hybrid
+            }     // OG
+        }         // board
     }
-    if( cmd.foundOption("injectionTest") && !cmd.foundOption("read"))
+    if(cmd.foundOption("injectionTest") && !cmd.foundOption("read"))
     {
-        //auto cNevents          = findValueInSettings("Check2STPamplitude", 255);
+        // auto cNevents          = findValueInSettings("Check2STPamplitude", 255);
         for(auto board: *cTool.fDetectorContainer)
         {
-
             cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "ReadoutMode", 0);
-            if( cInjectionSource.find("digital") != std::string::npos )
+            if(cInjectionSource.find("digital") != std::string::npos)
             {
-                // configure trigger 
-                uint8_t                  cTriggerSource   = 6;
-                uint16_t                 cDelayAfterReset = 100;
-                uint16_t                 cDelayTillNext   = 400;
-                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse" };
-                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext };
-                std::vector<uint16_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+                // configure trigger
+                uint8_t                                       cTriggerSource   = 6;
+                uint16_t                                      cDelayAfterReset = 100;
+                uint16_t                                      cDelayTillNext   = 400;
+                std::vector<std::string>                      cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse"};
+                std::vector<uint16_t>                         cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext};
+                std::vector<uint16_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
                 std::vector<std::pair<std::string, uint32_t>> cRegVec;
                 cRegVec.clear();
                 for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
@@ -585,52 +563,48 @@ int main(int argc, char* argv[])
                     cFcmdRegOrigVals[cIndx] = cTool.fBeBoardInterface->ReadBoardReg(board, cRegName);
                     cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
                 }
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept",0});
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
                 cTool.fBeBoardInterface->WriteBoardMultReg(board, cRegVec);
                 cTool.fBeBoardInterface->WriteBoardReg(board, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-
-                // first inject digitally 
+                // first inject digitally
                 Injection              cInjection;
                 std::vector<Injection> cInjections;
                 // inject one cluster into each MPA-SSA pair
                 cInjection.fRow    = 10;
                 cInjection.fColumn = 2;
-                cInjections.push_back(cInjection);//0
-                // inject 
+                cInjections.push_back(cInjection); // 0
+                // inject
                 for(auto cOpticalReadout: *board)
                 {
                     for(auto cHybrid: *cOpticalReadout)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            // and that readout mode is set 
+                            // and that readout mode is set
                             // make sure L1 latency is configured
-                            if(cChip->getFrontEndType() == FrontEndType::MPA)
-                            {
-                                (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections,0x01);
-                            }
+                            if(cChip->getFrontEndType() == FrontEndType::MPA) { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
                             if(cChip->getFrontEndType() == FrontEndType::SSA)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                                cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01); 
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
                                 for(auto cInjection: cInjections) { cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
                             }
                         } // chip
                     }     // hybrid
-                }// optica]l group
+                }         // optica]l group
             }
-            else if( cInjectionSource.find("analogue") != std::string::npos )
+            else if(cInjectionSource.find("analogue") != std::string::npos)
             {
-                // configure trigger 
-                uint8_t                  cTriggerSource   = 6;
-                uint16_t                 cDelayAfterReset = 100;
-                uint16_t                 cDelayTillNext   = 400;
-                std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse" };
-                std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext};
-                std::vector<uint16_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+                // configure trigger
+                uint8_t                                       cTriggerSource   = 6;
+                uint16_t                                      cDelayAfterReset = 100;
+                uint16_t                                      cDelayTillNext   = 400;
+                std::vector<std::string>                      cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse"};
+                std::vector<uint16_t>                         cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext};
+                std::vector<uint16_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
                 std::vector<std::pair<std::string, uint32_t>> cRegVec;
                 cRegVec.clear();
                 for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
@@ -650,43 +624,37 @@ int main(int argc, char* argv[])
                 cSetting            = cTool.fSettingsMap.find("PSOccupancyPulseAmplitude");
                 int cInjectionAmpl  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0xFF;
                 cSetting            = cTool.fSettingsMap.find("SamplingModeSSA");
-                int cSamplingSSA  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                int cSamplingSSA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
                 cSetting            = cTool.fSettingsMap.find("SamplingModeMPA");
-                int cSamplingMPA  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
-                // analogue injection 
+                int cSamplingMPA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                // analogue injection
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "InjectedCharge", cInjectionAmpl);
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 1);
-                LOG (INFO) << BOLDBLUE << cInjectionAmpl << " injected charge, " 
-                    << cPSmoduleSSAth << " as SSA threshold "
-                    << cPSmoduleMPAth << " as MPA threshold "
-                    << RESET;
-                // disable injection on all pixels MPAs 
+                LOG(INFO) << BOLDBLUE << cInjectionAmpl << " injected charge, " << cPSmoduleSSAth << " as SSA threshold " << cPSmoduleMPAth << " as MPA threshold " << RESET;
+                // disable injection on all pixels MPAs
                 for(auto opticalGroup: *board)
                 {
                     for(auto hybrid: *opticalGroup)
                     {
                         for(auto chip: *hybrid)
                         {
-                            cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x00, false); //0x5E
+                            cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x00, false); // 0x5E
                         }
                     }
                 }
-                // enable a few 
-                std::vector<uint32_t> cPxls; 
-                uint16_t cFirstRow=10; 
-                uint16_t cNCols=2;
-                uint16_t cNRows=1;
+                // enable a few
+                std::vector<uint32_t> cPxls;
+                uint16_t              cFirstRow = 10;
+                uint16_t              cNCols    = 2;
+                uint16_t              cNRows    = 1;
                 std::vector<uint16_t> cStrps;
-                for( uint16_t cNRow=0; cNRow < cNRows; cNRow++)
+                for(uint16_t cNRow = 0; cNRow < cNRows; cNRow++)
                 {
-                    uint16_t cRow = cFirstRow + cNRow*2; 
-                    cStrps.push_back( cRow );
-                    for( uint16_t cCol=0; cCol < cNCols; cCol++)
-                    {
-                        cPxls.push_back( (uint32_t)(cCol) * NSSACHANNELS + (uint32_t)cRow );
-                    }
+                    uint16_t cRow = cFirstRow + cNRow * 2;
+                    cStrps.push_back(cRow);
+                    for(uint16_t cCol = 0; cCol < cNCols; cCol++) { cPxls.push_back((uint32_t)(cCol)*NSSACHANNELS + (uint32_t)cRow); }
                 }
-                LOG (INFO) << BOLDBLUE << "Enabling analogue injection in " << cPxls.size() << " pixels and " << cStrps.size() << " strips." << RESET;
+                LOG(INFO) << BOLDBLUE << "Enabling analogue injection in " << cPxls.size() << " pixels and " << cStrps.size() << " strips." << RESET;
                 for(auto opticalGroup: *board)
                 {
                     for(auto hybrid: *opticalGroup)
@@ -695,29 +663,29 @@ int main(int argc, char* argv[])
                         {
                             if(chip->getFrontEndType() == FrontEndType::MPA)
                             {
-                                for( auto cPxl : cPxls )
+                                for(auto cPxl: cPxls)
                                 {
                                     std::stringstream cRegName;
-                                    cRegName << "ENFLAGS_P" << +cPxl; 
-                                    cTool.fReadoutChipInterface->WriteChipReg(chip,cRegName.str(), 0x4F, false); 
+                                    cRegName << "ENFLAGS_P" << +cPxl;
+                                    cTool.fReadoutChipInterface->WriteChipReg(chip, cRegName.str(), 0x4F, false);
                                     std::stringstream cRegNameTrim;
-                                    cRegNameTrim << "TrimDAC_P" << +cPxl; 
-                                    cTool.fReadoutChipInterface->WriteChipReg(chip,cRegNameTrim.str(), 0x0); 
+                                    cRegNameTrim << "TrimDAC_P" << +cPxl;
+                                    cTool.fReadoutChipInterface->WriteChipReg(chip, cRegNameTrim.str(), 0x0);
                                 }
                             }
                             if(chip->getFrontEndType() == FrontEndType::SSA)
                             {
-                                for( auto sStrp : cStrps )
+                                for(auto sStrp: cStrps)
                                 {
                                     std::stringstream cRegName;
-                                    cRegName << "ENFLAGS_S" << +sStrp; 
-                                    cTool.fReadoutChipInterface->WriteChipReg(chip,cRegName.str(), 0x13, false); 
+                                    cRegName << "ENFLAGS_S" << +sStrp;
+                                    cTool.fReadoutChipInterface->WriteChipReg(chip, cRegName.str(), 0x13, false);
                                 }
                             }
                         }
                     }
                 }
-                
+
                 for(auto opticalGroup: *board)
                 {
                     for(auto hybrid: *opticalGroup)
@@ -726,12 +694,12 @@ int main(int argc, char* argv[])
                         {
                             if(chip->getFrontEndType() == FrontEndType::SSA)
                             {
-                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth); 
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA)
                             {
-                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth); 
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
                             }
                         }
@@ -741,21 +709,20 @@ int main(int argc, char* argv[])
             else
             {
                 auto cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.trigger_source");
-                LOG (INFO) << BOLDBLUE << "Injection test with trigger source " << +cTriggerSource << RESET;
+                LOG(INFO) << BOLDBLUE << "Injection test with trigger source " << +cTriggerSource << RESET;
 
                 auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
                 int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
                 cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
                 int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
                 cSetting            = cTool.fSettingsMap.find("SamplingModeSSA");
-                int cSamplingSSA  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                int cSamplingSSA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
                 cSetting            = cTool.fSettingsMap.find("SamplingModeMPA");
-                int cSamplingMPA  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
-                
-                
-                // force TP to be off 
+                int cSamplingMPA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+
+                // force TP to be off
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 0);
-                // analogue injection 
+                // analogue injection
                 for(auto opticalGroup: *board)
                 {
                     for(auto hybrid: *opticalGroup)
@@ -765,19 +732,19 @@ int main(int argc, char* argv[])
                             if(chip->getFrontEndType() == FrontEndType::SSA)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
-                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth); 
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
-                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth); 
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                             }
                         }
                     }
                 }
             }
         }
-        
+
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
@@ -786,7 +753,6 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
     {
-
         // auto cSetting       = cTool.fSettingsMap.find("PedeNoisePulseAmplitude");
         // int  cInjectionAmpl = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 255;
         // for(auto cBoard: *cTool.fDetectorContainer)
@@ -820,7 +786,6 @@ int main(int argc, char* argv[])
         //                             if( cChip->getFrontEndType() == FrontEndType::MPA )  cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",130+30);
         //                             else cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",57+20);
 
-
         //                             //if( cActive < cNacitve ){
         //                             //    cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
         //                             //    cOut << " SSA#" << +cChip->getId() << " [Th:" << +cThreshold << "] ";
@@ -835,7 +800,6 @@ int main(int argc, char* argv[])
         //                 //const std::vector<Event*>& cEvents = cTool.GetEvents();
         //                 //LOG (INFO) << BOLDYELLOW << "Read-back " << +cEvents.size() << " events from the FC7 when 42 were requested" << RESET;
         //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
-            
 
         //             //}
         //         // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )
@@ -862,11 +826,11 @@ int main(int argc, char* argv[])
         //         //                     // uint8_t cDly_LSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
         //         //                     // uint8_t cDly_MSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
         //         //                     // //uint16_t  cDly  = (cDly_MSB << 8 ) | cDly_LSB;
-        //         //                     // LOG (DEBUG) << BOLDBLUE << "Readout mode is " << +cMode 
-        //         //                     //     << " ENFLAGS_ALL is set to 0x" << std::hex << +cCnfg 
+        //         //                     // LOG (DEBUG) << BOLDBLUE << "Readout mode is " << +cMode
+        //         //                     //     << " ENFLAGS_ALL is set to 0x" << std::hex << +cCnfg
         //         //                     //     << std::dec
-        //         //                     //     << " Delay value LSB is 0x" << std::hex << +cDly_LSB << std::dec 
-        //         //                     //     << " Delay value MSB is 0x" << std::hex << +cDly_MSB << std::dec 
+        //         //                     //     << " Delay value LSB is 0x" << std::hex << +cDly_LSB << std::dec
+        //         //                     //     << " Delay value MSB is 0x" << std::hex << +cDly_MSB << std::dec
         //         //                     //     << RESET;
         //         //                 }
         //         //             }
@@ -877,7 +841,7 @@ int main(int argc, char* argv[])
         //     }
         // }
 
-        bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
+        bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
         LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
@@ -885,7 +849,7 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        //cPedeNoise.scanScurves();
+        // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
@@ -974,30 +938,30 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t      cDisableFEs     = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
-        int          cReadoutPause   = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
-        uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0 ;
+        uint8_t         cDisableFEs        = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+        uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
-        if( cDisableFEs == 1 ) cBeamTestCheck.DisableAllFEs();
+        if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
         cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        cBeamTestCheck.CheckWithExternal( cContinuousReadout );
+        cBeamTestCheck.CheckWithExternal(cContinuousReadout);
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
-    else if(cmd.foundOption("read") )
+    else if(cmd.foundOption("read"))
     {
-        std::string   cRawFileName       = cmd.foundOption("read")  ? cmd.optionValue("read") : "" ;
-        
+        std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
         cBeamTestCheck.PrintData();
-        cBeamTestCheck.Reset();        
+        cBeamTestCheck.Reset();
     }
-    if( !cmd.foundOption("read") )
+    if(!cmd.foundOption("read"))
     {
         cTool.dumpConfigFiles();
         cTool.SaveResults();

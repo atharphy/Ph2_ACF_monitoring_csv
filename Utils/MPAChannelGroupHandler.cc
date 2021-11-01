@@ -13,16 +13,16 @@
 // }
 MPAChannelGroupHandler::MPAChannelGroupHandler()
 {
-    allChannelGroup_     = new ChannelGroup<NSSACHANNELS,NMPACOLS>();
-    currentChannelGroup_ = new ChannelGroup<NSSACHANNELS,NMPACOLS>();
+    allChannelGroup_     = new ChannelGroup<NSSACHANNELS, NMPACOLS>();
+    currentChannelGroup_ = new ChannelGroup<NSSACHANNELS, NMPACOLS>();
 
     allChannelGroup_->enableAllChannels();
 }
 
-MPAChannelGroupHandler::MPAChannelGroupHandler(std::bitset<NSSACHANNELS*NMPACOLS>&& inputChannelsBitset)
+MPAChannelGroupHandler::MPAChannelGroupHandler(std::bitset<NSSACHANNELS * NMPACOLS>&& inputChannelsBitset)
 {
-    allChannelGroup_     = new ChannelGroup<NSSACHANNELS,NMPACOLS>(std::move(inputChannelsBitset));
-    currentChannelGroup_ = new ChannelGroup<NSSACHANNELS,NMPACOLS>(std::move(inputChannelsBitset));
+    allChannelGroup_     = new ChannelGroup<NSSACHANNELS, NMPACOLS>(std::move(inputChannelsBitset));
+    currentChannelGroup_ = new ChannelGroup<NSSACHANNELS, NMPACOLS>(std::move(inputChannelsBitset));
 }
 MPAChannelGroupHandler::~MPAChannelGroupHandler()
 {

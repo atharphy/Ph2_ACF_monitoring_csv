@@ -38,16 +38,16 @@ class BeamTestCheck2S : public Tool
     void ReadDataFromFile(std::string pRawFileName);
     void PrintData();
     void CheckWithTP();
-    void CheckWithInternal(uint8_t pContinousReadout=0);
-    void CheckWithExternal(uint8_t pContinousReadout=0);
+    void CheckWithInternal(uint8_t pContinousReadout = 0);
+    void CheckWithExternal(uint8_t pContinousReadout = 0);
     void Initialise();
     void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;
     void Reset();
-    void                                writeObjects();
-    void SetReadoutPause(uint32_t pReadoutPause){ fReadoutPause =pReadoutPause; }
+    void writeObjects();
+    void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void DisableAllFEs();
 
   protected:
@@ -57,42 +57,41 @@ class BeamTestCheck2S : public Tool
         for(auto container: fSCurveOccupancyMap) fRecycleBin.free(container.second);
         fSCurveOccupancyMap.clear();
     }
-    
+
   private:
     // Containers
     DetectorDataContainer fBoardRegContainer;
-    // Latency 
+    // Latency
     DetectorDataContainer fLatencyContainer;
     DetectorDataContainer fLatencyContainerS0, fLatencyContainerS1;
-    // Cluster size 
+    // Cluster size
     DetectorDataContainer fClusterOccupancy;
     DetectorDataContainer fClusterOccupancyS0, fClusterOccupancyS1;
-    // Pedestals 
+    // Pedestals
     DetectorDataContainer fPedestalContainer;
     DetectorDataContainer fSignalContainer;
-    
+
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 
-
-    bool fSuccess{false};
-    bool fWithCIC{false};
-    uint8_t fTPamplitude{255};
-    uint8_t fTPdelay{0};
+    bool     fSuccess{false};
+    bool     fWithCIC{false};
+    uint8_t  fTPamplitude{255};
+    uint8_t  fTPdelay{0};
     uint16_t fThreshold{0};
     uint16_t fStartLatency{0};
     uint16_t fLatencyRange{0};
     uint32_t fNevents{100};
-    uint16_t fOptimalLatency; 
+    uint16_t fOptimalLatency;
     uint32_t fReadoutPause{100};
 
-    void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers=1);
-    void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
-    void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
-    void ScanLatency(Ph2_HwDescription::BeBoard* pBoard);
-    void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
-    void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
-    void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard); 
+    void   PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 1);
+    void   PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
+    void   PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
+    void   ScanLatency(Ph2_HwDescription::BeBoard* pBoard);
+    void   ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
+    void   UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
+    void   ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
     size_t fThStep{0};
 
 #ifdef __USE_ROOT__

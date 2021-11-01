@@ -21,23 +21,21 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {
-        // configure during constructor now when configuring chip 
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
+    {
+        // configure during constructor now when configuring chip
         SetConfigMode(pUseOpticalLink, pUseCPB);
         // configure CPB - do this here rather than in SystemController? Not sure
         CPBconfig cCPBconfig;
         cCPBconfig.fEnable       = pUseCPB;
         cCPBconfig.fI2CFrequency = 3;
-        cCPBconfig.fWait_us      = 100;   // TO-DO - make configurable from xml
+        cCPBconfig.fWait_us      = 100;  // TO-DO - make configurable from xml
         cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
         cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
         cCPBconfig.fMaxAttempts  = 5000; // TO-DO - make configurable from xml
         cCPBconfig.fResetEn      = 1;    // TO-DO - make configurable from xml
         // configure FW for all boards
-        for( auto cBoardMap : pBoardMap )
-        {
-            (cBoardMap.second)->ConfigureCPB(cCPBconfig);
-        }
+        for(auto cBoardMap: pBoardMap) { (cBoardMap.second)->ConfigureCPB(cCPBconfig); }
     }
     ~D19clpGBTInterface() {}
 
@@ -172,6 +170,7 @@ class D19clpGBTInterface : public lpGBTInterface
         if(fFeType == FrontEndType::OuterTrackerPS) return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA};
         return {};
     }
+
   private:
     // default clock configuration
     lpGBTClockConfig fClkConfig;
@@ -187,10 +186,10 @@ class D19clpGBTInterface : public lpGBTInterface
     // reset
     uint8_t fResetMinPeriod = 100; // ms was 100
 
-    // number of read transactions 
-    uint8_t fI2CReads_M0 = 0 ; 
-    uint8_t fI2CReads_M1 = 0 ; 
-    uint8_t fI2CReads_M2 = 0 ; 
+    // number of read transactions
+    uint8_t fI2CReads_M0 = 0;
+    uint8_t fI2CReads_M1 = 0;
+    uint8_t fI2CReads_M2 = 0;
 
     // clocks
     uint8_t fClock_RHS_Hybrid = 1;

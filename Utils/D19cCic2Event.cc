@@ -55,7 +55,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             for(auto cChip: *cFe)
             {
                 // only count MPAs
-                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 ) continue;
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                 cROCIds.push_back(cChip->getId() % 8);
                 fIs2S = fIs2S || cChip->getFrontEndType() == FrontEndType::CBC3;
@@ -63,9 +63,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             fROCIds.push_back(cROCIds);
             fNStripClusters.push_back(0);
             fNPxlClusters.push_back(0);
-            if(fIsSparsified) { 
-                fEventHitList.push_back(cFeData); 
-            }
+            if(fIsSparsified) { fEventHitList.push_back(cFeData); }
             else
             {
                 RawFeData cRawFeData;
@@ -90,43 +88,43 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     const uint8_t  VALID_L1_HEADER     = 0x0A;
     const uint8_t  VALID_STUB_HEADER   = 0x05;
     uint32_t       cNEvents            = 0;
-    //for( auto cWord : pData ) LOG (INFO) << BOLDYELLOW << std::bitset<32>(cWord) << RESET;
-    auto           cEventIterator      = pData.begin();
-    do 
+    // for( auto cWord : pData ) LOG (INFO) << BOLDYELLOW << std::bitset<32>(cWord) << RESET;
+    auto cEventIterator = pData.begin();
+    do
     {
         uint32_t cHeader    = (0xFFFF0000 & (*cEventIterator)) >> 16;
         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            //uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
+            // uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
             // LOG(INFO) << BOLDBLUE << "Event " << +cNEvents << "... event header is " << std::bitset<16>(cHeader)
             //     << " ... " << +cEventSize << " 32 bit words ... " << +cDummyCount
             //     << " dummy 32 bit words .. " << RESET;
-            //counters from event header
+            // counters from event header
             // TLU Trigger Id
             fExternalTriggerID = (*(cEventIterator + 1) >> 16) & 0x7FFF;
             // TDC + L1A counter
             uint32_t cEvntCntTag = (*(cEventIterator + 2));
             // LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
-            uint32_t cFc7EvtId = (cEvntCntTag & (0x00FFFFFF));
-            fTDC               = (cEvntCntTag & (0xFF << 24)) >> 24;
+            uint32_t cFc7EvtId     = (cEvntCntTag & (0x00FFFFFF));
+            fTDC                   = (cEvntCntTag & (0xFF << 24)) >> 24;
             uint8_t cTDCShiftValue = 1;
             if(fTDC < cTDCShiftValue)
                 fTDC += (8 - cTDCShiftValue);
             else
                 fTDC -= cTDCShiftValue;
-            //LOG (INFO) << BOLDMAGENTA << "\t... TDC is " << cFc7EvtId << " eventId is " << cFc7EvtId << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "\t... TDC is " << cFc7EvtId << " eventId is " << cFc7EvtId << RESET;
             // internal counters
             cEvntCntTag = (*(cEventIterator + 3));
-            //LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
+            // LOG (INFO) << BOLDMAGENTA << "Event counter information " << std::bitset<32>(cEvntCntTag) << RESET;
             uint16_t cFc7BxId = (cEvntCntTag & (0xFFFF));
-            //LOG (INFO) << BOLDMAGENTA << "\t... BxId is " << cFc7BxId <<  RESET;
+            // LOG (INFO) << BOLDMAGENTA << "\t... BxId is " << cFc7BxId <<  RESET;
             if(fTLUenabled == 0) { fExternalTriggerID = (cEvntCntTag & (0xFFFF << 16)) >> 16; }
             fEventCount = cFc7EvtId; // 0x00FFFFFF & *(cEventIterator + 2);
             fBunch      = cFc7BxId;  // 0xFFFFFFFF & *(cEventIterator + 3);
-            //LOG (INFO) << BOLDMAGENTA << "\t... EventCount is " << fEventCount << RESET;
-            
+            // LOG (INFO) << BOLDMAGENTA << "\t... EventCount is " << fEventCount << RESET;
+
             auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus   = 0x00000000;
             size_t   cRocIndex = 0;
@@ -134,7 +132,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             {
                 for(auto cFe: *cOpticalGroup)
                 {
-                    auto cFeIndex      = getFeIndex(cFe->getId());
+                    auto   cFeIndex            = getFeIndex(cFe->getId());
                     auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
                     auto&  cCic                = cOuterTrackerHybrid->fCic;
                     size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
@@ -146,7 +144,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
-                        // LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cFe->getIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit packet..."
+                        // LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cFe->getIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit
+                        // packet..."
                         //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x01)
                         {
@@ -159,13 +158,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             int cL1Offset = cOffset + 2 + int(cWithCIC2);
                             if(fIsSparsified)
                             {
-                                size_t cEOffset                      = 3;
+                                size_t cEOffset               = 3;
                                 fEventHitList[cFeIndex].first = cL1Information;
                                 fEventHitList[cFeIndex].second.clear();
                                 uint8_t cNStripClusters = 0;
                                 if(fIs2S)
                                 {
-                                    cNStripClusters                  = (*(cIterator + 2) & (0x7F << 0)) >> 0;
+                                    cNStripClusters           = (*(cIterator + 2) & (0x7F << 0)) >> 0;
                                     fNStripClusters[cFeIndex] = cNStripClusters;
                                     // clusters/hit data first
                                     std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);
@@ -226,13 +225,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             }
                             else
                             {
-                                //LOG (INFO) << BOLDBLUE << "Un-sparsified data from CIC#" << +cFe->getId() << RESET;
+                                // LOG (INFO) << BOLDBLUE << "Un-sparsified data from CIC#" << +cFe->getId() << RESET;
                                 fEventRawList[cFeIndex].first = cL1Information;
                                 fEventRawList[cFeIndex].second.clear();
-                                size_t                                  cFullSize = 8;// going to assume that I will always readout 8*275 block of data
+                                size_t cFullSize = 8; // going to assume that I will always readout 8*275 block of data
                                 if(cWithCIC2)
                                 {
-                                    const size_t                            cNblocks  = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
+                                    const size_t                            cNblocks = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                                     std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                                     this->splitStream(pData, cL1Words, cL1Offset,
                                                       cNblocks); // split 32 bit words in  blocks of 11 bits
@@ -272,10 +271,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 }
                                 else
                                 {
-                                    for( size_t cOffst=2; cOffst < 2 + cHitInfoSize ; cOffst ++ )
-                                    {
-                                        LOG (INFO) << BOLDMAGENTA << "Word#" << (cOffst-2) << " : " << std::bitset<32>(*(cIterator+cOffst)) << RESET; 
-                                    }
+                                    for(size_t cOffst = 2; cOffst < 2 + cHitInfoSize; cOffst++)
+                                    { LOG(INFO) << BOLDMAGENTA << "Word#" << (cOffst - 2) << " : " << std::bitset<32>(*(cIterator + cOffst)) << RESET; }
                                     // const size_t                     cNblocks = cFullSize; // 274 bits per chip ..
                                     // const size_t                     cRawL1   = RAW_L1_CBC - 1;
                                     // std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
@@ -301,7 +298,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cFe->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub packet."
+                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cFe->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub
+                        // packet."
                         //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x03)
                         {
@@ -433,7 +431,8 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
 
     auto cIterator = list.begin() + EVENT_HEADER_SIZE;
     LOG(DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
-    do {
+    do
+    {
         // L1
         size_t   cOffset   = std::distance(list.begin(), cIterator);
         uint32_t cL1Header = *cIterator;
@@ -728,12 +727,12 @@ std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pFeId, uint8_t pRead
 {
     auto   cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
     size_t cIndx         = 7 - cChipIdMapped;
-    size_t cFeIndex      = getFeIndex(pFeId); 
-    // LOG (INFO) << BOLDYELLOW << "D19cCic2Event::getRawL1Word for CIC" << +pFeId << " CBC" << +pReadoutChipId 
-    //     << " --- [cFeIndex,cIndx] == " << +cFeIndex << "," << +cIndx << " -- raw list has " << fEventRawList.size() << " entries and " 
+    size_t cFeIndex      = getFeIndex(pFeId);
+    // LOG (INFO) << BOLDYELLOW << "D19cCic2Event::getRawL1Word for CIC" << +pFeId << " CBC" << +pReadoutChipId
+    //     << " --- [cFeIndex,cIndx] == " << +cFeIndex << "," << +cIndx << " -- raw list has " << fEventRawList.size() << " entries and "
     //     << " --- list of bit-sets has " << +fEventRawList[cFeIndex].second.size() << " "
     //     << RESET;
-    auto&  cDataBitset   = fEventRawList[cFeIndex].second[cIndx];
+    auto& cDataBitset = fEventRawList[cFeIndex].second[cIndx];
     return cDataBitset;
 }
 
@@ -1118,8 +1117,9 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pFeId, uint8_t pReadoutChip
             auto   cDataBitset = this->getRawL1Word(pFeId, pReadoutChipId);
             for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
             {
-                if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1){ 
-                    LOG (DEBUG) << BOLDYELLOW << " Hit in channel " << +cPos << RESET;
+                if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1)
+                {
+                    LOG(DEBUG) << BOLDYELLOW << " Hit in channel " << +cPos << RESET;
                     cHits.push_back(cPos);
                 }
             }
@@ -1238,7 +1238,7 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pFeId, uint8_t pReadoutC
     std::vector<Cluster>   cClusters(0);
     auto&                  cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
     std::bitset<NCHANNELS> cBitSet(0);
-    size_t cClusterId=0;
+    size_t                 cClusterId = 0;
     for(auto cClusterWord: cClusterWords)
     {
         uint8_t cChipId       = (cClusterWord & (0x3 << 11)) >> 11;
@@ -1255,10 +1255,10 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pFeId, uint8_t pReadoutC
                    << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
 
         Cluster cCluster;
-        cCluster.fSensor = cLayerId;
-        cCluster.fFirstStrip = pReadoutChipId*127 + cStrip;
+        cCluster.fSensor       = cLayerId;
+        cCluster.fFirstStrip   = pReadoutChipId * 127 + cStrip;
         cCluster.fClusterWidth = cWidth;
-        cClusters.push_back( cCluster ); 
+        cClusters.push_back(cCluster);
         cClusterId++;
     }
     return cClusters;

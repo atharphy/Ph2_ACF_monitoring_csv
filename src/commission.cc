@@ -13,9 +13,9 @@
 #include "TApplication.h"
 #include "TROOT.h"
 #include "tools/BackEndAlignment.h"
-#include "tools/StubBackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -148,8 +148,8 @@ int main(int argc, char* argv[])
     cCicAligner.Inherit(&cTool);
     cCicAligner.Initialise();
     cCicAligner.CicLpGbtAlignment();
-   
-    // map MPA outputs on PS module 
+
+    // map MPA outputs on PS module
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
     cPSAlignment.Initialise();
@@ -161,14 +161,14 @@ int main(int argc, char* argv[])
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
-    
+
     // if you would like to re-do the input alignment
-    // then run align CIC align inputs   
-    if(cWithCIC && !cmd.foundOption("skipAlignment"))  cCicAligner.AlignInputs(); 
+    // then run align CIC align inputs
+    if(cWithCIC && !cmd.foundOption("skipAlignment")) cCicAligner.AlignInputs();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
 
-    // time align stubs in back-end 
+    // time align stubs in back-end
     StubBackEndAlignment cStubBackEndAligner;
     cStubBackEndAligner.Inherit(&cTool);
     cStubBackEndAligner.Start(0);
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
     // now align data between SSA-MPA
     if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
-    
+
     // hack
     // make sure MPAs and SSAs have all pixels enabled
     auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");

@@ -6,10 +6,10 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
-#include "tools/StubBackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
+#include "tools/LinkTestOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
@@ -17,7 +17,7 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
-#include "tools/LinkTestOT.h"
+#include "tools/StubBackEndAlignment.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -521,16 +521,13 @@ int main(int argc, char* argv[])
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
     cBackEndAligner.waitForRunToBeCompleted();
-    
+
     // if CIC is enabled then align CIC first
-    if(cWithCIC) 
-    {
-        cCicAligner.AlignInputs();
-    }
+    if(cWithCIC) { cCicAligner.AlignInputs(); }
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
-    
-    // time align stubs in back-end 
+
+    // time align stubs in back-end
     StubBackEndAlignment cStubBackEndAligner;
     cStubBackEndAligner.Inherit(&cTool);
     cStubBackEndAligner.Initialise();
@@ -542,24 +539,24 @@ int main(int argc, char* argv[])
     cStubBackEndAligner.Reset();
 
     // quickly check the new capture
-    if( cmd.foundOption("checkL1Timing") )
+    if(cmd.foundOption("checkL1Timing"))
     {
-        uint8_t      cChipId = (cmd.foundOption("checkL1Timing")) ? convertAnyInt(cmd.optionValue("checkL1Timing").c_str()) : 0;
+        uint8_t              cChipId = (cmd.foundOption("checkL1Timing")) ? convertAnyInt(cmd.optionValue("checkL1Timing").c_str()) : 0;
         std::vector<uint8_t> cHybridIds(0);
-        // get unique hybrid Ids 
+        // get unique hybrid Ids
         for(const auto cBoard: *cTool.fDetectorContainer)
         {
-            for( const auto cOpticalGroup : *cBoard )
+            for(const auto cOpticalGroup: *cBoard)
             {
-                for( const auto cHybrid : *cOpticalGroup )
+                for(const auto cHybrid: *cOpticalGroup)
                 {
-                    if( std::find( cHybridIds.begin(), cHybridIds.end(), cHybrid->getId() ) != cHybridIds.end() ) continue; 
-                    cHybridIds.push_back( cHybrid->getId() );
+                    if(std::find(cHybridIds.begin(), cHybridIds.end(), cHybrid->getId()) != cHybridIds.end()) continue;
+                    cHybridIds.push_back(cHybrid->getId());
                 }
             }
         }
 
-        for( auto cHybridId : cHybridIds) 
+        for(auto cHybridId: cHybridIds)
         {
             auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
             for(const auto cBoard: *cTool.fDetectorContainer)
@@ -567,20 +564,19 @@ int main(int argc, char* argv[])
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
             }
-            LOG (INFO) << BOLDYELLOW << "Scoping L1 data on hybrid" << +cHybridId << RESET;
+            LOG(INFO) << BOLDYELLOW << "Scoping L1 data on hybrid" << +cHybridId << RESET;
             cInterface->L1ADebug(1, false);
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
-                LOG (INFO) << BOLDMAGENTA << "First header found after " << +cTool.fBeBoardInterface->ReadBoardReg(cBoard,"fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay")
-                    << " 40 MHz clock cycles." << RESET;
-                //size_t cReadBackEvents = cTool.ReadData(cBoard, true);
-                //LOG(INFO) << BOLDMAGENTA << "Read-back " << +cReadBackEvents << " events from Board#" << +cBoard->getId() << RESET;
-
+                LOG(INFO) << BOLDMAGENTA << "First header found after " << +cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay")
+                          << " 40 MHz clock cycles." << RESET;
+                // size_t cReadBackEvents = cTool.ReadData(cBoard, true);
+                // LOG(INFO) << BOLDMAGENTA << "Read-back " << +cReadBackEvents << " events from Board#" << +cBoard->getId() << RESET;
             }
         }
     }
-    
-    if( cmd.foundOption("linkTest") ) 
+
+    if(cmd.foundOption("linkTest"))
     {
         LinkTestOT cLinkTest;
         cLinkTest.Inherit(&cTool);
@@ -707,7 +703,7 @@ int main(int argc, char* argv[])
         t.start();
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cTool);
-        //cDataChecker.Initialise();
+        // cDataChecker.Initialise();
         if(cmd.foundOption("checkClusters")) cDataChecker.ClusterCheck(cArgs);
         if(cmd.foundOption("checkSLink")) cDataChecker.WriteSlinkTest(cmd.optionValue("checkSLink"));
         if(cmd.foundOption("checkStubs")) cDataChecker.StubCheck(cArgs);
@@ -721,8 +717,8 @@ int main(int argc, char* argv[])
         // cDataChecker.DataCheck(cFEsToCheck,0,0);
         // cDataChecker.ReadDataTest();
         // cDataChecker.HitCheck();
-        //cDataChecker.writeObjects();
-        //cDataChecker.resetPointers();
+        // cDataChecker.writeObjects();
+        // cDataChecker.resetPointers();
         t.show("Time to check data of the front-ends on the system: ");
     }
 
@@ -783,7 +779,7 @@ int main(int argc, char* argv[])
         cShortFinder.waitForRunToBeCompleted();
         cShortFinder.Stop();
     }
-    //cTool.PrintRegCount();
+    // cTool.PrintRegCount();
     cTool.dumpConfigFiles();
     cTool.SaveResults();
     cTool.WriteRootFile();

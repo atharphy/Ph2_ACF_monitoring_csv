@@ -286,7 +286,7 @@ void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChan
     uint8_t     cValueChnCntr = ReadChipReg(pChip, cRegName);
     cValueChnCntr             = (cValueChnCntr & ~(0xF << 4)) | (pPhase << 4);
     WriteChipReg(pChip, cRegName, cValueChnCntr);
-    LOG (DEBUG) << BOLDMAGENTA << "lpGBT#" << +pChip->getId() << "Grp#" << +pGroup << " Chnl#" << +pChannel << " - phase " << +pPhase << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "lpGBT#" << +pChip->getId() << "Grp#" << +pGroup << " Chnl#" << +pChannel << " - phase " << +pPhase << RESET;
 }
 
 void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay)
@@ -350,7 +350,8 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
     {
         // Wait until channels lock
         LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
-        do {
+        do
+        {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
@@ -374,7 +375,7 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
 }
 uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
-    LOG (INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
+    LOG(INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
 
     // Configure Rx Phase Shifter
@@ -386,8 +387,8 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
     // lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_PRBS);
     // // Turn ON PRBS for channels 0,2
     // lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
-    std::vector<uint8_t> cAligned(pGroups.size(),0);
-    bool cSuccess = true;
+    std::vector<uint8_t> cAligned(pGroups.size(), 0);
+    bool                 cSuccess = true;
     std::vector<uint8_t> cOptimalTaps(0);
     for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++)
     {
@@ -410,7 +411,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         std::vector<uint8_t> cPhases(0);
         std::vector<uint8_t> cUniquePhases(0);
         LOG(DEBUG) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
-        size_t cMaxAttempts=5;
+        size_t cMaxAttempts = 5;
         for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
         {
             ResetRxDll(pChip, {cGroup});
@@ -432,21 +433,22 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             auto        cLock        = 0;
             uint8_t     cCurrPhase   = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
             bool        cContinue    = (cLock == 0);
-            uint8_t     cMaxIters    = 10; 
-            uint8_t     cIter        =  0;
-            do {
+            uint8_t     cMaxIters    = 10;
+            uint8_t     cIter        = 0;
+            do
+            {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
                 cContinue = cLock == 0;
                 cIter++;
-            } while(cContinue&&cIter<cMaxIters);
-            if( cLock ) cAligned[cIndx]+=1;
+            } while(cContinue && cIter < cMaxIters);
+            if(cLock) cAligned[cIndx] += 1;
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
             // LOG (DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
             cUniquePhases.push_back(cCurrPhase);
         }
-        cSuccess = cSuccess && ( cAligned[cIndx] == cMaxAttempts );
+        cSuccess = cSuccess && (cAligned[cIndx] == cMaxAttempts);
         // for now we just choose the first
         // what I want is the mode
         std::sort(cUniquePhases.begin(), cUniquePhases.end());
@@ -469,9 +471,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         if(cUniquePhases[cIndxBstPhase] != 15)
         {
             cOptimalTaps.push_back(cUniquePhases[cIndxBstPhase]);
-            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel 
-                << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] 
-                << RESET;
+            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
         }
         else
             LOG(ERROR) << BOLDRED << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
@@ -479,11 +479,11 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
     // find mode
-    std::vector<uint8_t> cTapsHist(15,0);
-    for( auto cItem : cOptimalTaps) cTapsHist[cItem]++;
-    auto cTapMode = std::max_element( cTapsHist.begin(), cTapsHist.end() ) - cTapsHist.begin() ;
-    LOG (INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
-    uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase 
+    std::vector<uint8_t> cTapsHist(15, 0);
+    for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
+    auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
+    LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
+    uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, cMode);
     return (cSuccess) ? cTapMode : 15;
 }
@@ -744,7 +744,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     // Check conversion status
     uint8_t cIter    = 0;
     bool    cSuccess = false;
-    do {
+    do
+    {
         LOG(DEBUG) << GREEN << "Waiting for ADC conversion to end" << RESET;
 
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
@@ -1033,7 +1034,8 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do {
+    do
+    {
         LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
         cIter++;
     } while(cIter < RD53Shared::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
@@ -1068,7 +1070,8 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do {
+    do
+    {
         LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
         cIter++;
     } while(cIter < RD53Shared::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));

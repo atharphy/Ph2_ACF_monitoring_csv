@@ -24,56 +24,56 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    
-    cWithCBC=false;
-    cWithSSA=false;
-    cWithMPA=false;
+
+    cWithCBC = false;
+    cWithSSA = false;
+    cWithMPA = false;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                if( !cWithCBC )
+                if(!cWithCBC)
                 {
-                    cWithCBC  = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end());
+                    cWithCBC = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end());
                 }
-                if( !cWithSSA )
+                if(!cWithSSA)
                 {
-
-                    cWithSSA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end());
+                    cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end());
                 }
-                if( !cWithMPA )
+                if(!cWithMPA)
                 {
-                    cWithMPA  = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end());
+                    cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end());
                 }
             }
         }
     }
-    if( cWithCBC ) LOG  (INFO) << BOLDBLUE << "PedestalEqualization with CBCs" << RESET;
-    if( cWithSSA && !cWithMPA ) LOG  (INFO) << BOLDBLUE << "PedestalEqualization with SSAs" << RESET;
-    if( cWithMPA && !cWithSSA ) LOG  (INFO) << BOLDBLUE << "PedestalEqualization with MPAs" << RESET;
-    if( cWithSSA && cWithMPA  ) LOG  (INFO) << BOLDBLUE << "PedestalEqualization with SSAs+MPAs" << RESET; 
+    if(cWithCBC) LOG(INFO) << BOLDBLUE << "PedestalEqualization with CBCs" << RESET;
+    if(cWithSSA && !cWithMPA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with SSAs" << RESET;
+    if(cWithMPA && !cWithSSA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with MPAs" << RESET;
+    if(cWithSSA && cWithMPA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with SSAs+MPAs" << RESET;
 
     // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     // cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     // cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     // cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
-    if(cWithCBC){ 
+    if(cWithCBC)
+    {
         fChannelGroupHandler = new CBCChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(16, 2);//16*2*8
+        fChannelGroupHandler->setChannelGroupParameters(16, 2); // 16*2*8
     }
-    if(cWithSSA && !cWithMPA ){ 
+    if(cWithSSA && !cWithMPA)
+    {
         fChannelGroupHandler = new SSAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS);//5*3*8
+        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS); // 5*3*8
     }
-    if(cWithMPA && !cWithSSA ){ 
+    if(cWithMPA && !cWithSSA)
+    {
         fChannelGroupHandler = new MPAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS*NMPACOLS);
+        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS);
     }
-    if(cWithMPA && cWithSSA ){ 
-        fChannelGroupHandler = new MPAChannelGroupHandler();
-    }
+    if(cWithMPA && cWithSSA) { fChannelGroupHandler = new MPAChannelGroupHandler(); }
 
     // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     // cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
@@ -94,7 +94,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     fOccupancyAtPedestal         = findValueInSettings("PedestalEqualizationOccupancy", 0.56);
-    uint8_t cDefTargetOffset     = (cWithCBC) ? 0x7F : 0xF ; 
+    uint8_t cDefTargetOffset     = (cWithCBC) ? 0x7F : 0xF;
     fTargetOffset                = findValueInSettings("PedestalEqualizationTargetOffset", cDefTargetOffset); // 0x7F;
     LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
     fTargetVcth = 0x0;
@@ -117,7 +117,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
-    
+
     // for now.. force to use async mode here
     bool cForcePSasync = true;
     fEventTypes.clear();
@@ -195,10 +195,7 @@ void PedestalEqualization::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap)
-        {
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
-        }
+        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         for(auto cOpticalGroup: *cBoard)
@@ -221,13 +218,13 @@ void PedestalEqualization::Reset()
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        // don't reconfigure the offsets .. whole point of this excercise 
-                        if( cMapItem.first.find("Channel") != std::string::npos ) continue;
-                        if( cMapItem.first.find("TrimDAC") != std::string::npos ) continue; 
-                        if( cMapItem.first.find("THTRIMMING") != std::string::npos ) continue; 
+                        // don't reconfigure the offsets .. whole point of this excercise
+                        if(cMapItem.first.find("Channel") != std::string::npos) continue;
+                        if(cMapItem.first.find("TrimDAC") != std::string::npos) continue;
+                        if(cMapItem.first.find("THTRIMMING") != std::string::npos) continue;
 
                         LOG(INFO) << BOLDBLUE << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
+                                  << cMapItem.second.fValue << RESET;
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
                 }
@@ -263,16 +260,14 @@ void PedestalEqualization::Reset()
 }
 void PedestalEqualization::FindVplus()
 {
-    // original tool flags 
-    bool originalAllChannelFlag = this->fAllChan;
-    uint8_t cNormalizationOrig = getNormalization();
+    // original tool flags
+    bool    originalAllChannelFlag = this->fAllChan;
+    uint8_t cNormalizationOrig     = getNormalization();
 
-    // figure  out if you should normalize or not 
-    uint8_t cNormalize=0;
-    if( cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA) ){ 
-        cNormalize=1;
-    }
-    LOG (INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
+    // figure  out if you should normalize or not
+    uint8_t cNormalize = 0;
+    if(cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA)) { cNormalize = 1; }
+    LOG(INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
     setNormalization(cNormalize);
 
     if(fTestPulse)
@@ -292,8 +287,10 @@ void PedestalEqualization::FindVplus()
         this->enableTestPulse(false);
 
     LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to mid-range value...0x" << std::hex << +fTargetOffset << std::dec << RESET;
-    if(cWithCBC) setSameLocalDac("ChannelOffset", fTargetOffset);
-    else setSameLocalDac("ThresholdTrim", fTargetOffset);
+    if(cWithCBC)
+        setSameLocalDac("ChannelOffset", fTargetOffset);
+    else
+        setSameLocalDac("ThresholdTrim", fTargetOffset);
 
     LOG(INFO) << BOLDBLUE << "Finding threshold at which to equalize offsets - searching for threshold where <Occupancy>/ROC is " << fOccupancyAtPedestal << RESET;
     this->SetTestAllChannels(true);
@@ -301,14 +298,16 @@ void PedestalEqualization::FindVplus()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
-    
+
     // dumpConfigFiles();
 
     // LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
-    if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    else setSameLocalDac("ThresholdTrim", 0x1F);//0x1F
+    if(cWithCBC)
+        setSameLocalDac("ChannelOffset", 0xFF);
+    else
+        setSameLocalDac("ThresholdTrim", 0x1F); // 0x1F
 
-    // store thresholds 
+    // store thresholds
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
 
@@ -326,11 +325,11 @@ void PedestalEqualization::FindVplus()
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t     tmpVthr = 0;
-                    if(theChip->getFrontEndType()==FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
-                    if(theChip->getFrontEndType()==FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
-                    if(theChip->getFrontEndType()==FrontEndType::MPA)
+                    if(theChip->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
+                    if(theChip->getFrontEndType() == FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
+                    if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        for( uint8_t cDAC=0; cDAC < 1; cDAC++ )
+                        for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
                         {
                             std::stringstream cRegName;
                             cRegName << "ThDAC" << +cDAC;
@@ -362,8 +361,9 @@ void PedestalEqualization::FindVplus()
 #endif
 
     fTargetVcth = uint16_t(cMeanValue / nCbc);
-    if( fUseMean ){ 
-        setSameDac("Threshold",fTargetVcth);
+    if(fUseMean)
+    {
+        setSameDac("Threshold", fTargetVcth);
         LOG(INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     }
     this->SetTestAllChannels(originalAllChannelFlag);
@@ -372,13 +372,11 @@ void PedestalEqualization::FindVplus()
 
 void PedestalEqualization::FindOffsets()
 {
-    // figure  out if you should normalize or not 
+    // figure  out if you should normalize or not
     uint8_t cNormalizationOrig = getNormalization();
-    uint8_t cNormalize=0;
-    if( cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA) ){ 
-        cNormalize=1;
-    }
-    LOG (INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
+    uint8_t cNormalize         = 0;
+    if(cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA)) { cNormalize = 1; }
+    LOG(INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
     setNormalization(cNormalize);
 
     float cOccupancyAtPedestal = fOccupancyAtPedestal;
@@ -389,8 +387,9 @@ void PedestalEqualization::FindOffsets()
     if(cWithSSA) NCH = NSSACHANNELS;
     if(cWithMPA) NCH = NMPACHANNELS;
 
-    if( fUseMean ){ 
-        setSameDac("Threshold",fTargetVcth);
+    if(fUseMean)
+    {
+        setSameDac("Threshold", fTargetVcth);
         LOG(INFO) << BOLDBLUE << "Mean VCth value of all chips is " << fTargetVcth << " - using as TargetVcth value for all chips!" << RESET;
     }
     DetectorDataContainer theOccupancyContainer;
@@ -429,9 +428,9 @@ void PedestalEqualization::FindOffsets()
                     {
                         char charRegName[20];
 
-                        if(roc->getFrontEndType()==FrontEndType::CBC3) sprintf(charRegName, "Channel%03d", channelNumber++);
-                        if(roc->getFrontEndType()==FrontEndType::SSA) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
-                        if(roc->getFrontEndType()==FrontEndType::MPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
+                        if(roc->getFrontEndType() == FrontEndType::CBC3) sprintf(charRegName, "Channel%03d", channelNumber++);
+                        if(roc->getFrontEndType() == FrontEndType::SSA) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
+                        if(roc->getFrontEndType() == FrontEndType::MPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
                         std::string cRegName = charRegName;
                         channel              = roc->getReg(cRegName);
                         cMeanOffset += channel;
@@ -461,9 +460,9 @@ void PedestalEqualization::FindOffsets()
         if(fStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fNetworkStreamer);
     }
 #endif
-    
+
     setNormalization(cNormalizationOrig);
-}   
+}
 
 void PedestalEqualization::writeObjects()
 {

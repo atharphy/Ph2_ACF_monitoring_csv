@@ -26,21 +26,25 @@ PSInterface::~PSInterface() {}
 
 bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
-        LOG (INFO) << BOLDMAGENTA << "Masking channels and setting injection schema MPA PS Interface" << RESET;
-        return theMPAInterface->maskChannelsAndSetInjectionSchema(pChip, group , mask, inject, pVerifLoop); 
+    if(pChip->getFrontEndType() == FrontEndType::MPA)
+    {
+        LOG(INFO) << BOLDMAGENTA << "Masking channels and setting injection schema MPA PS Interface" << RESET;
+        return theMPAInterface->maskChannelsAndSetInjectionSchema(pChip, group, mask, inject, pVerifLoop);
     }
-    else { 
-        return theSSAInterface->maskChannelsAndSetInjectionSchema(pChip, group , mask, inject, pVerifLoop); 
+    else
+    {
+        return theSSAInterface->maskChannelsAndSetInjectionSchema(pChip, group, mask, inject, pVerifLoop);
     }
 }
 bool PSInterface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
-        LOG (INFO) << BOLDMAGENTA << "ConfigureChipOriginalMask MPA PS Interface" << RESET;
+    if(pChip->getFrontEndType() == FrontEndType::MPA)
+    {
+        LOG(INFO) << BOLDMAGENTA << "ConfigureChipOriginalMask MPA PS Interface" << RESET;
         return theMPAInterface->ConfigureChipOriginalMask(pChip, pVerifLoop, pBlockSize);
     }
-    else { 
+    else
+    {
         return theSSAInterface->ConfigureChipOriginalMask(pChip, pVerifLoop, pBlockSize);
     }
 }
@@ -75,7 +79,7 @@ bool PSInterface::maskChannelsGroup(ReadoutChip* pPS, const ChannelGroupBase* gr
     if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->maskChannelsGroup(pPS, group, pVerifLoop); }
     else if(pPS->getFrontEndType() == FrontEndType::SSA)
     {
-        return theSSAInterface-maskChannelsGroup(pPS, group, pVerifLoop);
+        return theSSAInterface - maskChannelsGroup(pPS, group, pVerifLoop);
     }
     else
         LOG(ERROR) << "Bad chip for PS interface";
@@ -123,22 +127,18 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
-        theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); 
-    }
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); }
     else if(pChip->getFrontEndType() == FrontEndType::SSA)
     {
-        LOG (INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId()  << " when on a PS module" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
     }
 }
 void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { 
-        theMPAInterface->produceWordAlignmentPattern(pChip); 
-    }
+    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->produceWordAlignmentPattern(pChip); }
     else if(pChip->getFrontEndType() == FrontEndType::SSA)
     {
-        LOG (INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
     }
 }
 void PSInterface::setFileHandler(FileHandler* pHandler)

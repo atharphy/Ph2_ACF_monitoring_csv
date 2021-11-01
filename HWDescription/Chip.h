@@ -35,7 +35,7 @@ namespace Ph2_HwDescription
 struct ChipRegMask
 {
     uint8_t fBitShift;
-    uint8_t fNbits; 
+    uint8_t fNbits;
 };
 using ChipRegMap  = std::unordered_map<std::string, ChipRegItem>;
 using ChipRegPair = std::pair<std::string, ChipRegItem>;
@@ -144,54 +144,54 @@ class Chip : public FrontEndDescription
         if(fType == FrontEndType::CIC2) os << "FrontEndType\t--> CIC2";
     }
 
-    // set some of the bits in register , leave others untouched 
-    void setRegBits( const std::string& pReg, ChipRegMask pMask , uint16_t pValue ) 
+    // set some of the bits in register , leave others untouched
+    void setRegBits(const std::string& pReg, ChipRegMask pMask, uint16_t pValue)
     {
-        uint16_t cMask = 0x00; 
-        for(uint8_t cIndx=0; cIndx < pMask.fNbits; cIndx++) cMask = cMask | ( 1 << cIndx);
-        uint16_t  cRegMask        = (cMask << pMask.fBitShift);
+        uint16_t cMask = 0x00;
+        for(uint8_t cIndx = 0; cIndx < pMask.fNbits; cIndx++) cMask = cMask | (1 << cIndx);
+        uint16_t cRegMask = (cMask << pMask.fBitShift);
         cRegMask          = ~(cRegMask);
-        setReg( pReg, (getReg(pReg) & cRegMask) | (pValue<< pMask.fBitShift) ); 
+        setReg(pReg, (getReg(pReg) & cRegMask) | (pValue << pMask.fBitShift));
     }
-    // retrieve some bits of register 
-    uint16_t getRegBits( const std::string& pReg, ChipRegMask pMask ) 
+    // retrieve some bits of register
+    uint16_t getRegBits(const std::string& pReg, ChipRegMask pMask)
     {
-        uint16_t cMask = 0x0000; 
-        for(uint8_t cIndx=0; cIndx < pMask.fNbits; cIndx++) cMask = cMask | ( 1 << cIndx);
-        uint16_t  cRegMask        = (cMask << pMask.fBitShift);
-        uint16_t  cValue          = ( getReg(pReg) & cRegMask ) >> pMask.fBitShift; 
-        //std::cout << "\t\t\t Value is 0x" << std::hex << getReg(pReg) <<  std::dec << " Mask is 0x" << std::hex << cRegMask << std::dec << " value is " << +cValue << "\n"; 
+        uint16_t cMask = 0x0000;
+        for(uint8_t cIndx = 0; cIndx < pMask.fNbits; cIndx++) cMask = cMask | (1 << cIndx);
+        uint16_t cRegMask = (cMask << pMask.fBitShift);
+        uint16_t cValue   = (getReg(pReg) & cRegMask) >> pMask.fBitShift;
+        // std::cout << "\t\t\t Value is 0x" << std::hex << getReg(pReg) <<  std::dec << " Mask is 0x" << std::hex << cRegMask << std::dec << " value is " << +cValue << "\n";
         return cValue;
     }
-    // update write count 
-    void updateWriteCount(uint32_t fIncrement=1 ){ fI2CWrites+= fIncrement ; }
-    void updateReadCount(uint32_t fIncrement=1){ fI2Reads+= fIncrement ; }
-    void updateRBMismatchCount(uint32_t fIncrement=1){ fI2CReadMismatches+= fIncrement ; }
-    void updateRegWriteCount(uint32_t fIncrement=1){ fRegWrites+= fIncrement ; }
-    void updateRegReadCount(uint32_t fIncrement=1){ fRegReads+= fIncrement ; }
-    uint32_t getWriteCount(){ return fI2CWrites;}
-    uint32_t getReadCount(){ return fI2Reads;}
-    uint32_t getRBMismatchCount(){ return fI2CReadMismatches;}
-    uint32_t getRegWriteCount(){ return fRegWrites;}
-    uint32_t getRegReadCount(){ return fRegReads;}
-
+    // update write count
+    void     updateWriteCount(uint32_t fIncrement = 1) { fI2CWrites += fIncrement; }
+    void     updateReadCount(uint32_t fIncrement = 1) { fI2Reads += fIncrement; }
+    void     updateRBMismatchCount(uint32_t fIncrement = 1) { fI2CReadMismatches += fIncrement; }
+    void     updateRegWriteCount(uint32_t fIncrement = 1) { fRegWrites += fIncrement; }
+    void     updateRegReadCount(uint32_t fIncrement = 1) { fRegReads += fIncrement; }
+    uint32_t getWriteCount() { return fI2CWrites; }
+    uint32_t getReadCount() { return fI2Reads; }
+    uint32_t getRBMismatchCount() { return fI2CReadMismatches; }
+    uint32_t getRegWriteCount() { return fRegWrites; }
+    uint32_t getRegReadCount() { return fRegReads; }
 
     uint8_t geMasterId() const { return fMasterId; };
-    void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId;};
+    void    setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
+
   protected:
     uint8_t    fChipId;
     uint16_t   fMaxRegValue;
     uint16_t   fClockFrequency;
-    uint8_t    fMasterId; 
+    uint8_t    fMasterId;
     ChipRegMap fRegMap;
     CommentMap fCommentMap;
-   private:
-      uint32_t fI2CWrites=0; 
-      uint32_t fI2Reads=0;
-      uint32_t fI2CReadMismatches=0;
-      uint32_t fRegWrites=0; 
-      uint32_t fRegReads=0; 
 
+  private:
+    uint32_t fI2CWrites         = 0;
+    uint32_t fI2Reads           = 0;
+    uint32_t fI2CReadMismatches = 0;
+    uint32_t fRegWrites         = 0;
+    uint32_t fRegReads          = 0;
 };
 
 /*!

@@ -441,7 +441,8 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
         fFastCommands.push_back(fFCMDs.fEmpty);
         cBxId++;
     }
-    do {
+    do
+    {
         size_t cBurstLength = cBurstDist(cGen); //
         for(size_t cBx = 0; cBx < cBurstLength; cBx++)
         {
@@ -537,7 +538,8 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
     fIters.clear();
     fTriggeredBxs.clear();
     fTriggersSent = 0;
-    do {
+    do
+    {
         bool cSuccess = true;
         GenericTriggers(cNtriggersToSendPerAttempt, pTriggerSeparation, cMaxTriggersInBurst);
         // LOG (INFO) << BOLDMAGENTA << "Using fast command bram to inject " << fNInjectedTriggers << " into system..." << RESET;
@@ -558,7 +560,8 @@ bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSep
             // wait until all triggers have been seen by the FC7
             uint32_t cCounter        = 0;
             uint32_t cTriggerCounter = 0;
-            do {
+            do
+            {
                 // std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cTriggerCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                 auto cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -629,7 +632,8 @@ bool PedeNoiseTime::DataFromExternalTriggers()
         // wait until all triggers have been seen by the FC7
         uint32_t cCounter = 0;
         cNtriggers        = 0;
-        do {
+        do
+        {
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             /*auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
             LOG(INFO) << BOLDGREEN << "\t\t.. trigger wait loop Iter#" << +cCounter << " : "
@@ -782,7 +786,8 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
             bool   cLimitFound   = false;
             int    cLimitCounter = 0;
             size_t cStep         = 0;
-            do {
+            do
+            {
                 // push back new entry into scan data container
                 cScanData.push_back(cRecyclingBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy()));
                 cThresholds.push_back(cValue);

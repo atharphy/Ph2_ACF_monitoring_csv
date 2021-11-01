@@ -23,18 +23,17 @@ class LinkTestOT : public LinkAlignmentOT
     LinkTestOT();
     ~LinkTestOT();
 
-    //void Initialise();
+    // void Initialise();
     void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;
-    //void Reset();
+    // void Reset();
 
-    void TestL1ALines(bool pAlign=false);
+    void TestL1ALines(bool pAlign = false);
+
   protected:
-    
   private:
-    bool TestL1ALine(Ph2_HwDescription::BeBoard* pBoard, bool pAlign=false, size_t pAttempts = 20 ); 
-
+    bool TestL1ALine(Ph2_HwDescription::BeBoard* pBoard, bool pAlign = false, size_t pAttempts = 20);
 };
 #endif

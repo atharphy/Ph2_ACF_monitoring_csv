@@ -138,19 +138,18 @@ class CbcInterface : public ReadoutChipInterface
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);
-    void                 resetPageMap(){fPageMap.clear();}
-    
+    void                 resetPageMap() { fPageMap.clear(); }
+
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
     /*!
      * \brief Read CBC ID eFuse
      * \param pChip: pointer to Chip object
      */
     uint32_t ReadCbcIDeFuse(Ph2_HwDescription::Chip* pCbc);
-    
-  private:
 
-    std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0xBC, 0xD4, 0x31, 0x81 };
-    bool                        fRetry = true;
+  private:
+    std::vector<uint8_t>        fWordAlignmentPatterns = {0x7A, 0xBC, 0xD4, 0x31, 0x81};
+    bool                        fRetry                 = true;
     std::map<uint32_t, uint8_t> fPageMap;
     bool                        fWithlpGBT = false;
     std::bitset<NCHANNELS>      fActiveChannels;

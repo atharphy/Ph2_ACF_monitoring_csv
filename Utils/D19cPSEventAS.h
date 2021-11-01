@@ -50,7 +50,7 @@ class D19cPSEventAS : public Event
     std::vector<std::vector<uint8_t>> fROCIds;
     CounterData                       fCounterData;
 
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; //  Index Hybrid FE Id , Value CIC FE Id
     std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
     // mapped id
     // takes chip id on the hybrid

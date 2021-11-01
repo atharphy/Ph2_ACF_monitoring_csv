@@ -25,7 +25,6 @@
 #include <string>
 #include <utility>
 
-
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description

@@ -37,9 +37,9 @@ class PSInterface : public ReadoutChipInterface
 { // begin class
   private:
     // I2C config
-    bool    fRetryI2C       = true;
-    uint8_t fMaxI2CAttempts = 20;
-    std::vector<uint8_t> fWordAlignmentPatterns = { 0x7A, 0x7A, 0x7A, 0x7A, 0x7A };
+    bool                 fRetryI2C              = true;
+    uint8_t              fMaxI2CAttempts        = 20;
+    std::vector<uint8_t> fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
 
   public:
     PSInterface(const BeBoardFWMap& pBoardMap);
@@ -78,10 +78,10 @@ class PSInterface : public ReadoutChipInterface
     void Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
 
-    void             producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
-    void             produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
-    std::vector<uint8_t> getWordAlignmentPatterns() override{ return fWordAlignmentPatterns; }
-    
+    void                 producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void                 produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
+
     void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
     void             ReadASEvent(Ph2_HwDescription::ReadoutChip* pPS, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
@@ -109,7 +109,6 @@ class PSInterface : public ReadoutChipInterface
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pPS, bool pVerifLoop, uint32_t pBlockSize);
     //
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
-
 
     void Cleardata();
 

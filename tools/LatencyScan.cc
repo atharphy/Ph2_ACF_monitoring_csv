@@ -114,7 +114,7 @@ void LatencyScan::ScanLatency()
     {
         for(auto opticalGroup: *board)
         {
-            cIsPS = ( cIsPS || opticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS );
+            cIsPS = (cIsPS || opticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS);
             cNHybrids += opticalGroup->size();
             for(auto hybrid: *opticalGroup)
             {
@@ -146,9 +146,10 @@ void LatencyScan::ScanLatency()
         }     // optical group
     }
 
-    uint16_t cLat = fStartLatency;
-    float    cMaxHits = 0; 
-    do {
+    uint16_t cLat     = fStartLatency;
+    float    cMaxHits = 0;
+    do
+    {
         // setSameDac("TriggerLatency", cLat);
         // SSA latency -1 all other chips
         for(auto cBoard: *fDetectorContainer)
@@ -172,12 +173,12 @@ void LatencyScan::ScanLatency()
         uint16_t cOffset = 0;
         for(auto cBoard: *fDetectorContainer)
         {
-            auto cBrdIndx = cBoard->getIndex();
+            auto   cBrdIndx     = cBoard->getIndex();
             size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             // LOG (INFO) << BOLDRED << "Reading events in scan latency.." << RESET;
             this->ReadNEvents(cBoard, fNevents);
-            const std::vector<Event*>& cEvents = this->GetEvents();
-            float cNormalizationFactor = ( cIsPS && cTriggerMult == 0 ) ? (cEvents.size() -1 ) : cEvents.size()/(1+cTriggerMult);
+            const std::vector<Event*>& cEvents              = this->GetEvents();
+            float                      cNormalizationFactor = (cIsPS && cTriggerMult == 0) ? (cEvents.size() - 1) : cEvents.size() / (1 + cTriggerMult);
             // loop over triggers in the burst
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
@@ -211,15 +212,15 @@ void LatencyScan::ScanLatency()
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
                 fSCurveOccupancyMap[cLat + cTriggerId]       = theOccupancyContainer;
-                auto& cOccBrd = theOccupancyContainer->at(cBrdIndx);
-                int cTotalHits = 0;
-                int cTotalHitsS0 = 0 ; 
-                int cTotalHitsS1 = 0 ; 
-                size_t cNEventsThisTriggerId=0; 
-                do 
+                auto&  cOccBrd                               = theOccupancyContainer->at(cBrdIndx);
+                int    cTotalHits                            = 0;
+                int    cTotalHitsS0                          = 0;
+                int    cTotalHitsS1                          = 0;
+                size_t cNEventsThisTriggerId                 = 0;
+                do
                 {
                     if(cEventIter >= cEvents.end()) break;
-                    uint8_t cTDCVal        = (*cEventIter)->GetTDC();
+                    uint8_t cTDCVal = (*cEventIter)->GetTDC();
                     //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                     for(auto cOpticalGroup: *cBoard)
                     {
@@ -232,17 +233,17 @@ void LatencyScan::ScanLatency()
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                                if(cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+                                if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                    LOG (INFO) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "ROC#" << +cChip->getId()%8 << " "
-                                         << +cHits.size() << " hits." 
-                                        << RESET;
+                                    LOG(INFO) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "ROC#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                                     cTotalHits += cHits.size();
                                     for(auto cHit: cHits)
                                     {
-                                        if(cHit % 2 == 0) cTotalHitsS0++;
-                                        else cTotalHitsS1++; 
+                                        if(cHit % 2 == 0)
+                                            cTotalHitsS0++;
+                                        else
+                                            cTotalHitsS1++;
                                         cHitContainer.at(cBoard->getIndex())
                                             ->at(cOpticalGroup->getIndex())
                                             ->at(cHybrid->getIndex())
@@ -258,16 +259,15 @@ void LatencyScan::ScanLatency()
                                     std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
-                                    if( cPclstrs.size() > 0 && cSclstrs.size() > 0 )
-                                        LOG (DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId 
-                                        << " ROC#" << +cChip->getId()%8 << " "
-                                        << +cPclstrs.size() << " P-clusters " 
-                                        << +cSclstrs.size() << " S-clusters." 
-                                        << RESET;
+                                    if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
+                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " ROC#" << +cChip->getId() % 8 << " "
+                                                   << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
-                                        if( cSclstrs.size() > 0 ) LOG (DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId()%8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width " << +cPclstr.fWidth << RESET;
-                                        for( uint8_t cId=0; cId<(1+cPclstr.fWidth); cId++)
+                                        if(cSclstrs.size() > 0)
+                                            LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
+                                                       << +cPclstr.fWidth << RESET;
+                                        for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())
                                                 ->at(cOpticalGroup->getIndex())
@@ -280,8 +280,9 @@ void LatencyScan::ScanLatency()
                                     }
                                     for(auto& cSclstr: cSclstrs)
                                     {
-                                        if( cPclstrs.size() > 0 )  LOG (DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId()%8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
-                                        for( uint8_t cId=0; cId<(1+cSclstr.fWidth); cId++)
+                                        if(cPclstrs.size() > 0)
+                                            LOG(DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
+                                        for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())
                                                 ->at(cOpticalGroup->getIndex())
@@ -292,58 +293,50 @@ void LatencyScan::ScanLatency()
                                             // cOccChip->getChannel<Occupancy>(cSclstr.fAddress + cId).fOccupancy++;
                                         }
                                     }
-                                       
                                 }
                                 theLatencyContainerS0.at(cBoard->getIndex())
-                                                ->at(cOpticalGroup->getIndex())
-                                                ->at(cHybrid->getIndex())
-                                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS0;
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS0;
 
                                 theLatencyContainerS1.at(cBoard->getIndex())
-                                                ->at(cOpticalGroup->getIndex())
-                                                ->at(cHybrid->getIndex())
-                                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS1;
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS1;
                                 theLatencyContainer.at(cBoard->getIndex())
-                                            ->at(cOpticalGroup->getIndex())
-                                            ->at(cHybrid->getIndex())
-                                            ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = (cTotalHitsS0+cTotalHitsS1);
-                            }     // chip vector
-                        }         // hybrid vector
-                    }             // optical group vector
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = (cTotalHitsS0 + cTotalHitsS1);
+                            } // chip vector
+                        }     // hybrid vector
+                    }         // optical group vector
                     cEventIter += (1 + cTriggerMult);
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), cNormalizationFactor);
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
-                cTotalHits = cTotalHitsS0+cTotalHitsS1;
-                if( cTotalHits > 0 ) 
+                cTotalHits = cTotalHitsS0 + cTotalHitsS1;
+                if(cTotalHits > 0)
                 {
-                    if( cTotalHits >= cMaxHits )
+                    if(cTotalHits >= cMaxHits)
                     {
-                        LOG(INFO) << BOLDYELLOW << "[!!!! new max !!!!]Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) 
-                            << "... on average have found " << std::setprecision(2) 
-                            << cTotalHits /cNormalizationFactor << " hit(s) per event."
-                            << "In S0 " << cTotalHitsS0/cNormalizationFactor  << " hit(s); in S1 = " << cTotalHitsS1/cNormalizationFactor  << " hit(s)."
-                            << " [Nevents = " << cNEventsThisTriggerId << " ]" 
-                            << RESET;
-                        cMaxHits = cTotalHits; 
+                        LOG(INFO) << BOLDYELLOW << "[!!!! new max !!!!]Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult)
+                                  << "... on average have found " << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
+                                  << "In S0 " << cTotalHitsS0 / cNormalizationFactor << " hit(s); in S1 = " << cTotalHitsS1 / cNormalizationFactor << " hit(s)."
+                                  << " [Nevents = " << cNEventsThisTriggerId << " ]" << RESET;
+                        cMaxHits = cTotalHits;
                     }
                     else
-                        LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) 
-                            << "... on average have found " << std::setprecision(2) 
-                            << cTotalHits /cNormalizationFactor << " hit(s) per event."
-                            << "In S0 " << cTotalHitsS0/cNormalizationFactor  << " hit(s); in S1 = " << cTotalHitsS1/cNormalizationFactor  << " hit(s)."
-                            << " [Nevents = " << cNEventsThisTriggerId << " ]" 
-                            << RESET;
-
+                        LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
+                                  << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
+                                  << "In S0 " << cTotalHitsS0 / cNormalizationFactor << " hit(s); in S1 = " << cTotalHitsS1 / cNormalizationFactor << " hit(s)."
+                                  << " [Nevents = " << cNEventsThisTriggerId << " ]" << RESET;
                 }
-                else 
-                    LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) 
-                    << "... on average have found " << std::setprecision(2) 
-                    << cTotalHits /cNormalizationFactor << " hit(s) per event."
-                    << "In S0 " << cTotalHitsS0/cNormalizationFactor  << " hit(s); in S1 = " << cTotalHitsS1/cNormalizationFactor  << " hit(s)."
-                    << " [Nevents = " << cNEventsThisTriggerId << " ]" 
-                    << RESET;
+                else
+                    LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
+                              << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
+                              << "In S0 " << cTotalHitsS0 / cNormalizationFactor << " hit(s); in S1 = " << cTotalHitsS1 / cNormalizationFactor << " hit(s)."
+                              << " [Nevents = " << cNEventsThisTriggerId << " ]" << RESET;
 
 #ifdef __USE_ROOT__
                 fDQMHistogramLatencyScan.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
@@ -411,9 +404,7 @@ void LatencyScan::StubLatencyScan()
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(uint16_t cIndx = 0; cIndx < fLatencyRange; cIndx++)
-                {
-                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
-                }
+                { theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0; }
             } // hybrid
         }     //
     }
@@ -443,7 +434,8 @@ void LatencyScan::StubLatencyScan()
 
     // int cDebugOut = 5;
     uint16_t cLat = cLowerLimit;
-    do {
+    do
+    {
         uint16_t cOffset = 0;
         for(auto cBoard: *fDetectorContainer)
         {
@@ -464,7 +456,8 @@ void LatencyScan::StubLatencyScan()
                 size_t cAnyHits   = 0;
                 LOG(INFO) << BOLDMAGENTA << "\t..Looking at trigger#" << +cTriggerId << " in burst of " << (cTriggerMult + 1) << RESET;
                 size_t cMatchedStubs = 0;
-                do {
+                do
+                {
                     if(cEventIter >= cEvents.end()) break;
                     auto cEventCount = (*cEventIter)->GetEventCount();
                     for(auto cOpticalGroup: *cBoard)
@@ -751,7 +744,8 @@ void LatencyScan::ScanLatency2D()
                 uint32_t cNEvents_wStub = 0;
                 uint32_t cNEvents_wBoth = 0;
                 fBeBoardInterface->Start(theBoard);
-                do {
+                do
+                {
                     uint32_t cNeventsReadBack = ReadData(theBoard);
                     if(cNeventsReadBack == 0)
                     {

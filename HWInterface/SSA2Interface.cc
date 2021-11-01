@@ -98,26 +98,23 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
 #ifdef COUNT_FLAG
     LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA2" << +pSSA2->getId() << " config." << RESET;
 #endif
-    fTrackRegisters=false;
+    fTrackRegisters = false;
     return cSuccess;
 }
-void SSA2Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms )
+void SSA2Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
-    uint8_t                     cPhaseAlignmentPattern = 0xAA;
+    uint8_t                  cPhaseAlignmentPattern = 0xAA;
     std::vector<std::string> cRegNames{"Shift_pattern_L1",
-        "Shift_pattern_st_0",
-       "Shift_pattern_st_1",
-       "Shift_pattern_st_2",
-       "Shift_pattern_st_3",
-       "Shift_pattern_st_4_st_5",
-       "Shift_pattern_st_4_st_5",
-       "Shift_pattern_st_6_st_7",
-       "Shift_pattern_st_6_st_7"};
-    this->WriteChipReg(pChip, "ReadoutMode", 0x2, false);            
-    for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
-    {
-        this->WriteChipReg(pChip, cRegNames[cLineId], cPhaseAlignmentPattern);
-    }
+                                       "Shift_pattern_st_0",
+                                       "Shift_pattern_st_1",
+                                       "Shift_pattern_st_2",
+                                       "Shift_pattern_st_3",
+                                       "Shift_pattern_st_4_st_5",
+                                       "Shift_pattern_st_4_st_5",
+                                       "Shift_pattern_st_6_st_7",
+                                       "Shift_pattern_st_6_st_7"};
+    this->WriteChipReg(pChip, "ReadoutMode", 0x2, false);
+    for(uint8_t cLineId = 0; cLineId < 8; cLineId++) { this->WriteChipReg(pChip, cRegNames[cLineId], cPhaseAlignmentPattern); }
 }
 //	// READ REGISTER ON CHIP:
 //////////
@@ -210,9 +207,7 @@ uint8_t SSA2Interface::ReadChipId(Chip* pChip)
 {
     bool cVerifLoop = true;
     if(!this->WriteChipSingleReg(pChip, "Fuse_Mode", 0x0F, cVerifLoop)) // FIXME What is this even for? Do we really need this?
-    {
-        return 0;
-    }
+    { return 0; }
     else
         throw std::runtime_error(std::string("Failed to start e-fuse read operation from SSA2 ") + std::to_string(pChip->getId()));
 }
@@ -350,9 +345,9 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t cRegValue = (pValue << 2) | (1 << 0);
         return WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
     }
-    else if(pRegName == "EnablePhaseAlignmentPattern" ) 
+    else if(pRegName == "EnablePhaseAlignmentPattern")
     {
-        this->producePhaseAlignmentPattern( static_cast<ReadoutChip*>(pSSA2), pValue );
+        this->producePhaseAlignmentPattern(static_cast<ReadoutChip*>(pSSA2), pValue);
         return true;
     }
     else if(pRegName == "AmuxHigh")

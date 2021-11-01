@@ -271,9 +271,9 @@ class SystemController
     void   DecodeData(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
     double findValueInSettings(const std::string name, double defaultValue = 0.) const;
 
-    void  PrintRegCount()
+    void PrintRegCount()
     {
-        // print number of I2C transactions 
+        // print number of I2C transactions
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -281,31 +281,28 @@ class SystemController
                 auto& clpGBT = cOpticalGroup->flpGBT;
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    LOG (INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << RESET;
-                    uint8_t cMasterId = (cHybrid->getId()%2 == 0 ) ?  2 : 0 ; 
+                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << RESET;
+                    uint8_t cMasterId = (cHybrid->getId() % 2 == 0) ? 2 : 0;
                     for(auto cChip: *cHybrid)
                     {
-                        LOG (INFO) << BOLDMAGENTA << "\t\t..Chip#" << +cChip->getId() 
-                            << " performed " << cChip->getWriteCount() << " CPB I2C writes and "
-                            << cChip->getReadCount() << " CPB I2C reads; "
-                            << " wrote " << cChip->getRegWriteCount() <<  " registers and read "
-                            << cChip->getRegReadCount() << " registers."
-                            << RESET;
-                        if( clpGBT != nullptr )
+                        LOG(INFO) << BOLDMAGENTA << "\t\t..Chip#" << +cChip->getId() << " performed " << cChip->getWriteCount() << " CPB I2C writes and " << cChip->getReadCount() << " CPB I2C reads; "
+                                  << " wrote " << cChip->getRegWriteCount() << " registers and read " << cChip->getRegReadCount() << " registers." << RESET;
+                        if(clpGBT != nullptr)
                         {
-                            clpGBT->updateWriteCount( cMasterId , cChip->getWriteCount() );
-                            clpGBT->updateReadCount( cMasterId , cChip->getReadCount() );
+                            clpGBT->updateWriteCount(cMasterId, cChip->getWriteCount());
+                            clpGBT->updateReadCount(cMasterId, cChip->getReadCount());
                         }
                     }
-                    if( clpGBT != nullptr )
+                    if(clpGBT != nullptr)
                     {
-                        LOG (INFO) << BOLDBLUE << "\tCPB I2C writes on Master" << +cMasterId << " : " << clpGBT->getWriteCount( cMasterId ) << RESET;
-                        LOG (INFO) << BOLDBLUE << "\tCPB I2C reads on Master" << +cMasterId << " : " << clpGBT->getReadCount( cMasterId ) << RESET;
+                        LOG(INFO) << BOLDBLUE << "\tCPB I2C writes on Master" << +cMasterId << " : " << clpGBT->getWriteCount(cMasterId) << RESET;
+                        LOG(INFO) << BOLDBLUE << "\tCPB I2C reads on Master" << +cMasterId << " : " << clpGBT->getReadCount(cMasterId) << RESET;
                     }
                 }
             }
         }
     }
+
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 

@@ -212,8 +212,8 @@ void DQMHistogramLatencyScan::process()
             {
                 for(auto chip: *hybrid)
                 {
-                    std::string cCanvasName  = "LatencyTDC_" + std::to_string(chip->getId()) +  std::to_string(hybrid->getId());
-                    std::string cCanvasTitle = "Latency TDC plot " + std::to_string(chip->getId()) +  std::to_string(hybrid->getId());
+                    std::string cCanvasName  = "LatencyTDC_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
+                    std::string cCanvasTitle = "Latency TDC plot " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
                     TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
                     cCanvas->cd();

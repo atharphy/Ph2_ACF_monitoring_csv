@@ -48,7 +48,6 @@ class PedeNoise : public Tool
     void Resume() override;
     void Reset();
 
-    
   protected:
     void     measureSCurves(uint16_t pStartValue = 0);
     uint16_t findPedestal(bool forceAllChannels = false);
@@ -72,11 +71,11 @@ class PedeNoise : public Tool
     std::vector<EventType> fEventTypes;
     DetectorDataContainer* fStubLogicValue;
     DetectorDataContainer* fHIPCountValue;
-    DetectorDataContainer fBoardRegContainer;
-    
-    bool                   cWithCBC = true;
-    bool                   cWithSSA = false;
-    bool                   cWithMPA = false;
+    DetectorDataContainer  fBoardRegContainer;
+
+    bool cWithCBC = true;
+    bool cWithSSA = false;
+    bool cWithMPA = false;
 
     // Settings
     bool fPlotSCurves{false};

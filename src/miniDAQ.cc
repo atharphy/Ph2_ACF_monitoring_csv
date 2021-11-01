@@ -18,10 +18,10 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
-#include "tools/StubBackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/PSAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 
 #include "../System/SystemController.h"
 
@@ -124,10 +124,10 @@ int main(int argc, char* argv[])
     mkdir(cDirectory, 777);
     int cRunNumber = 0;
     getRunNumber("${PH2ACF_BASE_DIR}", cRunNumber);
-    cOutputFile    = "Data/" + string_format("run_%04d.raw", cRunNumber);
-    pEventsperVcth = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10;
-    size_t cScopingAttempts  = (cmd.foundOption("scopeData")) ? convertAnyInt(cmd.optionValue("scopeData").c_str()) : 10;
-    
+    cOutputFile             = "Data/" + string_format("run_%04d.raw", cRunNumber);
+    pEventsperVcth          = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10;
+    size_t cScopingAttempts = (cmd.foundOption("scopeData")) ? convertAnyInt(cmd.optionValue("scopeData").c_str()) : 10;
+
     std::string  cDAQFileName;
     FileHandler* cDAQFileHandler = nullptr;
     bool         cDAQFile        = cmd.foundOption("daq");
@@ -171,13 +171,10 @@ int main(int argc, char* argv[])
     cBackEndAligner.waitForRunToBeCompleted();
 
     // if CIC is enabled then align CIC first
-    if(cmd.foundOption("alignCIC")) 
-    {
-        cCicAligner.AlignInputs();
-    }
+    if(cmd.foundOption("alignCIC")) { cCicAligner.AlignInputs(); }
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
-    
+
     // align ASICs on PS module
     PSAlignment cPSAlignment;
     cPSAlignment.Inherit(&cTool);
@@ -185,7 +182,7 @@ int main(int argc, char* argv[])
     // map MPA outputs for PS module
     cPSAlignment.MapMPAOutputs();
 
-    // time align stubs in back-end 
+    // time align stubs in back-end
     StubBackEndAlignment cStubBackEndAligner;
     cStubBackEndAligner.Inherit(&cTool);
     cStubBackEndAligner.Initialise();
@@ -196,11 +193,7 @@ int main(int argc, char* argv[])
     }
     cStubBackEndAligner.Reset();
 
-    
-    if(!cmd.foundOption("skipAlignment"))
-    {
-        cPSAlignment.Align();
-    }
+    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
     cPSAlignment.dumpConfigFiles();
 
     auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
@@ -318,7 +311,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    if( cmd.foundOption("scopeData") )
+    if(cmd.foundOption("scopeData"))
     {
         // for(auto cBoard: *cTool.fDetectorContainer)
         // {
@@ -331,61 +324,64 @@ int main(int argc, char* argv[])
         //         } // hybrid
         //     }// optical group
         // }// board
-                
 
-        size_t cCorrectHeaders=0; 
-        size_t cHeadersFound=0; 
-        size_t cComparedL1s=0;
-        size_t cIncorrectL1s=0;
-        for( size_t cAttempts=0 ; cAttempts < cScopingAttempts; cAttempts++)
+        size_t cCorrectHeaders = 0;
+        size_t cHeadersFound   = 0;
+        size_t cComparedL1s    = 0;
+        size_t cIncorrectL1s   = 0;
+        for(size_t cAttempts = 0; cAttempts < cScopingAttempts; cAttempts++)
         {
-            LOG (DEBUG) << BOLDBLUE << "Attempt#" << +cAttempts << RESET;
-            auto cBuffer = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug(1,false);
-            // search for L1 headers 
-            size_t cSearch = 0; 
-            size_t cPos = 0; 
-            auto   cFound = cBuffer.find("111111111111111111111110",cPos); 
-            std::stringstream cL1DataHeaders;  
-            size_t cNcorrect=0;
-            size_t cNfound=0;
-            std::vector<uint16_t> cL1Ids(0); 
+            LOG(DEBUG) << BOLDBLUE << "Attempt#" << +cAttempts << RESET;
+            auto cBuffer = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug(1, false);
+            // search for L1 headers
+            size_t                cSearch = 0;
+            size_t                cPos    = 0;
+            auto                  cFound  = cBuffer.find("111111111111111111111110", cPos);
+            std::stringstream     cL1DataHeaders;
+            size_t                cNcorrect = 0;
+            size_t                cNfound   = 0;
+            std::vector<uint16_t> cL1Ids(0);
             do
             {
-                cSearch=cBuffer.find("111111111111111111111110",cPos);
-                auto cHeader = cBuffer.substr( cSearch - 8  , 32 ); 
-                cNfound++; 
-                size_t cCount1s = std::count_if( cHeader.begin(), cHeader.end(), []( char c ){return c =='1';});
-                cNcorrect+= (cCount1s == 27);
-                auto cStatus = cBuffer.substr( cSearch - 8 + 32 , 9 ); 
-                auto cL1Id   = cBuffer.substr( cSearch - 8 + 32 + 9 , 9 ); 
-                cL1Ids.push_back( std::stoi(cL1Id,0,2) );
-                if(cCount1s == 27) cL1DataHeaders << BOLDGREEN << cStatus << "-" << cL1Id << "[" << std::stoi(cL1Id,0,2) << "]:" ;
-                else cL1DataHeaders << BOLDRED << cStatus << "-" <<  cL1Id << "[" << std::stoi(cL1Id,0,2) << "]:" ;
-                //LOG (INFO) << BOLDYELLOW << cHeader << " - " << cStatus << " - " << cL1Id << RESET; 
-                cPos = cSearch - 8 + 32; 
-                cFound = cBuffer.find("111111111111111111111110",cPos);
-            }while( cFound != std::string::npos );
-            LOG (INFO) << BOLDBLUE << "\t " << cL1DataHeaders.str() << RESET;
-            LOG (INFO) << BOLDBLUE << "\t\t Found " << cNcorrect << " correct headers out of " << cNfound << RESET;
-            auto cIter = cL1Ids.begin()+1;
+                cSearch      = cBuffer.find("111111111111111111111110", cPos);
+                auto cHeader = cBuffer.substr(cSearch - 8, 32);
+                cNfound++;
+                size_t cCount1s = std::count_if(cHeader.begin(), cHeader.end(), [](char c) { return c == '1'; });
+                cNcorrect += (cCount1s == 27);
+                auto cStatus = cBuffer.substr(cSearch - 8 + 32, 9);
+                auto cL1Id   = cBuffer.substr(cSearch - 8 + 32 + 9, 9);
+                cL1Ids.push_back(std::stoi(cL1Id, 0, 2));
+                if(cCount1s == 27)
+                    cL1DataHeaders << BOLDGREEN << cStatus << "-" << cL1Id << "[" << std::stoi(cL1Id, 0, 2) << "]:";
+                else
+                    cL1DataHeaders << BOLDRED << cStatus << "-" << cL1Id << "[" << std::stoi(cL1Id, 0, 2) << "]:";
+                // LOG (INFO) << BOLDYELLOW << cHeader << " - " << cStatus << " - " << cL1Id << RESET;
+                cPos   = cSearch - 8 + 32;
+                cFound = cBuffer.find("111111111111111111111110", cPos);
+            } while(cFound != std::string::npos);
+            LOG(INFO) << BOLDBLUE << "\t " << cL1DataHeaders.str() << RESET;
+            LOG(INFO) << BOLDBLUE << "\t\t Found " << cNcorrect << " correct headers out of " << cNfound << RESET;
+            auto cIter = cL1Ids.begin() + 1;
             do
             {
-                if(*(cIter-1) != 511 ) // don't compare after 511
+                if(*(cIter - 1) != 511) // don't compare after 511
                 {
-                    uint16_t cXor = *(cIter-1) ^ (*cIter);
-                    LOG (DEBUG) << BOLDYELLOW << std::bitset<9>(cXor) << RESET;
-                    cComparedL1s+=2;
-                    cIncorrectL1s+= (cXor >> 8 );
+                    uint16_t cXor = *(cIter - 1) ^ (*cIter);
+                    LOG(DEBUG) << BOLDYELLOW << std::bitset<9>(cXor) << RESET;
+                    cComparedL1s += 2;
+                    cIncorrectL1s += (cXor >> 8);
                 }
                 cIter++;
-            }while( cIter < cL1Ids.begin()+2);
-            cCorrectHeaders += cNcorrect; cHeadersFound += cNfound;
+            } while(cIter < cL1Ids.begin() + 2);
+            cCorrectHeaders += cNcorrect;
+            cHeadersFound += cNfound;
         }
-        LOG (INFO) << BOLDBLUE << " Found " << (cHeadersFound-cCorrectHeaders) << " incorrect headers out of " << cHeadersFound << " headers compared - " << (float)(cHeadersFound-cCorrectHeaders)/cHeadersFound << RESET;
-        LOG (INFO) << BOLDBLUE << " Found " << cIncorrectL1s << " incorrect headers out of " << cComparedL1s << " L1Ids compared - " << (float)(cIncorrectL1s)/cComparedL1s << RESET;
+        LOG(INFO) << BOLDBLUE << " Found " << (cHeadersFound - cCorrectHeaders) << " incorrect headers out of " << cHeadersFound << " headers compared - "
+                  << (float)(cHeadersFound - cCorrectHeaders) / cHeadersFound << RESET;
+        LOG(INFO) << BOLDBLUE << " Found " << cIncorrectL1s << " incorrect headers out of " << cComparedL1s << " L1Ids compared - " << (float)(cIncorrectL1s) / cComparedL1s << RESET;
     }
 
-    if( !cmd.foundOption("scopeData") )
+    if(!cmd.foundOption("scopeData"))
     {
         bool cLimitTriggers = cmd.foundOption("limitTriggers");
         if(cmd.foundOption("continuousReadout"))
@@ -404,7 +400,8 @@ int main(int argc, char* argv[])
                 uint32_t cNevents = 0;
                 bool     cBreak   = false;
                 bool     cWait    = false;
-                do {
+                do
+                {
                     std::this_thread::sleep_for(std::chrono::microseconds(cReadoutPause));
                     std::vector<uint32_t> cData(0);
                     cNevents += cTool.ReadData(cBeBoard, cData, cWait);
@@ -459,7 +456,8 @@ int main(int argc, char* argv[])
 
                     // try to only readout once I know I have enough events
                     size_t cCounter = 0;
-                    do {
+                    do
+                    {
                         std::this_thread::sleep_for(std::chrono::microseconds(10));
                         cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
                         if(cCounter % 1000 == 0)
@@ -482,7 +480,8 @@ int main(int argc, char* argv[])
 
                         size_t cCurrentDataSize = 0;
                         size_t cDataSize        = cCompleteData.size();
-                        do {
+                        do
+                        {
                             cCurrentDataSize = cCompleteData.size();
                             std::this_thread::sleep_for(std::chrono::milliseconds(1));
                             std::vector<uint32_t> cData(0);
@@ -544,8 +543,8 @@ int main(int argc, char* argv[])
                 //                 auto cStubVector = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                 //                 if( cHits.size() > 0 )
                 //                 {
-                //                     LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size() << "
-                //                     stubs." << RESET;
+                //                     LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " Hybrid#" << +cHybrid->getId() << " found " << +cHits.size() << " hits and " << +cStubVector.size()
+                //                     << " stubs." << RESET;
                 //                 }
                 //             }
                 //         } // hybrid
@@ -663,8 +662,7 @@ int main(int argc, char* argv[])
                 //         //LOG (INFO) << BOLDBLUE << "\t\t.." << cNclusters << RESET;
                 //     } // hybrid
                 // }     // optical group
-                
-                
+
                 cEventCounter++;
             }
 

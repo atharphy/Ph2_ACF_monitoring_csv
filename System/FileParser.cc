@@ -170,7 +170,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     uint8_t cBoardReset = convertAnyInt(pBeBordNode.attribute("boardReset").value());
     cBeBoard->setReset(cBoardReset);
 
-
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute("linkReset").value());
     cBeBoard->setLinkReset(cReset);
 
@@ -611,7 +610,7 @@ void FileParser::parseMPA(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::stri
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
     cMPA->setOptical(pHybrid->isOptical());
     cMPA->setOpticalId(pHybrid->getOpticalId());
-    cMPA->setNumberOfChannels(NSSACHANNELS,NMPACOLS);
+    cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
     cMPA->setClockFrequency(320);
     this->parseMPASettings(pHybridNode, cMPA);
 }
@@ -640,21 +639,20 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         else
         {
             uint8_t cMasterId;
-            if( pHybridNode.attribute("Id") ){ 
-                cMasterId = pHybridNode.attribute("i2cMaster").as_int();
-            }
-            else cMasterId = ( pHybridNode.attribute("Id").as_int()%2 == 0 ) ? 1 : 0; 
+            if(pHybridNode.attribute("Id")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); }
+            else
+                cMasterId = (pHybridNode.attribute("Id").as_int() % 2 == 0) ? 1 : 0;
 
             cHybrid = pOpticalGroup->addHybridContainer(
                 pHybridNode.attribute("Id").as_int(),
                 new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
             // probably this can be removed now
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
-            cHybrid->setMasterId( cMasterId );
+            cHybrid->setMasterId(cMasterId);
         }
         uint8_t cHybridReset = convertAnyInt(pHybridNode.attribute("reset").value());
         cHybrid->setReset(cHybridReset);
-    
+
         cHybrid->setOptical(pBoard->isOptical());
         cHybrid->setOpticalId(pOpticalGroup->getOpticalId());
         os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalId() << RESET;
@@ -759,13 +757,13 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                               << std::bitset<5>(cRegValue) << " -- new value " << std::bitset<5>(cNewValue) << RESET;
                                     cCic->setReg(cRegName, cNewValue);
                                 }
-                                if( cChildGlobal.attribute("driveStrength") )
+                                if(cChildGlobal.attribute("driveStrength"))
                                 {
                                     uint8_t cDriveStrength = cChildGlobal.attribute("driveStrength").as_int();
                                     cCic->setDriveStrength(cDriveStrength);
                                 }
-                                
-                                if( cChildGlobal.attribute("edgeSelect") )
+
+                                if(cChildGlobal.attribute("edgeSelect"))
                                 {
                                     uint8_t cEdgeSelect = cChildGlobal.attribute("edgeSelect").as_int();
                                     cCic->setEdgeSelect(cEdgeSelect);
@@ -791,65 +789,67 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                 }
             }
         }
-        // parse global hybrids container - masks for noisy pixels/strips 
-        parseGlobalHybridMask( pHybridNode, cHybrid, os);
+        // parse global hybrids container - masks for noisy pixels/strips
+        parseGlobalHybridMask(pHybridNode, cHybrid, os);
         // Finally map front-end to LpGBT
         if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
     }
 }
-// so far implemented for MPA/SSA/CBC 
-void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os) 
+// so far implemented for MPA/SSA/CBC
+void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 {
     os << BOLDCYAN << "|"
-       << "  Parsing global hybrid settings " << "\n";
+       << "  Parsing global hybrid settings "
+       << "\n";
 
     pugi::xml_node cGlobalSettingsNode = pHybridNode.child("Global");
-    // parse masked channels 
+    // parse masked channels
     for(pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
     {
-        std::string cName          = cChildGlobal.name();
-        if( cName.find("Masked") == std::string::npos ) continue;
+        std::string cName = cChildGlobal.name();
+        if(cName.find("Masked") == std::string::npos) continue;
 
-        os << BOLDCYAN << "\t|\t|\t|"
-                << cName << "\n";
-        
-        std::vector<uint8_t> cFeIds(0);
-        std::map<uint8_t,std::vector<uint16_t>> cMapOfMaks; // key FeId, ChannelIds 
-        std::map<uint8_t,FrontEndType> cMapOfTypes; // key FeId , value Type 
+        os << BOLDCYAN << "\t|\t|\t|" << cName << "\n";
+
+        std::vector<uint8_t>                     cFeIds(0);
+        std::map<uint8_t, std::vector<uint16_t>> cMapOfMaks;  // key FeId, ChannelIds
+        std::map<uint8_t, FrontEndType>          cMapOfTypes; // key FeId , value Type
         for(const pugi::xml_attribute cAttribute: cChildGlobal.attributes())
         {
             std::string       cAttrName = cAttribute.name();
-            std::string       cList = std::string(cAttribute.value());
+            std::string       cList     = std::string(cAttribute.value());
             std::string       ctoken;
             std::stringstream cStr(cList);
-            os << GREEN << "|\t|\t|\t|---- " << cAttrName << " : "; 
+            os << GREEN << "|\t|\t|\t|---- " << cAttrName << " : ";
             int cIndex = 0;
             while(std::getline(cStr, ctoken, ','))
             {
                 uint8_t cItem = convertAnyInt(ctoken.c_str());
-                if( cAttrName.find("Id") != std::string::npos ) 
+                if(cAttrName.find("Id") != std::string::npos)
                 {
-                    // check if item exists in map 
-                    cFeIds.push_back( cItem );
+                    // check if item exists in map
+                    cFeIds.push_back(cItem);
                     auto cIter = cMapOfMaks.find(cItem);
-                    if( cIter == cMapOfMaks.end() ){
-                        std::vector<uint16_t> cMskedChnls(1,0);
-                        cMapOfMaks[cItem]=cMskedChnls;
+                    if(cIter == cMapOfMaks.end())
+                    {
+                        std::vector<uint16_t> cMskedChnls(1, 0);
+                        cMapOfMaks[cItem]  = cMskedChnls;
                         FrontEndType cType = FrontEndType::CBC3;
-                        if( cAttrName.find("MPA") != std::string::npos  ) cType = FrontEndType::MPA;
-                        if( cAttrName.find("SSA") != std::string::npos  ) cType = FrontEndType::SSA;
-                        if( cAttrName.find("SSA2") != std::string::npos  ) cType = FrontEndType::SSA2;
+                        if(cAttrName.find("MPA") != std::string::npos) cType = FrontEndType::MPA;
+                        if(cAttrName.find("SSA") != std::string::npos) cType = FrontEndType::SSA;
+                        if(cAttrName.find("SSA2") != std::string::npos) cType = FrontEndType::SSA2;
                         cMapOfTypes[cItem] = cType;
                     }
-                    else cMapOfMaks[cItem].push_back(0);
+                    else
+                        cMapOfMaks[cItem].push_back(0);
                 }
-                else if( cAttrName.find("Rows") != std::string::npos ) 
+                else if(cAttrName.find("Rows") != std::string::npos)
                 {
-                    cMapOfMaks[cFeIds[cIndex]][cIndex] = cItem ;
+                    cMapOfMaks[cFeIds[cIndex]][cIndex] = cItem;
                 }
-                else if( cAttrName.find("Columns") != std::string::npos ) 
+                else if(cAttrName.find("Columns") != std::string::npos)
                 {
-                    uint16_t cPixelId = 120*cItem + cMapOfMaks[cFeIds[cIndex]][cIndex];
+                    uint16_t cPixelId                  = 120 * cItem + cMapOfMaks[cFeIds[cIndex]][cIndex];
                     cMapOfMaks[cFeIds[cIndex]][cIndex] = cPixelId;
                 }
                 os << GREEN << +cItem << ", ";
@@ -857,84 +857,83 @@ void FileParser::parseGlobalHybridMask( pugi::xml_node pHybridNode, Hybrid* pHyb
             }
             os << "\n";
         }
-        std::sort( cFeIds.begin(), cFeIds.end() );
-        cFeIds.erase( std::unique( cFeIds.begin(), cFeIds.end() ), cFeIds.end() );
-        for( auto cFeId : cFeIds ) 
+        std::sort(cFeIds.begin(), cFeIds.end());
+        cFeIds.erase(std::unique(cFeIds.begin(), cFeIds.end()), cFeIds.end());
+        for(auto cFeId: cFeIds)
         {
-            auto cType = cMapOfTypes[cFeId];
-            std::string cRegNameBase="";
-            if( cType == FrontEndType::MPA )
-            { 
-                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId 
-                    << " have " << cMapOfMaks[cFeId].size() << " MPA pixels to mask..." << "\n";
+            auto        cType        = cMapOfTypes[cFeId];
+            std::string cRegNameBase = "";
+            if(cType == FrontEndType::MPA)
+            {
+                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId << " have " << cMapOfMaks[cFeId].size() << " MPA pixels to mask..."
+                   << "\n";
                 cRegNameBase = "ENFLAGS_P";
             }
-            else if ( cType == FrontEndType::SSA || cType == FrontEndType::SSA2  )
+            else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
             {
-                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId 
-                    << " have " << cMapOfMaks[cFeId].size() << " SSA strips to mask..." << "\n";
+                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId << " have " << cMapOfMaks[cFeId].size() << " SSA strips to mask..."
+                   << "\n";
                 cRegNameBase = "ENFLAGS_S";
             }
-            else 
-            { 
-                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId 
-                    << " have " << cMapOfMaks[cFeId].size() << " CBC strips to mask..." << "\n";
+            else
+            {
+                os << GREEN << "|\t|\t|\t|\t| ---- FeId" << +cFeId << " have " << cMapOfMaks[cFeId].size() << " CBC strips to mask..."
+                   << "\n";
                 cRegNameBase = "MaskChannel-";
             }
-            
-            // configure register map for each chip 
-            for( auto cChnlId :  cMapOfMaks[cFeId] ) 
+
+            // configure register map for each chip
+            for(auto cChnlId: cMapOfMaks[cFeId])
             {
-                std::stringstream cRegName; 
+                std::stringstream cRegName;
                 cRegName << cRegNameBase;
                 // get the index of the bit to shift
-                uint8_t cBitShift = 0 ; 
-                uint8_t cMaskValue = 0; 
-                if( cType == FrontEndType::CBC3 ) 
+                uint8_t cBitShift  = 0;
+                uint8_t cMaskValue = 0;
+                if(cType == FrontEndType::CBC3)
                 {
-                    uint8_t cRegisterIndex = 1+8*(cChnlId/8); 
-                    cRegName << std::setfill('0')<<std::setw(3)<<+(7+cRegisterIndex)<<"-to-"<<std::setfill('0')<<std::setw(3)<<+(cRegisterIndex);
+                    uint8_t cRegisterIndex = 1 + 8 * (cChnlId / 8);
+                    cRegName << std::setfill('0') << std::setw(3) << +(7 + cRegisterIndex) << "-to-" << std::setfill('0') << std::setw(3) << +(cRegisterIndex);
                     cBitShift = (cChnlId) % 8;
                 }
-                else{
-                    cRegName << cChnlId; 
+                else
+                {
+                    cRegName << cChnlId;
                 }
                 // get the original value of the register
-                os << GREEN << "|\t|\t|\t|\t|\t|  ---- Preparing registers to mask channel " << +cChnlId 
-                    << " - controled by register " << cRegName.str() << " \n"; 
-                for( auto cROC : *pHybrid ) 
+                os << GREEN << "|\t|\t|\t|\t|\t|  ---- Preparing registers to mask channel " << +cChnlId << " - controled by register " << cRegName.str() << " \n";
+                for(auto cROC: *pHybrid)
                 {
-                    if( cROC->getId() != cFeId ) continue; 
-                    auto cRegValue = cROC->getReg(cRegName.str() );
-                    uint8_t     cRegMask  = (0x1 << cBitShift); //
-                    cRegMask              = ~(cRegMask);
-                    uint8_t cValue        = (cRegValue & cRegMask) | (cMaskValue << cBitShift);
+                    if(cROC->getId() != cFeId) continue;
+                    auto    cRegValue = cROC->getReg(cRegName.str());
+                    uint8_t cRegMask  = (0x1 << cBitShift); //
+                    cRegMask          = ~(cRegMask);
+                    uint8_t cValue    = (cRegValue & cRegMask) | (cMaskValue << cBitShift);
                     // write the new value
                     os << GREEN << "|\t|\t|\t|\t|\t|\t|  ---- register set to 0x" << std::hex << +cValue << std::dec << "\n";
-                    cROC->setReg(cRegName.str(), cValue); 
+                    cROC->setReg(cRegName.str(), cValue);
                 }
             }
 
-            // set original mask for each ROC 
-            for( auto cROC : *pHybrid ) 
+            // set original mask for each ROC
+            for(auto cROC: *pHybrid)
             {
-                if( cROC->getId() != cFeId ) continue;
+                if(cROC->getId() != cFeId) continue;
                 os << GREEN << "|\t|\t|\t|\t|\t   ---- Applying channel mask to ROC" << +cROC->getId() << "\n";
-                cROC->setChipOriginalMask( cMapOfMaks[cFeId] );
+                cROC->setChipOriginalMask(cMapOfMaks[cFeId]);
             }
         }
-        if( cMapOfMaks.size() == 0 )
+        if(cMapOfMaks.size() == 0)
         {
             os << BOLDCYAN << "\t|\t|\t| Nothing masked on hybrid#" << +pHybrid->getId() << "\n";
-            for( auto cROC : *pHybrid ) 
+            for(auto cROC: *pHybrid)
             {
                 os << GREEN << "|\t|\t|\t|\t|\t   ---- Applying no channel mask to ROC" << +cROC->getId() << "\n";
                 std::vector<uint16_t> cEmptyList(0);
-                cROC->setChipOriginalMask( cEmptyList );
+                cROC->setChipOriginalMask(cEmptyList);
             }
         }
     }
-
 }
 void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
 {
@@ -1155,14 +1154,14 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
             uint8_t cAmuxRead = pCbc->getReg("MiscTestPulseCtrl&AnalogMux");
             pCbc->setReg("MiscTestPulseCtrl&AnalogMux", ((cAmuxRead & 0xE0) | (cAmuxValue & 0x1F)));
 
-            ChipRegMask cMask; 
-            cMask.fNbits = 3; cMask.fBitShift=5;
+            ChipRegMask cMask;
+            cMask.fNbits    = 3;
+            cMask.fBitShift = 5;
             pCbc->setRegBits("HIP&TestMode", cMask, cHIPcount);
 
             os << GREEN << "|\t|\t|\t|----Misc Settings: "
                << " PipelineLogicSource: " << RED << +cPipeLogic << GREEN << ", StubLogicSource: " << RED << +cStubLogic << GREEN << ", OR254: " << RED << +cOr254 << GREEN << ", TPG Clock: " << RED
-               << +cTpgClock << GREEN << ", Test Clock 40: " << RED << +cTestClock << GREEN << ", DLL: " << RED << convertAnyInt(cMiscNode.attribute("dll").value()) 
-               << ", HIPCount: " << +cHIPcount
+               << +cTpgClock << GREEN << ", Test Clock 40: " << RED << +cTestClock << GREEN << ", DLL: " << RED << convertAnyInt(cMiscNode.attribute("dll").value()) << ", HIPCount: " << +cHIPcount
                << RESET << std::endl;
         }
 

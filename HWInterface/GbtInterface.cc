@@ -290,15 +290,15 @@ void GbtInterface::gbtxSelectEdge(BeBoardFWInterface* pInterface, bool pRising)
     LOG(INFO) << BOLDBLUE << "GBTx default configuration " << std::bitset<8>(cReadBack) << " -- will be set to " << std::bitset<8>(cRegValue) << RESET;
     // icWrite(pInterface, 244 , cRegValue ) ;
 }
-void GbtInterface::gbtxAutoAlign(BeBoardFWInterface* pInterface, uint8_t pHybridId) 
+void GbtInterface::gbtxAutoAlign(BeBoardFWInterface* pInterface, uint8_t pHybridId)
 {
     uint16_t cReg = 62;
-    // training mode 
+    // training mode
     uint8_t  cPhaseSelectMode = 0x01;
     uint32_t cReadBack        = icRead(pInterface, cReg, 1);
     uint32_t cWrite           = (cReadBack & 0xc0) | ((cPhaseSelectMode << 4) | (cPhaseSelectMode << 2) | (cPhaseSelectMode << 0));
     icWrite(pInterface, cReg, cWrite);
-    // train channels 
+    // train channels
     //                                0,1,2,3,4,5
 
     // gbtxEnableRxChannel(pInterface, 0, {0, 4});
@@ -897,7 +897,8 @@ bool GbtInterface::cicWrite(BeBoardFWInterface* pInterface, uint8_t pFeId, uint8
     size_t cMaxAttempts = (cRetry) ? 10 : 0;
     size_t cAttempts    = 0;
     bool   cSuccess     = false;
-    do {
+    do
+    {
         uint8_t cWrite = writeI2C(pInterface, fSCAMaster + pFeId, 0x60, (pRegisterAddress << 8 * 2) | (pRegisterValue << 8 * 1), 3);
         cSuccess       = (cWrite == 0);
         if(!pReadBack) continue;

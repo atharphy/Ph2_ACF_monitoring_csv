@@ -24,7 +24,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     setBoard(pChip->getBeBoardId());
     pChip->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "]" << RESET;
-    
+
     // Configure High Speed Link Tx Rx Polarity
     // do this before doing anything else
     ConfigureHighSpeedPolarity(pChip, 1, 0);
@@ -53,7 +53,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cReady = IsPUSMDone(pChip);
         cIter++;
     }
-    if(cReady){ 
+    if(cReady)
+    {
         LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
         ResetI2C(pChip, {0, 1, 2});
     }
@@ -81,9 +82,8 @@ void D19clpGBTInterface::SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool 
             LOG(INFO) << BOLDGREEN << "Using Command Processor Block" << RESET;
             fUseCPB = true;
         }
-        else LOG(INFO) << BOLDRED << "Not using Command Processor Block" << RESET;
-            
-
+        else
+            LOG(INFO) << BOLDRED << "Not using Command Processor Block" << RESET;
     }
     else
     {
@@ -162,8 +162,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    //uint8_t              cTxDataRate = 3, cTxDriveStr = 4  , cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    // uint8_t              cTxDataRate = 3, cTxDriveStr = 4  , cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {

@@ -104,7 +104,7 @@ class lpGBTInterface : public ChipInterface
     void ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
     void ConfigureTxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
     void ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
-    
+
     // ########################
     // # LpGBT GPIO functions #
     // ########################
@@ -198,16 +198,16 @@ class lpGBTInterface : public ChipInterface
     //     return fI2Cconfigs[pMasterId];
     // }
     uint8_t AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
-    void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
-    void ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
-                             const std::vector<uint8_t>& pGroups,
-                             const std::vector<uint8_t>& pChannels,
-                             uint8_t                     pDriveStr,
-                             uint8_t                     pPreEmphMode,
-                             uint8_t                     pPreEmphStr,
-                             uint8_t                     pPreEmphWidth,
-                             uint8_t                     pInvert);
-    
+    void    ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    void    ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
+                                const std::vector<uint8_t>& pGroups,
+                                const std::vector<uint8_t>& pChannels,
+                                uint8_t                     pDriveStr,
+                                uint8_t                     pPreEmphMode,
+                                uint8_t                     pPreEmphStr,
+                                uint8_t                     pPreEmphWidth,
+                                uint8_t                     pInvert);
+
   protected:
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
 

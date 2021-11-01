@@ -61,7 +61,8 @@ class CicFEAlignment : public Tool
     {
         return fWordAlignmentValues.at(pBoard->getIndex())->at(pGroup->getIndex())->at(pFe->getIndex())->at(pChip->getIndex())->getSummary<AlignmentValues>()[pLine];
     }
-    bool    getStatus() const { return fSuccess; }
+    bool getStatus() const { return fSuccess; }
+
   protected:
   private:
     // status

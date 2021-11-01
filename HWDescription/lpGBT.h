@@ -64,11 +64,11 @@ class lpGBT : public Chip
     uint8_t getRxHSLPolarity() { return fRxHSLPolarity; }
     uint8_t getTxHSLPolarity() { return fTxHSLPolarity; }
 
+    void     updateWriteCount(uint8_t pMasterId, uint32_t fIncrement = 1) { fI2CWrites[pMasterId] += fIncrement; }
+    void     updateReadCount(uint8_t pMasterId, uint32_t fIncrement = 1) { fI2CReads[pMasterId] += fIncrement; }
+    uint32_t getWriteCount(uint8_t pMasterId) { return fI2CWrites[pMasterId]; }
+    uint32_t getReadCount(uint8_t pMasterId) { return fI2CReads[pMasterId]; }
 
-    void updateWriteCount(uint8_t pMasterId, uint32_t fIncrement=1 ){ fI2CWrites[pMasterId]+= fIncrement ; }
-    void updateReadCount(uint8_t pMasterId, uint32_t fIncrement=1){ fI2CReads[pMasterId]+= fIncrement ; }
-    uint32_t getWriteCount(uint8_t pMasterId){ return fI2CWrites[pMasterId];}
-    uint32_t getReadCount(uint8_t pMasterId){ return fI2CReads[pMasterId];}
   private:
     bool                 phaseRxAligned; // @TMP@
     std::string          configFileName;
@@ -76,10 +76,9 @@ class lpGBT : public Chip
     uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
     // number of write transactions - one element per master
-    std::vector<uint32_t> fI2CWrites{0,0,0};
+    std::vector<uint32_t> fI2CWrites{0, 0, 0};
     // number of read transactions - one element per master
-    std::vector<uint32_t> fI2CReads{0,0,0};
-
+    std::vector<uint32_t> fI2CReads{0, 0, 0};
 };
 } // namespace Ph2_HwDescription
 

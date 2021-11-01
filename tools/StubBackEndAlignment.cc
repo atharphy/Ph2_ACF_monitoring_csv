@@ -8,7 +8,11 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-StubBackEndAlignment::StubBackEndAlignment() : Tool() { fBoardRegContainer.reset(); fSuccess=false;}
+StubBackEndAlignment::StubBackEndAlignment() : Tool()
+{
+    fBoardRegContainer.reset();
+    fSuccess = false;
+}
 StubBackEndAlignment::~StubBackEndAlignment() {}
 void StubBackEndAlignment::Reset()
 {
@@ -40,7 +44,8 @@ void StubBackEndAlignment::Reset()
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
                 cWithPS       = cWithPS || cIsPS;
-                LOG(DEBUG) << BOLDBLUE << "StubBackEndAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+                LOG(DEBUG) << BOLDBLUE << "StubBackEndAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..."
+                           << RESET;
                 for(auto cChip: *cHybrid)
                 {
                     if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
@@ -67,7 +72,7 @@ void StubBackEndAlignment::Reset()
 void StubBackEndAlignment::Initialise()
 {
     fSuccess = false;
-    
+
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
@@ -87,12 +92,12 @@ void StubBackEndAlignment::Initialise()
         {
             for(auto cOpticalGroup: *cBoard)
             {
-                bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr); 
-                fWithCIC = cWithLpGBT; 
+                bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
+                fWithCIC        = cWithLpGBT;
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    fWithCIC = fWithCIC || (cCic != nullptr );
+                    fWithCIC   = fWithCIC || (cCic != nullptr);
                     if(cIsPS) continue;
 
                     auto cType    = FrontEndType::SSA;
@@ -108,14 +113,13 @@ void StubBackEndAlignment::Initialise()
 }
 bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 {
-    
     // make sure you're only sending one trigger at a time here
     LOG(INFO) << GREEN << "Trying to align CIC decoder in the back-end" << RESET;
     // sparsification of
-    bool cSparsified = pBoard->getSparsification();
-    uint32_t cNevents      = 10;
-    uint16_t cMaxBxCounter = 3564;
-    bool    cCorrectDelay = false;
+    bool                 cSparsified   = pBoard->getSparsification();
+    uint32_t             cNevents      = 10;
+    uint16_t             cMaxBxCounter = 3564;
+    bool                 cCorrectDelay = false;
     std::vector<uint8_t> cFeEnableRegs(0);
     for(auto cOpticalGroup: *pBoard)
     {
@@ -131,7 +135,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             // disable all FEs. . not needed here
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
-    }// disable FEs for all hybrids 
+    } // disable FEs for all hybrids
 
     // uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
     // uint16_t cOriginalTriggerSrc = cTriggerSrc;
@@ -202,8 +206,6 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 
     // } // pkg delay
 
-
-    
     // check trigger source
     // and reload
     uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
@@ -264,8 +266,8 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
                     LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
                 } // hybrids or CICs
-            }//OGs
-        }     // events
+            }     // OGs
+        }         // events
         // figure out the differences between the bxIds
         auto cFirstDifference = cBxDifferences[0];
         std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
@@ -283,7 +285,6 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             LOG(INFO) << BOLDRED << "Found differences between bxIds to be different from one another." << RESET;
 
     } // pkg delay
-    
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
@@ -312,7 +313,6 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     }
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
     return cCorrectDelay;
-    
 }
 bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
@@ -321,7 +321,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 530;
     cSetting            = fSettingsMap.find("StubAlignmentScanStart");
     uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
-    
 
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
@@ -450,7 +449,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 // uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
                 // disable all SSAs when doing this - why?
                 fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-            
+
                 if(cPSmode == 2) continue;
                 fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", (0x1 << 0));
                 fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", (0x0 << 0));
@@ -495,64 +494,62 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             }     // hybrid
         }         // OG
 
-        // send a ReSync since the latency was changed 
+        // send a ReSync since the latency was changed
         fBeBoardInterface->ChipReSync(pBoard);
-        // look at data 
+        // look at data
         ReadNEvents(pBoard, cNevents);
         const std::vector<Event*>& cEvents         = this->GetEvents();
         size_t                     cNEventsMatched = 0;
-        // one of these triggers should match 
+        // one of these triggers should match
         for(size_t cTriggerId = 0; cTriggerId < (size_t)(cMult + 1); cTriggerId++)
         {
             if(cFoundCorrectHitLatency) continue;
             LOG(INFO) << BOLDBLUE << "Checking readout for match in number of hits ... looking at Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << RESET;
-            auto   cEventIter     = cEvents.begin() + cTriggerId;
-            cNEventsMatched=0;
-            size_t cAllEvents=0;
-            do 
+            auto cEventIter   = cEvents.begin() + cTriggerId;
+            cNEventsMatched   = 0;
+            size_t cAllEvents = 0;
+            do
             {
                 if(cEventIter >= cEvents.end()) break;
-                size_t cNHits          = 0;
+                size_t cNHits = 0;
                 for(auto cOpticalReadout: *pBoard)
                 {
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        size_t cNHitsPerHybrid=0;
+                        size_t cNHitsPerHybrid = 0;
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                            if( cChip->getFrontEndType() == FrontEndType::MPA)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA)
                             {
-                                auto cPclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cChip->getHybridId(), cChip->getId());
-                                auto cSclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cChip->getHybridId(), cChip->getId());
+                                auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cChip->getHybridId(), cChip->getId());
+                                auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cChip->getHybridId(), cChip->getId());
                                 LOG(DEBUG) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " MPA" << +cChip->getId() << " found " << cSclus.size() << " S clusters and "
-                                    << cPclus.size() << " P clusters in L1 data." << RESET;
-                        
+                                           << cPclus.size() << " P clusters in L1 data." << RESET;
                             }
                             size_t cNHitsThisFE = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId()).size();
                             cNHitsPerHybrid += cNHitsThisFE;
                             cNHits += cNHitsThisFE;
-                            //if( cNHitsThisFE > 0 )
-                                LOG(DEBUG) << BOLDBLUE << "\t.. ROC" << +cChip->getId() << " found "   
-                                    << +cNHitsThisFE << " hits .." << RESET;
+                            // if( cNHitsThisFE > 0 )
+                            LOG(DEBUG) << BOLDBLUE << "\t.. ROC" << +cChip->getId() << " found " << +cNHitsThisFE << " hits .." << RESET;
                         }
-                        LOG (DEBUG) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;
+                        LOG(DEBUG) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;
                     }
                 }
                 cNEventsMatched += (cNHits == cNinjectedHits) ? 1 : 0;
                 cAllEvents++;
                 cEventIter += (1 + cMult);
             } while(cEventIter < cEvents.end());
-            if( cNEventsMatched == cAllEvents && cAllEvents > 0 )
+            if(cNEventsMatched == cAllEvents && cAllEvents > 0)
             {
-                LOG (INFO) << BOLDGREEN << ".... matched number of hits in all events." << RESET;
-                cFoundCorrectHitLatency=true;
-            } 
-        }//event loop 
-        if( cFoundCorrectHitLatency )
+                LOG(INFO) << BOLDGREEN << ".... matched number of hits in all events." << RESET;
+                cFoundCorrectHitLatency = true;
+            }
+        } // event loop
+        if(cFoundCorrectHitLatency)
         {
-            cHitLatency             = cLatency;
+            cHitLatency = cLatency;
             LOG(INFO) << BOLDGREEN << "For a latency of " << +cLatency << " found " << +cNEventsMatched << " out of " << +cEvents.size() << " events with the correct number of hits for all FEs."
                       << RESET;
         }
@@ -586,7 +583,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                        auto   cBx              = (int)cEvent->BxId(cHybrid->getId());
                         size_t cNstubsThisHybrd = 0;
                         for(auto cChip: *cHybrid)
                         {
@@ -597,11 +594,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
                         } // ROCs
-                        if( cNstubsThisHybrd > 0 ) 
-                            LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd
-                                << " stubs in CIC#" << +cHybrid->getId()
-                                << " BxId is " << +cBx
-                                << RESET;
+                        if(cNstubsThisHybrd > 0)
+                            LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << " BxId is " << +cBx << RESET;
                     } // hybrids
                 }     // OGs
             }         // events
@@ -683,7 +677,7 @@ bool StubBackEndAlignment::FindPackageDelay()
     for(auto cBoard: *fDetectorContainer)
     {
         // only find package delay if there is a CIC
-        if( fWithCIC ) 
+        if(fWithCIC)
         {
             cAligned = cAligned && FindPackageDelay(cBoard);
             if(!cAligned) continue;
@@ -697,7 +691,7 @@ bool StubBackEndAlignment::FindStubLatency()
     for(auto cBoard: *fDetectorContainer)
     {
         // only find package delay if there is a CIC
-        if( fWithCIC ) 
+        if(fWithCIC)
         {
             cAligned = cAligned && FindStubLatency(cBoard);
             if(!cAligned) continue;
@@ -709,11 +703,11 @@ bool StubBackEndAlignment::FindStubLatency()
 bool StubBackEndAlignment::Align()
 {
     LOG(INFO) << BOLDBLUE << "Starting back-end alignment procedure .... " << RESET;
-    bool cAligned = FindPackageDelay(); 
-    if(!cAligned) return cAligned; 
+    bool cAligned = FindPackageDelay();
+    if(!cAligned) return cAligned;
 
-    cAligned = FindStubLatency(); 
-    if(!cAligned) return cAligned; 
+    cAligned = FindStubLatency();
+    if(!cAligned) return cAligned;
 
     return cAligned;
 }
@@ -721,7 +715,7 @@ bool StubBackEndAlignment::Align()
 void StubBackEndAlignment::Running()
 {
     Initialise();
-    fSuccess =  FindStubLatency(); 
+    fSuccess = FindStubLatency();
     if(!fSuccess)
     {
         LOG(ERROR) << BOLDRED << "Failed to align stubs in the back-end" << RESET;

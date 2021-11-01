@@ -57,7 +57,7 @@ class BackEndAlignment : public LinkAlignmentOT
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
     DetectorDataContainer fEnabledFEs;
-    
+
 // booking histograms
 #ifdef __USE_ROOT__
 //  DQMHistogramCic fDQMHistogram;

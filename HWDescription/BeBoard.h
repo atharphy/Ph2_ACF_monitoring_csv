@@ -157,8 +157,8 @@ class BeBoard : public BoardContainer
     void    setStubOffset(uint16_t pOffset) { fStubOffset = pOffset; }
     uint8_t getStubOffset() const { return fStubOffset; }
 
-    void setReset(uint8_t pReset){ fReset = pReset;}
-    uint8_t getReset() const { return fReset;}
+    void    setReset(uint8_t pReset) { fReset = pReset; }
+    uint8_t getReset() const { return fReset; }
 
     int dummyValue_ = 1989;
 

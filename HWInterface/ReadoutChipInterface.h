@@ -32,8 +32,9 @@ class ReadoutChipInterface : public ChipInterface
 {
   protected:
     std::map<uint32_t, Ph2_HwDescription::ChipRegMap> fModifiedRegisters;
-    std::map<uint16_t, std::string> fMap;
-    bool fTrackRegisters{true};
+    std::map<uint16_t, std::string>                   fMap;
+    bool                                              fTrackRegisters{true};
+
   public:
     /*!
      * \brief Constructor of the ReadoutChipInterface Class
@@ -49,7 +50,11 @@ class ReadoutChipInterface : public ChipInterface
     /*!
      * \brief Clear Register Map
      */
-    void                          ClearModifiedRegisterMap() { fModifiedRegisters.clear(); LOG (DEBUG) << BOLDMAGENTA << "After clearing register map have " << +fModifiedRegisters.size() << " regs." << RESET;}
+    void ClearModifiedRegisterMap()
+    {
+        fModifiedRegisters.clear();
+        LOG(DEBUG) << BOLDMAGENTA << "After clearing register map have " << +fModifiedRegisters.size() << " regs." << RESET;
+    }
     Ph2_HwDescription::ChipRegMap GetModifiedRegisterMap(Ph2_HwDescription::Chip* pChip)
     {
         Ph2_HwDescription::ChipRegMap cMap;
@@ -77,12 +82,12 @@ class ReadoutChipInterface : public ChipInterface
         fModifiedRegisters[cChipId] = pRegMap;
         // std::cout << "OverwriteModifiedRegisterMap interface --- " << +cChipId << " contains " << fModifiedRegisters[cChipId].size() << " items.\n";
     }
-    void UpdateModifiedRegMap(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pPage = 0 )
+    void UpdateModifiedRegMap(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pPage = 0)
     {
         // modified registers map
         uint32_t cChipId = (uint8_t)(pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::RD53) << 12;
         cChipId          = cChipId | pChip->getOpticalId() << 8 | pChip->getHybridId() << 4 | pChip->getId();
-        auto cMapIter = fModifiedRegisters.find(cChipId);
+        auto cMapIter    = fModifiedRegisters.find(cChipId);
         if(cMapIter == fModifiedRegisters.end())
         {
             Ph2_HwDescription::ChipRegMap cRegMap;
@@ -90,21 +95,20 @@ class ReadoutChipInterface : public ChipInterface
         }
         cMapIter      = fModifiedRegisters.find(cChipId);
         auto& cModMap = cMapIter->second;
-        bool cFound = false;
-        for(auto cMapItem : pChip->getRegMap() ) 
+        bool  cFound  = false;
+        for(auto cMapItem: pChip->getRegMap())
         {
-            if( cFound ) break;
-            if( cMapItem.second.fAddress == pRegisterAddress && cMapItem.second.fPage == pPage ) 
+            if(cFound) break;
+            if(cMapItem.second.fAddress == pRegisterAddress && cMapItem.second.fPage == pPage)
             {
-                cFound=true;
+                cFound = true;
                 if(cModMap.find(cMapItem.first) == cModMap.end())
                 {
-                    auto cSize = cModMap.size();
-                    cModMap[cMapItem.first] = cMapItem.second; 
-                    LOG (DEBUG) << BOLDMAGENTA << "ReadoutChipInterface - ModMap contained " << cSize << " items....now has " 
-                        << cModMap.size() << " items that " << cMapItem.first << " register will be  modified "
-                        << " original value is " << +cMapItem.second.fValue 
-                        << RESET;
+                    auto cSize              = cModMap.size();
+                    cModMap[cMapItem.first] = cMapItem.second;
+                    LOG(DEBUG) << BOLDMAGENTA << "ReadoutChipInterface - ModMap contained " << cSize << " items....now has " << cModMap.size() << " items that " << cMapItem.first
+                               << " register will be  modified "
+                               << " original value is " << +cMapItem.second.fValue << RESET;
                 }
             }
         }
@@ -189,14 +193,17 @@ class ReadoutChipInterface : public ChipInterface
      */
     virtual bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) = 0;
 
-    virtual void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms=10 ){
-        //LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    virtual void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10)
+    {
+        // LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
-    virtual void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip ){
-        //LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    virtual void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        // LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
-    virtual std::vector<uint8_t> getWordAlignmentPatterns(){
-        std::vector<uint8_t> cAlignmentPattern{10,0};
+    virtual std::vector<uint8_t> getWordAlignmentPatterns()
+    {
+        std::vector<uint8_t> cAlignmentPattern{10, 0};
         return cAlignmentPattern;
     }
     /*!

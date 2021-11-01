@@ -61,6 +61,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
     void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
+
   private:
     void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
 

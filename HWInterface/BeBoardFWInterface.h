@@ -329,10 +329,10 @@ class BeBoardFWInterface : public RegManager
         fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
         fCPBConfig.fI2CFrequency = pConfig.fI2CFrequency;
     }
-    // return functions for internal I2C reads and writes 
-    uint32_t getWriteCount(){ return fI2CWriteCount;}
-    uint32_t getReadCount(){ return fI2CReadCount;}
-    uint32_t getRBMismatchCount(){ return fI2CReadMismatches;}
+    // return functions for internal I2C reads and writes
+    uint32_t getWriteCount() { return fI2CWriteCount; }
+    uint32_t getReadCount() { return fI2CReadCount; }
+    uint32_t getRBMismatchCount() { return fI2CReadMismatches; }
 
   protected:
     uint32_t   fBlockSize{0};
@@ -355,12 +355,12 @@ class BeBoardFWInterface : public RegManager
 
         return pMismatchedWriteVector;
     }
-  protected : 
-   // I2C write and read count 
-    uint32_t fI2CWriteCount{0};  
-    uint32_t fI2CReadCount{0}; 
+
+  protected:
+    // I2C write and read count
+    uint32_t fI2CWriteCount{0};
+    uint32_t fI2CReadCount{0};
     uint32_t fI2CReadMismatches{0};
-  
 };
 } // namespace Ph2_HwInterface
 

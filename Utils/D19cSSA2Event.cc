@@ -43,7 +43,8 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
     // start reading here for first SSA2
     auto   cIter = list.begin() + 4;
     size_t cIndx = 0;
-    do {
+    do
+    {
         if(cIndx == 2)
         {
             fL1Id = ((*cIter) >> 16) & 0x1FF;

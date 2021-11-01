@@ -6,18 +6,18 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
-#include "tools/StubBackEndAlignment.h"
 #include "tools/BeamTestCheck2S.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/LatencyScan.h"
+#include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
-#include "tools/LinkAlignmentOT.h"
-#include "tools/LatencyScan.h"
+#include "tools/StubBackEndAlignment.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -111,14 +111,14 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("tuneOffsets", "Tune Offsets  ", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("tuneOffsets", "t");
-    
+
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
-    // injection source 
+    // injection source
     cmd.defineOption("injectionSource", "Source for injection", ArgvParser::OptionRequiresValue);
-    
+
     cmd.defineOption("useReadNEvents", "Check ReadNEvents method... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("events", "Number of Events . Default value: 10", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
@@ -133,19 +133,19 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile           = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
-    bool        batchMode         = (cmd.foundOption("batch")) ? true : false;
-    bool cSaveToFile = cmd.foundOption("save");
-    std::string   cInjectionSource = (cmd.foundOption("injectionSource")) ? cmd.optionValue("injectionSource") : "none";
-    auto          cRunNumber = returnRunNumber("RunNumbers.dat");
-    auto cDisableStubs = (cmd.foundOption("measurePedeNoise")) ? convertAnyInt(cmd.optionValue("measurePedeNoise").c_str()) : 1;
-    
+    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
+    bool        cSaveToFile      = cmd.foundOption("save");
+    std::string cInjectionSource = (cmd.foundOption("injectionSource")) ? cmd.optionValue("injectionSource") : "none";
+    auto        cRunNumber       = returnRunNumber("RunNumbers.dat");
+    auto        cDisableStubs    = (cmd.foundOption("measurePedeNoise")) ? convertAnyInt(cmd.optionValue("measurePedeNoise").c_str()) : 1;
+
     std::ofstream cRunLog;
     cRunLog.open("RunNumbers.dat", std::fstream::app);
     cRunLog << cRunNumber << "\n";
     cRunLog.close();
     LOG(INFO) << BOLDBLUE << "Run number is " << +cRunNumber << RESET;
-    std::stringstream cDirectory; 
+    std::stringstream cDirectory;
     cDirectory << "OT_ModuleTest_" << cRunNumber;
     TApplication cApp("Root Application", &argc, argv);
 
@@ -175,20 +175,20 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory.str(), false, false);
     cTool.InitResultFile(cResultfile);
 
-    if( cmd.foundOption("reconfigure"))
+    if(cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw();
-        // align CIC-lpGBT-BE 
-        LinkAlignmentOT cLinkAlignment; 
+        // align CIC-lpGBT-BE
+        LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
         cLinkAlignment.Start(0);
         cLinkAlignment.waitForRunToBeCompleted();
         cLinkAlignment.dumpConfigFiles();
 
-        if( !cLinkAlignment.getStatus() ) 
+        if(!cLinkAlignment.getStatus())
         {
-            LOG (INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-            return(666);
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
         }
 
         // align FEs - CIC
@@ -197,14 +197,14 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
-        
-        // LinkAlignmentOT cLinkAlignment; 
+
+        // LinkAlignmentOT cLinkAlignment;
         // cLinkAlignment.Inherit(&cTool);
         // cLinkAlignment.Initialise();
-        // cLinkAlignment.AlignStubPackage();    
+        // cLinkAlignment.AlignStubPackage();
         // cLinkAlignment.Reset();
-        
-        // time align stubs with L1 data in the BE 
+
+        // time align stubs with L1 data in the BE
         // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
         // StubBackEndAlignment cStubBackEndAligner;
         // cStubBackEndAligner.Inherit(&cTool);
@@ -212,15 +212,14 @@ int main(int argc, char* argv[])
         // cStubBackEndAligner.waitForRunToBeCompleted();
     }
 
-    LinkAlignmentOT cLinkAlignment; 
+    LinkAlignmentOT cLinkAlignment;
     cLinkAlignment.Inherit(&cTool);
     cLinkAlignment.Initialise();
-    cLinkAlignment.AlignStubPackage();    
+    cLinkAlignment.AlignStubPackage();
     cLinkAlignment.Reset();
 
-   
     // Tune offsets
-    if( cmd.foundOption("tuneOffsets"))
+    if(cmd.foundOption("tuneOffsets"))
     {
         t.start();
         PedestalEqualization cPedestalEqualization;
@@ -236,7 +235,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.Reset();
         t.show("Time to tune the front-ends on the system: ");
     }
-    
+
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise"))
     {
@@ -246,7 +245,7 @@ int main(int argc, char* argv[])
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
-        cPedeNoise.Initialise(true, (cDisableStubs==1)); // canvases etc. for fast calibration
+        cPedeNoise.Initialise(true, (cDisableStubs == 1)); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
@@ -255,14 +254,15 @@ int main(int argc, char* argv[])
         t.show("Time to Scan Pedestals and Noise");
     }
 
-    // run test for 2S     
+    // run test for 2S
     BeamTestCheck2S cCheck2S;
     cCheck2S.Inherit(&cTool);
     cCheck2S.Initialise();
-    if( cInjectionSource.find("testPulse") != std::string::npos ) cCheck2S.CheckWithTP();
-    else if( cInjectionSource.find("external") != std::string::npos )  cCheck2S.CheckWithExternal();
+    if(cInjectionSource.find("testPulse") != std::string::npos)
+        cCheck2S.CheckWithTP();
+    else if(cInjectionSource.find("external") != std::string::npos)
+        cCheck2S.CheckWithExternal();
     cCheck2S.writeObjects();
-
 
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();

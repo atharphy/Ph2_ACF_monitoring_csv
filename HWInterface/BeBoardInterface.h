@@ -226,7 +226,6 @@ class BeBoardInterface
      */
     void SendNTriggers(Ph2_HwDescription::BeBoard* pBoard, uint16_t pNtriggers);
 
-
     /*!
      * \brief Read board monitor data
      * \param pReadoutChipInterface

@@ -33,35 +33,35 @@ class LinkAlignmentOT : public Tool
     // get alignment results
     bool getStatus() const { return fSuccess; }
 
-    bool WordAlignBEdata(const Ph2_HwDescription::BeBoard* pBoard);
-    bool PhaseAlignBEdata(const Ph2_HwDescription::BeBoard* pBoard); 
+    bool    WordAlignBEdata(const Ph2_HwDescription::BeBoard* pBoard);
+    bool    PhaseAlignBEdata(const Ph2_HwDescription::BeBoard* pBoard);
     uint8_t getBeSamplingDelay(uint8_t pBoardIndx, uint8_t pOGIndx, uint8_t pHybridIndx, uint8_t pLineIndx)
     {
-        auto& cBeSamplingDelay = fBeSamplingDelay.at(pBoardIndx);
-        auto& cBeSamplingDelayOG = cBeSamplingDelay->at(pOGIndx);
+        auto& cBeSamplingDelay      = fBeSamplingDelay.at(pBoardIndx);
+        auto& cBeSamplingDelayOG    = cBeSamplingDelay->at(pOGIndx);
         auto& cBeSamplingDelayHybrd = cBeSamplingDelayOG->at(pHybridIndx);
         return cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
     }
     uint8_t getBeBitSlip(uint8_t pBoardIndx, uint8_t pOGIndx, uint8_t pHybridIndx, uint8_t pLineIndx)
     {
-        auto& cBeBitSlip  = fBeBitSlip.at(pBoardIndx);
-        auto& cBeBitSlipOG = cBeBitSlip->at(pOGIndx);
+        auto& cBeBitSlip      = fBeBitSlip.at(pBoardIndx);
+        auto& cBeBitSlipOG    = cBeBitSlip->at(pOGIndx);
         auto& cBeBitSlipHybrd = cBeBitSlipOG->at(pHybridIndx);
         return cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
     }
-    void AlignStubPackage(); 
+    void AlignStubPackage();
+
   protected:
-    
   private:
     // Containers
     DetectorDataContainer fBoardRegContainer;
-    // Alignment parameters 
-    DetectorDataContainer fBeSamplingDelay;//one per line per data line from hybrid  
-    DetectorDataContainer fBeBitSlip;//one per line per data line from hybrid  
-    bool fSuccess{true};
-    bool fWithCIC{false};
-    bool fStubDebug{false};
-    bool fL1Debug{false};
+    // Alignment parameters
+    DetectorDataContainer fBeSamplingDelay; // one per line per data line from hybrid
+    DetectorDataContainer fBeBitSlip;       // one per line per data line from hybrid
+    bool                  fSuccess{true};
+    bool                  fWithCIC{false};
+    bool                  fStubDebug{false};
+    bool                  fL1Debug{false};
 
     bool AlignLpGBTInputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool PhaseAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);

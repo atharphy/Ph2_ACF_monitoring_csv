@@ -137,6 +137,7 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t>        getI2CStatus() { return fI2CStatus; }
     void                        setWith8CBC3(bool cIsWith8CBC3) { fWith8CBC3 = cIsWith8CBC3; }
     void                        setWithlpGBT(uint8_t pIsWithLpGBT) {}
+
   private:
     bool    fWith8CBC3      = false;
     bool    fRetryI2C       = true;
@@ -160,7 +161,8 @@ class CicInterface : public ChipInterface
     uint16_t fReW                = 0;
     uint16_t fReWR               = 0;
 
-    std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip){
+    std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
+    {
         std::string          cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
         auto                 cFeType    = this->ReadChipReg(pChip, cRegName);
         bool                 c2S        = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
@@ -171,12 +173,13 @@ class CicInterface : public ChipInterface
             cFeMapping = fFeMapping8BC3;
         return cFeMapping;
     }
+
   protected:
     std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};    // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7};  // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMapping8CBC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};   // Index hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2};   // Index hybrid FE Id , Value CIC FE Id
 
     void                         UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                         ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);

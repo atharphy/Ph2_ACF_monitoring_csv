@@ -72,9 +72,7 @@ int main(int argc, char* argv[])
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
             for(int i = 1; i <= 120; i++) // loop over all strips
-            {
-                cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 15);
-            }
+            { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 15); }
         }
         IB->PS_Clear_counters();
         cTool.SystemController::Start(0);
@@ -96,9 +94,7 @@ int main(int argc, char* argv[])
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
             for(int i = 1; i <= 120; i++) // loop over all strips
-            {
-                cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 20);
-            }
+            { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 20); }
         }
         IB->PS_Clear_counters();
         cTool.SystemController::Start(0);
@@ -120,9 +116,7 @@ int main(int argc, char* argv[])
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
             for(int i = 1; i <= 120; i++) // loop over all strips
-            {
-                cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 25);
-            }
+            { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 25); }
         }
         IB->PS_Clear_counters();
         cTool.SystemController::Start(0);
@@ -144,9 +138,7 @@ int main(int argc, char* argv[])
         {
             ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
             for(int i = 1; i <= 120; i++) // loop over all strips
-            {
-                cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 30);
-            }
+            { cTool.fReadoutChipInterface->WriteChipReg(theSSA, "THTRIMMING_S" + std::to_string(i), 30); }
         }
         IB->PS_Clear_counters();
         cTool.SystemController::Start(0);
