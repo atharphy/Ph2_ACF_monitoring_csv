@@ -175,10 +175,14 @@ class Chip : public FrontEndDescription
     uint32_t getRegWriteCount(){ return fRegWrites;}
     uint32_t getRegReadCount(){ return fRegReads;}
 
+
+    uint8_t geMasterId() const { return fMasterId; };
+    void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId;};
   protected:
     uint8_t    fChipId;
     uint16_t   fMaxRegValue;
     uint16_t   fClockFrequency;
+    uint8_t    fMasterId; 
     ChipRegMap fRegMap;
     CommentMap fCommentMap;
    private:

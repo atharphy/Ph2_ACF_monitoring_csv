@@ -197,33 +197,60 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
 {
     for(auto cBoard : *fDetectorContainer )
     {
+        // histogram for TDC phase 
+        #ifdef __USE_ROOT__
+            std::stringstream cHistName; 
+            cHistName << "h_TDC_BeBoard" << +cBoard->getId(); 
+            TObject* cObj  = gROOT->FindObject(cHistName.str().c_str());
+            if(cObj) delete cObj;
+            TH1D* cHist1D = new TH1D(cHistName.str().c_str(), "TDC distribution; TDC phase; Count", 255 , 0 ,255 );
+            bookHistogram(cBoard, "TDCdistribution", cHist1D);
+        #endif
+
         // prepare injection 
         PrepareForInternal(cBoard);
         if( pContinousReadout == 1 ) ContinousReadout(cBoard); 
         else // collect events with ReadNEvents 
         {
-            std::vector<Event*> cPh2Events;
             ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents = GetEvents();
             LOG (INFO) << BOLDYELLOW << "BeamTestCheck2S::CheckWithInternal Read-back " << +cEvents.size() << " events from the FC7 when " <<  fNevents << " were requested" << RESET;
         }
     }  
 }
-void BeamTestCheck2S::CheckWithExternal() 
+void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout) 
 {
+    LOG (INFO) << BOLDBLUE << "Checking with external triggers - will readout " << fNevents << RESET;
     for(auto cBoard : *fDetectorContainer )
     {
+        // histogram for TDC phase 
+        #ifdef __USE_ROOT__
+            std::stringstream cHistName; 
+            cHistName << "h_TDC_BeBoard" << +cBoard->getId(); 
+            TObject* cObj  = gROOT->FindObject(cHistName.str().c_str());
+            if(cObj) delete cObj;
+            TH1D* cHist1D = new TH1D(cHistName.str().c_str(), "TDC distribution; TDC phase; Count", 255 , 0 ,255 );
+            bookHistogram(cBoard, "TDCdistribution", cHist1D);
+        #endif
+
         // prepare injection 
         PrepareForExternal(cBoard);
+        if( pContinousReadout == 1 ) ContinousReadout(cBoard); 
+        else // collect events with ReadNEvents 
+        {
+            ReadNEvents(cBoard, fNevents);
+            const std::vector<Event*>& cEvents = GetEvents();
+            LOG (INFO) << BOLDYELLOW << "BeamTestCheck2S::CheckWithInternal Read-back " << +cEvents.size() << " events from the FC7 when " <<  fNevents << " were requested" << RESET;
+         }
         // scan the latency - find best hit latency 
-        ScanLatency(cBoard);
+        //ScanLatency(cBoard);
         // scan the threshold, record number of hits; cluster occupancy 
         //ScanThreshold(cBoard);
     }
-    #ifdef __USE_ROOT__
-        fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
-        fDQMHistogrammer.fillClusterOccupancyPlots(fClusterOccupancy);
-    #endif
+    // #ifdef __USE_ROOT__
+    //     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
+    //     fDQMHistogrammer.fillClusterOccupancyPlots(fClusterOccupancy);
+    // #endif
 }
 void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx) 
 {
@@ -775,6 +802,16 @@ void BeamTestCheck2S::ContinousReadout(BeBoard* pBoard)
     if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
     DecodeData(pBoard, cCompleteData, cNevents, fBeBoardInterface->getBoardType(pBoard));
     LOG (INFO) << BOLDYELLOW << "BeamTestCheck2S::ContinousReadout readout " << cNevents << " when " << fNevents << " were requested." << RESET;
+
+     #ifdef __USE_ROOT__
+        const std::vector<Event*>& cEvents = GetEvents();
+        auto cTDCdist = static_cast<TH1D*>(getHist(pBoard, "TDCdistribution"));
+        LOG (INFO) << BOLDBLUE << "Filling TDC histogram using " << cEvents.size() << " events." << RESET;
+        for(auto& cEvent: cEvents)
+        {
+            cTDCdist->Fill( cEvent->GetTDC() );
+        }
+    #endif
 }
 void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard) 
 {
@@ -847,6 +884,7 @@ void BeamTestCheck2S::Resume() {}
 void BeamTestCheck2S::writeObjects()
 {
 #ifdef __USE_ROOT__
+    this->SaveResults();
     fDQMHistogrammer.process();
 #endif
 }

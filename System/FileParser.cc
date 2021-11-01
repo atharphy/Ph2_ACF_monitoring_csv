@@ -639,11 +639,18 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         }
         else
         {
+            uint8_t cMasterId;
+            if( pHybridNode.attribute("Id") ){ 
+                cMasterId = pHybridNode.attribute("i2cMaster").as_int();
+            }
+            else cMasterId = ( pHybridNode.attribute("Id").as_int()%2 == 0 ) ? 1 : 0; 
+
             cHybrid = pOpticalGroup->addHybridContainer(
                 pHybridNode.attribute("Id").as_int(),
                 new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
             // probably this can be removed now
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
+            cHybrid->setMasterId( cMasterId );
         }
         uint8_t cHybridReset = convertAnyInt(pHybridNode.attribute("reset").value());
         cHybrid->setReset(cHybridReset);

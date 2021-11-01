@@ -737,17 +737,28 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
     // check if all registers are the same 
     std::vector<uint8_t> cVals(0);
-    for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel) cVals.push_back( localRegValues.getChannel<uint16_t>(iChannel) );
+    for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel){ cVals.push_back( localRegValues.getChannel<uint16_t>(iChannel)); LOG (DEBUG) << BOLDMAGENTA << +cVals[cVals.size()-1] << RESET; }
+
+
     if ( std::adjacent_find( cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>() ) == cVals.end() )
     {
-        LOG (INFO) << BOLDBLUE << "All elements of " << dacName << " are equal each other .. will use global register" << RESET;
+        LOG (INFO) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
         if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
         {
-            return this->WriteChipReg(pMPA,"TrimDAC_ALL", cVals[0]); 
+            bool cWrite = this->WriteChipReg(pMPA,"TrimDAC_ALL", cVals[0] , false);
+            if( pVerifLoop ) 
+            {
+                auto cReadback = this->ReadChipReg(pMPA,"TrimDAC_P100"); 
+                LOG (INFO) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
+                return (cReadback == cVals[0]);
+            }
+            else return cWrite;
         }
         // to-add .. add the rest
     }
 
+    LOG (INFO) << BOLDBLUE << "Different values for " << dacName << " ... will use global register" << RESET;
+        
     for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
     {
         char dacName1[20];

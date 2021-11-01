@@ -66,11 +66,14 @@ class Hybrid
     uint8_t getNChip() const { return this->size(); }
 
     uint8_t getLinkId() const { return fLinkId; };
-
+    uint8_t geMasterId() const { return fMasterId; };
+    
     void setLinkId(uint8_t pLinkId) { fLinkId = pLinkId; };
+    void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId;};
 
   protected:
     uint8_t fLinkId;
+    uint8_t fMasterId; 
 };
 } // namespace Ph2_HwDescription
 

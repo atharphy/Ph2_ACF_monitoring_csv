@@ -85,14 +85,15 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     }
     if(cWithSSA && !cWithMPA ){ 
         fChannelGroupHandler = new SSAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(5, 3);//5*3*8
+        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS);//5*3*8
     }
     if(cWithMPA && !cWithSSA ){ 
         fChannelGroupHandler = new MPAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(15, 16);//15*16*8
+        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS*NMPACOLS);
     }
     if(cWithMPA && cWithSSA ){ 
         fChannelGroupHandler = new MPAChannelGroupHandler();
+        fChannelGroupHandler->setChannelGroupParameters(120, 16);
     }
 
     initializeRecycleBin();
@@ -305,8 +306,8 @@ void PedeNoise::sweepSCurves()
     cStartValue = this->findPedestal(fPulseAmplitude == 0 );
     if(fDisableStubLogic) disableStubLogic();
     LOG (INFO) << BLUE <<  "Sweep of S-curves will start at an average threshold of " <<cStartValue<< RESET ;
-    //measureSCurves(cStartValue);
-    scanScurves();
+    measureSCurves(cStartValue);
+    //scanScurves();
 
 
     //if(fDisableStubLogic) reloadStubLogic();
@@ -497,7 +498,7 @@ void PedeNoise::scanScurves()
     int      cMinBreakCount =  15;//take from xml
     int      cStepSize      =  1;//take from xml 
     int      cInitialSign   = -1;
-    int      cPrintOutStep  =  5;
+    int      cPrintOutStep  = 10;
     DetectorDataContainer cCounts, cSigns, cThresholds , cStatus ;
 
     // figure  out if you should normalize or not 
@@ -635,7 +636,7 @@ void PedeNoise::scanScurves()
                         if( cStepCounter%cPrintOutStep == 0 ) LOG (INFO) << BOLDYELLOW << "Setting threshold on ROC" << +cROC->getId() << " on Hybrid" << +cROC->getHybridId() 
                             << " to " << cThThisROC << RESET;
                         fReadoutChipInterface->WriteChipReg(cROC,"Threshold", cThThisROC);
-                        if( cStatusThisROC == 0 && cROC->getFrontEndType() == FrontEndType::SSA ) cNmodified++;
+                        if( cStatusThisROC == 0  ) cNmodified++;
                     }//ROC
                 }//FE
             }//OG

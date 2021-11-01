@@ -750,7 +750,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         for(const auto& cRegItem: cRegItems)
         {
             // update list of modified registers 
-            if( fTrackRegisters ) { LOG (DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipMultReg updating " << cRegItem.first << RESET; UpdateModifiedRegMap(pCbc,  cRegItem.second.fAddress, cRegItem.second.fPage); }
+            //if( fTrackRegisters ) { LOG (DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipMultReg updating " << cRegItem.first << RESET; UpdateModifiedRegMap(pCbc,  cRegItem.second.fAddress, cRegItem.second.fPage); }
             
             bool cRegWriteSuccess = this->WriteChipSingleReg(pCbc, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
             if(!cRegWriteSuccess) LOG(INFO) << BOLDRED << "Failed to write to " << cRegItem.first << RESET;

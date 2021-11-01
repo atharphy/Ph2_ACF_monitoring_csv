@@ -33,8 +33,28 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise() {}
 //========================================================================================================================
 void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
-    std::cout << __PRETTY_FUNCTION__ << " " << theDetectorStructure.at(0)->at(0)->at(0)->size() << std::endl;
-    NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    // find the maximum number of channels 
+    std::vector<size_t> cNChanls(0);
+    for( auto cBrdIndx=0 ; cBrdIndx < theDetectorStructure.size(); cBrdIndx++ )
+    {
+        for(auto cOGIndx=0; cOGIndx < theDetectorStructure.at(cBrdIndx)->size() ; cOGIndx++ ) 
+        {
+            for(auto cHybridIndx=0; cHybridIndx < theDetectorStructure.at(cBrdIndx)->at(cOGIndx)->size() ; cHybridIndx++ ) 
+            {
+                for(auto cChipIndx=0; cChipIndx < theDetectorStructure.at(cBrdIndx)->at(cOGIndx)->at(cHybridIndx)->size() ; cChipIndx++ ) 
+                {
+                    auto cNchnl = theDetectorStructure.at(cBrdIndx)->at(cOGIndx)->at(cHybridIndx)->at(cChipIndx)->size(); 
+                    cNChanls.push_back(cNchnl);
+                    //std::cout << __PRETTY_FUNCTION__ << "B" << +cBrdIndx << "OG" << +cOGIndx << "H" << +cHybridIndx << "C" << +cChipIndx << ":" << cNchnl << std::endl;
+                }
+            }
+        }
+    }
+    //auto cMaxNChannels = std::max_element(std::begin(cNChanls), std::end(cNChanls));
+    //auto cMinNChannels = std::min_element(std::begin(cNChanls), std::end(cNChanls));
+    NCH = *std::max_element(std::begin(cNChanls), std::end(cNChanls));//theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    std::cout << __PRETTY_FUNCTION__ << " " << NCH << std::endl;
+    //theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
     // if
     // (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType()
     // == FrontEndType::SSA) NCH = NSSACHANNELS;

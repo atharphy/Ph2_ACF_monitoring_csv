@@ -65,15 +65,14 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     }
     if(cWithSSA && !cWithMPA ){ 
         fChannelGroupHandler = new SSAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(5, 3);//5*3*8
+        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS);//5*3*8
     }
     if(cWithMPA && !cWithSSA ){ 
         fChannelGroupHandler = new MPAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(15, 16);//15*16*8
+        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS*NMPACOLS);
     }
     if(cWithMPA && cWithSSA ){ 
         fChannelGroupHandler = new MPAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(15, 16);//15*16*8
     }
 
     // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
@@ -307,7 +306,7 @@ void PedestalEqualization::FindVplus()
 
     // LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
     if(cWithCBC) setSameLocalDac("ChannelOffset", 0xFF);
-    else setSameLocalDac("ThresholdTrim", 0x1F);
+    else setSameLocalDac("ThresholdTrim", 0x1F);//0x1F
 
     // store thresholds 
     DetectorDataContainer theVcthContainer;
@@ -346,6 +345,7 @@ void PedestalEqualization::FindVplus()
                     // LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
                     nCbc += float(ENCHAN) / float(TOTCHAN);
                     cMeanValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
+
                 } // for on chip - end
             }     // for on hybrid - end
         }         // for on opticalGroup - end

@@ -18,6 +18,7 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramBeamTestCheck.h"
+#include "TH1.h"
 #endif
 
 /*!
@@ -38,7 +39,7 @@ class BeamTestCheck2S : public Tool
     void PrintData();
     void CheckWithTP();
     void CheckWithInternal(uint8_t pContinousReadout=0);
-    void CheckWithExternal();
+    void CheckWithExternal(uint8_t pContinousReadout=0);
     void Initialise();
     void Running() override;
     void Stop() override;

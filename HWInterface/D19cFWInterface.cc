@@ -3036,6 +3036,7 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
         cMPAdoneMap[cId]=0;
         cSSAdoneMap[cId]=0;
     }
+    bool cStubZeroFound=false;
     do
     {
         //if( cStubPktCounter == 1 ) cMaxCountersSize = ( cNFEs == 0 ) ? (16*120 + 120 ) *8 : (16*120 + 120 ) *cNFEs;
@@ -3084,18 +3085,25 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
                         cStubFlds.push_back( std::make_pair("Offset",3) );
                         cStubFlds.push_back( std::make_pair("FeId",3) );
                         cStubFlds.push_back( std::make_pair("Stub",15) );
+                        size_t cMinPktLength = 3+3+15; 
+                        if( cStubPkt.length() < cMinPktLength ){ 
+                            LOG (DEBUG) << BOLDMAGENTA << "!!" << cStubPkt.length() << " -- " << cMinPktLength << RESET;
+                            continue;
+                        }
                         std::stringstream cStubOutput; 
                         int cFeId=-1; 
                         int cDecodedFeId=cFeId;
                         for( auto cFld : cStubFlds ) 
                         {
+                            if( cStubZeroFound ) continue;
                             auto cSubStr = cStubPkt.substr(cShft,cFld.second);
+                            LOG (DEBUG) << BOLDYELLOW << cFld.first << ":" << cSubStr << RESET;
                             if( cFld.first == "FeId" )
                             {
                                 cDecodedFeId = std::stoi( cSubStr, 0, 2 ); 
                                 cFeId = cDecodedFeId;
                             }
-                            if( cFld.first == "Stub" )
+                            if( cFld.first == "Stub" && cSubStr != "000000000000000")
                             {
                                 if( cStubPktCounter == 0 )
                                 { 
@@ -3132,7 +3140,8 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
                                     uint8_t cWithMPA = ( cFeId >> 3 == 0 );
                                     if( cWithMPA == 1 &&  cMPAdoneMap[cDecodedFeId]  == 0 ) 
                                     {
-                                        if( pFeCounters[cFeId].size() == 0 || pFeCounters[cFeId].size() == cMaxMPACounters-1) 
+                                        //if( pFeCounters[cFeId].size() == 0 || pFeCounters[cFeId].size() == cMaxMPACounters-1) 
+                                        if( pFeCounters[cFeId].size()%75 == 0 && pFeCounters[cFeId].size() > 0)
                                             LOG (DEBUG) << BOLDMAGENTA << "MPA [FeId " << +cFeId << " ] counter#" << +pFeCounters[cFeId].size() << " --> " << cCounterValue << RESET;
                                         pFeCounters[cFeId].push_back( cCounterValue );
                                         if( pFeCounters[cFeId].size() == cMaxMPACounters ) cMPAdoneMap[cDecodedFeId]=1; 
@@ -3140,15 +3149,21 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
 
                                     if( cWithMPA == 0 &&  cMPAdoneMap[cDecodedFeId]  == 1 && cSSAdoneMap[cDecodedFeId] == 0 ) 
                                     {
-                                        if( pFeCounters[cFeId].size() == 0 )//|| pFeCounters[cFeId].size() == cMaxSSACounters-1) 
+                                        //if( pFeCounters[cFeId].size() == 0 )//|| pFeCounters[cFeId].size() == cMaxSSACounters-1) 
+                                        if( pFeCounters[cFeId].size()%10 == 0)
                                             LOG (DEBUG) << BOLDYELLOW << "SSA [FeId " << +cFeId << " ] counter#" << +pFeCounters[cFeId].size() << " --> " << cCounterValue << RESET;
                                         pFeCounters[cFeId].push_back( cCounterValue );
                                         if( pFeCounters[cFeId].size() == cMaxSSACounters ) cSSAdoneMap[cDecodedFeId]=1; 
                                     }  
                                 }
                             }
+                            if( cFld.first == "Stub" && cSubStr == "000000000000000"){ 
+                                cStubZeroFound=true;
+                                LOG (DEBUG) << BOLDRED << "Found a stub from MPA that is all 00s.. this should not happen and is a decoder problem.. will look into it!!" << RESET;
+                            }
                             cShft += cFld.second;
                         }
+                        if( cStubZeroFound ) continue;
                     }
                 //}
                 cStubPktCounter+= (cNstubs > 0 ) ? 1 : 0;
@@ -3169,7 +3184,7 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
         // expect this to increment every 8 Bx?
         LOG (DEBUG) << BOLDYELLOW << "Decoded " << cNcountersDecoded << " counters from enabled FEs" << RESET;
         cBxId++;
-    }while( cStubBufferIter < fStubBuffer.end() && cNcountersDecoded < cMaxCountersSize );
+    }while( cStubBufferIter < fStubBuffer.end() && cNcountersDecoded < cMaxCountersSize && !cStubZeroFound );
 
     bool cAllCountersReceived=true;
     for( auto cId : pIds )
@@ -3179,7 +3194,12 @@ bool D19cFWInterface::DecodeRawCounterDataPS(PSCounterData &pFeCounters, std::ve
             cAllCountersReceived = false; 
             continue; 
         }
-            
+
+        auto& cCounters_MPA =  pFeCounters[cId];
+        auto& cCounters_SSA =  pFeCounters[(1<<3)|cId];
+        
+        LOG (DEBUG) << BOLDMAGENTA << "Mean hit count - MPA#" << +cId << " : " << std::accumulate(cCounters_MPA.begin(), cCounters_MPA.end() ,0. )/cCounters_MPA.size() << RESET;
+        LOG (DEBUG) << BOLDYELLOW << "Mean hit count - SSA#" << +cId << " : " << std::accumulate(cCounters_SSA.begin(), cCounters_SSA.end() ,0. )/cCounters_SSA.size() << RESET;
         //if( pFeCounters[(1<<3)|cId].size() != cMaxSSACounters ) 
         //{
             LOG (DEBUG) << BOLDYELLOW << "FECounters from FeId" << +cId 

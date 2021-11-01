@@ -160,7 +160,7 @@ void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const 
                     }
                     cChnl++;
                 }
-                //LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc/chip->size() << RESET;
+                LOG (DEBUG) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc/chip->size() << RESET;
             }
         }
     }

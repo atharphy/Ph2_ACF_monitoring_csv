@@ -1352,30 +1352,10 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
 
     if( fNormalize )
     {
-        LOG (INFO) << BOLDYELLOW << " Normalizing assuming " << +numberOfEvents << " events and " << fChannelGroupHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
+        LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << +numberOfEvents << " events and " << fChannelGroupHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
         auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), numberOfEvents);
-        LOG (INFO) << BOLDYELLOW << cTmp << RESET;
+        LOG (DEBUG) << BOLDYELLOW << cTmp << RESET;
     }
-    // for(auto opticalGroup: *fDetectorDataContainer->at(boardIndex))
-    // {
-    //     for(auto hybrid: *opticalGroup)
-    //     {
-    //         for(auto chip: *hybrid)
-    //         {
-    //             float cOcc=0; 
-    //             for(uint16_t cChnl=0 ; cChnl < chip->size(); cChnl++)
-    //             {
-    //                 cOcc += chip->getChannelContainer<Occupancy>()->at(cChnl).fOccupancy ;
-                        
-    //             }
-    //             chip->getSummary<Occupancy>().fOccupancy = (cOcc/chip->size())/numberOfEvents;
-    //             LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy [from summary] " << chip->getSummary<Occupancy>().fOccupancy << RESET;
-    //             LOG (INFO) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << (cOcc/chip->size()) << RESET;
-            
-                   
-    //         }
-    //     }
-    // }
     fUseReadNEvents=cUseReadNEvents;
 }
 

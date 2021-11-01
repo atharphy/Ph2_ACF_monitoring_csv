@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     //
-    cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
 
@@ -208,6 +208,8 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading temperatures from lpGBT-ADCs.." << RESET;
+        auto cCurrentDAC = (cmd.foundOption("readTemperatures")) ? convertAnyInt(cmd.optionValue("readTemperatures").c_str()) : 0x10;
+    
         for(const auto cBoard: *cTool.fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -216,7 +218,8 @@ int main(int argc, char* argv[])
                 if(clpGBT == nullptr) continue;
 
                 std::vector<std::string> cTemperatures={"TEMP","ADC4"};
-                cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, 0xff);
+                cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, cCurrentDAC);
+                std::vector<float> cTempADCReadings; 
                 for( auto cTempADC : cTemperatures )
                 {
                     std::vector<float>   cMeasurements(0);
@@ -226,8 +229,45 @@ int main(int argc, char* argv[])
                     }
                     float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
                     LOG (INFO) << BOLDBLUE << cTempADC << " : " << cMean << RESET;
+                    cTempADCReadings.push_back(cMean);
                 }
                 cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, 0x00);
+
+                std::vector<std::string> cReferenceADC={"ADC2"};
+                std::vector<float> cCorrections;
+                // change once we have a reference for PS 
+                if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS){ cReferenceADC[0] = "ADC2";}
+                float cExpected  = (10.4*0.49/10.)*1024;
+                if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS){ cExpected=0;}
+                 
+                for( auto cRefADC : cReferenceADC )
+                {
+                    std::vector<float>   cMeasurements(0);
+                    for( uint8_t cIndx=0;cIndx<10; cIndx++)
+                    {
+                        cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cRefADC));
+                    }
+                    float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+                    LOG (INFO) << BOLDBLUE << cRefADC << " : " << cMean << RESET;
+                    cCorrections.push_back(cMean-cExpected);
+                }
+                
+                // constants for different NTCs
+                std::vector<float> cCoefs{-177.029,267.091,-0.125408};
+                // change once we have a reference for PS 
+                if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS){ 
+                    std::vector<float> cCoefsPS={-177.029,267.091,-0.125408};
+                    cCoefs=cCoefsPS;
+                }
+                float cVoltageDrop=cTempADCReadings[1]*1.0/1024;
+                float cCorrectedVoltageDrop = (cTempADCReadings[1]-cCorrections[0])*1.0/1024; 
+                float cCurrent = (0.9*cCurrentDAC/256)/1e3; 
+                float cTemperatureSensor        =  cCoefs[0]+cCoefs[1]*std::pow(cVoltageDrop*1e-3/cCurrent,cCoefs[2]); 
+                float cTemperatureSensorCorr    =  cCoefs[0]+cCoefs[1]*std::pow(cCorrectedVoltageDrop*1e-3/cCurrent,cCoefs[2]); 
+                LOG (DEBUG) << BOLDMAGENTA << "Corrected temperature reading [ADC units] " << cCorrectedVoltageDrop << RESET;
+                LOG (DEBUG) << BOLDMAGENTA << "Resistance " << cCorrectedVoltageDrop*1e-3/cCurrent << " kOhm" << RESET;
+                LOG (INFO) << BOLDMAGENTA << "Temperature of sensor [via NTC + lpGBT] is " << cTemperatureSensor << " [ corr is " <<  cTemperatureSensorCorr << " ] " << RESET;
+                
             } // configure lpGBT
         }
     }
@@ -758,41 +798,46 @@ int main(int argc, char* argv[])
         // for(auto cBoard: *cTool.fDetectorContainer)
         // {
         //     cBoard->setEventType(EventType::PSAS);
-        //     std::vector<uint16_t> cThresholds{5,static_cast<uint16_t>(cInjectionAmpl+20)};//, 20, 40, 50, 100,200};
-        //     for( auto cThreshold : cThresholds )
-        //     //for( uint16_t cThreshold=10; cThreshold <= 15 ; cThreshold += 5)
+        //     // std::vector<uint16_t> cThresholds{5,static_cast<uint16_t>(cInjectionAmpl+20)};//, 20, 40, 50, 100,200};
+        //     // for( auto cThreshold : cThresholds )
+        //     for( uint16_t cOffset=0; cOffset < 30 ; cOffset ++)
         //     {
-        //         // 
-        //         cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "Threshold", 255);
-        //         LOG (INFO) << BOLDMAGENTA << "Threshold of " << +cThreshold << RESET;
-        //         for( uint8_t cNacitve=7; cNacitve < 8 ;cNacitve++)
-        //         {
-        //             for( size_t cAttempt = 0 ; cAttempt < 3; cAttempt++ )
-        //             {
+        //         cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "ThresholdTrim", cOffset);
+        //         LOG (INFO) << BOLDMAGENTA << "Offset of " << +cOffset;
+        //         //for( uint8_t cNacitve=7; cNacitve < 8 ;cNacitve++)
+        //         //{
+        //             //for( size_t cAttempt = 0 ; cAttempt < 3; cAttempt++ )
+        //             //{
         //                 std::stringstream cOut;
-        //                 cOut << +cNacitve << " SSA-MPA pairs [Attempt# " << +cAttempt << " ]: ";
+        //                 //cOut << +cNacitve << " SSA-MPA pairs [Attempt# " << +cAttempt << " ]: ";
         //                 for(auto cOpticalGroup: *cBoard)
         //                 {
         //                     for(auto cHybrid: *cOpticalGroup)
         //                     {
-        //                         size_t cActive=0;
+        //                         //size_t cActive=0;
         //                         for(auto cChip: *cHybrid)
         //                         {
-        //                             if( cChip->getFrontEndType() == FrontEndType::MPA ) continue;
+        //                             if( cChip->getFrontEndType() == FrontEndType::MPA )  cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",130+30);
+        //                             else cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",57+20);
 
-        //                             if( cActive < cNacitve ){
-        //                                 cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
-        //                                 cOut << " SSA#" << +cChip->getId() << " [Th:" << +cThreshold << "] ";
-        //                                 cActive++;
-        //                             }
-        //                             else cOut << " SSA#" << +cChip->getId() << " [Th:255] ";
+
+        //                             //if( cActive < cNacitve ){
+        //                             //    cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
+        //                             //    cOut << " SSA#" << +cChip->getId() << " [Th:" << +cThreshold << "] ";
+        //                             //    cActive++;
+        //                             //}
+        //                             //else cOut << " SSA#" << +cChip->getId() << " [Th:255] ";
         //                         }
         //                     }
         //                 }
         //                 LOG (INFO) << BOLDBLUE << cOut.str() << RESET;
         //                 cTool.ReadNEvents(cBoard, 42);
-        //             }
-        //         }
+        //                 //const std::vector<Event*>& cEvents = cTool.GetEvents();
+        //                 //LOG (INFO) << BOLDYELLOW << "Read-back " << +cEvents.size() << " events from the FC7 when 42 were requested" << RESET;
+        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+            
+
+        //             //}
         //         // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )
         //         // {
         //         //     //for( uint16_t cDelay=10;  cDelay < 11 ; cDelay++)
@@ -922,14 +967,6 @@ int main(int argc, char* argv[])
         t.show("Time to check data of the front-ends on the system: ");
     }
 
-    if( !cmd.foundOption("read") )
-    {
-        cTool.dumpConfigFiles();
-        cTool.SaveResults();
-        cTool.WriteRootFile();
-        cTool.CloseResultFile();
-    }
-
     if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
     {
         std::ofstream cGoodRuns;
@@ -945,7 +982,8 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Initialise();
         if( cDisableFEs == 1 ) cBeamTestCheck.DisableAllFEs();
         cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        cBeamTestCheck.CheckWithInternal( cContinuousReadout );
+        cBeamTestCheck.CheckWithExternal( cContinuousReadout );
+        cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
     else if(cmd.foundOption("read") )
@@ -958,6 +996,13 @@ int main(int argc, char* argv[])
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
         cBeamTestCheck.PrintData();
         cBeamTestCheck.Reset();        
+    }
+    if( !cmd.foundOption("read") )
+    {
+        cTool.dumpConfigFiles();
+        cTool.SaveResults();
+        cTool.WriteRootFile();
+        cTool.CloseResultFile();
     }
 
     cTool.Destroy();
