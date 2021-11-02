@@ -645,10 +645,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     // update the HWDescription object
     if(cSuccess)
     {
-        // LOG (INFO) << BOLDMAGENTA << "CbcInterface::WriteChipSingleReg written 0x"
-        //     << std::hex << +pValue << std::dec
-        //     << " to register " << pRegNode
-        //     << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "CbcInterface::WriteChipSingleReg written 0x" << std::hex << +pValue << std::dec << " to register " << pRegNode << RESET;
         pCbc->setReg(pRegNode, pValue);
     }
 #ifdef COUNT_FLAG

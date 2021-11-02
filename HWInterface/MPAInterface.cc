@@ -555,21 +555,21 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         pMPA->setRegBits("ENFLAGS_ALL", cMask, pValue);
         //
         if(pValue == 1)
-            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         else
-            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerifLoop);
         // enabling async readout for stubs
         bool cReadoutMode = true;
         if(pValue == 1)
         {
             cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x01);
-            LOG(INFO) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Enabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
         }
         else
         {
             cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
-            LOG(INFO) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
         }
         return cEnableAnalogue && cReadoutMode;
     }
@@ -581,9 +581,9 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         cMask.fNbits    = 1;
         pMPA->setRegBits("ENFLAGS_ALL", cMask, pValue);
         if(pValue == 1)
-            LOG(INFO) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         else
-            LOG(INFO) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerifLoop);
         // enabling async readout for stubs
         bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
@@ -599,7 +599,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 
     else if(pRegName == "InjectedCharge")
     {
-        LOG(INFO) << BOLDBLUE << "Setting "
+        LOG(DEBUG) << BOLDBLUE << "Setting "
                   << " bias calDac to " << +pValue << " on MPA" << +pMPA->getId() << RESET;
 
         Set_calibration(pMPA, pValue);
@@ -737,14 +737,14 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
     if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
     {
-        LOG(INFO) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
         if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
         {
             bool cWrite = this->WriteChipReg(pMPA, "TrimDAC_ALL", cVals[0], false);
             if(pVerifLoop)
             {
                 auto cReadback = this->ReadChipReg(pMPA, "TrimDAC_P100");
-                LOG(INFO) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
                 return (cReadback == cVals[0]);
             }
             else
@@ -753,7 +753,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
         // to-add .. add the rest
     }
 
-    LOG(INFO) << BOLDBLUE << "Different values for " << dacName << " ... will use global register" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Different values for " << dacName << " ... will NOT use global register" << RESET;
 
     for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
     {

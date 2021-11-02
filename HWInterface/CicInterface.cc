@@ -54,8 +54,11 @@ bool CicInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValu
     // from
     bool cSuccess = ((cRegItem.fStatusReg == 0x01) ? true : (cRegItem.fValue == cValue));
     if(cSuccess)
+    {
         LOG(DEBUG) << BOLDGREEN << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec << " CIC register with address 0x" << std::hex << +cRegItem.fAddress << std::dec
                    << " value read back is 0x" << std::hex << +cValue << std::dec << RESET;
+        pChip->setReg(pRegName, pValue);
+    }
     else if(!cSuccess)
         LOG(DEBUG) << BOLDRED << "\t...[DEBUG] Have written 0x" << std::hex << +cRegItem.fValue << std::dec << " CIC register with address 0x" << std::hex << +cRegItem.fAddress << std::dec
                    << " value read back is 0x" << std::hex << +cValue << std::dec << RESET;
@@ -430,8 +433,10 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
     ChipRegMap cRegMap = pChip->getRegMap();
     if(cRegMap.find(pRegNode) == cRegMap.end()) { LOG(INFO) << BOLDRED << "Could not find CIC register " << pRegNode << RESET; }
 
-    ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-    return this->ReadChipRegItem(pChip, cRegItem).second;
+    ChipRegItem cRegItem  = pChip->getRegItem(pRegNode);
+    auto        cReadBack = this->ReadChipRegItem(pChip, cRegItem);
+    if(cReadBack.first) pChip->setReg(pRegNode, cReadBack.second);
+    return cReadBack.second;
 }
 std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem pRegItem)
 {
@@ -456,7 +461,6 @@ std::pair<bool, uint16_t> CicInterface::ReadChipRegItem(Chip* pChip, ChipRegItem
         // LOG (INFO) << BOLDMAGENTA << "CicInterface::ReadChipReg(ChipRegItem) via lpGBT Register 0x"
         //     << std::hex << +pRegItem.fAddress << std::dec << RESET;
         uint32_t cValue = fBoardFW->ReadFERegister(pChip, pRegItem.fAddress);
-
         return std::make_pair(true, cValue);
     }
 }
@@ -804,6 +808,8 @@ bool CicInterface::SetAutomaticPhaseAlignment(Chip* pChip, bool pAuto)
         LOG(ERROR) << BOLDRED << "Error setting automatic phase alignment in CIC" << RESET;
         throw std::runtime_error(std::string("Error setting automatic phase alignment in CIC"));
     }
+    else
+        LOG(INFO) << BOLDBLUE << "Phase aligner mode set with register " << cRegName << " to 0x" << std::hex << cValue << std::dec << RESET;
     if(pAuto) { this->ResetPhaseAligner(pChip); }
     return cSuccess;
 }
@@ -879,8 +885,8 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
 {
     bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
     if(!cSuccess) return cSuccess;
-
-    cSuccess = this->SetOptimalTaps(pChip);
+    // not working  - DO NOT USE
+    // cSuccess = this->SetOptimalTaps(pChip);
     return cSuccess;
 }
 
@@ -1008,9 +1014,11 @@ bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPort
 
     LOG(DEBUG) << BOLDGREEN << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
                << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of " << +cPhaseTap
-               << " original register value is 0x" << std::hex << +cRegValue << std::dec << " - modified register so that phase value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort]) << RESET;
+               << " original register value is 0x" << std::hex << +cRegValue << std::dec << " - modified register so that phase value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort])
+               << " new register value is 0x" << std::hex << +cValue << std::dec << RESET;
     return WriteReg(pChip, cRegItem.fAddress, cValue, cVerifloop);
 }
+// NOT WORKING - DO NOT USE
 bool CicInterface::SetOptimalTaps(Chip* pChip, int pOffset)
 {
     bool cSuccess = true;
@@ -1206,7 +1214,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     LOG(DEBUG) << BOLDMAGENTA << "FE_Enable Register set to " << +cEnabledFEs << RESET;
 
     uint16_t cRegBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5C : 0xA0;
-    LOG(DEBUG) << BOLDBLUE << "Checking Auto phase aligner lock in CIC." << RESET;
+    LOG(INFO) << BOLDBLUE << "Checking Auto phase aligner lock in CIC." << RESET;
     ChipRegItem cRegItem;
     bool        cLocked = true;
 
@@ -1219,6 +1227,11 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     size_t cL1Line            = 5;
     bool   cLastStubLineFound = false;
 
+    // set all phase taps to 0
+    for(size_t cIndxInput = 0; cIndxInput < 4; cIndxInput++)
+    {
+        for(size_t cIndxPort = 0; cIndxPort < 12; cIndxPort++) { fPhaseTaps[cIndxInput][cIndxPort] = 0; }
+    }
     std::vector<uint8_t> cFeMapping = getMapping(pChip);
     // read back phase alignment on stub lines
     for(int cIndex = 0; cIndex < 6; cIndex++)
@@ -1257,11 +1270,17 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
                 if(cEnableBit) this->SetOptimalTap(pChip, cPortCounter, cInputCounter);
             }
             else if(cPortCounter < 10)
+            {
+                fPhaseTaps[cInputCounter][cPortCounter] = 0;
                 LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " StubLine#" << +cInputLineCounter << " -- Alignment value is "
                            << +cAligned << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+            }
             else
+            {
+                fPhaseTaps[cInputCounter][cPortCounter] = 0;
                 LOG(DEBUG) << BOLDRED << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cFeCounter << " L1 Line -- Alignment value is " << +cAligned
                            << " phase tap value is " << +cPhaseTap << " stored value is " << std::bitset<24>(fPhaseValues[cFeCounter]) << RESET;
+            }
 
             fPortStates[cPortCounter][cInputCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];
             fFeStates[cFeCounter][cInputLineCounter] = std::bitset<8>(cReadBack.second)[cBitIndex];

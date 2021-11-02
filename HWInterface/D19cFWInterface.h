@@ -20,6 +20,7 @@
 #include <limits.h>
 #include <map>
 #include <mutex>
+#include <numeric>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -284,6 +285,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t fReadoutAttempts     = 0;
     uint16_t fWait_us             = 10000; // 10 ms
     uint8_t  fResetMinPeriod_ms   = 100;   // was 100
+
     // get data from FC7
 
     // wait for events from FC7

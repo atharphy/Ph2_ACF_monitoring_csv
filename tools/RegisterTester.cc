@@ -119,7 +119,7 @@ void RegisterTester::RegisterTest()
                     {
                         if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cListItem.first) != cRegsToSkip.end()) continue;
 
-                        auto cRegItem = cListItem.second;
+                        auto cRegItem   = cListItem.second;
                         cRegItem.fValue = (uint8_t)(cChip->getRegItem(cListItem.first).fDefValue); // fReadoutChipInterface->ReadChipReg(cChip, cListItem.first);
                         cList.push_back(std::make_pair(cListItem.first, cRegItem));
                         LOG(DEBUG) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x" << std::hex << +cRegItem.fValue << std::dec

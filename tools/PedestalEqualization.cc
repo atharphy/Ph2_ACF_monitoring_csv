@@ -433,6 +433,7 @@ void PedestalEqualization::FindOffsets()
                         if(roc->getFrontEndType() == FrontEndType::MPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
                         std::string cRegName = charRegName;
                         channel              = roc->getReg(cRegName);
+                        LOG(DEBUG) << BOLDGREEN << "Offset set to " << +channel << RESET;
                         cMeanOffset += channel;
                     }
 

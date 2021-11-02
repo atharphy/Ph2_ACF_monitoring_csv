@@ -696,6 +696,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
                 cSSA->setOpticalId(cHybrid->getOpticalId());
                 cSSA->setOptical(cHybrid->isOptical());
+                cSSA->setMasterId(cHybrid->getMasterId());
                 LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
                 (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA);
             }

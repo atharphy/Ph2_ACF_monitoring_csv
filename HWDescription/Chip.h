@@ -175,7 +175,7 @@ class Chip : public FrontEndDescription
     uint32_t getRegWriteCount() { return fRegWrites; }
     uint32_t getRegReadCount() { return fRegReads; }
 
-    uint8_t geMasterId() const { return fMasterId; };
+    uint8_t getMasterId() const { return fMasterId; };
     void    setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
 
   protected:
