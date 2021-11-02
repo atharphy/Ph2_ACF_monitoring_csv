@@ -273,7 +273,7 @@ void ThrEqualization::analyze()
 void ThrEqualization::fillHisto()
 {
 #ifdef __USE_ROOT__
-    // histos->fillOccupancy(*theOccContainer.get());
+    histos->fillOccupancy(*theOccContainer.get());
     histos->fillTDAC(theTDACcontainer);
 #endif
 }
