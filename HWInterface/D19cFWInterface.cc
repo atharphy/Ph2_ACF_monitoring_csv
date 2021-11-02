@@ -20,7 +20,6 @@
 #include <chrono>
 #include <time.h>
 #include <uhal/uhal.hpp>
-uint8_t cLpGBTI2CHack = true;
 // #pragma GCC diagnostic ignored "-Wpedantic"
 
 using namespace Ph2_HwDescription;
@@ -6258,11 +6257,11 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
 bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
 {
     auto    cLinkId   = pChip->getOpticalId();
-    uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
-    if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
+    //uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
+    uint8_t cMasterId = pChip->getMasterId();
+    //if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
 
-    // LOG (INFO) << BOLDGREEN << "Writing FE register on link " << +cLinkId << RESET;
-    LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+    LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "] I2C master" << +cMasterId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
     uint8_t cChipAddress = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
@@ -6338,8 +6337,10 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
 uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
     auto    cLinkId   = pChip->getOpticalId();
-    uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
-    if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
+    uint8_t cMasterId = pChip->getMasterId();
+    // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
+    // cMasterId = pChip->getMasterId();
+    //if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
 
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();

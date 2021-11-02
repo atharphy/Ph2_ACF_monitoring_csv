@@ -146,6 +146,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint8_t> fStubBuffer;
     PSModuleCounterData  fPSModulesCounterData;
 
+
   public:
     /*!
      *
@@ -284,6 +285,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t fReadoutAttempts     = 0;
     uint16_t fWait_us             = 10000; // 10 ms
     uint8_t  fResetMinPeriod_ms   = 100;   // was 100
+
     // get data from FC7
 
     // wait for events from FC7

@@ -66,7 +66,7 @@ class Hybrid
     uint8_t getNChip() const { return this->size(); }
 
     uint8_t getLinkId() const { return fLinkId; };
-    uint8_t geMasterId() const { return fMasterId; };
+    uint8_t getMasterId() const { return fMasterId; };
 
     void setLinkId(uint8_t pLinkId) { fLinkId = pLinkId; };
     void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
