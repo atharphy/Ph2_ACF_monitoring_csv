@@ -20,10 +20,10 @@
 #include <limits.h>
 #include <map>
 #include <mutex>
+#include <numeric>
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <numeric>
 //#include "../Utils/OccupancyAndPh.h"
 //#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
@@ -146,7 +146,6 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint8_t> fBeL1Bitslips;
     std::vector<uint8_t> fStubBuffer;
     PSModuleCounterData  fPSModulesCounterData;
-
 
   public:
     /*!

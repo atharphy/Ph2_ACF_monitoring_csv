@@ -1,19 +1,19 @@
 /*!
  *
  * \file Eudaq2Producer.h
- * \brief Testbeam Producer for EUDAQ2 
+ * \brief Testbeam Producer for EUDAQ2
  * \author Younes OTARID
  * \date 13 / 09 / 21
  *
  * \Support : younes.otarid@cern.ch
  *
-*/
+ */
 #ifndef Eudaq2Producer_h__
 #define Eudaq2Producer_h__
 
+#include "CommonVisitors.h"
 #include "Tool.h"
 #include "Visitor.h"
-#include "CommonVisitors.h"
 
 #include <cmath>
 #include <map>
@@ -21,14 +21,13 @@
 #include <stdlib.h>
 
 #ifdef __USE_ROOT__
-  #include "TCanvas.h"
-  #include "TH2.h"
-  #include "TProfile.h"
-  #include "TProfile2D.h"
-  #include "TString.h"
-  #include "TGraphErrors.h"
-  #include "TString.h"
-  #include "TText.h"
+#include "TCanvas.h"
+#include "TGraphErrors.h"
+#include "TH2.h"
+#include "TProfile.h"
+#include "TProfile2D.h"
+#include "TString.h"
+#include "TText.h"
 #endif
 
 // eudaq stuff
@@ -76,35 +75,35 @@ class Eudaq2Producer
 
   protected:
   private:
-    // Some HW settings 
-    bool fHandshakeEnabled;
-    uint32_t fTriggerMultiplicity; 
-    uint32_t fHitsCounter;    
-    bool fIsPS = true;
-    bool fEnableInjection = false;
+    // Some HW settings
+    bool             fHandshakeEnabled;
+    uint32_t         fTriggerMultiplicity;
+    uint32_t         fHitsCounter;
+    bool             fIsPS            = true;
+    bool             fEnableInjection = false;
     std::vector<int> fThresholdList;
-    int fLastThreshold;
+    int              fLastThreshold;
 
     // Run status variables
-    bool fExitRun, fConfigured;
+    bool        fExitRun, fConfigured;
     std::thread fThreadRun;
-    bool fFirstEvent = true;
+    bool        fFirstEvent = true;
 
     // Handlers gor Ph2ACF Raw data and SLink data
-    std::string fPathToHWFile;
-    std::string fPathToRawPh2ACF;
+    std::string  fPathToHWFile;
+    std::string  fPathToRawPh2ACF;
     FileHandler* fPh2FileHandler;
     FileHandler* fSLinkFileHandler;
 
-    //Temporary
+    // Temporary
     uint16_t fOriginalTriggerSrc;
-    uint8_t fOriginalTLUConfig;
+    uint8_t  fOriginalTLUConfig;
 };
 
 // Register Producer in EUDAQ Factory
 namespace
 {
-  auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<Eudaq2Producer, const std::string&, const std::string&>(Eudaq2Producer::m_id_factory);
+auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<Eudaq2Producer, const std::string&, const std::string&>(Eudaq2Producer::m_id_factory);
 }
 
 #endif

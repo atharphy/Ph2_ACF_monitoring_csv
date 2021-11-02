@@ -6256,10 +6256,10 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
 
 bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
 {
-    auto    cLinkId   = pChip->getOpticalId();
-    //uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
+    auto cLinkId = pChip->getOpticalId();
+    // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
     uint8_t cMasterId = pChip->getMasterId();
-    //if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
+    // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
 
     LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "] I2C master" << +cMasterId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
@@ -6340,7 +6340,7 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
     uint8_t cMasterId = pChip->getMasterId();
     // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
     // cMasterId = pChip->getMasterId();
-    //if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
+    // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
 
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
