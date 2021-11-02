@@ -98,7 +98,6 @@ int main(int argc, char* argv[])
     bool cAntenna    = (cmd.foundOption("antenna")) ? true : false;
     bool cPulseShape = (cmd.foundOption("pulseShape")) ? true : false;
 
-    bool        cWithCIC   = (cmd.foundOption("withCIC"));
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
 
     if(cNoise)
@@ -143,39 +142,55 @@ int main(int argc, char* argv[])
     cTool.StartHttpServer();
     cTool.ConfigureHw();
 
-    // Align lpGBT-CIC first
+    LinkAlignmentOT cLinkAlignment;
+    cLinkAlignment.Inherit(&cTool);
+    try 
+    {
+        cLinkAlignment.Start(0);
+    }
+    catch(const std::exception& e)
+    {
+        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+        return (666);
+    }
+    cLinkAlignment.waitForRunToBeCompleted();
+    cLinkAlignment.dumpConfigFiles();
+    if(!cLinkAlignment.getStatus())
+    {
+        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+        return (666);
+    }
+
+    // align FEs - CIC
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
-    cCicAligner.Initialise();
-    cCicAligner.CicLpGbtAlignment();
-
-    // map MPA outputs on PS module
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(&cTool);
-    cPSAlignment.Initialise();
-    cPSAlignment.MapMPAOutputs();
+    cCicAligner.Start(0);
+    cCicAligner.waitForRunToBeCompleted();
+    cCicAligner.dumpConfigFiles();
+    
 
     // align back-end - make sure L1 and stub data lines can be sampled correctly
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
-    cBackEndAligner.waitForRunToBeCompleted();
-    cBackEndAligner.Reset();
-
-    // if you would like to re-do the input alignment
-    // then run align CIC align inputs
-    if(cWithCIC && !cmd.foundOption("skipAlignment")) cCicAligner.AlignInputs();
-    cCicAligner.Reset();
-    cCicAligner.dumpConfigFiles();
-
-    // time align stubs in back-end
+    LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
     StubBackEndAlignment cStubBackEndAligner;
     cStubBackEndAligner.Inherit(&cTool);
     cStubBackEndAligner.Start(0);
     cStubBackEndAligner.waitForRunToBeCompleted();
 
     // now align data between SSA-MPA
-    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
+    // bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos);
+    // if(cSkipMPAin)
+    //     LOG(INFO) << BOLDBLUE << "Will skip alignment of SSA output data (L1+stubs) to MPAs " << RESET;
+    // else
+    // {
+    // map MPA outputs for PS module
+    PSAlignment cPSAlignment;
+    cPSAlignment.Inherit(&cTool);
+    cPSAlignment.Initialise();
+    cPSAlignment.MapMPAOutputs();
+    LOG(INFO) << BOLDBLUE << "Performing alignment of SSA output data (L1+stubs) to MPAs " << RESET;
+    cPSAlignment.Align();
+    cPSAlignment.Reset();
+    cPSAlignment.dumpConfigFiles();
 
     // hack
     // make sure MPAs and SSAs have all pixels enabled
