@@ -72,6 +72,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("allChan", "Do pedestal and noise measurement using all channels? Default: false", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("allChan", "a");
 
+    cmd.defineOption("reconfigure", "Reconfigure Hardware");
+
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
@@ -140,41 +142,64 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
-    cTool.ConfigureHw();
+
+    if (cmd.foundOption("reconfigure") )
+    {
+        cTool.ConfigureHw();
+
+        // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
+
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try 
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+
+        // align FEs - CIC
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(&cTool);
+        cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
+        cCicAligner.dumpConfigFiles();
+
+        // align back-end - make sure L1 and stub data lines can be sampled correctly
+        LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+        StubBackEndAlignment cStubBackEndAligner;
+        cStubBackEndAligner.Inherit(&cTool);
+        cStubBackEndAligner.Start(0);
+        cStubBackEndAligner.waitForRunToBeCompleted();
+    }
 
     LinkAlignmentOT cLinkAlignment;
     cLinkAlignment.Inherit(&cTool);
-    try 
-    {
-        cLinkAlignment.Start(0);
-    }
-    catch(const std::exception& e)
-    {
-        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-        return (666);
-    }
-    cLinkAlignment.waitForRunToBeCompleted();
-    cLinkAlignment.dumpConfigFiles();
-    if(!cLinkAlignment.getStatus())
-    {
-        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-        return (666);
-    }
+    cLinkAlignment.Initialise();
+    cLinkAlignment.AlignStubPackage();
+    cLinkAlignment.Reset();
 
-    // align FEs - CIC
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit(&cTool);
-    cCicAligner.Start(0);
-    cCicAligner.waitForRunToBeCompleted();
-    cCicAligner.dumpConfigFiles();
-    
-
-    // align back-end - make sure L1 and stub data lines can be sampled correctly
-    LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
-    StubBackEndAlignment cStubBackEndAligner;
-    cStubBackEndAligner.Inherit(&cTool);
-    cStubBackEndAligner.Start(0);
-    cStubBackEndAligner.waitForRunToBeCompleted();
+    // // align back-end - make sure L1 and stub data lines can be sampled correctly
+    // LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+    // StubBackEndAlignment cStubBackEndAligner;
+    // cStubBackEndAligner.Inherit(&cTool);
+    // cStubBackEndAligner.Start(0);
+    // cStubBackEndAligner.waitForRunToBeCompleted();
 
     // now align data between SSA-MPA
     // bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos);
@@ -183,14 +208,6 @@ int main(int argc, char* argv[])
     // else
     // {
     // map MPA outputs for PS module
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(&cTool);
-    cPSAlignment.Initialise();
-    cPSAlignment.MapMPAOutputs();
-    LOG(INFO) << BOLDBLUE << "Performing alignment of SSA output data (L1+stubs) to MPAs " << RESET;
-    cPSAlignment.Align();
-    cPSAlignment.Reset();
-    cPSAlignment.dumpConfigFiles();
 
     // hack
     // make sure MPAs and SSAs have all pixels enabled
