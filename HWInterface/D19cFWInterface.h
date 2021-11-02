@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <numeric>
 //#include "../Utils/OccupancyAndPh.h"
 //#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>

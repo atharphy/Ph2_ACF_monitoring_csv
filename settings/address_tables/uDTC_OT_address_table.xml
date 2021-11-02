@@ -259,6 +259,7 @@
         <node id="handshake_mode"       address="0x000" mask="0x00000003"/>
                 <node id="tlu_enabled"                  address="0x000" mask="0x00000010"/>
                 <node id="trigger_id_delay"             address="0x000" mask="0x00000f00"/>
+                <node id="phase_select"                 address="0x000" mask="0x000ff000"/>
         </node>
 
         <node id="calibration_2s_block"         address="0xE000">
