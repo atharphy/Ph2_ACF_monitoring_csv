@@ -43,6 +43,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
+    cmd.defineOption("reconfigure", "Reconfigure Hardware");
+    cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("latency", "scan the trigger latency", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("latency", "l");
 
@@ -74,10 +76,7 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
-    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
-
+    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -98,7 +97,6 @@ int main(int argc, char* argv[])
     bool cAntenna    = (cmd.foundOption("antenna")) ? true : false;
     bool cPulseShape = (cmd.foundOption("pulseShape")) ? true : false;
 
-    bool        cWithCIC   = (cmd.foundOption("withCIC"));
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
 
     if(cNoise)
@@ -141,41 +139,79 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
-    cTool.ConfigureHw();
 
-    // Align lpGBT-CIC first
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit(&cTool);
-    cCicAligner.Initialise();
-    cCicAligner.CicLpGbtAlignment();
+    bool cIgnoreI2c = false; 
+    bool cReInitialize=true;    
+    if( cmd.foundOption("reconfigure"))
+    {
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
-    // map MPA outputs on PS module
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(&cTool);
-    cPSAlignment.Initialise();
-    cPSAlignment.MapMPAOutputs();
+        // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
 
-    // align back-end - make sure L1 and stub data lines can be sampled correctly
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
-    cBackEndAligner.waitForRunToBeCompleted();
-    cBackEndAligner.Reset();
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
 
-    // if you would like to re-do the input alignment
-    // then run align CIC align inputs
-    if(cWithCIC && !cmd.foundOption("skipAlignment")) cCicAligner.AlignInputs();
-    cCicAligner.Reset();
-    cCicAligner.dumpConfigFiles();
+        // align FEs - CIC
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(&cTool);
+        cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
+        cCicAligner.dumpConfigFiles();
+    }
+    // reload settings on-to FE chips 
+    if(cmd.foundOption("reload"))
+    {
+        // //cReInitialize=false;    
+        // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
-    // time align stubs in back-end
-    StubBackEndAlignment cStubBackEndAligner;
-    cStubBackEndAligner.Inherit(&cTool);
-    cStubBackEndAligner.Start(0);
-    cStubBackEndAligner.waitForRunToBeCompleted();
+        // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
 
-    // now align data between SSA-MPA
-    if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+    }
 
     // hack
     // make sure MPAs and SSAs have all pixels enabled

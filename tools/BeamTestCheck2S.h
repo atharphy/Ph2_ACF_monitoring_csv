@@ -36,7 +36,6 @@ class BeamTestCheck2S : public Tool
     ~BeamTestCheck2S();
 
     void ReadDataFromFile(std::string pRawFileName);
-    void PrintData();
     void CheckWithTP();
     void CheckWithInternal(uint8_t pContinousReadout = 0);
     void CheckWithExternal(uint8_t pContinousReadout = 0);
@@ -88,10 +87,14 @@ class BeamTestCheck2S : public Tool
     void   PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 1);
     void   PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
     void   PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
-    void   ScanLatency(Ph2_HwDescription::BeBoard* pBoard);
+    void   ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinousReadout=0);
     void   ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void   UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void   ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
+    void   ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
+    void   EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
+    void   PrintData(Ph2_HwDescription::BeBoard* pBoard);
+    
     size_t fThStep{0};
 
 #ifdef __USE_ROOT__

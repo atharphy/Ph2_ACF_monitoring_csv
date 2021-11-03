@@ -74,8 +74,6 @@ void BeamTestCheck2S::Reset()
 // Initialization function
 void BeamTestCheck2S::Initialise()
 {
-    fSuccess = false;
-    initializeRecycleBin();
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
@@ -84,6 +82,13 @@ void BeamTestCheck2S::Initialise()
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
+
+    // check sparsification 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+        cBoard->setSparsification(cSparsified);
+    }    
 
     // clear map of modified registers
     fWithCIC = false;
@@ -114,6 +119,9 @@ void BeamTestCheck2S::Initialise()
         if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
     }
 
+    fSuccess = false;
+    initializeRecycleBin();
+    
     // create groups for injection
     // set injection group
     fChannelGroupHandler = new CBCChannelGroupHandler();
@@ -147,9 +155,9 @@ void BeamTestCheck2S::Initialise()
     // pedestals
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fPedestalContainer);
 
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    // #endif
+    #ifdef __USE_ROOT__
+        fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
 }
 
 // State machine control functions
@@ -186,7 +194,7 @@ void BeamTestCheck2S::CheckWithTP()
         // scan the latency - find best hit latency
         ScanLatency(cBoard);
         // scan the threshold, record number of hits; cluster occupancy
-        ScanThreshold(cBoard);
+        //ScanThreshold(cBoard);
     }
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
@@ -210,14 +218,12 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
 
         // prepare injection
         PrepareForInternal(cBoard);
-        if(pContinousReadout == 1)
-            ContinousReadout(cBoard);
-        else // collect events with ReadNEvents
-        {
-            ReadNEvents(cBoard, fNevents);
-            const std::vector<Event*>& cEvents = GetEvents();
-            LOG(INFO) << BOLDYELLOW << "BeamTestCheck2S::CheckWithInternal Read-back " << +cEvents.size() << " events from the FC7 when " << fNevents << " were requested" << RESET;
-        }
+        // retreive events from FC7 
+        if(pContinousReadout == 1) ContinousReadout(cBoard);
+        else ReadNEvents(cBoard, fNevents);
+
+        // process events 
+        ProcessEvents(cBoard);
     }
 }
 void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
@@ -237,16 +243,14 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
 
         // prepare injection
         PrepareForExternal(cBoard);
-        if(pContinousReadout == 1)
-            ContinousReadout(cBoard);
-        else // collect events with ReadNEvents
-        {
-            ReadNEvents(cBoard, fNevents);
-            const std::vector<Event*>& cEvents = GetEvents();
-            LOG(INFO) << BOLDYELLOW << "BeamTestCheck2S::CheckWithInternal Read-back " << +cEvents.size() << " events from the FC7 when " << fNevents << " were requested" << RESET;
-        }
+        if(pContinousReadout == 1) ContinousReadout(cBoard);
+        else   ReadNEvents(cBoard, fNevents);
+
+        // process events 
+        ProcessEvents(cBoard);
+
         // scan the latency - find best hit latency
-        // ScanLatency(cBoard);
+        //ScanLatency(cBoard);
         // scan the threshold, record number of hits; cluster occupancy
         // ScanThreshold(cBoard);
     }
@@ -482,7 +486,7 @@ void BeamTestCheck2S::ScanThreshold(BeBoard* pBoard)
         }
     }
 }
-void BeamTestCheck2S::ScanLatency(BeBoard* pBoard)
+void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 {
     // bool cUseReadNevents = false;
     LOG(INFO) << "Scanning Latency ... ";
@@ -532,21 +536,14 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard)
     {
         setSameDacBeBoard(pBoard, "TriggerLatency", cLat);
         fBeBoardInterface->ChipReSync(pBoard);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
+        
         uint16_t cOffset      = 0;
         auto     cBrdIndx     = pBoard->getIndex();
         size_t   cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        if(fUseReadNEvents)
-            this->ReadNEvents(pBoard, fNevents);
-        else
-        {
-            fBeBoardInterface->Start(pBoard);
-            std::this_thread::sleep_for(std::chrono::milliseconds(getWait()));
-            fBeBoardInterface->Stop(pBoard);
-            ReadData(pBoard, false);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+
+        if(pContinousReadout == 1) ContinousReadout(pBoard);
+        else   ReadNEvents(pBoard, fNevents);
+        
         const std::vector<Event*>& cEvents              = this->GetEvents();
         float                      cNormalizationFactor = cEvents.size() / (1 + cTriggerMult);
         // loop over triggers in the burst
@@ -715,12 +712,62 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     }
     // set TP amplitude and delay
     LOG(INFO) << BOLDYELLOW << "Enabling TP with : " << +fTPamplitude << " injected charge "
-              << " delay of " << +fTPdelay << " ns and "
-              << " a threshold of " << +fThreshold << RESET;
+              << " delay of " << +fTPdelay << " ns "
+              << RESET;
 
-    // setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
-    // setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay);
-    setSameDacBeBoard(pBoard, "Threshold", fThreshold);
+    // stop triggers 
+    fBeBoardInterface->Stop(pBoard);
+    // send a ReSync 
+    fBeBoardInterface->ChipReSync(pBoard);
+    // set thresholds from xml 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid) { 
+                uint32_t cThreshold=0;
+                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
+                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
+                    {
+                        std::stringstream cRegName;
+                        cRegName << "ThDAC" << +cDAC;
+                        cThreshold = cChip->getReg(cRegName.str());
+                    }
+                }
+                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
+                LOG (INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
+            }
+        }
+    }
+
+    setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
+    setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay);
+    // // set TP group and TP amplitude from xml 
+    // for(auto cOpticalGroup: *pBoard)
+    // {
+    //     for(auto cHybrid: *cOpticalGroup)
+    //     {
+    //         for(auto cChip: *cHybrid) { 
+    //             uint32_t cThreshold=0;
+    //             if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
+    //             if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
+    //             if(cChip->getFrontEndType() == FrontEndType::MPA)
+    //             {
+    //                 for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
+    //                 {
+    //                     std::stringstream cRegName;
+    //                     cRegName << "ThDAC" << +cDAC;
+    //                     cThreshold = cChip->getReg(cRegName.str());
+    //                 }
+    //             }
+    //             fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
+    //             LOG (INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
+    //         }
+    //     }
+    // }
 }
 void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
 {
@@ -741,6 +788,34 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
+
+    // stop triggers 
+    fBeBoardInterface->Stop(pBoard);
+    // send a ReSync 
+    fBeBoardInterface->ChipReSync(pBoard);
+    // set thresholds 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid) { 
+                uint32_t cThreshold=0;
+                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
+                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
+                    {
+                        std::stringstream cRegName;
+                        cRegName << "ThDAC" << +cDAC;
+                        cThreshold = cChip->getReg(cRegName.str());
+                    }
+                }
+                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
+                LOG (INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
+            }
+        }
+    }
 }
 void BeamTestCheck2S::ContinousReadout(BeBoard* pBoard)
 {
@@ -769,13 +844,63 @@ void BeamTestCheck2S::ContinousReadout(BeBoard* pBoard)
     if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
     DecodeData(pBoard, cCompleteData, cNevents, fBeBoardInterface->getBoardType(pBoard));
     LOG(INFO) << BOLDYELLOW << "BeamTestCheck2S::ContinousReadout readout " << cNevents << " when " << fNevents << " were requested." << RESET;
-
+}
+void   BeamTestCheck2S::ProcessEvents(BeBoard* pBoard)
+{
 #ifdef __USE_ROOT__
     const std::vector<Event*>& cEvents  = GetEvents();
     auto                       cTDCdist = static_cast<TH1D*>(getHist(pBoard, "TDCdistribution"));
-    LOG(INFO) << BOLDBLUE << "Filling TDC histogram using " << cEvents.size() << " events." << RESET;
-    for(auto& cEvent: cEvents) { cTDCdist->Fill(cEvent->GetTDC()); }
-#endif
+    for(auto& cEvent: cEvents) cTDCdist->Fill(cEvent->GetTDC()); 
+#endif 
+    PrintData(pBoard);              
+}
+void   BeamTestCheck2S::PrintData(BeBoard* pBoard)
+{
+    const std::vector<Event*>& cEvents  = GetEvents();
+    LOG (INFO) << BOLDBLUE << "Printing events from FC7.. collected : " << +cEvents.size() << " events." << RESET;
+    for(auto& cEvent: cEvents) 
+    {
+        EventPrintout(pBoard, cEvent);              
+    }
+}
+void   BeamTestCheck2S::EventPrintout(BeBoard* pBoard, Event* pEvent)
+{
+    auto cSparsified  = pBoard->getSparsification();
+    if( cSparsified ) LOG (DEBUG) << BOLDBLUE << "Checking with internal - sparisified data" << RESET;
+    else LOG (DEBUG) << BOLDBLUE << "Checking with internal - un-sparisified data" << RESET;
+
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto cL1IdCIC      = static_cast<D19cCic2Event*>(pEvent)->L1Id(cHybrid->getId(), 0);
+            auto cL1Status     = static_cast<D19cCic2Event*>(pEvent)->L1Status(cHybrid->getId());
+            auto cBxId         = (pEvent)->BxId(cHybrid->getId());
+            auto cStubStat     = static_cast<D19cCic2Event*>(pEvent)->Status(cHybrid->getId());
+            std::stringstream cOut;
+            if( cStubStat != 0x00 || cL1Status != 0x00 ) 
+                cOut << BOLDRED  << "Event#" << +pEvent->GetEventCount() 
+                    << " L1Id " << +cL1IdCIC 
+                    << " Stub status is " << std::bitset<8>(cStubStat) 
+                    << " L1 status [FEs] is " << std::bitset<8>(cL1Status) 
+                    << " L1 status [CIC] is " << std::bitset<1>(cL1Status&0x1) 
+                    << " BxId is " << +cBxId ;
+            else 
+                cOut << BOLDGREEN  << "Event#" << +pEvent->GetEventCount() 
+                    << " L1Id " << +cL1IdCIC 
+                    << " Stub status is " << std::bitset<8>(cStubStat) 
+                    << " L1 status [FEs] is " << std::bitset<8>(cL1Status) 
+                    << " L1 status [CIC] is " << std::bitset<1>(cL1Status&0x1) 
+                    << " BxId is " << +cBxId ;
+            for( auto cChip : *cHybrid )
+            {
+                if(!cSparsified) break;
+                auto   cClusters    = (pEvent)->getClusters(cHybrid->getId(), cChip->getId());
+                cOut << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
+            }
+            LOG (INFO) << cOut.str() << RESET;
+        }
+    }   
 }
 void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
 {
@@ -800,7 +925,33 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-    setSameDacBeBoard(pBoard, "Threshold", fThreshold);
+    // stop triggers 
+    fBeBoardInterface->Stop(pBoard);
+    // send a ReSync 
+    fBeBoardInterface->ChipReSync(pBoard);
+    // set thresholds 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid) { 
+                uint32_t cThreshold=0;
+                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
+                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
+                    {
+                        std::stringstream cRegName;
+                        cRegName << "ThDAC" << +cDAC;
+                        cThreshold = cChip->getReg(cRegName.str());
+                    }
+                }
+                LOG (INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
+                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
+            }
+        }
+    }
 }
 void BeamTestCheck2S::ReadDataFromFile(std::string pRawFileName)
 {
@@ -814,30 +965,10 @@ void BeamTestCheck2S::ReadDataFromFile(std::string pRawFileName)
         DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
         // const std::vector<Event*>& cEvents = GetEvents ();
         LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
+        PrintData(cBoard);
     }
 }
-void BeamTestCheck2S::PrintData()
-{
-    for(auto cBoard: *fDetectorContainer)
-    {
-        const std::vector<Event*>& cEvents = GetEvents();
-        LOG(INFO) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
-        for(auto& cEvent: cEvents)
-        {
-            auto cEventId   = cEvent->GetEventCount();
-            auto cTriggerId = cEvent->GetExternalTriggerId();
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
-                {
-                    auto cStatus = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
-                    auto cL1Id   = (static_cast<D19cCic2Event*>(cEvent))->L1Id(cHybrid->getId(), 0);
-                    LOG(INFO) << BOLDBLUE << "Event#" << +cEventId << " trigger Id " << +cTriggerId << " L1 Id is " << +cL1Id << " status is " << std::bitset<9>(cStatus) << RESET;
-                }
-            }
-        } // event loop
-    }
-}
+// 
 void BeamTestCheck2S::Stop() {}
 
 void BeamTestCheck2S::Pause() {}
