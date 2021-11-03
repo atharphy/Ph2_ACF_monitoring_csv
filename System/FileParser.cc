@@ -562,7 +562,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
        << "   "
        << "|"
        << "   "
-       << "|" 
+       << "|"
        << "---- SSA controlled by I2CMaster " << +cSSA->getMasterId() << RESET << "\n";
 }
 
@@ -624,7 +624,7 @@ void FileParser::parseMPAContainer(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
     cMPA->setOpticalId(pHybrid->getOpticalId());
     cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
     cMPA->setClockFrequency(320);
-    cMPA->setMasterId( pHybrid->getMasterId() ); 
+    cMPA->setMasterId(pHybrid->getMasterId());
     this->parseMPASettings(pHybridNode, cMPA);
 
     os << BOLDCYAN << "|"
@@ -635,8 +635,8 @@ void FileParser::parseMPAContainer(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
        << "   "
        << "|"
        << "   "
-       << "|" 
-       << "---- MPA controlled by I2CMaster " << +cMPA->getMasterId() << RESET << std::endl ;
+       << "|"
+       << "---- MPA controlled by I2CMaster " << +cMPA->getMasterId() << RESET << std::endl;
 }
 
 void FileParser::parseMPASettings(pugi::xml_node pHybridNode, ReadoutChip* pMPA)
@@ -663,8 +663,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         else
         {
             uint8_t cMasterId;
-            if(pHybridNode.attribute("i2cMaster")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); } // can overwrite default from xml 
-            else cMasterId = (pHybridNode.attribute("Id").as_int() % 2 == 0) ? 2 : 0;// default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
+            if(pHybridNode.attribute("i2cMaster")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); } // can overwrite default from xml
+            else
+                cMasterId = (pHybridNode.attribute("Id").as_int() % 2 == 0) ? 2 : 0; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
 
             os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET;
             cHybrid = pOpticalGroup->addHybridContainer(
@@ -987,9 +988,9 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setOpticalId(cHybrid->getOpticalId());
     cCbc->setClockFrequency(320);
     cCbc->setNumberOfChannels(254);
-    cCbc->setMasterId( cHybrid->getMasterId() ); 
+    cCbc->setMasterId(cHybrid->getMasterId());
 
-     os << BOLDCYAN << "|"
+    os << BOLDCYAN << "|"
        << "  "
        << "|"
        << "   "
@@ -997,7 +998,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
        << "   "
        << "|"
        << "   "
-       << "|" 
+       << "|"
        << "---- CBC controlled by I2CMaster " << +cCbc->getMasterId() << RESET << std::endl;
 
     // parse the specific CBC settings so that Registers take precedence

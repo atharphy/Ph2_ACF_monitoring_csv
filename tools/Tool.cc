@@ -1047,7 +1047,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         // TO-DO.. generalize so that I don't need the MPA/SSA
         if(fNormalize == 0)
         {
-            float cMaxOcc          = 1.0;
+            float cMaxOcc               = 1.0;
             auto& cDataContainerThisBrd = fDetectorDataContainer->at(boardIndex);
             for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
             {
@@ -1104,7 +1104,14 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     {
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
-                            cOut << BOLDBLUE << "localocc "<< currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<"\n";
+                            cOut << BOLDBLUE << "localocc "
+                                 << currentStepOccupancyContainer->at(boardIndex)
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<Occupancy>(iChannel)
+                                        .fOccupancy
+                                 << "\n";
 
                             if(currentStepOccupancyContainer->at(boardIndex)
                                    ->at(cOpticalGroup->getIndex())

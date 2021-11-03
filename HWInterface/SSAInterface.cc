@@ -759,6 +759,35 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     ChannelGroup<NCHANNELS, 1>                    channelToEnable;
 
+    // check if all registers are the same
+    std::vector<uint8_t> cVals(0);
+    for(uint16_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
+    {
+        cVals.push_back(localRegValues.getChannel<uint16_t>(iChannel));
+        LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
+    }
+
+    if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
+    {
+        LOG(DEBUG) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
+        if(dacName == "TrimDAC_S" or dacName == "ThresholdTrim")
+        {
+            bool cWrite = this->WriteChipReg(pChip, "THTRIMMING_ALL", cVals[0], false);
+            if(pVerifLoop)
+            {
+                auto cReadback = this->ReadChipReg(pChip, "TrimDAC_S100");
+                LOG(DEBUG) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
+                return (cReadback == cVals[0]);
+            }
+            else
+                return cWrite;
+        }
+        // to-add .. add the rest
+    }
+
+    LOG(DEBUG) << BOLDBLUE << "Different values for " << dacName << " ... will NOT use global register" << RESET;
+
+
     std::vector<uint32_t> cVec;
     cVec.clear();
     bool cSuccess = true;
