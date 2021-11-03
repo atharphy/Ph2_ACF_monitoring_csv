@@ -8,108 +8,20 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-StubBackEndAlignment::StubBackEndAlignment() : Tool()
+StubBackEndAlignment::StubBackEndAlignment() : OTTool()
 {
-    fBoardRegContainer.reset();
-    fSuccess = false;
 }
 StubBackEndAlignment::~StubBackEndAlignment() {}
-void StubBackEndAlignment::Reset()
-{
-    LOG(INFO) << BOLDGREEN << "Resetting registers touched  by StubBackEndAlignment" << RESET;
-    // set everything back to original values .. like I wasn't here
-    bool cWithPS = false;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
-        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
-        cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap)
-        {
-            if(cReg.first.find("stub_package_delay") != std::string::npos) continue;
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
-        }
-        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
-        for(auto cOpticalGroup: *cBoard)
-        {
-            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
-                cWithPS       = cWithPS || cIsPS;
-                LOG(DEBUG) << BOLDBLUE << "StubBackEndAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..."
-                           << RESET;
-                for(auto cChip: *cHybrid)
-                {
-                    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
-                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    for(auto cMapItem: cModMap)
-                    {
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        LOG(DEBUG) << BOLDBLUE << "StubBackEndAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
-                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
-                    }
-                }
-            }
-        }
-    }
-    if(fReadoutChipInterface != nullptr)
-    {
-        fReadoutChipInterface->ClearModifiedRegisterMap();
-        if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
-    }
-    resetPointers();
-}
 void StubBackEndAlignment::Initialise()
 {
-    fSuccess = false;
+    // prepare common OTTool
+    Prepare();
+    SetName("StubBackEndAlignment");
 
-    // retreive original settings for all chips and all back-end boards
-    ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
-    for(auto cBoard: *fDetectorContainer)
-    {
-        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
-        const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
-        cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
-    }
-
-    // clear map of modified registers
-    fWithCIC = false;
-    if(fReadoutChipInterface != nullptr)
-    {
-        fReadoutChipInterface->ClearModifiedRegisterMap();
-        bool cIsPS = false;
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
-                fWithCIC        = cWithLpGBT;
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    fWithCIC   = fWithCIC || (cCic != nullptr);
-                    if(cIsPS) continue;
-
-                    auto cType    = FrontEndType::SSA;
-                    bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                    cType         = FrontEndType::MPA;
-                    bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                    cIsPS         = (cWithSSA && cWithMPA) && cWithLpGBT;
-                }
-            }
-        }
-        if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
-    }
+    // list of board registers that can be modified by this tool 
+    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay"};
+    SetBrdRegstoPerserve(cBrdRegsToKeep);
 }
 bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 {

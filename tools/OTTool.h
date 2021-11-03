@@ -37,7 +37,7 @@ class OTTool : public Tool
     void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void ReadDataFromFile(std::string pRawFileName);
     void ContinousReadout();
-    void SetName(std::string pName){ fMyName = fMyName;};
+    void SetName(std::string pName){ fMyName = pName;};
 
 protected:
     // success or fail 
