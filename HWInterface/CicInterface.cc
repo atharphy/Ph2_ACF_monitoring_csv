@@ -1508,6 +1508,49 @@ bool CicInterface::ConfigureTermination(Chip* pChip, uint8_t pClkTerm, uint8_t p
     LOG(INFO) << BOLDBLUE << "\t\t.. Rx Term set to " << +pRxTerm << RESET;
     return this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
 }
+// configure drive strength 
+bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength ) 
+{
+    std::string cRegName  = "SLVS_PADS_CONFIG";
+    uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
+    auto        cIterator = fTxDriveStrength.find(pDriveStrength);
+    bool cSuccess  = true;
+    if(cIterator != fTxDriveStrength.end())
+    {
+        auto cValue = (cRegValue & 0xFE) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
+        cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
+        LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
+        if(!cSuccess)
+        {
+            LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " configure drive strength on CIC output pads." << RESET;
+            throw std::runtime_error(std::string("Could NOT configure drive strength on CIC output pads"));
+        }
+        cRegValue = this->ReadChipReg(pChip, cRegName);
+        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec 
+            << "[ drive strength set to " << +pDriveStrength << " ]" << RESET;
+    }
+    return cSuccess;
+}
+// configure fast command edge 
+bool CicInterface::ConfigureFCMDEdge(Chip* pChip, uint8_t pUseNegEdge ) 
+{
+    // select fast command edge
+    bool cNegEdge = (pUseNegEdge == 1); // was false for PS - need to check
+    if(cNegEdge)
+        LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
+    else
+        LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on rising edge." << RESET;
+    std::string cRegName        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "FC_ON_NEG_EDGE" : "MISC_CTRL";
+    auto cRegValue       = this->ReadChipReg(pChip, cRegName);
+    uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC) ? cNegEdge : (cRegValue & 0x17) | (cNegEdge << 3);
+    bool cSuccess        = this->WriteChipReg(pChip, cRegName, cValue);
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " select FC edge in CIC  " << RESET;
+        throw std::runtime_error(std::string("Error selecting FC edge in CIC"));       
+    }
+    return cSuccess;
+}
 // start-up sequence for CIC [everything that does not require interaction
 // with the BE or the other readout ASICs on the chip
 bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegEdge)
@@ -1525,23 +1568,24 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
         LOG (INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC..." << RESET;
     }
     
-    std::string cRegName  = "SLVS_PADS_CONFIG";
-    uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    auto        cIterator = fTxDriveStrength.find(pDriveStrength);
-    if(cIterator != fTxDriveStrength.end())
-    {
-        auto cValue = (cRegValue & 0xFE) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
-        cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
-        LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
-        if(!cSuccess)
-        {
-            LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " configure drive strength on CIC output pads." << RESET;
-            throw std::runtime_error(std::string("Could NOT configure drive strength on CIC output pads"));
-        }
-        cRegValue = this->ReadChipReg(pChip, cRegName);
-        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec 
-            << "[ drive strength set to " << +pDriveStrength << " ]" << RESET;
-    }
+    cSuccess = this->ConfigureDriveStrength(pChip, pDriveStrength);
+    // std::string cRegName  = "SLVS_PADS_CONFIG";
+    // uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
+    // auto        cIterator = fTxDriveStrength.find(pDriveStrength);
+    // if(cIterator != fTxDriveStrength.end())
+    // {
+    //     auto cValue = (cRegValue & 0xFE) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
+    //     cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
+    //     LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
+    //     if(!cSuccess)
+    //     {
+    //         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " configure drive strength on CIC output pads." << RESET;
+    //         throw std::runtime_error(std::string("Could NOT configure drive strength on CIC output pads"));
+    //     }
+    //     cRegValue = this->ReadChipReg(pChip, cRegName);
+    //     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec 
+    //         << "[ drive strength set to " << +pDriveStrength << " ]" << RESET;
+    // }
 
     // reset DLL for each of the 12 phy ports
     cSuccess = this->ResetDLL(pChip);
@@ -1569,20 +1613,21 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     }
 
     // select fast command edge
-    bool cNegEdge = (pUseNegEdge == 1); // was false for PS - need to check
-    if(cNegEdge)
-        LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
-    else
-        LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on rising edge." << RESET;
-    cRegName        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "FC_ON_NEG_EDGE" : "MISC_CTRL";
-    cRegValue       = this->ReadChipReg(pChip, cRegName);
-    uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC) ? cNegEdge : (cRegValue & 0x17) | (cNegEdge << 3);
-    cSuccess        = this->WriteChipReg(pChip, cRegName, cValue);
-    if(!cSuccess)
-    {
-        LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " select FC edge in CIC  " << RESET;
-        throw std::runtime_error(std::string("Error selecting FC edge in CIC"));       
-    }
+    cSuccess = this->ConfigureFCMDEdge(pChip, pUseNegEdge);
+    // bool cNegEdge = (pUseNegEdge == 1); // was false for PS - need to check
+    // if(cNegEdge)
+    //     LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
+    // else
+    //     LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on rising edge." << RESET;
+    // cRegName        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "FC_ON_NEG_EDGE" : "MISC_CTRL";
+    // cRegValue       = this->ReadChipReg(pChip, cRegName);
+    // uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC) ? cNegEdge : (cRegValue & 0x17) | (cNegEdge << 3);
+    // cSuccess        = this->WriteChipReg(pChip, cRegName, cValue);
+    // if(!cSuccess)
+    // {
+    //     LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " select FC edge in CIC  " << RESET;
+    //     throw std::runtime_error(std::string("Error selecting FC edge in CIC"));       
+    // }
 
     // check fast command lock
     cSuccess = this->CheckFastCommandLock(pChip);

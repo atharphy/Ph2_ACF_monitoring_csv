@@ -94,7 +94,7 @@ bool LinkAlignmentOT::Align()
         }
     } // align BE
 
-    AlignStubPackage();
+    //AlignStubPackage();
     fSuccess = true;
     return fSuccess;
 }
