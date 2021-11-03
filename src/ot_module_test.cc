@@ -120,6 +120,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("allChan", "a");
 
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
+    cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
 
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
@@ -366,9 +367,12 @@ int main(int argc, char* argv[])
     }
 
     // align CIC-lpGBT-BE
+    
+    bool cIgnoreI2c = false; 
+    bool cReInitialize=true;    
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw();
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -403,9 +407,54 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
+    // reload settings on-to FE chips 
+    if(!cmd.foundOption("read") && cmd.foundOption("reload"))
+    {
+        // //cReInitialize=false;    
+        // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
+        // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
+
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+    }
     if(!cmd.foundOption("read") && cmd.foundOption("realign"))
     {
+        // re-align stub package 
+        // bool cSkipStubPkg = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("stubPackage") != std::string::npos);
+        // if(cSkipStubPkg)
+        //     LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
+        // else
+        // {
+        //     LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+        //     LinkAlignmentOT cLinkAlignment;
+        //     cLinkAlignment.Inherit(&cTool);
+        //     cLinkAlignment.AlignStubPackage();
+        //     cLinkAlignment.Reset();
+        // }
+
         // time align stubs with L1 data in the BE
         bool cSkipBEstubs = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("beStubs") != std::string::npos);
         if(cSkipBEstubs)
@@ -939,14 +988,20 @@ int main(int argc, char* argv[])
         cGoodRuns.close();
 
         uint8_t         cDisableFEs        = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
-        int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
-        uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
-        cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        cBeamTestCheck.CheckWithExternal(cContinuousReadout);
+        
+        // check with TP
+        cBeamTestCheck.CheckWithTP();
+
+        // uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
+        // int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+        // cBeamTestCheck.SetReadoutPause(cReadoutPause);
+        //cBeamTestCheck.CheckWithInternal(cContinuousReadout);
+        // cBeamTestCheck.CheckWithExternal(cContinuousReadout);
+        //cBeamTestCheck.CheckWithExternal(cContinuousReadout);
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
@@ -958,7 +1013,6 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
-        cBeamTestCheck.PrintData();
         cBeamTestCheck.Reset();
     }
     if(!cmd.foundOption("read"))

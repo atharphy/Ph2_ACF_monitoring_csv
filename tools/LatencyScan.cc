@@ -14,6 +14,13 @@ LatencyScan::~LatencyScan() {}
 
 void LatencyScan::Initialize()
 {
+    // check sparsification 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+        cBoard->setSparsification(cSparsified);
+    }    
+
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
@@ -236,7 +243,7 @@ void LatencyScan::ScanLatency()
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                    LOG(INFO) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "ROC#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                                    LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "ROC#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                                     cTotalHits += cHits.size();
                                     for(auto cHit: cHits)
                                     {
