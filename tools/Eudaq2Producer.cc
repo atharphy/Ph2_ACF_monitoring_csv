@@ -331,7 +331,7 @@ void Eudaq2Producer::DoTerminate()
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Terminated Run");
 }
 
-// ReadoutLoop has been modified in order to allow for the acquisition of multilple events by a single trigger signal.
+// ReadoutLoop has been modified in order to allow for the acquisition of multiple events by a single trigger signal.
 // This way, time walk performance can be evaluated in the analysis
 // Multiple Ph2ACF Events are read, converted and stored as EUDAQ SubEvents within in one EUDAQ Event
 void Eudaq2Producer::ReadoutLoop()
@@ -761,7 +761,7 @@ bool Eudaq2Producer::EventsPending()
             }                                                                                                                                // end of cBoard loop
         }                                                                                                                                    // end of if fHandshakeEnabled
         else
-            return false;
+            return true;
     }
     return false;
 }
