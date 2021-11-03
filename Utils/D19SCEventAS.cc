@@ -1,4 +1,4 @@
-#include "../Utils/D19cSSAEventAS.h"
+#include "../Utils/D19SCEventAS.h"
 #include "../HWDescription/Definition.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/DataContainer.h"
@@ -11,12 +11,12 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cSSAEventAS::D19cSSAEventAS(const BeBoard* pBoard, uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list) : fEventDataVector(pNSSA * pNFe)
+D19SCEventAS::D19SCEventAS(const BeBoard* pBoard, uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list) : fEventDataVector(pNSSA * pNFe)
 {
     fNSSA = pNSSA;
     SetEvent(pBoard, pNSSA, list);
 }
-D19cSSAEventAS::D19cSSAEventAS(const BeBoard* pBoard, const std::vector<uint32_t>& list)
+D19SCEventAS::D19SCEventAS(const BeBoard* pBoard, const std::vector<uint32_t>& list)
 {
     fEventDataVector.clear();
     fNSSA = 0;
@@ -50,7 +50,7 @@ D19cSSAEventAS::D19cSSAEventAS(const BeBoard* pBoard, const std::vector<uint32_t
     }     // opticalGroup
     this->Set(pBoard, list);
 }
-void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
+void D19SCEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async SSA " << RESET;
     auto    cDataIterator = pData.begin();
@@ -87,7 +87,7 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
 }
 
 // required by event but not sure if makes sense for AS
-void D19cSSAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19SCEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -107,7 +107,7 @@ void D19cSSAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
     }
 }
 
-void D19cSSAEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list)
+void D19SCEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list)
 {
     for(auto cOpticalGroup: *pBoard)
     {
@@ -126,23 +126,18 @@ void D19cSSAEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNSSA, const std::
     }
 }
 
-uint32_t D19cSSAEventAS::GetNHits(uint8_t pFeId, uint8_t pSSAId) const
+uint32_t D19SCEventAS::GetNHits(uint8_t pFeId, uint8_t pSSAId) const
 {
     uint8_t cFeIndex   = getFeIndex(pFeId);
     uint8_t cRocIndex  = getROCIndex(pFeId, pSSAId);
     auto&   cHitVecotr = fCounterData.at(cFeIndex).at(cRocIndex);
     return std::accumulate(cHitVecotr.begin(), cHitVecotr.end(), 0);
-    // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pSSAId,fNSSA));
-    // return std::accumulate(hitVector.begin()+1, hitVector.end(), 0);
 }
-std::vector<uint32_t> D19cSSAEventAS::GetHits(uint8_t pFeId, uint8_t pSSAId) const
+std::vector<uint32_t> D19SCEventAS::GetHits(uint8_t pFeId, uint8_t pSSAId) const
 {
     uint8_t cFeIndex  = getFeIndex(pFeId);
     uint8_t cRocIndex = getROCIndex(pFeId, pSSAId);
     return fCounterData.at(cFeIndex).at(cRocIndex);
-    // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pSSAId,fNSSA));
-    // LOG (INFO) << BOLDBLUE << hitVector[0] << RESET;
-    // return hitVector;
 }
 
 } // namespace Ph2_HwInterface
