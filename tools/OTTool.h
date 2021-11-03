@@ -37,10 +37,18 @@ class OTTool : public Tool
     void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void ReadDataFromFile(std::string pRawFileName);
     void ContinousReadout();
+    void SetName(std::string pName){ fMyName = fMyName;};
 
 protected:
+    // success or fail 
     bool     fSuccess{false};
+    // chips found on the detector 
     uint8_t  fWithCIC{0};
+    uint8_t  fWithLpGBT{0};
+    uint8_t  fWithMPA{0};
+    uint8_t  fWithSSA{0};
+    uint8_t  fWithCBC{0};
+    // readout related items 
     uint32_t fNevents{100};
     uint32_t fReadoutPause{100};
 
@@ -53,6 +61,8 @@ protected:
     DetectorDataContainer fBoardRegContainer;
     // configuration of print-out
     PrintConfig fPrintConfig;
+    // name of the tool 
+    std::string fMyName;
 
     // list of registers to perserve
     std::vector<std::string> fBrdRegsToPerserve;

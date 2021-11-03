@@ -13,27 +13,31 @@ OTTool::OTTool() : Tool()
     fBrdRegsToPerserve.clear();
     fROCRegsToPerserve.reset();
     fSuccess = false;
+    fMyName = "OTTool";
 }
 
 OTTool::~OTTool() {}
-// Reset register map 
+// Reset register on BeBoard + ROCs 
 void OTTool::Reset()
 {
-    LOG(INFO) << BOLDGREEN << "Resetting registers touched  by BeamTestCheck2S" << RESET;
+    LOG(INFO) << BOLDGREEN << "Resetting registers touched  by " << fMyName << RESET;
     // set everything back to original values .. like I wasn't here
     bool cWithPS = false;
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
+        LOG(INFO) << BOLDBLUE << fMyName << ":Resetting all registers on back-end board " << +cBoard->getId() << RESET;
         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap)
         {
         	// skip registers that I should perserve for this board 
-        	if( std::find( fBrdRegsToPerserve.begin(), fBrdRegsToPerserve.end() , cReg.first ) != fBrdRegsToPerserve.end() ) continue;
-        	cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+            if( std::find( fBrdRegsToPerserve.begin(), fBrdRegsToPerserve.end() , cReg.first ) != fBrdRegsToPerserve.end() ){ 
+                LOG (INFO) << BOLDBLUE << "Will not reconfigure " << cReg.first << RESET;
+                continue;
+            }
+            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
@@ -51,7 +55,7 @@ void OTTool::Reset()
                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
                 bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
                 cWithPS       = cWithPS || cIsPS;
-                LOG(DEBUG) << BOLDBLUE << "BeamTestCheck2S::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+                LOG(INFO) << BOLDBLUE << fMyName << ":Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
                 auto& cROCRegsToPreserveThisHybrd = cROCRegsToPreserveThisOG->at(cHybrid->getIndex());
             	for(auto cChip: *cHybrid)
                 {
@@ -59,14 +63,14 @@ void OTTool::Reset()
                 	auto& cRegsToPerserve = cROCRegsToPreserveThisROC->getSummary<std::vector<std::string>>(); 
                 	if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
                     auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     for(auto cMapItem: cModMap)
                     {
                     	// skip registers that I should perserve for this ROC 
                         if( std::find( cRegsToPerserve.begin(), cRegsToPerserve.end() , cMapItem.first ) != cRegsToPerserve.end() ) continue;
         				
         				auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        LOG(DEBUG) << BOLDBLUE << "BeamTestCheck2S::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                        LOG(INFO) << BOLDBLUE << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                    << cMapItem.second.fValue << RESET;
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
@@ -86,12 +90,13 @@ void OTTool::Reset()
 void OTTool::Prepare()
 {
     // retreive original settings for all chips and all back-end boards
+    fBoardRegContainer.reset();
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                cBoardRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
-        cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
+        cBoardRegMap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
 
     // check sparsification 
@@ -102,36 +107,39 @@ void OTTool::Prepare()
     }    
 
     // clear map of modified registers
-    fWithCIC = false;
+    // probably this should be a container per board 
+    // since we should be able to mix different types of boards 
+    // but need to decide if this is per board/OG/hybrid 
+    // TO-DO 
+    fWithCIC = 0;
+    fWithLpGBT = 0 ; 
+    fWithSSA   = 0 ; 
+    fWithMPA   = 0 ; 
+    fWithCBC   = 0 ; 
     if(fReadoutChipInterface != nullptr)
     {
         fReadoutChipInterface->ClearModifiedRegisterMap();
-        bool cIsPS = false;
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
             {
-                bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
-                fWithCIC        = cWithLpGBT;
+                fWithLpGBT = (cOpticalGroup->flpGBT != nullptr) ? 1 : 0 ;
+                fWithCIC        = fWithLpGBT;
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     fWithCIC   = fWithCIC || (cCic != nullptr);
-                    if(cIsPS) continue;
-
-                    auto cType    = FrontEndType::SSA;
-                    bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                    cType         = FrontEndType::MPA;
-                    bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                    cIsPS         = (cWithSSA && cWithMPA) && cWithLpGBT;
+                    fWithSSA = fWithSSA || (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end()) ? 1 : 0 ;
+                    fWithMPA = fWithMPA || (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end()) ? 1 : 0 ;
+                    fWithCBC = fWithCBC || (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end()) ? 1 : 0 ;
                 }
             }
         }
+        bool cIsPS = (fWithSSA && fWithMPA) && fWithLpGBT;
         if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
     }
 
-    // clear list of registers to perserce 
-    fBoardRegContainer.clear();
+    // prepare list of ROC registers to perserve 
     fDetectorDataContainer = &fROCRegsToPerserve;
     ContainerFactory::copyAndInitChip<std::vector<std::string>>(*fDetectorContainer, *fDetectorDataContainer);
 
@@ -151,7 +159,10 @@ void OTTool::ConfigurePrintout(PrintConfig pCnfg)
 void OTTool::SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs)
 {
     fBrdRegsToPerserve.clear();
-    for (const auto& cRegName : pListOfRegs) fBrdRegsToPerserve.push_back(cRegName);
+    for (const auto& cRegName : pListOfRegs){ 
+        LOG (INFO) << BOLDBLUE << "Adding " << cRegName << " to list of Brd Regs to perserve..." << RESET;
+        fBrdRegsToPerserve.push_back(cRegName);
+    }
 }
 // set list of ROC registers to perserve
 void OTTool::SetROCRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs)

@@ -86,9 +86,6 @@ class BeamTestCheck2S : public OTTool
     void   ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void   UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void   ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
-    //void   ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
-    //void   EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
-    //void   PrintData(Ph2_HwDescription::BeBoard* pBoard);
     
     size_t fThStep{0};
 

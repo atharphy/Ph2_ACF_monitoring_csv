@@ -13,7 +13,7 @@
 #ifndef CicFEAlignment_h__
 #define CicFEAlignment_h__
 
-#include "Tool.h"
+#include "OTTool.h"
 #include <map>
 // #ifdef __USE_ROOT__
 
@@ -26,7 +26,7 @@ const uint8_t FAILED_PHASE_ALIGNMENT = 1;
 const uint8_t FAILED_WORD_ALIGNMENT  = 2;
 const uint8_t FAILED_BX_ALIGNMENT    = 3;
 
-class CicFEAlignment : public Tool
+class CicFEAlignment : public OTTool
 {
     using RegisterVector      = std::vector<std::pair<std::string, uint8_t>>;
     using TestGroupChannelMap = std::map<int, std::vector<uint8_t>>;
@@ -49,7 +49,6 @@ class CicFEAlignment : public Tool
     void Stop() override;
     void Pause() override;
     void Resume() override;
-    void Reset();
     void writeObjects();
 
     // get alignment results
@@ -72,9 +71,7 @@ class CicFEAlignment : public Tool
     DetectorDataContainer fWordAlignmentValues;
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
-    // with MPA
-    bool fWithMPA;
-
+    
     // mapping of FEs for CIC
     std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC [2S]
     void                 SetStubWindowOffsets(uint8_t pBendCode, int pBend);

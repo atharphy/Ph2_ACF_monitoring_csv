@@ -13,11 +13,11 @@
 #ifndef LinkAlignmentOT_h__
 #define LinkAlignmentOT_h__
 
-#include "Tool.h"
+#include "OTTool.h"
 
 using namespace Ph2_HwDescription;
 
-class LinkAlignmentOT : public Tool
+class LinkAlignmentOT : public OTTool
 {
   public:
     LinkAlignmentOT();
@@ -28,8 +28,7 @@ class LinkAlignmentOT : public Tool
     void Stop() override;
     void Pause() override;
     void Resume() override;
-    void Reset();
-
+    
     // get alignment results
     bool getStatus() const { return fSuccess; }
 
@@ -53,13 +52,9 @@ class LinkAlignmentOT : public Tool
 
   protected:
   private:
-    // Containers
-    DetectorDataContainer fBoardRegContainer;
     // Alignment parameters
     DetectorDataContainer fBeSamplingDelay; // one per line per data line from hybrid
     DetectorDataContainer fBeBitSlip;       // one per line per data line from hybrid
-    bool                  fSuccess{true};
-    bool                  fWithCIC{false};
     bool                  fStubDebug{false};
     bool                  fL1Debug{false};
 
