@@ -85,7 +85,7 @@ class Eudaq2Producer
     int              fLastThreshold;
 
     // Run status variables
-    bool        fExitRun, fConfigured;
+    bool        fExitRun, fConfigured, fInitialised;
     std::thread fThreadRun;
     bool        fFirstEvent = true;
 

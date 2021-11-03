@@ -31,6 +31,7 @@ Eudaq2Producer::Eudaq2Producer(const std::string& name, const std::string& runco
 {
     fPh2FileHandler   = nullptr;
     fSLinkFileHandler = nullptr;
+    fInitialised = false;
 }
 
 Eudaq2Producer::~Eudaq2Producer()
@@ -125,6 +126,7 @@ void Eudaq2Producer::DoInitialise()
         cPSAlignment.Align();
     }
 
+    fInitialised = true;
     LOG(INFO) << BOLDGREEN << "[CMS-OT Producer] Initialised" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Initialised");
 }
@@ -140,6 +142,8 @@ void Eudaq2Producer::DoConfigure()
     // get MPA and SSA thresholds
     uint8_t cThresholdMPA = std::stoi(cEudaqConf->Get("ThresholdMPA", "75"));
     uint8_t cThresholdSSA = std::stoi(cEudaqConf->Get("ThresholdSSA", "35"));
+    // get CBC thresholds
+    uint16_t cThresholdCBC = std::stoi(cEudaqConf->Get("ThresholdCBC", "550"));
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled    = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
@@ -202,6 +206,22 @@ void Eudaq2Producer::DoConfigure()
         uint8_t cPulseAmplitude = std::stoi(cEudaqConf->Get("PulseAmplitude", "120"));
         EnableDigitalInjection(cPulseAmplitude, cThresholdMPA, cThresholdSSA);
     }
+    // Set CBC threshold
+    if (!fIsPS) 
+    {
+        LOG(INFO) << RED << "Set Threshold on all CBCs to " << +cThresholdCBC << RESET;
+        for (auto cBoard : *fDetectorContainer) {
+          for (auto cOpticalGroup : *cBoard) {
+            for (auto cHybrid : *cOpticalGroup) {
+              for (auto cChip : *cHybrid) {
+                // ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
+                ThresholdVisitor cThresholdVisitor (fReadoutChipInterface, cThresholdCBC);
+                static_cast<ReadoutChip*>(cChip)->accept(cThresholdVisitor);
+              }
+            }
+          }
+        }
+    }
     fConfigured = true;
     LOG(INFO) << BOLDGREEN << "[CMS-OT Producer] Configured" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Configured");
@@ -210,6 +230,43 @@ void Eudaq2Producer::DoConfigure()
 void Eudaq2Producer::DoStartRun()
 {
     LOG(INFO) << "[CMS-OT Producer] Starting Run..." << RESET;
+
+    // Send BORE event at beginning of run with important register information
+    eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
+    std::time_t cTimestamp = std::time(nullptr);
+    cEudaqEvent->SetTimestamp(cTimestamp, cTimestamp);
+    cEudaqEvent->SetBORE();
+    //Readout the CBCs register data and store them as Tags in a BORE event
+    char name[150];
+    char name2[150];
+    if (!fIsPS) 
+    {
+      LOG(INFO) << "Downloading the register configuration of the CBCs" << RESET;
+      for(auto cBoard : *fDetectorContainer){
+          for(auto cOpticalGroup : *cBoard) {
+            for (auto cHybrid : *cOpticalGroup) {
+                for (auto cChip : *cHybrid) {
+                  int cCbcId = int(cChip->getId());
+                  uint32_t cHybridId = cHybrid->getId();
+                  auto cRegMap = cChip->getRegMap();
+                  ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
+                  static_cast<ReadoutChip*>(cChip)->accept (cThresholdVisitor);
+                  uint16_t cOriginalThreshold = cThresholdVisitor.getThreshold();
+                  std::sprintf (name2, "Threshold_%02d_%02d", int(cHybridId), int(cCbcId));
+                  cEudaqEvent->SetTag(name2, (uint32_t)cOriginalThreshold);
+                  LOG(INFO) << "Threshold FE" << int(cHybridId) << "CBC" << int(cCbcId) << ": " << cOriginalThreshold << RESET;
+                  for(auto& ireg : cRegMap){
+                      std::sprintf (name, "%s_%02d_%02d", ireg.first.c_str(), int(cHybridId), int(cCbcId));
+                      cEudaqEvent->SetTag(name, (uint32_t)ireg.second.fValue);
+                      LOG(DEBUG) << "Register " << ireg.first.c_str() << "\t" << ireg.second.fValue << RESET;
+                  }//end of ireg loop
+                }
+            }
+          }
+      }
+    }
+    SendEvent(cEudaqEvent);
+
 
     // Getting Run Number and EUDAQ configuration file object
     auto cEudaqConf = GetConfiguration();
@@ -270,6 +327,10 @@ void Eudaq2Producer::DoStopRun()
     // Finalize data acquisition
     LOG(INFO) << "[CMS-OT Producer] Stopping Run..." << RESET;
 
+    // Set exit run flag and join running data thread
+    // No need to reset fConfigured flag. We need to allow for a restart of the run without the full configuration sequence
+    fExitRun = true;
+
     // Close shutter
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Closing shutter..." << RESET;
     for(auto cBoard: *fDetectorContainer)
@@ -282,10 +343,6 @@ void Eudaq2Producer::DoStopRun()
         LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "
                   << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
     }
-
-    // Set exit run flag and join running data thread
-    // No need to reset fConfigured flag. We need to allow for a restart of the run without the full configuration sequence
-    fExitRun = true;
 
     // Close raw data and Slink data files
     if(fThreadRun.joinable()) fThreadRun.join();
@@ -308,15 +365,18 @@ void Eudaq2Producer::DoStopRun()
 void Eudaq2Producer::DoReset()
 {
     LOG(INFO) << "[CMS-OT Producer] Reseting Run..." << RESET;
-    // Just in case close the shutter
-    for(auto cBoard: *fDetectorContainer)
+    if (fInitialised)  // Avoid seg fault if Tool object is not yet initialised
     {
-        fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
-        static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->ResetReadout();
-        LOG(INFO) << BOLDBLUE << "Reset readout on D19cFWInterface" << RESET;
-        // Show number of triggers received so far
-        LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "
-                  << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+      // Just in case close the shutter
+      for(auto cBoard: *fDetectorContainer)
+      {
+          fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
+          static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+          LOG(INFO) << BOLDBLUE << "Reset readout on D19cFWInterface" << RESET;
+          // Show number of triggers received so far
+          LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "
+                    << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+      }
     }
 
     fExitRun = true, fConfigured = false;

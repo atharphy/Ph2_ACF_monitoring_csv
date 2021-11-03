@@ -43,6 +43,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
+    cmd.defineOption("reconfigure", "Reconfigure Hardware");
+    cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("latency", "scan the trigger latency", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("latency", "l");
 
@@ -76,10 +78,7 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
-    cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
-
+    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -143,9 +142,11 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
 
-    if (cmd.foundOption("reconfigure") )
+    bool cIgnoreI2c = false; 
+    bool cReInitialize=true;    
+    if( cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw();
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -156,7 +157,7 @@ int main(int argc, char* argv[])
 
         LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
-        try 
+        try
         {
             cLinkAlignment.Start(0);
         }
@@ -179,35 +180,40 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
-
-        // align back-end - make sure L1 and stub data lines can be sampled correctly
-        LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
-        StubBackEndAlignment cStubBackEndAligner;
-        cStubBackEndAligner.Inherit(&cTool);
-        cStubBackEndAligner.Start(0);
-        cStubBackEndAligner.waitForRunToBeCompleted();
     }
+    // reload settings on-to FE chips 
+    if(cmd.foundOption("reload"))
+    {
+        // //cReInitialize=false;    
+        // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
-    LinkAlignmentOT cLinkAlignment;
-    cLinkAlignment.Inherit(&cTool);
-    cLinkAlignment.Initialise();
-    cLinkAlignment.AlignStubPackage();
-    cLinkAlignment.Reset();
+        // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
 
-    // // align back-end - make sure L1 and stub data lines can be sampled correctly
-    // LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
-    // StubBackEndAlignment cStubBackEndAligner;
-    // cStubBackEndAligner.Inherit(&cTool);
-    // cStubBackEndAligner.Start(0);
-    // cStubBackEndAligner.waitForRunToBeCompleted();
-
-    // now align data between SSA-MPA
-    // bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos);
-    // if(cSkipMPAin)
-    //     LOG(INFO) << BOLDBLUE << "Will skip alignment of SSA output data (L1+stubs) to MPAs " << RESET;
-    // else
-    // {
-    // map MPA outputs for PS module
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+    }
 
     // hack
     // make sure MPAs and SSAs have all pixels enabled

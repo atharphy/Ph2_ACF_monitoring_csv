@@ -169,7 +169,7 @@ class SystemController
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
-    void ConfigureHw(bool bIgnoreI2c = false);
+    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize=true);
     // IT + OT specific configurations
     /*!
      * \brief Configure the Hardware with XML file indicated values
@@ -183,7 +183,7 @@ class SystemController
      */
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool cStartUpSequence);
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested
