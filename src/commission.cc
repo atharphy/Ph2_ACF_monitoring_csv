@@ -74,8 +74,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("allChan", "Do pedestal and noise measurement using all channels? Default: false", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("allChan", "a");
 
-    cmd.defineOption("reconfigure", "Reconfigure Hardware");
-
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
     
