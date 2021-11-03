@@ -71,7 +71,7 @@ class CicFEAlignment : public OTTool
     DetectorDataContainer fWordAlignmentValues;
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
-    
+
     // mapping of FEs for CIC
     std::vector<uint8_t> fFEMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC [2S]
     void                 SetStubWindowOffsets(uint8_t pBendCode, int pBend);

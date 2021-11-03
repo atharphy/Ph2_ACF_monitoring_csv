@@ -169,7 +169,7 @@ class SystemController
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
-    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize=true);
+    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true);
     // IT + OT specific configurations
     /*!
      * \brief Configure the Hardware with XML file indicated values

@@ -600,7 +600,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     else if(pRegName == "InjectedCharge")
     {
         LOG(DEBUG) << BOLDBLUE << "Setting "
-                  << " bias calDac to " << +pValue << " on MPA" << +pMPA->getId() << RESET;
+                   << " bias calDac to " << +pValue << " on MPA" << +pMPA->getId() << RESET;
 
         Set_calibration(pMPA, pValue);
 

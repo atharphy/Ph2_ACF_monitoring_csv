@@ -8,9 +8,8 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-LinkAlignmentOT::LinkAlignmentOT() : OTTool(){ }
+LinkAlignmentOT::LinkAlignmentOT() : OTTool() {}
 LinkAlignmentOT::~LinkAlignmentOT() {}
-
 
 // Processing
 void LinkAlignmentOT::AlignStubPackage()
@@ -49,13 +48,13 @@ void LinkAlignmentOT::Initialise()
     Prepare();
     SetName("LinkAlignmentOT");
 
-    // list of board registers that can be modified by this tool 
+    // list of board registers that can be modified by this tool
     std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
-    // no ROC registers to perserve 
+    // no ROC registers to perserve
 
-    // initialize containers that hold values found by this tool 
+    // initialize containers that hold values found by this tool
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeSamplingDelay);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlip);
     for(auto cBoard: *fDetectorContainer)

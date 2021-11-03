@@ -787,7 +787,6 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
 
     LOG(DEBUG) << BOLDBLUE << "Different values for " << dacName << " ... will NOT use global register" << RESET;
 
-
     std::vector<uint32_t> cVec;
     cVec.clear();
     bool cSuccess = true;

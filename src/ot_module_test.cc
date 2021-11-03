@@ -367,9 +367,9 @@ int main(int argc, char* argv[])
     }
 
     // align CIC-lpGBT-BE
-    
-    bool cIgnoreI2c = false; 
-    bool cReInitialize=true;    
+
+    bool cIgnoreI2c    = false;
+    bool cReInitialize = true;
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
@@ -407,10 +407,10 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
-    // reload settings on-to FE chips 
+    // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {
-        // //cReInitialize=false;    
+        // //cReInitialize=false;
         // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
@@ -442,7 +442,7 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read") && cmd.foundOption("realign"))
     {
-        // re-align stub package 
+        // re-align stub package
         // bool cSkipStubPkg = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("stubPackage") != std::string::npos);
         // if(cSkipStubPkg)
         //     LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
@@ -987,21 +987,21 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t         cDisableFEs        = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
-        
+
         // check with TP
         cBeamTestCheck.CheckWithTP();
 
         // uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
         // int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
         // cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        //cBeamTestCheck.CheckWithInternal(cContinuousReadout);
+        // cBeamTestCheck.CheckWithInternal(cContinuousReadout);
         // cBeamTestCheck.CheckWithExternal(cContinuousReadout);
-        //cBeamTestCheck.CheckWithExternal(cContinuousReadout);
+        // cBeamTestCheck.CheckWithExternal(cContinuousReadout);
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }

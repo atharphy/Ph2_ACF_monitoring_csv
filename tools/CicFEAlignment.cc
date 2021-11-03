@@ -10,18 +10,18 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-CicFEAlignment::CicFEAlignment() : OTTool() { }
+CicFEAlignment::CicFEAlignment() : OTTool() {}
 
 CicFEAlignment::~CicFEAlignment() {}
 
 void CicFEAlignment::Initialise()
 {
-    LOG (INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
     // prepare common OTTool
     Prepare();
     SetName("CicFEAlignment");
- 
-    // initialize containers holding data from this tool 
+
+    // initialize containers holding data from this tool
     ContainerFactory::copyAndInitChip<AlignmentValues>(*fDetectorContainer, fPhaseAlignmentValues);
     ContainerFactory::copyAndInitChip<AlignmentValues>(*fDetectorContainer, fWordAlignmentValues);
     for(auto cBoard: *fDetectorContainer)
@@ -66,7 +66,7 @@ void CicFEAlignment::writeObjects()
 // State machine control functions
 void CicFEAlignment::AlignInputs()
 {
-    LOG (INFO) << BOLDMAGENTA << "CicFEAlignment::Aligning Inputs " << RESET;
+    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Aligning Inputs " << RESET;
     // align CIC inputs - first phase
     bool cPhaseAligned = this->PhaseAlignment();
     if(!cPhaseAligned)

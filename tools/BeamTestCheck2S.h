@@ -45,8 +45,8 @@ class BeamTestCheck2S : public OTTool
     void Resume() override;
     // void Reset();
     void writeObjects();
-    //void ReadDataFromFile(std::string pRawFileName);
-    //void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
+    // void ReadDataFromFile(std::string pRawFileName);
+    // void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void DisableAllFEs();
 
   protected:
@@ -78,15 +78,15 @@ class BeamTestCheck2S : public OTTool
     uint16_t fStartLatency{0};
     uint16_t fLatencyRange{0};
     uint16_t fOptimalLatency;
-    
-    void   PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 1);
-    void   PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
-    void   PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
-    void   ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinousReadout=0);
-    void   ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
-    void   UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
-    void   ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
-    
+
+    void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 1);
+    void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
+    void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
+    void ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinousReadout = 0);
+    void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
+    void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
+    void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
+
     size_t fThStep{0};
 
 #ifdef __USE_ROOT__

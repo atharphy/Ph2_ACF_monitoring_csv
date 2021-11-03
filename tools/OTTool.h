@@ -18,8 +18,8 @@ using namespace Ph2_HwDescription;
 
 struct PrintConfig
 {
-    uint8_t  fVerbose=0;
-    uint32_t fPrintEvery=1;
+    uint8_t  fVerbose    = 0;
+    uint32_t fPrintEvery = 1;
 };
 
 class OTTool : public Tool
@@ -28,7 +28,7 @@ class OTTool : public Tool
     OTTool();
     ~OTTool();
 
-    // expect thise to be the same for 
+    // expect thise to be the same for
     void Prepare();
     void Reset();
     void ConfigurePrintout(PrintConfig pCnfg);
@@ -37,31 +37,31 @@ class OTTool : public Tool
     void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void ReadDataFromFile(std::string pRawFileName);
     void ContinousReadout();
-    void SetName(std::string pName){ fMyName = pName;};
+    void SetName(std::string pName) { fMyName = pName; };
 
-protected:
-    // success or fail 
-    bool     fSuccess{false};
-    // chips found on the detector 
-    uint8_t  fWithCIC{0};
-    uint8_t  fWithLpGBT{0};
-    uint8_t  fWithMPA{0};
-    uint8_t  fWithSSA{0};
-    uint8_t  fWithCBC{0};
-    // readout related items 
+  protected:
+    // success or fail
+    bool fSuccess{false};
+    // chips found on the detector
+    uint8_t fWithCIC{0};
+    uint8_t fWithLpGBT{0};
+    uint8_t fWithMPA{0};
+    uint8_t fWithSSA{0};
+    uint8_t fWithCBC{0};
+    // readout related items
     uint32_t fNevents{100};
     uint32_t fReadoutPause{100};
 
-    void   PrintData(Ph2_HwDescription::BeBoard* pBoard);
-    void   EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
-    void   ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
+    void PrintData(Ph2_HwDescription::BeBoard* pBoard);
+    void EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
+    void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
 
   private:
     // Containers
     DetectorDataContainer fBoardRegContainer;
     // configuration of print-out
     PrintConfig fPrintConfig;
-    // name of the tool 
+    // name of the tool
     std::string fMyName;
 
     // list of registers to perserve

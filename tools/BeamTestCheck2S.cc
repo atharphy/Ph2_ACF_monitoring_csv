@@ -10,8 +10,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-BeamTestCheck2S::BeamTestCheck2S() : OTTool()
-{}
+BeamTestCheck2S::BeamTestCheck2S() : OTTool() {}
 
 BeamTestCheck2S::~BeamTestCheck2S() {}
 
@@ -20,7 +19,7 @@ void BeamTestCheck2S::Initialise()
 {
     Prepare();
     initializeRecycleBin();
-    
+
     // create groups for injection
     // set injection group
     fChannelGroupHandler = new CBCChannelGroupHandler();
@@ -51,9 +50,9 @@ void BeamTestCheck2S::Initialise()
     // pedestals
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fPedestalContainer);
 
-    #ifdef __USE_ROOT__
-        fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    #endif
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }
 
 // State machine control functions
@@ -90,7 +89,7 @@ void BeamTestCheck2S::CheckWithTP()
         // scan the latency - find best hit latency
         ScanLatency(cBoard);
         // scan the threshold, record number of hits; cluster occupancy
-        //ScanThreshold(cBoard);
+        // ScanThreshold(cBoard);
     }
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
@@ -114,11 +113,13 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
 
         // prepare injection
         PrepareForInternal(cBoard);
-        // retreive events from FC7 
-        if(pContinousReadout == 1) ContinousReadout(cBoard);
-        else ReadNEvents(cBoard, fNevents);
+        // retreive events from FC7
+        if(pContinousReadout == 1)
+            ContinousReadout(cBoard);
+        else
+            ReadNEvents(cBoard, fNevents);
 
-        // process events 
+        // process events
         ProcessEvents(cBoard);
     }
 }
@@ -139,14 +140,16 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
 
         // prepare injection
         PrepareForExternal(cBoard);
-        if(pContinousReadout == 1) ContinousReadout(cBoard);
-        else   ReadNEvents(cBoard, fNevents);
+        if(pContinousReadout == 1)
+            ContinousReadout(cBoard);
+        else
+            ReadNEvents(cBoard, fNevents);
 
-        // process events 
+        // process events
         ProcessEvents(cBoard);
 
         // scan the latency - find best hit latency
-        //ScanLatency(cBoard);
+        // ScanLatency(cBoard);
         // scan the threshold, record number of hits; cluster occupancy
         // ScanThreshold(cBoard);
     }
@@ -432,14 +435,16 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
     {
         setSameDacBeBoard(pBoard, "TriggerLatency", cLat);
         fBeBoardInterface->ChipReSync(pBoard);
-        
+
         uint16_t cOffset      = 0;
         auto     cBrdIndx     = pBoard->getIndex();
         size_t   cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
 
-        if(pContinousReadout == 1) ContinousReadout(pBoard);
-        else   ReadNEvents(pBoard, fNevents);
-        
+        if(pContinousReadout == 1)
+            ContinousReadout(pBoard);
+        else
+            ReadNEvents(pBoard, fNevents);
+
         const std::vector<Event*>& cEvents              = this->GetEvents();
         float                      cNormalizationFactor = cEvents.size() / (1 + cTriggerMult);
         // loop over triggers in the burst
@@ -608,20 +613,20 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     }
     // set TP amplitude and delay
     LOG(INFO) << BOLDYELLOW << "Enabling TP with : " << +fTPamplitude << " injected charge "
-              << " delay of " << +fTPdelay << " ns "
-              << RESET;
+              << " delay of " << +fTPdelay << " ns " << RESET;
 
-    // stop triggers 
+    // stop triggers
     fBeBoardInterface->Stop(pBoard);
-    // send a ReSync 
+    // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    // set thresholds from xml 
+    // set thresholds from xml
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cHybrid) { 
-                uint32_t cThreshold=0;
+            for(auto cChip: *cHybrid)
+            {
+                uint32_t cThreshold = 0;
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
                 if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -633,8 +638,8 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
                         cThreshold = cChip->getReg(cRegName.str());
                     }
                 }
-                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
-                LOG (INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
+                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
             }
         }
     }
@@ -662,17 +667,18 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-    // stop triggers 
+    // stop triggers
     fBeBoardInterface->Stop(pBoard);
-    // send a ReSync 
+    // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    // set thresholds 
+    // set thresholds
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cHybrid) { 
-                uint32_t cThreshold=0;
+            for(auto cChip: *cHybrid)
+            {
+                uint32_t cThreshold = 0;
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
                 if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -684,20 +690,20 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
                         cThreshold = cChip->getReg(cRegName.str());
                     }
                 }
-                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
-                LOG (INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
+                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
             }
         }
     }
 }
-void   BeamTestCheck2S::ProcessEvents(BeBoard* pBoard)
+void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard)
 {
 #ifdef __USE_ROOT__
     const std::vector<Event*>& cEvents  = GetEvents();
     auto                       cTDCdist = static_cast<TH1D*>(getHist(pBoard, "TDCdistribution"));
-    for(auto& cEvent: cEvents) cTDCdist->Fill(cEvent->GetTDC()); 
-#endif 
-    PrintData(pBoard);              
+    for(auto& cEvent: cEvents) cTDCdist->Fill(cEvent->GetTDC());
+#endif
+    PrintData(pBoard);
 }
 
 void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
@@ -723,17 +729,18 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-    // stop triggers 
+    // stop triggers
     fBeBoardInterface->Stop(pBoard);
-    // send a ReSync 
+    // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    // set thresholds 
+    // set thresholds
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cHybrid) { 
-                uint32_t cThreshold=0;
+            for(auto cChip: *cHybrid)
+            {
+                uint32_t cThreshold = 0;
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
                 if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -745,8 +752,8 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
                         cThreshold = cChip->getReg(cRegName.str());
                     }
                 }
-                LOG (INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
-                fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
+                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
+                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
             }
         }
     }

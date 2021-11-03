@@ -8,9 +8,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-StubBackEndAlignment::StubBackEndAlignment() : OTTool()
-{
-}
+StubBackEndAlignment::StubBackEndAlignment() : OTTool() {}
 StubBackEndAlignment::~StubBackEndAlignment() {}
 
 void StubBackEndAlignment::Initialise()
@@ -19,7 +17,7 @@ void StubBackEndAlignment::Initialise()
     Prepare();
     SetName("StubBackEndAlignment");
 
-    // list of board registers that can be modified by this tool 
+    // list of board registers that can be modified by this tool
     std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 }

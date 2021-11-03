@@ -1843,7 +1843,7 @@ bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         // configure pattern
         pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
         uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
-        bool    cWithCIC = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+        bool     cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
         if(cWithCIC)
         {
             for(uint16_t cPatternLength = 40; cPatternLength < 41; cPatternLength++)
@@ -4568,8 +4568,8 @@ void D19cFWInterface::ChipReSync()
     uint8_t cL1A      = 0;
     // in CIC case always send fast reset with an orbit reset
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
-    bool    cWithCIC = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
-    uint8_t cBC0     = (cWithCIC && fIs2S) ? 1 : 0;
+    bool     cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+    uint8_t  cBC0              = (cWithCIC && fIs2S) ? 1 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }

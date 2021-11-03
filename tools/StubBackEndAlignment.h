@@ -31,7 +31,7 @@ class StubBackEndAlignment : public OTTool
     void Stop() override;
     void Pause() override;
     void Resume() override;
-    
+
     // get alignment results
     bool getStatus() const { return fSuccess; }
 
