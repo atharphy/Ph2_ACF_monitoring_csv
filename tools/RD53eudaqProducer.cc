@@ -74,6 +74,15 @@ void RD53eudaqProducer::OnStartRun(unsigned runNumber)
 {
     try
     {
+        // #################################
+        // # Reconfigure all readout chips #
+        // #################################
+        LOG(INFO) << GREEN << "[RD53eudaqProducer::OnStartRun] Reconfiguring all readout chips" << RESET;
+        for(const auto cBoard: *RD53sysCntrPhys.fDetectorContainer)
+            for(auto cOpticalGroup: *cBoard)
+                for(auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid) static_cast<Ph2_HwInterface::RD53Interface*>(RD53sysCntrPhys.fReadoutChipInterface)->ConfigureChip(cChip);
+
         theRunNumber = runNumber;
         evCounter    = 0;
 

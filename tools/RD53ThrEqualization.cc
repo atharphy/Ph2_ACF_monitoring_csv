@@ -25,6 +25,8 @@ void ThrEqualization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
+    nEvents      = this->findValueInSettings<double>("nEvents");
+    nEvtsBurst   = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     startValue   = this->findValueInSettings<double>("VCalHstart");
     stopValue    = this->findValueInSettings<double>("VCalHstop");
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
@@ -84,7 +86,7 @@ void ThrEqualization::sendData()
 
     if(fStreamerEnabled == true)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
         for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
@@ -151,7 +153,11 @@ void ThrEqualization::run()
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
-    ThrEqualization::bitWiseScanLocal(frontEnd->name, PixelAlive::thrOccupancy);
+
+    this->fDetectorDataContainer = &theOccContainer;
+    ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
+
+    ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, nEvtsBurst);
 
     // #################################################
     // # Fill TDAC container and mark enabled channels #
@@ -168,12 +174,8 @@ void ThrEqualization::run()
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
                             {
-                                theOccContainer->at(cBoard->getIndex())
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
-                                    ->getChannel<OccupancyAndPh>(row, col)
-                                    .fOccupancy = RD53Shared::ISDISABLED;
+                                theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy =
+                                    RD53Shared::ISDISABLED;
                                 theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = TDACsize;
                             }
                 }
@@ -273,7 +275,7 @@ void ThrEqualization::analyze()
 void ThrEqualization::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos->fillOccupancy(*theOccContainer.get());
+    histos->fillOccupancy(theOccContainer);
     histos->fillTDAC(theTDACcontainer);
 #endif
 }
@@ -365,6 +367,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
                         // # Build discriminator #
                         // #######################
                         float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                        // float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancyMedian; // @TMP@
 
                         // ########################
                         // # Save best DAC values #
@@ -436,7 +439,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
     PixelAlive::analyze();
 }
 
-void ThrEqualization::bitWiseScanLocal(const std::string& regName, const float& target)
+void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
     float    tmp;
     uint16_t init;
@@ -475,27 +478,26 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, const float& 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                    {
                         this->fReadoutChipInterface->WriteChipAllLocalReg(
                             static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-                        static_cast<RD53*>(cChip)->copyMaskToDefault();
-                    }
 
         // ################
         // # Run analysis #
         // ################
-        PixelAlive::run();
-        auto output = PixelAlive::analyze();
+        this->measureData(nEvents, nEvtsBurst);
+        // PixelAlive::run();
+        // auto output = PixelAlive::analyze();
 
         // ##############################################
         // # Send periodic data to monitor the progress #
         // ##############################################
-        PixelAlive::sendData();
+        // PixelAlive::sendData();
 
         // #####################
         // # Compute next step #
         // #####################
-        for(const auto cBoard: *output)
+        // for(const auto cBoard: *output)
+        for(const auto cBoard: theOccContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
@@ -543,17 +545,15 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, const float& 
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                {
                     this->fReadoutChipInterface->WriteChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-                    static_cast<RD53*>(cChip)->copyMaskToDefault();
-                }
 
     // ################
     // # Run analysis #
     // ################
-    PixelAlive::run();
-    theOccContainer = PixelAlive::analyze();
+    this->measureData(nEvents, nEvtsBurst);
+    // PixelAlive::run();
+    // theOccContainerMy = PixelAlive::analyze();
 }
 
 void ThrEqualization::chipErrorReport() const

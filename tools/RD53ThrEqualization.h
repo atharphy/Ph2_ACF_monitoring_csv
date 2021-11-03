@@ -60,18 +60,20 @@ class ThrEqualization : public PixelAlive
 #endif
 
   private:
+    size_t nEvents;
+    size_t nEvtsBurst;
     size_t startValue;
     size_t stopValue;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-    std::shared_ptr<DetectorDataContainer>   theOccContainer;
-    DetectorDataContainer                    theTDACcontainer;
+    /* std::shared_ptr<DetectorDataContainer> theOccContainer; */
+    DetectorDataContainer theOccContainer;
+    DetectorDataContainer theTDACcontainer;
 
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
-    void bitWiseScanLocal(const std::string& regName, const float& target);
+    void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
     void chipErrorReport() const;
 
   protected:

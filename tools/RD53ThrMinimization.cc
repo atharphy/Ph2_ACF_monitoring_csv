@@ -274,6 +274,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
                         // # Build discriminator #
                         // #######################
                         float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                        // float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancyMedian; // @TMP@
 
                         // ########################
                         // # Save best DAC values #
