@@ -45,10 +45,6 @@ void Eudaq2Producer::DoInitialise()
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Initialising  ..." << RESET;
     auto cEudaqIni = GetInitConfiguration();
 
-    // check if PS module it is
-    fIsPS = (cEudaqIni->Get("IsPS", "true") == "true") ? true : false;
-    (fIsPS == true) ? LOG(INFO) << BOLDYELLOW << "PS Module" << RESET : LOG(INFO) << BOLDYELLOW << "2S Module" << RESET;
-
     bool cSkipAlignment = (cEudaqIni->Get("SkipAlignment", "true") == "true") ? true : false;
     LOG(INFO) << BOLDYELLOW << "Setting cSkipAlignment to : " << std::boolalpha << cSkipAlignment << RESET;
 
@@ -62,6 +58,15 @@ void Eudaq2Producer::DoInitialise()
     this->InitializeSettings(fPathToHWFile, outp);
     LOG(INFO) << outp.str();
     this->ConfigureHw();
+
+    // check if PS module it is
+    for(auto cBoard : *fDetectorContainer)
+    {
+      for(auto cOpticalGroup : *cBoard)
+      {
+        fIsPS &= (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS);
+      } 
+    }
 
     PSAlignment cPSAlignment;
     if(fIsPS)
