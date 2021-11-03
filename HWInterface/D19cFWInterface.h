@@ -114,6 +114,10 @@ class D19cFWInterface : public BeBoardFWInterface
     bool         fIsDDR3Readout;
     bool         fDDR3Calibrated;
     uint32_t     fDDR3Offset;
+    // PS counters
+    uint8_t fPSCounterDelay{29};
+    uint8_t fPSCounterFast{0};
+    uint8_t fPairSelect{0};
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
@@ -242,8 +246,6 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
 
-    void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-
     /*!
      * \brief Read data for pNEvents
      * \param pBoard : the pointer to the BeBoard
@@ -258,6 +260,11 @@ class D19cFWInterface : public BeBoardFWInterface
     // vector of 32 bit words for ROC#pIndex [stubs]
     std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
 
+    // configure PS counter readout
+    void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
+    void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
+    void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
+
   private:
     uint8_t  fFastCommandDuration = 0;
     uint16_t fWait_us             = 10000; // 10 ms
@@ -270,7 +277,8 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool cFast);
+    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
 
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
@@ -586,6 +594,24 @@ class D19cFWInterface : public BeBoardFWInterface
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
             cStatus = ParseStatus(pInterface);
             return cStatus;
+        };
+        void TunePhase(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
+        {
+            SetLineMode(pInterface, pHybrid, pChip, pLine);
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
+        };
+        void AlignWord(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
+        {
+            if(pChangePattern)
+            {
+                SetLineMode(pInterface, pHybrid, pChip, pLine);
+                SetLinePattern(pInterface, pHybrid, pChip, pLine, pPattern, pPatternPeriod);
+            }
+            // perform phase alignment
+            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+            SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
         };
         bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {

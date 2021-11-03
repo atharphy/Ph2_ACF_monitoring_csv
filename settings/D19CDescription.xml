@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR">
-    <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.75:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="120"/>
     
     <OpticalGroup Id="0" FMCId="0" >
-        
+        <lpGBT_Interface useOpticalLink="0" useCPB="0"/>
         <Hybrid Id="0" Status="1">
             <Global>
                 <Settings threshold="500" latency="29"/>
