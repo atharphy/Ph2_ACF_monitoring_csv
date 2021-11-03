@@ -13,7 +13,7 @@
 #ifndef PSAlignment_h__
 #define PSAlignment_h__
 
-#include "Tool.h"
+#include "OTTool.h"
 
 #include <map>
 
@@ -28,7 +28,7 @@ struct MPAInputAlignment
     uint8_t  fEdgeSelStubs;
     uint16_t fStubOffset;
 };
-class PSAlignment : public Tool
+class PSAlignment : public OTTool
 {
   public:
     PSAlignment();
@@ -49,7 +49,6 @@ class PSAlignment : public Tool
     void                                     Pause() override;
     void                                     Resume() override;
     void                                     writeObjects();
-    void                                     Reset();
 
     // get alignment results
     bool                           getStatus() const { return fSuccess; }

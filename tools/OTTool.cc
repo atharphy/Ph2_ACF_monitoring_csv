@@ -184,7 +184,10 @@ void OTTool::SetROCRegstoPerserve(FrontEndType pType, std::vector<std::string> p
                     auto& cROCRegsToPreserveThisROC = cROCRegsToPreserveThisHybrd->at(cChip->getIndex());
                     auto& cRegsToPerserve = cROCRegsToPreserveThisROC->getSummary<std::vector<std::string>>();
                     cRegsToPerserve.clear();
-                    for (const auto& cRegName : pListOfRegs) cRegsToPerserve.push_back(cRegName);
+                    for (const auto& cRegName : pListOfRegs){ 
+                        LOG (INFO) << BOLDBLUE << "Adding " << cRegName << " to list of ROC Regs to perserve..." << RESET;
+                        cRegsToPerserve.push_back(cRegName);
+                    }
                 }//ROCs
             }//Hybrds
         }//OGs

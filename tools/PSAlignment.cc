@@ -7,77 +7,82 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-PSAlignment::PSAlignment() : Tool() { fRegMapContainer.reset(); }
+PSAlignment::PSAlignment() : OTTool() { }
 
 PSAlignment::~PSAlignment() {}
-void PSAlignment::Reset()
-{
-    // set everything back to original values .. like I wasn't here
-    bool cWithPS = false;
-    LOG(INFO) << BOLDYELLOW << "PSAlignment::Reset - Resetting BE board and chip registers I've touched/modified" << RESET;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        LOG(DEBUG) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
-        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
-        cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
-        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
+// void PSAlignment::Reset()
+// {
+//     // set everything back to original values .. like I wasn't here
+//     bool cWithPS = false;
+//     LOG(INFO) << BOLDYELLOW << "PSAlignment::Reset - Resetting BE board and chip registers I've touched/modified" << RESET;
+//     for(auto cBoard: *fDetectorContainer)
+//     {
+//         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+//         LOG(DEBUG) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
+//         auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+//         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
+//         cVecBeBoardRegs.clear();
+//         for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
+//         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
-        std::vector<std::string> cRegsMod{"OutSetting", "LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw"};
-        for(auto cOpticalGroup: *cBoard)
-        {
-            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
-                cWithPS       = cWithPS || cIsPS;
-                LOG(DEBUG) << BOLDBLUE << "PSAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-                for(auto cChip: *cHybrid)
-                {
-                    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
-                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    for(auto cMapItem: cModMap)
-                    {
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        bool cLeaveReg      = false;
-                        for(auto cReg: cRegsMod) { cLeaveReg = cLeaveReg || (cMapItem.first.find(cReg) != std::string::npos); }
-                        if(!cLeaveReg)
-                        {
-                            LOG(DEBUG) << BOLDYELLOW << "PSAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                       << cMapItem.second.fValue << RESET;
-                            fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
-                        }
-                        else
-                        {
-                            LOG(DEBUG) << BOLDRED << "PSAlignment::Reset Leaving register " << cMapItem.first << " on Chip#" << +cChip->getId() << " set to 0x" << std::hex << cValueInMemory
-                                       << std::dec << RESET;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    if(fReadoutChipInterface != nullptr)
-    {
-        fReadoutChipInterface->ClearModifiedRegisterMap();
-        if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
-    }
-    resetPointers();
-}
+//         std::vector<std::string> cRegsMod{"OutSetting", "LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw"};
+//         for(auto cOpticalGroup: *cBoard)
+//         {
+//             bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
+//             for(auto cHybrid: *cOpticalGroup)
+//             {
+//                 auto cType    = FrontEndType::SSA;
+//                 bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+//                 cType         = FrontEndType::MPA;
+//                 bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
+//                 bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
+//                 cWithPS       = cWithPS || cIsPS;
+//                 LOG(DEBUG) << BOLDBLUE << "PSAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
+//                 for(auto cChip: *cHybrid)
+//                 {
+//                     if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
+//                     auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
+//                     LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+//                     for(auto cMapItem: cModMap)
+//                     {
+//                         auto cValueInMemory = cChip->getReg(cMapItem.first);
+//                         bool cLeaveReg      = false;
+//                         for(auto cReg: cRegsMod) { cLeaveReg = cLeaveReg || (cMapItem.first.find(cReg) != std::string::npos); }
+//                         if(!cLeaveReg)
+//                         {
+//                             LOG(DEBUG) << BOLDYELLOW << "PSAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+//                                        << cMapItem.second.fValue << RESET;
+//                             fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
+//                         }
+//                         else
+//                         {
+//                             LOG(DEBUG) << BOLDRED << "PSAlignment::Reset Leaving register " << cMapItem.first << " on Chip#" << +cChip->getId() << " set to 0x" << std::hex << cValueInMemory
+//                                        << std::dec << RESET;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     if(fReadoutChipInterface != nullptr)
+//     {
+//         fReadoutChipInterface->ClearModifiedRegisterMap();
+//         if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
+//     }
+//     resetPointers();
+// }
 
 void PSAlignment::Initialise()
 {
-    fSuccess = false;
-    // retreive original settings for all chips and all back-end boards
-    ContainerFactory::copyAndInitChip<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
-    ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
+    // prepare common OTTool
+    Prepare();
+    SetName("PSAlignment");
+
+    // list of chip registers that can be modified by this tool 
+    std::vector<std::string> cRegsMod{"OutSetting", "LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw"};
+    SetROCRegstoPerserve(FrontEndType::MPA, cRegsMod);
+    
+    // data containers to hold alignment parameters 
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fAlParsContainer);
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fL1AlParsContainer);
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fStubAlParsContainer);
@@ -108,9 +113,6 @@ void PSAlignment::Initialise()
                         auto& cStubAlParsThisChip = cStubAlParsThisHybrd->at(cChip->getIndex());
                         cStubAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>().clear();
                     }
-                    ChipRegMap&       theChipMap     = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
-                    const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                    theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end());
                 }
             }
         }
