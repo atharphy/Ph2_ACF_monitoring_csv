@@ -30,10 +30,6 @@ class OTTool : public Tool
 
     // expect thise to be the same for 
     void Prepare();
-    virtual void Running() ;
-    virtual void Stop() ;
-    virtual void Pause() ;
-    virtual void Resume() ;
     void Reset();
     void ConfigurePrintout(PrintConfig pCnfg);
     void SetROCRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs);
@@ -43,26 +39,23 @@ class OTTool : public Tool
     void ContinousReadout();
 
 protected:
-  private:
-    // Containers
-    DetectorDataContainer fBoardRegContainer;
     bool     fSuccess{false};
     uint8_t  fWithCIC{0};
     uint32_t fNevents{100};
-    uint16_t fOptimalLatency;
     uint32_t fReadoutPause{100};
 
+    void   PrintData(Ph2_HwDescription::BeBoard* pBoard);
+    void   EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
+    void   ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
+
+  private:
+    // Containers
+    DetectorDataContainer fBoardRegContainer;
     // configuration of print-out
     PrintConfig fPrintConfig;
 
     // list of registers to perserve
     std::vector<std::string> fBrdRegsToPerserve;
     DetectorDataContainer    fROCRegsToPerserve;
-
-    // void   ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
-    void   PrintData(Ph2_HwDescription::BeBoard* pBoard);
-    void   EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
-    void   ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
-    
 };
 #endif
