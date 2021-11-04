@@ -145,17 +145,17 @@ void ThrEqualization::run()
     // #########################
     // # Find global threshold #
     // #########################
-    if(PixelAlive::injType != PixelAlive::INJtype::None) ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", PixelAlive::thrOccupancy, startValue, stopValue);
+    if(PixelAlive::injType != PixelAlive::INJtype::None) ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", TARGETEFF /*PixelAlive::thrOccupancy*/, startValue, stopValue);
 
     // ##############################
     // # Run threshold equalization #
     // ##############################
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
 
     this->fDetectorDataContainer = &theOccContainer;
     ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
 
     ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, nEvtsBurst);
 
@@ -553,7 +553,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
     // ################
     this->measureData(nEvents, nEvtsBurst);
     // PixelAlive::run();
-    // theOccContainerMy = PixelAlive::analyze();
+    // theOccContainer = PixelAlive::analyze();
 }
 
 void ThrEqualization::chipErrorReport() const
