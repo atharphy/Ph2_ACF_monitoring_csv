@@ -71,9 +71,7 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     HistContainer<TH2F> hLatencyScan2D("LatencyScan2D", "LatencyScan2D", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyScan2DHistograms, hLatencyScan2D);
 
-    HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", TDCBINS, 0, TDCBINS);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
-
+    
     // hit map vs. latency
     HistContainer<TH2F> hLatencyHitMap("LatencyHitMap", "Latency HitMap", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, cNCh, 0, cNCh);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHitMaps, hLatencyHitMap);
@@ -81,6 +79,10 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     // hit count for TDC phase + latency
     HistContainer<TH2F> hLatencyTDC("LatencyTDC", "Latency TDC", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, TDCBINS, 0, TDCBINS);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyTDCHistograms, hLatencyTDC);
+
+    //
+    HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", TDCBINS, 0, TDCBINS);
+    RootContainerFactory::bookBoardHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
 
     // Cluster Count
     HistContainer<TH2F> hClusterOccupancy("CLusterOccupancy", "Cluster Occupancy", 1024, 0, 1024, 40 / 0.25, 0, 40);
@@ -291,9 +293,6 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
 void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
 {
     LOG (INFO) << BOLDMAGENTA << "Filling latency plots with TDC summary .."  << RESET;
-    //fillTriggerTDCPlots(pTDCsummary);
-    // float cOccGlbl = pOccupancy.getSummary<Occupancy, Occupancy>().fOccupancy;
-    // LOG (INFO) << BOLDBLUE << "Global Occ is " << cOccGlbl << RESET;
     for(auto board: pOccupancy)
     {
         for(auto opticalGroup: *board)
@@ -486,11 +485,15 @@ void DQMHistogramBeamTestCheck::fillTriggerTDCPlots(DetectorDataContainer& theTr
 {
     for(auto board: theTriggerTDC)
     {
+        // bool  cFill                  = (theTriggerTDC.hasSummary());
+        // if(!cFill){ LOG (INFO) << BOLDYELLOW << "No TDC container to fill for " << +board->getIndex() << RESET; }
+        // retreive TDC counts for the board 
+        auto  sum                      = board->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
         for(uint32_t tdcValue = 0; tdcValue < TDCBINS; ++tdcValue)
         {
-            auto  sum                      = board->at(0)->at(0)->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
             TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.at(board->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, sum[tdcValue]);
+            auto cBin = boardTriggerTDCHistogram->GetXaxis()->FindBin(tdcValue);
+            boardTriggerTDCHistogram->SetBinContent(cBin, sum[tdcValue]);
         }
     }
 }

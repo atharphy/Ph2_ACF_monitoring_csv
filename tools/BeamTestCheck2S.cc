@@ -49,6 +49,9 @@ void BeamTestCheck2S::Initialise()
     ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, float>>(*fDetectorContainer, fClusterOccupancyS0);
     ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, float>>(*fDetectorContainer, fClusterOccupancyS1);
 
+    // TDC per board 
+    ContainerFactory::copyAndInitBoard<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, fTDCContainer);
+    
     // pedestals
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fPedestalContainer);
 
@@ -103,16 +106,6 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-// histogram for TDC phase
-#ifdef __USE_ROOT__
-        std::stringstream cHistName;
-        cHistName << "h_TDC_BeBoard" << +cBoard->getId();
-        TObject* cObj = gROOT->FindObject(cHistName.str().c_str());
-        if(cObj) delete cObj;
-        TH1D* cHist1D = new TH1D(cHistName.str().c_str(), "TDC distribution; TDC phase; Count", 255, 0, 255);
-        bookHistogram(cBoard, "TDCdistribution", cHist1D);
-#endif
-
         // prepare injection
         PrepareForInternal(cBoard);
         // retreive events from FC7
@@ -130,16 +123,6 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     LOG(INFO) << BOLDBLUE << "Checking with external triggers - will readout " << fNevents << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-// histogram for TDC phase
-#ifdef __USE_ROOT__
-        std::stringstream cHistName;
-        cHistName << "h_TDC_BeBoard" << +cBoard->getId();
-        TObject* cObj = gROOT->FindObject(cHistName.str().c_str());
-        if(cObj) delete cObj;
-        TH1D* cHist1D = new TH1D(cHistName.str().c_str(), "TDC distribution; TDC phase; Count", 255, 0, 255);
-        bookHistogram(cBoard, "TDCdistribution", cHist1D);
-#endif
-
         // prepare injection
         PrepareForExternal(cBoard);
         LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
@@ -156,6 +139,7 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     }
     #ifdef __USE_ROOT__
         fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
+        fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);    
     #endif
 }
 void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx)
@@ -403,6 +387,13 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
         }                                                                 // OG
     }                                                                     // board
 
+    // zero container that hold TDC information per board 
+    auto cTDCContainer = fTDCContainer.at(pBoard->getIndex());
+    for(uint16_t cIndx = 0; cIndx < TDCBINS; cIndx++)
+    {
+       cTDCContainer->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+    }
+    
     // zero container
     // latency per hybrid
     auto cLatencyContainer   = fLatencyContainer.at(pBoard->getIndex());
@@ -491,6 +482,8 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
             {
                 if(cEventIter >= cEvents.end()) break;
                 uint8_t cTDCVal = (*cEventIter)->GetTDC();
+                cTDCContainer->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal]++;
+    
                 //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                 for(auto cOpticalGroup: *pBoard)
                 {
@@ -700,11 +693,6 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
 }
 void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard)
 {
-#ifdef __USE_ROOT__
-    const std::vector<Event*>& cEvents  = GetEvents();
-    auto                       cTDCdist = static_cast<TH1D*>(getHist(pBoard, "TDCdistribution"));
-    for(auto& cEvent: cEvents) cTDCdist->Fill(cEvent->GetTDC());
-#endif
     PrintData(pBoard);
 }
 

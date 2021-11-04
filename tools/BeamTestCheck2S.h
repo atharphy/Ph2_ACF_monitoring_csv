@@ -59,6 +59,8 @@ class BeamTestCheck2S : public OTTool
 
   private:
     // Containers
+    // TDC 
+    DetectorDataContainer fTDCContainer;
     // Latency
     DetectorDataContainer fLatencyContainer;
     DetectorDataContainer fLatencyContainerS0, fLatencyContainerS1;
