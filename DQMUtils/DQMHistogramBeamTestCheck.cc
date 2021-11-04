@@ -385,8 +385,9 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
                         uint32_t hits  = cHybridHitsS0->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
-                        hybridLatencyHistogramS0->SetBinContent(i, hits);
-                        hybridLatencyHistogramS0->SetBinError(i, error);
+                        auto cBin = hybridLatencyHistogramS0->FindBin((float)(fStartLatency+i));
+                        hybridLatencyHistogramS0->SetBinContent(cBin, hits);
+                        hybridLatencyHistogramS0->SetBinError(cBin, error);
                         hits_total = hits;
                     }
                     if(cFillS1)
@@ -394,13 +395,15 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
                         uint32_t hits  = cHybridHitsS1->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
                         float    error = 0;
                         if(hits > 0)  error = sqrt(float(hits));
-                        hybridLatencyHistogramS1->SetBinContent(i, hits);
-                        hybridLatencyHistogramS1->SetBinError(i, error);
+                        auto cBin = hybridLatencyHistogramS1->FindBin((float)(fStartLatency+i));
+                        hybridLatencyHistogramS1->SetBinContent(cBin, hits);
+                        hybridLatencyHistogramS1->SetBinError(cBin, error);
                         hits_total += hits;
                     }
-                    hybridLatencyHistogram->SetBinContent(i, hits_total);
+                    auto cBin = hybridLatencyHistogram->FindBin((float)(fStartLatency+i));
+                    hybridLatencyHistogram->SetBinContent(cBin, hits_total);
                     float    error = (hits_total > 0)  ? sqrt(float(hits_total)) : 0;
-                    hybridLatencyHistogram->SetBinError(i, error);
+                    hybridLatencyHistogram->SetBinError(cBin, error);
                 }
             }
         }

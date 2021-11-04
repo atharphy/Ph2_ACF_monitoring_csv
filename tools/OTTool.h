@@ -38,7 +38,7 @@ class OTTool : public Tool
     void ReadDataFromFile(std::string pRawFileName);
     void ContinousReadout();
     void SetName(std::string pName) { fMyName = pName; };
-
+    void ContinousReadoutTh(uint8_t cBrdId);
   protected:
     // success or fail
     bool fSuccess{false};
@@ -51,10 +51,14 @@ class OTTool : public Tool
     // readout related items
     uint32_t fNevents{100};
     uint32_t fReadoutPause{100};
+    uint32_t fEventCounter{0};
+    // waits 
+    uint32_t fThreadWait{100};//in us
 
     void PrintData(Ph2_HwDescription::BeBoard* pBoard);
     void EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
     void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
+    void WaitForTriggers(Ph2_HwDescription::BeBoard* pBoard);
 
   private:
     // Containers

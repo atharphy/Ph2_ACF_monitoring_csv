@@ -39,8 +39,7 @@ class BackEndAlignment : public LinkAlignmentOT
     void Pause() override;
     void Resume() override;
     void writeObjects();
-    void Reset();
-
+    
     // get alignment results
     bool getStatus() const { return fSuccess; }
 
@@ -51,16 +50,7 @@ class BackEndAlignment : public LinkAlignmentOT
   private:
     //
     bool fAlignStub = true;
-    // status
-    bool fSuccess;
     // Containers
-    DetectorDataContainer fRegMapContainer;
-    DetectorDataContainer fBoardRegContainer;
     DetectorDataContainer fEnabledFEs;
-
-// booking histograms
-#ifdef __USE_ROOT__
-//  DQMHistogramCic fDQMHistogram;
-#endif
 };
 #endif

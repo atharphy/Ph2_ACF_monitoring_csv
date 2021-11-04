@@ -2686,6 +2686,19 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 //     // need to return the number of events read
 //     return cNEvents;
 // }
+uint32_t D19cFWInterface::GetTriggerState()
+{
+    int cState = ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+    if(cState == 0)
+        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Idle" << RESET;
+    else if(cState == 1)
+        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+    else if(cState == 2)
+        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Paused. Waiting for readout" << RESET;
+    else
+        LOG(WARNING) << " Trigger State: " << BOLDRED << "Unknown" << RESET;
+    return cState;
+}
 uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
     // LOG(INFO) << BOLDYELLOW << "ReadData D19cFWInterface" << RESET;
@@ -2696,6 +2709,14 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     bool      pFailed    = false;
     EventType cEventType = pBoard->getEventType();
     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+
+    // here check if the trigger state machine is running 
+    // if it is not .. stop it , reset and start again 
+    if( GetTriggerState() == 0 ) // 0, idle - 1 running 
+    {
+        LOG (INFO) << BOLDRED << "Triggers not running.. no data to read " << RESET;
+        return 0;
+    }
 
     // don't wait
     // check what happens in system controller
@@ -2939,6 +2960,8 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     //    }
     //    if(fSaveToFile) fFileHandler->setData(pData);
 
+    // update local event counter
+    fEventCounter += cNEvents;
     // need to return the number of events read
     return cNEvents;
 }

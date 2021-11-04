@@ -136,6 +136,8 @@ class D19cFWInterface : public BeBoardFWInterface
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
     // I'm going to add a variable to hold the stub offset
     uint32_t fStubOffset = 0xFFFF;
+    // event counter 
+    uint32_t fEventCounter = 0; 
 
     // some useful stuff
     int  fResetAttempts;
@@ -214,6 +216,13 @@ class D19cFWInterface : public BeBoardFWInterface
      * \brief Detect the right FE Id to write the right registers (not working with the latest Firmware)
      */
     void SelectFEId();
+
+    void ResetEventCounter(){fEventCounter=0;}
+    uint32_t GetEventCounter(){return fEventCounter;}
+    /*!
+     * \brief Status of triggers 
+     */
+    uint32_t GetTriggerState();
     /*!
      * \brief Start a DAQ
      */

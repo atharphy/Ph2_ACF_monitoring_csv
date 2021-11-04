@@ -121,26 +121,36 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
 void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
 {
     LOG(INFO) << BOLDBLUE << "Checking with external triggers - will readout " << fNevents << RESET;
+
     for(auto cBoard: *fDetectorContainer)
     {
         // prepare injection
         PrepareForExternal(cBoard);
         LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
-
-        // if(pContinousReadout == 1) ContinousReadout(cBoard);
-        // else ReadNEvents(cBoard, fNevents);
-
-        // // process events
-        // //ProcessEvents(cBoard);
-        // // scan the latency - find best hit latency
-        ScanLatency(cBoard, pContinousReadout);
-        // scan the threshold, record number of hits; cluster occupancy
-        // ScanThreshold(cBoard);
     }
-    #ifdef __USE_ROOT__
-        fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
-        fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);    
-    #endif
+
+    if( pContinousReadout ) ContinousReadout();
+
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     // prepare injection
+    //     PrepareForExternal(cBoard);
+    //     LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
+
+    //     // if(pContinousReadout == 1) ContinousReadout(cBoard);
+    //     // else ReadNEvents(cBoard, fNevents);
+
+    //     // // process events
+    //     // //ProcessEvents(cBoard);
+    //     // // scan the latency - find best hit latency
+    //     ScanLatency(cBoard, pContinousReadout);
+    //     // scan the threshold, record number of hits; cluster occupancy
+    //     // ScanThreshold(cBoard);
+    // }
+    // #ifdef __USE_ROOT__
+    //     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
+    //     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);    
+    // #endif
 }
 void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx)
 {
@@ -699,9 +709,10 @@ void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard)
 void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
 {
     // configure trigger
+    // make sure I am accepting all triggers 
     uint8_t                                       cTriggerSource = 5;
     std::vector<std::string>                      cFcmdRegs{"trigger_source","triggers_to_accept"};
-    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource,fNevents};
+    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource,0};//fNevents};
     std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.clear();
