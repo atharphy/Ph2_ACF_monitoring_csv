@@ -143,6 +143,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("DataMonitor", "Data monitor", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("TestPulseCheck", "Test pulse check - inject with TP and perform latency scan", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     //
@@ -980,6 +981,21 @@ int main(int argc, char* argv[])
         t.show("Time to check data of the front-ends on the system: ");
     }
 
+    if(!cmd.foundOption("read") && cmd.foundOption("TestPulseCheck"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
+
+        BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.Inherit(&cTool);
+        cBeamTestCheck.Initialise();
+        // check with TP
+        cBeamTestCheck.CheckWithTP();
+        cBeamTestCheck.writeObjects();
+        cBeamTestCheck.Reset();
+    }
     if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
     {
         std::ofstream cGoodRuns;
@@ -993,15 +1009,12 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
 
-        // check with TP
-        cBeamTestCheck.CheckWithTP();
-
-        // uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
-        // int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
-        // cBeamTestCheck.SetReadoutPause(cReadoutPause);
+        
+        uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
+        int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+        cBeamTestCheck.SetReadoutPause(cReadoutPause);
+        cBeamTestCheck.CheckWithExternal(cContinuousReadout);
         // cBeamTestCheck.CheckWithInternal(cContinuousReadout);
-        // cBeamTestCheck.CheckWithExternal(cContinuousReadout);
-        // cBeamTestCheck.CheckWithExternal(cContinuousReadout);
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }

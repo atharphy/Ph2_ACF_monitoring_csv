@@ -18,6 +18,8 @@ BeamTestCheck2S::~BeamTestCheck2S() {}
 void BeamTestCheck2S::Initialise()
 {
     Prepare();
+    SetName("BeamTestCheck2S");
+
     initializeRecycleBin();
 
     // create groups for injection
@@ -87,7 +89,7 @@ void BeamTestCheck2S::CheckWithTP()
         // prepare injection
         PrepareForTP(cBoard);
         // scan the latency - find best hit latency
-        ScanLatency(cBoard);
+        ScanLatency(cBoard,1);
         // scan the threshold, record number of hits; cluster occupancy
         // ScanThreshold(cBoard);
     }
@@ -140,23 +142,21 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
 
         // prepare injection
         PrepareForExternal(cBoard);
-        if(pContinousReadout == 1)
-            ContinousReadout(cBoard);
-        else
-            ReadNEvents(cBoard, fNevents);
+        LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
 
-        // process events
-        ProcessEvents(cBoard);
+        // if(pContinousReadout == 1) ContinousReadout(cBoard);
+        // else ReadNEvents(cBoard, fNevents);
 
-        // scan the latency - find best hit latency
-        // ScanLatency(cBoard);
+        // // process events
+        // //ProcessEvents(cBoard);
+        // // scan the latency - find best hit latency
+        ScanLatency(cBoard, pContinousReadout);
         // scan the threshold, record number of hits; cluster occupancy
         // ScanThreshold(cBoard);
     }
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
-    //     fDQMHistogrammer.fillClusterOccupancyPlots(fClusterOccupancy);
-    // #endif
+    #ifdef __USE_ROOT__
+        fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
+    #endif
 }
 void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx)
 {
@@ -388,7 +388,7 @@ void BeamTestCheck2S::ScanThreshold(BeBoard* pBoard)
 void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 {
     // bool cUseReadNevents = false;
-    LOG(INFO) << "Scanning Latency ... ";
+    LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;;
     size_t cTotalNChnls = 0;
     size_t cNHybrids    = 0;
     for(auto board: *fDetectorContainer)
@@ -516,9 +516,16 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                                     }
                                 }
                                 if(cHit % 2 == 0)
+                                {
+                                    cLatencyContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency]++;
                                     cTotalHitsS0++;
+                                }
                                 else
+                                {
+                                    cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency]++;
                                     cTotalHitsS1++;
+                                }
+                                cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency]++;
                                 cHitContainer.at(pBoard->getIndex())
                                     ->at(cOpticalGroup->getIndex())
                                     ->at(cHybrid->getIndex())
@@ -527,20 +534,15 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                                 auto& cOccChip = cOccHybrid->at(cChip->getIndex());
                                 cOccChip->getChannel<Occupancy>(cHit).fOccupancy++;
                             }
-                            cLatencyContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] =
-                                cTotalHitsS0;
-                            cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] =
-                                cTotalHitsS1;
-                            cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] =
-                                (cTotalHitsS0 + cTotalHitsS1);
                         } // chip vector
                     }     // hybrid vector
                 }         // optical group vector
                 cEventIter += (1 + cTriggerMult);
             } while(cEventIter < cEvents.end());
-            cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNReadbackEvents);
+            // cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNReadbackEvents);
             // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
             cTotalHits = cTotalHitsS0 + cTotalHitsS1;
+
             if(cTotalHits > 0)
             {
                 if(cRefHits >= cMaxHits)
@@ -548,24 +550,24 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                     fOptimalLatency = cLat;
                     LOG(INFO) << BOLDYELLOW << "[!!!! new max !!!!]Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult)
                               << "... on average have found " << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
-                              << "In S0 " << cTotalHitsS0 / cNormalizationFactor << " hit(s); in S1 = " << cTotalHitsS1 / cNormalizationFactor << " hit(s)."
+                              << "In S0 " << cTotalHitsS0 << " hit(s); in S1 = " << cTotalHitsS1  << " hit(s)."
                               << "... optimal latency will be set to " << cLat << ". Normalization done with " << fNReadbackEvents << " events." << RESET;
                     cMaxHits = cRefHits;
                 }
                 else
                     LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
                               << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
-                              << "In S0 " << cTotalHitsS0 / cNormalizationFactor << " hit(s); in S1 = " << cTotalHitsS1 / cNormalizationFactor << " hit(s)."
+                              << "In S0 " << cTotalHitsS0  << " hit(s); in S1 = " << cTotalHitsS1  << " hit(s)."
                               << "Normalization done with " << fNReadbackEvents << " events." << RESET;
             }
             else
                 LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
                           << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
-                          << "In S0 " << cTotalHitsS0 / cNormalizationFactor << " hit(s); in S1 = " << cTotalHitsS1 / cNormalizationFactor << " hit(s) "
+                          << "In S0 " << cTotalHitsS0  << " hit(s); in S1 = " << cTotalHitsS1  << " hit(s) "
                           << " normalization done with " << fNReadbackEvents << " events." << RESET;
-#ifdef __USE_ROOT__
-            fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
-#endif
+            #ifdef __USE_ROOT__
+                fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
+            #endif
         }
         if(cOffset < (1 + cTriggerMult)) cOffset = (1 + cTriggerMult);
         cLat += cOffset;
@@ -578,11 +580,11 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
 {
     // configure trigger
     uint8_t                                       cTriggerSource   = 6;
-    uint16_t                                      cDelayAfterReset = 100;
-    uint16_t                                      cDelayTillNext   = 400;
-    std::vector<std::string>                      cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse"};
-    std::vector<uint16_t>                         cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext};
-    std::vector<uint16_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+    uint32_t                                      cDelayAfterReset = 100;
+    uint32_t                                      cDelayTillNext   = 5000;
+    std::vector<std::string>                      cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse", "triggers_to_accept"};
+    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext, fNevents };
+    std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.clear();
     for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
@@ -710,9 +712,9 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
 {
     // configure trigger
     uint8_t                                       cTriggerSource = 5;
-    std::vector<std::string>                      cFcmdRegs{"trigger_source"};
-    std::vector<uint16_t>                         cFcmdRegVals{cTriggerSource};
-    std::vector<uint16_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+    std::vector<std::string>                      cFcmdRegs{"trigger_source","triggers_to_accept"};
+    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource,fNevents};
+    std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.clear();
     for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)

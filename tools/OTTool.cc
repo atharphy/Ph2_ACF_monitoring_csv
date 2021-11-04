@@ -233,31 +233,41 @@ void OTTool::PrintData(BeBoard* pBoard)
 // continuous readout
 void OTTool::ContinousReadout(BeBoard* pBoard)
 {
+    LOG (INFO) << BOLDBLUE << "OTTool::ContinousReadout with " << fNevents << RESET;
     std::vector<uint32_t> cCompleteData(0);
     fBeBoardInterface->Start(pBoard);
     size_t   cCounter = 0;
     uint32_t cNevents = 0;
     bool     cBreak   = false;
     bool     cWait    = false;
+    std::vector<size_t> cTriggerCounters(0);
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
-        std::vector<uint32_t> cData(0);
-        cNevents += ReadData(pBoard, cData, cWait);
-        if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-        auto cTriggerCounter = fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        if(cCounter % 100 == 0)
-            LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounter << " triggers received and " << +cNevents << " events readout so far... " << RESET;
+        // this will check for events while I'm reading.. I dont want to do that 
+        // std::vector<uint32_t> cData(0);
+        // cNevents += ReadData(pBoard, cData, cWait);
+        // if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+        auto cTriggerCounter = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+        cTriggerCounters.push_back( cTriggerCounter ); 
+        if(cCounter % 200 == 0 && cCounter > 0 )
+        {
+            LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size()-1] << " triggers received" 
+                << RESET;
+        }
         cCounter++;
-        cBreak = (cNevents >= fNevents);
+        cBreak = (cTriggerCounter >= fNevents);
+        // cBreak = (cNevents >= fNevents);
     } while(!cBreak);
+    //for( auto cCounter : cTriggerCounters ) LOG (INFO) << cCounter << RESET;
     fBeBoardInterface->Stop(pBoard);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::vector<uint32_t> cData(0);
-    cNevents += ReadData(pBoard, cData, false);
+    cNevents += ReadData(pBoard, cData, cWait);
     if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
     DecodeData(pBoard, cCompleteData, cNevents, fBeBoardInterface->getBoardType(pBoard));
-    LOG(INFO) << BOLDYELLOW << "BeamTestCheck2S::ContinousReadout readout " << cNevents << " when " << fNevents << " were requested." << RESET;
+    LOG (INFO) << BOLDYELLOW << fMyName << " : Mean trigger rate is " << cTriggerCounters[cTriggerCounters.size()-1]/(cCounter*fReadoutPause*1e-6)  << " Hz" 
+        << " .... readout " << cNevents << " when " << fNevents << " were requested." << RESET;
 }
 
 // event print-out

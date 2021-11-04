@@ -71,7 +71,7 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     HistContainer<TH2F> hLatencyScan2D("LatencyScan2D", "LatencyScan2D", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyScan2DHistograms, hLatencyScan2D);
 
-    HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", TDCBINS, -0.5, TDCBINS - 0.5);
+    HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", TDCBINS, 0, TDCBINS);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
 
     // hit map vs. latency
@@ -290,6 +290,8 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
 //
 void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
 {
+    LOG (INFO) << BOLDMAGENTA << "Filling latency plots with TDC summary .."  << RESET;
+    //fillTriggerTDCPlots(pTDCsummary);
     // float cOccGlbl = pOccupancy.getSummary<Occupancy, Occupancy>().fOccupancy;
     // LOG (INFO) << BOLDBLUE << "Global Occ is " << cOccGlbl << RESET;
     for(auto board: pOccupancy)
@@ -309,45 +311,48 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorData
                     cHist->SetBinContent(cBin, cOcc * chip->size());
                     cHist->SetBinError(cBin, cError * chip->size());
                     uint16_t cChnlIndx = 0;
-                    uint16_t cOffset   = chip->getId() * chip->size() / 2.;
+                    uint16_t cOffset   = chip->getId() * chip->size() / 2;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
-                        uint16_t cStripOffset = (cChnlIndx % 2 == 0) ? cOffset : cHitMap->GetYaxis()->GetNbins() / 2. + cOffset;
-                        uint16_t cStripId     = cStripOffset + cChnlIndx / 2.0;
+                        uint16_t cStripOffset = (cChnlIndx % 2 == 0) ? cOffset : cHitMap->GetYaxis()->GetNbins() / 2 + cOffset;
+                        uint16_t cStripId     = cStripOffset + cChnlIndx / 2;
                         if(hybrid->getId() % 2 == 0)
                         {
-                            cStripOffset = (cChnlIndx % 2 == 0) ? cHitMap->GetYaxis()->GetNbins() / 2. : cHitMap->GetYaxis()->GetNbins();
-                            cStripId     = cStripOffset - (chip->getId() * chip->size() / 2. + cChnlIndx / 2.0);
+                            cStripOffset = (cChnlIndx % 2 == 0) ? cHitMap->GetYaxis()->GetNbins() / 2 : cHitMap->GetYaxis()->GetNbins();
+                            cStripId     = cStripOffset - (chip->getId() * chip->size() / 2 + cChnlIndx / 2);
                         }
+                        if( channel.fOccupancy > 0 )
+                            LOG (DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() 
+                                    << " Channel " << cChnlIndx
+                                    << " strip number " << cChnlIndx / 2.0
+                                    << " strip offset is " << cStripOffset 
+                                    << " global strip number " << +cStripId
+                                    << " hit is in S" << +(cChnlIndx % 2 == 0)
+                                    << " - have found " << channel.fOccupancy << " hits."
+                                    << RESET;
+
                         cBin = cHitMap->FindBin((float)pLatency, cStripId);
                         cHitMap->SetBinContent(cBin, channel.fOccupancy);
                         cHitMap->SetBinError(cBin, channel.fOccupancyError);
                         cChnlIndx++;
                     }
 
-                    TH2F* cLatencyTDC =
-                        fLatencyTDCHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cLatencyTDC = fLatencyTDCHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     for(uint8_t cTDC = 0; cTDC < TDCBINS; cTDC++)
                     {
                         cBin = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
-                        uint32_t cNhits =
-                            pTDCsummary.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
-                        // LOG (INFO) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency
-                        //         << " bin of " << +cBin
-                        //         <<  " OG" << +opticalGroup->getId()
-                        //         << " Hybrid" << +hybrid->getId()
-                        //         << " Chip" << +chip->getId()
-                        //         << " - on average have found " << cNhits << " channels with a hit [per chip per event]."
-                        //         << RESET;
+                        uint32_t cNhits =pTDCsummary.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
+                        LOG (DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency
+                                << " bin of " << +cBin
+                                <<  " OG" << +opticalGroup->getId()
+                                << " Hybrid" << +hybrid->getId()
+                                << " Chip" << +chip->getId()
+                                << " - on average have found " << cNhits << " channels with a hit [per chip per event]."
+                                << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
                         cLatencyTDC->SetBinError(cBin, std::sqrt((float)cNhits)); // for now
                     }
                 }
-                // float cError = 0;
-                // if(cNhits > 0) cError = sqrt(float(cNhits));
-                // auto cBin = cHist->FindBin( (float)pLatency );
-                // cHist->SetBinContent(cBin, cNhits);
-                // cHist->SetBinError(cBin, cError);
             }
         }
     }
@@ -355,41 +360,48 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorData
 
 void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1)
 {
+    LOG (INFO) << BOLDMAGENTA << "Filling latency plots for S0/S1 .."  << RESET;
+    
     for(auto board: theLatencyS0)
     {
         auto& cBrdHitsS1 = theLatencyS1.at(board->getIndex());
         for(auto opticalGroup: *board)
         {
             auto& cOGHitsS1 = cBrdHitsS1->at(opticalGroup->getIndex());
-            for(auto hybrid: *opticalGroup)
+            for(auto cHybridHitsS0: *opticalGroup)
             {
-                auto& cHybridHitsS1 = cOGHitsS1->at(hybrid->getIndex());
+                auto& cHybridHitsS1 = cOGHitsS1->at(cHybridHitsS0->getIndex());
 
-                bool cFillS0 = (hybrid->hasSummary());
+                bool cFillS0 = (cHybridHitsS0->hasSummary());
                 bool cFillS1 = (cHybridHitsS1->hasSummary());
 
-                // if(cFillS0) LOG (INFO) << BOLDYELLOW << "Filling latnecy plots for S0" << RESET;
-                // if(cFillS1) LOG (INFO) << BOLDYELLOW << "Filling latency plots for S1" << RESET;
-                TH1F* hybridLatencyHistogramS0 = fLatencyHistogramsS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* hybridLatencyHistogramS1 = fLatencyHistogramsS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogram   = fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(cHybridHitsS0->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogramS0 = fLatencyHistogramsS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(cHybridHitsS0->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogramS1 = fLatencyHistogramsS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(cHybridHitsS1->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
+                    uint32_t hits_total=0;
                     if(cFillS0)
                     {
-                        uint32_t hits  = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        uint32_t hits  = cHybridHitsS0->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
                         hybridLatencyHistogramS0->SetBinContent(i, hits);
                         hybridLatencyHistogramS0->SetBinError(i, error);
+                        hits_total = hits;
                     }
                     if(cFillS1)
                     {
                         uint32_t hits  = cHybridHitsS1->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
                         float    error = 0;
-                        if(hits > 0) error = sqrt(float(hits));
+                        if(hits > 0)  error = sqrt(float(hits));
                         hybridLatencyHistogramS1->SetBinContent(i, hits);
                         hybridLatencyHistogramS1->SetBinError(i, error);
+                        hits_total += hits;
                     }
+                    hybridLatencyHistogram->SetBinContent(i, hits_total);
+                    float    error = (hits_total > 0)  ? sqrt(float(hits_total)) : 0;
+                    hybridLatencyHistogram->SetBinError(i, error);
                 }
             }
         }
