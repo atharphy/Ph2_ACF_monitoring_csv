@@ -403,7 +403,7 @@ void OTTool::ContinousReadout()
     // exit condition for this run 
     bool cAllFinished=false;
     size_t cWaitCounter=0;
-    LOG (INFO) << BOLDBLUE << fMyName << ":Main thread - starting to wait for events to be readout.." << RESET;
+    LOG (DEBUG) << BOLDBLUE << fMyName << ":Main thread - starting to wait for events to be readout.." << RESET;
     do
     {
         size_t cNFinished=0;
@@ -418,7 +418,7 @@ void OTTool::ContinousReadout()
             // finished if I've received all events or if someone else has stopped triggers for me 
             if( cBrdEvntCntrs[cBoard->getIndex()] >= fNevents || cInterface->GetTriggerState() == 0)
             {
-                LOG (INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard"
+                LOG (DEBUG) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard"
                     << +cBoard->getId() 
                     << RESET;
                 cNFinished++;
@@ -546,7 +546,7 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     cLclEvntCntr += ReadData((*cBoardIter), cData, cWait);
     if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
     DecodeData((*cBoardIter), cCompleteData, cLclEvntCntr, fBeBoardInterface->getBoardType((*cBoardIter)));
-    LOG (INFO) << BOLDYELLOW << fMyName << " : Mean trigger rate is " << cTriggerCounters[cTriggerCounters.size()-1]/(cWaitCounter*fReadoutPause*1e-6)  << " Hz" 
+    LOG (DEBUG) << BOLDYELLOW << fMyName << " : Mean trigger rate is " << cTriggerCounters[cTriggerCounters.size()-1]/(cWaitCounter*fReadoutPause*1e-6)  << " Hz" 
         << " .... readout " << cLclEvntCntr << " events from the FC7"
         << RESET;
 }

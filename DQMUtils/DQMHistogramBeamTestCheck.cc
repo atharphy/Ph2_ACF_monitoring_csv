@@ -292,7 +292,7 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
 //
 void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
 {
-    LOG (INFO) << BOLDMAGENTA << "Filling latency plots with TDC summary .."  << RESET;
+    LOG (DEBUG) << BOLDMAGENTA << "Filling latency plots with TDC summary .."  << RESET;
     for(auto board: pOccupancy)
     {
         for(auto opticalGroup: *board)

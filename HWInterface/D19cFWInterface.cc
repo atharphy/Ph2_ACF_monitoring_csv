@@ -2744,7 +2744,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // if it is not .. stop it , reset and start again 
     if( GetTriggerState() == 0 ) // 0, idle - 1 running 
     {
-        LOG (INFO) << BOLDRED << "Triggers not running.. no data to read " << RESET;
+        LOG (DEBUG) << BOLDRED << "Triggers not running.. no data to read " << RESET;
         return 0;
     }
 
