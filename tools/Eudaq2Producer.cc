@@ -136,69 +136,12 @@ void Eudaq2Producer::DoConfigure()
     // auto cRunNumber = GetRunNumber();
     auto cEudaqConf = GetConfiguration();
 
-    // Set thresholds -- two different possibilities implemented
-    // Possibility 1: Global threshold value read from config file for all chips 
-    //                Needs to have either ThresholdMPA or ThresholdCBC to be defined in EUDAQ config file
     // get MPA and SSA thresholds
-    uint8_t cThresholdMPA = std::stoi(cEudaqConf->Get("ThresholdMPA", "75"));
-    uint8_t cThresholdSSA = std::stoi(cEudaqConf->Get("ThresholdSSA", "35"));
-    if (!cEudaqConf->Get("ThresholdMPA", "").empty() || !cEudaqConf->Get("ThresholdCBC", "").empty()) 
-    {
-        LOG(INFO) << BOLDYELLOW << "Using global threshold setting to set common threshold for all chips!" << RESET;
-        // get CBC threshold
-        uint16_t cThresholdCBC = std::stoi(cEudaqConf->Get("ThresholdCBC", "550"));
-        for (auto cBoard : *fDetectorContainer) {
-            for (auto cOpticalGroup : *cBoard) {
-                for (auto cHybrid : *cOpticalGroup) {
-                    for (auto cChip : *cHybrid) {
-                        if (cChip->getFrontEndType() == FrontEndType::CBC3)
-                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThresholdCBC);
-                        else if (cChip->getFrontEndType() == FrontEndType::MPA)
-                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThresholdMPA);
-                        else if (cChip->getFrontEndType() == FrontEndType::SSA)
-                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThresholdSSA);
-                    }
-                }
-            }
-        }
-    }
-    // Possibility 2: Set threshold per chip relative to the measured pedestal 
-    //                Threshold set per chip is 'chip_threshold = pedestal + relative_threshold' (negative values possible!)
-    //                IMPORTANT: please note
-    //                  * the register 'threshold' register has to be removed from the Ph2_ACF xml config file for all hybrids
-    //                  * the individual chip thresholds need to be configured at their pedestal (e.g. by the PedeNoise class ran previously)
-    else if (!cEudaqConf->Get("RelativeThreshold", "").empty()) 
-    {
-        LOG(INFO) << BOLDYELLOW << "Using relativ threshold method to set threshold per chip!" << RESET;
-        int cRelativeThreshold = std::stoi(cEudaqConf->Get("RelativeThreshold", "0"));  // 0 will correspond to a threshold at the pedestal
-        // Create a data container to hold the individual chip thresholds
-        DetectorDataContainer cChipThreshContainer;
-        ContainerFactory::copyAndInitChip<uint16_t>(*this->fDetectorContainer, cChipThreshContainer);
-        for (auto cBoard : *fDetectorContainer) {
-            for (auto cOpticalGroup : *cBoard) {
-                for (auto cHybrid : *cOpticalGroup) {
-                    for (auto cChip : *cHybrid) {
-                        auto & cRegister = cChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-                        // Fill chip threshold with configured value
-                        if (cChip->getFrontEndType() == FrontEndType::CBC3)
-                            cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
-                        else if (cChip->getFrontEndType() == FrontEndType::MPA)
-                        {
-                            cRegister = cChip->getReg("ThDAC0") << 8;
-                            cThresholdMPA = cRegister;
-                        }
-                        else if (cChip->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            cRegister = cChip->getReg("Bias_THDAC"); 
-                            cThresholdSSA = cRegister;
-                        }
-                        LOG(INFO) << "Set Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) + cRelativeThreshold << RESET;
-                        this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister) + cRelativeThreshold);
-                    }
-                }
-            }
-        }
-    }
+    fThresholdMPA = std::stoi(cEudaqConf->Get("ThresholdMPA", "75"));
+    fThresholdSSA = std::stoi(cEudaqConf->Get("ThresholdSSA", "35"));
+    // get CBC threshold
+    fThresholdCBC = std::stoi(cEudaqConf->Get("ThresholdCBC", "550"));
+    fRelativeThreshold = std::stoi(cEudaqConf->Get("RelativeThreshold", "0"));  // 0 will correspond to a threshold at the pedestal
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled    = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
@@ -259,7 +202,7 @@ void Eudaq2Producer::DoConfigure()
     if(fIsPS && fEnableInjection)
     {
         uint8_t cPulseAmplitude = std::stoi(cEudaqConf->Get("PulseAmplitude", "120"));
-        EnableDigitalInjection(cPulseAmplitude, cThresholdMPA, cThresholdSSA);
+        EnableDigitalInjection(cPulseAmplitude, fThresholdMPA, fThresholdSSA);
     }
 
     fConfigured = true;
@@ -270,6 +213,69 @@ void Eudaq2Producer::DoConfigure()
 void Eudaq2Producer::DoStartRun()
 {
     LOG(INFO) << "[CMS-OT Producer] Starting Run..." << RESET;
+
+    auto cEudaqConf = GetConfiguration();
+    // Save current threshold values per chip to restore them in the stop state
+    // Save individual chip thresholds in a data container
+    ContainerFactory::copyAndInitChip<uint16_t>(*this->fDetectorContainer, fChipThreshContainer);
+    for (auto cBoard : *fDetectorContainer) {
+        for (auto cOpticalGroup : *cBoard) {
+            for (auto cHybrid : *cOpticalGroup) {
+                for (auto cChip : *cHybrid) {
+                    auto & cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    // Fill chip threshold with current value
+                    if (cChip->getFrontEndType() == FrontEndType::CBC3)
+                        cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
+                    else if (cChip->getFrontEndType() == FrontEndType::MPA)
+                        cRegister = cChip->getReg("ThDAC0");
+                    else if (cChip->getFrontEndType() == FrontEndType::SSA)
+                        cRegister = cChip->getReg("Bias_THDAC"); 
+                }
+            }
+        }
+    }
+
+    // Set thresholds -- two different possibilities implemented
+    // Possibility 1: Global threshold value read from config file for all chips 
+    //                Needs to have either ThresholdMPA or ThresholdCBC to be defined in EUDAQ config file
+    if (!cEudaqConf->Get("ThresholdMPA", "").empty() || !cEudaqConf->Get("ThresholdCBC", "").empty()) 
+    {
+        LOG(INFO) << BOLDYELLOW << "Using global threshold setting to set common threshold for all chips!" << RESET;
+        for (auto cBoard : *fDetectorContainer) {
+            for (auto cOpticalGroup : *cBoard) {
+                for (auto cHybrid : *cOpticalGroup) {
+                    for (auto cChip : *cHybrid) {
+                        if (cChip->getFrontEndType() == FrontEndType::CBC3)
+                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdCBC);
+                        else if (cChip->getFrontEndType() == FrontEndType::MPA)
+                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdMPA);
+                        else if (cChip->getFrontEndType() == FrontEndType::SSA)
+                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdSSA);
+                    }
+                }
+            }
+        }
+    }
+    // Possibility 2: Set threshold per chip relative to the measured pedestal 
+    //                Threshold set per chip is 'chip_threshold = pedestal + relative_threshold' (negative values possible!)
+    //                IMPORTANT: please note
+    //                  * the register 'threshold' register has to be removed from the Ph2_ACF xml config file for all hybrids
+    //                  * the individual chip thresholds need to be configured at their pedestal (e.g. by the PedeNoise class ran previously)
+    else if (!cEudaqConf->Get("RelativeThreshold", "").empty()) 
+    {
+        LOG(INFO) << BOLDYELLOW << "Using relativ threshold method to set threshold per chip!" << RESET;
+        for (auto cBoard : *fDetectorContainer) {
+            for (auto cOpticalGroup : *cBoard) {
+                for (auto cHybrid : *cOpticalGroup) {
+                    for (auto cChip : *cHybrid) {
+                        auto & cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                        LOG(INFO) << "Set Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) + fRelativeThreshold << RESET;
+                        this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister) + fRelativeThreshold);
+                    }
+                }
+            }
+        }
+    }
 
     // Send BORE event at beginning of run with important register information
     eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
@@ -309,7 +315,6 @@ void Eudaq2Producer::DoStartRun()
 
 
     // Getting Run Number and EUDAQ configuration file object
-    auto cEudaqConf = GetConfiguration();
     auto cRunNumber = GetRunNumber();
 
     // Get path to Ph2ACF Raw data and SLink data
@@ -397,6 +402,20 @@ void Eudaq2Producer::DoStopRun()
     {
         LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Closing file handler for .daq " << RESET;
         fSLinkFileHandler->closeFile();
+    }
+
+    // Reset chip thresholds to original values
+    LOG(INFO) << BOLDYELLOW << "Resetting chip thresholds!" << RESET;
+    for (auto cBoard : *fDetectorContainer) {
+        for (auto cOpticalGroup : *cBoard) {
+            for (auto cHybrid : *cOpticalGroup) {
+                for (auto cChip : *cHybrid) {
+                    auto & cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    LOG(INFO) << "Reset Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) << RESET;
+                    this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister));
+                }
+            }
+        }
     }
     LOG(INFO) << "[CMS-OT Producer] Stopped Run" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Stopped Run");
