@@ -58,7 +58,6 @@ void Eudaq2Producer::DoInitialise()
     this->InitializeHw(fPathToHWFile);
     this->InitializeSettings(fPathToHWFile, outp);
     LOG(INFO) << outp.str();
-    this->ConfigureHw();
 
     // check if PS module it is
     for(auto cBoard : *fDetectorContainer)
@@ -69,61 +68,60 @@ void Eudaq2Producer::DoInitialise()
       } 
     }
 
-    PSAlignment cPSAlignment;
-    if(fIsPS)
-    {
+    bool cIgnoreI2c = false; 
+    bool cReInitialize = true;    
+    bool cReconfigure = (cEudaqIni->Get("Reconfigure", "false") == "true") ? true : false;
+    if (cReconfigure) {
+        this->ConfigureHw(cIgnoreI2c, cReInitialize);
+      
         // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
         cPSAlignment.Inherit(this);
         cPSAlignment.Initialise();
         cPSAlignment.MapMPAOutputs();
-    }
+        cPSAlignment.Reset();
 
-    // align CIC-lpGBT-BE
-    LinkAlignmentOT cLinkAlignment;
-    cLinkAlignment.Inherit(this);
-    try
-    {
-        cLinkAlignment.Start(0);
-    }
-    catch(const std::exception& e)
-    {
-        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here [1]" << RESET;
-        throw std::runtime_error(std::string("Could not align link in the BE... stopping here."));
-    }
-    cLinkAlignment.waitForRunToBeCompleted();
-    cLinkAlignment.dumpConfigFiles();
-    if(!cLinkAlignment.getStatus())
-    {
-        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here [2]" << RESET;
-        throw std::runtime_error(std::string("Could not align link in the BE... stopping here."));
-    }
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(this);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            exit(0);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            exit(0);
+        }
 
-    // align FEs - CIC
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit(this);
-    cCicAligner.Start(0);
-    cCicAligner.waitForRunToBeCompleted();
-    cCicAligner.dumpConfigFiles();
+        // align FEs - CIC
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(this);
+        cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
+        cCicAligner.dumpConfigFiles();
 
-    // time align stubs with L1 data in the BE
-    if(!cSkipAlignment)
-    {
-        StubBackEndAlignment cStubBackEndAligner;
-        cStubBackEndAligner.Inherit(this);
-        cStubBackEndAligner.Start(0);
-        cStubBackEndAligner.waitForRunToBeCompleted();
+        // time align stubs with L1 data in the BE
+        if(!cSkipAlignment)
+        {
+            StubBackEndAlignment cStubBackEndAligner;
+            cStubBackEndAligner.Inherit(this);
+            cStubBackEndAligner.Start(0);
+            cStubBackEndAligner.waitForRunToBeCompleted();
+        }
 
-        // cStubBackEndAligner.Initialise();
-        // cStubBackEndAligner.FindStubLatency();
-        // cStubBackEndAligner.Reset();
-        // cPSAlignment.Align();
-    }
-
-    // now align data between SSA-MPA
-    if(fIsPS && !cSkipAlignment)
-    {
-        cPSAlignment.dumpConfigFiles();
-        cPSAlignment.Align();
+        // now align data between SSA-MPA
+        if(fIsPS && !cSkipAlignment)
+        {
+            cPSAlignment.dumpConfigFiles();
+            cPSAlignment.Align();
+        }
     }
 
     fInitialised = true;
