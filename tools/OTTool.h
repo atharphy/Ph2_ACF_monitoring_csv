@@ -13,6 +13,7 @@
 #ifndef OTTool_h__
 #define OTTool_h__
 
+#include <signal.h>
 #include "Tool.h"
 using namespace Ph2_HwDescription;
 
@@ -21,6 +22,7 @@ struct PrintConfig
     uint8_t  fVerbose    = 0;
     uint32_t fPrintEvery = 1;
 };
+
 
 class OTTool : public Tool
 {
@@ -38,7 +40,9 @@ class OTTool : public Tool
     void ReadDataFromFile(std::string pRawFileName);
     void ContinousReadout();
     void SetName(std::string pName) { fMyName = pName; };
-    void ContinousReadoutTh(uint8_t cBrdId);
+    void TriggerMonitor(uint32_t pDelta_s=1); 
+    static void StopTriggerMonitor(int signum){ LOG (INFO) << BOLDRED << "Caught Ctrl+C from command line [signum == " << signum << RESET; throw Exception("Ctrl+C caught from command line..");};
+
   protected:
     // success or fail
     bool fSuccess{false};
@@ -54,11 +58,15 @@ class OTTool : public Tool
     uint32_t fEventCounter{0};
     // waits 
     uint32_t fThreadWait{100};//in us
+    // stop trigger monitor  
+    uint8_t  fStopTriggerMonitor{0};
 
     void PrintData(Ph2_HwDescription::BeBoard* pBoard);
     void EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
     void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
     void WaitForTriggers(Ph2_HwDescription::BeBoard* pBoard);
+    void ContinousReadoutTh(uint8_t cBrdId);
+    void CatchStop();
 
   private:
     // Containers

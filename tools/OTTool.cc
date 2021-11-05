@@ -274,6 +274,93 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
         << " .... readout " << cNevents << " when " << fNevents << " were requested." << RESET;  
 }
 
+// poll boards for number of triggers 
+void OTTool::TriggerMonitor(uint32_t pDelta_s)
+{
+    // launch thread to catch ctrl+c from command line 
+    std::thread cCatchStopTh; 
+
+    // make sure that triggers have been started on all board
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        if( cInterface->GetTriggerState() == 0 ) fBeBoardInterface->Start(cBoard);
+    }
+
+    // get start time for monitoring 
+    auto startTimeUTC_us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count(); 
+    // create text file to store data 
+    // file name : 
+    std::stringstream cFileName;
+    cFileName << fDirectoryName << "TriggerMonitor_" << startTimeUTC_us << ".dat"; 
+    // file format : 
+    std::ofstream cLogFile;
+    cLogFile.open(cFileName.str(), std::ios::out | std::ios::app);
+    cLogFile.close();
+    LOG (INFO) << fMyName << ":Starting trigger monitor ... Results will be saved to " << cFileName.str() << RESET;
+    cCatchStopTh = std::thread(&OTTool::CatchStop, this);
+    try
+    {
+        size_t cLoopCounter=0;
+        // initialize container to hold trigger counters
+        DetectorDataContainer cTrigCounters; 
+        ContainerFactory::copyAndInitBoard<std::vector<uint32_t>>(*fDetectorContainer, cTrigCounters);
+        for(auto cBoard: *fDetectorContainer)
+        {
+            auto& cCounterThisBrd = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
+            cCounterThisBrd.clear();
+        }
+        auto cTime0         = startTimeUTC_us; 
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(pDelta_s*1000));
+            auto currentTimeUTC_us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count(); 
+            auto cDeltaTime_us    = currentTimeUTC_us-cTime0;
+            cLogFile.open(cFileName.str(), std::ios::out | std::ios::app);
+            for(auto cBoard: *fDetectorContainer)
+            {
+                auto& cCounterThisBrd = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
+                cCounterThisBrd.push_back(fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter"));
+                auto cDeltaTriggers = (cCounterThisBrd.size() == 1 ) ? cCounterThisBrd[0] : cCounterThisBrd[cCounterThisBrd.size()-1]-cCounterThisBrd[cCounterThisBrd.size()-2];
+                auto cTriggerSource  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+                auto cTriggerRateInst = cDeltaTriggers/(cDeltaTime_us*1e-6); // Hz 
+                // output to terminal 
+                LOG (INFO) << BOLDBLUE << "Monitoring triggers...BeBoard#" << +cBoard->getId() 
+                    << " --- received " << cCounterThisBrd[cCounterThisBrd.size()-1] << " triggers so far "
+                    << " --- " << cDeltaTriggers  << " triggers since the last check "
+                    << " Inst. Trigger rate " << std::scientific  << std::setprecision(3) << cTriggerRateInst << std::dec << " Hz "
+                    <<  " [ trigger source is " << +cTriggerSource  << " ]"
+                    << RESET;
+                // send to file once you've got more than one point 
+                if( cCounterThisBrd.size() > 1 ) cLogFile << +cBoard->getId() << "\t" << currentTimeUTC_us << "\t" << cDeltaTriggers << "\n";
+            }
+            cLogFile.close();
+            cTime0 = currentTimeUTC_us; 
+            cLoopCounter++;
+        }while( fStopTriggerMonitor == 0 );
+    }
+    catch (const std::exception& e)
+    {
+        LOG (INFO) << BOLDBLUE << "CatchStop caught ctrl+c ... will now exit main monitoring thread" << RESET;
+        // wait for all threads to finish 
+        cCatchStopTh.join();
+        cLogFile.close();
+    }  
+}
+// thread to monitor exit signal from main program 
+void OTTool::CatchStop()
+{
+    try
+    {
+        signal(SIGINT, StopTriggerMonitor);
+    }
+    catch (const std::exception& e)
+    {
+        LOG (INFO) << BOLDBLUE << "Caught stop signal from terminal..." << RESET;
+        fStopTriggerMonitor=1;
+    }
+}
 // poll board from data
 // one thread per BeBoard connected to this computer 
 void OTTool::ContinousReadout()
