@@ -60,6 +60,7 @@ class OTTool : public Tool
     uint32_t fThreadWait{100};//in us
     // stop trigger monitor  
     uint8_t  fStopTriggerMonitor{0};
+    
 
     void PrintData(Ph2_HwDescription::BeBoard* pBoard);
     void EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);

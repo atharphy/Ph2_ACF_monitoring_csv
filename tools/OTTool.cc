@@ -66,7 +66,7 @@ void OTTool::Reset()
                     for(auto cMapItem: cModMap)
                     {
                         // skip registers that I should perserve for this ROC
-                        if(std::find(cRegsToPerserve.begin(), cRegsToPerserve.end(), cMapItem.first) != cRegsToPerserve.end()) continue;
+                        if(std::find(cRegsToPerserve.begin(), cRegsToPerserve.end(), cMapItem.first) != cRegsToPerserve.end()){ LOG (DEBUG) << BOLDBLUE << "Skipping reconfiguration of " << cMapItem.first << RESET; continue;}
 
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         LOG(DEBUG) << BOLDBLUE << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
@@ -76,6 +76,8 @@ void OTTool::Reset()
                 }
             }
         }
+
+
     }
     if(fReadoutChipInterface != nullptr)
     {
@@ -83,6 +85,9 @@ void OTTool::Reset()
         if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
     }
     resetPointers();
+
+    // for  now .. keep triggers running on all boards
+    for( auto cBoard : *fDetectorContainer ) fBeBoardInterface->Start(cBoard); 
 }
 
 // Initialization function
@@ -320,6 +325,9 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
             cLogFile.open(cFileName.str(), std::ios::out | std::ios::app);
             for(auto cBoard: *fDetectorContainer)
             {
+                fBeBoardInterface->setBoard(cBoard->getId());
+                auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                auto cTriggerState = cInterface->GetTriggerState(); 
                 auto& cCounterThisBrd = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
                 cCounterThisBrd.push_back(fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter"));
                 auto cDeltaTriggers = (cCounterThisBrd.size() == 1 ) ? cCounterThisBrd[0] : cCounterThisBrd[cCounterThisBrd.size()-1]-cCounterThisBrd[cCounterThisBrd.size()-2];
@@ -330,7 +338,8 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
                     << " --- received " << cCounterThisBrd[cCounterThisBrd.size()-1] << " triggers so far "
                     << " --- " << cDeltaTriggers  << " triggers since the last check "
                     << " Inst. Trigger rate " << std::scientific  << std::setprecision(3) << cTriggerRateInst << std::dec << " Hz "
-                    <<  " [ trigger source is " << +cTriggerSource  << " ]"
+                    << " [ trigger source is " << +cTriggerSource  << " ]"
+                    << " [ trigger state is " << +cTriggerState << " ]" 
                     << RESET;
                 // send to file once you've got more than one point 
                 if( cCounterThisBrd.size() > 1 ) cLogFile << +cBoard->getId() << "\t" << currentTimeUTC_us << "\t" << cDeltaTriggers << "\n";
@@ -394,6 +403,7 @@ void OTTool::ContinousReadout()
     // exit condition for this run 
     bool cAllFinished=false;
     size_t cWaitCounter=0;
+    LOG (INFO) << BOLDBLUE << fMyName << ":Main thread - starting to wait for events to be readout.." << RESET;
     do
     {
         size_t cNFinished=0;
@@ -485,7 +495,7 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
 }
 void OTTool::ContinousReadoutTh(uint8_t cBrdId)
 {
-    LOG (INFO) << BOLDBLUE << fMyName << ":Starting continuous readout thread for BeBoard#" << +cBrdId << RESET;
+    LOG (DEBUG) << BOLDBLUE << fMyName << ":Starting continuous readout thread for BeBoard#" << +cBrdId << RESET;
     // get D19cFW Interface 
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
@@ -495,11 +505,17 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
-        if( cWaitCounter%100 == 0 ) LOG (INFO) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET; 
+        if( cWaitCounter%100 == 0 ) LOG (DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET; 
         cWaitCounter++;
-    }while(cInterface->GetTriggerState() != 1 ); 
+    }while(cInterface->GetTriggerState() != 1 && cWaitCounter < 1000 ); 
 
-    LOG (INFO) << BOLDBLUE << fMyName << ":Triggers started .. now polling readout.." << RESET;
+    if( cWaitCounter == 1000 )
+    {
+        LOG (INFO) << BOLDRED << "Triggers not started on this board.. start them myself!" << RESET;
+        cInterface->Start();
+    }
+
+    LOG (DEBUG) << BOLDBLUE << fMyName << ":Triggers started .. now polling readout.." << RESET;
     std::vector<uint32_t> cCompleteData(0);
     bool     cWait    = false;
     std::vector<size_t> cTriggerCounters(0);
@@ -516,7 +532,7 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         cTriggerCounters.push_back( cTriggerCounter ); 
         if(cWaitCounter % 100 == 0 && cWaitCounter > 0 )
         {
-            LOG (INFO) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to be stopped on BeBoard#" << +cBrdId 
+            LOG (DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to be stopped on BeBoard#" << +cBrdId 
                 << " continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size()-1] << " triggers received" 
                 << " and "
                 << cLclEvntCntr << " events in the readout so far ... "

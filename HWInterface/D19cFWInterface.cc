@@ -1379,27 +1379,51 @@ void D19cFWInterface::SendNTriggers(uint16_t pNtriggers)
 }
 void D19cFWInterface::Start()
 {
-    // LOG (INFO) << BOLDBLUE << "D19cFWInterface::Start" << RESET;
-    // ChipReSync();
-    // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    auto cTriggerState = GetTriggerState(); 
+    if( cTriggerState == 1 ){ 
+        LOG (INFO) << BOLDMAGENTA << "Triggers have already been started... stop them " << RESET;
+        this->Stop();
+    }
 
-    // this stops triggers  + resets
-    this->ResetTriggerFSM();
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    // first lets
     // reset the readout
     this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-    // prints to debug and also checks that things are ok
-    this->TriggerConfiguration();
+    cTriggerState = GetTriggerState(); 
+    // get handshake mode 
+    // this changes how I check if I've actually started
+    auto cHandshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable"); 
+    bool cBreak = false;
+    do
+    {
+        LOG (DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+        // this stops triggers  + resets
+        this->ResetTriggerFSM();
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+        this->TriggerConfiguration();
 
-    // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
-    // clear the register manually)
-    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
-    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
+        // clear the register manually)
+        WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
+        WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
+        // prints to debug and also checks that things are ok
+        this->TriggerConfiguration();
+        cTriggerState = GetTriggerState(); 
+        // now check if I should try and start again 
+        if( cHandshake ){ 
+            auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");       
+            cBreak = (cReadoutReq == 1 ); 
+            if( cBreak ) LOG (DEBUG) << BOLDMAGENTA << "Hand-shakee is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
+        }
+        else cBreak = (cTriggerState != 0 );
+        if(!cBreak ) LOG (INFO) << BOLDRED << "Triggers failed to START - trying again" << RESET;
+    }while( !cBreak );
+    LOG (DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state at the end of start is " << +cTriggerState << RESET;
 }
 
 void D19cFWInterface::Stop()
@@ -1410,8 +1434,14 @@ void D19cFWInterface::Stop()
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    auto cTriggerState = GetTriggerState(); 
+    do
+    {
+        LOG (DEBUG) << BOLDBLUE << "D19cFWInterface::Stop Trigger state is " << cTriggerState << RESET;
+        WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        cTriggerState = GetTriggerState(); 
+    }while( cTriggerState == 1);
 }
 // reconfigure trigger
 void D19cFWInterface::ResetTriggerFSM()

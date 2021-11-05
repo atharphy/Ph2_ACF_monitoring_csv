@@ -35,9 +35,9 @@ class BeamTestCheck2S : public OTTool
     BeamTestCheck2S();
     ~BeamTestCheck2S();
 
-    void CheckWithTP();
-    void CheckWithInternal(uint8_t pContinousReadout = 0);
-    void CheckWithExternal(uint8_t pContinousReadout = 0);
+    void CheckWithTP(uint8_t pContinousReadout = 1);
+    void CheckWithInternal(uint8_t pContinousReadout = 1);
+    void CheckWithExternal(uint8_t pContinousReadout = 1);
     void Initialise();
     void Running() override;
     void Stop() override;
@@ -48,7 +48,9 @@ class BeamTestCheck2S : public OTTool
     // void ReadDataFromFile(std::string pRawFileName);
     // void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void DisableAllFEs();
-
+    void ScanStubLatency(uint8_t pContinousReadout );
+    void ScanL1Latency(uint8_t pContinousReadout );
+    
   protected:
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
     void cleanContainerMap()
@@ -70,6 +72,8 @@ class BeamTestCheck2S : public OTTool
     // Pedestals
     DetectorDataContainer fPedestalContainer;
     DetectorDataContainer fSignalContainer;
+    // Optimal Latencies 
+    DetectorDataContainer fOptimalL1Latency;
 
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
