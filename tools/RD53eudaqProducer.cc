@@ -128,6 +128,15 @@ void RD53eudaqProducer::OnStopRun()
         const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(theRunNumber) + "_" + configFileBasename;
         system(("cp " + configFile + " " + outputConfigFile).c_str());
 
+        // #####################
+        // # Update run number #
+        // #####################
+        std::ofstream fileRunNumberOut;
+        theRunNumber++;
+        fileRunNumberOut.open(EUDAQ::FILERUNNUMBER, std::ios::out);
+        if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(theRunNumber) << std::endl;
+        fileRunNumberOut.close();
+
         this->SetConnectionState(eudaq::ConnectionState::STATE_CONF, "RD53eudaqProducer::Configured");
     }
     catch(...)
