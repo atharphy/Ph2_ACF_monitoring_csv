@@ -86,7 +86,7 @@ void ThrEqualization::sendData()
 
     if(fStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
         for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
     }
 }
@@ -152,11 +152,7 @@ void ThrEqualization::run()
     // ##############################
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
-
-    this->fDetectorDataContainer = &theOccContainer;
-    ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
-
     ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, nEvtsBurst);
 
     // #################################################
@@ -174,7 +170,7 @@ void ThrEqualization::run()
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
                             {
-                                theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy =
+                                theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy =
                                     RD53Shared::ISDISABLED;
                                 theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = TDACsize;
                             }
@@ -275,7 +271,7 @@ void ThrEqualization::analyze()
 void ThrEqualization::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos->fillOccupancy(theOccContainer);
+    histos->fillOccupancy(*theOccContainer.get());
     histos->fillTDAC(theTDACcontainer);
 #endif
 }
@@ -484,20 +480,19 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
         // ################
         // # Run analysis #
         // ################
-        this->measureData(nEvents, nEvtsBurst);
-        // PixelAlive::run();
-        // auto output = PixelAlive::analyze();
+        // this->measureData(nEvents, nEvtsBurst);
+        PixelAlive::run();
+        auto output = PixelAlive::analyze();
 
         // ##############################################
         // # Send periodic data to monitor the progress #
         // ##############################################
-        // PixelAlive::sendData();
+        PixelAlive::sendData();
 
         // #####################
         // # Compute next step #
         // #####################
-        // for(const auto cBoard: *output)
-        for(const auto cBoard: theOccContainer)
+        for(const auto cBoard: *output)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
@@ -545,15 +540,18 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
+                {
                     this->fReadoutChipInterface->WriteChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                    static_cast<RD53*>(cChip)->copyMaskToDefault();
+                }
 
     // ################
     // # Run analysis #
     // ################
-    this->measureData(nEvents, nEvtsBurst);
-    // PixelAlive::run();
-    // theOccContainer = PixelAlive::analyze();
+    PixelAlive::run();
+    theOccContainer = PixelAlive::analyze();
+
 }
 
 void ThrEqualization::chipErrorReport() const

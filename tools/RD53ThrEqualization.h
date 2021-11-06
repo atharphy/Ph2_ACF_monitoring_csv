@@ -67,9 +67,8 @@ class ThrEqualization : public PixelAlive
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    /* std::shared_ptr<DetectorDataContainer> theOccContainer; */
-    DetectorDataContainer theOccContainer;
-    DetectorDataContainer theTDACcontainer;
+    std::shared_ptr<DetectorDataContainer> theOccContainer;
+    DetectorDataContainer                  theTDACcontainer;
 
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
