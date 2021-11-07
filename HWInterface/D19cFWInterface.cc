@@ -1482,6 +1482,8 @@ void D19cFWInterface::Resume()
 void D19cFWInterface::ResetReadout()
 {
     // LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
+    auto     cPkgDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    LOG (DEBUG) << "Package delay is set to " << +cPkgDelay << RESET;
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
@@ -1501,7 +1503,7 @@ void D19cFWInterface::ResetReadout()
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
         }
-    }
+    }=
 }
 
 void D19cFWInterface::DDR3SelfTest()
@@ -4648,6 +4650,7 @@ void D19cFWInterface::Trigger(uint8_t pDuration)
 bool D19cFWInterface::Bx0Alignment()
 {
     bool     cSuccess   = false;
+    auto     cPkgDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
     {
@@ -4674,8 +4677,8 @@ bool D19cFWInterface::Bx0Alignment()
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
         {
-            LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!" << RESET;
-            // BOLDBLUE << "\t... Stub package delay set to : " << +cStubPackageDelay << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!" 
+                <<  "\t... Stub package delay set to : " << +cPkgDelay << RESET;
             cSuccess = true;
             /*
             // definitely works with

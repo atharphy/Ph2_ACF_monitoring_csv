@@ -124,6 +124,11 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapS1Histograms, hStubMapS1);
     
     LOG (DEBUG) << BOLDYELLOW << "Seeds have " << cNSeedChs << " bins." << RESET;
+
+    // bend histogrsm per hybrid
+    HistContainer<TH1F> hBendDist("BendDistribution", "Stub Bend Distribution [strips]", 20/0.5,  -10 , 10 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBendHistrograms, hBendDist);
+    
 }
 
 //========================================================================================================================
@@ -371,6 +376,26 @@ void DQMHistogramBeamTestCheck::process()
                 cHistogram->GetXaxis()->SetTitle("Seed Channel Number [local x S1]");
                 cHistogram->GetYaxis()->SetTitle("Module Side [local y S1]");
                 cHistogram->GetZaxis()->SetTitle("<Count>");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+
+    for(auto board: fBendHistrograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                
+                std::string cCanvasName  = "BendDistribution_" +  std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "BendDistribution plot " +   std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Bend [strips]");
+                cHistogram->GetYaxis()->SetTitle("Count");
                 cHistogram->DrawCopy();
             }
         }
@@ -720,7 +745,30 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
         }//OG
     }//board
 }
-
+void DQMHistogramBeamTestCheck::fillBendPlots(DetectorDataContainer& theMap)
+{
+    LOG (INFO) << BOLDBLUE << "Filling Bend  histograms..." << RESET;
+    for(auto board: theMap)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                //hit map 
+                TH1F* cHist = fBendHistrograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                auto  cBends = hybrid->getSummary<GenericDataArray<BENDBINS, uint16_t>>();
+                for(uint32_t cIndx = 0; cIndx < BENDBINS; ++cIndx)
+                {
+                    float    cBend=-7.0 + cIndx*0.5;
+                    auto cBin = cHist->GetXaxis()->FindBin(cBend);
+                    cHist->SetBinContent(cBin, cBends[cIndx]);
+                    cHist->SetBinError(cBin, std::sqrt(cBends[cIndx]) );
+                }
+                
+            }//hybrids
+        }//OG
+    }//board
+}
 void DQMHistogramBeamTestCheck::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
 {
     auto cSetting = pSettingsMap.find("StartLatency");

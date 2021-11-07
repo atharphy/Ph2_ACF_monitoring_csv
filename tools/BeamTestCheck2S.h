@@ -36,8 +36,10 @@ class BeamTestCheck2S : public OTTool
     ~BeamTestCheck2S();
 
     void CheckWithTP(uint8_t pContinousReadout = 1);
+    void ValidateTP();
     void CheckWithInternal(uint8_t pContinousReadout = 1);
     void CheckWithExternal(uint8_t pContinousReadout = 1);
+    void ValidateExternal();
     void Initialise();
     void Running() override;
     void Stop() override;
@@ -50,7 +52,6 @@ class BeamTestCheck2S : public OTTool
     void DisableAllFEs();
     void ScanStubLatency(uint8_t pContinousReadout );
     void ScanL1Latency(uint8_t pContinousReadout );
-    
   protected:
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
     void cleanContainerMap()
@@ -80,6 +81,8 @@ class BeamTestCheck2S : public OTTool
     DetectorDataContainer fStubOccupancy; 
     // Hit Maps 
     DetectorDataContainer fHitMap, fStubMap; 
+    // Bend Maps 
+    DetectorDataContainer fBendMap; 
     
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
@@ -99,7 +102,8 @@ class BeamTestCheck2S : public OTTool
     void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
     void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pPrintOut=0);
-
+    void Validate();
+  
     size_t fThStep{0};
 
 #ifdef __USE_ROOT__

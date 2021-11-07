@@ -145,6 +145,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("DataMonitor", "Data monitor", ArgvParser::OptionRequiresValue);
     cmd.defineOption("TestPulseCheck", "Test pulse check - inject with TP and perform latency scan", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("scanLatencies", "Scan L1+Stub Latencies ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -993,7 +994,8 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         // check with TP
-        cBeamTestCheck.CheckWithTP();
+        if( cmd.foundOption("scanLatencies") )  cBeamTestCheck.CheckWithTP();
+        else cBeamTestCheck.ValidateTP();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
@@ -1014,8 +1016,8 @@ int main(int argc, char* argv[])
         uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
         int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
         cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        cBeamTestCheck.CheckWithExternal(cContinuousReadout);
-        // cBeamTestCheck.CheckWithInternal(cContinuousReadout);
+        if( cmd.foundOption("scanLatencies") ) cBeamTestCheck.CheckWithExternal(cContinuousReadout);
+        else cBeamTestCheck.ValidateExternal();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
