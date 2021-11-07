@@ -64,7 +64,7 @@ class BeamTestCheck2S : public OTTool
     // TDC 
     DetectorDataContainer fTDCContainer;
     // Latency
-    DetectorDataContainer fLatencyContainer;
+    DetectorDataContainer fLatencyContainer, fStubLatencyContainer;
     DetectorDataContainer fLatencyContainerS0, fLatencyContainerS1;
     // Cluster size
     DetectorDataContainer fClusterOccupancy;
@@ -73,12 +73,14 @@ class BeamTestCheck2S : public OTTool
     DetectorDataContainer fPedestalContainer;
     DetectorDataContainer fSignalContainer;
     // Optimal Latencies 
-    DetectorDataContainer fOptimalL1Latency;
+    DetectorDataContainer fOptimalL1Latency, fOptimalStubLatency;
     // Hit Containers 
     DetectorDataContainer fHitOccupancyS0, fHitOccupancyS1;
     DetectorDataContainer fHitContainerTDC; 
     DetectorDataContainer fStubOccupancy; 
-
+    // Hit Maps 
+    DetectorDataContainer fHitMap, fStubMap; 
+    
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 
@@ -96,7 +98,7 @@ class BeamTestCheck2S : public OTTool
     void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
-    void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId);
+    void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pPrintOut=0);
 
     size_t fThStep{0};
 

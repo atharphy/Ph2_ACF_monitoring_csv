@@ -444,17 +444,18 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("realign"))
     {
         // re-align stub package
-        // bool cSkipStubPkg = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("stubPackage") != std::string::npos);
-        // if(cSkipStubPkg)
-        //     LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
-        // else
-        // {
-        //     LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
-        //     LinkAlignmentOT cLinkAlignment;
-        //     cLinkAlignment.Inherit(&cTool);
-        //     cLinkAlignment.AlignStubPackage();
-        //     cLinkAlignment.Reset();
-        // }
+        bool cSkipStubPkg = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("stubPackage") != std::string::npos);
+        if(cSkipStubPkg)
+            LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+            LinkAlignmentOT cLinkAlignment;
+            cLinkAlignment.Inherit(&cTool);
+            cLinkAlignment.Initialise();
+            cLinkAlignment.AlignStubPackage();
+            cLinkAlignment.Reset();
+        }
 
         // time align stubs with L1 data in the BE
         bool cSkipBEstubs = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("beStubs") != std::string::npos);

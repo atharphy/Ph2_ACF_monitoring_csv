@@ -37,6 +37,7 @@ DQMHistogramBeamTestCheck::~DQMHistogramBeamTestCheck() {}
 void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     uint32_t cNCh = 0;
+    uint32_t cNSeedChs=0;
     for(auto board: theDetectorStructure)
     {
         for(auto opticalGroup: *board)
@@ -44,12 +45,17 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
             for(auto hybrid: *opticalGroup)
             {
                 uint32_t cN = 0;
-                for(auto chip: *hybrid) { cN += chip->size(); } // chip
+                for(auto chip: *hybrid) { cN += chip->size(); 
+                    // only account for seeds in MPAs/CBCs 
+                    if( chip->size() == NMPACHANNELS ) cNSeedChs+= chip->size() ; // any mPA pixel can be a seed 
+                    else if(  chip->size() == NCHANNELS ) cNSeedChs+= chip->size()/2 ; // either bottom/top CBC row can be a seed 
+                } // chip
                 if(cN > cNCh) cNCh = cN;
             } // hybrid
         }     // OG
     }         // board
-
+    cNSeedChs/=2; // one per hybrid 
+    
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
@@ -65,7 +71,7 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     HistContainer<TH1F> hLatencyS1("LatencyValueS1", "Latency Value [top sensor]", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistogramsS1, hLatencyS1);
 
-    HistContainer<TH1F> hStub("StubValue", "Stub Value", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    HistContainer<TH1F> hStub("StubValue", "Stub Value", fLatencyRange, 0, 0 + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubHistograms, hStub);
 
     HistContainer<TH2F> hLatencyScan2D("LatencyScan2D", "LatencyScan2D", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
@@ -87,6 +93,16 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     // Cluster Count
     HistContainer<TH2F> hClusterOccupancy("CLusterOccupancy", "Cluster Occupancy", 1024, 0, 1024, 40 / 0.25, 0, 40);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fClusterOccupancyHistograms, hClusterOccupancy);
+
+    // hit maps per hybrid 
+    // first hits 
+    HistContainer<TH2F> hHitMap("HitOccupancy", "Hit Occupancy", cNCh, 0, cNCh , 2 , 0 , 2 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHitMapHistograms, hHitMap);
+    // then stubs 
+    HistContainer<TH2F> hStubMap("StubOccupancy", "Stub Occupancy", cNSeedChs, 0, cNSeedChs , 2 , 0 , 2 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapHistograms, hStubMap);
+    
+    LOG (INFO) << BOLDYELLOW << "Seeds have " << cNSeedChs << " bins." << RESET;
 }
 
 //========================================================================================================================
@@ -251,6 +267,49 @@ void DQMHistogramBeamTestCheck::process()
                     cHistogram->GetZaxis()->SetTitle("<Count>");
                     cHistogram->DrawCopy();
                 }
+            }
+        }
+    }
+
+    // maps 
+    for(auto board: fHitMapHistograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                
+                std::string cCanvasName  = "HitOccupancy_" +  std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "HitOccupancy plot " +   std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Hit Channel Number [local x]");
+                cHistogram->GetYaxis()->SetTitle("Module Side [local y]");
+                cHistogram->GetZaxis()->SetTitle("<Count>");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+
+    for(auto board: fStubMapHistograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                
+                std::string cCanvasName  = "StubOccupancy_" +  std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "StubOccupancy plot " +   std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Seed Channel Number [local x]");
+                cHistogram->GetYaxis()->SetTitle("Module Side [local y]");
+                cHistogram->GetZaxis()->SetTitle("<Count>");
+                cHistogram->DrawCopy();
             }
         }
     }
@@ -437,6 +496,7 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
 //
 void DQMHistogramBeamTestCheck::fillStubLatencyPlots(DetectorDataContainer& theStubLatency)
 {
+    LOG (DEBUG) << BOLDBLUE << "Filling Stub Latency Plots..." << RESET;
     for(auto board: theStubLatency)
     {
         for(auto opticalGroup: *board)
@@ -445,16 +505,18 @@ void DQMHistogramBeamTestCheck::fillStubLatencyPlots(DetectorDataContainer& theS
             {
                 if(!hybrid->hasSummary()) continue;
                 TH1F* hybridLatencyHistogram = fStubHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-
+                LOG (DEBUG) << BOLDBLUE << ".....Hybrid#" << +hybrid->getId() << RESET;
+    
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
                     uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
-
                     float error = 0;
-                    if(hits > 0) error = sqrt(float(hits));
-
-                    hybridLatencyHistogram->SetBinContent(i, hits);
-                    hybridLatencyHistogram->SetBinError(i, error);
+                    if(hits > 0){ 
+                        error = sqrt(float(hits));
+                    }
+                    auto cBin = hybridLatencyHistogram->FindBin((float)i);
+                    hybridLatencyHistogram->SetBinContent(cBin, hits);
+                    hybridLatencyHistogram->SetBinError(cBin, error);
                 }
             }
         }
@@ -499,6 +561,54 @@ void DQMHistogramBeamTestCheck::fillTriggerTDCPlots(DetectorDataContainer& theTr
             boardTriggerTDCHistogram->SetBinContent(cBin, sum[tdcValue]);
         }
     }
+}
+
+void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap)
+{
+    LOG (DEBUG) << BOLDBLUE << "Filling Hit/Stub Maps..." << RESET;
+    for(auto board: theHitMap)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                // float cNhits=0;
+                TH2F* cHitMap = fHitMapHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                for(auto chip: *hybrid)
+                {
+                    uint16_t cChnlIndx = 0;
+                    // this is for 2S 
+                    uint16_t cDivider = (chip->size() == NCHANNELS ) ?  2 : 1;
+                    uint16_t cOffset   = (hybrid->getId()%2 == 0 ) ? (7 - chip->getId())*chip->size()/cDivider : chip->getId() * chip->size() / cDivider;
+                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    {
+                        uint16_t cStripOffset = cOffset;//(cChnlIndx % 2 == 0) ? cOffset : cHitMap->GetYaxis()->GetNbins() / 2 + cOffset;
+                        uint16_t cStripId     = cStripOffset + cChnlIndx / cDivider;
+                        if(hybrid->getId() % 2 == 0)
+                        {
+                            cStripId     = cOffset + (chip->size() - cChnlIndx)/cDivider;
+                            //cStripId     = cStripOffset - (chip->getId() * chip->size() / cDivider + cChnlIndx / cDivider);
+                        }
+                        if( channel.fOccupancy > 0 )
+                            LOG (INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() 
+                                    << " Hybrid#" << +hybrid->getId()
+                                    << " Channel " << cChnlIndx
+                                    << " strip number " << cChnlIndx / cDivider
+                                    << " strip offset is " << cStripOffset 
+                                    << " global strip number " << +cStripId
+                                    << " hit is in S" << +(cChnlIndx % 2 == 0)
+                                    << " - have found " << channel.fOccupancy << " hits."
+                                    << RESET;
+
+                        auto cBin = cHitMap->FindBin(cStripId, hybrid->getId()%2);
+                        cHitMap->SetBinContent(cBin, channel.fOccupancy);
+                        cHitMap->SetBinError(cBin, channel.fOccupancyError);
+                        cChnlIndx++;
+                    }//chanenls 
+                }//ROCs
+            }//hybrids
+        }//OG
+    }//board
 }
 
 void DQMHistogramBeamTestCheck::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)

@@ -1018,10 +1018,10 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
         uint8_t cStubBend     = static_cast<uint8_t>((cStubWord & (cBendMask << (cBendOffset))) >> cBendOffset);
         uint8_t cRow          = fIs2S ? 0x00 : static_cast<uint8_t>((cStubWord & 0xF));
 
+        LOG(DEBUG) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]"
+            << " stub address is " << +cStubAddress << " stub bend is " << +cStubBend << " stub row is " << +cRow << RESET;
         if(cChipId == cChipIdMapped)
         {
-            // LOG(INFO) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]"
-            // << " stub address is " << +cStubAddress << " stub bend is " << +cStubBend << " stub row is " << +cRow << RESET;
             cStubVec.emplace_back(cStubAddress, cStubBend, cRow);
         }
         // CI
