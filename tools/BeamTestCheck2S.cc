@@ -154,7 +154,6 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);  
-    //fDQMHistogrammer.fillClusterOccupancyPlots(fClusterOccupancy);
 #endif
 
     // validate 
@@ -170,12 +169,11 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
         LOG (INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
         for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
         {
-            Count(cEvents, cTriggerId,1);
+            Count(cEvents, cTriggerId);
         }
     }
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap);
-    //fDQMHistogrammer.fillClusterOccupancyPlots(fClusterOccupancy);
 #endif
 }
 //
@@ -247,6 +245,14 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
             Count(cEvents, cTriggerId,1);
         }
     }
+
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
+    fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
+    fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);  
+    fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap);
+#endif
+
     // if( pContinousReadout ) ContinousReadout();
     //ScanStubLatency(pContinousReadout);
     
@@ -266,11 +272,11 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     //     // scan the threshold, record number of hits; cluster occupancy
     //     // ScanThreshold(cBoard);
     // }
-    #ifdef __USE_ROOT__
-        fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
-        fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
-        fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);    
-    #endif
+    // #ifdef __USE_ROOT__
+    //     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
+    //     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
+    //     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);    
+    // #endif
 }
 void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx)
 {
@@ -583,7 +589,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
                 {
                     auto& cLatThisChip   = cLatThisHybrid->at(cChip->getIndex());
                     auto& cMaxCountThisChip = cMaxCountThisHybrid->at(cChip->getIndex());
-                    cLatThisChip->getSummary<uint16_t>()=fStartLatency;
+                    cLatThisChip->getSummary<uint16_t>()=0;
                     cMaxCountThisChip->getSummary<uint32_t>()=0;
                 }
             } // hybrid
@@ -885,7 +891,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             ->at(cHybrid->getIndex())
                             ->at(cChip->getIndex())
                             ->getSummary<uint8_t>();
-                        if( pPrint ) LOG (INFO) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId 
+                        if( pPrint ) LOG (DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId 
                                 << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status " << std::bitset<8>(cStubStat) 
                                 << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " found " << +cStubs.size() << " stubs." << RESET;
                         for(auto cStub : cStubs)
@@ -1178,6 +1184,8 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout )
         cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>()=0; 
         uint16_t cMinLatency=0;
         uint16_t cMaxLatency=0; 
+        // get mode for stub latency 
+        std::vector<uint16_t> cLatencyBins(512,0);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -1185,6 +1193,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout )
                 for(auto cChip: *cHybrid)
                 {
                     auto cLat = fReadoutChipInterface->ReadChipReg(cChip,"TriggerLatency");
+                    if( cLat > 0) cLatencyBins[cLat]++;
                     if( cMinLatency == 0 ) cMinLatency = cLat; 
                     if( cMaxLatency == 0 ) cMaxLatency = cLat;
 
@@ -1193,11 +1202,13 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout )
                 }
             }
         }
+        auto cModeLatency = std::max_element(cLatencyBins.begin(), cLatencyBins.end()) - cLatencyBins.begin();
         // set latency for the board to the minium 
         LOG (INFO) << BOLDMAGENTA << "Min L1 latency on this board is " << cMinLatency << " 40 MHz clock cycles" << RESET;
         LOG (INFO) << BOLDMAGENTA << "Max L1 latency on this board is " << cMaxLatency << " 40 MHz clock cycles" << RESET;
-        cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>()=cMinLatency; 
-        setSameDacBeBoard(cBoard,"TriggerLatency", cMinLatency);
+        LOG (INFO) << BOLDBLUE    << "Mode L1 latency on this board is " << cModeLatency << " 40 MHz clock cycles" << RESET;
+        cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>()=cModeLatency; 
+        setSameDacBeBoard(cBoard,"TriggerLatency", cModeLatency);
         fBeBoardInterface->ChipReSync(cBoard);
     }
 

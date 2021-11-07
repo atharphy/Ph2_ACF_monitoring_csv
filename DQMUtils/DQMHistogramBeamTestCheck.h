@@ -76,8 +76,12 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     DetectorDataContainer fLatencyScan2DHistograms;
     DetectorDataContainer fTriggerTDCHistograms;
     DetectorDataContainer fClusterOccupancyHistograms;
-    DetectorDataContainer fHitMapHistograms;
-    DetectorDataContainer fStubMapHistograms;
+    // stub hit maps - one per sensor [0 == bottom ; 1 == top ]
+    DetectorDataContainer fStubMapS0Histograms;
+    DetectorDataContainer fStubMapS1Histograms;
+    // hit maps = one per sensor [ 0 == bottom; 1 == top ]
+    DetectorDataContainer fHitMapS0Histograms;
+    DetectorDataContainer fHitMapS1Histograms;
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;

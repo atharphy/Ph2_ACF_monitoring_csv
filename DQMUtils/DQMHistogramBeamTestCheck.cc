@@ -38,6 +38,8 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
 {
     uint32_t cNCh = 0;
     uint32_t cNSeedChs=0;
+    uint32_t cNChannelsS0=0;
+    uint32_t cNChannelsS1=0;
     for(auto board: theDetectorStructure)
     {
         for(auto opticalGroup: *board)
@@ -45,17 +47,32 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
             for(auto hybrid: *opticalGroup)
             {
                 uint32_t cN = 0;
+                uint32_t cNS0 = 0;
+                uint32_t cNS1 = 0;
                 for(auto chip: *hybrid) { cN += chip->size(); 
                     // only account for seeds in MPAs/CBCs 
-                    if( chip->size() == NMPACHANNELS ) cNSeedChs+= chip->size() ; // any mPA pixel can be a seed 
-                    else if(  chip->size() == NCHANNELS ) cNSeedChs+= chip->size()/2 ; // either bottom/top CBC row can be a seed 
+                    if( chip->size() == NMPACHANNELS ){ 
+                        cNSeedChs+= chip->size() ; // any mPA pixel can be a seed 
+                        cNS0 += chip->size();
+                    }
+                    else if(  chip->size() == NCHANNELS ){ 
+                        cNSeedChs+= chip->size()/2 ; // either bottom/top CBC row can be a seed 
+                        cNS0 += chip->size()/2 ; 
+                        cNS1  = cNS0;
+                    }
+                    else 
+                    {
+                        cNS1 += chip->size();
+                    }
                 } // chip
+                if(cNS0 > cNChannelsS0 ) cNChannelsS0 = cNS0;
+                if(cNS1 > cNChannelsS1 ) cNChannelsS1 = cNS1;
                 if(cN > cNCh) cNCh = cN;
             } // hybrid
         }     // OG
     }         // board
     cNSeedChs/=2; // one per hybrid 
-    
+
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
@@ -95,14 +112,18 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fClusterOccupancyHistograms, hClusterOccupancy);
 
     // hit maps per hybrid 
-    // first hits 
-    HistContainer<TH2F> hHitMap("HitOccupancy", "Hit Occupancy", cNCh, 0, cNCh , 2 , 0 , 2 );
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHitMapHistograms, hHitMap);
+    HistContainer<TH2F> hMitMapS0("HitOccupancyS0", "Hit Occupancy [S0]", cNChannelsS0, 0, cNChannelsS0 , 2 , 0 , 2 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHitMapS0Histograms, hMitMapS0);
+    HistContainer<TH2F> hMitMapS1("HitOccupancyS1", "Hit Occupancy [S1]", cNChannelsS1, 0, cNChannelsS1 , 2 , 0 , 2 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHitMapS1Histograms, hMitMapS1);
+     
     // then stubs 
-    HistContainer<TH2F> hStubMap("StubOccupancy", "Stub Occupancy", cNSeedChs, 0, cNSeedChs , 2 , 0 , 2 );
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapHistograms, hStubMap);
+    HistContainer<TH2F> hStubMapS0("StubOccupancyS0", "Stub Occupancy [S0]", cNChannelsS0, 0, cNChannelsS0 , 2 , 0 , 2 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapS0Histograms, hStubMapS0);
+    HistContainer<TH2F> hStubMapS1("StubOccupancyS1", "Stub Occupancy [S1]", cNChannelsS1, 0, cNChannelsS1 , 2 , 0 , 2 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapS1Histograms, hStubMapS1);
     
-    LOG (INFO) << BOLDYELLOW << "Seeds have " << cNSeedChs << " bins." << RESET;
+    LOG (DEBUG) << BOLDYELLOW << "Seeds have " << cNSeedChs << " bins." << RESET;
 }
 
 //========================================================================================================================
@@ -271,43 +292,84 @@ void DQMHistogramBeamTestCheck::process()
         }
     }
 
-    // maps 
-    for(auto board: fHitMapHistograms)
+    for(auto board: fHitMapS0Histograms)
     {
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
             {
                 
-                std::string cCanvasName  = "HitOccupancy_" +  std::to_string(hybrid->getId());
-                std::string cCanvasTitle = "HitOccupancy plot " +   std::to_string(hybrid->getId());
+                std::string cCanvasName  = "HitOccupancy_S0_" +  std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "HitOccupancy [S0] plot " +   std::to_string(hybrid->getId());
 
                 TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
                 cCanvas->cd();
                 auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                cHistogram->GetXaxis()->SetTitle("Hit Channel Number [local x]");
-                cHistogram->GetYaxis()->SetTitle("Module Side [local y]");
+                cHistogram->GetXaxis()->SetTitle("Channel Number [local x S0]");
+                cHistogram->GetYaxis()->SetTitle("Module Side [local y S0]");
                 cHistogram->GetZaxis()->SetTitle("<Count>");
                 cHistogram->DrawCopy();
             }
         }
     }
 
-    for(auto board: fStubMapHistograms)
+    for(auto board: fHitMapS1Histograms)
     {
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
             {
                 
-                std::string cCanvasName  = "StubOccupancy_" +  std::to_string(hybrid->getId());
-                std::string cCanvasTitle = "StubOccupancy plot " +   std::to_string(hybrid->getId());
+                std::string cCanvasName  = "HitOccupancy_S1_" +  std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "HitOccupancy [S1] plot " +   std::to_string(hybrid->getId());
 
                 TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
                 cCanvas->cd();
                 auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                cHistogram->GetXaxis()->SetTitle("Seed Channel Number [local x]");
-                cHistogram->GetYaxis()->SetTitle("Module Side [local y]");
+                cHistogram->GetXaxis()->SetTitle("Channel Number [local x S1]");
+                cHistogram->GetYaxis()->SetTitle("Module Side [local y S1]");
+                cHistogram->GetZaxis()->SetTitle("<Count>");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+
+    for(auto board: fStubMapS0Histograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                
+                std::string cCanvasName  = "StubOccupancy_S0_" +  std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "StubOccupancy [S0] plot " +   std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Seed Channel Number [local x S0]");
+                cHistogram->GetYaxis()->SetTitle("Module Side [local y S0]");
+                cHistogram->GetZaxis()->SetTitle("<Count>");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+
+    for(auto board: fStubMapS1Histograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                
+                std::string cCanvasName  = "StubOccupancy_S1_" +  std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "StubOccupancy [S1] plot " +   std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Seed Channel Number [local x S1]");
+                cHistogram->GetYaxis()->SetTitle("Module Side [local y S1]");
                 cHistogram->GetZaxis()->SetTitle("<Count>");
                 cHistogram->DrawCopy();
             }
@@ -566,43 +628,91 @@ void DQMHistogramBeamTestCheck::fillTriggerTDCPlots(DetectorDataContainer& theTr
 void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap)
 {
     LOG (DEBUG) << BOLDBLUE << "Filling Hit/Stub Maps..." << RESET;
-    for(auto board: theHitMap)
+    for(auto board: fStubMapS0Histograms)
     {
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
             {
-                // float cNhits=0;
-                TH2F* cHitMap = fHitMapHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                //hit map 
+                TH2F* cHitMapS0 = fHitMapS0Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* cHitMapS1 = fHitMapS1Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                LOG (DEBUG) << BOLDYELLOW << "Hit map [S0] has " << cHitMapS0->GetXaxis()->GetNbins() << " in X  and " << cHitMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
+                LOG (DEBUG) << BOLDYELLOW << "Hit map [S1] has " << cHitMapS1->GetXaxis()->GetNbins() << " in X  and " << cHitMapS1->GetYaxis()->GetNbins() << " in Y." << RESET;
+                uint8_t cLocalY   = ( hybrid->getId()%2 == 0 ) ? 0 : 1 ; 
+                //stub map 
+                TH2F* cStubMapS0 = fStubMapS0Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* cStubMapS1 = fStubMapS1Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                LOG (DEBUG) << BOLDYELLOW << "Stub map [S0] has " << cStubMapS0->GetXaxis()->GetNbins() << " in X  and " << cStubMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
+                LOG (DEBUG) << BOLDYELLOW << "Stub map [S1] has " << cStubMapS0->GetXaxis()->GetNbins() << " in X  and " << cStubMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
                 for(auto chip: *hybrid)
                 {
-                    uint16_t cChnlIndx = 0;
-                    // this is for 2S 
                     uint16_t cDivider = (chip->size() == NCHANNELS ) ?  2 : 1;
                     uint16_t cOffset   = (hybrid->getId()%2 == 0 ) ? (7 - chip->getId())*chip->size()/cDivider : chip->getId() * chip->size() / cDivider;
-                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    uint16_t cChnlIndx = 0;
+                    auto& cChipStubOCc = theStubMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    for(auto channel: *cChipStubOCc->getChannelContainer<Occupancy>())
                     {
-                        uint16_t cStripOffset = cOffset;//(cChnlIndx % 2 == 0) ? cOffset : cHitMap->GetYaxis()->GetNbins() / 2 + cOffset;
-                        uint16_t cStripId     = cStripOffset + cChnlIndx / cDivider;
-                        if(hybrid->getId() % 2 == 0)
-                        {
-                            cStripId     = cOffset + (chip->size() - cChnlIndx)/cDivider;
-                            //cStripId     = cStripOffset - (chip->getId() * chip->size() / cDivider + cChnlIndx / cDivider);
-                        }
+                        uint16_t cStripOffset = cOffset;
+                        uint16_t cStripId     = cOffset + cChnlIndx / cDivider;
+                        // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
+                        if(hybrid->getId() % 2 == 0) cStripId     = cOffset + (chip->size() - cChnlIndx)/cDivider;
+                        uint8_t cSensorId = ( chip->size() == NCHANNELS ) ? (cChnlIndx%2 != 0 ) : (chip->size() == NMPACHANNELS );
+                        auto cBin = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
                         if( channel.fOccupancy > 0 )
-                            LOG (INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() 
+                            LOG (DEBUG) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() 
                                     << " Hybrid#" << +hybrid->getId()
+                                    << " Sensor" << +cSensorId
+                                    << " Local x coordinate " << +cStripId 
+                                    << " bin# " << cBin 
                                     << " Channel " << cChnlIndx
-                                    << " strip number " << cChnlIndx / cDivider
-                                    << " strip offset is " << cStripOffset 
-                                    << " global strip number " << +cStripId
-                                    << " hit is in S" << +(cChnlIndx % 2 == 0)
-                                    << " - have found " << channel.fOccupancy << " hits."
+                                    << " offset is " << cStripOffset 
+                                    << " - have found " << channel.fOccupancy << " stubs "
                                     << RESET;
 
-                        auto cBin = cHitMap->FindBin(cStripId, hybrid->getId()%2);
-                        cHitMap->SetBinContent(cBin, channel.fOccupancy);
-                        cHitMap->SetBinError(cBin, channel.fOccupancyError);
+                        if( cSensorId == 0 )
+                        {
+                            cStubMapS0->SetBinContent(cBin, channel.fOccupancy);
+                            cStubMapS0->SetBinError(cBin, channel.fOccupancyError);
+                        }
+                        else
+                        {
+                            cStubMapS1->SetBinContent(cBin, channel.fOccupancy);
+                            cStubMapS1->SetBinError(cBin, channel.fOccupancyError);
+                        }
+                        cChnlIndx++;
+                    }//chanenls 
+
+                    cChnlIndx = 0;
+                    auto& cChipHitOCc = theHitMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    for(auto channel: *cChipHitOCc->getChannelContainer<Occupancy>())
+                    {
+                        uint16_t cStripOffset = cOffset;
+                        uint16_t cStripId     = cOffset + cChnlIndx / cDivider;
+                        // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
+                        if(hybrid->getId() % 2 == 0) cStripId     = cOffset + (chip->size() - cChnlIndx)/cDivider;
+                        uint8_t cSensorId = ( chip->size() == NCHANNELS ) ? (cChnlIndx%2 != 0 ) : (chip->size() == NMPACHANNELS );
+                        auto cBin = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
+                        if( channel.fOccupancy > 0 )
+                            LOG (DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() 
+                                    << " Hybrid#" << +hybrid->getId()
+                                    << " Sensor" << +cSensorId
+                                    << " Local x coordinate " << +cStripId 
+                                    << " bin# " << cBin 
+                                    << " Channel " << cChnlIndx
+                                    << " offset is " << cStripOffset 
+                                    << " - have found " << channel.fOccupancy << " hits "
+                                    << RESET;
+                        if( cSensorId == 0 )
+                        {
+                            cHitMapS0->SetBinContent(cBin, channel.fOccupancy);
+                            cHitMapS0->SetBinError(cBin, channel.fOccupancyError);
+                        }
+                        else
+                        {
+                            cHitMapS1->SetBinContent(cBin, channel.fOccupancy);
+                            cHitMapS1->SetBinError(cBin, channel.fOccupancyError);
+                        }
                         cChnlIndx++;
                     }//chanenls 
                 }//ROCs
