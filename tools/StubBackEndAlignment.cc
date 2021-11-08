@@ -18,14 +18,14 @@ void StubBackEndAlignment::Initialise()
     SetName("StubBackEndAlignment");
 
     // list of board registers that can be modified by this tool
-    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay"};
+    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
     // list of board registers that can be modified by this tool
     for(auto cBoard: *fDetectorContainer)
     {
         LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
-                  << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay") << RESET;
+                  << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
     }
 }
 bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
@@ -72,7 +72,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     //     if(cCorrectDelay) continue;
 
     //     LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
-    //     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+    //     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
     //     (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
     //     ReadNEvents(pBoard, cNevents);
     //     const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
@@ -139,7 +139,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // now try and find correct package delay
-    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
     uint8_t cPackageDelay = 7;
     uint8_t cFinalDelay   = cPackageDelay;
@@ -148,7 +148,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
         if(cCorrectDelay) continue;
 
         LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
         (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
 
         // check stubs
@@ -529,7 +529,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // I think this should belong to the board.. need to fix
     if(cFoundCorrectStubLatency)
     {
-        LOG (INFO) << BOLDMAGENTA << "Stub offset set to " << cCorrectOffset - cReTime << " clock cycles." << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Stub offset set to " << cCorrectOffset - cReTime << " clock cycles." << RESET;
         pBoard->setStubOffset(cCorrectOffset - cReTime);
         // TO-DO .. remove this
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime);

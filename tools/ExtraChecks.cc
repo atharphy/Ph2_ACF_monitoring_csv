@@ -1347,7 +1347,7 @@ void ExtraChecks::QuickStubCheck(std::vector<uint8_t> pChipIds, uint16_t pTrigge
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
 
-        auto cStubPackageDelay = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+        auto cStubPackageDelay = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDBLUE << "Stub package delay to " << +cStubPackageDelay << RESET;
 
         // uint16_t cDelay = fBeBoardInterface->ReadBoardReg( theBoard,
@@ -1517,7 +1517,7 @@ void ExtraChecks::DataCheck(std::vector<uint8_t> pChipIds, uint16_t pTriggerRate
             if(pScan)
             {
                 LOG(INFO) << BOLDBLUE << "Setting package delay to " << +cPackageDelay << RESET;
-                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
             }
             // read N events

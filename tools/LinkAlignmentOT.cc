@@ -49,7 +49,7 @@ void LinkAlignmentOT::Initialise()
     SetName("LinkAlignmentOT");
 
     // list of board registers that can be modified by this tool
-    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay"};
+    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
     // no ROC registers to perserve
@@ -474,7 +474,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         // now try and find correct package delay
         uint16_t cMaxBxCounter  = 3564;
         uint32_t cNevents       = 10;
-        auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+        auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
         size_t cAttempt = 0;
@@ -486,7 +486,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                 if(cCorrectDelay) continue;
 
                 LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
-                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                 cInterface->Bx0Alignment();
 
                 ReadNEvents(pBoard, cNevents);
@@ -691,7 +691,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
     fBeBoardInterface->WriteBoardMultReg((*cBoardIter), cRegVec);
 
     // now try and find correct package delay
-    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
     uint8_t cPackageDelay = 7;
     uint8_t cFinalDelay   = cPackageDelay;
@@ -700,7 +700,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         if(cCorrectDelay) continue;
 
         LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
-        fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+        fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
         cInterface->Bx0Alignment();
 
         // check stubs
