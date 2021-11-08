@@ -306,36 +306,112 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
     uint16_t cRegAddress = ((pRow << 11) | (pBaseRegister << 7) | 0x79);
     return cRegAddress;
 }
-bool MPAInterface::setInjectionSchema(ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop)
+
+
+
+//two methods -- also kinda slow but cant really use broadcast commands with enflags without overwriting other bits
+//Would want  to do a rowwise broadcast -- maybe using col 0  for bit mask?
+bool MPAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
 {
+
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS* NMPACOLS>*>(cChip->getChipOriginalMask());
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
+
+    auto cBitset = std::bitset<NSSACHANNELS*NMPACOLS>(groupToMask->getBitset() & cOriginalMask->getBitset() );
+    //cBitset = cBitset&std::bitset<NSSACHANNELS*NMPACOLS>(0x0000F0FF0);
+    LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with "
+              << group->getNumberOfEnabledChannels()
+              << " desired mask \t... : " << cBitset
+              << " original mask  \t... : " << cOriginalMask << " enabled channels "
+              << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
+	
+	//std::vector<std::pair<std::string, uint16_t>> pVecReq;
+    //pVecReq.clear();
+	bool returnval=true;
+    for(uint32_t ipix = 0; ipix < (NSSACHANNELS* NMPACOLS); ipix++)
+	{
+		auto shifted=std::bitset<NSSACHANNELS*NMPACOLS>(0x1)<<ipix;
+		bool bitval=bool(((cBitset&shifted)>>ipix).to_ulong());
+
+        //uint32_t           cPixelIds = ipix;
+        //std::ostringstream cRegName;
+        //cRegName << "ENFLAGS_P" << std::to_string(cPixelIds+1);
+        //uint16_t regval=this->ReadChipReg(cChip, cRegName.str());
+		//regval=regval&(0xFF&bitval);
+		//std::pair<std::string, uint16_t> Req;
+		//Req.first=cRegName.str();
+		//Req.second=regval;
+		//pVecReq.push_back(Req);
+	
+        returnval&=maskPixel(cChip,ipix+1,(1-bitval),pVerifLoop); // I  think mask 0 is enable?
+
+	}
+    //return this->WriteChipMultReg(cChip, pVecReq);
+    return returnval;
+}
+
+
+
+bool MPAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+{
+
     std::bitset<NSSACHANNELS* NMPACOLS> cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
-    // figure this out
-    return true;
+
+
+
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS* NMPACOLS>*>(cChip->getChipOriginalMask());
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
+
+	//cBitset=cBitset&std::bitset<NSSACHANNELS * NMPACOLS>(0xF0FF0);
+
+    LOG(DEBUG) << BOLDBLUE << "\t... Applying injection to MPA" << +cChip->getId() << " with "
+              << group->getNumberOfEnabledChannels()
+              << " desired mask \t... : " << cBitset
+              << " original mask  \t... : " << cOriginalMask << " enabled channels "
+              << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
+
+	bool returnval=true;
+    for(uint32_t ipix = 0; ipix < (NSSACHANNELS* NMPACOLS); ipix++)
+	{
+		auto shifted=std::bitset<NSSACHANNELS*NMPACOLS>(0x1)<<ipix;
+		bool bitval=bool(((cBitset&shifted)>>ipix).to_ulong());
+
+
+        returnval&=enablePixelInjection(cChip,ipix+1,bitval,pVerifLoop);
+
+	}
+
+    return returnval;
+
 }
 bool MPAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
 {
+
     bool success = true;
     if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
+
     return success;
 }
-bool MPAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+
+
+
+
+
+
+bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerifLoop)
 {
-    // first make sure all pixels are enabled
-    // then mask those disabled
-    const ChannelGroupBase*                     cOriginalMask = cChip->getChipOriginalMask();
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
-    // std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset());
-    // auto cBitset = std::bitset<NSSACHANNELS*NMPACOLS>(groupToMask->getBitset() & cOriginalMask->getBitset() );
-    LOG(INFO) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with "
-              << group->getNumberOfEnabledChannels()
-              // << " desired mask \t... : " << cBitset
-              << " original mask  \t... : " << cOriginalMask << " enabled channels "
-              << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
-    return true;
+    auto    cRegValue = this->readPixel(pChip, "PixelEnable", pPixelNum);
+    uint8_t cNewValue = (cRegValue & 0xBF) | (pInj<<6);
+
+
+    LOG(DEBUG) << BOLDBLUE << "Setting Enable to 0x" << std::hex << +cNewValue << std::dec << RESET;
+    return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop);
 }
+
+
 bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
     ChannelGroup<NSSACHANNELS * NMPACOLS> allChannelEnabledGroup;
