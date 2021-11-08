@@ -143,7 +143,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("DataMonitor", "Data monitor", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("TestPulseCheck", "Test pulse check - inject with TP and perform latency scan", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("scanLatencies", "Scan L1+Stub Latencies ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -367,9 +369,9 @@ int main(int argc, char* argv[])
     }
 
     // align CIC-lpGBT-BE
-    
-    bool cIgnoreI2c = false; 
-    bool cReInitialize=true;    
+
+    bool cIgnoreI2c    = false;
+    bool cReInitialize = true;
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
@@ -407,10 +409,10 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
-    // reload settings on-to FE chips 
+    // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {
-        // //cReInitialize=false;    
+        // //cReInitialize=false;
         // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
@@ -442,18 +444,19 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read") && cmd.foundOption("realign"))
     {
-        // re-align stub package 
-        // bool cSkipStubPkg = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("stubPackage") != std::string::npos);
-        // if(cSkipStubPkg)
-        //     LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
-        // else
-        // {
-        //     LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
-        //     LinkAlignmentOT cLinkAlignment;
-        //     cLinkAlignment.Inherit(&cTool);
-        //     cLinkAlignment.AlignStubPackage();
-        //     cLinkAlignment.Reset();
-        // }
+        // re-align stub package
+        bool cSkipStubPkg = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("stubPackage") != std::string::npos);
+        if(cSkipStubPkg)
+            LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+            LinkAlignmentOT cLinkAlignment;
+            cLinkAlignment.Inherit(&cTool);
+            cLinkAlignment.Initialise();
+            cLinkAlignment.AlignStubPackage();
+            cLinkAlignment.Reset();
+        }
 
         // time align stubs with L1 data in the BE
         bool cSkipBEstubs = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("beStubs") != std::string::npos);
@@ -980,6 +983,24 @@ int main(int argc, char* argv[])
         t.show("Time to check data of the front-ends on the system: ");
     }
 
+    if(!cmd.foundOption("read") && cmd.foundOption("TestPulseCheck"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
+
+        BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.Inherit(&cTool);
+        cBeamTestCheck.Initialise();
+        // check with TP
+        if(cmd.foundOption("scanLatencies"))
+            cBeamTestCheck.CheckWithTP();
+        else
+            cBeamTestCheck.ValidateTP();
+        cBeamTestCheck.writeObjects();
+        cBeamTestCheck.Reset();
+    }
     if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
     {
         std::ofstream cGoodRuns;
@@ -987,21 +1008,19 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t         cDisableFEs        = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
-        
-        // check with TP
-        cBeamTestCheck.CheckWithTP();
 
-        // uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
-        // int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
-        // cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        //cBeamTestCheck.CheckWithInternal(cContinuousReadout);
-        // cBeamTestCheck.CheckWithExternal(cContinuousReadout);
-        //cBeamTestCheck.CheckWithExternal(cContinuousReadout);
+        uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
+        int     cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+        cBeamTestCheck.SetReadoutPause(cReadoutPause);
+        if(cmd.foundOption("scanLatencies"))
+            cBeamTestCheck.CheckWithExternal(cContinuousReadout);
+        else
+            cBeamTestCheck.ValidateExternal();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }

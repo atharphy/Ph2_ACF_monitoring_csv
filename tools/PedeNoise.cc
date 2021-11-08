@@ -200,7 +200,7 @@ void PedeNoise::Reset()
                         if(cMapItem.first.find("Bias_THDAC") != std::string::npos) continue;
 
                         LOG(DEBUG) << BOLDBLUE << "PedeNoise::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to " << cMapItem.second.fValue
-                                  << RESET;
+                                   << RESET;
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
                     }
                 }
@@ -304,7 +304,7 @@ void PedeNoise::sweepSCurves()
     cStartValue = this->findPedestal(fPulseAmplitude == 0);
     if(fDisableStubLogic) disableStubLogic();
     LOG(INFO) << BLUE << "Sweep of S-curves will start at an average threshold of " << cStartValue << RESET;
-    //measureSCurves(cStartValue);
+    // measureSCurves(cStartValue);
     scanScurves();
 
     // if(fDisableStubLogic) reloadStubLogic();

@@ -411,7 +411,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 // ######################################
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
-    LOG (INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -491,7 +491,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }
-        bool cSuccess = CicStartUp(cOpticalGroup,true);
+        bool cSuccess = CicStartUp(cOpticalGroup, true);
         if(!cSuccess)
         {
             LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
@@ -788,15 +788,18 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         cSuccess = fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
         if(cSuccess)
         {
-            if( cStartUpSequence ){ 
-                LOG (INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
+            if(cStartUpSequence)
+            {
+                LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
                 cSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
             }
-            else 
+            else
             {
-                LOG (INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
-                if( fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength())) cSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
-                else cSuccess= false;
+                LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
+                if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
+                    cSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
+                else
+                    cSuccess = false;
             }
         }
         else
@@ -845,10 +848,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // make sure board is also set to the same thing
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
-            if( pReInitialize ) InitializeOT(cBoard);
+            if(pReInitialize)
+                InitializeOT(cBoard);
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {
-                // lpGBT config 
+                // lpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
                     if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -891,7 +895,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     }
                 }
 
-                // CIC configure 
+                // CIC configure
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& clpGBT = cOpticalGroup->flpGBT;

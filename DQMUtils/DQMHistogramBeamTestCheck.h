@@ -59,8 +59,10 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1);
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
+    void fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
     void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
+    void fillBendPlots(DetectorDataContainer& theBendMap);
 
   private:
     void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
@@ -75,6 +77,14 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     DetectorDataContainer fLatencyScan2DHistograms;
     DetectorDataContainer fTriggerTDCHistograms;
     DetectorDataContainer fClusterOccupancyHistograms;
+    // stub hit maps - one per sensor [0 == bottom ; 1 == top ]
+    DetectorDataContainer fStubMapS0Histograms;
+    DetectorDataContainer fStubMapS1Histograms;
+    // hit maps = one per sensor [ 0 == bottom; 1 == top ]
+    DetectorDataContainer fHitMapS0Histograms;
+    DetectorDataContainer fHitMapS1Histograms;
+    // Bend distributions
+    DetectorDataContainer fBendHistrograms;
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;

@@ -132,6 +132,8 @@
 #define OFFSET_CBCSTUBDATA_CBC3 264 + 23 // LAST BIT
 #define WIDTH_CBCSTUBDATA 12
 
+// number of bend codes
+#define BENDBINS 30
 // Latency Scan
 #define TDCBINS 8
 #define VECSIZE 1000

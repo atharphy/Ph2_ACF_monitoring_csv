@@ -102,8 +102,8 @@ class CicInterface : public ChipInterface
     bool                              ControlMux(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
     bool                              ConfigureStubOutput(Ph2_HwDescription::Chip* pChip, uint8_t pLineSel = 0);
     bool                              ConfigureTermination(Ph2_HwDescription::Chip* pChip, uint8_t pClkTerm = 1, uint8_t pRxTerm = 1);
-    bool                              ConfigureDriveStrength(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength=3 ); 
-    bool                              ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge=1 );
+    bool                              ConfigureDriveStrength(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 3);
+    bool                              ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge = 1);
     bool                              GetResyncRequest(Ph2_HwDescription::Chip* pChip);
     //
     bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
