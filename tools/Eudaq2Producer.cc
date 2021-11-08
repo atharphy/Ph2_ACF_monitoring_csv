@@ -31,6 +31,7 @@ Eudaq2Producer::Eudaq2Producer(const std::string& name, const std::string& runco
 {
     fPh2FileHandler   = nullptr;
     fSLinkFileHandler = nullptr;
+    fInitialised = false;
 }
 
 Eudaq2Producer::~Eudaq2Producer()
@@ -57,7 +58,6 @@ void Eudaq2Producer::DoInitialise()
     this->InitializeHw(fPathToHWFile);
     this->InitializeSettings(fPathToHWFile, outp);
     LOG(INFO) << outp.str();
-    this->ConfigureHw();
 
     // check if PS module it is
     for(auto cBoard : *fDetectorContainer)
@@ -68,63 +68,63 @@ void Eudaq2Producer::DoInitialise()
       } 
     }
 
-    PSAlignment cPSAlignment;
-    if(fIsPS)
-    {
+    bool cIgnoreI2c = false; 
+    bool cReInitialize = true;    
+    bool cReconfigure = (cEudaqIni->Get("Reconfigure", "false") == "true") ? true : false;
+    if (cReconfigure) {
+        this->ConfigureHw(cIgnoreI2c, cReInitialize);
+      
         // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
         cPSAlignment.Inherit(this);
         cPSAlignment.Initialise();
         cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
+
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(this);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            exit(0);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            exit(0);
+        }
+
+        // align FEs - CIC
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(this);
+        cCicAligner.Start(0);
+        cCicAligner.waitForRunToBeCompleted();
+        cCicAligner.dumpConfigFiles();
+
+        // time align stubs with L1 data in the BE
+        if(!cSkipAlignment)
+        {
+            StubBackEndAlignment cStubBackEndAligner;
+            cStubBackEndAligner.Inherit(this);
+            cStubBackEndAligner.Start(0);
+            cStubBackEndAligner.waitForRunToBeCompleted();
+        }
+
+        // now align data between SSA-MPA
+        if(fIsPS && !cSkipAlignment)
+        {
+            cPSAlignment.dumpConfigFiles();
+            cPSAlignment.Align();
+        }
     }
 
-    // align CIC-lpGBT-BE
-    LinkAlignmentOT cLinkAlignment;
-    cLinkAlignment.Inherit(this);
-    try
-    {
-        cLinkAlignment.Start(0);
-    }
-    catch(const std::exception& e)
-    {
-        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here [1]" << RESET;
-        throw std::runtime_error(std::string("Could not align link in the BE... stopping here."));
-    }
-    cLinkAlignment.waitForRunToBeCompleted();
-    cLinkAlignment.dumpConfigFiles();
-    if(!cLinkAlignment.getStatus())
-    {
-        LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here [2]" << RESET;
-        throw std::runtime_error(std::string("Could not align link in the BE... stopping here."));
-    }
-
-    // align FEs - CIC
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit(this);
-    cCicAligner.Start(0);
-    cCicAligner.waitForRunToBeCompleted();
-    cCicAligner.dumpConfigFiles();
-
-    // time align stubs with L1 data in the BE
-    if(!cSkipAlignment)
-    {
-        StubBackEndAlignment cStubBackEndAligner;
-        cStubBackEndAligner.Inherit(this);
-        cStubBackEndAligner.Start(0);
-        cStubBackEndAligner.waitForRunToBeCompleted();
-
-        // cStubBackEndAligner.Initialise();
-        // cStubBackEndAligner.FindStubLatency();
-        // cStubBackEndAligner.Reset();
-        // cPSAlignment.Align();
-    }
-
-    // now align data between SSA-MPA
-    if(fIsPS && !cSkipAlignment)
-    {
-        cPSAlignment.dumpConfigFiles();
-        cPSAlignment.Align();
-    }
-
+    fInitialised = true;
     LOG(INFO) << BOLDGREEN << "[CMS-OT Producer] Initialised" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Initialised");
 }
@@ -136,10 +136,12 @@ void Eudaq2Producer::DoConfigure()
     // auto cRunNumber = GetRunNumber();
     auto cEudaqConf = GetConfiguration();
 
-    // check if async counters are enabled
     // get MPA and SSA thresholds
-    uint8_t cThresholdMPA = std::stoi(cEudaqConf->Get("ThresholdMPA", "75"));
-    uint8_t cThresholdSSA = std::stoi(cEudaqConf->Get("ThresholdSSA", "35"));
+    fThresholdMPA = std::stoi(cEudaqConf->Get("ThresholdMPA", "75"));
+    fThresholdSSA = std::stoi(cEudaqConf->Get("ThresholdSSA", "35"));
+    // get CBC threshold
+    fThresholdCBC = std::stoi(cEudaqConf->Get("ThresholdCBC", "550"));
+    fRelativeThreshold = std::stoi(cEudaqConf->Get("RelativeThreshold", "0"));  // 0 will correspond to a threshold at the pedestal
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled    = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
@@ -200,8 +202,9 @@ void Eudaq2Producer::DoConfigure()
     if(fIsPS && fEnableInjection)
     {
         uint8_t cPulseAmplitude = std::stoi(cEudaqConf->Get("PulseAmplitude", "120"));
-        EnableDigitalInjection(cPulseAmplitude, cThresholdMPA, cThresholdSSA);
+        EnableDigitalInjection(cPulseAmplitude, fThresholdMPA, fThresholdSSA);
     }
+
     fConfigured = true;
     LOG(INFO) << BOLDGREEN << "[CMS-OT Producer] Configured" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Configured");
@@ -211,8 +214,107 @@ void Eudaq2Producer::DoStartRun()
 {
     LOG(INFO) << "[CMS-OT Producer] Starting Run..." << RESET;
 
-    // Getting Run Number and EUDAQ configuration file object
     auto cEudaqConf = GetConfiguration();
+    // Save current threshold values per chip to restore them in the stop state
+    // Save individual chip thresholds in a data container
+    ContainerFactory::copyAndInitChip<uint16_t>(*this->fDetectorContainer, fChipThreshContainer);
+    for (auto cBoard : *fDetectorContainer) {
+        for (auto cOpticalGroup : *cBoard) {
+            for (auto cHybrid : *cOpticalGroup) {
+                for (auto cChip : *cHybrid) {
+                    auto & cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    // Fill chip threshold with current value
+                    if (cChip->getFrontEndType() == FrontEndType::CBC3)
+                        cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
+                    else if (cChip->getFrontEndType() == FrontEndType::MPA)
+                        cRegister = cChip->getReg("ThDAC0");
+                    else if (cChip->getFrontEndType() == FrontEndType::SSA)
+                        cRegister = cChip->getReg("Bias_THDAC"); 
+                }
+            }
+        }
+    }
+
+    // Set thresholds -- two different possibilities implemented
+    // Possibility 1: Global threshold value read from config file for all chips 
+    //                Needs to have either ThresholdMPA or ThresholdCBC to be defined in EUDAQ config file
+    if (!cEudaqConf->Get("ThresholdMPA", "").empty() || !cEudaqConf->Get("ThresholdCBC", "").empty()) 
+    {
+        LOG(INFO) << BOLDYELLOW << "Using global threshold setting to set common threshold for all chips!" << RESET;
+        for (auto cBoard : *fDetectorContainer) {
+            for (auto cOpticalGroup : *cBoard) {
+                for (auto cHybrid : *cOpticalGroup) {
+                    for (auto cChip : *cHybrid) {
+                        if (cChip->getFrontEndType() == FrontEndType::CBC3)
+                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdCBC);
+                        else if (cChip->getFrontEndType() == FrontEndType::MPA)
+                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdMPA);
+                        else if (cChip->getFrontEndType() == FrontEndType::SSA)
+                            this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdSSA);
+                    }
+                }
+            }
+        }
+    }
+    // Possibility 2: Set threshold per chip relative to the measured pedestal 
+    //                Threshold set per chip is 'chip_threshold = pedestal + relative_threshold' (negative values possible!)
+    //                IMPORTANT: please note
+    //                  * the register 'threshold' register has to be removed from the Ph2_ACF xml config file for all hybrids
+    //                  * the individual chip thresholds need to be configured at their pedestal (e.g. by the PedeNoise class ran previously)
+    else if (!cEudaqConf->Get("RelativeThreshold", "").empty()) 
+    {
+        LOG(INFO) << BOLDYELLOW << "Using relativ threshold method to set threshold per chip!" << RESET;
+        for (auto cBoard : *fDetectorContainer) {
+            for (auto cOpticalGroup : *cBoard) {
+                for (auto cHybrid : *cOpticalGroup) {
+                    for (auto cChip : *cHybrid) {
+                        auto & cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                        LOG(INFO) << "Set Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) + fRelativeThreshold << RESET;
+                        this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister) + fRelativeThreshold);
+                    }
+                }
+            }
+        }
+    }
+
+    // Send BORE event at beginning of run with important register information
+    eudaq::EventSP cEudaqEvent = eudaq::Event::MakeShared("CMSPhase2RawEvent");
+    std::time_t cTimestamp = std::time(nullptr);
+    cEudaqEvent->SetTimestamp(cTimestamp, cTimestamp);
+    cEudaqEvent->SetBORE();
+    //Readout the CBCs register data and store them as Tags in a BORE event
+    char name[150];
+    char name2[150];
+    if (!fIsPS) 
+    {
+      LOG(INFO) << "Downloading the register configuration of the CBCs" << RESET;
+      for(auto cBoard : *fDetectorContainer){
+          for(auto cOpticalGroup : *cBoard) {
+            for (auto cHybrid : *cOpticalGroup) {
+                for (auto cChip : *cHybrid) {
+                  int cCbcId = int(cChip->getId());
+                  uint32_t cHybridId = cHybrid->getId();
+                  auto cRegMap = cChip->getRegMap();
+                  ThresholdVisitor cThresholdVisitor (fReadoutChipInterface);
+                  static_cast<ReadoutChip*>(cChip)->accept (cThresholdVisitor);
+                  uint16_t cOriginalThreshold = cThresholdVisitor.getThreshold();
+                  std::sprintf (name2, "Threshold_%02d_%02d", int(cHybridId), int(cCbcId));
+                  cEudaqEvent->SetTag(name2, (uint32_t)cOriginalThreshold);
+                  LOG(INFO) << "Threshold FE" << int(cHybridId) << "CBC" << int(cCbcId) << ": " << cOriginalThreshold << RESET;
+                  for(auto& ireg : cRegMap){
+                      std::sprintf (name, "%s_%02d_%02d", ireg.first.c_str(), int(cHybridId), int(cCbcId));
+                      cEudaqEvent->SetTag(name, (uint32_t)ireg.second.fValue);
+                      LOG(DEBUG) << "Register " << ireg.first.c_str() << "\t" << ireg.second.fValue << RESET;
+                  }//end of ireg loop
+                }
+            }
+          }
+      }
+    }
+    SendEvent(cEudaqEvent);
+
+
+    // Getting Run Number and EUDAQ configuration file object
     auto cRunNumber = GetRunNumber();
 
     // Get path to Ph2ACF Raw data and SLink data
@@ -270,6 +372,10 @@ void Eudaq2Producer::DoStopRun()
     // Finalize data acquisition
     LOG(INFO) << "[CMS-OT Producer] Stopping Run..." << RESET;
 
+    // Set exit run flag and join running data thread
+    // No need to reset fConfigured flag. We need to allow for a restart of the run without the full configuration sequence
+    fExitRun = true;
+
     // Close shutter
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Closing shutter..." << RESET;
     for(auto cBoard: *fDetectorContainer)
@@ -282,10 +388,6 @@ void Eudaq2Producer::DoStopRun()
         LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "
                   << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
     }
-
-    // Set exit run flag and join running data thread
-    // No need to reset fConfigured flag. We need to allow for a restart of the run without the full configuration sequence
-    fExitRun = true;
 
     // Close raw data and Slink data files
     if(fThreadRun.joinable()) fThreadRun.join();
@@ -301,6 +403,20 @@ void Eudaq2Producer::DoStopRun()
         LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Closing file handler for .daq " << RESET;
         fSLinkFileHandler->closeFile();
     }
+
+    // Reset chip thresholds to original values
+    LOG(INFO) << BOLDYELLOW << "Resetting chip thresholds!" << RESET;
+    for (auto cBoard : *fDetectorContainer) {
+        for (auto cOpticalGroup : *cBoard) {
+            for (auto cHybrid : *cOpticalGroup) {
+                for (auto cChip : *cHybrid) {
+                    auto & cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    LOG(INFO) << "Reset Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) << RESET;
+                    this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister));
+                }
+            }
+        }
+    }
     LOG(INFO) << "[CMS-OT Producer] Stopped Run" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Stopped Run");
 }
@@ -308,15 +424,18 @@ void Eudaq2Producer::DoStopRun()
 void Eudaq2Producer::DoReset()
 {
     LOG(INFO) << "[CMS-OT Producer] Reseting Run..." << RESET;
-    // Just in case close the shutter
-    for(auto cBoard: *fDetectorContainer)
+    if (fInitialised)  // Avoid seg fault if Tool object is not yet initialised
     {
-        fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
-        static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->ResetReadout();
-        LOG(INFO) << BOLDBLUE << "Reset readout on D19cFWInterface" << RESET;
-        // Show number of triggers received so far
-        LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "
-                  << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+      // Just in case close the shutter
+      for(auto cBoard: *fDetectorContainer)
+      {
+          fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
+          static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+          LOG(INFO) << BOLDBLUE << "Reset readout on D19cFWInterface" << RESET;
+          // Show number of triggers received so far
+          LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "
+                    << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
+      }
     }
 
     fExitRun = true, fConfigured = false;
@@ -336,7 +455,7 @@ void Eudaq2Producer::DoTerminate()
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Terminated Run");
 }
 
-// ReadoutLoop has been modified in order to allow for the acquisition of multilple events by a single trigger signal.
+// ReadoutLoop has been modified in order to allow for the acquisition of multiple events by a single trigger signal.
 // This way, time walk performance can be evaluated in the analysis
 // Multiple Ph2ACF Events are read, converted and stored as EUDAQ SubEvents within in one EUDAQ Event
 void Eudaq2Producer::ReadoutLoop()
@@ -766,7 +885,7 @@ bool Eudaq2Producer::EventsPending()
             }                                                                                                                                // end of cBoard loop
         }                                                                                                                                    // end of if fHandshakeEnabled
         else
-            return false;
+            return true;
     }
     return false;
 }

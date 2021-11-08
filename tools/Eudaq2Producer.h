@@ -81,11 +81,16 @@ class Eudaq2Producer
     uint32_t         fHitsCounter;
     bool             fIsPS            = true;
     bool             fEnableInjection = false;
-    std::vector<int> fThresholdList;
-    int              fLastThreshold;
+    // std::vector<int> fThresholdList;
+
+    uint8_t fThresholdMPA;
+    uint8_t fThresholdSSA;
+    uint16_t fThresholdCBC;
+    int fRelativeThreshold;
+    DetectorDataContainer fChipThreshContainer;
 
     // Run status variables
-    bool        fExitRun, fConfigured;
+    bool        fExitRun, fConfigured, fInitialised;
     std::thread fThreadRun;
     bool        fFirstEvent = true;
 
