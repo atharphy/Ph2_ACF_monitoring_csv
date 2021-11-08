@@ -76,17 +76,17 @@ class Eudaq2Producer
   protected:
   private:
     // Some HW settings
-    bool             fHandshakeEnabled;
-    uint32_t         fTriggerMultiplicity;
-    uint32_t         fHitsCounter;
-    bool             fIsPS            = true;
-    bool             fEnableInjection = false;
+    bool     fHandshakeEnabled;
+    uint32_t fTriggerMultiplicity;
+    uint32_t fHitsCounter;
+    bool     fIsPS            = true;
+    bool     fEnableInjection = false;
     // std::vector<int> fThresholdList;
 
-    uint8_t fThresholdMPA;
-    uint8_t fThresholdSSA;
-    uint16_t fThresholdCBC;
-    int fRelativeThreshold;
+    uint8_t               fThresholdMPA;
+    uint8_t               fThresholdSSA;
+    uint16_t              fThresholdCBC;
+    int                   fRelativeThreshold;
     DetectorDataContainer fChipThreshContainer;
 
     // Run status variables

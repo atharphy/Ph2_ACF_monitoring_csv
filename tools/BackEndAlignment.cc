@@ -20,7 +20,7 @@ void BackEndAlignment::Initialise()
     SetName("BackEndAlignment");
 
     // list of board registers that can be modified by this tool
-    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay"};
+    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
     // retreive original settings for all chips and all back-end boards

@@ -27,9 +27,9 @@ void BeamTestCheck2S::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
-                  << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay") << RESET;
+                  << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
     }
-    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", "fc7_daq_cnfg.readout_block.global.common_stubdata_delay"};
+    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", "fc7_daq_cnfg.readout_block.global.common_stubdata_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
     initializeRecycleBin();

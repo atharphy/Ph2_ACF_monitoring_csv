@@ -177,7 +177,7 @@ void OTTool::SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs)
 // set list of ROC registers to perserve
 void OTTool::SetROCRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs)
 {
-    LOG (INFO) << BOLDBLUE << fMyName << " setting registers to store on ROCs." << RESET;
+    LOG(INFO) << BOLDBLUE << fMyName << " setting registers to store on ROCs." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cROCRegsToPreserveThisBrd = fROCRegsToPerserve.at(cBoard->getIndex());

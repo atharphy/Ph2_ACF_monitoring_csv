@@ -140,97 +140,81 @@ bool SSAInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAm
 
 //
 
-
 //
-bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)  
+bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
 {
-
     const ChannelGroup<NSSACHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
     const ChannelGroup<NSSACHANNELS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
 
+    auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
+    // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
+    LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
+               << " original mask  \t... : " << cOriginalMask << " enabled channels "
+               << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
 
-
-    auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset() );
-    //cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
-    LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with "
-              << group->getNumberOfEnabledChannels()
-              << " desired mask \t... : " << cBitset
-              << " original mask  \t... : " << cOriginalMask << " enabled channels "
-              << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
-
-	std::vector<std::pair<std::string, uint16_t>> pVecReq;
+    std::vector<std::pair<std::string, uint16_t>> pVecReq;
     pVecReq.clear();
 
     for(uint32_t ipix = 0; ipix < (NSSACHANNELS); ipix++)
-	{
-		auto shifted=std::bitset<NSSACHANNELS>(0x1)<<ipix;
-		bool bitval=bool(((cBitset&shifted)>>ipix).to_ulong());
+    {
+        auto shifted = std::bitset<NSSACHANNELS>(0x1) << ipix;
+        bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
+        std::pair<std::string, uint16_t> Req;
+        uint32_t                         cPixelIds = ipix;
+        std::ostringstream               cRegName;
+        cRegName << "ENFLAGS_S" << std::to_string(cPixelIds + 1);
+        uint16_t regval = this->ReadChipReg(cChip, cRegName.str());
 
-		std::pair<std::string, uint16_t> Req;
-        uint32_t           cPixelIds = ipix;
-        std::ostringstream cRegName;
-        cRegName << "ENFLAGS_S" << std::to_string(cPixelIds+1);
-        uint16_t regval=this->ReadChipReg(cChip, cRegName.str());
+        regval = (regval & 0xEF) | (bitval << 4);
 
-		regval=(regval&0xEF)|(bitval<<4);
-
-		//LOG(INFO) << BOLDBLUE << cRegName.str() <<","<<ipix<<","<<bitval<<","<<regval<< RESET; 
-		Req.first=cRegName.str();
-		Req.second=regval;
-		pVecReq.push_back(Req);
-	}
+        // LOG(INFO) << BOLDBLUE << cRegName.str() <<","<<ipix<<","<<bitval<<","<<regval<< RESET;
+        Req.first  = cRegName.str();
+        Req.second = regval;
+        pVecReq.push_back(Req);
+    }
     return this->WriteChipMultReg(cChip, pVecReq);
-
 }
 //
 
 bool SSAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
 {
-
     const ChannelGroup<NSSACHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
     const ChannelGroup<NSSACHANNELS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
 
+    auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
+    // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
+    LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
+               << " original mask  \t... : " << cOriginalMask << " enabled channels "
+               << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
 
-
-    auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset() );
-    //cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
-    LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with "
-              << group->getNumberOfEnabledChannels()
-              << " desired mask \t... : " << cBitset
-              << " original mask  \t... : " << cOriginalMask << " enabled channels "
-              << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
-
-	std::vector<std::pair<std::string, uint16_t>> pVecReq;
+    std::vector<std::pair<std::string, uint16_t>> pVecReq;
     pVecReq.clear();
 
     for(uint32_t ipix = 0; ipix < (NSSACHANNELS); ipix++)
-	{
-		auto shifted=std::bitset<NSSACHANNELS>(0x1)<<ipix;
-		bool bitval=bool(((cBitset&shifted)>>ipix).to_ulong());
+    {
+        auto shifted = std::bitset<NSSACHANNELS>(0x1) << ipix;
+        bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
+        std::pair<std::string, uint16_t> Req;
+        uint32_t                         cPixelIds = ipix;
+        std::ostringstream               cRegName;
+        cRegName << "ENFLAGS_S" << std::to_string(cPixelIds + 1);
+        uint16_t regval = this->ReadChipReg(cChip, cRegName.str());
 
-		std::pair<std::string, uint16_t> Req;
-        uint32_t           cPixelIds = ipix;
-        std::ostringstream cRegName;
-        cRegName << "ENFLAGS_S" << std::to_string(cPixelIds+1);
-        uint16_t regval=this->ReadChipReg(cChip, cRegName.str());
+        regval = (regval & 0xFE) | (bitval);
 
-		regval=(regval&0xFE)|(bitval);
+        // LOG(INFO) << BOLDBLUE << cRegName.str() <<","<<ipix<<","<<bitval<<","<<regval<< RESET;
 
-		//LOG(INFO) << BOLDBLUE << cRegName.str() <<","<<ipix<<","<<bitval<<","<<regval<< RESET; 
-
-		Req.first=cRegName.str();
-		Req.second=regval;
-		pVecReq.push_back(Req);
-	}
+        Req.first  = cRegName.str();
+        Req.second = regval;
+        pVecReq.push_back(Req);
+    }
     return this->WriteChipMultReg(cChip, pVecReq);
-
 }
 //
 bool SSAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
 {
-
     bool success = true;
     if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);

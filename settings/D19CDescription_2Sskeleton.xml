@@ -252,7 +252,9 @@
 		</Register>
         <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
-                <Register name = "stub_package_delay"> 2 </Register>
+        </Register>
+        <Register name="stubs">
+            <Register name = "stub_package_delay"> 7 </Register>
         </Register>
 	</Register>
 	<!-- Readout Block -->

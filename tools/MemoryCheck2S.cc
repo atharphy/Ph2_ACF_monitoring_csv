@@ -410,7 +410,7 @@ void MemoryCheck2S::Initialise()
     {
         auto& cPkgDelayThisBrd = fPackageDelays->at(cBoard->getIndex());
         auto& cPkgDelay        = cPkgDelayThisBrd->getSummary<uint8_t>();
-        cPkgDelay              = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+        cPkgDelay              = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     }
     fThresholdAndNoiseContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);

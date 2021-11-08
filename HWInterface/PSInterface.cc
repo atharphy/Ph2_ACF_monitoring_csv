@@ -24,27 +24,26 @@ PSInterface::PSInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(p
 }
 PSInterface::~PSInterface() {}
 
-
 bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
 {
-	 bool toreturn=false;
-     if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn=theMPAInterface->setInjectionSchema(pPS,   group,  pVerifLoop); }
-     if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn=theSSAInterface->setInjectionSchema(pPS,   group,  pVerifLoop); }
-	 return toreturn;
+    bool toreturn = false;
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn = theMPAInterface->setInjectionSchema(pPS, group, pVerifLoop); }
+    if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn = theSSAInterface->setInjectionSchema(pPS, group, pVerifLoop); }
+    return toreturn;
 }
 bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pPS, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
 {
-	 bool toreturn=false;
-     if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn=theMPAInterface->maskChannelsAndSetInjectionSchema(pPS,   group,  mask,  inject,  pVerifLoop); }
-     if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn=theSSAInterface->maskChannelsAndSetInjectionSchema(pPS,   group,  mask,  inject,  pVerifLoop); }
-	 return toreturn;
+    bool toreturn = false;
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn = theMPAInterface->maskChannelsAndSetInjectionSchema(pPS, group, mask, inject, pVerifLoop); }
+    if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn = theSSAInterface->maskChannelsAndSetInjectionSchema(pPS, group, mask, inject, pVerifLoop); }
+    return toreturn;
 }
 bool PSInterface::maskChannelsGroup(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
 {
-	 bool toreturn=false;
-     if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn=theMPAInterface->maskChannelsGroup(pPS,  group,  pVerifLoop); }
-     if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn=theSSAInterface->maskChannelsGroup(pPS,  group,  pVerifLoop); }
-	 return toreturn;
+    bool toreturn = false;
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn = theMPAInterface->maskChannelsGroup(pPS, group, pVerifLoop); }
+    if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn = theSSAInterface->maskChannelsGroup(pPS, group, pVerifLoop); }
+    return toreturn;
 }
 
 bool PSInterface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
