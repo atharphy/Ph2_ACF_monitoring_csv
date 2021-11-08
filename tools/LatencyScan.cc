@@ -14,12 +14,12 @@ LatencyScan::~LatencyScan() {}
 
 void LatencyScan::Initialize()
 {
-    // check sparsification 
+    // check sparsification
     for(auto cBoard: *fDetectorContainer)
     {
         bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
         cBoard->setSparsification(cSparsified);
-    }    
+    }
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);

@@ -13,7 +13,7 @@
 #ifndef PSAlignment_h__
 #define PSAlignment_h__
 
-#include "Tool.h"
+#include "OTTool.h"
 
 #include <map>
 
@@ -28,7 +28,7 @@ struct MPAInputAlignment
     uint8_t  fEdgeSelStubs;
     uint16_t fStubOffset;
 };
-class PSAlignment : public Tool
+class PSAlignment : public OTTool
 {
   public:
     PSAlignment();
@@ -48,9 +48,7 @@ class PSAlignment : public Tool
     void                                     Stop() override;
     void                                     Pause() override;
     void                                     Resume() override;
-    void                                     writeObjects();
-    void                                     Reset();
-
+    void                                     writeObjects(); 
     // get alignment results
     bool                           getStatus() const { return fSuccess; }
     std::vector<MPAInputAlignment> getAlignmentParameters(Ph2_HwDescription::ReadoutChip* pChip)
@@ -79,6 +77,8 @@ class PSAlignment : public Tool
 
   protected:
   private:
+    // optimal latency 
+    uint16_t fOptimalLatency=0;
     // status
     bool fSuccess;
     // Containers
@@ -136,7 +136,10 @@ class PSAlignment : public Tool
         ConfigureRawInputs(pChip, pPar, pPrint);
         ConfigureStubInputs(pChip, pPar, pPrint);
     }
-
+    void InjectPattern(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections, int pChipId=-1);
+    void Validate(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections, uint8_t pEdgeSelT1=0 );
+    bool CheckFullMatch(Ph2_HwDescription::ReadoutChip* pChip, const std::vector<Ph2_HwInterface::Event*>& pEvents , std::vector<Ph2_HwInterface::Injection> pInjections, uint8_t pTriggerId , size_t pTriggerMult);
+    bool CheckL1Data(const std::vector<Ph2_HwInterface::PCluster> pPClusters, const std::vector<Ph2_HwInterface::SCluster> pSClusters, const std::vector<Ph2_HwInterface::Injection> pInjections);
 // booking histograms
 #ifdef __USE_ROOT__
 //  DQMHistogramCic fDQMHistogram;

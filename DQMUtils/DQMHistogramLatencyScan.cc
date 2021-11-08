@@ -72,7 +72,7 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theD
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyScan2DHistograms, hLatencyScan2D);
 
     HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", TDCBINS, -0.5, TDCBINS - 0.5);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
+    RootContainerFactory::bookBoardHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
 
     // hit map vs. latency
     HistContainer<TH2F> hLatencyHitMap("LatencyHitMap", "Latency HitMap", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, cNCh, 0, cNCh);
@@ -233,10 +233,9 @@ void DQMHistogramLatencyScan::process()
 void DQMHistogramLatencyScan::reset(void) {}
 void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
 {
-    // float cOccGlbl = pOccupancy.getSummary<Occupancy, Occupancy>().fOccupancy;
-    // LOG (INFO) << BOLDBLUE << "Global Occ is " << cOccGlbl << RESET;
     for(auto board: pOccupancy)
     {
+        TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.at(board->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
@@ -260,6 +259,9 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                         cBin                  = cHitMap->FindBin((float)pLatency, cStripId);
                         cHitMap->SetBinContent(cBin, channel.fOccupancy);
                         cHitMap->SetBinError(cBin, channel.fOccupancyError);
+                        if(channel.fOccupancy > 0)
+                            LOG(INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
+                                      << " - have found " << channel.fOccupancy << " hits." << RESET;
                         cChnlIndx++;
                     }
                     TH2F* cLatencyTDC =
@@ -269,15 +271,11 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                         cBin = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
                         uint32_t cNhits =
                             pTDCsummary.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
-                        // LOG (INFO) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency
-                        //         << " bin of " << +cBin
-                        //         <<  " OG" << +opticalGroup->getId()
-                        //         << " Hybrid" << +hybrid->getId()
-                        //         << " Chip" << +chip->getId()
-                        //         << " - on average have found " << cNhits << " channels with a hit [per chip per event]."
-                        //         << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
+                                  << +hybrid->getId() << " Chip" << +chip->getId() << " - have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
                         cLatencyTDC->SetBinError(cBin, std::sqrt((float)cNhits)); // for now
+                        boardTriggerTDCHistogram->Fill((float)cTDC, cNhits);
                     }
                 }
                 // float cError = 0;

@@ -76,7 +76,6 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
-    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -140,9 +139,9 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
 
-    bool cIgnoreI2c = false; 
-    bool cReInitialize=true;    
-    if( cmd.foundOption("reconfigure"))
+    bool cIgnoreI2c    = false;
+    bool cReInitialize = true;
+    if(cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
@@ -179,10 +178,10 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
-    // reload settings on-to FE chips 
+    // reload settings on-to FE chips
     if(cmd.foundOption("reload"))
     {
-        // //cReInitialize=false;    
+        // //cReInitialize=false;
         // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 

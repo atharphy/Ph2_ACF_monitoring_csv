@@ -60,12 +60,9 @@ void Eudaq2Producer::DoInitialise()
     LOG(INFO) << outp.str();
 
     // check if PS module it is
-    for(auto cBoard : *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
-      for(auto cOpticalGroup : *cBoard)
-      {
-        fIsPS &= (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS);
-      } 
+        for(auto cOpticalGroup: *cBoard) { fIsPS &= (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS); }
     }
 
     bool cIgnoreI2c = false; 

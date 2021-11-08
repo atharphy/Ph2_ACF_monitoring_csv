@@ -1379,27 +1379,55 @@ void D19cFWInterface::SendNTriggers(uint16_t pNtriggers)
 }
 void D19cFWInterface::Start()
 {
-    // LOG (INFO) << BOLDBLUE << "D19cFWInterface::Start" << RESET;
-    // ChipReSync();
-    // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    auto cTriggerState = GetTriggerState();
+    if(cTriggerState == 1)
+    {
+        LOG(INFO) << BOLDMAGENTA << "Triggers have already been started... stop them " << RESET;
+        this->Stop();
+    }
 
-    // this stops triggers  + resets
-    this->ResetTriggerFSM();
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    // first lets
     // reset the readout
     this->ResetReadout();
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-    // prints to debug and also checks that things are ok
-    this->TriggerConfiguration();
+    cTriggerState = GetTriggerState();
+    // get handshake mode
+    // this changes how I check if I've actually started
+    auto cHandshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+    bool cBreak     = false;
+    do
+    {
+        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+        // this stops triggers  + resets
+        this->ResetTriggerFSM();
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+        this->TriggerConfiguration();
 
-    // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
-    // clear the register manually)
-    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
-    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
+        // clear the register manually)
+        WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
+        WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
+        // prints to debug and also checks that things are ok
+        this->TriggerConfiguration();
+        cTriggerState = GetTriggerState();
+        // now check if I should try and start again
+        if(cHandshake)
+        {
+            auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+            cBreak           = (cReadoutReq == 1);
+            if(cBreak)
+                LOG(DEBUG) << BOLDMAGENTA << "Hand-shakee is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
+        }
+        else
+            cBreak = (cTriggerState != 0);
+        if(!cBreak) LOG(INFO) << BOLDRED << "Triggers failed to START - trying again" << RESET;
+    } while(!cBreak);
+    LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state at the end of start is " << +cTriggerState << RESET;
 }
 
 void D19cFWInterface::Stop()
@@ -1410,8 +1438,14 @@ void D19cFWInterface::Stop()
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_close", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    auto cTriggerState = GetTriggerState();
+    do
+    {
+        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Stop Trigger state is " << cTriggerState << RESET;
+        WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        cTriggerState = GetTriggerState();
+    } while(cTriggerState == 1);
 }
 // reconfigure trigger
 void D19cFWInterface::ResetTriggerFSM()
@@ -1452,6 +1486,8 @@ void D19cFWInterface::Resume()
 void D19cFWInterface::ResetReadout()
 {
     // LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
+    auto cPkgDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+    LOG(DEBUG) << "Package delay is set to " << +cPkgDelay << RESET;
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
@@ -1843,7 +1879,7 @@ bool D19cFWInterface::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         // configure pattern
         pTuner.SetLineMode(this, cHybrid->getId(), 0, cLineId, 0);
         uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
-        bool    cWithCIC = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+        bool     cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
         if(cWithCIC)
         {
             for(uint16_t cPatternLength = 40; cPatternLength < 41; cPatternLength++)
@@ -2686,6 +2722,19 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 //     // need to return the number of events read
 //     return cNEvents;
 // }
+uint32_t D19cFWInterface::GetTriggerState()
+{
+    int cState = ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+    if(cState == 0)
+        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Idle" << RESET;
+    else if(cState == 1)
+        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+    else if(cState == 2)
+        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Paused. Waiting for readout" << RESET;
+    else
+        LOG(WARNING) << " Trigger State: " << BOLDRED << "Unknown" << RESET;
+    return cState;
+}
 uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
     // LOG(INFO) << BOLDYELLOW << "ReadData D19cFWInterface" << RESET;
@@ -2696,6 +2745,14 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     bool      pFailed    = false;
     EventType cEventType = pBoard->getEventType();
     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+
+    // here check if the trigger state machine is running
+    // if it is not .. stop it , reset and start again
+    if(GetTriggerState() == 0) // 0, idle - 1 running
+    {
+        LOG(DEBUG) << BOLDRED << "Triggers not running.. no data to read " << RESET;
+        return 0;
+    }
 
     // don't wait
     // check what happens in system controller
@@ -2939,6 +2996,8 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     //    }
     //    if(fSaveToFile) fFileHandler->setData(pData);
 
+    // update local event counter
+    fEventCounter += cNEvents;
     // need to return the number of events read
     return cNEvents;
 }
@@ -4568,8 +4627,8 @@ void D19cFWInterface::ChipReSync()
     uint8_t cL1A      = 0;
     // in CIC case always send fast reset with an orbit reset
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
-    bool    cWithCIC = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
-    uint8_t cBC0     = (cWithCIC && fIs2S) ? 1 : 0;
+    bool     cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+    uint8_t  cBC0              = (cWithCIC && fIs2S) ? 1 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
@@ -4595,6 +4654,7 @@ void D19cFWInterface::Trigger(uint8_t pDuration)
 bool D19cFWInterface::Bx0Alignment()
 {
     bool     cSuccess   = false;
+    auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
     {
@@ -4621,8 +4681,8 @@ bool D19cFWInterface::Bx0Alignment()
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
         {
-            LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!" << RESET;
-            // BOLDBLUE << "\t... Stub package delay set to : " << +cStubPackageDelay << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!"
+                       << "\t... Stub package delay set to : " << +cPkgDelay << RESET;
             cSuccess = true;
             /*
             // definitely works with
