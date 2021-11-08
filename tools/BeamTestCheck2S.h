@@ -50,8 +50,9 @@ class BeamTestCheck2S : public OTTool
     // void ReadDataFromFile(std::string pRawFileName);
     // void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void DisableAllFEs();
-    void ScanStubLatency(uint8_t pContinousReadout );
-    void ScanL1Latency(uint8_t pContinousReadout );
+    void ScanStubLatency(uint8_t pContinousReadout);
+    void ScanL1Latency(uint8_t pContinousReadout);
+
   protected:
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
     void cleanContainerMap()
@@ -62,7 +63,7 @@ class BeamTestCheck2S : public OTTool
 
   private:
     // Containers
-    // TDC 
+    // TDC
     DetectorDataContainer fTDCContainer;
     // Latency
     DetectorDataContainer fLatencyContainer, fStubLatencyContainer;
@@ -73,17 +74,17 @@ class BeamTestCheck2S : public OTTool
     // Pedestals
     DetectorDataContainer fPedestalContainer;
     DetectorDataContainer fSignalContainer;
-    // Optimal Latencies 
+    // Optimal Latencies
     DetectorDataContainer fOptimalL1Latency, fOptimalStubLatency;
-    // Hit Containers 
+    // Hit Containers
     DetectorDataContainer fHitOccupancyS0, fHitOccupancyS1;
-    DetectorDataContainer fHitContainerTDC; 
-    DetectorDataContainer fStubOccupancy; 
-    // Hit Maps 
-    DetectorDataContainer fHitMap, fStubMap; 
-    // Bend Maps 
-    DetectorDataContainer fBendMap; 
-    
+    DetectorDataContainer fHitContainerTDC;
+    DetectorDataContainer fStubOccupancy;
+    // Hit Maps
+    DetectorDataContainer fHitMap, fStubMap;
+    // Bend Maps
+    DetectorDataContainer fBendMap;
+
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 
@@ -97,13 +98,13 @@ class BeamTestCheck2S : public OTTool
     void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 1);
     void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
-    void ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinousReadout );
+    void ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinousReadout);
     void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
-    void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pPrintOut=0);
+    void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pPrintOut = 0);
     void Validate();
-  
+
     size_t fThStep{0};
 
 #ifdef __USE_ROOT__

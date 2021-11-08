@@ -994,8 +994,10 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         // check with TP
-        if( cmd.foundOption("scanLatencies") )  cBeamTestCheck.CheckWithTP();
-        else cBeamTestCheck.ValidateTP();
+        if(cmd.foundOption("scanLatencies"))
+            cBeamTestCheck.CheckWithTP();
+        else
+            cBeamTestCheck.ValidateTP();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
@@ -1012,12 +1014,13 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
 
-        
-        uint8_t         cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
-        int             cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+        uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
+        int     cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
         cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        if( cmd.foundOption("scanLatencies") ) cBeamTestCheck.CheckWithExternal(cContinuousReadout);
-        else cBeamTestCheck.ValidateExternal();
+        if(cmd.foundOption("scanLatencies"))
+            cBeamTestCheck.CheckWithExternal(cContinuousReadout);
+        else
+            cBeamTestCheck.ValidateExternal();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }

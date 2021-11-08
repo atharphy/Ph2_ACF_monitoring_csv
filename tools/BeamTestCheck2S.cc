@@ -21,16 +21,15 @@ void BeamTestCheck2S::Initialise()
     SetName("BeamTestCheck2S");
 
     // list of chip registers that can be modified by this tool
-    SetROCRegstoPerserve(FrontEndType::CBC3, {"TriggerLatency1","FeCtrl&TrgLat2"});
+    SetROCRegstoPerserve(FrontEndType::CBC3, {"TriggerLatency1", "FeCtrl&TrgLat2"});
 
     // list of board registers that can be modified by this tool
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG (INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
-            << fBeBoardInterface->ReadBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay") 
-            << RESET;
+        LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
+                  << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay") << RESET;
     }
-    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay","fc7_daq_cnfg.readout_block.global.common_stubdata_delay"};
+    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", "fc7_daq_cnfg.readout_block.global.common_stubdata_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
     initializeRecycleBin();
@@ -63,27 +62,27 @@ void BeamTestCheck2S::Initialise()
     ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, float>>(*fDetectorContainer, fClusterOccupancyS0);
     ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, float>>(*fDetectorContainer, fClusterOccupancyS1);
 
-    // hit occupancies per strip 
+    // hit occupancies per strip
     ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fHitOccupancyS0);
     ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fHitOccupancyS1);
-    // stub occupancies per chip 
+    // stub occupancies per chip
     ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fStubOccupancy);
-    // hits per TDC phase 
+    // hits per TDC phase
     ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, fHitContainerTDC);
-    
+
     // hit+stub maps per chip
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fHitMap);
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fStubMap);
 
-    // bend maps per hybrid 
+    // bend maps per hybrid
     ContainerFactory::copyAndInitHybrid<GenericDataArray<BENDBINS, uint16_t>>(*fDetectorContainer, fBendMap);
 
     // optimal latencies
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fOptimalL1Latency);
-    ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, fOptimalStubLatency); 
-    // TDC per board 
+    ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, fOptimalStubLatency);
+    // TDC per board
     ContainerFactory::copyAndInitBoard<GenericDataArray<TDCBINS, uint16_t>>(*fDetectorContainer, fTDCContainer);
-    
+
     // pedestals
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fPedestalContainer);
 
@@ -134,30 +133,26 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
             {
                 for(auto cChip: *cHybrid) // for on chip - begin
                 {
-                    if( cChip->getId() > 1 ) fReadoutChipInterface->WriteChipReg(cChip,"Threshold",100);
+                    if(cChip->getId() > 1) fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 100);
                 } // for on chip - end
             }     // for on hybrid - end
-        }// for on opticalGroup - end
+        }         // for on opticalGroup - end
     }
     ScanStubLatency(pContinousReadout);
 
-    // print out optimal L1 + stub latencies 
+    // print out optimal L1 + stub latencies
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG (INFO) << BOLDYELLOW << "BeBoard#" << +cBoard->getId() << " optimal stub latency found to be " << fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() << RESET;
+        LOG(INFO) << BOLDYELLOW << "BeBoard#" << +cBoard->getId() << " optimal stub latency found to be " << fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() << RESET;
         for(auto cOpticalGroup: *cBoard) // for on opticalGroup - begin
         {
             for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
             {
-                LOG (INFO) << BOLDYELLOW << "\tHybrid#" << +cHybrid->getId() << RESET;
+                LOG(INFO) << BOLDYELLOW << "\tHybrid#" << +cHybrid->getId() << RESET;
                 for(auto cChip: *cHybrid) // for on chip - begin
                 {
-                    auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<uint16_t>();
-                    LOG (INFO) << BOLDYELLOW << "\t\tROC#" << +cChip->getId() << " optimal L1 latency found to be " << cLat << RESET;
+                    auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    LOG(INFO) << BOLDYELLOW << "\t\tROC#" << +cChip->getId() << " optimal L1 latency found to be " << cLat << RESET;
                 }
             }
         }
@@ -166,10 +161,10 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
-    fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);  
+    fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
 #endif
 
-    // validate 
+    // validate
     Validate();
 }
 void BeamTestCheck2S::ValidateTP()
@@ -179,26 +174,23 @@ void BeamTestCheck2S::ValidateTP()
         // prepare injection
         PrepareForTP(cBoard);
     }
-    // validate 
+    // validate
     Validate();
 }
 void BeamTestCheck2S::Validate()
 {
-    // validate 
-    // read events     
+    // validate
+    // read events
     ContinousReadout();
-    
+
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
         const std::vector<Event*>& cEvents              = this->GetEvents();
-        auto  cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        auto                       cTriggerMult         = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         float                      cNormalizationFactor = cEvents.size() / (1 + cTriggerMult);
-        LOG (INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
-        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
-        {
-            Count(cEvents, cTriggerId);
-        }
+        LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId); }
     }
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap);
@@ -230,29 +222,25 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     {
         // prepare injection
         PrepareForExternal(cBoard);
-        LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
+        LOG(INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
     }
 
     ScanL1Latency(pContinousReadout);
     ScanStubLatency(pContinousReadout);
 
-    // print out optimal L1 + stub latencies 
+    // print out optimal L1 + stub latencies
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG (INFO) << BOLDYELLOW << "BeBoard#" << +cBoard->getId() << " optimal stub latency found to be " << fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() << RESET;
+        LOG(INFO) << BOLDYELLOW << "BeBoard#" << +cBoard->getId() << " optimal stub latency found to be " << fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() << RESET;
         for(auto cOpticalGroup: *cBoard) // for on opticalGroup - begin
         {
             for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
             {
-                LOG (INFO) << BOLDYELLOW << "\tHybrid#" << +cHybrid->getId() << RESET;
+                LOG(INFO) << BOLDYELLOW << "\tHybrid#" << +cHybrid->getId() << RESET;
                 for(auto cChip: *cHybrid) // for on chip - begin
                 {
-                    auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<uint16_t>();
-                    LOG (INFO) << BOLDYELLOW << "\t\tROC#" << +cChip->getId() << " optimal L1 latency found to be " << cLat << RESET;
+                    auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    LOG(INFO) << BOLDYELLOW << "\t\tROC#" << +cChip->getId() << " optimal L1 latency found to be " << cLat << RESET;
                 }
             }
         }
@@ -261,10 +249,10 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
-    fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);  
+    fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
 #endif
 
-    // validate 
+    // validate
     Validate();
 
     // for(auto cBoard: *fDetectorContainer)
@@ -286,7 +274,7 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     // #ifdef __USE_ROOT__
     //     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
     //     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
-    //     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);    
+    //     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
     // #endif
 }
 void BeamTestCheck2S::ValidateExternal()
@@ -296,7 +284,7 @@ void BeamTestCheck2S::ValidateExternal()
         // prepare injection
         PrepareForExternal(cBoard);
     }
-    // validate 
+    // validate
     Validate();
 }
 void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx)
@@ -526,10 +514,11 @@ void BeamTestCheck2S::ScanThreshold(BeBoard* pBoard)
         }
     }
 }
-void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
+void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
 {
-    bool cValidate=false;
-    LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;;
+    bool cValidate = false;
+    LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
+    ;
     size_t cTotalNChnls = 0;
     size_t cNHybrids    = 0;
     for(auto cBoard: *fDetectorContainer)
@@ -544,14 +533,11 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
         }                                                                 // OG
     }
 
-    // zero container that hold TDC information per board 
+    // zero container that hold TDC information per board
     for(auto cBoard: *fDetectorContainer)
     {
         auto cTDCContainer = fTDCContainer.at(cBoard->getIndex());
-        for(uint16_t cIndx = 0; cIndx < TDCBINS; cIndx++)
-        {
-           cTDCContainer->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
-        }
+        for(uint16_t cIndx = 0; cIndx < TDCBINS; cIndx++) { cTDCContainer->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0; }
     }
 
     // zero container
@@ -574,44 +560,42 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
             } // hybrid
         }     // optical group
     }
-    
-    // container to hold trigger multiplicity per board 
-    DetectorDataContainer cBrdTriggerMult; 
+
+    // container to hold trigger multiplicity per board
+    DetectorDataContainer cBrdTriggerMult;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cBrdTriggerMult);
     for(auto cBoard: *fDetectorContainer)
-    {
-        cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>()=fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    }
+    { cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"); }
 
     for(auto cBoard: *fDetectorContainer)
     {
         setSameDacBeBoard(cBoard, "TriggerLatency", fStartLatency);
         fBeBoardInterface->ChipReSync(cBoard);
     }
-    
-    size_t   cLatStep = 0;
-    // need a container to hold maximum hit count per chip 
-    // and one to hold best latency per chip 
+
+    size_t cLatStep = 0;
+    // need a container to hold maximum hit count per chip
+    // and one to hold best latency per chip
     DetectorDataContainer cHitCount, cMaximumHitCount;
     ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, cMaximumHitCount);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cLat   = fOptimalL1Latency.at(cBoard->getIndex());
+        auto& cLat      = fOptimalL1Latency.at(cBoard->getIndex());
         auto& cMaxCount = cMaximumHitCount.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cLatThisOG   = cLat->at(cOpticalGroup->getIndex());
+            auto& cLatThisOG      = cLat->at(cOpticalGroup->getIndex());
             auto& cMaxCountThisOG = cMaxCount->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cLatThisHybrid   = cLatThisOG->at(cHybrid->getIndex());
+                auto& cLatThisHybrid      = cLatThisOG->at(cHybrid->getIndex());
                 auto& cMaxCountThisHybrid = cMaxCountThisOG->at(cHybrid->getIndex());
-                for(auto cChip: *cHybrid )
+                for(auto cChip: *cHybrid)
                 {
-                    auto& cLatThisChip   = cLatThisHybrid->at(cChip->getIndex());
-                    auto& cMaxCountThisChip = cMaxCountThisHybrid->at(cChip->getIndex());
-                    cLatThisChip->getSummary<uint16_t>()=0;
-                    cMaxCountThisChip->getSummary<uint32_t>()=0;
+                    auto& cLatThisChip                        = cLatThisHybrid->at(cChip->getIndex());
+                    auto& cMaxCountThisChip                   = cMaxCountThisHybrid->at(cChip->getIndex());
+                    cLatThisChip->getSummary<uint16_t>()      = 0;
+                    cMaxCountThisChip->getSummary<uint32_t>() = 0;
                 }
             } // hybrid
         }     // optical group
@@ -630,30 +614,30 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        uint16_t cLatency = fReadoutChipInterface->ReadChipReg(cChip,"TriggerLatency");
-                        LOG (DEBUG) << BOLDMAGENTA << "L1 Latency for ROC#" << +cChip->getId() << " set to " << cLatency << RESET;
+                        uint16_t cLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
+                        LOG(DEBUG) << BOLDMAGENTA << "L1 Latency for ROC#" << +cChip->getId() << " set to " << cLatency << RESET;
                     } // chip
                 }     // hybrid
-            } // optical group
+            }         // optical group
         }
-        LOG (INFO) << BOLDBLUE << "Latency Step#" << +cLatStep << RESET;
+        LOG(INFO) << BOLDBLUE << "Latency Step#" << +cLatStep << RESET;
         ContinousReadout();
 
-        // check read-back events 
+        // check read-back events
         for(auto cBoard: *fDetectorContainer)
         {
             auto cBrdIndx = cBoard->getIndex();
             fBeBoardInterface->setBoard(cBoard->getId());
             const std::vector<Event*>& cEvents              = this->GetEvents();
-            auto&    cTriggerMult = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>(); 
+            auto&                      cTriggerMult         = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>();
             float                      cNormalizationFactor = fNevents / (1 + cTriggerMult);
-            LOG (DEBUG) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+            LOG(DEBUG) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
 
             // data containers for this board
             auto& cLatencyContainer   = fLatencyContainer.at(cBrdIndx);
             auto& cLatencyContainerS0 = fLatencyContainerS0.at(cBrdIndx);
             auto& cLatencyContainerS1 = fLatencyContainerS1.at(cBrdIndx);
-            
+
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
                 Count(cEvents, cTriggerId);
@@ -666,30 +650,23 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
                         auto& cHitContainerS1 = fHitOccupancyS1.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
                         for(auto cChip: *cHybrid)
                         {
-                            auto cLatency = fReadoutChipInterface->ReadChipReg(cChip,"TriggerLatency");
-                            auto cCrntCnt = cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() + cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>();
-                            auto& cMaxCnt = cMaximumHitCount.at(cBrdIndx)
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<uint32_t>();
-                            auto& cLat = fOptimalL1Latency.at(cBrdIndx)
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<uint16_t>();
-                            if( cCrntCnt > cMaxCnt ){ 
+                            auto  cLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
+                            auto  cCrntCnt = cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() + cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>();
+                            auto& cMaxCnt  = cMaximumHitCount.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>();
+                            auto& cLat     = fOptimalL1Latency.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            if(cCrntCnt > cMaxCnt)
+                            {
                                 cLat = cLatency;
-                                LOG (DEBUG) << BOLDYELLOW << "\t\t..New maximum found for ROC#" << +cChip->getId() << " on Hybrid#" << +cHybrid->getId() 
-                                    << " for an L1 latency of " << cLatency 
-                                    << " -- previous maximum was " << cMaxCnt << " -- now is " << cCrntCnt << RESET;
-                                cMaxCnt = cCrntCnt; 
+                                LOG(DEBUG) << BOLDYELLOW << "\t\t..New maximum found for ROC#" << +cChip->getId() << " on Hybrid#" << +cHybrid->getId() << " for an L1 latency of " << cLatency
+                                           << " -- previous maximum was " << cMaxCnt << " -- now is " << cCrntCnt << RESET;
+                                cMaxCnt = cCrntCnt;
                             }
-                            else LOG (DEBUG) << BOLDBLUE << "ROC#" << +cChip->getId() << " -- previous maximum was " << cMaxCnt << " -- current hit count is " << cCrntCnt << RESET;
+                            else
+                                LOG(DEBUG) << BOLDBLUE << "ROC#" << +cChip->getId() << " -- previous maximum was " << cMaxCnt << " -- current hit count is " << cCrntCnt << RESET;
                         } // chip
                     }     // hybrid
-                } // optical group
-                // fill containers for DQMUtils 
+                }         // optical group
+                // fill containers for DQMUtils
                 for(auto cOpticalGroup: *cBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
@@ -700,13 +677,13 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
                         {
                             auto& cHitsS0 = cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>();
                             auto& cHitsS1 = cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>();
-                            cLatencyContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId]+=cHitsS0;
-                            cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId]+=cHitsS1;
-                            cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId]+=cHitsS0+cHitsS1;
+                            cLatencyContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cHitsS0;
+                            cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cHitsS1;
+                            cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cHitsS0 + cHitsS1;
                         }
                     }
                 }
-                // print-out 
+                // print-out
                 for(auto cOpticalGroup: *cBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
@@ -716,38 +693,36 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
                         auto& cM  = cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId];
                         if(cM > 0)
                         {
-                            LOG(INFO) << BOLDYELLOW << "Hybrid" << +cHybrid->getId() 
-                                << " Latency of " << (fStartLatency + cLatStep + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
-                                << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
-                                << "In S0 " << cS0  << " hit(s); in S1 = " << cS1  << " hit(s)."
-                                << "Normalization done with " << cNormalizationFactor << " events." << RESET;
+                            LOG(INFO) << BOLDYELLOW << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
+                                      << (1 + cTriggerMult) << "... on average have found " << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
+                                      << "In S0 " << cS0 << " hit(s); in S1 = " << cS1 << " hit(s)."
+                                      << "Normalization done with " << cNormalizationFactor << " events." << RESET;
                         }
                         else
-                            LOG(INFO) << BOLDBLUE << "Hybrid" << +cHybrid->getId() 
-                                << " Latency of " << (fStartLatency + cLatStep + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
-                                << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
-                                << "In S0 " << cS0  << " hit(s); in S1 = " << cS1  << " hit(s)."
-                                << "Normalization done with " << cNormalizationFactor << " events." << RESET;
+                            LOG(INFO) << BOLDBLUE << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
+                                      << (1 + cTriggerMult) << "... on average have found " << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
+                                      << "In S0 " << cS0 << " hit(s); in S1 = " << cS1 << " hit(s)."
+                                      << "Normalization done with " << cNormalizationFactor << " events." << RESET;
                     }
                 }
-                #ifdef __USE_ROOT__
-                    fDQMHistogrammer.fillLatencyPlots(fStartLatency + cLatStep + cTriggerId, *fDetectorDataContainer, fHitContainerTDC);
-                #endif
+#ifdef __USE_ROOT__
+                fDQMHistogrammer.fillLatencyPlots(fStartLatency + cLatStep + cTriggerId, *fDetectorDataContainer, fHitContainerTDC);
+#endif
             }
         }
-        // update trigger latency for next step 
+        // update trigger latency for next step
         for(auto cBoard: *fDetectorContainer)
         {
-            auto&    cTriggerMult = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>(); 
-            setSameDacBeBoard(cBoard, "TriggerLatency", fStartLatency + (1+cLatStep)*(1 + cTriggerMult));
+            auto& cTriggerMult = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>();
+            setSameDacBeBoard(cBoard, "TriggerLatency", fStartLatency + (1 + cLatStep) * (1 + cTriggerMult));
             fBeBoardInterface->ChipReSync(cBoard);
         }
         cLatStep++;
     } while(cLatStep < fLatencyRange);
 
     // set latency per FE ASIC
-    float cMeanLat=0;
-    size_t cNItems=0;
+    float  cMeanLat = 0;
+    size_t cNItems  = 0;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -756,46 +731,37 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout )
             {
                 for(auto cChip: *cHybrid)
                 {
-                   auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())
-                        ->at(cOpticalGroup->getIndex())
-                        ->at(cHybrid->getIndex())
-                        ->at(cChip->getIndex())
-                        ->getSummary<uint16_t>();
-                    LOG (INFO) << BOLDMAGENTA << "Found optimal L1 Latency for ROC#" << +cChip->getId() << " to be " << cLat << RESET;
-                    fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cLat);
-                    cMeanLat += cLat; 
+                    auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    LOG(INFO) << BOLDMAGENTA << "Found optimal L1 Latency for ROC#" << +cChip->getId() << " to be " << cLat << RESET;
+                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
+                    cMeanLat += cLat;
                     cNItems++;
                 } // chip
             }     // hybrid
-        } // optical group
+        }         // optical group
         fBeBoardInterface->ChipReSync(cBoard);
     }
-    // 
-    uint16_t cLatency = (uint16_t)(cMeanLat/cNItems);
-    LOG (INFO) << BOLDMAGENTA << "Scan L1 Latency : average latency across all items is " << cLatency << RESET;
-    if( cValidate )
+    //
+    uint16_t cLatency = (uint16_t)(cMeanLat / cNItems);
+    LOG(INFO) << BOLDMAGENTA << "Scan L1 Latency : average latency across all items is " << cLatency << RESET;
+    if(cValidate)
     {
         // int  cValidateRange=3;
         ContinousReadout();
-        // check read-back events 
+        // check read-back events
         for(auto cBoard: *fDetectorContainer)
         {
             fBeBoardInterface->setBoard(cBoard->getId());
-            const std::vector<Event*>& cEvents              = this->GetEvents();
-            size_t   cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-            for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
-            {
-                Count(cEvents, cTriggerId);
-            }
+            const std::vector<Event*>& cEvents      = this->GetEvents();
+            size_t                     cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+            for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId); }
         }
     }
-
-   
 }
-void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId , uint8_t pPrint )
+void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId, uint8_t pPrint)
 {
     // layer swaps [S0/S1] are stub seeds
-    // read back from chips 
+    // read back from chips
     DetectorDataContainer cLyrSwp;
     ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, cLyrSwp);
     for(auto cBoard: *fDetectorContainer)
@@ -806,22 +772,18 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                    auto& cLyrSwap = cLyrSwp.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<uint8_t>();
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3 ) cLyrSwap = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "LayerSwap") ;
-                    //TO-DO - add for MPA 
-               }
-           }
+                    auto& cLyrSwap = cLyrSwp.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3) cLyrSwap = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "LayerSwap");
+                    // TO-DO - add for MPA
+                }
+            }
         }
     }
 
-    // Bend LUT 
-    // encoded bend 
+    // Bend LUT
+    // encoded bend
     DetectorDataContainer cBendLUT;
     ContainerFactory::copyAndInitChip<std::vector<uint8_t>>(*fDetectorContainer, cBendLUT);
     for(auto cBoard: *fDetectorContainer)
@@ -832,56 +794,34 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cChip: *cHybrid)
                 {
-                   auto& cLUT = cBendLUT.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<std::vector<uint8_t>>();
+                    auto& cLUT = cBendLUT.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>();
                     cLUT.clear();
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) cLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(cChip);
-                    //to-do.. check readLUT for MPAs
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3) cLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(cChip);
+                    // to-do.. check readLUT for MPAs
                 }
             }
         }
     }
 
-    // check read-back events 
+    // check read-back events
     for(auto cBoard: *fDetectorContainer)
     {
-        auto cBrdIndx = cBoard->getIndex();
-        size_t   cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        // zero hit containers for each sensor 
-        // for each TDC phase 
-        // and hit maps 
+        auto   cBrdIndx     = cBoard->getIndex();
+        size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        // zero hit containers for each sensor
+        // for each TDC phase
+        // and hit maps
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-
-                for(size_t cIndx= 0 ; cIndx < 30; cIndx++)
-                {
-                    fBendMap.at(cBoard->getIndex())
-                        ->at(cOpticalGroup->getIndex())
-                        ->at(cHybrid->getIndex())
-                        ->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cIndx] = 0;
-                }
+                for(size_t cIndx = 0; cIndx < 30; cIndx++)
+                { fBendMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cIndx] = 0; }
                 for(auto cChip: *cHybrid)
                 {
-                    fHitOccupancyS0.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<uint32_t>() = 0;
-                    fHitOccupancyS1.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<uint32_t>() = 0;
-                    fStubOccupancy.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<uint32_t>() = 0;
+                    fHitOccupancyS0.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() = 0;
+                    fHitOccupancyS1.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() = 0;
+                    fStubOccupancy.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()  = 0;
                     for(uint16_t cIndx = 0; cIndx < TDCBINS; cIndx++)
                     {
                         fHitContainerTDC.at(cBoard->getIndex())
@@ -891,31 +831,21 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
                     }
 
-                    for(uint32_t cIndx= 0 ; cIndx < cChip->size(); cIndx++)
+                    for(uint32_t cIndx = 0; cIndx < cChip->size(); cIndx++)
                     {
-                        fHitMap.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getChannel<Occupancy>(cIndx).fOccupancy=0;
-                        fStubMap.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getChannel<Occupancy>(cIndx).fOccupancy=0;
+                        fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cIndx).fOccupancy  = 0;
+                        fStubMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cIndx).fOccupancy = 0;
                     }
                 } // chip
             }     // hybrid
-        } // optical group
+        }         // optical group
 
-        
-                        
         auto& cHitContainerS0 = fHitOccupancyS0.at(cBrdIndx);
         auto& cHitContainerS1 = fHitOccupancyS1.at(cBrdIndx);
         auto& cStubContainer  = fStubOccupancy.at(cBrdIndx);
         // start at the beginning + trigger id in burst
-        auto cEventIter  = pEvents.begin() + pTriggerId;
-        size_t cEventCount = 0; 
+        auto                   cEventIter            = pEvents.begin() + pTriggerId;
+        size_t                 cEventCount           = 0;
         DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer                       = theOccupancyContainer;
         do
@@ -928,113 +858,99 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    //auto              cL1IdCIC  = static_cast<D19cCic2Event*>(*cEventIter)->L1Id(cHybrid->getId(), 0);
-                    auto              cL1Status = static_cast<D19cCic2Event*>(*cEventIter)->L1Status(cHybrid->getId());
-                    auto              cBxId     = (*cEventIter)->BxId(cHybrid->getId());
-                    auto              cStubStat = static_cast<D19cCic2Event*>(*cEventIter)->Status(cHybrid->getId());
-                    LOG (DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status " << std::bitset<8>(cStubStat) << RESET;
-                    auto& cOccHybrid            = fDetectorDataContainer->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
+                    // auto              cL1IdCIC  = static_cast<D19cCic2Event*>(*cEventIter)->L1Id(cHybrid->getId(), 0);
+                    auto cL1Status = static_cast<D19cCic2Event*>(*cEventIter)->L1Status(cHybrid->getId());
+                    auto cBxId     = (*cEventIter)->BxId(cHybrid->getId());
+                    auto cStubStat = static_cast<D19cCic2Event*>(*cEventIter)->Status(cHybrid->getId());
+                    LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
+                               << std::bitset<8>(cStubStat) << RESET;
+                    auto& cOccHybrid = fDetectorDataContainer->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
                     for(auto cChip: *cHybrid)
                     {
-                        if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
                         if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                        auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-                        auto& cLyrSwap = cLyrSwp.at(cBrdIndx)
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<uint8_t>();
-                        
-                        if( pPrint ) LOG (DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId 
-                                << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status " << std::bitset<8>(cStubStat) 
-                                << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " found " << +cStubs.size() << " stubs." << RESET;
-                        auto& cLUT = cBendLUT.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<std::vector<uint8_t>>();
-                        for(auto cStub : cStubs)
+                        auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                        auto& cLyrSwap = cLyrSwp.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
+
+                        if(pPrint)
+                            LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
+                                       << std::bitset<8>(cStubStat) << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " found " << +cStubs.size() << " stubs." << RESET;
+                        auto& cLUT = cBendLUT.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>();
+                        for(auto cStub: cStubs)
                         {
-                            // update hit map 
-                            uint32_t cSeedChnl=0;
-                            if( cChip->getFrontEndType() == FrontEndType::CBC3 ){
-                                uint32_t             cSeedStrip = std::floor(cStub.getPosition() / 2.0); // counting from 1
-                                cSeedChnl = 2 * (cSeedStrip - 1) + !cLyrSwap;
+                            // update hit map
+                            uint32_t cSeedChnl = 0;
+                            if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                            {
+                                uint32_t cSeedStrip = std::floor(cStub.getPosition() / 2.0); // counting from 1
+                                cSeedChnl           = 2 * (cSeedStrip - 1) + !cLyrSwap;
                             }
-                            // update bend map 
+                            // update bend map
                             // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
-                            int cBendIndx = std::distance(cLUT.begin(), std::find(cLUT.begin(), cLUT.end(), cStub.getBend() ) ); 
-                            float    cBend=-7.0 + cBendIndx*0.5;
-                            fBendMap.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cBendIndx]++;
-                            if( pPrint )  LOG (INFO) << BOLDYELLOW << "\t\t.. Seed " << +cStub.getPosition() << " Row " << +cStub.getRow() << " Bend " << +cStub.getBend() 
-                                << " i.e. seed in ROC channel#" << +cSeedChnl 
-                                << " bend in strips is " << cBend
-                                << " bend index is " << cBendIndx
-                                << RESET; 
-                            // update stub map 
-                            fStubMap.at(cBrdIndx)
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getChannel<Occupancy>(cSeedChnl).fOccupancy++;
+                            int   cBendIndx = std::distance(cLUT.begin(), std::find(cLUT.begin(), cLUT.end(), cStub.getBend()));
+                            float cBend     = -7.0 + cBendIndx * 0.5;
+                            fBendMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cBendIndx]++;
+                            if(pPrint)
+                                LOG(INFO) << BOLDYELLOW << "\t\t.. Seed " << +cStub.getPosition() << " Row " << +cStub.getRow() << " Bend " << +cStub.getBend() << " i.e. seed in ROC channel#"
+                                          << +cSeedChnl << " bend in strips is " << cBend << " bend index is " << cBendIndx << RESET;
+                            // update stub map
+                            fStubMap.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cSeedChnl).fOccupancy++;
                         }
-                        cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()+= cStubs.size();
+                        cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() += cStubs.size();
                         auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                         LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << " ROC#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
                         for(auto cHit: cHits)
                         {
-                            if( pPrint ) LOG (DEBUG) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Channel " << cHit << RESET;
-                            if(cHit % 2 == 0) cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
-                            else cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
+                            if(pPrint) LOG(DEBUG) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Channel " << cHit << RESET;
+                            if(cHit % 2 == 0)
+                                cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
+                            else
+                                cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
                             auto& cOccChip = cOccHybrid->at(cChip->getIndex());
-                            if( cEventCount == 0 ) cOccChip->getChannel<Occupancy>(cHit).fOccupancy=1; 
-                            else cOccChip->getChannel<Occupancy>(cHit).fOccupancy++;
+                            if(cEventCount == 0)
+                                cOccChip->getChannel<Occupancy>(cHit).fOccupancy = 1;
+                            else
+                                cOccChip->getChannel<Occupancy>(cHit).fOccupancy++;
                             // update hit container for each TDC phase
                             fHitContainerTDC.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
                                 ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
-                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] ++;
-                            // update hit map 
-                            fHitMap.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getChannel<Occupancy>(cHit).fOccupancy++;
+                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal]++;
+                            // update hit map
+                            fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cHit).fOccupancy++;
                         }
                     } // chip vector
                 }     // hybrid vector
             }         // optical group vector
             cEventIter += (1 + cTriggerMult);
             cEventCount++;
-        } while(cEventIter < pEvents.end() && cEventCount < fNevents );//I've only asked to look at fNEvents
+        } while(cEventIter < pEvents.end() && cEventCount < fNevents); // I've only asked to look at fNEvents
     }
 
     for(auto cBoard: *fDetectorContainer)
     {
-        auto cBrdIndx = cBoard->getIndex();
+        auto  cBrdIndx        = cBoard->getIndex();
         auto& cHitContainerS0 = fHitOccupancyS0.at(cBrdIndx);
         auto& cHitContainerS1 = fHitOccupancyS1.at(cBrdIndx);
-        auto& cStubContainer = fStubOccupancy.at(cBrdIndx);
+        auto& cStubContainer  = fStubOccupancy.at(cBrdIndx);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    //if( cChip->getId()==0)
+                    // if( cChip->getId()==0)
                     //{
-                        LOG(DEBUG) << BOLDBLUE << "S0 ROC#" << +(cChip->getId() % 8) << "   " << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
-                        LOG(DEBUG) << BOLDBLUE << "S1 ROC#" << +(cChip->getId() % 8) << "   " << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
-                        LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId() % 8)
-                            << " Stubs   : " << cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs." 
-                            << " Hits S0 : " << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
-                            << " Hits S1 : " << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." 
-                            << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "S0 ROC#" << +(cChip->getId() % 8) << "   "
+                               << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "S1 ROC#" << +(cChip->getId() % 8) << "   "
+                               << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
+                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId() % 8)
+                              << " Stubs   : " << cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs."
+                              << " Hits S0 : " << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
+                              << " Hits S1 : " << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
                     //}
                 }
             }
@@ -1044,7 +960,8 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
 void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 {
     // bool cUseReadNevents = false;
-    LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;;
+    LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
+    ;
     size_t cTotalNChnls = 0;
     size_t cNHybrids    = 0;
     for(auto board: *fDetectorContainer)
@@ -1059,13 +976,10 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
         }                                                                 // OG
     }                                                                     // board
 
-    // zero container that hold TDC information per board 
+    // zero container that hold TDC information per board
     auto cTDCContainer = fTDCContainer.at(pBoard->getIndex());
-    for(uint16_t cIndx = 0; cIndx < TDCBINS; cIndx++)
-    {
-       cTDCContainer->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
-    }
-    
+    for(uint16_t cIndx = 0; cIndx < TDCBINS; cIndx++) { cTDCContainer->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0; }
+
     // zero container
     // latency per hybrid
     auto cLatencyContainer   = fLatencyContainer.at(pBoard->getIndex());
@@ -1155,7 +1069,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                 if(cEventIter >= cEvents.end()) break;
                 uint8_t cTDCVal = (*cEventIter)->GetTDC();
                 cTDCContainer->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal]++;
-    
+
                 //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                 for(auto cOpticalGroup: *pBoard)
                 {
@@ -1215,24 +1129,24 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                     fOptimalLatency = cLat;
                     LOG(INFO) << BOLDYELLOW << "[!!!! new max !!!!]Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult)
                               << "... on average have found " << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
-                              << "In S0 " << cTotalHitsS0 << " hit(s); in S1 = " << cTotalHitsS1  << " hit(s)."
+                              << "In S0 " << cTotalHitsS0 << " hit(s); in S1 = " << cTotalHitsS1 << " hit(s)."
                               << "... optimal latency will be set to " << cLat << ". Normalization done with " << fNReadbackEvents << " events." << RESET;
                     cMaxHits = cRefHits;
                 }
                 else
                     LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
                               << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
-                              << "In S0 " << cTotalHitsS0  << " hit(s); in S1 = " << cTotalHitsS1  << " hit(s)."
+                              << "In S0 " << cTotalHitsS0 << " hit(s); in S1 = " << cTotalHitsS1 << " hit(s)."
                               << "Normalization done with " << fNReadbackEvents << " events." << RESET;
             }
             else
                 LOG(INFO) << BOLDBLUE << "Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << "... on average have found "
                           << std::setprecision(2) << cTotalHits / cNormalizationFactor << " hit(s) per event."
-                          << "In S0 " << cTotalHitsS0  << " hit(s); in S1 = " << cTotalHitsS1  << " hit(s) "
+                          << "In S0 " << cTotalHitsS0 << " hit(s); in S1 = " << cTotalHitsS1 << " hit(s) "
                           << " normalization done with " << fNReadbackEvents << " events." << RESET;
-            #ifdef __USE_ROOT__
-                fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
-            #endif
+#ifdef __USE_ROOT__
+            fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
+#endif
         }
         if(cOffset < (1 + cTriggerMult)) cOffset = (1 + cTriggerMult);
         cLat += cOffset;
@@ -1240,137 +1154,135 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 
     LOG(INFO) << BOLDYELLOW << "Optimal latency found to be : " << fOptimalLatency << " 40 MHz clock cycles [L1 data]" << RESET;
 }
-void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout )
+void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
 {
     // bool cUseReadNevents = false;
     LOG(INFO) << "Scanning Stub Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
     // stub offset already set for this board
     // LOG(INFO) << BOLDBLUE << "Stub offset for BeBoard#" << +pBoard->getId() << " set to " << +pBoard->getStubOffset() << RESET;
-    // figure out latency scan range 
-    DetectorDataContainer cBrdLatency; 
+    // figure out latency scan range
+    DetectorDataContainer cBrdLatency;
     ContainerFactory::copyAndInitBoard<uint16_t>(*fDetectorContainer, cBrdLatency);
     for(auto cBoard: *fDetectorContainer)
     {
-        cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>()=0; 
-        uint16_t cMinLatency=0;
-        uint16_t cMaxLatency=0; 
-        // get mode for stub latency 
-        std::vector<uint16_t> cLatencyBins(512,0);
+        cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>() = 0;
+        uint16_t cMinLatency                                       = 0;
+        uint16_t cMaxLatency                                       = 0;
+        // get mode for stub latency
+        std::vector<uint16_t> cLatencyBins(512, 0);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto cLat = fReadoutChipInterface->ReadChipReg(cChip,"TriggerLatency");
-                    if( cLat > 0) cLatencyBins[cLat]++;
-                    if( cMinLatency == 0 ) cMinLatency = cLat; 
-                    if( cMaxLatency == 0 ) cMaxLatency = cLat;
+                    auto cLat = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
+                    if(cLat > 0) cLatencyBins[cLat]++;
+                    if(cMinLatency == 0) cMinLatency = cLat;
+                    if(cMaxLatency == 0) cMaxLatency = cLat;
 
-                    if( cLat > cMaxLatency ) cMaxLatency = cLat;
-                    if( cLat < cMaxLatency ) cMinLatency = cLat;
+                    if(cLat > cMaxLatency) cMaxLatency = cLat;
+                    if(cLat < cMaxLatency) cMinLatency = cLat;
                 }
             }
         }
         auto cModeLatency = std::max_element(cLatencyBins.begin(), cLatencyBins.end()) - cLatencyBins.begin();
-        // set latency for the board to the minium 
-        LOG (INFO) << BOLDMAGENTA << "Min L1 latency on this board is " << cMinLatency << " 40 MHz clock cycles" << RESET;
-        LOG (INFO) << BOLDMAGENTA << "Max L1 latency on this board is " << cMaxLatency << " 40 MHz clock cycles" << RESET;
-        LOG (INFO) << BOLDBLUE    << "Mode L1 latency on this board is " << cModeLatency << " 40 MHz clock cycles" << RESET;
-        cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>()=cModeLatency; 
-        setSameDacBeBoard(cBoard,"TriggerLatency", cModeLatency);
+        // set latency for the board to the minium
+        LOG(INFO) << BOLDMAGENTA << "Min L1 latency on this board is " << cMinLatency << " 40 MHz clock cycles" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Max L1 latency on this board is " << cMaxLatency << " 40 MHz clock cycles" << RESET;
+        LOG(INFO) << BOLDBLUE << "Mode L1 latency on this board is " << cModeLatency << " 40 MHz clock cycles" << RESET;
+        cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>() = cModeLatency;
+        setSameDacBeBoard(cBoard, "TriggerLatency", cModeLatency);
         fBeBoardInterface->ChipReSync(cBoard);
     }
 
-    // container to hold trigger multiplicity per board 
-    DetectorDataContainer cBrdTriggerMult; 
+    // container to hold trigger multiplicity per board
+    DetectorDataContainer cBrdTriggerMult;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cBrdTriggerMult);
     for(auto cBoard: *fDetectorContainer)
-    {
-        cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>()=fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    }
-
+    { cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"); }
 
     // zero container
     // that hold latency per hybrid
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cLatencyContainer   = fStubLatencyContainer.at(cBoard->getIndex());
+        auto& cLatencyContainer = fStubLatencyContainer.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(uint16_t cIndx = 0; cIndx < fLatencyRange; cIndx++)
-                {
-                    cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx]   = 0;
-                }
+                { cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0; }
             } // hybrid
         }     // optical group
     }
 
-    // need a container to hold maximum hit count per chip 
+    // need a container to hold maximum hit count per chip
     // and one to hold best latency per chip [already defined in tool : fOptimalStubLatency]
     DetectorDataContainer cMaximumStubCount;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cMaximumStubCount);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cMaxCount = cMaximumStubCount.at(cBoard->getIndex());
-        cMaxCount->getSummary<uint32_t>() = 0; 
+        auto& cMaxCount                                                    = cMaximumStubCount.at(cBoard->getIndex());
+        cMaxCount->getSummary<uint32_t>()                                  = 0;
         fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
     }
 
-    // check if stub alignment has already been run 
-    bool cAlignmentRun=true;
-    for(auto cBoard: *fDetectorContainer)
+    // check if stub alignment has already been run
+    bool cAlignmentRun = true;
+    for(auto cBoard: *fDetectorContainer) { cAlignmentRun = cAlignmentRun && (cBoard->getStubOffset() != 0); }
+    int cOffset = 0;
+    // if no alignment has been run .. use scan range
+    if(!cAlignmentRun)
     {
-        cAlignmentRun = cAlignmentRun && ( cBoard->getStubOffset() != 0 ); 
-    }
-    int cOffset=0;
-    // if no alignment has been run .. use scan range 
-    if( !cAlignmentRun )
-    {
-        auto cSetting            = fSettingsMap.find("StubAlignmentScanStart");
+        auto     cSetting   = fSettingsMap.find("StubAlignmentScanStart");
         uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
-        cOffset = cScanStart;
+        cOffset             = cScanStart;
     }
-    else cOffset = (int)(fLatencyRange/2.); 
+    else
+        cOffset = (int)(fLatencyRange / 2.);
 
-    fOptimalLatency   = 0;
-    size_t cLatStep = 0 ; 
+    fOptimalLatency = 0;
+    size_t cLatStep = 0;
     do
     {
         // set stub latency on all BE boards
         std::vector<uint8_t> cSet(0);
         for(auto cBoard: *fDetectorContainer)
         {
-            auto cBrdIndx = cBoard->getIndex();
+            auto  cBrdIndx     = cBoard->getIndex();
             auto& cTriggerMult = cBrdTriggerMult.at(cBrdIndx)->getSummary<uint32_t>();
-            int cStubLatency = cBrdLatency.at(cBrdIndx)->getSummary<uint16_t>() - ( cOffset - cLatStep*(1+cTriggerMult) ) ;
-            if( cStubLatency < 0 ){ cSet.push_back(0); continue;}
+            int   cStubLatency = cBrdLatency.at(cBrdIndx)->getSummary<uint16_t>() - (cOffset - cLatStep * (1 + cTriggerMult));
+            if(cStubLatency < 0)
+            {
+                cSet.push_back(0);
+                continue;
+            }
             fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
-            LOG (INFO) << BOLDBLUE << "Setting stub latency on BeBoard#" << +cBoard->getId() << " to " << cStubLatency << " [stub offset is " << (cBrdLatency.at(cBrdIndx)->getSummary<uint16_t>()-cStubLatency) << " ]" << RESET;
+            LOG(INFO) << BOLDBLUE << "Setting stub latency on BeBoard#" << +cBoard->getId() << " to " << cStubLatency << " [stub offset is "
+                      << (cBrdLatency.at(cBrdIndx)->getSummary<uint16_t>() - cStubLatency) << " ]" << RESET;
             cSet.push_back(1);
         }
-        // read events     
+        // read events
         ContinousReadout();
-        
+
         for(auto cBoard: *fDetectorContainer)
         {
-            if( cSet[cBoard->getIndex()] == 0 ) continue;
+            if(cSet[cBoard->getIndex()] == 0) continue;
             fBeBoardInterface->setBoard(cBoard->getId());
             const std::vector<Event*>& cEvents              = this->GetEvents();
-            auto& cTriggerMult = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>();
+            auto&                      cTriggerMult         = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>();
             float                      cNormalizationFactor = cEvents.size() / (1 + cTriggerMult);
-            LOG (DEBUG) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+            LOG(DEBUG) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
 
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
                 Count(cEvents, cTriggerId);
-                // fill containers for DQMUtils 
-                auto cBrdIndx = cBoard->getIndex();
-                auto& cLatencyContainer   = fStubLatencyContainer.at(cBrdIndx);
-                auto& cMaxCount = cMaximumStubCount.at(cBrdIndx)->getSummary<uint32_t>();
-                size_t cStubCount = 0; 
+                // fill containers for DQMUtils
+                auto   cBrdIndx          = cBoard->getIndex();
+                auto&  cLatencyContainer = fStubLatencyContainer.at(cBrdIndx);
+                auto&  cMaxCount         = cMaximumStubCount.at(cBrdIndx)->getSummary<uint32_t>();
+                size_t cStubCount        = 0;
                 for(auto cOpticalGroup: *cBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
@@ -1379,16 +1291,17 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout )
                         for(auto cChip: *cHybrid)
                         {
                             auto& cStubs = cStubContainer->at(cChip->getIndex())->getSummary<uint32_t>();
-                            cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId]+=cStubs;
+                            cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cStubs;
                             cStubCount += cStubs;
                         }
                     }
                 }
-                if( cStubCount > cMaxCount ) 
+                if(cStubCount > cMaxCount)
                 {
-                    cMaxCount = cStubCount;
+                    cMaxCount                                                = cStubCount;
                     fOptimalStubLatency.at(cBrdIndx)->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
-                    LOG (INFO) << BOLDYELLOW << "Brd#" << +cBoard->getId() << " Trigger# " << +cTriggerId << " found new optimal stub latency of " << fOptimalStubLatency.at(cBrdIndx)->getSummary<uint32_t>() << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Brd#" << +cBoard->getId() << " Trigger# " << +cTriggerId << " found new optimal stub latency of "
+                              << fOptimalStubLatency.at(cBrdIndx)->getSummary<uint32_t>() << RESET;
                 }
             }
         }
@@ -1399,20 +1312,20 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout )
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cLat = fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>();
-        LOG (INFO) << BOLDYELLOW << "Setting common_stubdata_delay on BeBoard#" << +cBoard->getId() << " to " << cLat << RESET;
+        LOG(INFO) << BOLDYELLOW << "Setting common_stubdata_delay on BeBoard#" << +cBoard->getId() << " to " << cLat << RESET;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cLat);
     }
 }
 void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
 {
     // configure trigger
-    uint8_t                                       cTriggerSource   = 6;
-    uint32_t                                      cDelayAfterReset = 300;
-    uint32_t                                      cDelayAfterTP    = 300; 
-    uint32_t                                      cDelayTillNext   = 5000;
-    std::vector<std::string>                      cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "triggers_to_accept"};
-    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayAfterTP, cDelayTillNext, 0 };
-    std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+    uint8_t                  cTriggerSource   = 6;
+    uint32_t                 cDelayAfterReset = 300;
+    uint32_t                 cDelayAfterTP    = 300;
+    uint32_t                 cDelayTillNext   = 5000;
+    std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "triggers_to_accept"};
+    std::vector<uint32_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayAfterTP, cDelayTillNext, 0};
+    std::vector<uint32_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.clear();
     for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
@@ -1526,18 +1439,15 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
         }
     }
 }
-void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard)
-{
-    PrintData(pBoard);
-}
+void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard) { PrintData(pBoard); }
 
 void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
 {
     // configure trigger
-    // make sure I am accepting all triggers 
+    // make sure I am accepting all triggers
     uint8_t                                       cTriggerSource = 5;
-    std::vector<std::string>                      cFcmdRegs{"trigger_source","triggers_to_accept"};
-    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource,0};//fNevents};
+    std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};
+    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, 0}; // fNevents};
     std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.clear();

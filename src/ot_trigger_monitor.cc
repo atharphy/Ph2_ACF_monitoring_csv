@@ -1,9 +1,9 @@
-#include <cstring>
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/OTTool.h"
+#include <cstring>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("pollingTime", "Time to wait between checking trigger counters.... [in seconds]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("pollingTime", "p");
 
-    
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -46,21 +45,21 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint32_t    cPollingTime     = (cmd.foundOption("pollingTime")) ? convertAnyInt(cmd.optionValue("pollingTime").c_str()) : 1;
-    
+    std::string cDirectory   = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    uint32_t    cPollingTime = (cmd.foundOption("pollingTime")) ? convertAnyInt(cmd.optionValue("pollingTime").c_str()) : 1;
+
     // now query the parsing results
-    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
     Timer       cGlobalTimer;
     cGlobalTimer.start();
 
     std::stringstream outp;
-    OTTool              cTool;
+    OTTool            cTool;
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     cTool.CreateResultDirectory(cDirectory, false, false);
-    
-    // monitor trigger rate 
+
+    // monitor trigger rate
     cTool.TriggerMonitor(cPollingTime);
 
     cTool.Destroy();

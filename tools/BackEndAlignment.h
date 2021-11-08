@@ -39,7 +39,7 @@ class BackEndAlignment : public LinkAlignmentOT
     void Pause() override;
     void Resume() override;
     void writeObjects();
-    
+
     // get alignment results
     bool getStatus() const { return fSuccess; }
 

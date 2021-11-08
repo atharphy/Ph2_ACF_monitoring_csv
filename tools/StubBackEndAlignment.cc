@@ -20,6 +20,13 @@ void StubBackEndAlignment::Initialise()
     // list of board registers that can be modified by this tool
     std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
+
+    // list of board registers that can be modified by this tool
+    for(auto cBoard: *fDetectorContainer)
+    {
+        LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
+                  << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay") << RESET;
+    }
 }
 bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 {
@@ -522,6 +529,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // I think this should belong to the board.. need to fix
     if(cFoundCorrectStubLatency)
     {
+        LOG (INFO) << BOLDMAGENTA << "Stub offset set to " << cCorrectOffset - cReTime << " clock cycles." << RESET;
         pBoard->setStubOffset(cCorrectOffset - cReTime);
         // TO-DO .. remove this
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime);
