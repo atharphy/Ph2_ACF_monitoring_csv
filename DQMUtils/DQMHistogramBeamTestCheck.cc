@@ -37,7 +37,8 @@ DQMHistogramBeamTestCheck::~DQMHistogramBeamTestCheck() {}
 void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     uint32_t cNCh         = 0;
-    uint32_t cNSeedChs    = 0;
+    uint32_t cNSeedChsS0  = 0;
+    uint32_t cNSeedChsS1  = 0;
     uint32_t cNChannelsS0 = 0;
     uint32_t cNChannelsS1 = 0;
     for(auto board: theDetectorStructure)
@@ -49,47 +50,69 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
                 uint32_t cN   = 0;
                 uint32_t cNS0 = 0;
                 uint32_t cNS1 = 0;
+                uint32_t cNSeedS0 = 0 ;
+                uint32_t cNSeedS1 = 0 ;
+
+                uint32_t  cMaxS0 = 0; 
+                uint32_t  cMaxS1 = 0; 
+                uint32_t cMaxSeedsS0 = 0; 
+                uint32_t cMaxSeedsS1 = 0; 
                 for(auto chip: *hybrid)
                 {
                     cN += chip->size();
                     // only account for seeds in MPAs/CBCs
                     if(chip->size() == NMPACHANNELS)
                     {
-                        cNSeedChs += chip->size(); // any mPA pixel can be a seed
-                        cNS0 += chip->size();
+                        cNSeedS0 = chip->size()/NMPACOLS;
+                        cNS0 = chip->size()/NMPACOLS;
                     }
                     else if(chip->size() == NCHANNELS)
                     {
-                        cNSeedChs += chip->size() / 2; // either bottom/top CBC row can be a seed
-                        cNS0 += chip->size() / 2;
+                        cNSeedS0 = chip->size()/ 2 ;// either bottom/top CBC row can be a seed
+                        cNS0 = chip->size() / 2;
                         cNS1 = cNS0;
+                        cNSeedS1 = cNSeedS0;
                     }
                     else
                     {
-                        cNS1 += chip->size();
+                        cNSeedS1 = chip->size();
+                        cNS1 = chip->size();
                     }
+
+                    if( cNS0 > cMaxS0 ) cMaxS0 = cNS0;
+                    if( cNS1 > cMaxS1 ) cMaxS1 = cNS1;
+                    if( cNSeedS0 > cMaxSeedsS0 ) cMaxSeedsS0 = cNSeedS0;
+                    if( cNSeedS1 > cMaxSeedsS1 ) cMaxSeedsS1 = cNSeedS1;
                 } // chip
-                if(cNS0 > cNChannelsS0) cNChannelsS0 = cNS0;
-                if(cNS1 > cNChannelsS1) cNChannelsS1 = cNS1;
+
+                if(8*cNS0 > cNChannelsS0) cNChannelsS0 = 8*cMaxS0;
+                if(8*cNS1 > cNChannelsS1) cNChannelsS1 = 8*cMaxS1;
+                if(8*cNSeedS0 > cNSeedChsS0) cNSeedChsS0 = 8*cNSeedS0;
+                if(8*cNSeedS1 > cNSeedChsS1) cNSeedChsS1 = 8*cNSeedS1;
                 if(cN > cNCh) cNCh = cN;
+
             }       // hybrid
         }           // OG
     }               // board
-    cNSeedChs /= 2; // one per hybrid
 
+    LOG (INFO) << BOLDYELLOW << "Number of channels in S0 " << cNChannelsS0 << RESET;
+    LOG (INFO) << BOLDYELLOW << "Number of channels in S1 " << cNChannelsS1 << RESET;
+    LOG (INFO) << BOLDYELLOW << "Number of seeds in S0 " << cNSeedChsS0 << RESET;
+    LOG (INFO) << BOLDYELLOW << "Number of seeds in S1 " << cNSeedChsS1 << RESET;
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     LOG(INFO) << "Setting histograms with range " << fLatencyRange << " and start value " << fStartLatency;
 
-    HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    float cBinSize=(1.0);
+    HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange/cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistograms, hLatency);
 
-    HistContainer<TH1F> hLatencyS0("LatencyValueS0", "Latency Value [bottom sensor]", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    HistContainer<TH1F> hLatencyS0("LatencyValueS0", "Latency Value [bottom sensor]", fLatencyRange/cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistogramsS0, hLatencyS0);
 
-    HistContainer<TH1F> hLatencyS1("LatencyValueS1", "Latency Value [top sensor]", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    HistContainer<TH1F> hLatencyS1("LatencyValueS1", "Latency Value [top sensor]", fLatencyRange/cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistogramsS1, hLatencyS1);
 
     HistContainer<TH1F> hStub("StubValue", "Stub Value", fLatencyRange, 0, 0 + fLatencyRange);
@@ -115,18 +138,22 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fClusterOccupancyHistograms, hClusterOccupancy);
 
     // hit maps per hybrid
-    HistContainer<TH2F> hMitMapS0("HitOccupancyS0", "Hit Occupancy [S0]", cNChannelsS0, 0, cNChannelsS0, 2, 0, 2);
+    float cBinSizeY = (cNChannelsS0 == 8*NSSACHANNELS ) ? 1.0/(float)NMPACOLS : 1.; 
+    LOG (INFO) << BOLDYELLOW << "Bin size in Y is " << cBinSizeY << RESET;
+    HistContainer<TH2F> hMitMapS0("HitOccupancyS0", "Hit Occupancy [S0]", cNChannelsS0, 0, cNChannelsS0,  2/cBinSizeY, 0, 2);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHitMapS0Histograms, hMitMapS0);
-    HistContainer<TH2F> hMitMapS1("HitOccupancyS1", "Hit Occupancy [S1]", cNChannelsS1, 0, cNChannelsS1, 2, 0, 2);
+    cBinSizeY = 1.; 
+    HistContainer<TH2F> hMitMapS1("HitOccupancyS1", "Hit Occupancy [S1]", cNChannelsS1, 0, cNChannelsS1,  2/cBinSizeY, 0, 2);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHitMapS1Histograms, hMitMapS1);
 
     // then stubs
-    HistContainer<TH2F> hStubMapS0("StubOccupancyS0", "Stub Occupancy [S0]", cNChannelsS0, 0, cNChannelsS0, 2, 0, 2);
+    cBinSizeY = (cNChannelsS0 == 8*NSSACHANNELS ) ? 1.0/(float)NMPACOLS : 1; 
+    HistContainer<TH2F> hStubMapS0("StubOccupancyS0", "Stub Occupancy [S0]", cNChannelsS0, 0, cNChannelsS0, 2/cBinSizeY, 0, 2);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapS0Histograms, hStubMapS0);
-    HistContainer<TH2F> hStubMapS1("StubOccupancyS1", "Stub Occupancy [S1]", cNChannelsS1, 0, cNChannelsS1, 2, 0, 2);
+    cBinSizeY = 1.; 
+    HistContainer<TH2F> hStubMapS1("StubOccupancyS1", "Stub Occupancy [S1]", cNChannelsS1, 0, cNChannelsS1, 2/cBinSizeY, 0, 2);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapS1Histograms, hStubMapS1);
 
-    LOG(DEBUG) << BOLDYELLOW << "Seeds have " << cNSeedChs << " bins." << RESET;
 
     // bend histogrsm per hybrid
     HistContainer<TH1F> hBendDist("BendDistribution", "Stub Bend Distribution [strips]", 20 / 0.5, -10, 10);
@@ -433,7 +460,7 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
     }
 }
 //
-void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
+void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
 {
     LOG(DEBUG) << BOLDMAGENTA << "Filling latency plots with TDC summary .." << RESET;
     for(auto board: pOccupancy)
@@ -449,7 +476,8 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorData
                 {
                     float cOcc   = chip->getSummary<Occupancy>().fOccupancy;
                     float cError = chip->getSummary<Occupancy>().fOccupancyError;
-                    auto  cBin   = cHist->FindBin((float)pLatency);
+                    auto  cBin   = cHist->FindBin((float)pLatency + (float)(pTriggerId)/100.);
+                    LOG (DEBUG) << BOLDYELLOW << "Latency of " << +pLatency << " trigger# " << +pTriggerId << " bin#" << cBin << RESET;
                     cHist->SetBinContent(cBin, cOcc * chip->size());
                     cHist->SetBinError(cBin, cError * chip->size());
                     uint16_t cChnlIndx = 0;
@@ -467,7 +495,7 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorData
                             LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " strip offset is " << cStripOffset
                                        << " global strip number " << +cStripId << " hit is in S" << +(cChnlIndx % 2 == 0) << " - have found " << channel.fOccupancy << " hits." << RESET;
 
-                        cBin = cHitMap->FindBin((float)pLatency, cStripId);
+                        cBin = cHitMap->FindBin((float)pLatency , cStripId);
                         cHitMap->SetBinContent(cBin, channel.fOccupancy);
                         cHitMap->SetBinError(cBin, channel.fOccupancyError);
                         cChnlIndx++;
@@ -640,7 +668,7 @@ void DQMHistogramBeamTestCheck::fillTriggerTDCPlots(DetectorDataContainer& theTr
 
 void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap)
 {
-    LOG(DEBUG) << BOLDBLUE << "Filling Hit/Stub Maps..." << RESET;
+    LOG(INFO) << BOLDBLUE << "Filling Hit/Stub Maps..." << RESET;
     for(auto board: fStubMapS0Histograms)
     {
         for(auto opticalGroup: *board)
@@ -650,18 +678,18 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                 // hit map
                 TH2F* cHitMapS0 = fHitMapS0Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 TH2F* cHitMapS1 = fHitMapS1Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                LOG(DEBUG) << BOLDYELLOW << "Hit map [S0] has " << cHitMapS0->GetXaxis()->GetNbins() << " in X  and " << cHitMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
-                LOG(DEBUG) << BOLDYELLOW << "Hit map [S1] has " << cHitMapS1->GetXaxis()->GetNbins() << " in X  and " << cHitMapS1->GetYaxis()->GetNbins() << " in Y." << RESET;
-                uint8_t cLocalY = (hybrid->getId() % 2 == 0) ? 0 : 1;
+                LOG(INFO) << BOLDYELLOW << "Hit map [S0] has " << cHitMapS0->GetXaxis()->GetNbins() << " in X  and " << cHitMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
+                LOG(INFO) << BOLDYELLOW << "Hit map [S1] has " << cHitMapS1->GetXaxis()->GetNbins() << " in X  and " << cHitMapS1->GetYaxis()->GetNbins() << " in Y." << RESET;
+                float cLocalY = (hybrid->getId() % 2 == 0) ? 0 : 1;
                 // stub map
                 TH2F* cStubMapS0 = fStubMapS0Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 TH2F* cStubMapS1 = fStubMapS1Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                LOG(DEBUG) << BOLDYELLOW << "Stub map [S0] has " << cStubMapS0->GetXaxis()->GetNbins() << " in X  and " << cStubMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
-                LOG(DEBUG) << BOLDYELLOW << "Stub map [S1] has " << cStubMapS0->GetXaxis()->GetNbins() << " in X  and " << cStubMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
+                LOG(INFO) << BOLDYELLOW << "Stub map [S0] has " << cStubMapS0->GetXaxis()->GetNbins() << " in X  and " << cStubMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
+                LOG(INFO) << BOLDYELLOW << "Stub map [S1] has " << cStubMapS1->GetXaxis()->GetNbins() << " in X  and " << cStubMapS1->GetYaxis()->GetNbins() << " in Y." << RESET;
                 for(auto chip: *hybrid)
                 {
                     uint16_t cDivider     = (chip->size() == NCHANNELS) ? 2 : 1;
-                    uint16_t cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()) * chip->size() / cDivider : chip->getId() * chip->size() / cDivider;
+                    uint16_t cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * chip->size() / cDivider : (chip->getId()%8) * chip->size() / cDivider;
                     uint16_t cChnlIndx    = 0;
                     auto&    cChipStubOCc = theStubMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
                     for(auto channel: *cChipStubOCc->getChannelContainer<Occupancy>())
@@ -670,10 +698,10 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         uint16_t cStripId     = cOffset + cChnlIndx / cDivider;
                         // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
                         if(hybrid->getId() % 2 == 0) cStripId = cOffset + (chip->size() - cChnlIndx) / cDivider;
-                        uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() == NMPACHANNELS);
+                        uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPACHANNELS);
                         auto    cBin      = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
                         if(channel.fOccupancy > 0)
-                            LOG(DEBUG) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
+                            LOG(INFO) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
                                        << cBin << " Channel " << cChnlIndx << " offset is " << cStripOffset << " - have found " << channel.fOccupancy << " stubs " << RESET;
 
                         if(cSensorId == 0)
@@ -693,15 +721,32 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                     auto& cChipHitOCc = theHitMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
                     for(auto channel: *cChipHitOCc->getChannelContainer<Occupancy>())
                     {
-                        uint16_t cStripOffset = cOffset;
-                        uint16_t cStripId     = cOffset + cChnlIndx / cDivider;
+                        // sensor id 
+                        uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPACHANNELS);
+                        // offset for plotting 
+                        uint32_t cNChannels = (cSensorId == 0 ) ? cStubMapS0->GetXaxis()->GetNbins()/8. : cStubMapS1->GetXaxis()->GetNbins()/8.;
+                        cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * cNChannels / cDivider : (chip->getId()%8) * cNChannels / cDivider;
+                        // rows and columns
+                        uint32_t cNRows =  (chip->size() == NCHANNELS ) ? NCHANNELS : NSSACHANNELS;
+                        uint32_t cNCols =(chip->size() == NMPACHANNELS ) ? NMPACOLS : 1; 
+                        uint32_t cRow = cChnlIndx % cNRows;
+                        uint32_t cCol = (cNCols == 1 ) ? 0 : cChnlIndx / cNRows; 
+                        // local x , local y 
+                        uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * cNChannels / cDivider : (chip->getId()%8) * cNChannels / cDivider;
+                        uint16_t cLocalX     = cXOffset + cRow / cDivider;
+                        if(hybrid->getId() % 2 == 0) cLocalX = cOffset + (cNChannels -  cRow) / cDivider;
+                        cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol*1./NMPACOLS : 1 + cCol*1./NMPACOLS;
                         // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
-                        if(hybrid->getId() % 2 == 0) cStripId = cOffset + (chip->size() - cChnlIndx) / cDivider;
-                        uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() == NMPACHANNELS);
-                        auto    cBin      = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
+                        auto    cBin      = (cSensorId == 0 ) ? cStubMapS0->FindBin((float)cLocalX, (float)cLocalY) : cStubMapS1->FindBin((float)cLocalX, (float)cLocalY) ;
                         if(channel.fOccupancy > 0)
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
-                                       << cBin << " Channel " << cChnlIndx << " offset is " << cStripOffset << " - have found " << channel.fOccupancy << " hits " << RESET;
+                            LOG(INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId 
+                                << " Row " << +cRow << " Column " << +cCol 
+                                << " Offset is " << cXOffset
+                                << " Local x coordinate " << +cLocalX 
+                                << " Local y coordinate " << cLocalY
+                                << " bin# "
+                                << cBin 
+                                << " Channel " << cChnlIndx << " offset is " << cXOffset << " - have found " << channel.fOccupancy << " hits " << RESET;
                         if(cSensorId == 0)
                         {
                             cHitMapS0->SetBinContent(cBin, channel.fOccupancy);

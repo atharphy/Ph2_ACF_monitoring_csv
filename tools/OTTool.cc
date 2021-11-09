@@ -486,17 +486,23 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     // wait until triggers have started
     size_t cWaitCounter = 0;
+    size_t cMaxWait     = 10000;
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
         if(cWaitCounter % 100 == 0) LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
         cWaitCounter++;
-    } while(cInterface->GetTriggerState() != 1 && cWaitCounter < 1000);
+    } while(cInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
 
-    if(cWaitCounter == 1000)
+    if(cWaitCounter == cMaxWait)
     {
         LOG(INFO) << BOLDRED << "Triggers not started on this board.. start them myself!" << RESET;
         cInterface->Start();
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
+            LOG (INFO) << BOLDRED << " ... waiting  for triggers to start... " << RESET;
+        }while(cInterface->GetTriggerState() == 0);
     }
 
     LOG(DEBUG) << BOLDBLUE << fMyName << ":Triggers started .. now polling readout.." << RESET;
@@ -568,4 +574,36 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             LOG(INFO) << cOut.str() << RESET;
         }
     }
+}
+
+//
+void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, int pChipId)
+{
+    LOG (INFO) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET; 
+    // inject pixel clusters
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                //fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode",0x0);
+                if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
+                LOG(INFO) << BOLDMAGENTA << "Injecting patterns in ROC#" << +cChip->getId() << RESET;
+                // make sure L1 latency is configured
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", 0); // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
+                }
+                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                {
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                    fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
+                    for(auto cInjection: pInjections) { fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
+                }
+            } // chip
+        }     // hybrid
+    }         // optica]l group
 }

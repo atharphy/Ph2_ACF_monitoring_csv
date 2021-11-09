@@ -554,33 +554,38 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     {
         // tracker mode
         bool cReadoutMode = this->configPeri(pMPA, "ReadoutMode", 0x00);
-        // value to change
-        // enable digital injection, disable analogue calibration and analogue count
-        uint8_t cEnable = 1;
-        uint8_t cValue  = (0 << PIXEL_ENABLE_TABLE.find("PixelMask")->second);                       // enable pixel;
-        cValue          = (0 << PIXEL_ENABLE_TABLE.find("CounterEnable")->second);                   // disable counter
-        cValue          = cValue | (cEnable << PIXEL_ENABLE_TABLE.find("DigitalInjection")->second); // enable digital injection
-        cValue          = cValue | (0 << PIXEL_ENABLE_TABLE.find("AnalogueInjection")->second);      // disable analogue injection
         // register mask
-        std::vector<std::string> cPixelRegs{"CounterEnable", "DigitalInjection", "AnalogueInjection"};
+        std::vector<std::string> cPixelRegs{"PixelMask", "DigitalInjection"};
+        uint8_t cFEEnable   = 0; 
+        uint8_t cEnableDigi = (pValue == 0 ) ? 0 : 1; 
+        std::vector<uint8_t>     cPixelVals{cFEEnable,cEnableDigi};
         uint8_t                  cRegMask = 0x00;
         for(auto cPixelReg: cPixelRegs) cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second);
         cRegMask = ~(cRegMask);
-        LOG(DEBUG) << BOLDBLUE << "Register mask is 0x" << std::hex << +cRegMask << std::dec << RESET;
-        uint8_t cRegValue    = 0x00;
+        uint8_t                  cValue = 0x00;
+        size_t                    cIndx=0;
+        for(auto cVal: cPixelVals){ 
+            cValue = cValue | (cVal << PIXEL_ENABLE_TABLE.find(cPixelRegs[cIndx])->second);
+            cIndx++;
+        }
         int     cPixelNumber = 0;
+        uint8_t cReadValue   = 0x00;
         if(pRegName.find("P") != std::string::npos) // single pixel
         {
             cPixelNumber = std::stoi(pRegName.substr(pRegName.find("P") + 1, pRegName.length()));
-            cRegValue    = this->readPixel(pMPA, "ENFLAGS", cPixelNumber);
-            cRegValue    = (cRegValue & cRegMask) | cValue;
+            cReadValue    = this->readPixel(pMPA, "ENFLAGS", cPixelNumber);
         }
-
         else
         {
-            std::vector<uint8_t> cBits = {1, 1, 1, 0, 0, cEnable, 0, 0};
-            for(auto cBit: cBits) cRegValue = cRegValue | (1 << cBit);
+            cReadValue    = this->ReadChipReg(pMPA, "ENFLAGS_ALL");
         }
+        auto cRegValue    = (cReadValue & cRegMask) | cValue;
+        LOG(DEBUG) << BOLDBLUE << "Register mask " << pRegName << " 0x" << std::hex << +cRegMask << std::dec 
+            << " readback value is 0x" << std::hex << +cReadValue << std::dec 
+            << " will write value 0x" << std::hex << +cValue << std::dec 
+            << " register value is 0x" << std::hex << +cRegValue << std::dec 
+            << RESET;
+    
         bool cEnableDigital = this->configPixel(pMPA, "ENFLAGS", cPixelNumber, cRegValue, pVerifLoop);
         // configure pattern
         bool cConfigPattern = this->configPixel(pMPA, "DigiPattern", cPixelNumber, pValue, pVerifLoop);
