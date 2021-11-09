@@ -607,6 +607,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
     // prepare container to hold hit information per chip
     DetectorDataContainer cHitContainer;
     ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, cHitContainer);
+    bool cBreak=false;
     do
     {
         for(auto cBoard: *fDetectorContainer)
@@ -696,13 +697,13 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                         auto& cM  = cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId];
                         if(cM > 0)
                         {
-                            LOG(INFO) << BOLDYELLOW << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
+                            LOG(INFO) << BOLDYELLOW << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep*(1 + cTriggerMult) + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
                                       << (1 + cTriggerMult) << "... on average have found " << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
                                       << "In S0 " << cS0 << " hit(s); in S1 = " << cS1 << " hit(s)."
                                       << "Normalization done with " << cNormalizationFactor << " events." << RESET;
                         }
                         else
-                            LOG(INFO) << BOLDBLUE << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
+                            LOG(INFO) << BOLDBLUE << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep*(1 + cTriggerMult) + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
                                       << (1 + cTriggerMult) << "... on average have found " << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
                                       << "In S0 " << cS0 << " hit(s); in S1 = " << cS1 << " hit(s)."
                                       << "Normalization done with " << cNormalizationFactor << " events." << RESET;
@@ -714,14 +715,17 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
             }
         }
         // update trigger latency for next step
+        bool cAllCompleted=true;
         for(auto cBoard: *fDetectorContainer)
         {
             auto& cTriggerMult = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>();
             setSameDacBeBoard(cBoard, "TriggerLatency", fStartLatency + (1 + cLatStep) * (1 + cTriggerMult));
+            cAllCompleted = cAllCompleted &&  ((1 + cLatStep) * (1 + cTriggerMult) >= fLatencyRange) ; 
             fBeBoardInterface->ChipReSync(cBoard);
         }
+        cBreak = cAllCompleted; 
         cLatStep++;
-    } while(cLatStep < fLatencyRange);
+    } while(!cBreak);//cLatStep < fLatencyRange);
 
     // set latency per FE ASIC
     float  cMeanLat = 0;
