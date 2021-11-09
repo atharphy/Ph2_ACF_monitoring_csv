@@ -710,7 +710,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                     }
                 }
 #ifdef __USE_ROOT__
-                fDQMHistogrammer.fillLatencyPlots(fStartLatency + cLatStep + cTriggerId, *fDetectorDataContainer, fHitContainerTDC);
+                fDQMHistogrammer.fillLatencyPlots(fStartLatency + cLatStep*(1 + cTriggerMult) + cTriggerId, *fDetectorDataContainer, fHitContainerTDC);
 #endif
             }
         }
