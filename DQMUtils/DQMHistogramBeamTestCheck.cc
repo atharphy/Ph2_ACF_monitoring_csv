@@ -701,7 +701,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPACHANNELS);
                         auto    cBin      = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
                         if(channel.fOccupancy > 0)
-                            LOG(INFO) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
+                            LOG(DEBUG) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
                                        << cBin << " Channel " << cChnlIndx << " offset is " << cStripOffset << " - have found " << channel.fOccupancy << " stubs " << RESET;
 
                         if(cSensorId == 0)
@@ -734,12 +734,12 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         // local x , local y 
                         uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * cNChannels / cDivider : (chip->getId()%8) * cNChannels / cDivider;
                         uint16_t cLocalX     = cXOffset + cRow / cDivider;
-                        if(hybrid->getId() % 2 == 0) cLocalX = cOffset + (cNChannels -  cRow) / cDivider;
-                        cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol*1./NMPACOLS : 1 + cCol*1./NMPACOLS;
+                        if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels -  cRow) / cDivider;
+                        cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol*1./NMPACOLS : 1 + (NMPACOLS - cCol)*1./NMPACOLS;
                         // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
                         auto    cBin      = (cSensorId == 0 ) ? cStubMapS0->FindBin((float)cLocalX, (float)cLocalY) : cStubMapS1->FindBin((float)cLocalX, (float)cLocalY) ;
                         if(channel.fOccupancy > 0)
-                            LOG(INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId 
+                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId 
                                 << " Row " << +cRow << " Column " << +cCol 
                                 << " Offset is " << cXOffset
                                 << " Local x coordinate " << +cLocalX 

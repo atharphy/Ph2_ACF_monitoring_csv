@@ -229,7 +229,7 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     }
 
     ScanL1Latency(pContinousReadout);
-    ScanStubLatency(pContinousReadout);
+    /*ScanStubLatency(pContinousReadout);
 
     // print out optimal L1 + stub latencies
     for(auto cBoard: *fDetectorContainer)
@@ -247,7 +247,7 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
                 }
             }
         }
-    }
+    }*/
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
@@ -934,23 +934,43 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             uint16_t cCol = 0; 
                             // sensor iD - 0 -- bottoml; 1 -- top 
                             uint8_t cSensorID = (cChip->getFrontEndType()==FrontEndType::CBC3) ? (cHit%2!=0) : (cCol!=0);
+                            uint16_t cMaxRows = (cChip->getFrontEndType()==FrontEndType::CBC3) ? cChip->size() : 0 ;
+                            if( cChip->getFrontEndType() == FrontEndType::MPA ) cMaxRows = NSSACHANNELS; 
+                            uint16_t cMaxCols = 0;
+                            if( cChip->getFrontEndType() == FrontEndType::MPA && cSensorID == 0 ) cMaxCols = NMPACOLS;
+
                             if( cChip->getFrontEndType() != FrontEndType::CBC3 )
                             {
-                                auto cZPos = cHit >> 24; 
+                                uint8_t cZPos = (cHit >> 24) & 0xFF; 
                                 cSensorID = (cZPos == 0 ) ? 1 : 0; 
-                                auto cAddress = cHit >> 8; 
-                                auto cId      = cHit & 0xFF;
-                                cRow     = cAddress; 
-                                cCol     = ( cZPos == 0 ) ? cZPos : cZPos - 1 + cId; 
+                                uint8_t cAddress = (cHit >> 8) & 0x7F; 
+                                uint8_t cId      = cHit & 0xFF;
+                                cRow     = cAddress  + cId ; 
+                                cCol     = ( cZPos == 0 ) ? cZPos : cZPos - 1; 
+                                if( cRow == cMaxRows || cCol == cMaxCols )
+                                    LOG (INFO) << BOLDRED << "Event#" << (*cEventIter)->GetEventCount() 
+                                        << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " S" << +cSensorID
+                                        << " Address " << +cAddress << " , Zpos " << +cZPos << " id " << +cId 
+                                        << " Row " << +cRow << " Column " << +cCol 
+                                        << RESET;
+                                else 
+                                    LOG (DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() 
+                                        << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " S" << +cSensorID
+                                        << " Address " << +cAddress << " , Zpos " << +cZPos << " id " << +cId 
+                                        << " Row " << +cRow << " Column " << +cCol 
+                                        << RESET;
                             }
+                            
+                            
+                            bool cValidCoords = (cRow < cMaxRows && cCol < cMaxCols); 
                             if(cSensorID == 0)
                                 cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
                             else
                                 cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
                             
-                            if(cEventCount == 0)
+                            if(cEventCount == 0 && cValidCoords )  
                                 cOccChip->getChannel<Occupancy>(cRow,cCol).fOccupancy = 1;
-                            else
+                            else if ( cValidCoords )
                                 cOccChip->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
                             // update hit container for each TDC phase
                             fHitContainerTDC.at(cBoard->getIndex())
@@ -959,13 +979,13 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                 ->at(cChip->getIndex())
                                 ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal]++;
                             // update hit map
-                            if( cChip->getFrontEndType() == FrontEndType::CBC3 )
+                            if( cChip->getFrontEndType() == FrontEndType::CBC3 && cValidCoords)
                                 fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cIndices[cIndx])->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
-                            else if( cSensorID == 0 ) 
+                            else if( cSensorID == 0  && cValidCoords ) 
                                 fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cIndices[cIndx])->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
-                            else 
+                            else if( cValidCoords )
                                 fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
-                            if(pPrint) LOG (DEBUG) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Row " << +cRow << " , Col " << +cCol 
+                            if(pPrint && cValidCoords) LOG (DEBUG) << BOLDBLUE << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Row " << +cRow << " , Col " << +cCol 
                                 << " occ. " 
                                 << fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy
                                 << RESET;
@@ -991,6 +1011,8 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cChip: *cHybrid)
                 {
+                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
                     // if( cChip->getId()==0)
                     //{
                     LOG(DEBUG) << BOLDBLUE << "S0 ROC#" << +(cChip->getId() % 8) << "   "

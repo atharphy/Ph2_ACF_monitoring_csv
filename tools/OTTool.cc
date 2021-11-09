@@ -515,6 +515,8 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
+        auto  cTriggerState   = cInterface->GetTriggerState();
+        auto cTriggerSource   = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
         auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
         std::vector<uint32_t> cData(0);
         cLclEvntCntr += ReadData((*cBoardIter), cData, cWait);
@@ -524,6 +526,8 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         {
             LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to be stopped on BeBoard#" << +cBrdId << " continuousReadout loop ... "
                        << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received"
+                       << " trigger source is " << +cTriggerSource 
+                       << " trigger state is " << +cTriggerState 
                        << " and " << cLclEvntCntr << " events in the readout so far ... " << RESET;
         }
         cWaitCounter++;
