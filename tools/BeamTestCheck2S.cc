@@ -634,7 +634,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
             fBeBoardInterface->setBoard(cBoard->getId());
             const std::vector<Event*>& cEvents              = this->GetEvents();
             auto&                      cTriggerMult         = cBrdTriggerMult.at(cBoard->getIndex())->getSummary<uint32_t>();
-            float                      cNormalizationFactor = fNevents / (1 + cTriggerMult);
+            float                      cNormalizationFactor = fNevents;
             LOG(DEBUG) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
 
             // data containers for this board
@@ -681,9 +681,9 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                         {
                             auto& cHitsS0 = cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>();
                             auto& cHitsS1 = cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>();
-                            cLatencyContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cHitsS0;
-                            cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cHitsS1;
-                            cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cHitsS0 + cHitsS1;
+                            cLatencyContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep*(1 + cTriggerMult)-cTriggerId ] += cHitsS0;
+                            cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep*(1 + cTriggerMult)-cTriggerId ] += cHitsS1;
+                            cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep*(1 + cTriggerMult)-cTriggerId ] += cHitsS0 + cHitsS1;
                         }
                     }
                 }
@@ -692,25 +692,25 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cS0 = cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId];
-                        auto& cS1 = cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId];
-                        auto& cM  = cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId];
+                        auto& cS0 = cLatencyContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep*(1 + cTriggerMult)-cTriggerId ];
+                        auto& cS1 = cLatencyContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep*(1 + cTriggerMult)-cTriggerId ];
+                        auto& cM  = cLatencyContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep*(1 + cTriggerMult)-cTriggerId];
                         if(cM > 0)
                         {
-                            LOG(INFO) << BOLDYELLOW << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep*(1 + cTriggerMult) + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
+                            LOG(INFO) << BOLDYELLOW << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep*(1 + cTriggerMult) ) << " - trigger#" << +cTriggerId << " in a burst of "
                                       << (1 + cTriggerMult) << "... on average have found " << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
                                       << "In S0 " << cS0 << " hit(s); in S1 = " << cS1 << " hit(s)."
                                       << "Normalization done with " << cNormalizationFactor << " events." << RESET;
                         }
                         else
-                            LOG(INFO) << BOLDBLUE << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep*(1 + cTriggerMult) + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of "
+                            LOG(INFO) << BOLDBLUE << "Hybrid" << +cHybrid->getId() << " Latency of " << (fStartLatency + cLatStep*(1 + cTriggerMult) ) << " - trigger#" << +cTriggerId << " in a burst of "
                                       << (1 + cTriggerMult) << "... on average have found " << std::setprecision(2) << cM / cNormalizationFactor << " hit(s) per event."
                                       << "In S0 " << cS0 << " hit(s); in S1 = " << cS1 << " hit(s)."
                                       << "Normalization done with " << cNormalizationFactor << " events." << RESET;
                     }
                 }
 #ifdef __USE_ROOT__
-                fDQMHistogrammer.fillLatencyPlots(fStartLatency + cLatStep*(1 + cTriggerMult) + cTriggerId, *fDetectorDataContainer, fHitContainerTDC);
+                fDQMHistogrammer.fillLatencyPlots(fStartLatency + cLatStep*(1 + cTriggerMult) , cTriggerId , *fDetectorDataContainer, fHitContainerTDC);
 #endif
             }
         }
@@ -1177,7 +1177,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                           << "In S0 " << cTotalHitsS0 << " hit(s); in S1 = " << cTotalHitsS1 << " hit(s) "
                           << " normalization done with " << fNReadbackEvents << " events." << RESET;
 #ifdef __USE_ROOT__
-            fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, *theOccupancyContainer, cHitContainer);
+            fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, cTriggerId, *theOccupancyContainer, cHitContainer);
 #endif
         }
         if(cOffset < (1 + cTriggerMult)) cOffset = (1 + cTriggerMult);

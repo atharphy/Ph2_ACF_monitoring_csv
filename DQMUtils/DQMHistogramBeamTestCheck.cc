@@ -83,13 +83,14 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     LOG(INFO) << "Setting histograms with range " << fLatencyRange << " and start value " << fStartLatency;
 
-    HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    float cBinSize=(1.0);
+    HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange/cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistograms, hLatency);
 
-    HistContainer<TH1F> hLatencyS0("LatencyValueS0", "Latency Value [bottom sensor]", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    HistContainer<TH1F> hLatencyS0("LatencyValueS0", "Latency Value [bottom sensor]", fLatencyRange/cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistogramsS0, hLatencyS0);
 
-    HistContainer<TH1F> hLatencyS1("LatencyValueS1", "Latency Value [top sensor]", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    HistContainer<TH1F> hLatencyS1("LatencyValueS1", "Latency Value [top sensor]", fLatencyRange/cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistogramsS1, hLatencyS1);
 
     HistContainer<TH1F> hStub("StubValue", "Stub Value", fLatencyRange, 0, 0 + fLatencyRange);
@@ -433,7 +434,7 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
     }
 }
 //
-void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
+void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
 {
     LOG(DEBUG) << BOLDMAGENTA << "Filling latency plots with TDC summary .." << RESET;
     for(auto board: pOccupancy)
@@ -449,7 +450,8 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorData
                 {
                     float cOcc   = chip->getSummary<Occupancy>().fOccupancy;
                     float cError = chip->getSummary<Occupancy>().fOccupancyError;
-                    auto  cBin   = cHist->FindBin((float)pLatency);
+                    auto  cBin   = cHist->FindBin((float)pLatency + (float)(pTriggerId)/100.);
+                    LOG (DEBUG) << BOLDYELLOW << "Latency of " << +pLatency << " trigger# " << +pTriggerId << " bin#" << cBin << RESET;
                     cHist->SetBinContent(cBin, cOcc * chip->size());
                     cHist->SetBinError(cBin, cError * chip->size());
                     uint16_t cChnlIndx = 0;
@@ -467,7 +469,7 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, DetectorData
                             LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " strip offset is " << cStripOffset
                                        << " global strip number " << +cStripId << " hit is in S" << +(cChnlIndx % 2 == 0) << " - have found " << channel.fOccupancy << " hits." << RESET;
 
-                        cBin = cHitMap->FindBin((float)pLatency, cStripId);
+                        cBin = cHitMap->FindBin((float)pLatency , cStripId);
                         cHitMap->SetBinContent(cBin, channel.fOccupancy);
                         cHitMap->SetBinError(cBin, channel.fOccupancyError);
                         cChnlIndx++;
