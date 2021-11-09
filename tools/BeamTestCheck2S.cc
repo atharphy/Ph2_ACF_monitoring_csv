@@ -166,9 +166,9 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
 #endif
-    return;
     // validate
     Validate();
+    return;
 }
 void BeamTestCheck2S::ValidateTP()
 {
@@ -191,9 +191,9 @@ void BeamTestCheck2S::Validate()
         fBeBoardInterface->setBoard(cBoard->getId());
         const std::vector<Event*>& cEvents              = this->GetEvents();
         auto                       cTriggerMult         = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        float                      cNormalizationFactor = cEvents.size() / (1 + cTriggerMult);
+        float                      cNormalizationFactor = fNevents;//cEvents.size() / (1 + cTriggerMult);
         LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
-        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId); }
+        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId,1); }
     }
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap);
@@ -752,7 +752,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                 {
                     if( cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::CBC3  ) continue;
                     LOG(INFO) << BOLDMAGENTA << "Will set SSA L1 Latency for ROC#" << +cChip->getId() << " to be " << cLatencies[cChip->getId()%8] << " - 1 " <<  RESET;
-                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatencies[cChip->getId()%8]);
+                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatencies[cChip->getId()%8]-1);
                 }
             }     // hybrid
         }         // optical group
@@ -882,6 +882,14 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
                                << std::bitset<8>(cStubStat) << RESET;
                     auto& cOccHybrid = fDetectorDataContainer->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
+                    std::vector<uint8_t> cIndices(0);
+                    std::vector<uint8_t> cSSAIndices(0);
+                    for(auto cChip: *cHybrid)
+                    {
+                        if( cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType :: CBC3 ) cIndices.push_back(cChip->getIndex());
+                        else cSSAIndices.push_back(cChip->getIndex());
+                    }
+                    size_t cIndx=0; 
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
@@ -951,8 +959,18 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                 ->at(cChip->getIndex())
                                 ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal]++;
                             // update hit map
-                            fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
+                            if( cChip->getFrontEndType() == FrontEndType::CBC3 )
+                                fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cIndices[cIndx])->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
+                            else if( cSensorID == 0 ) 
+                                fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cIndices[cIndx])->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
+                            else 
+                                fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
+                            if(pPrint) LOG (DEBUG) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Row " << +cRow << " , Col " << +cCol 
+                                << " occ. " 
+                                << fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy
+                                << RESET;
                         }
+                        cIndx++;
                     } // chip vector
                 }     // hybrid vector
             }         // optical group vector
