@@ -154,9 +154,9 @@
                 <node id="debug_blk_output" address = "0x03C" mask="0xFFFFFFFF"/>
                 <node id="debug_blk_signal" address = "0x03D" mask="0xFFFFFFFF"/>
 
-                <!-- will be 0x46 -->
                 <node id="stubs"          address="0x000">
-                    <node id="stub_package_delay"             mask="0x00000007"/>
+                    <node id="stub_package_delay"               mask="0x1c000000"/>
+                    <!-- <node id="stub_package_delay"             mask="0x00000007"/> -->
                 </node>
             </node>
 

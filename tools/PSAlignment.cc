@@ -1019,36 +1019,7 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
         fOptimalLatency = 0;
     return cFoundCorrectHitLatency;
 }
-void PSAlignment::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, int pChipId)
-{
-    // inject pixel clusters
-    for(auto cOpticalReadout: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalReadout)
-        {
-            for(auto cChip: *cHybrid)
-            {
-                fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
-                LOG(INFO) << BOLDMAGENTA << "Injecting patterns in ROC#" << +cChip->getId() << RESET;
-                // make sure L1 latency is configured
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                {
-                    // fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                    (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", 0); // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
-                }
-                if(cChip->getFrontEndType() == FrontEndType::SSA)
-                {
-                    // fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
-                    fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
-                    for(auto cInjection: pInjections) { fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
-                }
-            } // chip
-        }     // hybrid
-    }         // optica]l group
-}
+
 
 bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
 {

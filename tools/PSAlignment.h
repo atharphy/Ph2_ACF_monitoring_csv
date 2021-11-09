@@ -136,7 +136,6 @@ class PSAlignment : public OTTool
         ConfigureRawInputs(pChip, pPar, pPrint);
         ConfigureStubInputs(pChip, pPar, pPrint);
     }
-    void InjectPattern(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections, int pChipId = -1);
     void Validate(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections, uint8_t pEdgeSelT1 = 0);
     bool CheckFullMatch(Ph2_HwDescription::ReadoutChip*             pChip,
                         const std::vector<Ph2_HwInterface::Event*>& pEvents,

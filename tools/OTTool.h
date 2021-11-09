@@ -45,7 +45,8 @@ class OTTool : public Tool
         LOG(INFO) << BOLDRED << "Caught Ctrl+C from command line [signum == " << signum << RESET;
         throw Exception("Ctrl+C caught from command line..");
     };
-
+    void InjectPattern(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections, int pChipId = -1);
+    
   protected:
     // success or fail
     bool fSuccess{false};

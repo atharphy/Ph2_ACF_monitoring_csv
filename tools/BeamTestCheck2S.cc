@@ -89,6 +89,8 @@ void BeamTestCheck2S::Initialise()
 #ifdef __USE_ROOT__
     fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+    // injection 
+    defInjection();
 }
 
 // State machine control functions
@@ -123,7 +125,8 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
         // prepare injection
         PrepareForTP(cBoard);
     }
-    ScanL1Latency(pContinousReadout);
+    ScanL1Latency(pContinousReadout);  
+    /*
     // make sure only two chips are 'on'
     for(auto cBoard: *fDetectorContainer)
     {
@@ -157,13 +160,13 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
             }
         }
     }
-
+    */
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
 #endif
-
+    return;
     // validate
     Validate();
 }
@@ -518,7 +521,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
 {
     bool cValidate = false;
     LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
-    ;
+   
     size_t cTotalNChnls = 0;
     size_t cNHybrids    = 0;
     for(auto cBoard: *fDetectorContainer)
@@ -654,7 +657,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                             auto  cCrntCnt = cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() + cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>();
                             auto& cMaxCnt  = cMaximumHitCount.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>();
                             auto& cLat     = fOptimalL1Latency.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-                            if(cCrntCnt > cMaxCnt)
+                            if(cCrntCnt >= cMaxCnt && cCrntCnt > 0)
                             {
                                 cLat = cLatency;
                                 LOG(DEBUG) << BOLDYELLOW << "\t\t..New maximum found for ROC#" << +cChip->getId() << " on Hybrid#" << +cHybrid->getId() << " for an L1 latency of " << cLatency
@@ -729,14 +732,24 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
+                std::map<uint8_t,uint16_t> cLatencies; 
                 for(auto cChip: *cHybrid)
                 {
+                    if( cChip->getFrontEndType() == FrontEndType::SSA  ) continue;
+
                     auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                     LOG(INFO) << BOLDMAGENTA << "Found optimal L1 Latency for ROC#" << +cChip->getId() << " to be " << cLat << RESET;
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
+                    cLatencies[cChip->getId()%8]=cLat;
                     cMeanLat += cLat;
                     cNItems++;
                 } // chip
+                for( auto cChip : *cHybrid )
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::CBC3  ) continue;
+                    LOG(INFO) << BOLDMAGENTA << "Will set SSA L1 Latency for ROC#" << +cChip->getId() << " to be " << cLatencies[cChip->getId()%8] << " - 1 " <<  RESET;
+                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatencies[cChip->getId()%8]);
+                }
             }     // hybrid
         }         // optical group
         fBeBoardInterface->ChipReSync(cBoard);
@@ -868,7 +881,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                        if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                        //if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
                         auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                         auto& cLyrSwap = cLyrSwp.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
@@ -903,15 +916,30 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                         for(auto cHit: cHits)
                         {
                             if(pPrint) LOG(DEBUG) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Channel " << cHit << RESET;
-                            if(cHit % 2 == 0)
+                            auto& cOccChip = cOccHybrid->at(cChip->getIndex());
+                            LOG (DEBUG) << cOccChip->getChannel<Occupancy>(0).fOccupancy << RESET;
+                            uint16_t cRow = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : 0; 
+                            uint16_t cCol = 0; 
+                            // sensor iD - 0 -- bottoml; 1 -- top 
+                            uint8_t cSensorID = (cChip->getFrontEndType()==FrontEndType::CBC3) ? (cHit%2!=0) : (cCol!=0);
+                            if( cChip->getFrontEndType() != FrontEndType::CBC3 )
+                            {
+                                auto cZPos = cHit >> 24; 
+                                cSensorID = (cZPos == 0 ) ? 1 : 0; 
+                                auto cAddress = cHit >> 8; 
+                                auto cId      = cHit & 0xFF;
+                                cRow     = cAddress; 
+                                cCol     = ( cZPos == 0 ) ? cZPos : cZPos - 1 + cId; 
+                            }
+                            if(cSensorID == 0)
                                 cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
                             else
                                 cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
-                            auto& cOccChip = cOccHybrid->at(cChip->getIndex());
+                            
                             if(cEventCount == 0)
-                                cOccChip->getChannel<Occupancy>(cHit).fOccupancy = 1;
+                                cOccChip->getChannel<Occupancy>(cRow,cCol).fOccupancy = 1;
                             else
-                                cOccChip->getChannel<Occupancy>(cHit).fOccupancy++;
+                                cOccChip->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
                             // update hit container for each TDC phase
                             fHitContainerTDC.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
@@ -919,7 +947,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                 ->at(cChip->getIndex())
                                 ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal]++;
                             // update hit map
-                            fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cHit).fOccupancy++;
+                            fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
                         }
                     } // chip vector
                 }     // hybrid vector
@@ -1341,12 +1369,15 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     size_t cNgroups                     = 0;
     bool   cMaskChannelsFromOtherGroups = false;
     bool   cInject                      = true;
+    bool   cWith2S                      = false;
     // inject in one of each CBCs
     for(auto cGroup: *fChannelGroupHandler)
     {
         if(cNgroups > 0) continue;
         for(auto cOpticalGroup: *pBoard)
         {
+            if( cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS ) continue; 
+            cWith2S = true;
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, cGroup, cMaskChannelsFromOtherGroups, cInject); }
@@ -1354,6 +1385,9 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
         }
         cNgroups++;
     }
+    // inject PS 
+    if(!cWith2S) InjectPattern(pBoard,fInjections,-1);
+
     // set TP amplitude and delay
     LOG(INFO) << BOLDYELLOW << "Enabling TP with : " << +fTPamplitude << " injected charge "
               << " delay of " << +fTPdelay << " ns " << RESET;
@@ -1387,8 +1421,11 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
         }
     }
 
-    setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
-    setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay);
+    if( cWith2S )
+    {
+        setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
+        setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay);
+    }
 }
 void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
 {

@@ -33,7 +33,7 @@ class D19clpGBTInterface : public lpGBTInterface
         cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
         cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
         cCPBconfig.fMaxAttempts  = 5000; // TO-DO - make configurable from xml
-        cCPBconfig.fResetEn      = 1;    // TO-DO - make configurable from xml
+        cCPBconfig.fResetEn      = 0;    // TO-DO - make configurable from xml
         // configure FW for all boards
         for(auto cBoardMap: pBoardMap) { (cBoardMap.second)->ConfigureCPB(cCPBconfig); }
     }

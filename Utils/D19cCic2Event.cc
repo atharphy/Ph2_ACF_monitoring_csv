@@ -1083,11 +1083,12 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pFeId, uint8_t pReadoutChip
                 for(int cId = 0; cId < 1 + cCluster.fWidth; cId++)
                 {
                     uint32_t cHit = ((cCluster.fZpos + 1) << 24) | (cCluster.fAddress) << 8 | cId << 0;
-                    // LOG (INFO) << BOLDGREEN << "Pixel cluster " << +cCluster.fZpos
-                    //     << " [z-pos]; " << +cCluster.fAddress
-                    //     << " [address] " << +cId
-                    //     << " [in cluster]"
-                    //     << RESET;
+                    LOG (DEBUG) << BOLDBLUE << "Pixel cluster " << +cCluster.fZpos
+                        << " [z-pos]; " << +cCluster.fAddress
+                        << " [address] " << +cId
+                        << " [in cluster]"
+                        << " hit is " << +cHit
+                        << RESET;
                     cHits.push_back(cHit);
                 }
             }
@@ -1096,11 +1097,12 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pFeId, uint8_t pReadoutChip
                 for(int cId = 0; cId < 1 + cCluster.fWidth; cId++)
                 {
                     uint32_t cHit = 0 << 24 | (cCluster.fAddress) << 8 | cId << 0;
-                    // LOG (INFO) << BOLDGREEN << "Strip cluster "
-                    //     << +cCluster.fAddress
-                    //     << " [address] " << +cId
-                    //     << " [in cluster]"
-                    //     << RESET;
+                    LOG (DEBUG) << BOLDGREEN << "Strip cluster "
+                        << +cCluster.fAddress
+                        << " [address] " << +cId
+                        << " [in cluster]"
+                        << " hit is " << +cHit
+                        << RESET;
                     cHits.push_back(cHit);
                 }
             }
