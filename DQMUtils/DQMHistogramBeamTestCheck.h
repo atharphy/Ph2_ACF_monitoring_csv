@@ -55,7 +55,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
 
     // Histogram Fillers
     void fillClusterOccupancyPlots(DetectorDataContainer& pOccupancy);
-    void fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId , DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary);
+    void fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary);
     void fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1);
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
