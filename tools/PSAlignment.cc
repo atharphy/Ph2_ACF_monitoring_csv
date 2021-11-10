@@ -25,8 +25,12 @@ void PSAlignment::Initialise()
         cRegName << "OutSetting_" << +cIndx;
         cRegsMod.push_back(cRegName.str());
     }
+    cRegsMod.push_back("ReadoutMode");
     SetROCRegstoPerserve(FrontEndType::MPA, cRegsMod);
-
+    cRegsMod.clear();
+    cRegsMod.push_back("ReadoutMode");
+    SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
+    
     // data containers to hold alignment parameters
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fAlParsContainer);
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fL1AlParsContainer);
@@ -62,6 +66,23 @@ void PSAlignment::Initialise()
             }
         }
     }
+
+    //make sure ReadoutMode is set correctly 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) continue;
+                    fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode",0x00);
+                }
+            }
+        }
+    }
+
 }
 void PSAlignment::MapMPAOutputs(std::string pSetupType)
 {
@@ -122,6 +143,21 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
             }     // hybrid
         }         // optical group
     }
+
+    // make sure that we save the values at the end
+    std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw"};
+    for(size_t cIndx = 0; cIndx <= 5; cIndx++)
+    {
+        std::stringstream cRegName;
+        cRegName << "OutSetting_" << +cIndx;
+        cRegsMod.push_back(cRegName.str());
+    }
+    cRegsMod.push_back("ReadoutMode");
+    SetROCRegstoPerserve(FrontEndType::MPA, cRegsMod);
+    cRegsMod.clear();
+    cRegsMod.push_back("ReadoutMode");
+    SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
+
 }
 bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
 {
@@ -1695,7 +1731,11 @@ bool PSAlignment::Align()
             cRegName << "OutSetting_" << +cIndx;
             cRegsMod.push_back(cRegName.str());
         }
+        cRegsMod.push_back("ReadoutMode");
         SetROCRegstoPerserve(FrontEndType::MPA, cRegsMod);
+        cRegsMod.clear();
+        cRegsMod.push_back("ReadoutMode");
+        SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
 
         // check trigger source
         // and reload

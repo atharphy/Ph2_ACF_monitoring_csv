@@ -581,7 +581,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 //
 void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, int pChipId)
 {
-    LOG(INFO) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
     // inject pixel clusters
     for(auto cOpticalReadout: *pBoard)
     {
@@ -591,7 +591,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
             {
                 // fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode",0x0);
                 if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
-                LOG(INFO) << BOLDMAGENTA << "Injecting patterns in ROC#" << +cChip->getId() << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Injecting patterns in ROC#" << +cChip->getId() << RESET;
                 // make sure L1 latency is configured
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
@@ -613,13 +613,23 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    if(pInjections.size() > 0) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                    fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
+                    if(pInjections.size() > 0){ 
+                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x00);
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00);
+                        fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                    }
                     for(auto cInjection: pInjections)
                     {
                         if(fInjectionType == 0)
-                            fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9);
+                        {
+                            std::stringstream cRegNameEn;
+                            cRegNameEn << "ENFLAGS_S" << +cInjection.fRow;
+                            fReadoutChipInterface->WriteChipReg(cChip,cRegNameEn.str() ,0x8);
+                            std::stringstream cRegNamePattern;
+                            cRegNamePattern << "DigCalibPattern_L_S" << +cInjection.fRow;
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegNamePattern.str(), 0x01);
+                        }
                         else
                         {
                             fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x08);

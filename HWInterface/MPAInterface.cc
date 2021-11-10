@@ -853,7 +853,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 {
     fTrackRegisters = false;
     // for now ...
-    bool              cConfigLocalRegs = false;
+    bool              cConfigLocalRegs = true;
     std::stringstream cOutput;
     setBoard(pMPA->getBeBoardId());
     pMPA->printChipType(cOutput);
@@ -876,32 +876,34 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
     cRegs.clear();
     std::vector<std::string> cRegsToConfig;
-    // cRegsToConfig.push_back("TrimDAC");
+    cRegsToConfig.push_back("TrimDAC");
+    cConfigLocalRegs = cConfigLocalRegs && (cRegsToConfig.size()>0);
     for(auto& cMapItem: fMap)
     {
         bool cIsLocal = (cMapItem.second.find("_P") != std::string::npos);
-        bool cSkip    = cIsLocal && !cConfigLocalRegs;
-        if(cIsLocal && cSkip) LOG(DEBUG) << BOLDCYAN << "Skipping local register " << cMapItem.second << RESET;
-        if(cSkip) continue;
-
-        if(cRegsToConfig.size() > 0 && cConfigLocalRegs)
+        // if local and we are not configuring local then skip 
+        bool cSkip = (cIsLocal && !cConfigLocalRegs);
+        if(cRegsToConfig.size() > 0 && cConfigLocalRegs && cIsLocal)
         {
-            // check if this is one to skip
+            // check if this is one to not skip
             bool cRegFound = false;
             auto cIter     = cRegsToConfig.begin();
             do
             {
                 cRegFound = cMapItem.second.find(*cIter) != std::string::npos;
+                if( cRegFound ) LOG (DEBUG) << BOLDMAGENTA << " Found " <<  cMapItem.second << RESET;
+
                 cIter++;
             } while(cIter < cRegsToConfig.end() && !cRegFound);
             cSkip = (!cRegFound);
         }
         if(cSkip) continue;
         if(cIsLocal)
-            LOG(DEBUG) << BOLDCYAN << "Configuring local register " << cMapItem.second << RESET;
+            LOG(DEBUG) << BOLDGREEN << "Configuring local register " << cMapItem.second << RESET;
         else
-            LOG(DEBUG) << BOLDCYAN << "Configuring global register " << cMapItem.second << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring global register " << cMapItem.second << RESET;
 
+        
         // create a register
         ChipRegItem&                  cItem = cMPARegMap[cMapItem.second];
         std::pair<uint16_t, uint16_t> cReg;

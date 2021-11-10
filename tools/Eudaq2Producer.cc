@@ -694,13 +694,14 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             // shift offset by 6 elements
                             cStripDataOffset += 6;
                             cNStripHit++;
-
+/*
                             LOG(INFO) << "Hybrid Id              : " << +cHybridId << RESET;
                             LOG(INFO) << "Chip Id                : " << +(cChipId % 8) << RESET;
                             LOG(INFO) << "Pixel Initial position : " << +cCluster.fAddress << RESET;
                             LOG(INFO) << "Pixel Final position   : " << +cHitAddress << RESET;
                             LOG(INFO) << "Pixel Final Zpos       : " << +cHitZpos << RESET;
                             LOG(INFO) << BOLDYELLOW << "  ----- " << RESET;
+*/
 
                         } // end of hit loop
                     }     // end of SCluster loop

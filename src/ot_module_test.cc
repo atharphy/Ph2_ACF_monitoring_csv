@@ -381,6 +381,7 @@ int main(int argc, char* argv[])
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Initialise();
         cPSAlignment.MapMPAOutputs();
+        cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
         LinkAlignmentOT cLinkAlignment;
