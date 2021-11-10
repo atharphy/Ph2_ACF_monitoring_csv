@@ -40,7 +40,7 @@ void BeamTestCheck2S::Initialise()
     fChannelGroupHandler->setChannelGroupParameters(16, 2); // number of cluster per group, number of rows per cluster
 
     // set TP amplitude and delay
-    fTPamplitude = 255 - findValueInSettings("Check2STPamplitude", 255);
+    fTPamplitude = findValueInSettings("Check2STPamplitude", 255);
     fTPdelay     = findValueInSettings("Check2STPdelay", 0);
 
     // threshold
@@ -50,6 +50,9 @@ void BeamTestCheck2S::Initialise()
     fStartLatency = findValueInSettings("StartLatency", 0);
     fLatencyRange = findValueInSettings("LatencyRange", 0);
 
+    auto cInjectionType = findValueInSettings("InjectionType",0);
+    SetInjectionType(cInjectionType); 
+    
     // initialize containers
     // latency per hybrid
     ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, fLatencyContainer);
@@ -141,8 +144,9 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
             }     // for on hybrid - end
         }         // for on opticalGroup - end
     }
+    */
     ScanStubLatency(pContinousReadout);
-
+    /*
     // print out optimal L1 + stub latencies
     for(auto cBoard: *fDetectorContainer)
     {
@@ -736,24 +740,24 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                std::map<uint8_t,uint16_t> cLatencies; 
+                // std::map<uint8_t,uint16_t> cLatencies; 
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::SSA  ) continue;
+                    // if( cChip->getFrontEndType() == FrontEndType::SSA  ) continue;
 
                     auto& cLat = fOptimalL1Latency.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                     LOG(INFO) << BOLDMAGENTA << "Found optimal L1 Latency for ROC#" << +cChip->getId() << " to be " << cLat << RESET;
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
-                    cLatencies[cChip->getId()%8]=cLat;
+                    // cLatencies[cChip->getId()%8]=cLat;
                     cMeanLat += cLat;
                     cNItems++;
                 } // chip
-                for( auto cChip : *cHybrid )
-                {
-                    if( cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::CBC3  ) continue;
-                    LOG(INFO) << BOLDMAGENTA << "Will set SSA L1 Latency for ROC#" << +cChip->getId() << " to be " << cLatencies[cChip->getId()%8] << " - 1 " <<  RESET;
-                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatencies[cChip->getId()%8]-1);
-                }
+                // for( auto cChip : *cHybrid )
+                // {
+                //     if( cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::CBC3  ) continue;
+                //     LOG(INFO) << BOLDMAGENTA << "Will set SSA L1 Latency for ROC#" << +cChip->getId() << " to be " << cLatencies[cChip->getId()%8] << " - 1 " <<  RESET;
+                //     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatencies[cChip->getId()%8]-1);
+                // }
             }     // hybrid
         }         // optical group
         fBeBoardInterface->ChipReSync(cBoard);
@@ -792,8 +796,9 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
                     auto& cLyrSwap = cLyrSwp.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3) cLyrSwap = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(cChip, "LayerSwap");
-                    // TO-DO - add for MPA
+                    // 0 -- bottom sensor seed; 1 -- top sensor seed 
+                    cLyrSwap = fReadoutChipInterface->ReadChipReg(cChip, "LayerSwap");
+                    LOG (INFO) << BOLDYELLOW << " Layer Swap on ROC#" << +cChip->getId() << " is " << +cLyrSwap << RESET;
                 }
             }
         }
@@ -811,9 +816,12 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cChip: *cHybrid)
                 {
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+
                     auto& cLUT = cBendLUT.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>();
                     cLUT.clear();
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3) cLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(cChip);
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) cLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(cChip);
+                    else cLUT = static_cast<PSInterface*>(fReadoutChipInterface)->readLUT(cChip);
                     // to-do.. check readLUT for MPAs
                 }
             }
@@ -906,21 +914,46 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                         {
                             // update hit map
                             uint32_t cSeedChnl = 0;
+                            uint16_t cRow      = 0;  
+                            uint16_t cCol      = 0; 
                             if(cChip->getFrontEndType() == FrontEndType::CBC3)
                             {
                                 uint32_t cSeedStrip = std::floor(cStub.getPosition() / 2.0); // counting from 1
                                 cSeedChnl           = 2 * (cSeedStrip - 1) + !cLyrSwap;
+                                cRow                = cSeedChnl; 
+                            }
+                            else 
+                            {
+                                cRow                = std::floor( cStub.getPosition()/2.0 ) ;
+                                cCol                = cStub.getRow(); 
                             }
                             // update bend map
                             // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
                             int   cBendIndx = std::distance(cLUT.begin(), std::find(cLUT.begin(), cLUT.end(), cStub.getBend()));
                             float cBend     = -7.0 + cBendIndx * 0.5;
                             fBendMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cBendIndx]++;
-                            if(pPrint)
-                                LOG(INFO) << BOLDYELLOW << "\t\t.. Seed " << +cStub.getPosition() << " Row " << +cStub.getRow() << " Bend " << +cStub.getBend() << " i.e. seed in ROC channel#"
-                                          << +cSeedChnl << " bend in strips is " << cBend << " bend index is " << cBendIndx << RESET;
+                            //if(pPrint)
+
+                            uint16_t cMaxRows = (cChip->getFrontEndType()==FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
+                            uint16_t cMaxCols = ( cChip->getFrontEndType() == FrontEndType::MPA ) ? NMPACOLS : 0 ;
+                            bool cValidCoords = (cRow < cMaxRows && cCol < cMaxCols); 
+                            
+                            if( !cValidCoords ) LOG(INFO) << BOLDRED << "\t\t.. Stub in strip# " << +cStub.getPosition()
+                                    << " Row# " << +cStub.getRow() << " Bend " << +cStub.getBend() 
+                                    << " i.e. seed in ROC channel# [R"
+                                    << +cRow << ",C" << +cCol 
+                                    << " bend in strips is " << cBend 
+                                    << " bend index is " << cBendIndx 
+                                    << RESET;
+                            else LOG(DEBUG) << BOLDBLUE << "\t\t.. Stub in strip# " << +cStub.getPosition()
+                                    << " Row# " << +cStub.getRow() << " Bend " << +cStub.getBend() 
+                                    << " i.e. seed in ROC channel# [R"
+                                    << +cRow << ",C" << +cCol 
+                                    << " bend in strips is " << cBend 
+                                    << " bend index is " << cBendIndx 
+                                    << RESET;
                             // update stub map
-                            fStubMap.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cSeedChnl).fOccupancy++;
+                            if( cValidCoords ) fStubMap.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
                         }
                         cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() += cStubs.size();
                         auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
@@ -965,6 +998,8 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             bool cValidCoords = (cRow < cMaxRows && cCol < cMaxCols); 
                             if(cSensorID == 0)
                                 cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
+                            else if( cChip->getFrontEndType() != FrontEndType::CBC3 )
+                                cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getSummary<uint32_t>()++;
                             else
                                 cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
                             
@@ -1011,19 +1046,20 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-
-                    // if( cChip->getId()==0)
-                    //{
-                    LOG(DEBUG) << BOLDBLUE << "S0 ROC#" << +(cChip->getId() % 8) << "   "
-                               << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
-                    LOG(DEBUG) << BOLDBLUE << "S1 ROC#" << +(cChip->getId() % 8) << "   "
-                               << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
-                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId() % 8)
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3 )
+                        LOG(INFO) << BOLDBLUE << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
                               << " Stubs   : " << cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs."
                               << " Hits S0 : " << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
                               << " Hits S1 : " << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
-                    //}
+                    else if( cChip->getFrontEndType() == FrontEndType::MPA ) 
+                        LOG(INFO) << BOLDBLUE << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
+                              << " Stubs   : " << cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs."
+                              << " Hits S0 : " << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
+                              << RESET;
+                    else 
+                        LOG(INFO) << BOLDBLUE << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
+                              << " Hits S1 : " << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
+                              << RESET;
                 }
             }
         }
@@ -1248,6 +1284,8 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
             {
                 for(auto cChip: *cHybrid)
                 {
+                    if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
                     auto cLat = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
                     if(cLat > 0) cLatencyBins[cLat]++;
                     if(cMinLatency == 0) cMinLatency = cLat;
@@ -1264,8 +1302,8 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
         LOG(INFO) << BOLDMAGENTA << "Max L1 latency on this board is " << cMaxLatency << " 40 MHz clock cycles" << RESET;
         LOG(INFO) << BOLDBLUE << "Mode L1 latency on this board is " << cModeLatency << " 40 MHz clock cycles" << RESET;
         cBrdLatency.at(cBoard->getIndex())->getSummary<uint16_t>() = cModeLatency;
-        setSameDacBeBoard(cBoard, "TriggerLatency", cModeLatency);
-        fBeBoardInterface->ChipReSync(cBoard);
+        //setSameDacBeBoard(cBoard, "TriggerLatency", cModeLatency);
+        //fBeBoardInterface->ChipReSync(cBoard);
     }
 
     // container to hold trigger multiplicity per board
@@ -1312,7 +1350,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
         cOffset             = cScanStart;
     }
     else
-        cOffset = (int)(fLatencyRange / 2.);
+       cOffset = (int)(fLatencyRange / 2.);
 
     fOptimalLatency = 0;
     size_t cLatStep = 0;
@@ -1327,6 +1365,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
             int   cStubLatency = cBrdLatency.at(cBrdIndx)->getSummary<uint16_t>() - (cOffset - cLatStep * (1 + cTriggerMult));
             if(cStubLatency < 0)
             {
+                LOG (INFO) << BOLDYELLOW << +cTriggerMult << " " << +cStubLatency << " " << cStubLatency << RESET;
                 cSet.push_back(0);
                 continue;
             }
@@ -1429,7 +1468,7 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
         }
         cNgroups++;
     }
-    // inject PS 
+    // inject PS
     if(!cWith2S) InjectPattern(pBoard,fInjections,-1);
 
     // set TP amplitude and delay
@@ -1465,9 +1504,9 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
         }
     }
 
+    setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
     if( cWith2S )
     {
-        setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
         setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay);
     }
 }

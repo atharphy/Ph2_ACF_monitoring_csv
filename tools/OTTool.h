@@ -46,7 +46,8 @@ class OTTool : public Tool
         throw Exception("Ctrl+C caught from command line..");
     };
     void InjectPattern(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections, int pChipId = -1);
-    
+    void SetInjectionType(uint8_t pInjType){ fInjectionType = pInjType;};//0-digital, 1 - analogue
+
   protected:
     // success or fail
     bool fSuccess{false};
@@ -64,7 +65,9 @@ class OTTool : public Tool
     uint32_t fThreadWait{100}; // in us
     // stop trigger monitor
     uint8_t fStopTriggerMonitor{0};
-
+    // type of injection 
+    uint8_t fInjectionType{0};//0-digital,1-analogue
+    
     void PrintData(Ph2_HwDescription::BeBoard* pBoard);
     void EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
     void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);

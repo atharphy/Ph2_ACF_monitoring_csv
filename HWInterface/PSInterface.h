@@ -50,6 +50,7 @@ class PSInterface : public ReadoutChipInterface
     bool                           ConfigureChip(Ph2_HwDescription::Chip* pPS, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     uint32_t                       ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
     void                           ReadPS(Ph2_HwDescription::ReadoutChip* pPS);
+    std::vector<uint8_t>           readLUT(Ph2_HwDescription::ReadoutChip* pChip);
 
     bool     WriteChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;

@@ -689,20 +689,46 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                 for(auto chip: *hybrid)
                 {
                     uint16_t cDivider     = (chip->size() == NCHANNELS) ? 2 : 1;
-                    uint16_t cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * chip->size() / cDivider : (chip->getId()%8) * chip->size() / cDivider;
+                    //uint16_t cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * chip->size() / cDivider : (chip->getId()%8) * chip->size() / cDivider;
                     uint16_t cChnlIndx    = 0;
                     auto&    cChipStubOCc = theStubMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
                     for(auto channel: *cChipStubOCc->getChannelContainer<Occupancy>())
                     {
-                        uint16_t cStripOffset = cOffset;
-                        uint16_t cStripId     = cOffset + cChnlIndx / cDivider;
-                        // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
-                        if(hybrid->getId() % 2 == 0) cStripId = cOffset + (chip->size() - cChnlIndx) / cDivider;
+                        // this is only valid for MPA 
+                        if(chip->size() != NMPACHANNELS && chip->size() != NCHANNELS ) continue; 
+                        // sensor id 
                         uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPACHANNELS);
-                        auto    cBin      = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
+                        uint32_t cNChannels = (cSensorId == 0 ) ? cStubMapS0->GetXaxis()->GetNbins()/8. : cStubMapS1->GetXaxis()->GetNbins()/8.;
+                        // rows and columns
+                        uint32_t cNRows =  (chip->size() == NCHANNELS ) ? NCHANNELS : NSSACHANNELS;
+                        uint32_t cNCols =(chip->size() == NMPACHANNELS ) ? NMPACOLS : 1; 
+                        uint32_t cRow = cChnlIndx % cNRows;
+                        uint32_t cCol = (cNCols == 1 ) ? 0 : cChnlIndx / cNRows; 
+                        // local x , local y 
+                        uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * cNChannels / cDivider : (chip->getId()%8) * cNChannels / cDivider;
+                        uint16_t cLocalX     = cXOffset + cRow / cDivider;
+                        if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels -  cRow) / cDivider;
+                        cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol*1./NMPACOLS : 1 + (NMPACOLS - cCol)*1./NMPACOLS;
+                        
+                        auto    cBin      = (cSensorId == 0 ) ? cStubMapS0->FindBin((float)cLocalX, (float)cLocalY) : cStubMapS1->FindBin((float)cLocalX, (float)cLocalY) ;
                         if(channel.fOccupancy > 0)
-                            LOG(DEBUG) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
-                                       << cBin << " Channel " << cChnlIndx << " offset is " << cStripOffset << " - have found " << channel.fOccupancy << " stubs " << RESET;
+                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId 
+                                << " Row " << +cRow << " Column " << +cCol 
+                                << " Offset is " << cXOffset
+                                << " Local x coordinate " << +cLocalX 
+                                << " Local y coordinate " << cLocalY
+                                << " bin# "
+                                << cBin 
+                                << " Channel " << cChnlIndx << " offset is " << cXOffset << " - have found " << channel.fOccupancy << " hits " << RESET;
+
+                        // uint16_t cStripOffset = cOffset;
+                        // uint16_t cStripId     = cOffset + cChnlIndx / cDivider;
+                        // // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
+                        // if(hybrid->getId() % 2 == 0) cStripId = cOffset + (chip->size() - cChnlIndx) / cDivider;
+                        // auto    cBin      = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
+                        // if(channel.fOccupancy > 0)
+                        //     LOG(DEBUG) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
+                        //                << cBin << " Channel " << cChnlIndx << " offset is " << cStripOffset << " - have found " << channel.fOccupancy << " stubs " << RESET;
 
                         if(cSensorId == 0)
                         {
@@ -725,7 +751,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPACHANNELS);
                         // offset for plotting 
                         uint32_t cNChannels = (cSensorId == 0 ) ? cStubMapS0->GetXaxis()->GetNbins()/8. : cStubMapS1->GetXaxis()->GetNbins()/8.;
-                        cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * cNChannels / cDivider : (chip->getId()%8) * cNChannels / cDivider;
+                        // cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * cNChannels / cDivider : (chip->getId()%8) * cNChannels / cDivider;
                         // rows and columns
                         uint32_t cNRows =  (chip->size() == NCHANNELS ) ? NCHANNELS : NSSACHANNELS;
                         uint32_t cNCols =(chip->size() == NMPACHANNELS ) ? NMPACOLS : 1; 

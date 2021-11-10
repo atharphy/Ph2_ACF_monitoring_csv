@@ -41,6 +41,22 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
                    << RESET;
         return cCounterValue;
     }
+    else if(pRegNode == "StubMode")
+    {
+        uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
+        auto    cReg      = this->readPeri(pMPA, "ECM");
+        uint8_t cRegMask  = (0x3 << cBitShift); //
+        uint8_t cValue    = (cReg & cRegMask)  >> cBitShift; 
+        return cValue;
+    }
+    else if(pRegNode == "LayerSwap")
+    {
+        uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
+        auto    cReg      = this->readPeri(pMPA, "ECM");
+        uint8_t cRegMask  = (0x3 << cBitShift); //
+        uint8_t cValue    = (cReg & cRegMask) >> cBitShift; 
+        return cValue & 0x1; // 0 -- pixels as seed; 1 --> strip as seed 
+    }
     else if(pRegNode.find("BendCode") != std::string::npos) // configure bend LUT
     {
         std::string cSubStr  = pRegNode.substr(pRegNode.find("BendCode") + std::string("BendCode").length(), pRegNode.length());
@@ -144,7 +160,7 @@ std::vector<int> MPAInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendC
 {
     std::vector<int>     cBends(0);
     std::vector<uint8_t> cBendLUT    = this->readLUT(pChip);
-    int                  cStartValue = -9;
+    int                  cStartValue = -7;
     for(auto cBendCode: cBendLUT)
     {
         if(cBendCode == pBendCode)
@@ -161,25 +177,34 @@ std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip)
 {
     std::vector<uint8_t> cBendCodes(0); // bend registers are 0 -- 14. Each register encodes 2 codes
 
-    int cStartValue = -9;
-    for(size_t cIndex = 0; cIndex < 9; cIndex++) // 9 registers
+    float cStartValue = -7.0/2.;
+    for(size_t cIndex = 0; cIndex < 8; cIndex++) // 9 registers
     {
-        uint16_t cRegAddress = 5 + cIndex; // each register controls two codes
+        uint16_t cRegAddress = 6 + cIndex; // each register controls two codes
         // code starts from dummy
         cRegAddress = this->regPeri(pChip, cRegAddress);
-        std::vector<int> cTheseBends{cStartValue, cStartValue + 1};
+        std::vector<float> cTheseBends{cStartValue, (float)(cStartValue + 0.5)};
         uint8_t          cCode = MPAInterface::ReadReg(pChip, cRegAddress);
-        LOG(DEBUG) << BOLDMAGENTA << "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  " << +cTheseBends[0] << " and " << +cTheseBends[1]
-                   << " the register value is 0x" << std::hex << +cCode << std::dec << RESET;
+        std::stringstream cOut; 
+        cOut <<  "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  "; 
+        if( cTheseBends[0] == -9 ) cOut << " dummy code and ";
+        else cOut << +cTheseBends[0] << " and ";
+        cOut << +cTheseBends[1]  << " half-strips the register value is 0x" << std::hex << +cCode << std::dec << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << cOut.str() << RESET;
         for(int cNibble = 0; cNibble < 2; cNibble++)
         {
-            int     cBendHalfStrips = cStartValue + cNibble;
+            float     cBendHalfStrips = cStartValue + cNibble*0.5;
             int     cBitOffset      = (1 - cNibble) * 3;
             uint8_t cBendCode       = (cCode & (0x7 << cBitOffset)) >> cBitOffset;
-            LOG(DEBUG) << BOLDMAGENTA << "BendCode for a bend of " << +cBendHalfStrips << " is " << std::bitset<3>(cBendCode) << RESET;
+            std::stringstream cPrint;
+            cPrint << "BendCode for a bend of ";
+            if( cBendHalfStrips == -9 ) continue;//cPrint << " [dummy] is ";
+            else cPrint << cBendHalfStrips << " is " ; 
+            cPrint << std::bitset<3>(cBendCode) ;
+            LOG (DEBUG) << BOLDBLUE << "\t\t" << cPrint.str() << RESET;
             cBendCodes.push_back(cBendCode);
         }
-        cStartValue = cStartValue + 2;
+        cStartValue = cStartValue + 2*0.5;
     }
     return cBendCodes;
 }

@@ -63,8 +63,8 @@ class BeamTestCheck2S : public OTTool
     void defInjection(){
         Ph2_HwInterface::Injection cInjection;
         // inject one cluster into each MPA-SSA pair
-        cInjection.fRow    = 10;
-        cInjection.fColumn = 2;
+        cInjection.fRow    = 100;
+        cInjection.fColumn = 12;
         fInjections.clear();
         fInjections.push_back(cInjection); // 0
     }
@@ -114,7 +114,6 @@ class BeamTestCheck2S : public OTTool
 
     size_t fThStep{0};
 
-    uint8_t fInjectionType{0};//0-digital,1-analogue
     std::vector<Ph2_HwInterface::Injection> fInjections;
     
     
