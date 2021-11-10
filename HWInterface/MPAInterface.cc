@@ -46,7 +46,7 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
         uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
         auto    cReg      = this->readPeri(pMPA, "ECM");
         uint8_t cRegMask  = (0x3 << cBitShift); //
-        uint8_t cValue    = (cReg & cRegMask)  >> cBitShift; 
+        uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
         return cValue;
     }
     else if(pRegNode == "LayerSwap")
@@ -54,8 +54,8 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
         uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
         auto    cReg      = this->readPeri(pMPA, "ECM");
         uint8_t cRegMask  = (0x3 << cBitShift); //
-        uint8_t cValue    = (cReg & cRegMask) >> cBitShift; 
-        return cValue & 0x1; // 0 -- pixels as seed; 1 --> strip as seed 
+        uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
+        return cValue & 0x1; // 0 -- pixels as seed; 1 --> strip as seed
     }
     else if(pRegNode.find("BendCode") != std::string::npos) // configure bend LUT
     {
@@ -177,34 +177,38 @@ std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip)
 {
     std::vector<uint8_t> cBendCodes(0); // bend registers are 0 -- 14. Each register encodes 2 codes
 
-    float cStartValue = -7.0/2.;
+    float cStartValue = -7.0 / 2.;
     for(size_t cIndex = 0; cIndex < 8; cIndex++) // 9 registers
     {
         uint16_t cRegAddress = 6 + cIndex; // each register controls two codes
         // code starts from dummy
         cRegAddress = this->regPeri(pChip, cRegAddress);
         std::vector<float> cTheseBends{cStartValue, (float)(cStartValue + 0.5)};
-        uint8_t          cCode = MPAInterface::ReadReg(pChip, cRegAddress);
-        std::stringstream cOut; 
-        cOut <<  "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  "; 
-        if( cTheseBends[0] == -9 ) cOut << " dummy code and ";
-        else cOut << +cTheseBends[0] << " and ";
-        cOut << +cTheseBends[1]  << " half-strips the register value is 0x" << std::hex << +cCode << std::dec << RESET;
+        uint8_t            cCode = MPAInterface::ReadReg(pChip, cRegAddress);
+        std::stringstream  cOut;
+        cOut << "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  ";
+        if(cTheseBends[0] == -9)
+            cOut << " dummy code and ";
+        else
+            cOut << +cTheseBends[0] << " and ";
+        cOut << +cTheseBends[1] << " half-strips the register value is 0x" << std::hex << +cCode << std::dec << RESET;
         LOG(DEBUG) << BOLDMAGENTA << cOut.str() << RESET;
         for(int cNibble = 0; cNibble < 2; cNibble++)
         {
-            float     cBendHalfStrips = cStartValue + cNibble*0.5;
-            int     cBitOffset      = (1 - cNibble) * 3;
-            uint8_t cBendCode       = (cCode & (0x7 << cBitOffset)) >> cBitOffset;
+            float             cBendHalfStrips = cStartValue + cNibble * 0.5;
+            int               cBitOffset      = (1 - cNibble) * 3;
+            uint8_t           cBendCode       = (cCode & (0x7 << cBitOffset)) >> cBitOffset;
             std::stringstream cPrint;
             cPrint << "BendCode for a bend of ";
-            if( cBendHalfStrips == -9 ) continue;//cPrint << " [dummy] is ";
-            else cPrint << cBendHalfStrips << " is " ; 
-            cPrint << std::bitset<3>(cBendCode) ;
-            LOG (DEBUG) << BOLDBLUE << "\t\t" << cPrint.str() << RESET;
+            if(cBendHalfStrips == -9)
+                continue; // cPrint << " [dummy] is ";
+            else
+                cPrint << cBendHalfStrips << " is ";
+            cPrint << std::bitset<3>(cBendCode);
+            LOG(DEBUG) << BOLDBLUE << "\t\t" << cPrint.str() << RESET;
             cBendCodes.push_back(cBendCode);
         }
-        cStartValue = cStartValue + 2*0.5;
+        cStartValue = cStartValue + 2 * 0.5;
     }
     return cBendCodes;
 }
@@ -581,15 +585,16 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         bool cReadoutMode = this->configPeri(pMPA, "ReadoutMode", 0x00);
         // register mask
         std::vector<std::string> cPixelRegs{"PixelMask", "DigitalInjection"};
-        uint8_t cFEEnable   = 0; 
-        uint8_t cEnableDigi = (pValue == 0 ) ? 0 : 1; 
-        std::vector<uint8_t>     cPixelVals{cFEEnable,cEnableDigi};
+        uint8_t                  cFEEnable   = 0;
+        uint8_t                  cEnableDigi = (pValue == 0) ? 0 : 1;
+        std::vector<uint8_t>     cPixelVals{cFEEnable, cEnableDigi};
         uint8_t                  cRegMask = 0x00;
         for(auto cPixelReg: cPixelRegs) cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second);
-        cRegMask = ~(cRegMask);
-        uint8_t                  cValue = 0x00;
-        size_t                    cIndx=0;
-        for(auto cVal: cPixelVals){ 
+        cRegMask       = ~(cRegMask);
+        uint8_t cValue = 0x00;
+        size_t  cIndx  = 0;
+        for(auto cVal: cPixelVals)
+        {
             cValue = cValue | (cVal << PIXEL_ENABLE_TABLE.find(cPixelRegs[cIndx])->second);
             cIndx++;
         }
@@ -598,19 +603,16 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         if(pRegName.find("P") != std::string::npos) // single pixel
         {
             cPixelNumber = std::stoi(pRegName.substr(pRegName.find("P") + 1, pRegName.length()));
-            cReadValue    = this->readPixel(pMPA, "ENFLAGS", cPixelNumber);
+            cReadValue   = this->readPixel(pMPA, "ENFLAGS", cPixelNumber);
         }
         else
         {
-            cReadValue    = this->ReadChipReg(pMPA, "ENFLAGS_ALL");
+            cReadValue = this->ReadChipReg(pMPA, "ENFLAGS_ALL");
         }
-        auto cRegValue    = (cReadValue & cRegMask) | cValue;
-        LOG(DEBUG) << BOLDBLUE << "Register mask " << pRegName << " 0x" << std::hex << +cRegMask << std::dec 
-            << " readback value is 0x" << std::hex << +cReadValue << std::dec 
-            << " will write value 0x" << std::hex << +cValue << std::dec 
-            << " register value is 0x" << std::hex << +cRegValue << std::dec 
-            << RESET;
-    
+        auto cRegValue = (cReadValue & cRegMask) | cValue;
+        LOG(DEBUG) << BOLDBLUE << "Register mask " << pRegName << " 0x" << std::hex << +cRegMask << std::dec << " readback value is 0x" << std::hex << +cReadValue << std::dec << " will write value 0x"
+                   << std::hex << +cValue << std::dec << " register value is 0x" << std::hex << +cRegValue << std::dec << RESET;
+
         bool cEnableDigital = this->configPixel(pMPA, "ENFLAGS", cPixelNumber, cRegValue, pVerifLoop);
         // configure pattern
         bool cConfigPattern = this->configPixel(pMPA, "DigiPattern", cPixelNumber, pValue, pVerifLoop);

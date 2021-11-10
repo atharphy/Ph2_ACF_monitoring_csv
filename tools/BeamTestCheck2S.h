@@ -60,7 +60,8 @@ class BeamTestCheck2S : public OTTool
         for(auto container: fSCurveOccupancyMap) fRecycleBin.free(container.second);
         fSCurveOccupancyMap.clear();
     }
-    void defInjection(){
+    void defInjection()
+    {
         Ph2_HwInterface::Injection cInjection;
         // inject one cluster into each MPA-SSA pair
         cInjection.fRow    = 100;
@@ -68,6 +69,7 @@ class BeamTestCheck2S : public OTTool
         fInjections.clear();
         fInjections.push_back(cInjection); // 0
     }
+
   private:
     // Containers
     // TDC
@@ -115,8 +117,7 @@ class BeamTestCheck2S : public OTTool
     size_t fThStep{0};
 
     std::vector<Ph2_HwInterface::Injection> fInjections;
-    
-    
+
 #ifdef __USE_ROOT__
     DQMHistogramBeamTestCheck fDQMHistogrammer;
 #endif

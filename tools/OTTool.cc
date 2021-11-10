@@ -501,8 +501,8 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
-            LOG (INFO) << BOLDRED << " ... waiting  for triggers to start... " << RESET;
-        }while(cInterface->GetTriggerState() == 0);
+            LOG(INFO) << BOLDRED << " ... waiting  for triggers to start... " << RESET;
+        } while(cInterface->GetTriggerState() == 0);
     }
 
     LOG(DEBUG) << BOLDBLUE << fMyName << ":Triggers started .. now polling readout.." << RESET;
@@ -515,8 +515,8 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
-        auto  cTriggerState   = cInterface->GetTriggerState();
-        auto cTriggerSource   = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
+        auto                  cTriggerState   = cInterface->GetTriggerState();
+        auto                  cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
         auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
         std::vector<uint32_t> cData(0);
         cLclEvntCntr += ReadData((*cBoardIter), cData, cWait);
@@ -526,9 +526,7 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         {
             LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to be stopped on BeBoard#" << +cBrdId << " continuousReadout loop ... "
                        << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received"
-                       << " trigger source is " << +cTriggerSource 
-                       << " trigger state is " << +cTriggerState 
-                       << " and " << cLclEvntCntr << " events in the readout so far ... " << RESET;
+                       << " trigger source is " << +cTriggerSource << " trigger state is " << +cTriggerState << " and " << cLclEvntCntr << " events in the readout so far ... " << RESET;
         }
         cWaitCounter++;
     } while(cInterface->GetTriggerState() == 1);
@@ -583,7 +581,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 //
 void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, int pChipId)
 {
-    LOG (INFO) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET; 
+    LOG(INFO) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
     // inject pixel clusters
     for(auto cOpticalReadout: *pBoard)
     {
@@ -591,21 +589,22 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
         {
             for(auto cChip: *cHybrid)
             {
-                //fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode",0x0);
+                // fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode",0x0);
                 if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
                 LOG(INFO) << BOLDMAGENTA << "Injecting patterns in ROC#" << +cChip->getId() << RESET;
                 // make sure L1 latency is configured
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
-                    if( fInjectionType == 0 ) (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
-                    else 
+                    if(fInjectionType == 0)
+                        (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
+                    else
                     {
-                        if( pInjections.size() > 0 ) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "AnalogueSync", 0x1);
+                        if(pInjections.size() > 0) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "AnalogueSync", 0x1);
                         for(auto cInjection: pInjections)
                         {
-                            auto cPxl = cInjection.fColumn*NSSACHANNELS + (uint32_t)cInjection.fRow;
-                            LOG (INFO) << BOLDBLUE << " Injecting in pixel " << +cPxl << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
+                            auto cPxl = cInjection.fColumn * NSSACHANNELS + (uint32_t)cInjection.fRow;
+                            LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +cPxl << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
                             std::stringstream cRegName;
                             cRegName << "ENFLAGS_P" << +cPxl;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x5F, false);
@@ -614,14 +613,17 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    if( pInjections.size() > 0 ) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                    if(pInjections.size() > 0) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
                     fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
-                    for(auto cInjection: pInjections) { 
-                        if( fInjectionType == 0 ) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); 
-                        else{ 
+                    for(auto cInjection: pInjections)
+                    {
+                        if(fInjectionType == 0)
+                            fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9);
+                        else
+                        {
                             fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x08);
-                            fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x13);  
+                            fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x13);
                         }
                     }
                 }

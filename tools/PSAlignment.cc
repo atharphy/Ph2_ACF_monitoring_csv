@@ -1020,7 +1020,6 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
     return cFoundCorrectHitLatency;
 }
 
-
 bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
 {
     if(pBoard->getStubOffset() == 0) pBoard->setStubOffset(70);
