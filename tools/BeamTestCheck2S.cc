@@ -128,8 +128,7 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
         // prepare injection
         PrepareForTP(cBoard);
     }
-    ScanL1Latency(pContinousReadout);
-    /*
+    /*ScanL1Latency(pContinousReadout);
     // make sure only two chips are 'on'
     for(auto cBoard: *fDetectorContainer)
     {
@@ -145,6 +144,7 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
         }         // for on opticalGroup - end
     }
     */
+    
     ScanStubLatency(pContinousReadout);
     /*
     // print out optimal L1 + stub latencies
@@ -233,8 +233,7 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     }
 
     ScanL1Latency(pContinousReadout);
-    ScanStubLatency(pContinousReadout);
-    /*
+    /*ScanStubLatency(pContinousReadout);
     // print out optimal L1 + stub latencies
     for(auto cBoard: *fDetectorContainer)
     {
@@ -936,7 +935,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             }
                             else
                             {
-                                cRow = std::floor(cStub.getPosition() / 2.0);
+                                cRow = std::floor(cStub.getPosition()/ 2.0);
                                 cCol = cStub.getRow();
                             }
                             // update bend map
@@ -1050,11 +1049,11 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                   << " Hits S0 : " << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
                                   << " Hits S1 : " << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
                     else if(cChip->getFrontEndType() == FrontEndType::MPA)
-                        LOG(INFO) << BOLDBLUE << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
+                        LOG(INFO) << BOLDMAGENTA << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
                                   << " Stubs   : " << cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs."
                                   << " Hits S0 : " << cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
                     else
-                        LOG(INFO) << BOLDBLUE << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
+                        LOG(INFO) << BOLDGREEN << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
                                   << " Hits S1 : " << cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
                 }
             }
@@ -1464,9 +1463,7 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
         }
         cNgroups++;
     }
-    // inject PS
-    if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
-
+    
     // set TP amplitude and delay
     LOG(INFO) << BOLDYELLOW << "Enabling TP with : " << +fTPamplitude << " injected charge "
               << " delay of " << +fTPdelay << " ns " << RESET;
@@ -1475,33 +1472,15 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     fBeBoardInterface->Stop(pBoard);
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    // set thresholds from xml
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            for(auto cChip: *cHybrid)
-            {
-                uint32_t cThreshold = 0;
-                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
-                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                {
-                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "ThDAC" << +cDAC;
-                        cThreshold = cChip->getReg(cRegName.str());
-                    }
-                }
-                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
-            }
-        }
+    
+    UpdateFromRegMap(pBoard);
+    if(cWith2S) { 
+        //setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
+        setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay); 
     }
 
-    setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
-    if(cWith2S) { setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay); }
+    // inject PS
+    if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
 }
 void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
 {
@@ -1527,30 +1506,7 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
     fBeBoardInterface->Stop(pBoard);
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    // set thresholds
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            for(auto cChip: *cHybrid)
-            {
-                uint32_t cThreshold = 0;
-                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
-                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                {
-                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "ThDAC" << +cDAC;
-                        cThreshold = cChip->getReg(cRegName.str());
-                    }
-                }
-                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
-            }
-        }
-    }
+    UpdateFromRegMap(pBoard);
 }
 void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard) { PrintData(pBoard); }
 
@@ -1582,30 +1538,7 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
     fBeBoardInterface->Stop(pBoard);
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    // set thresholds
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            for(auto cChip: *cHybrid)
-            {
-                uint32_t cThreshold = 0;
-                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
-                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                {
-                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "ThDAC" << +cDAC;
-                        cThreshold = cChip->getReg(cRegName.str());
-                    }
-                }
-                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to " << cThreshold << RESET;
-                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-            }
-        }
-    }
+    UpdateFromRegMap(pBoard);
 }
 void BeamTestCheck2S::Stop() {}
 

@@ -597,11 +597,13 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     if(fInjectionType == 0)
+                    {
+                        // for digi injection .. explicity disable all other strips  
+                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                         (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
+                    }
                     else
                     {
-                        if(pInjections.size() > 0) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                        // fReadoutChipInterface->WriteChipReg(cChip, "AnalogueSync", 0x1);
                         for(auto cInjection: pInjections)
                         {
                             if( cInjectAll ) continue;
@@ -616,7 +618,8 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    if(pInjections.size() > 0){ 
+                    // for digi injection .. explicity disable all other strips  
+                    if(pInjections.size() > 0 && fInjectionType == 0 ){ 
                         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                         fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x00);
                         fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00);
@@ -650,4 +653,138 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
             } // chip
         }     // hybrid
     }         // optica]l group
+}
+void OTTool::UpdateFromRegMap(BeBoard* pBoard)
+{
+    // set thresholds
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                uint32_t cThreshold = 0;
+                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
+                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
+                    {
+                        std::stringstream cRegName;
+                        cRegName << "ThDAC" << +cDAC;
+                        cThreshold = cChip->getReg(cRegName.str());
+                    }
+                }
+                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to 0x" << std::hex << +cThreshold << std::dec << RESET;
+                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+            }
+        }
+    }
+    // set stub mode from xml 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    auto cMode = cChip->getReg("ECM");
+                    fReadoutChipInterface->WriteChipReg(cChip, "ECM", cMode);
+                    LOG(INFO) << BOLDMAGENTA << "Setting StubMode regisger on ROC#" << +cChip->getId() << " to " << cMode << RESET;
+                }
+            }
+        }
+    } 
+    // set hit mode from xml 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    auto cMode = cChip->getReg("ModeSel_ALL");
+                    fReadoutChipInterface->WriteChipReg(cChip, "ModeSel_ALL", cMode);
+                    LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on ROC#" << +cChip->getId() << " to " << cMode << RESET;
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::SSA ) 
+                {
+                    auto cMode = cChip->getReg("SAMPLINGMODE_ALL");
+                    fReadoutChipInterface->WriteChipReg(cChip, "SAMPLINGMODE_ALL", cMode);
+                    LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on ROC#" << +cChip->getId() << " to " << cMode << RESET;
+                }
+            }
+        }
+    }  
+    // charge injection 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                std::string cRegName = ""; 
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    cRegName = "CalDAC0";
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::SSA ) 
+                {
+                    cRegName = "Bias_CALDAC";
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+                {
+                    cRegName = "MiscTestPulseCtrl&AnalogMux";
+                }
+                uint8_t cInjectedCharge = cChip->getReg(cRegName);
+                if( cChip->getFrontEndType() == FrontEndType::CBC3 ) cInjectedCharge = (cInjectedCharge >> 6 ) & 0x3F;
+                fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge" , cInjectedCharge);
+                LOG(INFO) << BOLDMAGENTA << "Setting Charge injection register on ROC#" << +cChip->getId() << " to " << +cInjectedCharge << RESET;
+            }
+        }
+    }
+    // latency
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                uint16_t cLatency=0;
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL");
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::SSA ) 
+                {
+                    cLatency = cChip->getReg("L1-Latency_MSB") << 8 | cChip->getReg("L1-Latency_LSB");
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+                {
+                    //To-Do fill 
+                    //cRegName = "MiscTestPulseCtrl&AnalogMux";
+                }
+                LOG (INFO) << BOLDYELLOW << "Setting latency on ROC#" << +cChip->getId() << " to " << cLatency << RESET;
+                fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency" , cLatency);
+            }
+        }
+    }
+    // make sure MPAs have both modes enables   
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                std::string cRegName = ""; 
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL" , 0x0F);
+                    LOG(INFO) << BOLDMAGENTA << "Setting ENFLAGS_ALL on ROC#" << +cChip->getId() << " to enable both modes.." << RESET;
+                }
+            }
+        }
+    }
 }

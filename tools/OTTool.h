@@ -68,6 +68,8 @@ class OTTool : public Tool
     // type of injection
     uint8_t fInjectionType{0}; // 0-digital,1-analogue
 
+
+    void UpdateFromRegMap(Ph2_HwDescription::BeBoard* pBoard); 
     void PrintData(Ph2_HwDescription::BeBoard* pBoard);
     void EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
     void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
