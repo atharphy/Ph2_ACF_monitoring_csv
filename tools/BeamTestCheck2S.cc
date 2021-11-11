@@ -233,8 +233,8 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     }
 
     ScanL1Latency(pContinousReadout);
-    /*ScanStubLatency(pContinousReadout);
-    // print out optimal L1 + stub latencies
+    ScanStubLatency(pContinousReadout);
+    /*// print out optimal L1 + stub latencies
     for(auto cBoard: *fDetectorContainer)
     {
         LOG(INFO) << BOLDYELLOW << "BeBoard#" << +cBoard->getId() << " optimal stub latency found to be " << fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() << RESET;

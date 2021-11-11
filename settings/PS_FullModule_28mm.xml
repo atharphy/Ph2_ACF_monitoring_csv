@@ -19,8 +19,8 @@
                 <!-- Window in half pixels  -->
                 <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
                 <Latencies       stripLatency="121" pixelLatency="121"/>
-                <Thresholds      stripThreshold="7000" pixelThreshold="7000"/> 
-                <StubLogic       mode="0" window="7"/>
+                <Thresholds      stripThreshold="15000" pixelThreshold="15000"/> 
+                <StubLogic       mode="0" window="31"/>
                 <HitLogic        stripMode="0" pixelMode="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
@@ -221,12 +221,12 @@
     <Setting name="MaxStubPhase">8</Setting>
 
     <Setting name="InjectionType">0</Setting>
-    <Setting name="StubAlignmentScanStart">90</Setting>
+    <Setting name="StubAlignmentScanStart">80</Setting>
     <!-- <Setting name="StartLatency">280</Setting>
     <Setting name="LatencyRange">30</Setting> -->
 
-    <Setting name="StartLatency">115</Setting>
-    <Setting name="LatencyRange">30</Setting>
+    <Setting name="StartLatency">119</Setting>
+    <Setting name="LatencyRange">5</Setting>
 
     <Setting name="PSmoduleSSAthreshold">10</Setting>
     <Setting name="PSmoduleMPAthreshold">120</Setting>
@@ -235,7 +235,7 @@
 
     <Setting name="SaveRawData">1</Setting>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">1000</Setting>
+    <Setting name="Nevents">50000</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
