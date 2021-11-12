@@ -39,7 +39,9 @@ class BeamTestCheck2S : public OTTool
     void ValidateTP();
     void CheckWithInternal(uint8_t pContinousReadout = 1);
     void CheckWithExternal(uint8_t pContinousReadout = 1);
+    void CheckWithTLU(uint8_t pContinousReadout = 1);
     void ValidateExternal();
+    void ValidateTLU();
     void Initialise();
     void Running() override;
     void Stop() override;
@@ -53,6 +55,10 @@ class BeamTestCheck2S : public OTTool
     void ScanStubLatency(uint8_t pContinousReadout);
     void ScanL1Latency(uint8_t pContinousReadout);
 
+    void ConfigureScans(uint8_t pStatusL1, uint8_t pStatusStubs ){
+        fScanL1Latency = pStatusL1;
+        fScanStubLatency = pStatusStubs;
+    }
   protected:
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
     void cleanContainerMap()
@@ -77,6 +83,7 @@ class BeamTestCheck2S : public OTTool
     // Latency
     DetectorDataContainer fLatencyContainer, fStubLatencyContainer;
     DetectorDataContainer fLatencyContainerS0, fLatencyContainerS1;
+    DetectorDataContainer fLatencyContainerCoincidence;
     // Cluster size
     DetectorDataContainer fClusterOccupancy;
     DetectorDataContainer fClusterOccupancyS0, fClusterOccupancyS1;
@@ -87,6 +94,7 @@ class BeamTestCheck2S : public OTTool
     DetectorDataContainer fOptimalL1Latency, fOptimalStubLatency;
     // Hit Containers
     DetectorDataContainer fHitOccupancyS0, fHitOccupancyS1;
+    DetectorDataContainer fHitOccupancyCoinc;
     DetectorDataContainer fHitContainerTDC;
     DetectorDataContainer fStubOccupancy;
     // Hit Maps
@@ -107,6 +115,7 @@ class BeamTestCheck2S : public OTTool
     void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 1);
     void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
+    void PrepareForTLU(Ph2_HwDescription::BeBoard* pBoard);
     void ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinousReadout);
     void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
@@ -118,6 +127,9 @@ class BeamTestCheck2S : public OTTool
 
     std::vector<Ph2_HwInterface::Injection> fInjections;
 
+    // configure checks
+    uint8_t fScanL1Latency{0};
+    uint8_t fScanStubLatency{0};
 #ifdef __USE_ROOT__
     DQMHistogramBeamTestCheck fDQMHistogrammer;
 #endif

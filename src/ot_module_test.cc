@@ -144,8 +144,12 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("DataMonitor", "Data monitor", ArgvParser::OptionRequiresValue);
     cmd.defineOption("TestPulseCheck", "Test pulse check - inject with TP and perform latency scan", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("ExternalCheck", "External trigger check - run with external triggers", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("TLUCheck", "External trigger check - run with external triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("scanLatencies", "Scan L1+Stub Latencies ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("scanL1", "Scan L1 Latency ", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("scanStubs", "Scan Stub Latency ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -984,6 +988,8 @@ int main(int argc, char* argv[])
         t.show("Time to check data of the front-ends on the system: ");
     }
 
+    uint8_t cScanL1 = (cmd.foundOption("scanL1") || cmd.foundOption("scanLatencies")) ? 1 : 0 ;
+    uint8_t cScanStubs = (cmd.foundOption("scanStubs") || cmd.foundOption("scanLatencies")) ? 1 : 0;
     if(!cmd.foundOption("read") && cmd.foundOption("TestPulseCheck"))
     {
         std::ofstream cGoodRuns;
@@ -994,38 +1000,66 @@ int main(int argc, char* argv[])
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
-        // check with TP
-        if(cmd.foundOption("scanLatencies"))
-            cBeamTestCheck.CheckWithTP();
-        else
-            cBeamTestCheck.ValidateTP();
+        cBeamTestCheck.ConfigureScans(cScanL1,cScanStubs);
+        cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
-    if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
+
+    if(!cmd.foundOption("read") && cmd.foundOption("ExternalCheck"))
     {
         std::ofstream cGoodRuns;
         cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
-        if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
-
-        uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
-        int     cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
-        cBeamTestCheck.SetReadoutPause(cReadoutPause);
-        if(cmd.foundOption("scanLatencies"))
-            cBeamTestCheck.CheckWithExternal(cContinuousReadout);
-        else
-            cBeamTestCheck.ValidateExternal();
+        cBeamTestCheck.ConfigureScans(cScanL1,cScanStubs);
+        // check with TP
+        cBeamTestCheck.CheckWithExternal();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
-    else if(cmd.foundOption("read"))
+
+    if(!cmd.foundOption("read") && cmd.foundOption("TLUCheck"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
+
+        BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.Inherit(&cTool);
+        cBeamTestCheck.Initialise();
+        cBeamTestCheck.ConfigureScans(cScanL1,cScanStubs);
+        cBeamTestCheck.CheckWithTLU();
+        cBeamTestCheck.writeObjects();
+        cBeamTestCheck.Reset();
+    }
+
+
+    // if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
+    // {
+    //     std::ofstream cGoodRuns;
+    //     cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+    //     cGoodRuns << cRunNumber << "\n";
+    //     cGoodRuns.close();
+
+    //     uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+    //     BeamTestCheck2S cBeamTestCheck;
+    //     cBeamTestCheck.Inherit(&cTool);
+    //     cBeamTestCheck.Initialise();
+    //     if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
+
+    //     uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
+    //     int     cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+    //     cBeamTestCheck.SetReadoutPause(cReadoutPause);
+    //     cBeamTestCheck.writeObjects();
+    //     cBeamTestCheck.Reset();
+    // }
+    if(cmd.foundOption("read"))
     {
         std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
 

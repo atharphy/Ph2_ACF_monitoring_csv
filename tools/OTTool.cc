@@ -771,6 +771,34 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             }
         }
     }
+    // configure HIPs 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                uint16_t cCut=0;
+                std::string cRegName; 
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    cRegName = "HipCut_ALL";
+                    cCut = cChip->getReg(cRegName);
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::SSA ) 
+                {
+                    cRegName = "HIPCUT_ALL";
+                    cCut = cChip->getReg(cRegName);
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+                {
+                    cCut = cChip->getReg("HIP&TestMode");
+                }
+                LOG (INFO) << BOLDYELLOW << "Setting HIP register on ROC#" << +cChip->getId() << " to " << cCut << RESET;
+                fReadoutChipInterface->WriteChipReg(cChip, cRegName , cCut);
+            }
+        }
+    }
     // make sure MPAs have both modes enables   
     for(auto cOpticalGroup: *pBoard)
     {

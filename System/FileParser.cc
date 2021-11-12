@@ -637,6 +637,21 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                    << RESET << std::endl;
             }
         }
+
+        // hip cut 
+        pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
+        if(cLatencyNode != nullptr) 
+        {
+            for(auto cROC: *pHybrid)
+            {
+                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
+                int cCut  = convertAnyInt(cHIPmode.attribute("stripCut").value()) ;
+                cROC->setReg("HIPCUT_ALL", cCut );
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cROC->getId() << RESET 
+                   << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec 
+                   << RESET << std::endl;
+            }
+        }
     }
 }
 void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
@@ -803,6 +818,21 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                    << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency << std::dec 
                    << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF)  << std::dec 
                    << GREEN << " LSB is 0x" <<  std::hex << (cLatency & 0xFF)  << std::dec 
+                   << RESET << std::endl;
+            }
+        }
+
+        // hip cut 
+        pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
+        if(cLatencyNode != nullptr) 
+        {
+            for(auto cROC: *pHybrid)
+            {
+                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
+                int cCut  = convertAnyInt(cHIPmode.attribute("pixelCut").value()) ;
+                cROC->setReg("HipCut_ALL", cCut );
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cROC->getId() << RESET 
+                   << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec 
                    << RESET << std::endl;
             }
         }      

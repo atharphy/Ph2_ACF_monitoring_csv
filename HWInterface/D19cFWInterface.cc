@@ -1415,6 +1415,8 @@ void D19cFWInterface::Start()
         // prints to debug and also checks that things are ok
         this->TriggerConfiguration();
         cTriggerState = GetTriggerState();
+        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+        
         // now check if I should try and start again
         if(cHandshake)
         {
