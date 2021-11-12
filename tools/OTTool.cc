@@ -799,6 +799,40 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             }
         }
     }
+    // configure sampling delay 
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if( cChip->getFrontEndType() == FrontEndType::SSA ) 
+                {
+                    std::vector<std::string> cRegNames{"PhaseShiftClock","ClockDeskewing"}; 
+                    for( auto cRegName : cRegNames )
+                    {
+                        auto cValueInMemory = cChip->getReg(cRegName);
+                        fReadoutChipInterface->WriteChipReg(cChip,cRegName, cValueInMemory);
+                    }
+                }
+                else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    std::vector<std::string> cRegNames{"PhaseShift","ConfDLL"}; 
+                    for( auto cRegName : cRegNames )
+                    {
+                        auto cValueInMemory = cChip->getReg(cRegName);
+                        fReadoutChipInterface->WriteChipReg(cChip,cRegName, cValueInMemory);
+                    }
+                }
+                // To-Do add CBC 
+                // else if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
+                // {
+                // }
+
+            }
+        }
+    }
+
     // make sure MPAs have both modes enables   
     for(auto cOpticalGroup: *pBoard)
     {

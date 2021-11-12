@@ -640,7 +640,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
         // hip cut 
         pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
-        if(cLatencyNode != nullptr) 
+        if(cHIPmode != nullptr) 
         {
             for(auto cROC: *pHybrid)
             {
@@ -649,6 +649,28 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 cROC->setReg("HIPCUT_ALL", cCut );
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cROC->getId() << RESET 
                    << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec 
+                   << RESET << std::endl;
+            }
+        }
+
+        // timing 
+        pugi::xml_node cSamplingDelay = cGlobalSettingsNode.child("SamplingDelay");
+        if(cSamplingDelay != nullptr) 
+        {
+            for(auto cROC: *pHybrid)
+            {
+                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
+                int cCoarse  = convertAnyInt(cSamplingDelay.attribute("PhaseShiftClock").value()) ;
+                int cFine  = convertAnyInt(cSamplingDelay.attribute("ClockDeskewing").value()) ;
+                cROC->setReg("PhaseShiftClock", cCoarse );
+                ChipRegMask cMask;
+                cMask.fNbits    = 3;
+                cMask.fBitShift = 0;
+                cROC->setRegBits("ClockDeskewing", cMask, cFine);
+
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cROC->getId() << RESET 
+                   << GREEN << "|\t|\t|\t|---- Coarse delay will be set to " << cCoarse*3.125 << " ns "
+                   << GREEN << " Fine delay will be set to " <<  cFine*0.2 << " ns." 
                    << RESET << std::endl;
             }
         }
@@ -824,7 +846,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
         // hip cut 
         pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
-        if(cLatencyNode != nullptr) 
+        if(cHIPmode != nullptr) 
         {
             for(auto cROC: *pHybrid)
             {
@@ -833,6 +855,25 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 cROC->setReg("HipCut_ALL", cCut );
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cROC->getId() << RESET 
                    << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec 
+                   << RESET << std::endl;
+            }
+        }
+
+        // timing 
+        pugi::xml_node cSamplingDelay = cGlobalSettingsNode.child("SamplingDelay");
+        if(cSamplingDelay != nullptr) 
+        {
+            for(auto cROC: *pHybrid)
+            {
+                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
+                int cCoarse  = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value()) ;
+                int cFine  = convertAnyInt(cSamplingDelay.attribute("pixelFine").value()) ;
+                cROC->setReg("PhaseShift", cCoarse );
+                cROC->setReg("ConfDLL", cFine );
+                
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cROC->getId() << RESET 
+                   << GREEN << "|\t|\t|\t|---- Coarse delay will be set to " << cCoarse*3.125 << " ns "
+                   << GREEN << " Fine delay will be set to " <<  cFine*0.2 << " ns." 
                    << RESET << std::endl;
             }
         }      

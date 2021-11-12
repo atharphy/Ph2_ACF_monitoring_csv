@@ -1006,8 +1006,8 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                 if(cRow == cMaxRows || cCol == cMaxCols)
                                     LOG(INFO) << BOLDRED << "Event#" << (*cEventIter)->GetEventCount() << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " S" << +cSensorID
                                               << " Address " << +cAddress << " , Zpos " << +cZPos << " id " << +cId << " Row " << +cRow << " Column " << +cCol << RESET;
-                                else
-                                    LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " S" << +cSensorID
+                                else if ( pPrint )
+                                    LOG(INFO) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " S" << +cSensorID
                                                << " Address " << +cAddress << " , Zpos " << +cZPos << " id " << +cId << " Row " << +cRow << " Column " << +cCol << RESET;
                             }
 
