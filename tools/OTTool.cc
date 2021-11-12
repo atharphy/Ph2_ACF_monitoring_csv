@@ -214,7 +214,7 @@ void OTTool::ReadDataFromFile(std::string pRawFileName)
     LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        size_t cNevents = 1;
+        size_t cNevents = fNevents;
         DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
         // const std::vector<Event*>& cEvents = GetEvents ();
         LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
@@ -570,8 +570,22 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             for(auto cChip: *cHybrid)
             {
                 if(!cSparsified) break;
-                auto cClusters = (pEvent)->getClusters(cHybrid->getId(), cChip->getId());
-                cOut << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
+                if(cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
+                if(cChip->getFrontEndType() == FrontEndType::CBC3 )
+                {
+                    auto cClusters = (pEvent)->getClusters(cHybrid->getId(), cChip->getId());
+                    cOut << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
+                }
+                else 
+                {
+                    auto cStripClusters = static_cast<D19cCic2Event*>(pEvent)->GetStripClusters(cHybrid->getId(), cChip->getId());
+                    auto cPxlClusters = static_cast<D19cCic2Event*>(pEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                    cOut << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " 
+                        << +cStripClusters.size() << " S-clusters and "
+                        << +cPxlClusters.size() << " P-clusters." 
+                        << RESET;
+                }
             }
             LOG(INFO) << cOut.str() << RESET;
         }

@@ -913,13 +913,13 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                << std::bitset<8>(cStubStat) << RESET;
                     auto&                cOccHybrid = fDetectorDataContainer->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
                     std::vector<uint8_t> cIndices(0);
-                    std::vector<uint8_t> cSSAIndices(0);
+                    std::vector<uint8_t> cSSAIds(0);
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType ::CBC3)
                             cIndices.push_back(cChip->getIndex());
                         else
-                            cSSAIndices.push_back(cChip->getIndex());
+                            cSSAIds.push_back(cChip->getId());
                     }
                     size_t cIndx = 0;
 
@@ -981,6 +981,9 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                         uint16_t cMaxRows  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
                         cTmpS0.assign(cMaxRows,0 );
                         cTmpS1.assign(cMaxRows,0 ); 
+                        bool cSSAExists = std::find( cSSAIds.begin(), cSSAIds.end(), cChip->getId()%8) != cSSAIds.end(); 
+                        uint8_t cSSAIndex = ( cSSAExists ) ? std::distance( cSSAIds.begin(), std::find( cSSAIds.begin(), cSSAIds.end(), cChip->getId()%8) )  : 0 ;
+                        if( cSSAExists ) LOG (DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Index " << +cSSAIndex << RESET;
                         for(auto cHit: cHits)
                         {
                             if(pPrint) LOG(DEBUG) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Channel " << cHit << RESET;
@@ -1014,8 +1017,11 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             bool cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
                             if(cSensorID == 0)
                                 cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
-                            else if(cChip->getFrontEndType() != FrontEndType::CBC3)
-                                cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getSummary<uint32_t>()++;
+                            else if(cChip->getFrontEndType() != FrontEndType::CBC3 && cSSAExists) 
+                            {
+                                cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndex)->getSummary<uint32_t>()++;
+                                //cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getSummary<uint32_t>()++;
+                            }
                             else
                                 cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
 
@@ -1041,9 +1047,11 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cIndices[cIndx])->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
                                cTmpS0[cRow]++;
                             }
-                            else if(cValidCoords)
-                            { 
-                               fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
+                            else if(cValidCoords &&  cSSAExists ) 
+                            {
+                               // find correct SSA Index 
+                               fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndex)->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
+                               //fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
                                cTmpS1[cRow]++;
                             }
                             if(pPrint && cValidCoords)

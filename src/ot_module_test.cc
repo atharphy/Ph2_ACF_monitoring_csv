@@ -1040,25 +1040,31 @@ int main(int argc, char* argv[])
     }
 
 
-    // if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
-    // {
-    //     std::ofstream cGoodRuns;
-    //     cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
-    //     cGoodRuns << cRunNumber << "\n";
-    //     cGoodRuns.close();
+    if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
 
-    //     uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
-    //     BeamTestCheck2S cBeamTestCheck;
-    //     cBeamTestCheck.Inherit(&cTool);
-    //     cBeamTestCheck.Initialise();
-    //     if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
+        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.Inherit(&cTool);
+        cBeamTestCheck.Initialise();
+        if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
 
-    //     uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
-    //     int     cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
-    //     cBeamTestCheck.SetReadoutPause(cReadoutPause);
-    //     cBeamTestCheck.writeObjects();
-    //     cBeamTestCheck.Reset();
-    // }
+        // uint8_t cContinuousReadout = cmd.foundOption("continuousReadout") ? 1 : 0;
+        // int     cReadoutPause      = (cmd.foundOption("continuousReadout")) ? convertAnyInt(cmd.optionValue("continuousReadout").c_str()) : 10;
+        // cBeamTestCheck.SetReadoutPause(cReadoutPause);
+
+        if( cmd.foundOption("TLUCheck") ) cBeamTestCheck.CheckWithTLU(); 
+        if( cmd.foundOption("ExternalCheck") ) cBeamTestCheck.CheckWithExternal(); 
+        if( cmd.foundOption("TestPulseCheck") ) cBeamTestCheck.CheckWithTP(); 
+        
+        cBeamTestCheck.writeObjects();
+        cBeamTestCheck.Reset();
+    }
+
     if(cmd.foundOption("read"))
     {
         std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
@@ -1066,6 +1072,9 @@ int main(int argc, char* argv[])
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
+        PrintConfig cCng; 
+        cCng.fVerbose=1; cCng.fPrintEvery = 1; 
+        cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
         cBeamTestCheck.Reset();
     }

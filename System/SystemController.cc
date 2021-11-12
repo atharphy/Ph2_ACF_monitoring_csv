@@ -597,8 +597,8 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
     // configure PS ROHs
     if(clpGBT != nullptr)
     {
-        const uint8_t cSsaClockDrive = 4;
-        const uint8_t cCicClockDrive = 4;
+        const uint8_t cSsaClockDrive = 7;
+        const uint8_t cCicClockDrive = 7;
 
         static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigurePSROH(clpGBT);
         const std::vector<uint8_t> cGroupsExamples = {0, 1};

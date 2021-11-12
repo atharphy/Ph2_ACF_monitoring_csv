@@ -21,11 +21,11 @@
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <Latencies       stripLatency="120" pixelLatency="120"/>
-                <Thresholds      stripThreshold="8500" pixelThreshold="10000"/> 
+                <Thresholds      stripThreshold="10000" pixelThreshold="9000"/> 
                 <StubLogic       mode="3" window="31"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
-                <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="0" pixelFine="0"/>
+                <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
@@ -43,6 +43,7 @@
             <MPA Id="8" configfile="BE0_OG0_FE0_Chip0.txt" />
             <MPA Id="9" configfile="BE0_OG0_FE0_Chip1.txt" />
             <MPA Id="10" configfile="BE0_OG0_FE0_Chip2.txt" />
+            <MPA Id="11" configfile="BE0_OG0_FE0_Chip3.txt" />
             <MPA Id="12" configfile="BE0_OG0_FE0_Chip4.txt" />
             <MPA Id="13" configfile="BE0_OG0_FE0_Chip5.txt" />
             <MPA Id="14" configfile="BE0_OG0_FE0_Chip6.txt" />
@@ -52,16 +53,20 @@
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
-        <Hybrid Id="1" Status="0" LinkId="0" reset="1" i2cMaster="1">
+        <Hybrid Id="1" Status="1" LinkId="0" reset="1" i2cMaster="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
                 <!-- Window in half pixels  -->
                 <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="121" pixelLatency="121"/>
-                <Thresholds      stripThreshold="7000" pixelThreshold="7000"/> 
-                <StubLogic       mode="0" window="7"/>
-                <HitLogic        stripMode="0" pixelMode="0"/>
+                <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
+                <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <Latencies       stripLatency="120" pixelLatency="120"/>
+                <Thresholds      stripThreshold="10000" pixelThreshold="9000"/> 
+                <StubLogic       mode="0" window="31"/>
+                <HitLogic        stripMode="1" pixelMode="1"/>
+                <HipLogic        stripCut="7" pixelCut="7"/>
+                <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
@@ -79,6 +84,7 @@
             <MPA Id="8" configfile="BE0_OG0_FE1_Chip0.txt" />
             <MPA Id="9" configfile="BE0_OG0_FE1_Chip1.txt" />
             <MPA Id="10" configfile="BE0_OG0_FE1_Chip2.txt" />
+            <MPA Id="11" configfile="BE0_OG0_FE1_Chip3.txt" />
             <MPA Id="12" configfile="BE0_OG0_FE1_Chip4.txt" />
             <MPA Id="13" configfile="BE0_OG0_FE1_Chip5.txt" />
             <MPA Id="14" configfile="BE0_OG0_FE1_Chip6.txt" />
@@ -175,7 +181,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 38 </Register>
+                    <Register name="common_stubdata_delay"> 41 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
@@ -227,9 +233,9 @@
     <Setting name="InjectionType">1</Setting>
     <Setting name="StubAlignmentScanStart">85</Setting>
     <!-- <Setting name="StartLatency">290</Setting>
-    <Setting name="LatencyRange">20</Setting>
+    <Setting name="LatencyRange">10</Setting>
      -->
-    <Setting name="StartLatency">115</Setting>
+    <Setting name="StartLatency">114</Setting>
     <Setting name="LatencyRange">10</Setting>
 
     <Setting name="PSmoduleSSAthreshold">10</Setting>
