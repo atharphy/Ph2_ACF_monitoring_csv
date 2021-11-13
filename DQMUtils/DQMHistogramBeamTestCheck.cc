@@ -868,19 +868,18 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                 {
                     uint16_t cDivider = (chip->size() == NCHANNELS) ? 2 : 1;
                     uint16_t cChnlIndx    = 0;
-                    auto&    cChipS0OCc = theHitMapS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
-                    auto&    cChipS1OCc = theHitMapS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
-                    auto&    cChipStubCc = theStubMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    auto&    cChipS0Occ = theHitMapS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    auto&    cChipS1Occ = theHitMapS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    auto&    cChipStubOcc = theStubMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
                     // hits 
-                    for(auto channel: *cChipS0OCc->getChannelContainer<Occupancy>())
+                    uint32_t cNChannels = cS0S1->GetXaxis()->GetNbins() / 8.;
+                    uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS : NSSACHANNELS;
+                    uint32_t cNCols = (chip->size() == NMPACHANNELS) ? NMPACOLS : 1;
+                    for(auto channel: *cChipS0Occ->getChannelContainer<Occupancy>())
                     {
                         // this is only valid for MPAs/CBCs
                         if(chip->size() != NMPACHANNELS && chip->size() != NCHANNELS) continue;
-                        // sensor id
-                        uint32_t cNChannels = cS0S1->GetXaxis()->GetNbins() / 8.;
                         // rows and columns
-                        uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS : NSSACHANNELS;
-                        uint32_t cNCols = (chip->size() == NMPACHANNELS) ? NMPACOLS : 1;
                         uint32_t cRow   = cChnlIndx % cNRows;
                         uint32_t cCol   = (cNCols == 1) ? 0 : cChnlIndx / cNRows;
                         // local x , local y
@@ -889,15 +888,8 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                         if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels - cRow) / cDivider;
                         if( channel.fOccupancy > 0 )
                         {
-                            // look for hits in the other sensor 
                             size_t cChnlIndxS1=0;
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() 
-                                            << " Row [S0] " << +cRow << " Column [S0] " << +cCol
-                                            << " Local x coordinate [S0] " << +cLocalX 
-                                            << " Channel [S0] " << cChnlIndx
-                                            << " -- [S0] " << cChipS0OCc->getChannel<Occupancy>(cRow, cCol).fOccupancy
-                                            << " hits " << RESET;
-                            for(auto channelS1: *cChipS1OCc->getChannelContainer<Occupancy>())
+                            for(auto channelS1: *cChipS1Occ->getChannelContainer<Occupancy>())
                             {
                                 uint32_t cRowS1   = cChnlIndxS1 % cNRows;
                                 uint32_t cColS1   = 0;
@@ -905,33 +897,30 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                 uint16_t cXOffsetS1 = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
                                 uint16_t cLocalXS1  = cXOffsetS1 + cRowS1 / cDivider;
                                 if(hybrid->getId() % 2 == 0) cLocalXS1 = cXOffsetS1 + (cNChannels - cRowS1) / cDivider;
-                                if(channelS1.fOccupancy > 0 )
+                                if(channelS1.fOccupancy > 0  )
                                 {
                                     auto cBin = cS0S1->FindBin((float)cLocalX, (float)cLocalXS1);
                                     auto cBinContent = cS0S1->GetBinContent( cBin ); 
                                     cS0S1->SetBinContent( cBin, cBinContent + 1 ) ; 
                                     cS0S1->SetBinError( cBin, std::sqrt(cBinContent + 1 )) ; 
-                                    if( cRowS1 == cRow ) 
-                                        LOG(DEBUG) << BOLDGREEN << "\t\t\t Row [S1] " << +cRowS1 << " Column [S1] " << +cColS1
-                                                        << " Local x coordinate [S1] " << +cLocalXS1 
-                                                        << " Channel [S1] " << cChnlIndxS1
-                                                        << " -- [S1] " << channelS1.fOccupancy 
-                                                        << " hits " << RESET;
+                                    //if( cLocalX != cLocalXS1 ) 
+                                        LOG(DEBUG) << BOLDYELLOW << " Correlation plot S0:S1 " 
+                                            << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId()
+                                            << " Row [S0] " << +cRow << " Column [S0] " << +cCol
+                                            << " Row [S1] " << +cRowS1 << " Column [S1] " << +cColS1
+                                            << RESET;
                                 }//print 
                                 cChnlIndxS1++;
                             }///all hit in other sensor for this chip 
                         }// hit in this channel 
                         cChnlIndx++;
                     } // chanenls
-                    // stubs 
-                    for(auto channel: *cChipStubCc->getChannelContainer<Occupancy>())
+                    // now correlation for stubs 
+                    cChnlIndx         = 0;
+                    for(auto channel: *cChipStubOcc->getChannelContainer<Occupancy>())
                     {
                         // this is only valid for MPAs/CBCs
                         if(chip->size() != NMPACHANNELS && chip->size() != NCHANNELS) continue;
-                        // sensor id
-                        uint32_t cNChannels = cStubS0->GetXaxis()->GetNbins() / 8.;
-                        // rows and columns
-                        uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS : NSSACHANNELS;
                         uint32_t cRow   = cChnlIndx % cNRows;
                         // local x , local y
                         uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
@@ -941,14 +930,14 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                         {
                             // look for hits in the other sensor 
                             size_t cChnlIndxS1=0;
-                            for(auto channelS1: *cChipS0OCc->getChannelContainer<Occupancy>())
+                            for(auto channelS1: *cChipS0Occ->getChannelContainer<Occupancy>())
                             {
                                 uint32_t cRowS1   = cChnlIndxS1 % cNRows;
                                 // local x , local y
                                 uint16_t cXOffsetS1 = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
                                 uint16_t cLocalXS1  = cXOffsetS1 + cRowS1 / cDivider;
                                 if(hybrid->getId() % 2 == 0) cLocalXS1 = cXOffsetS1 + (cNChannels - cRowS1) / cDivider;
-                                if(channelS1.fOccupancy > 0 )
+                                if(channelS1.fOccupancy > 0  )
                                 {
                                     auto cBin = cStubS0->FindBin((float)cLocalX, (float)cLocalXS1);
                                     auto cBinContent = cStubS0->GetBinContent( cBin ); 
@@ -958,14 +947,14 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                 cChnlIndxS1++;
                             }///all hit in S0
                             cChnlIndxS1=0;
-                            for(auto channelS1: *cChipS1OCc->getChannelContainer<Occupancy>())
+                            for(auto channelS1: *cChipS1Occ->getChannelContainer<Occupancy>())
                             {
                                 uint32_t cRowS1   = cChnlIndxS1 % cNRows;
                                 // local x , local y
                                 uint16_t cXOffsetS1 = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
                                 uint16_t cLocalXS1  = cXOffsetS1 + cRowS1 / cDivider;
                                 if(hybrid->getId() % 2 == 0) cLocalXS1 = cXOffsetS1 + (cNChannels - cRowS1) / cDivider;
-                                if(channelS1.fOccupancy > 0 )
+                                if(channelS1.fOccupancy > 0  )
                                 {
                                     auto cBin = cStubS1->FindBin((float)cLocalX, (float)cLocalXS1);
                                     auto cBinContent = cStubS1->GetBinContent( cBin ); 
