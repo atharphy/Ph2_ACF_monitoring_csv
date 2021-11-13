@@ -60,6 +60,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
     void fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap);
+    void fillCorrelations(DetectorDataContainer& theHitMapS0, DetectorDataContainer& theHitMapS1, DetectorDataContainer& theStubMap);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
     void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
     void fillBendPlots(DetectorDataContainer& theBendMap);
@@ -85,6 +86,10 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     DetectorDataContainer fHitMapS1Histograms;
     // Bend distributions
     DetectorDataContainer fBendHistrograms;
+    // Correlation plots 
+    DetectorDataContainer fCorrelationS0S1Histograms;
+    DetectorDataContainer fCorrelationStubS0Histograms; 
+    DetectorDataContainer fCorrelationStubS1Histograms; 
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;

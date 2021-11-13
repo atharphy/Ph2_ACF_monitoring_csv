@@ -157,6 +157,12 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     // bend histogrsm per hybrid
     HistContainer<TH1F> hBendDist("BendDistribution", "Stub Bend Distribution [strips]", 20 / 0.5, -10, 10);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBendHistrograms, hBendDist);
+
+    // correlation plots per hybrid 
+    HistContainer<TH2F> hHitCorrS0S1("HitCorrelationS0S1", "Channel [S0]; Channel [S1]", cNChannelsS0, 0, cNChannelsS0,  cNChannelsS1 , 0 , cNChannelsS1 );
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fCorrelationS0S1Histograms, hHitCorrS0S1);
+    
+
 }
 
 //========================================================================================================================
@@ -423,6 +429,26 @@ void DQMHistogramBeamTestCheck::process()
             }
         }
     }
+    //correlation plots S0 S1
+    for(auto board: fCorrelationS0S1Histograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                std::string cCanvasName  = "CorrelationS0S1_" + std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "Correlation [S0:S1] " + std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Row [S0]");
+                cHistogram->GetYaxis()->SetTitle("Row [S1]");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+    
 }
 
 //========================================================================================================================
@@ -774,6 +800,93 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                             cHitMapS1->SetBinContent(cBin, channel.fOccupancy);
                             cHitMapS1->SetBinError(cBin, channel.fOccupancyError);
                         }
+                        cChnlIndx++;
+                    } // chanenls
+                }     // ROCs
+            }         // hybrids
+        }             // OG
+    }                 // board
+}
+void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMapS0, DetectorDataContainer& theHitMapS1, DetectorDataContainer& theStubMap)
+{
+    LOG(DEBUG) << BOLDBLUE << "Filling Correlation plots Hit/Stub Maps..." << RESET;
+    for(auto board: fStubMapS0Histograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                // hit map
+                TH2F* cS0S1 = fCorrelationS0S1Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                LOG(DEBUG) << BOLDYELLOW << "Correlation map [S0:S1] has " << cS0S1->GetXaxis()->GetNbins() << " in X  and " << cS0S1->GetYaxis()->GetNbins() << " in Y." << RESET;
+                // stub map
+                // TH2F* cStubMapS0 = fStubMapS0Histograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                for(auto chip: *hybrid)
+                {
+                    uint16_t cDivider = (chip->size() == NCHANNELS) ? 2 : 1;
+                    uint16_t cChnlIndx    = 0;
+                    auto&    cChipS0OCc = theHitMapS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    auto&    cChipS1OCc = theHitMapS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    //auto&    cChipStubOCc = theStubMap.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    for(auto channel: *cChipS0OCc->getChannelContainer<Occupancy>())
+                    {
+                        // this is only valid for MPAs/CBCs
+                        if(chip->size() != NMPACHANNELS && chip->size() != NCHANNELS) continue;
+                        // sensor id
+                        uint32_t cNChannels = cS0S1->GetXaxis()->GetNbins() / 8.;
+                        // rows and columns
+                        uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS : NSSACHANNELS;
+                        uint32_t cNCols = (chip->size() == NMPACHANNELS) ? NMPACOLS : 1;
+                        uint32_t cRow   = cChnlIndx % cNRows;
+                        uint32_t cCol   = (cNCols == 1) ? 0 : cChnlIndx / cNRows;
+                        // local x , local y
+                        uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
+                        uint16_t cLocalX  = cXOffset + cRow / cDivider;
+                        if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels - cRow) / cDivider;
+                        if( channel.fOccupancy > 0 )
+                        {
+                            // look for hits in the other sensor 
+                            size_t cChnlIndxS1=0;
+                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() 
+                                            << " Row [S0] " << +cRow << " Column [S0] " << +cCol
+                                            << " Local x coordinate [S0] " << +cLocalX 
+                                            << " Channel [S0] " << cChnlIndx
+                                            << " -- [S0] " << cChipS0OCc->getChannel<Occupancy>(cRow, cCol).fOccupancy
+                                            << " hits " << RESET;
+                            for(auto channelS1: *cChipS1OCc->getChannelContainer<Occupancy>())
+                            {
+                                uint32_t cRowS1   = cChnlIndxS1 % cNRows;
+                                uint32_t cColS1   = 0;
+                                // local x , local y
+                                uint16_t cXOffsetS1 = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
+                                uint16_t cLocalXS1  = cXOffsetS1 + cRowS1 / cDivider;
+                                if(hybrid->getId() % 2 == 0) cLocalXS1 = cXOffsetS1 + (cNChannels - cRowS1) / cDivider;
+                                if(channelS1.fOccupancy > 0 )
+                                {
+                                    auto cBin = cS0S1->FindBin((float)cLocalX, (float)cLocalXS1);
+                                    auto cBinContent = cS0S1->GetBinContent( cBin ); 
+                                    cS0S1->SetBinContent( cBin, cBinContent + 1 ) ; 
+                                    cS0S1->SetBinError( cBin, std::sqrt(cBinContent + 1 )) ; 
+                                    if( cRowS1 == cRow ) 
+                                        LOG(DEBUG) << BOLDGREEN << "\t\t\t Row [S1] " << +cRowS1 << " Column [S1] " << +cColS1
+                                                        << " Local x coordinate [S1] " << +cLocalXS1 
+                                                        << " Channel [S1] " << cChnlIndxS1
+                                                        << " -- [S1] " << channelS1.fOccupancy 
+                                                        << " hits " << RESET;
+                                }//print 
+                                cChnlIndxS1++;
+                            }///all hit in other sensor for this chip 
+                        }// hit in this channel 
+                        // if(cSensorId == 0)
+                        // {
+                        //     cStubMapS0->SetBinContent(cBin, channel.fOccupancy);
+                        //     cStubMapS0->SetBinError(cBin, channel.fOccupancyError);
+                        // }
+                        // else
+                        // {
+                        //     cStubMapS1->SetBinContent(cBin, channel.fOccupancy);
+                        //     cStubMapS1->SetBinError(cBin, channel.fOccupancyError);
+                        // }
                         cChnlIndx++;
                     } // chanenls
                 }     // ROCs

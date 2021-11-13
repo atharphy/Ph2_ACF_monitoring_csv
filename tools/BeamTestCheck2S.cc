@@ -899,7 +899,8 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
     }
 
     // containers to hold occ [L1,Stubs] per event
-    DetectorDataContainer* cEventL1Occ = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+    DetectorDataContainer* cEventL1OccS0 = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
+    DetectorDataContainer* cEventL1OccS1 = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
     DetectorDataContainer* cEventStubOcc = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
     // check read-back events
     for(auto cBoard: *fDetectorContainer)
@@ -953,6 +954,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
         size_t                 cEventCount           = 0;
         DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer                       = theOccupancyContainer;
+
         do
         {
             if(cEventIter >= pEvents.end()) break;
@@ -985,15 +987,18 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
-                        // if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-
                         auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                         auto& cLyrSwap = cLyrSwp.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
-
                         if(pPrint)
                             LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
                                        << std::bitset<8>(cStubStat) << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " found " << +cStubs.size() << " stubs." << RESET;
                         auto& cLUT = cBendLUT.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>();
+                        // make sure stub map for this event is set to 0 
+                        for(auto channel: *cEventStubOcc->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannelContainer<Occupancy>())
+                        {
+                            channel.fOccupancy =0;
+                        }
+                        // loop over stubs and count 
                         for(auto cStub: cStubs)
                         {
                             // update hit map
@@ -1032,20 +1037,11 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             if(cValidCoords)
                             { 
                                 fStubMap.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                if(cEventCount == 0 )
-                                {
-                                    cEventStubOcc->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy = 1;
-                                }
-                                else if(cValidCoords)
-                                {
-                                    cEventStubOcc->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                }
+                                cEventStubOcc->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy = 1;
                             }
                         }
                         cStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>() += cStubs.size();
-                        auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                        LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << " ROC#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
-
+                        
                         std::vector<uint16_t> cTmpS0;
                         std::vector<uint16_t> cTmpS1;
                         uint16_t cMaxRows  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
@@ -1054,6 +1050,20 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                         bool cSSAExists = std::find( cSSAIds.begin(), cSSAIds.end(), cChip->getId()%8) != cSSAIds.end(); 
                         uint8_t cSSAIndex = ( cSSAExists ) ? std::distance( cSSAIds.begin(), std::find( cSSAIds.begin(), cSSAIds.end(), cChip->getId()%8) )  : 0 ;
                         if( cSSAExists ) LOG (DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Index " << +cSSAIndex << RESET;
+
+                        // make sure occupancy for this event set to 0 
+                        // for S0, S1 + stubs 
+                        for(auto channel: *cEventL1OccS0->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannelContainer<Occupancy>())
+                        {
+                            channel.fOccupancy =0;
+                        }
+                        for(auto channel: *cEventL1OccS1->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannelContainer<Occupancy>())
+                        {
+                            channel.fOccupancy =0;
+                        }
+                        // loop over hits and count 
+                        auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                        LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << " ROC#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
                         for(auto cHit: cHits)
                         {
                             if(pPrint) LOG(DEBUG) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " Channel " << cHit << RESET;
@@ -1099,13 +1109,23 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             if(cEventCount == 0 && cValidCoords)
                             {
                                 cOccChip->getChannel<Occupancy>(cRow, cCol).fOccupancy = 1;
-                                cEventL1Occ->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy = 1;
                             }
                             else if(cValidCoords)
                             {
                                 cOccChip->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                cEventL1Occ->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
                             }
+
+                            // 
+                            if( cSensorID == 0  && cValidCoords )
+                                cEventL1OccS0->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy = 1;
+                            else if( cValidCoords )
+                                cEventL1OccS1->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy = 1;
+                            
+                            // if( cValidCoords )
+                            //     LOG (DEBUG) << BOLDYELLOW 
+                            //         << "\t\t... [S0] " << cEventL1OccS0->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy
+                            //         << " [S1]" << cEventL1OccS1->at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow, cCol).fOccupancy 
+                            //         << RESET;
                             // update hit container for each TDC phase
                             fHitContainerTDC.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
@@ -1158,7 +1178,9 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             }         // optical group vector
 
             // fill correlation plot 
-            // 
+            #ifdef __USE_ROOT__
+            //fDQMHistogrammer.fillCorrelations(*cEventL1OccS0,*cEventL1OccS1, *cEventStubOcc);
+            #endif
             cEventIter += (1 + cTriggerMult);
             cEventCount++;
         } while(cEventIter < pEvents.end() && cEventCount < fNevents); // I've only asked to look at fNEvents
