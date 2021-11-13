@@ -177,7 +177,7 @@ void BeamTestCheck2S::Validate()
         std::string cMultRegName = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
         size_t cTriggerMult = ( fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName]; 
         LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
-        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId); }
+        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
     }
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap);
@@ -831,7 +831,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
         }
     }
 }
-void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId, uint8_t pPrint)
+void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations, uint8_t pPrint)
 {
     // layer swaps [S0/S1] are stub seeds
     // read back from chips
@@ -1178,9 +1178,12 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             }         // optical group vector
 
             // fill correlation plot 
-            #ifdef __USE_ROOT__
-            //fDQMHistogrammer.fillCorrelations(*cEventL1OccS0,*cEventL1OccS1, *cEventStubOcc);
-            #endif
+            if( pFillCorrelations )
+            {
+                #ifdef __USE_ROOT__
+                    fDQMHistogrammer.fillCorrelations(*cEventL1OccS0,*cEventL1OccS1, *cEventStubOcc);
+                #endif
+            }
             cEventIter += (1 + cTriggerMult);
             cEventCount++;
         } while(cEventIter < pEvents.end() && cEventCount < fNevents); // I've only asked to look at fNEvents
