@@ -707,7 +707,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
                         uint16_t cLocalX  = cXOffset + cRow / cDivider;
                         if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels - cRow) / cDivider;
-                        cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol * 1. / NMPACOLS : 1 + (NMPACOLS - cCol) * 1. / NMPACOLS;
+                        cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol * 1. / NMPACOLS : 1 + (NMPACOLS - (1+cCol)) * 1. / NMPACOLS;
 
                         auto cBin = (cSensorId == 0) ? cStubMapS0->FindBin((float)cLocalX, (float)cLocalY) : cStubMapS1->FindBin((float)cLocalX, (float)cLocalY);
                         if(channel.fOccupancy > 0)
@@ -755,7 +755,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels / cDivider : (chip->getId() % 8) * cNChannels / cDivider;
                         uint16_t cLocalX  = cXOffset + cRow / cDivider;
                         if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels - cRow) / cDivider;
-                        if( cSensorId == 0 ) cLocalY = (hybrid->getId() % 2 == 0 ) ? 0 + cCol * 1. / NMPACOLS : 1 + (NMPACOLS - cCol) * 1. / NMPACOLS;
+                        if( cSensorId == 0 ) cLocalY = (hybrid->getId() % 2 == 0 ) ? 0 + cCol * 1. / NMPACOLS : 1 + (NMPACOLS - (1+cCol)) * 1. / NMPACOLS;
                         else cLocalY = (hybrid->getId() % 2 == 0 ) ? 0 : 1 ;
 
                         // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
