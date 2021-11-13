@@ -47,7 +47,7 @@ class OTTool : public Tool
     };
     void InjectPattern(Ph2_HwDescription::BeBoard* pBoard, std::vector<Ph2_HwInterface::Injection> pInjections, int pChipId = -1);
     void SetInjectionType(uint8_t pInjType) { fInjectionType = pInjType; }; // 0-digital, 1 - analogue
-
+    void SetReadoutMode(uint8_t pType){ fReadoutMode = pType; };
   protected:
     // success or fail
     bool fSuccess{false};
@@ -67,7 +67,8 @@ class OTTool : public Tool
     uint8_t fStopTriggerMonitor{0};
     // type of injection
     uint8_t fInjectionType{0}; // 0-digital,1-analogue
-
+    // type of readout 
+    uint8_t fReadoutMode{0}; // 0  - from board; 1 -- from .raw 
 
     void UpdateFromRegMap(Ph2_HwDescription::BeBoard* pBoard); 
     void PrintData(Ph2_HwDescription::BeBoard* pBoard);

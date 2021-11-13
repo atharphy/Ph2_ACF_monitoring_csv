@@ -136,7 +136,7 @@ class CbcInterface : public ReadoutChipInterface
                                      bool                            pUseOffsets = false,
                                      uint8_t                         pAllOff     = 0xFF); // address + bend in units of half strips
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
-    std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc);
+    std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc, uint8_t pMode = 0 );
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);
     void                 resetPageMap() { fPageMap.clear(); }
 

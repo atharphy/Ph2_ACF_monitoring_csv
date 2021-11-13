@@ -173,18 +173,19 @@ std::vector<int> MPAInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendC
     }
     return cBends;
 }
-std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip)
+std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip, uint8_t pMode)
 {
     std::vector<uint8_t> cBendCodes(0); // bend registers are 0 -- 14. Each register encodes 2 codes
 
     float cStartValue = -7.0 / 2.;
+    std::vector<std::string> cRegNames{"CodeM76","CodeM54","CodeM32","CodeM10","CodeP12","CodeP34","CodeP56","CodeP78"};
     for(size_t cIndex = 0; cIndex < 8; cIndex++) // 9 registers
     {
         uint16_t cRegAddress = 6 + cIndex; // each register controls two codes
         // code starts from dummy
-        cRegAddress = this->regPeri(pChip, cRegAddress);
+        // cRegAddress = this->regPeri(pChip, cRegAddress);
         std::vector<float> cTheseBends{cStartValue, (float)(cStartValue + 0.5)};
-        uint8_t            cCode = MPAInterface::ReadReg(pChip, cRegAddress);
+        uint8_t            cCode = (pMode == 0 ) ? ReadChipReg(pChip,cRegNames[cIndex]) : pChip->getReg(cRegNames[cIndex]); //MPAInterface::ReadReg(pChip, cRegAddress);
         std::stringstream  cOut;
         cOut << "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  ";
         if(cTheseBends[0] == -9)

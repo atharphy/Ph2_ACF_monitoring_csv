@@ -19,6 +19,8 @@ OTTool::~OTTool() {}
 // Reset register on BeBoard + ROCs
 void OTTool::Reset()
 {
+    if( fReadoutMode == 1 ) return;
+
     LOG(INFO) << BOLDGREEN << "Resetting registers touched  by " << fMyName << RESET;
     // set everything back to original values .. like I wasn't here
     bool cWithPS = false;
@@ -95,6 +97,7 @@ void OTTool::Reset()
 // Initialization function
 void OTTool::Prepare()
 {
+    if( fReadoutMode == 1 ) return;
     // retreive original settings for all chips and all back-end boards
     fBoardRegContainer.reset();
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
@@ -551,7 +554,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 
     if(pEvent->GetEventCount() % fPrintConfig.fPrintEvery != 0) return;
     std::stringstream cEvntHeader;
-    cEvntHeader << "Event#" << +pEvent->GetEventCount();
+    cEvntHeader << "Event#" << +pEvent->GetEventCount(); 
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
@@ -560,34 +563,85 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             auto              cL1Status = static_cast<D19cCic2Event*>(pEvent)->L1Status(cHybrid->getId());
             auto              cBxId     = (pEvent)->BxId(cHybrid->getId());
             auto              cStubStat = static_cast<D19cCic2Event*>(pEvent)->Status(cHybrid->getId());
-            std::stringstream cOut;
+            std::stringstream cOutStubs;
+            std::stringstream cOutL1;
+            std::stringstream cOutEvntHeader; 
             if(cStubStat != 0x00 || cL1Status != 0x00)
-                cOut << BOLDRED << cEvntHeader.str() << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
-                     << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId;
+                cOutEvntHeader << cEvntHeader.str() << BOLDRED << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
+                     << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId ;
             else
-                cOut << BOLDGREEN << cEvntHeader.str() << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
-                     << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId;
+                cOutEvntHeader << cEvntHeader.str() << BOLDGREEN << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
+                     << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId ;
+            
+            bool cStubFound=false;
+            bool cClusterFound=false;
             for(auto cChip: *cHybrid)
             {
                 if(!cSparsified) break;
                 if(cChip->getFrontEndType() == FrontEndType::SSA ) continue;
 
+                auto  cStubs   = pEvent->StubVector(cHybrid->getId(), cChip->getId());
                 if(cChip->getFrontEndType() == FrontEndType::CBC3 )
                 {
                     auto cClusters = (pEvent)->getClusters(cHybrid->getId(), cChip->getId());
-                    cOut << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
+                    cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
                 }
                 else 
                 {
                     auto cStripClusters = static_cast<D19cCic2Event*>(pEvent)->GetStripClusters(cHybrid->getId(), cChip->getId());
                     auto cPxlClusters = static_cast<D19cCic2Event*>(pEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                    cOut << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " 
-                        << +cStripClusters.size() << " S-clusters and "
-                        << +cPxlClusters.size() << " P-clusters." 
-                        << RESET;
+                    if( cStubs.size() > 0 )
+                    {
+                        cStubFound=true;
+                        cOutStubs << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has " 
+                            << +cStubs.size() << " stubs" 
+                            << "\t : ";
+                        uint8_t cIndx=0;
+                        for(auto cStub : cStubs )
+                        {
+                            cOutStubs << " Stub#" << +cIndx << " : Seed " << +cStub.getPosition() 
+                                 << " Row " << +cStub.getRow() 
+                                 << " Bend " << +cStub.getBend()
+                                 << " \t";
+                            cIndx++;
+                        }
+                    }
+                    if( cStripClusters.size() > 0 &&  cPxlClusters.size() > 0 )
+                    {
+                        cClusterFound=true;
+                        cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " 
+                            << +cStripClusters.size() << " S-clusters and "
+                            << +cPxlClusters.size() << " P-clusters\t"; 
+                        for( auto cPxlCluster : cPxlClusters )
+                        {
+                            cOutL1 << BOLDMAGENTA << "\tP-Address " << +cPxlCluster.fAddress << " P-Position " << +cPxlCluster.fZpos << " P_Width " << +cPxlCluster.fWidth << ";";
+                        }
+                        for( auto cStripCluster : cStripClusters )
+                        {
+                            cOutL1 << BOLDGREEN << "\tS-Address " << +cStripCluster.fAddress << " S_Width " << +cStripCluster.fWidth << ";";
+                        }
+                    }
                 }
             }
-            LOG(INFO) << cOut.str() << RESET;
+            if( (cClusterFound || cStubFound) && pEvent->GetEventCount() < 10  ) 
+                LOG (INFO) << cOutEvntHeader.str() << RESET; 
+            if( (cClusterFound && cStubFound) && pEvent->GetEventCount() < 10 )
+            {
+                LOG(INFO) << BOLDGREEN << " Clusters and stubs in the same event " << RESET;
+                LOG(INFO) << cOutStubs.str() << RESET;
+                LOG(INFO) << cOutL1.str() << RESET;
+            }
+            if( (cClusterFound && !cStubFound) && pEvent->GetEventCount() < 10 )
+            {
+                LOG(INFO) << BOLDRED << " Clusters and no stubs in the same event " << RESET;
+                LOG(INFO) << cOutL1.str() << RESET;
+            }
+            if( (!cClusterFound && cStubFound) && pEvent->GetEventCount() < 10 )
+            {
+                LOG(INFO) << BOLDRED << " Stubs but no Clusters in the same event " << RESET;
+                LOG(INFO) << cOutStubs.str() << RESET;
+            }
+                
         }
     }
 }

@@ -40,6 +40,7 @@ class BeamTestCheck2S : public OTTool
     void CheckWithInternal(uint8_t pContinousReadout = 1);
     void CheckWithExternal(uint8_t pContinousReadout = 1);
     void CheckWithTLU(uint8_t pContinousReadout = 1);
+    void ValidateRaw();
     void ValidateExternal();
     void ValidateTLU();
     void Initialise();

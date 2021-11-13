@@ -183,6 +183,11 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Run number is " << +cRunNumber << RESET;
         cDirectory += Form("OT_ModuleTest_%s_Run%d", cModuleId.c_str(), cRunNumber);
     }
+    else 
+    {
+        std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+        cDirectory += Form("Raw_%s", cRawFileName.substr(0, cRawFileName.find(".raw")).c_str());
+    }
     TApplication cApp("Root Application", &argc, argv);
 
     if(batchMode)
@@ -1068,24 +1073,27 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("read"))
     {
         std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
-
         BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.SetReadoutMode(1);
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         PrintConfig cCng; 
         cCng.fVerbose=1; cCng.fPrintEvery = 1; 
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
+        cBeamTestCheck.ValidateRaw();
+        cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
     if(!cmd.foundOption("read"))
     {
         cTool.dumpConfigFiles();
-        cTool.SaveResults();
-        cTool.WriteRootFile();
-        cTool.CloseResultFile();
     }
 
+
+    cTool.SaveResults();
+    cTool.WriteRootFile();
+    cTool.CloseResultFile();
     cTool.Destroy();
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();

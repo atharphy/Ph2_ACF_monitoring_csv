@@ -24,10 +24,10 @@ PSInterface::PSInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(p
 }
 PSInterface::~PSInterface() {}
 
-std::vector<uint8_t> PSInterface::readLUT(ReadoutChip* pPS)
+std::vector<uint8_t> PSInterface::readLUT(ReadoutChip* pPS, uint8_t pMode)
 {
     std::vector<uint8_t> cLUT(0);
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { cLUT = theMPAInterface->readLUT(pPS); }
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { cLUT = theMPAInterface->readLUT(pPS,pMode); }
     return cLUT;
 }
 bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
