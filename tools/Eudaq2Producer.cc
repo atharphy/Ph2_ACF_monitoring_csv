@@ -27,7 +27,7 @@ using namespace Ph2_System;
 #ifdef __EUDAQ__
 #include "Eudaq2Producer.h"
 
-Eudaq2Producer::Eudaq2Producer(const std::string& name, const std::string& runcontrol) : Tool(), eudaq::Producer(name, runcontrol), fExitRun(false)
+Eudaq2Producer::Eudaq2Producer(const std::string& name, const std::string& runcontrol) : OTTool(), eudaq::Producer(name, runcontrol), fExitRun(false)
 {
     fPh2FileHandler   = nullptr;
     fSLinkFileHandler = nullptr;
@@ -120,6 +120,10 @@ void Eudaq2Producer::DoInitialise()
             cPSAlignment.dumpConfigFiles();
             cPSAlignment.Align();
         }
+
+        //Update critical registers to correct value
+        //#FIXME some registers like threshold might be overwritten later on (ie: in the DoConfigure function)
+        for(auto cBoard: *fDetectorContainer){ UpdateFromRegMap(cBoard); }
     }
 
     fInitialised = true;
