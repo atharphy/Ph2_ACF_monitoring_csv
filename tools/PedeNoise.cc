@@ -304,8 +304,8 @@ void PedeNoise::sweepSCurves()
     cStartValue = this->findPedestal(fPulseAmplitude == 0);
     if(fDisableStubLogic) disableStubLogic();
     LOG(INFO) << BLUE << "Sweep of S-curves will start at an average threshold of " << cStartValue << RESET;
-    // measureSCurves(cStartValue);
-    scanScurves();
+    measureSCurves(cStartValue);
+    // scanScurves();
 
     // if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);

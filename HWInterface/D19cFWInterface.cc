@@ -1423,7 +1423,7 @@ void D19cFWInterface::Start()
             auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             cBreak           = (cReadoutReq == 1);
             if(cBreak)
-                LOG(DEBUG) << BOLDMAGENTA << "Hand-shakee is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
         }
         else
             cBreak = (cTriggerState != 0);

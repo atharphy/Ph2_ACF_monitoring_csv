@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("TestPulseCheck", "Test pulse check - inject with TP and perform latency scan", ArgvParser::NoOptionAttribute);
     cmd.defineOption("ExternalCheck", "External trigger check - run with external triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("TLUCheck", "External trigger check - run with external triggers", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("InternalCheck", "External trigger check - run with external triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("continuousReadout", "Readout triggers as they come : argument to provide is how often to poll the readout [in us]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("scanLatencies", "Scan L1+Stub Latencies ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("scanL1", "Scan L1 Latency ", ArgvParser::NoOptionAttribute);
@@ -1027,7 +1028,23 @@ int main(int argc, char* argv[])
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
+    
+    if(!cmd.foundOption("read") && cmd.foundOption("InternalCheck"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
 
+        BeamTestCheck2S cBeamTestCheck;
+        cBeamTestCheck.Inherit(&cTool);
+        cBeamTestCheck.Initialise();
+        cBeamTestCheck.ConfigureScans(cScanL1,cScanStubs);
+        cBeamTestCheck.CheckWithInternal();
+        cBeamTestCheck.writeObjects();
+        cBeamTestCheck.Reset();
+    }
+    
     if(!cmd.foundOption("read") && cmd.foundOption("TLUCheck"))
     {
         std::ofstream cGoodRuns;

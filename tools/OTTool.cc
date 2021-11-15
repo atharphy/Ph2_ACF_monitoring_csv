@@ -667,7 +667,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 {
                     if(fInjectionType == 0)
                     {
-                        // for digi injection .. explicity disable all other strips  
+                        // for digi injection .. explicity disable all other pixels  
                         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                         (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
                     }

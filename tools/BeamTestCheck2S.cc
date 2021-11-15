@@ -191,15 +191,10 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
     {
         // prepare injection
         PrepareForInternal(cBoard);
-        // retreive events from FC7
-        if(pContinousReadout == 1)
-            ContinousReadout(cBoard);
-        else
-            ReadNEvents(cBoard, fNevents);
-
-        // process events
-        ProcessEvents(cBoard);
+        LOG (INFO) << "Check with internal triggers " << RESET;
     }
+    // validate
+    Validate(); 
 }
 void BeamTestCheck2S::CheckWithTLU(uint8_t pContinousReadout)
 {
@@ -663,7 +658,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
         
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
-                Count(cEvents, cTriggerId);
+                Count(cEvents, cTriggerId, 0, 1);
                 // check if maximum hit count has been exceeded
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -1077,7 +1072,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             uint8_t  cSensorID = (cChip->getFrontEndType() == FrontEndType::CBC3) ? (cHit % 2 != 0) : (cCol != 0);
                             //uint16_t cMaxRows  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : 0;
                             //if(cChip->getFrontEndType() == FrontEndType::MPA) cMaxRows = NSSACHANNELS;
-                            uint16_t cMaxCols = 0;
+                            uint16_t cMaxCols = 1;
                             if(cChip->getFrontEndType() == FrontEndType::MPA && cSensorID == 0) cMaxCols = NMPACOLS;
 
                             if(cChip->getFrontEndType() != FrontEndType::CBC3)
@@ -1694,11 +1689,14 @@ void BeamTestCheck2S::PrepareForTLU(BeBoard* pBoard)
 }
 void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
 {
+    BeBoardRegMap   cRegMap = pBoard->getBeBoardRegMap();
+    uint32_t cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"]; 
     // configure trigger
     uint8_t                                       cTriggerSource     = 3;
     uint32_t                                      cNtriggersToAccept = (pLimitTriggers == 0) ? 0 : (uint32_t)fNevents;
-    std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};
-    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, cNtriggersToAccept};
+    uint32_t                                      cHandshakeMode     = (pLimitTriggers == 0 ) ? 0 : 1; 
+    std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept","user_trigger_frequency"};
+    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, cNtriggersToAccept,cTriggerFreq};
     std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.clear();
@@ -1708,15 +1706,18 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
         cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
     }
+    cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled",0});
+    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable",cHandshakeMode});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
     // stop triggers
     fBeBoardInterface->Stop(pBoard);
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
     UpdateFromRegMap(pBoard);
+
+    LOG (INFO) << BOLDYELLOW << "Handshake Mode " << +cHandshakeMode << RESET;
 }
 void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard) { PrintData(pBoard); }
 
