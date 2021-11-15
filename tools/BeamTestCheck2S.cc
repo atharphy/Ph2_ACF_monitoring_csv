@@ -1680,7 +1680,10 @@ void BeamTestCheck2S::PrepareForTLU(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 1);
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.handshake_mode", 0);
+    BeBoardRegMap   cRegMap = pBoard->getBeBoardRegMap();
+    std::string cRegName = "fc7_daq_cnfg.tlu_block.handshake_mode";
+    size_t cHandshake = cRegMap[cRegName]; 
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.handshake_mode", cHandshake);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.phase_select", 255);
 
     // stop triggers

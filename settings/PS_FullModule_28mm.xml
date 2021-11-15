@@ -20,13 +20,13 @@
                 <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="120" pixelLatency="120"/>
+                <Latencies       stripLatency="121" pixelLatency="121"/>
                 <Thresholds      stripThreshold="10000" pixelThreshold="9000"/> 
                 <StubLogic       mode="3" window="2"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
-                <InjectedCharge  stripCharge="20000" pixelCharge="20000"/> 
+                <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
             
@@ -61,13 +61,13 @@
                 <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="120" pixelLatency="120"/>
+                <Latencies       stripLatency="121" pixelLatency="121"/>
                 <Thresholds      stripThreshold="10000" pixelThreshold="9000"/> 
                 <StubLogic       mode="0" window="2"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
-                <InjectedCharge  stripCharge="20000" pixelCharge="20000"/> 
+                <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
             
@@ -181,7 +181,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 40 </Register>
+                    <Register name="common_stubdata_delay"> 42 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
@@ -230,6 +230,7 @@
     <Setting name="MinStubPhase">1</Setting>
     <Setting name="MaxStubPhase">8</Setting>
 
+    <!-- 0 : digital; 1 : analogue --> 
     <Setting name="InjectionType">1</Setting>
     <Setting name="TriggerMultiplicity">0</Setting>
     <Setting name="StubAlignmentScanStart">86</Setting>
