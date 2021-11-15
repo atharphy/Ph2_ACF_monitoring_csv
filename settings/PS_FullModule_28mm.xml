@@ -3,7 +3,7 @@
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="0" boardReset="0">
     <connection id="board" uri="chtcp-2.0://192.168.21.201:10203?target=192.168.21.206:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
-    <CDCE configure="0" clockRate="320"/>
+    <CDCE configure="1" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
