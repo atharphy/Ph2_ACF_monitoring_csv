@@ -1128,7 +1128,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                 else if(cAttrName.find("Rows") != std::string::npos)
                 {
                     auto cFeId = cFeIds[cFeIds.size()-1]; 
-                    cMapOfMaks[cFeId].push_back( cItem );
+                    cMapOfMaks[cFeId].push_back( cItem + 1 ); // registers for masking start from 1 
                     //auto cPos = cMapOfMaks[cFeId].size();
                     //os << YELLOW << "FeId " << +cFeIds[cFeIds.size()-1] << " mask contained " << +cPos << " channels and have just added " <<  +cItem <<  ", ";
                 }
