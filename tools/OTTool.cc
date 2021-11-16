@@ -566,6 +566,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             auto              cStubStat = static_cast<D19cCic2Event*>(pEvent)->Status(cHybrid->getId());
             std::stringstream cOutStubs;
             std::stringstream cOutL1;
+            std::stringstream cOutAna;
             std::stringstream cOutEvntHeader; 
             if(cStubStat != 0x00 || cL1Status != 0x00)
                 cOutEvntHeader << cEvntHeader.str() << BOLDRED << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
@@ -576,6 +577,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             
             bool cStubFound=false;
             bool cClusterFound=false;
+            bool cAna=false;
             for(auto cChip: *cHybrid)
             {
                 if(!cSparsified) break;
@@ -617,10 +619,35 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                         {
                             cOutL1 << BOLDMAGENTA << "\tP-Address " << +cPxlCluster.fAddress << " P-Position " << +cPxlCluster.fZpos << " P_Width " << +cPxlCluster.fWidth << ";";
                         }
+                    
                         for( auto cStripCluster : cStripClusters )
                         {
                             cOutL1 << BOLDGREEN << "\tS-Address " << +cStripCluster.fAddress << " S_Width " << +cStripCluster.fWidth << ";";
                         }
+                    }
+                    if( cStripClusters.size() == 1 &&  cPxlClusters.size() == 1 )
+                    { 
+                        cAna = true;
+                        float cCenterOfMassP=0; 
+                        for( auto cPxlCluster : cPxlClusters )
+                        {
+                            cCenterOfMassP += cPxlCluster.fAddress + cPxlCluster.fWidth; 
+                        }
+                        cCenterOfMassP /= cPxlClusters.size();
+
+                        float cCenterOfMassS=0; 
+                        for( auto cStripCluster : cStripClusters )
+                        {
+                            cCenterOfMassS += cStripCluster.fAddress + cStripCluster.fWidth; 
+                        }
+                        cCenterOfMassS /= cStripClusters.size();
+                    
+                        cOutAna << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has " 
+                            << +cStripClusters.size() << " S-clusters and "
+                            << +cPxlClusters.size() << " P-clusters\t"
+                            << "..Center of mass P : " << cCenterOfMassP << " Center of mass S : " << cCenterOfMassS 
+                            << " # of stubs is " << cStubs.size()
+                            << "\n";
                     }
                 }
             }
@@ -642,7 +669,11 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                 LOG(INFO) << BOLDRED << " Stubs but no Clusters in the same event " << RESET;
                 LOG(INFO) << cOutStubs.str() << RESET;
             }
-                
+            if( cAna && pEvent->GetEventCount() < 10 ) 
+            {
+                LOG(INFO) << BOLDYELLOW << " Event with exactly one cluster in both sensors " << RESET;
+                LOG(INFO) << cOutAna.str() << RESET;
+            }
         }
     }
 }
@@ -902,7 +933,8 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         }
     }
 
-    // make sure MPAs have both modes enables   
+    // make sure MPAs have both modes enabled 
+    // and that the disabled strips in the SSAs are really disabled 
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
@@ -915,6 +947,20 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL" , 0x0F);
                     LOG(INFO) << BOLDMAGENTA << "Setting ENFLAGS_ALL on ROC#" << +cChip->getId() << " to enable both modes.." << RESET;
                 }
+                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                {
+                    for( size_t cIndx=0; cIndx < NSSACHANNELS ; cIndx++)
+                    {
+                        std::stringstream cRegName;
+                        cRegName << "ENFLAGS_S" << +(cIndx+1);
+                        auto cValueInMemory = cChip->getReg(cRegName.str());
+                        if( (cValueInMemory & 0x1) == 0 ) // strip is masked 
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), cValueInMemory);
+                        }
+                    }
+                }
+
             }
         }
     }

@@ -660,14 +660,14 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cROC: *pHybrid)
             {
                 if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
-                int cCoarse  = convertAnyInt(cSamplingDelay.attribute("PhaseShiftClock").value()) ;
-                int cFine  = convertAnyInt(cSamplingDelay.attribute("ClockDeskewing").value()) ;
+                int cCoarse  = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value()) ;
+                int cFine  = convertAnyInt(cSamplingDelay.attribute("stripFine").value()) ;
                 cROC->setReg("PhaseShiftClock", cCoarse );
                 ChipRegMask cMask;
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 0;
                 cROC->setRegBits("ClockDeskewing", cMask, cFine);
-
+                
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cROC->getId() << RESET 
                    << GREEN << "|\t|\t|\t|---- Coarse delay will be set to " << cCoarse*3.125 << " ns "
                    << GREEN << " Fine delay will be set to " <<  cFine*0.2 << " ns." 
@@ -1114,7 +1114,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                     auto cIter = cMapOfMaks.find(cItem);
                     if(cIter == cMapOfMaks.end())
                     {
-                        std::vector<uint16_t> cMskedChnls(1, 0);
+                        std::vector<uint16_t> cMskedChnls;
                         cMapOfMaks[cItem]  = cMskedChnls;
                         FrontEndType cType = FrontEndType::CBC3;
                         if(cAttrName.find("MPA") != std::string::npos) cType = FrontEndType::MPA;
@@ -1123,18 +1123,22 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                         cMapOfTypes[cItem] = cType;
                     }
                     else
-                        cMapOfMaks[cItem].push_back(0);
+                        cMapOfMaks[cItem].clear();
                 }
                 else if(cAttrName.find("Rows") != std::string::npos)
                 {
-                    cMapOfMaks[cFeIds[cIndex]][cIndex] = cItem;
+                    auto cFeId = cFeIds[cFeIds.size()-1]; 
+                    auto cPos = cMapOfMaks[cFeId].size();
+                    cMapOfMaks[cFeId].push_back( cItem );
+                    //os << YELLOW << "FeId " << +cFeIds[cFeIds.size()-1] << " mask contained " << +cPos << " channels and have just added " <<  +cItem <<  ", ";
                 }
-                else if(cAttrName.find("Columns") != std::string::npos)
-                {
-                    uint16_t cPixelId                  = 120 * cItem + cMapOfMaks[cFeIds[cIndex]][cIndex];
-                    cMapOfMaks[cFeIds[cIndex]][cIndex] = cPixelId;
-                }
-                os << GREEN << +cItem << ", ";
+                // fix me 
+                // else if(cAttrName.find("Columns") != std::string::npos)
+                // {
+                //     uint16_t cPixelId                  = 120 * cItem + cMapOfMaks[cFeIds[cIndex]][cIndex];
+                //     cMapOfMaks[cFeIds[cIndex]][cIndex] = cPixelId;
+                // }
+                //os << GREEN << +cItem << ", ";
                 cIndex++;
             }
             os << "\n";

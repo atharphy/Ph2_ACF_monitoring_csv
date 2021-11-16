@@ -64,6 +64,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
     void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
     void fillBendPlots(DetectorDataContainer& theBendMap);
+    void fillCountPlots(DetectorDataContainer& theEventCount, DetectorDataContainer& theStubCount);
 
   private:
     void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
@@ -86,6 +87,8 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     DetectorDataContainer fHitMapS1Histograms;
     // Bend distributions
     DetectorDataContainer fBendHistrograms;
+    DetectorDataContainer fStubCountHistrograms;
+    DetectorDataContainer fEventCountHistrograms;
     // Correlation plots 
     DetectorDataContainer fCorrelationS0S1Histograms;
     DetectorDataContainer fCorrelationStubS0Histograms; 

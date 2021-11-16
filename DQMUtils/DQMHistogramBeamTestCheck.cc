@@ -155,8 +155,16 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubMapS1Histograms, hStubMapS1);
 
     // bend histogrsm per hybrid
-    HistContainer<TH1F> hBendDist("BendDistribution", "Stub Bend Distribution [strips]", 20 / 0.5, -10, 10);
+    HistContainer<TH1F> hBendDist("BendDistribution", "Stub Bend Distribution [strips]", 30 / 0.5, -15, 15);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBendHistrograms, hBendDist);
+
+    // number of stubs per hybrid 
+    HistContainer<TH1F> hStubCount("StubCount", "Stub Count [strips]", 30 / 0.5, -15, 15);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubCountHistrograms, hStubCount);
+    HistContainer<TH1F> hEventCount("EventCount", "EventCount Count [strips]", 30 / 0.5, -15, 15);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fEventCountHistrograms, hEventCount);
+    
+
 
     // correlation plots per hybrid 
     HistContainer<TH2F> hHitCorrS0S1("HitCorrelationS0S1", "Channel [S0]; Channel [S1]", cNChannelsS0, 0, cNChannelsS0,  cNChannelsS1 , 0 , cNChannelsS1 );
@@ -435,6 +443,48 @@ void DQMHistogramBeamTestCheck::process()
             }
         }
     }
+
+    for(auto board: fStubCountHistrograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                std::string cCanvasName  = "StubCountDistribution_" + std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "StubCountDistribution_ plot " + std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Bend [strips/pixels]");
+                cHistogram->GetYaxis()->SetTitle("Count [Subs]");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+    
+    for(auto board: fEventCountHistrograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                std::string cCanvasName  = "EventCountDistribution_" + std::to_string(hybrid->getId());
+                std::string cCanvasTitle = "EventCountDistribution_ plot " + std::to_string(hybrid->getId());
+
+                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Bend [strips/pixels]");
+                cHistogram->GetYaxis()->SetTitle("Count [Events]");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+    
+
+
+
     //correlation plots S0 S1
     for(auto board: fCorrelationS0S1Histograms)
     {
@@ -1018,6 +1068,55 @@ void DQMHistogramBeamTestCheck::fillBendPlots(DetectorDataContainer& theMap)
             } // hybrids
         }     // OG
     }         // board
+}
+// fill counts
+
+void DQMHistogramBeamTestCheck::fillCountPlots(DetectorDataContainer& theEventCount, DetectorDataContainer& theStubCount)
+{
+    LOG(INFO) << BOLDBLUE << "Filling Stub count  histograms..." << RESET;
+    for(auto board: theStubCount)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                // hit map
+                TH1F* cHist  = fStubCountHistrograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                auto  cBends = hybrid->getSummary<GenericDataArray<BENDBINS, uint16_t>>();
+                for(uint32_t cIndx = 0; cIndx < BENDBINS; ++cIndx)
+                {
+                    float cBend = -7.5 + cIndx * 0.5;
+                    auto  cBin  = cHist->GetXaxis()->FindBin(cBend);
+                    cHist->SetBinContent(cBin, cBends[cIndx]);
+                    cHist->SetBinError(cBin, std::sqrt(cBends[cIndx]));
+                }
+            } // hybrids
+        }     // OG
+    }         // board
+
+    for(auto board: theEventCount)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                // hit map
+                TH1F* cHist  = fEventCountHistrograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                auto  cBends = hybrid->getSummary<GenericDataArray<BENDBINS, uint16_t>>();
+                for(uint32_t cIndx = 0; cIndx < BENDBINS; ++cIndx)
+                {
+                    float cBend = -7.5 + cIndx * 0.5;
+                    auto  cBin  = cHist->GetXaxis()->FindBin(cBend);
+                    cHist->SetBinContent(cBin, cBends[cIndx]);
+                    cHist->SetBinError(cBin, std::sqrt(cBends[cIndx]));
+                }
+            } // hybrids
+        }     // OG
+    }         // board
+
+
+                
+
 }
 void DQMHistogramBeamTestCheck::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
 {

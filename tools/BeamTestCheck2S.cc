@@ -86,6 +86,10 @@ void BeamTestCheck2S::Initialise()
 
     // bend maps per hybrid
     ContainerFactory::copyAndInitHybrid<GenericDataArray<BENDBINS, uint16_t>>(*fDetectorContainer, fBendMap);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<BENDBINS, uint16_t>>(*fDetectorContainer, fEventsWithSingleClusters);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<BENDBINS, uint16_t>>(*fDetectorContainer, fEventsWithStubs);
+
+
 
     // optimal latencies
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fOptimalL1Latency);
@@ -182,6 +186,7 @@ void BeamTestCheck2S::Validate()
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap);
     fDQMHistogrammer.fillBendPlots(fBendMap);
+    fDQMHistogrammer.fillCountPlots(fEventsWithSingleClusters, fEventsWithStubs);
 #endif
 }
 //
@@ -899,6 +904,12 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, cEventL1OccS1);
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, cEventStubOcc);
 
+    // Cluster container 
+    DetectorDataContainer cClusterS0, cClusterS1, cStubsSingles;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, cClusterS0);
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, cClusterS1);
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, cStubsSingles);
+    
     // check read-back events
     for(auto cBoard: *fDetectorContainer)
     {
@@ -914,13 +925,20 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
         auto& cHitContainerS1  = fHitOccupancyS1.at(cBrdIndx);
         auto& cStubContainer   = fStubOccupancy.at(cBrdIndx);
         auto& cCoHitCointainer = fHitOccupancyCoinc.at(cBrdIndx); 
+        auto& cClusterContainerS0 = cClusterS0.at(cBrdIndx); 
+        auto& cClusterContainerS1 = cClusterS1.at(cBrdIndx);
+        auto& cSingleStubContainer = cStubsSingles.at(cBrdIndx); 
         
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(size_t cIndx = 0; cIndx < 30; cIndx++)
-                { fBendMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cIndx] = 0; }
+                { 
+                    fBendMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cIndx] = 0; 
+                    fEventsWithSingleClusters.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cIndx] = 0; 
+                    fEventsWithStubs.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cIndx] = 0; 
+                }
                 
                 for(auto cChip: *cHybrid)
                 {
@@ -941,10 +959,13 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     {
                         fHitMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cIndx).fOccupancy  = 0;
                         fStubMap.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cIndx).fOccupancy = 0;
+                        cClusterContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cIndx).fOccupancy  = 0;
+                        cClusterContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cIndx).fOccupancy = 0;
+                        cSingleStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cIndx).fOccupancy = 0;
                     }
                 } // chip
             }     // hybrid
-        }         // optical group
+        }// optical group
 
         // start at the beginning + trigger id in burst
         auto                   cEventIter            = pEvents.begin() + pTriggerId;
@@ -999,8 +1020,87 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                        
                         auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                         auto& cLyrSwap = cLyrSwp.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
+                        // if its a CBC .. look for events with exactly 2 clusters
+                        if(cChip->getFrontEndType() == FrontEndType::MPA )
+                        {
+                            auto cStripClusters = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
+                            auto cPxlClusters = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                            if( cStripClusters.size() == cPxlClusters.size() && cPxlClusters.size() == 1 ) // events with exactly one cluster in each sensor 
+                            {
+                                double cCenterOfMassP=0; 
+                                bool  cSingles=true;
+                                for( auto cPxlCluster : cPxlClusters )
+                                {
+                                    uint32_t cRow = cPxlCluster.fAddress-1;
+                                    uint32_t cCol = cPxlCluster.fZpos;
+                                    if(cPxlCluster.fWidth!=0){ 
+                                        cSingles = false;
+                                        continue;
+                                    }
+                                    cClusterContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
+                                    for( uint8_t cOff=0; cOff <= cPxlCluster.fWidth ; cOff++)  cCenterOfMassP += cPxlCluster.fAddress + cOff; 
+                                    cCenterOfMassP /= (1+cPxlCluster.fWidth);
+                                }
+                                double cCenterOfMassS=0; 
+                                for( auto cStrpCluster : cStripClusters )
+                                {
+                                    uint32_t cRow = cStrpCluster.fAddress-1;
+                                    uint32_t cCol = 0;
+                                    if(cStrpCluster.fWidth!=0){ 
+                                        cSingles = false;
+                                        continue;
+                                    }
+                                    cClusterContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
+                                    for( uint8_t cOff=0; cOff <= cStrpCluster.fWidth ; cOff++)  cCenterOfMassS += cStrpCluster.fAddress + cOff; 
+                                    cCenterOfMassS /= (1+cStrpCluster.fWidth);
+                                }
+                                for(auto cStub : cStubs)
+                                {
+                                    if( !cSingles ) continue;
+                                    uint32_t cRow = std::floor(cStub.getPosition()/ 2.0);
+                                    uint32_t cCol = cStub.getRow();
+                                    cSingleStubContainer->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy++;
+                                }
+                                double cBend = 0; 
+                                double cDifference = (cLyrSwap == 0 ) ? (cCenterOfMassS - cCenterOfMassP) : (cCenterOfMassP-cCenterOfMassS) ;
+                                cBend = (std::fabs(cDifference) <= 3.5 ) ? cDifference : 7.0; 
+                                double cDiffIndx =  (cBend - (-7.5))/0.5; 
+                                std::stringstream cOut; 
+                                cOut   << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
+                                       << std::bitset<8>(cStubStat) << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " found " << +cStubs.size() << " stubs" 
+                                       << " and exactly 1 cluster in each of S0 + S1 "
+                                       << " center of mass P-Cluster " << cCenterOfMassP 
+                                       << " center of mass S-Cluster " << cCenterOfMassS
+                                       << " bend from clusters is " << cBend
+                                       << " [ index is " << cDiffIndx 
+                                       << " ]\n";
+                                for( auto cPxlCluster : cPxlClusters )
+                                {
+                                    uint32_t cRow = cPxlCluster.fAddress-1;
+                                    uint32_t cCol = cPxlCluster.fZpos;
+                                    if(cPxlCluster.fWidth!=0) continue;
+                                    cOut << "\t\t\t\t\t.. P cluster  - row " << cRow << " column " << cCol << "\n"; 
+                                }
+                                bool cStubFound= (cStubs.size() > 0 );
+                                for(auto cStub : cStubs)
+                                {
+                                    if( !cSingles ) continue;
+                                    uint32_t cRow = std::floor(cStub.getPosition()/ 2.0)-1;
+                                    uint32_t cCol = cStub.getRow();
+                                    cOut << "\t\t\t\t\t.. stub in row " << +cRow << " and column " << +cCol << RESET;
+                                }
+                                if( cSingles ){ 
+                                    fEventsWithSingleClusters.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cDiffIndx]++;
+                                    fEventsWithStubs.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>()[cDiffIndx]+= cStubs.size();
+                                }
+
+                                if( cSingles && cStubFound && pPrint ) LOG (INFO) << BOLDGREEN << "!!!" << cOut.str() << RESET;
+                                else if( cSingles && !cStubFound && pPrint ) LOG (INFO) << BOLDRED << "!!!" << cOut.str() << RESET;
+                            }
+                        }
                         if(pPrint)
                             LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
                                        << std::bitset<8>(cStubStat) << " Hybrid#" << +cHybrid->getId() << " ROC# " << +cChip->getId() << " found " << +cStubs.size() << " stubs." << RESET;
@@ -1202,9 +1302,54 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                 auto& cHitContainerS1 = fHitOccupancyS1.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
                 auto& cStubContainer  = fStubOccupancy.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
                 auto& cCoHitCointainer = fHitOccupancyCoinc.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
-                
+                // auto& cClusterContainerS0 = cClusterS0.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
+                // auto& cSingleStubContainer = cStubsSingles.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
+                    if(cChip->getFrontEndType() == FrontEndType::MPA ) 
+                    {
+                        auto& cEventsWithSingles =  fEventsWithSingleClusters.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>(); 
+                        auto& cEventsWithStubs  = fEventsWithStubs.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<BENDBINS, uint16_t>>(); 
+                        float cNevents=0;
+                        float cNstubs=0;
+                        for( size_t cIndx=0; cIndx < BENDBINS ; cIndx++) cNevents+= cEventsWithSingles[cIndx];
+                        for( size_t cIndx=0; cIndx < BENDBINS ; cIndx++) cNstubs+= cEventsWithStubs[cIndx];
+
+                        LOG(INFO) << BOLDMAGENTA << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
+                            << " " << cNevents
+                            << " events with exactly one cluster of size 1 in each layer " 
+                            << " and " << +cNstubs 
+                            << " stubs found "
+                            << " stub matching efficiecny is " << (float)cNstubs/cNevents 
+                            << RESET;
+                        // size_t cNStubsWithACluster=0;
+                        // size_t cEventsWithACluster=0;
+                        // for(uint32_t cRow = 0; cRow < NSSACHANNELS ; cRow++)
+                        // {
+                        //     for(uint32_t cCol = 0; cCol < NMPACOLS ; cCol++)
+                        //     {
+                        //         auto& cOccS0 = cClusterContainerS0->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy; 
+                        //         auto& cOccStubs = cSingleStubContainer->at(cChip->getIndex())->getChannel<Occupancy>(cRow,cCol).fOccupancy; 
+                        //         if( cOccS0 > 0 )
+                        //         {
+                        //             cEventsWithACluster += cOccS0;
+                        //             cNStubsWithACluster += cOccStubs; 
+                        //             LOG (DEBUG) << BOLDYELLOW  << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId()) 
+                        //                 << " Row " << +cRow << " Col " << +cCol 
+                        //                 << " found " << cOccS0 << " events with a single cluster and "
+                        //                 << " " << cOccStubs << " events with a stub"
+                        //                 << " efficiency is " << cOccStubs/cOccS0
+                        //                 << RESET;
+                        //         }
+                        //     }
+                        // }
+                        // LOG (INFO) << BOLDYELLOW  << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId()) 
+                        //                 << " total number of stubs is " << cNStubsWithACluster
+                        //                 << " total number of events with a single cluster in each layer is " << cEventsWithACluster
+                        //                 << RESET;
+
+                    }
+
                     if(cChip->getFrontEndType() == FrontEndType::CBC3 && cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() > 0 ) 
                         LOG(INFO) << BOLDBLUE << "Counting step...Hybrid#" << +cHybrid->getId() << " ROC#" << +(cChip->getId())
                                   << " Stubs   : " << cStubContainer->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs."
