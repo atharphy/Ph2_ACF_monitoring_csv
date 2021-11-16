@@ -913,6 +913,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     {
                         auto cValueInMemory = cChip->getReg(cRegName);
                         fReadoutChipInterface->WriteChipReg(cChip,cRegName, cValueInMemory);
+ 			LOG(INFO) << BOLDMAGENTA << "Setting " << cRegName << " on ROC#" << +cChip->getId() << " to " << +cValueInMemory;
                     }
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -922,6 +923,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     {
                         auto cValueInMemory = cChip->getReg(cRegName);
                         fReadoutChipInterface->WriteChipReg(cChip,cRegName, cValueInMemory);
+ 			LOG(INFO) << BOLDMAGENTA << "Setting " << cRegName << " on ROC#" << +cChip->getId() << " to " << +cValueInMemory;
                     }
                 }
                 // To-Do add CBC 
@@ -954,14 +956,16 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                         std::stringstream cRegName;
                         cRegName << "ENFLAGS_S" << +(cIndx+1);
                         auto cValueInMemory = cChip->getReg(cRegName.str());
+                        //LOG(INFO) << "strip " << +cIndx << RESET;
                         if( (cValueInMemory & 0x1) == 0 ) // strip is masked 
                         {
                             fReadoutChipInterface->WriteChipReg(cChip,cRegName.str(), cValueInMemory);
+			    LOG(INFO) << "Register " << cRegName.str() << " = 0b" << std::bitset<8>(cValueInMemory) << RESET;
                         }
                     }
                 }
 
             }
         }
-    }
+    }   
 }
