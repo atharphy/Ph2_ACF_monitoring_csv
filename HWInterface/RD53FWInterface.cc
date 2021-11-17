@@ -1332,10 +1332,10 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const uint32_t nBitInClkPeriod  = 32. * std::pow(2, frontendSpeed);      // Number of bits in the 40 MHz clock period
-    const double   fps              = 1.28e9 / nBitInClkPeriod;              // Frames per second
-    const int      n_prints         = 10;                                    // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
-    const double   scaleByAuroraClk = (given_time == true ? 37.5 / 40. : 0); // @CONST@
+    const uint32_t nBitInClkPeriod  = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
+    const double   fps              = 1.28e9 / nBitInClkPeriod;         // Frames per second
+    const int      n_prints         = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const double   scaleByAuroraClk = 37.5 / 40;                        // @CONST@
     double         frames2run;
     double         time2run;
     uint32_t       cntr_lo;
@@ -1344,7 +1344,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     if(given_time == true)
     {
         time2run   = frames_or_time;
-        frames2run = time2run * fps;
+        frames2run = time2run * fps * scaleByAuroraClk;
     }
     else
     {
@@ -1415,10 +1415,10 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
     LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
     LOG(INFO) << GREEN << "Final Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
-              << nErrors / frames2run * 100 * scaleByAuroraClk << RESET << GREEN << "%)" << RESET;
+              << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return nErrors / frames2run * scaleByAuroraClk;
+    return nErrors / frames2run;
 }
 
 } // namespace Ph2_HwInterface
