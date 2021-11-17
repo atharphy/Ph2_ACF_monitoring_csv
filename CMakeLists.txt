@@ -228,13 +228,9 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
-    set(CompileForShep "$ENV{CompileForShep}")
-    set(CompileForHerd "$ENV{CompileForHerd}")
-    if ((NOT CompileForShep) AND (NOT CompileForHerd))
-        set(NoDataShipping true)
-    else()
-        set(NoDataShipping false)
-    endif()
+    set(CompileForShep true)
+    set(CompileForHerd false)
+    set(NoDataShipping false)
 
     # AMC13
     if(${CACTUS_AMC13_FOUND})

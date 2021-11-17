@@ -73,6 +73,7 @@ else()
     MESSAGE(STATUS " ")
 
     #include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)

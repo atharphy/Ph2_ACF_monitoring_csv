@@ -35,8 +35,8 @@ class GenericDacDacScan : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string& fileRes_, int currentRun);
+    void   initializeFiles(const std::string& fileRes_, int currentRun);
     void   run();
     void   draw();
     void   analyze();

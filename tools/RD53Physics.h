@@ -45,8 +45,8 @@ class Physics : public Tool
     void ConfigureCalibration() override;
 
     void sendBoardData(const BoardContainer* cBoard);
-    void localConfigure(const std::string fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void run();
     void draw();
     void analyze(bool doReadBinary = false);
@@ -70,6 +70,8 @@ class Physics : public Tool
     size_t colStart;
     size_t colStop;
     size_t nTRIGxEvent;
+
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     DetectorDataContainer                    theOccContainer;

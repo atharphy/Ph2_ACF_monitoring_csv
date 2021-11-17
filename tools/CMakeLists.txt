@@ -146,6 +146,7 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
@@ -160,7 +161,10 @@ else()
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-            EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
+            EXCLUDE 
+            RD53eudaqProducer.h RD53eudaqProducer.cc
+            SEHTester.h SEHTester.cc
+            SSAPhysics.h SSAPhysics.cc
             )
 
     install_headers()

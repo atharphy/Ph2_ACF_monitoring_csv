@@ -1,6 +1,6 @@
 
-#ifndef __D19cSSAEventAS_H__
-#define __D19cSSAEventAS_H__
+#ifndef __D19SCEventAS_H__
+#define __D19SCEventAS_H__
 
 #include "Event.h"
 
@@ -11,12 +11,12 @@ using HybridCounterData = std::vector<RocCounterData>; // vector per hybrid
 using CounterData       = std::vector<HybridCounterData>;
 
 using EventDataVector = std::vector<std::vector<uint32_t>>;
-class D19cSSAEventAS : public Event
+class D19SCEventAS : public Event
 {
   public:
-    D19cSSAEventAS(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
-    D19cSSAEventAS(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list);
-    ~D19cSSAEventAS() {}
+    D19SCEventAS(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
+    D19SCEventAS(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list);
+    ~D19SCEventAS() {}
     void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) override;
     void SetEvent(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list) override;
 

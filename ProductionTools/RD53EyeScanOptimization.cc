@@ -8,6 +8,7 @@
 */
 
 #include "RD53EyeScanOptimization.h"
+#include "../Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

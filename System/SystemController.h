@@ -22,23 +22,26 @@
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
-#include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/SSA2Interface.h"
+#include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
 #include "../NetworkUtils/TCPClient.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
+// 2S scc/8CBC3 hybrid tests
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
-#include "../Utils/D19cCic2Event.h"
-#include "../Utils/D19cCicEvent.h"
+// ps sync - scc/feh tests
 #include "../Utils/D19cMPAEvent.h"
-#include "../Utils/D19cMPAEventAS.h"
-#include "../Utils/D19cSSAEvent.h"
-#include "../Utils/D19cSSAEventAS.h"
 #include "../Utils/D19cSSA2Event.h"
-#include "../Utils/D19cSSA2EventAS.h"
+#include "../Utils/D19cSSAEvent.h"
+// ps async - scc/feh tetse
+#include "../Utils/D19SCEventAS.h"
+// ps async - modules
+#include "../Utils/D19cMPAEventAS.h"
+// final modules  - CIC2/CIC2 data
+#include "../Utils/D19cCic2Event.h"
 #include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"
@@ -222,8 +225,6 @@ class SystemController
      * \param pNEvents
      */
     void ReadNEvents(uint32_t pNEvents);
-
-    void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMsec, uint32_t pulses = 0, bool fast = false, bool fsm = false);
 
     const Ph2_HwDescription::BeBoard* getBoard(int index) const { return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr); }
 

@@ -54,6 +54,7 @@ class FileParser
     void        parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
     void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
     std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile);
+    void        disableInterfaces() { fEnableInterfaces = false; }
 
   protected:
     /*!
@@ -125,6 +126,9 @@ class FileParser
         {18, "MaskChannel-152-to-145"}, {19, "MaskChannel-160-to-153"}, {20, "MaskChannel-168-to-161"}, {21, "MaskChannel-176-to-169"}, {22, "MaskChannel-184-to-177"}, {23, "MaskChannel-192-to-185"},
         {24, "MaskChannel-200-to-193"}, {25, "MaskChannel-208-to-201"}, {26, "MaskChannel-216-to-209"}, {27, "MaskChannel-224-to-217"}, {28, "MaskChannel-232-to-225"}, {29, "MaskChannel-240-to-233"},
         {30, "MaskChannel-248-to-241"}, {31, "MaskChannel-254-to-249"}};
+
+  private:
+    bool fEnableInterfaces{true};
 };
 } // namespace Ph2_System
 

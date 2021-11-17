@@ -27,7 +27,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
 
     cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
     cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
     if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
@@ -39,13 +39,15 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     this->fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
-    fCheckLoop                   = findValueInSettings<double>("VerificationLoop", 1);
-    fTestPulseAmplitude          = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fTargetOffset                = 0x7F;
+    fSkipMaskedChannels               = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups      = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fCheckLoop                        = findValueInSettings<double>("VerificationLoop", 1);
+    fTestPulseAmplitude               = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fEventsPerPoint                   = findValueInSettings<double>("Nevents", 10);
+    fNEventsPerBurst                  = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fTargetOffset                     = 0x7F;
+    uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
+    uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
     if(cWithSSA or cWithMPA) fTargetOffset = 0xF;
 
     fTargetVcth = 0x0;
@@ -61,6 +63,29 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
+    LOG(INFO) << " Fast Counter Readout [PS] " << +cEnableFastCounterReadout << RESET;
+    LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise" << RESET;
+    // enable ASYCN mode
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        cInterface->SetPSCounterMode(cEnableFastCounterReadout);
+        cInterface->SetPSPairSelect(cEnablePairSelect);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // set all SSAs + MPAs to output data in async mode
+                for(auto cROC: *cHybrid)
+                {
+                    if(cROC->getFrontEndType() == FrontEndType::CBC3) continue;
+
+                    if(cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2) { fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1); }
+                }
+            }
+        }
+    }
     if(fDisableStubLogic)
     {
         ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fStubLogicCointainer);

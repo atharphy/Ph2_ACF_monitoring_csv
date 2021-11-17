@@ -62,7 +62,7 @@ void BERtest::Stop()
     RD53RunProgress::reset();
 }
 
-void BERtest::localConfigure(const std::string fileRes_, int currentRun)
+void BERtest::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -77,7 +77,7 @@ void BERtest::localConfigure(const std::string fileRes_, int currentRun)
     BERtest::initializeFiles(fileRes_, currentRun);
 }
 
-void BERtest::initializeFiles(const std::string fileRes_, int currentRun)
+void BERtest::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -125,8 +125,9 @@ void BERtest::run()
 
                         fReadoutChipInterface->StartPRBSpattern(cChip);
 
-                        auto value = (chain2test == 0 ? fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), cChip->getId(), frontendSpeed)
-                                                      : flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroup, cChannel, given_time, frames_or_time, frontendSpeed));
+                        auto value =
+                            (chain2test == 0 ? fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), static_cast<RD53*>(cChip)->getChipLane(), frontendSpeed)
+                                             : flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroup, cChannel, given_time, frames_or_time, frontendSpeed));
                         theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>() = value;
 
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"

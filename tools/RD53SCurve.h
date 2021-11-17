@@ -42,12 +42,12 @@ class SCurve : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
-    void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
+    void                                   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void                                   run();
     void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
+    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * nSteps; }
     void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
@@ -66,6 +66,7 @@ class SCurve : public Tool
     size_t offset;
     size_t nHITxCol;
     bool   doFast;
+    size_t doOnlyNGroups;
 
     std::vector<uint16_t> dacList;
 
