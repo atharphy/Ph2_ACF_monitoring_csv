@@ -206,11 +206,14 @@ class ChannelGroupHandler
 
     const ChannelGroupBase* allChannelGroup() const { return allChannelGroup_; }
 
-    virtual ChannelGroupBase* getTestGroup(uint32_t groupNumber) const
+    virtual const ChannelGroupBase* getTestGroup(int groupNumber) const
     {
+        if(groupNumber<0) return allChannelGroup();
         allChannelGroup_->makeTestGroup(currentChannelGroup_, groupNumber, numberOfClustersPerGroup_, numberOfRowsPerCluster_, numberOfColsPerCluster_);
         return currentChannelGroup_;
     }
+
+    uint16_t getNumberOfGroups() const {return numberOfGroups_;};
 
   protected:
     uint32_t          numberOfGroups_;

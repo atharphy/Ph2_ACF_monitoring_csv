@@ -198,8 +198,9 @@ void MemoryCheck2S::Initialise()
 {
     // this is needed if you're going to use groups anywhere
     initializeRecycleBin();
-    fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     ContainerFactory::copyAndInitStructure<ChannelList>(*fDetectorContainer, fInjections);
     ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fDataMismatches);

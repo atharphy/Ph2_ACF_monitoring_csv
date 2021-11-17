@@ -44,14 +44,29 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
     cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
-    if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
-    if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
-    if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
+    if(cWithCBC)
+    {
+        CBCChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler);
+    }
+    if(cWithSSA)
+    {
+        SSAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+    }
+    if(cWithMPA)
+    {
+        MPAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+    }
+
 
     initializeRecycleBin();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    // For async only -- to fix
-    if(cWithMPA or cWithSSA) fChannelGroupHandler->setChannelGroupParameters(120, 16);
     fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -722,7 +737,7 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                         for(auto cHit: cHits)
                         {
                             fEvent.fHits.push_back((uint8_t)cHit);
-                            if(fChannelGroupHandler->allChannelGroup()->isChannelEnabled(cHit))
+                            if(fChannelGroupHandlerContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->isChannelEnabled(cHit))
                             {
                                 // LOG (INFO) << BOLDMAGENTA << "\t\t..found a hit in channel " << +cHit << RESET;
                                 cOccThischip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
@@ -739,7 +754,7 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
         fEvent.fEventCnt++;
     } // event loop - I want to keep this because I want to look at what happens in an event/per event basis
     auto cNevents = cPh2Events.size();
-    pOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandler->allChannelGroup(), cNevents);
+    pOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, &fChannelGroupHandlerContainer, cNevents);
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
@@ -906,7 +921,7 @@ void PedeNoiseTime::extractPedeNoiseTime()
                     {
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                            if(!fChannelGroupHandlerContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                             float previousOccupancy = (previousIterator)
                                                           ->second->at(board->getIndex())
                                                           ->at(opticalGroup->getIndex())
@@ -960,7 +975,7 @@ void PedeNoiseTime::extractPedeNoiseTime()
                 {
                     for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                        if(!fChannelGroupHandlerContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->isChannelEnabled(iChannel)) continue;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *
@@ -971,7 +986,7 @@ void PedeNoiseTime::extractPedeNoiseTime()
                 }
             }
         }
-        board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
+        board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandlerContainer.getObject(board->getId()), 0);
     }
 }
 

@@ -270,7 +270,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, &fChannelGroupHandlerContainer, 1);
 
         // ##############################################
         // # Send periodic data to minitor the progress #

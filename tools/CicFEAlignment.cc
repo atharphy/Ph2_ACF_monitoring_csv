@@ -66,8 +66,9 @@ void CicFEAlignment::Initialise()
     fSuccess = false;
     fWithMPA = false;
     // this is needed if you're going to use groups anywhere
-    fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;

@@ -124,8 +124,9 @@ void BeamTestCheck2S::Initialise()
     
     // create groups for injection
     // set injection group
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2); // number of cluster per group, number of rows per cluster
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     // set TP amplitude and delay
     fTPamplitude = 255 - findValueInSettings("Check2STPamplitude", 255);
@@ -590,7 +591,6 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
             {
                 if(cEventIter >= cEvents.end()) break;
                 uint8_t cTDCVal = (*cEventIter)->GetTDC();
-                //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                 for(auto cOpticalGroup: *pBoard)
                 {
                     auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
@@ -637,7 +637,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                 }         // optical group vector
                 cEventIter += (1 + cTriggerMult);
             } while(cEventIter < cEvents.end());
-            cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNReadbackEvents);
+            cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandlerContainer.getObject(cOccBrd->getId()), fNReadbackEvents);
             // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
             cTotalHits = cTotalHitsS0 + cTotalHitsS1;
             if(cTotalHits > 0)
@@ -698,7 +698,7 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     bool   cMaskChannelsFromOtherGroups = false;
     bool   cInject                      = true;
     // inject in one of each CBCs
-    for(auto cGroup: *fChannelGroupHandler)
+    for(auto cGroup : *fChannelGroupHandlerContainer.at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         if(cNgroups > 0) continue;
         for(auto cOpticalGroup: *pBoard)

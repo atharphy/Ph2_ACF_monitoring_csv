@@ -236,7 +236,7 @@ class BaseDataContainer
     }
 
     // virtual void initialize() = 0;
-    virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) = 0;
+    virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents) = 0;
 
     template <typename T>
     bool isSummaryContainerType()
@@ -254,6 +254,12 @@ class BaseDataContainer
 
     template <typename S, typename T = EmptyContainer>
     S& getSummary()
+    {
+        return static_cast<Summary<S, T>*>(summary_)->theSummary_;
+    }
+
+    template <typename S, typename T = EmptyContainer>
+    const S& getSummary() const
     {
         return static_cast<Summary<S, T>*>(summary_)->theSummary_;
     }
@@ -317,7 +323,7 @@ class DataContainer
         return SummaryContainerList;
     }
 
-    uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) override
+    uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer,  const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents) override
     {
         uint16_t              index                    = 0;
         uint32_t              numberOfEnabledChannels_ = 0;
@@ -325,7 +331,7 @@ class DataContainer
         for(auto container: *this)
         {
             uint32_t numberOfContainerEnabledChannels = 0;
-            if(container != nullptr) numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(theContainer->getElement(index++), cTestChannelGroup, numberOfEvents);
+            if(container != nullptr) numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(theContainer->getElement(index++), static_cast<const DataContainer<T>*>(theChannelGroupContainer)->getObject(this->getId()), numberOfEvents);
             theNumberOfEnabledChannelsList.emplace_back(numberOfContainerEnabledChannels);
             numberOfEnabledChannels_ += numberOfContainerEnabledChannels;
         }
@@ -432,15 +438,15 @@ class ChipDataContainer
             for(auto& channel: *this->getChannelContainer<V>()) channel = initialValue;
     }
 
-    uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
+    uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents)
     {
         // std::cout << " Index " << theContainer->getIndex()
         //     << " # of enabled channels " << cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask())
         //     << " # of events " << numberOfEvents
         //     << "\n";
         if(container_ != nullptr) container_->normalize(numberOfEvents);
-        if(summary_ != nullptr) summary_->makeSummaryOfChannels(this, static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), cTestChannelGroup, numberOfEvents);
-        return cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
+        if(summary_ != nullptr) summary_->makeSummaryOfChannels(this, static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(), theChannelGroupContainer->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup(), numberOfEvents);
+        return theChannelGroupContainer->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
     }
 
     void cleanDataStored() override

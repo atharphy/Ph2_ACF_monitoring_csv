@@ -84,15 +84,27 @@ void ShortFinder::Initialise()
     fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     LOG(INFO) << "With SSA set to " << ((fWithSSA) ? 1 : 0) << RESET;
 
-    if(ShortFinder::fWithCBC)
+    if(fWithCBC)
     {
-        fChannelGroupHandler = new CBCChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(16, 2);
-        fSkipMaskedChannels = findValueInSettings("SkipMaskedChannels", 0);
-        this->SetSkipMaskedChannels(fSkipMaskedChannels);
+        CBCChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler);
     }
-    if(ShortFinder::fWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
-    // THRESHOLD_IN=0.01;
+    if(fWithSSA)
+    {
+        SSAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+    }
+    // if(cWithMPA)
+    // {
+    //     MPAChannelGroupHandler theChannelGroupHandler;
+    //     theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+    //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+    //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+    // }
+
 
     // now read the settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
@@ -439,7 +451,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
     // for (auto cBoard : this->fBoardVector)
     uint8_t cTestGroup = 0;
     LOG(INFO) << BOLDBLUE << "Starting short finding loop for 2S hybrid " << RESET;
-    for(auto cGroup: *fChannelGroupHandler)
+    for(auto cGroup: *fChannelGroupHandlerContainer.getObject(pBoard->getId())->getObject(0)->getObject(0)->getObject(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         setSameGlobalDac("TestPulseGroup", cTestGroup);
         // bitset for this group

@@ -357,6 +357,9 @@ class Tool : public Ph2_System::SystemController
 
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};
+
+    uint16_t getMaxNumberOfGroups();
+    
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
     ChipHistogramMap    fChipHistMap;
@@ -391,7 +394,6 @@ class Tool : public Ph2_System::SystemController
     bool                 fTestPulse;
     bool                 fDoBoardBroadcast;
     bool                 fDoHybridBroadcast;
-    ChannelGroupHandler* fChannelGroupHandler;
     bool                 fUseReadNEvents{1};
     int                  fWait_ms{100};
     size_t               fNReadbackEvents{0};

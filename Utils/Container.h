@@ -81,6 +81,12 @@ class Container
         return idObjectMap_[id];
     }
 
+    const T* getObject(uint16_t id) const
+    {
+        if(idObjectMap_.find(id) == idObjectMap_.end()) throw Exception("T* getObject(uint16_t id) : Object Id not found");
+        return idObjectMap_.at(id);
+    }
+
     void cleanDataStored() override
     {
         for(auto container: *this) { container->cleanDataStored(); }

@@ -12,6 +12,7 @@
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
+#include "../Utils/DataContainer.h"
 #include "../Utils/easylogging++.h"
 #include "ConsoleColor.h"
 #include "SLinkEvent.h"
@@ -161,6 +162,14 @@ class Event
     //}
     /*! \brief Get the event size in bytes */
     uint32_t GetSize() const { return fEventSize; }
+
+    inline const ChannelGroupBase* getChannelGroup(const BoardDataContainer* theChannelGroupContainer, int groupNumber, uint16_t opticalGroupId, uint16_t hybridGroupId,  uint16_t chipGroupId)
+    {
+        auto theChannelGroupHandler = theChannelGroupContainer->getObject(opticalGroupId)->getObject(hybridGroupId)->getObject(chipGroupId)->getSummary<std::shared_ptr<ChannelGroupHandler>>();
+        if(groupNumber > theChannelGroupHandler->getNumberOfGroups()) return nullptr;
+        return theChannelGroupHandler->getTestGroup(groupNumber);
+    }
+
     /*!
      * \brief Get the bunch value
      * \return Bunch value
@@ -402,7 +411,7 @@ class Event
 
     virtual std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const { return {}; }
 
-    virtual void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) = 0;
+    virtual void fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) = 0;
 
     // split stream of data
     template <std::size_t N>

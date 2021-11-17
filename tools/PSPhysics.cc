@@ -14,6 +14,8 @@
 #include "BackEndAlignment.h"
 #include "CicFEAlignment.h"
 #include "PSAlignment.h"
+#include "../Utils/MPAChannelGroupHandler.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -95,8 +97,16 @@ void PSPhysics::ConfigureCalibration()
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fOccupancyContainer);
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
-    fChannelGroupHandler = new MPAChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(120, 16);
+    SSAChannelGroupHandler theSSAChannelGroupHandler;
+    theSSAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA);
+    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
+
+    MPAChannelGroupHandler theMPAChannelGroupHandler;
+    theMPAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA);
+    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
+
 }
 
 void PSPhysics::Running()

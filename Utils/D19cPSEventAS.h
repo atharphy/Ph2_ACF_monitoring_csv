@@ -25,7 +25,7 @@ class D19cPSEventAS : public Event
     std::vector<uint32_t>   GetHits(uint8_t pFeId, uint8_t pMPAId) const override;
     EventDataVector         fEventDataVector;
     static constexpr size_t encodeVectorIndex(const uint8_t pFeId, const uint8_t pCbcId, const uint8_t numberOfCBCs) { return pCbcId + pFeId * numberOfCBCs; }
-    void                    fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+    void                    fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) override;
     inline bool             privateDataBit(uint8_t pFeId, uint8_t pMPAId, uint8_t i) const;
 
     size_t getFeIndex(const uint8_t pFeId) const

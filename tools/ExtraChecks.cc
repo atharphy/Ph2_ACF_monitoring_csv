@@ -41,8 +41,9 @@ ExtraChecks::~ExtraChecks()
 void ExtraChecks::Initialise()
 {
     // this is needed if you're going to use groups anywhere
-    fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 #ifdef __USE_ROOT__
 //    fDQMHistogram.book(fResultFile,*fDetectorContainer);
 #endif
@@ -1945,7 +1946,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
         this->setSameDacBeBoard(theBoard, "TriggerLatency", cDelay - 1);
         this->setSameDacBeBoard(theBoard, "TestPulseDelay", cTPdelay);
         uint8_t cTestGroup = 0;
-        for(auto cGroup: *fChannelGroupHandler)
+        for(auto cGroup: *fChannelGroupHandlerContainer.at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>())
         {
             setSameGlobalDac("TestPulseGroup", cTestGroup);
             // bitset for this group

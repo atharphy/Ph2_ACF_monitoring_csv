@@ -103,7 +103,7 @@ void RD53Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53Event
         }
 }
 
-void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     bool   vectorRequired = boardContainer->at(0)->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
     size_t chipIndx;
@@ -113,6 +113,9 @@ void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const Chan
             for(const auto& cChip: *cHybrid)
                 if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
                 {
+                    auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
+                    if(cTestChannelGroup == nullptr) continue;
+                    
                     if(vectorRequired == true)
                     {
                         cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);

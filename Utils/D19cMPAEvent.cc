@@ -28,7 +28,7 @@ D19cMPAEvent::D19cMPAEvent(const BeBoard* pBoard, uint32_t pNMPA, uint32_t pNFe,
     SetEvent(pBoard, pNMPA, list);
 }
 
-void D19cMPAEvent::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cMPAEvent::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -39,6 +39,9 @@ void D19cMPAEvent::fillDataContainer(BoardDataContainer* boardContainer, const C
                 unsigned int i = 0;
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
+                    auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                    if(cTestChannelGroup == nullptr) continue;
+                    
                     if(cTestChannelGroup->isChannelEnabled(i))
                     {
                         // TOFIX
