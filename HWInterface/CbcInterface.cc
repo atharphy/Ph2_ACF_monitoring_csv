@@ -294,7 +294,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
     }
 }
 
-std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc)
+std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc, uint8_t pMode)
 {
     setBoard(pCbc->getBeBoardId());
     std::vector<uint8_t> cBendCodes(30, 0); // bend registers are 0 -- 14. Each register encodes 2 codes
@@ -305,7 +305,7 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc)
         sprintf(cBuffer, "Bend%d", static_cast<int>(cIndex));
         std::string cRegName(cBuffer, cLength);
         // LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
-        uint16_t cValue            = this->ReadChipReg(pCbc, cRegName);
+        uint16_t cValue            = (pMode == 0 ) ? this->ReadChipReg(pCbc, cRegName) : pCbc->getReg(cRegName);
         cBendCodes[cIndex * 2]     = (cValue & 0x0F);
         cBendCodes[cIndex * 2 + 1] = (cValue & 0xF0) >> 4;
     }

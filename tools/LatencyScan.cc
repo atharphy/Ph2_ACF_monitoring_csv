@@ -14,12 +14,12 @@ LatencyScan::~LatencyScan() {}
 
 void LatencyScan::Initialize()
 {
-    // check sparsification 
+    // check sparsification
     for(auto cBoard: *fDetectorContainer)
     {
         bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
         cBoard->setSparsification(cSparsified);
-    }    
+    }
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
@@ -335,7 +335,7 @@ void LatencyScan::ScanLatency()
                     cEventIter += (1 + cTriggerMult);
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
-                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandlerContainer.getObject(cOccBrd->getId()), cNormalizationFactor);
+                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandlerContainer->getObject(cOccBrd->getId()), cNormalizationFactor);
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;
                 if(cTotalHits > 0)
@@ -501,7 +501,7 @@ void LatencyScan::StubLatencyScan()
                                 {
                                     // first check for hits
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                    for(auto cHit: cHits) { LOG(INFO) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << " hit in channel " << +cHit << RESET; }
+                                    for(auto cHit: cHits) { LOG(DEBUG) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << " hit in channel " << +cHit << RESET; }
                                     auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                     std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
                                     auto                 cStubs                = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());

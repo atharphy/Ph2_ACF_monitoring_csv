@@ -41,6 +41,22 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
                    << RESET;
         return cCounterValue;
     }
+    else if(pRegNode == "StubMode")
+    {
+        uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
+        auto    cReg      = this->readPeri(pMPA, "ECM");
+        uint8_t cRegMask  = (0x3 << cBitShift); //
+        uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
+        return cValue;
+    }
+    else if(pRegNode == "LayerSwap")
+    {
+        uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
+        auto    cReg      = this->readPeri(pMPA, "ECM");
+        uint8_t cRegMask  = (0x3 << cBitShift); //
+        uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
+        return cValue & 0x1; // 0 -- pixels as seed; 1 --> strip as seed
+    }
     else if(pRegNode.find("BendCode") != std::string::npos) // configure bend LUT
     {
         std::string cSubStr  = pRegNode.substr(pRegNode.find("BendCode") + std::string("BendCode").length(), pRegNode.length());
@@ -144,7 +160,7 @@ std::vector<int> MPAInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendC
 {
     std::vector<int>     cBends(0);
     std::vector<uint8_t> cBendLUT    = this->readLUT(pChip);
-    int                  cStartValue = -9;
+    int                  cStartValue = -7;
     for(auto cBendCode: cBendLUT)
     {
         if(cBendCode == pBendCode)
@@ -157,29 +173,43 @@ std::vector<int> MPAInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendC
     }
     return cBends;
 }
-std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip)
+std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip, uint8_t pMode)
 {
     std::vector<uint8_t> cBendCodes(0); // bend registers are 0 -- 14. Each register encodes 2 codes
 
-    int cStartValue = -9;
-    for(size_t cIndex = 0; cIndex < 9; cIndex++) // 9 registers
+    float cStartValue = -7.0 / 2.;
+    std::vector<std::string> cRegNames{"CodeM76","CodeM54","CodeM32","CodeM10","CodeP12","CodeP34","CodeP56","CodeP78"};
+    for(size_t cIndex = 0; cIndex < 8; cIndex++) // 9 registers
     {
-        uint16_t cRegAddress = 5 + cIndex; // each register controls two codes
+        uint16_t cRegAddress = 6 + cIndex; // each register controls two codes
         // code starts from dummy
-        cRegAddress = this->regPeri(pChip, cRegAddress);
-        std::vector<int> cTheseBends{cStartValue, cStartValue + 1};
-        uint8_t          cCode = MPAInterface::ReadReg(pChip, cRegAddress);
-        LOG(DEBUG) << BOLDMAGENTA << "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  " << +cTheseBends[0] << " and " << +cTheseBends[1]
-                   << " the register value is 0x" << std::hex << +cCode << std::dec << RESET;
+        // cRegAddress = this->regPeri(pChip, cRegAddress);
+        std::vector<float> cTheseBends{cStartValue, (float)(cStartValue + 0.5)};
+        uint8_t            cCode = (pMode == 0 ) ? ReadChipReg(pChip,cRegNames[cIndex]) : pChip->getReg(cRegNames[cIndex]); //MPAInterface::ReadReg(pChip, cRegAddress);
+        std::stringstream  cOut;
+        cOut << "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  ";
+        if(cTheseBends[0] == -9)
+            cOut << " dummy code and ";
+        else
+            cOut << +cTheseBends[0] << " and ";
+        cOut << +cTheseBends[1] << " half-strips the register value is 0x" << std::hex << +cCode << std::dec << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << cOut.str() << RESET;
         for(int cNibble = 0; cNibble < 2; cNibble++)
         {
-            int     cBendHalfStrips = cStartValue + cNibble;
-            int     cBitOffset      = (1 - cNibble) * 3;
-            uint8_t cBendCode       = (cCode & (0x7 << cBitOffset)) >> cBitOffset;
-            LOG(DEBUG) << BOLDMAGENTA << "BendCode for a bend of " << +cBendHalfStrips << " is " << std::bitset<3>(cBendCode) << RESET;
+            float             cBendHalfStrips = cStartValue + cNibble * 0.5;
+            int               cBitOffset      = (1 - cNibble) * 3;
+            uint8_t           cBendCode       = (cCode & (0x7 << cBitOffset)) >> cBitOffset;
+            std::stringstream cPrint;
+            cPrint << "BendCode for a bend of ";
+            if(cBendHalfStrips == -9)
+                continue; // cPrint << " [dummy] is ";
+            else
+                cPrint << cBendHalfStrips << " is ";
+            cPrint << std::bitset<3>(cBendCode);
+            LOG(DEBUG) << BOLDBLUE << "\t\t" << cPrint.str() << RESET;
             cBendCodes.push_back(cBendCode);
         }
-        cStartValue = cStartValue + 2;
+        cStartValue = cStartValue + 2 * 0.5;
     }
     return cBendCodes;
 }
@@ -306,36 +336,88 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
     uint16_t cRegAddress = ((pRow << 11) | (pBaseRegister << 7) | 0x79);
     return cRegAddress;
 }
-bool MPAInterface::setInjectionSchema(ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop)
+
+// two methods -- also kinda slow but cant really use broadcast commands with enflags without overwriting other bits
+// Would want  to do a rowwise broadcast -- maybe using col 0  for bit mask?
+bool MPAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+{
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(cChip->getChipOriginalMask());
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
+
+    auto cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(groupToMask->getBitset() & cOriginalMask->getBitset());
+    // cBitset = cBitset&std::bitset<NSSACHANNELS*NMPACOLS>(0x0000F0FF0);
+    LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
+               << " original mask  \t... : " << cOriginalMask << " enabled channels "
+               << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
+
+    // std::vector<std::pair<std::string, uint16_t>> pVecReq;
+    // pVecReq.clear();
+    bool returnval = true;
+    for(uint32_t ipix = 0; ipix < (NSSACHANNELS * NMPACOLS); ipix++)
+    {
+        auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
+        bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
+
+        // uint32_t           cPixelIds = ipix;
+        // std::ostringstream cRegName;
+        // cRegName << "ENFLAGS_P" << std::to_string(cPixelIds+1);
+        // uint16_t regval=this->ReadChipReg(cChip, cRegName.str());
+        // regval=regval&(0xFF&bitval);
+        // std::pair<std::string, uint16_t> Req;
+        // Req.first=cRegName.str();
+        // Req.second=regval;
+        // pVecReq.push_back(Req);
+
+        returnval &= maskPixel(cChip, ipix + 1, (1 - bitval), pVerifLoop); // I  think mask 0 is enable?
+    }
+    // return this->WriteChipMultReg(cChip, pVecReq);
+    return returnval;
+}
+
+bool MPAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
 {
     std::bitset<NSSACHANNELS* NMPACOLS> cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
-    // figure this out
-    return true;
+
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(cChip->getChipOriginalMask());
+    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
+
+    // cBitset=cBitset&std::bitset<NSSACHANNELS * NMPACOLS>(0xF0FF0);
+
+    LOG(DEBUG) << BOLDBLUE << "\t... Applying injection to MPA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
+               << " original mask  \t... : " << cOriginalMask << " enabled channels "
+               << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
+
+    bool returnval = true;
+    for(uint32_t ipix = 0; ipix < (NSSACHANNELS * NMPACOLS); ipix++)
+    {
+        auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
+        bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
+
+        returnval &= enablePixelInjection(cChip, ipix + 1, bitval, pVerifLoop);
+    }
+
+    return returnval;
 }
 bool MPAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
 {
     bool success = true;
     if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
+
     return success;
 }
-bool MPAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+
+bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerifLoop)
 {
-    // first make sure all pixels are enabled
-    // then mask those disabled
-    const ChannelGroupBase*                     cOriginalMask = cChip->getChipOriginalMask();
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
-    // std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset());
-    // auto cBitset = std::bitset<NSSACHANNELS*NMPACOLS>(groupToMask->getBitset() & cOriginalMask->getBitset() );
-    LOG(INFO) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with "
-              << group->getNumberOfEnabledChannels()
-              // << " desired mask \t... : " << cBitset
-              << " original mask  \t... : " << cOriginalMask << " enabled channels "
-              << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
-    return true;
+    auto    cRegValue = this->readPixel(pChip, "PixelEnable", pPixelNum);
+    uint8_t cNewValue = (cRegValue & 0xBF) | (pInj << 6);
+
+    LOG(DEBUG) << BOLDBLUE << "Setting Enable to 0x" << std::hex << +cNewValue << std::dec << RESET;
+    return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop);
 }
+
 bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
     ChannelGroup<NSSACHANNELS * NMPACOLS> allChannelEnabledGroup;
@@ -502,33 +584,36 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     {
         // tracker mode
         bool cReadoutMode = this->configPeri(pMPA, "ReadoutMode", 0x00);
-        // value to change
-        // enable digital injection, disable analogue calibration and analogue count
-        uint8_t cEnable = 1;
-        uint8_t cValue  = (0 << PIXEL_ENABLE_TABLE.find("PixelMask")->second);                       // enable pixel;
-        cValue          = (0 << PIXEL_ENABLE_TABLE.find("CounterEnable")->second);                   // disable counter
-        cValue          = cValue | (cEnable << PIXEL_ENABLE_TABLE.find("DigitalInjection")->second); // enable digital injection
-        cValue          = cValue | (0 << PIXEL_ENABLE_TABLE.find("AnalogueInjection")->second);      // disable analogue injection
         // register mask
-        std::vector<std::string> cPixelRegs{"CounterEnable", "DigitalInjection", "AnalogueInjection"};
+        std::vector<std::string> cPixelRegs{"PixelMask", "DigitalInjection"};
+        uint8_t                  cFEEnable   = 0;
+        uint8_t                  cEnableDigi = (pValue == 0) ? 0 : 1;
+        std::vector<uint8_t>     cPixelVals{cFEEnable, cEnableDigi};
         uint8_t                  cRegMask = 0x00;
-        for(auto cPixelReg: cPixelRegs) cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second);
-        cRegMask = ~(cRegMask);
-        LOG(DEBUG) << BOLDBLUE << "Register mask is 0x" << std::hex << +cRegMask << std::dec << RESET;
-        uint8_t cRegValue    = 0x00;
+        for(auto cPixelReg: cPixelRegs) cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second) ;
+        cRegMask       = ~(cRegMask);
+        uint8_t cValue = 0x00;
+        size_t  cIndx  = 0;
+        for(auto cVal: cPixelVals)
+        {
+            cValue = cValue | (cVal << PIXEL_ENABLE_TABLE.find(cPixelRegs[cIndx])->second);
+            cIndx++;
+        }
         int     cPixelNumber = 0;
+        uint8_t cReadValue   = 0x00;
         if(pRegName.find("P") != std::string::npos) // single pixel
         {
             cPixelNumber = std::stoi(pRegName.substr(pRegName.find("P") + 1, pRegName.length()));
-            cRegValue    = this->readPixel(pMPA, "ENFLAGS", cPixelNumber);
-            cRegValue    = (cRegValue & cRegMask) | cValue;
+            cReadValue   = this->readPixel(pMPA, "ENFLAGS", cPixelNumber);
         }
-
         else
         {
-            std::vector<uint8_t> cBits = {1, 1, 1, 0, 0, cEnable, 0, 0};
-            for(auto cBit: cBits) cRegValue = cRegValue | (1 << cBit);
+            cReadValue = this->ReadChipReg(pMPA, "ENFLAGS_ALL");
         }
+        auto cRegValue = (cReadValue & cRegMask) | cValue;
+        LOG(INFO) << BOLDBLUE << "Register mask " << pRegName << " 0x" << std::hex << +cRegMask << std::dec << " readback value is 0x" << std::hex << +cReadValue << std::dec << " will write value 0x"
+                   << std::hex << +cValue << std::dec << " register value is 0x" << std::hex << +cRegValue << std::dec << RESET;
+
         bool cEnableDigital = this->configPixel(pMPA, "ENFLAGS", cPixelNumber, cRegValue, pVerifLoop);
         // configure pattern
         bool cConfigPattern = this->configPixel(pMPA, "DigiPattern", cPixelNumber, pValue, pVerifLoop);
@@ -600,7 +685,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     else if(pRegName == "InjectedCharge")
     {
         LOG(DEBUG) << BOLDBLUE << "Setting "
-                  << " bias calDac to " << +pValue << " on MPA" << +pMPA->getId() << RESET;
+                   << " bias calDac to " << +pValue << " on MPA" << +pMPA->getId() << RESET;
 
         Set_calibration(pMPA, pValue);
 
@@ -769,7 +854,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
 {
     fTrackRegisters = false;
     // for now ...
-    bool              cConfigLocalRegs = false;
+    bool              cConfigLocalRegs = true;
     std::stringstream cOutput;
     setBoard(pMPA->getBeBoardId());
     pMPA->printChipType(cOutput);
@@ -792,32 +877,34 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     std::vector<std::pair<uint16_t, uint16_t>> cRegs;
     cRegs.clear();
     std::vector<std::string> cRegsToConfig;
-    // cRegsToConfig.push_back("TrimDAC");
+    cRegsToConfig.push_back("TrimDAC");
+    cConfigLocalRegs = cConfigLocalRegs && (cRegsToConfig.size()>0);
     for(auto& cMapItem: fMap)
     {
         bool cIsLocal = (cMapItem.second.find("_P") != std::string::npos);
-        bool cSkip    = cIsLocal && !cConfigLocalRegs;
-        if(cIsLocal && cSkip) LOG(DEBUG) << BOLDCYAN << "Skipping local register " << cMapItem.second << RESET;
-        if(cSkip) continue;
-
-        if(cRegsToConfig.size() > 0 && cConfigLocalRegs)
+        // if local and we are not configuring local then skip 
+        bool cSkip = (cIsLocal && !cConfigLocalRegs);
+        if(cRegsToConfig.size() > 0 && cConfigLocalRegs && cIsLocal)
         {
-            // check if this is one to skip
+            // check if this is one to not skip
             bool cRegFound = false;
             auto cIter     = cRegsToConfig.begin();
             do
             {
                 cRegFound = cMapItem.second.find(*cIter) != std::string::npos;
+                if( cRegFound ) LOG (DEBUG) << BOLDMAGENTA << " Found " <<  cMapItem.second << RESET;
+
                 cIter++;
             } while(cIter < cRegsToConfig.end() && !cRegFound);
             cSkip = (!cRegFound);
         }
         if(cSkip) continue;
         if(cIsLocal)
-            LOG(DEBUG) << BOLDCYAN << "Configuring local register " << cMapItem.second << RESET;
+            LOG(DEBUG) << BOLDGREEN << "Configuring local register " << cMapItem.second << RESET;
         else
-            LOG(DEBUG) << BOLDCYAN << "Configuring global register " << cMapItem.second << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Configuring global register " << cMapItem.second << RESET;
 
+        
         // create a register
         ChipRegItem&                  cItem = cMPARegMap[cMapItem.second];
         std::pair<uint16_t, uint16_t> cReg;

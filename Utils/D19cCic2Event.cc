@@ -1021,12 +1021,9 @@ std::vector<Stub> D19cCic2Event::StubVector(uint8_t pFeId, uint8_t pReadoutChipI
         uint8_t cStubBend     = static_cast<uint8_t>((cStubWord & (cBendMask << (cBendOffset))) >> cBendOffset);
         uint8_t cRow          = fIs2S ? 0x00 : static_cast<uint8_t>((cStubWord & 0xF));
 
-        if(cChipId == cChipIdMapped)
-        {
-            // LOG(INFO) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]"
-            // << " stub address is " << +cStubAddress << " stub bend is " << +cStubBend << " stub row is " << +cRow << RESET;
-            cStubVec.emplace_back(cStubAddress, cStubBend, cRow);
-        }
+        LOG(DEBUG) << BOLDGREEN << "Stub package ..... " << std::bitset<18>(cStubWord) << " --  chip id from package " << +cChipId << " [ chip id on hybrid " << +pReadoutChipId << "]"
+                   << " stub address is " << +cStubAddress << " stub bend is " << +cStubBend << " stub row is " << +cRow << RESET;
+        if(cChipId == cChipIdMapped) { cStubVec.emplace_back(cStubAddress, cStubBend, cRow); }
         // CI
     }
     return cStubVec;
@@ -1086,27 +1083,23 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pFeId, uint8_t pReadoutChip
         {
             for(auto cCluster: GetPixelClusters(pFeId, pReadoutChipId))
             {
-                for(int cId = 0; cId < 1 + cCluster.fWidth; cId++)
+                for(int cId = 0; cId <= cCluster.fWidth; cId++)
                 {
-                    uint32_t cHit = ((cCluster.fZpos + 1) << 24) | (cCluster.fAddress) << 8 | cId << 0;
-                    // LOG (INFO) << BOLDGREEN << "Pixel cluster " << +cCluster.fZpos
-                    //     << " [z-pos]; " << +cCluster.fAddress
-                    //     << " [address] " << +cId
-                    //     << " [in cluster]"
-                    //     << RESET;
+                    uint32_t cHit = ((cCluster.fZpos + 1) << 24) | (cCluster.fAddress - 1) << 8 | cId << 0;
+                    if(cCluster.fWidth > 0)
+                        LOG(DEBUG) << BOLDBLUE << "Pixel cluster " << +cCluster.fZpos << " [z-pos]; " << +cCluster.fAddress << " [address] " << +cId << " [in cluster]"
+                                   << " hit is " << +cHit << RESET;
                     cHits.push_back(cHit);
                 }
             }
             for(auto cCluster: GetStripClusters(pFeId, pReadoutChipId))
             {
-                for(int cId = 0; cId < 1 + cCluster.fWidth; cId++)
+                for(int cId = 0; cId <= cCluster.fWidth; cId++)
                 {
-                    uint32_t cHit = 0 << 24 | (cCluster.fAddress) << 8 | cId << 0;
-                    // LOG (INFO) << BOLDGREEN << "Strip cluster "
-                    //     << +cCluster.fAddress
-                    //     << " [address] " << +cId
-                    //     << " [in cluster]"
-                    //     << RESET;
+                    uint32_t cHit = 0 << 24 | (cCluster.fAddress - 1) << 8 | cId << 0;
+                    if(cCluster.fWidth > 0)
+                        LOG(DEBUG) << BOLDGREEN << "Strip cluster " << +cCluster.fAddress << " [address] " << +cId << " [in cluster]"
+                                   << " hit is " << +cHit << RESET;
                     cHits.push_back(cHit);
                 }
             }

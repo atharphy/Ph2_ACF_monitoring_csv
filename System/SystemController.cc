@@ -34,6 +34,7 @@ SystemController::SystemController()
     , fStreamerEnabled(false)
     , fNetworkStreamer(nullptr)
     , fDetectorMonitor(nullptr)
+    , fChannelGroupHandlerContainer(nullptr)
 {
 }
 
@@ -41,18 +42,19 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface     = pController->fBeBoardInterface;
-    fReadoutChipInterface = pController->fReadoutChipInterface;
-    fChipInterface        = pController->fChipInterface;
-    flpGBTInterface       = pController->flpGBTInterface;
-    fBeBoardFWMap         = pController->fBeBoardFWMap;
-    fSettingsMap          = pController->fSettingsMap;
-    fFileHandler          = pController->fFileHandler;
-    fStreamerEnabled      = pController->fStreamerEnabled;
-    fNetworkStreamer      = pController->fNetworkStreamer;
-    fDetectorContainer    = pController->fDetectorContainer;
-    fCicInterface         = pController->fCicInterface;
-    fPowerSupplyClient    = pController->fPowerSupplyClient;
+    fBeBoardInterface             = pController->fBeBoardInterface;
+    fReadoutChipInterface         = pController->fReadoutChipInterface;
+    fChipInterface                = pController->fChipInterface;
+    flpGBTInterface               = pController->flpGBTInterface;
+    fBeBoardFWMap                 = pController->fBeBoardFWMap;
+    fSettingsMap                  = pController->fSettingsMap;
+    fFileHandler                  = pController->fFileHandler;
+    fStreamerEnabled              = pController->fStreamerEnabled;
+    fNetworkStreamer              = pController->fNetworkStreamer;
+    fDetectorContainer            = pController->fDetectorContainer;
+    fCicInterface                 = pController->fCicInterface;
+    fPowerSupplyClient            = pController->fPowerSupplyClient;
+    fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
 }
 
 void SystemController::Destroy()
@@ -88,7 +90,8 @@ void SystemController::Destroy()
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
 
-    fChannelGroupHandlerContainer.reset();
+    delete fChannelGroupHandlerContainer;
+    fChannelGroupHandlerContainer = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -135,8 +138,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
 
-    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, fChannelGroupHandlerContainer);
-
+    fChannelGroupHandlerContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
+    
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
@@ -417,7 +421,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 // ######################################
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
-    LOG (INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -497,7 +501,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }
-        bool cSuccess = CicStartUp(cOpticalGroup,true);
+        bool cSuccess = CicStartUp(cOpticalGroup, true);
         if(!cSuccess)
         {
             LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
@@ -603,8 +607,8 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
     // configure PS ROHs
     if(clpGBT != nullptr)
     {
-        const uint8_t cSsaClockDrive = 7; // 4;
-        const uint8_t cCicClockDrive = 7; // 4;
+        const uint8_t cSsaClockDrive = 7;
+        const uint8_t cCicClockDrive = 7;
 
         static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigurePSROH(clpGBT);
         const std::vector<uint8_t> cGroupsExamples = {0, 1};
@@ -794,15 +798,18 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         cSuccess = fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
         if(cSuccess)
         {
-            if( cStartUpSequence ){ 
-                LOG (INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
+            if(cStartUpSequence)
+            {
+                LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
                 cSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
             }
-            else 
+            else
             {
-                LOG (INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
-                if( fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength())) cSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
-                else cSuccess= false;
+                LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
+                if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
+                    cSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
+                else
+                    cSuccess = false;
             }
         }
         else
@@ -851,10 +858,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // make sure board is also set to the same thing
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
-            if( pReInitialize ) InitializeOT(cBoard);
+            if(pReInitialize)
+                InitializeOT(cBoard);
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {
-                // lpGBT config 
+                // lpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
                     if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -897,7 +905,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     }
                 }
 
-                // CIC configure 
+                // CIC configure
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& clpGBT = cOpticalGroup->flpGBT;
@@ -1249,22 +1257,32 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
-    auto theChannelGroupHandlerPointer = std::shared_ptr<ChannelGroupHandler>(&theChannelGroupHandler);
+    auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     for(const auto board : *fDetectorContainer)
     {
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
         for(const auto opticalGroup : *board)
         {
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
             for(const auto hybrid : *opticalGroup)
             {
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
                 for(const auto chip : *hybrid)
                 {
-                    fChannelGroupHandlerContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
+                    std::cout << +board->getIndex() << " - " << +opticalGroup->getIndex() << " - " << +hybrid->getIndex() << " - " << +chip->getIndex() << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
+                    fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
                 }
             }
         }
     }
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     fDetectorContainer->resetReadoutChipQueryFunction();
+    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 
     return;
 }

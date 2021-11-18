@@ -142,11 +142,12 @@ class MPAInterface : public ReadoutChipInterface
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = VERIFY_MPA);
 
-    bool maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
-
-    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
-    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = VERIFY_MPA) override;
+    bool maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pMPA, const ChannelGroupBase* group, bool pVerifLoop = VERIFY_MPA);
     //
+    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = VERIFY_MPA);
+
+    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop = VERIFY_MPA);
+
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pMPA, bool pVerifLoop, uint32_t pBlockSize);
     //
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerifLoop) { return true; }
@@ -159,7 +160,7 @@ class MPAInterface : public ReadoutChipInterface
     //
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
-    std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pChip);
+    std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pMode=0);
     bool                 configPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum, uint8_t pValue, bool pVerifLoop = VERIFY_MPA);
     uint16_t             readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum);
     bool                 configRow(Ph2_HwDescription::Chip* pChip, std::string cReg, int pRowNum, uint8_t pValue, bool pVerifLoop = VERIFY_MPA);
@@ -175,6 +176,7 @@ class MPAInterface : public ReadoutChipInterface
     bool     WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = VERIFY_MPA);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, bool pVerifLoop = VERIFY_MPA);
     bool     maskPixel(Ph2_HwDescription::Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerifLoop = VERIFY_MPA);
+    bool     enablePixelInjection(Ph2_HwDescription::Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerifLoop = VERIFY_MPA);
     bool     maskRowCol(Ph2_HwDescription::Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerifLoop = VERIFY_MPA);
     uint16_t regPixel(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow, int pColumn);
     uint16_t regPeri(Ph2_HwDescription::Chip* pChip, int pBaseRegister);

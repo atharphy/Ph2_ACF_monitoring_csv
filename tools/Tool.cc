@@ -879,7 +879,7 @@ uint16_t Tool::getMaxNumberOfGroups()
             {
                 for(const auto chip : *hybrid)
                 {
-                    uint16_t numberOfGroups = fChannelGroupHandlerContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getNumberOfGroups();
+                    uint16_t numberOfGroups = fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getNumberOfGroups();
                     if(numberOfGroups > maxNumberOfGroups) maxNumberOfGroups = maxNumberOfGroups;
                 }
             }
@@ -1234,7 +1234,7 @@ class ScanBase
     virtual ~ScanBase() { ; }
 
     virtual void operator()() = 0;
-    void         setGroupHandlerContainer(const DetectorDataContainer& theChannelHandlerContainer) { fChannelHandlerContainer= &theChannelHandlerContainer; }
+    void         setGroupHandlerContainer(const DetectorDataContainer* theChannelHandlerContainer) { fChannelHandlerContainer = theChannelHandlerContainer; }
     void         setGroup(int groupNumber) { fGroupNumber = groupNumber; }
     // void         setGroup(const ChannelGroupBase* cTestChannelGroup) { fTestChannelGroup = cTestChannelGroup; }
     void         setBoardId(uint16_t boardIndex) { fBoardIndex = boardIndex; }
@@ -1277,8 +1277,8 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                     {
                         for(auto cChip: *cHybrid) 
                         {
-                            if(groupNumber > fChannelGroupHandlerContainer.getObject(fDetectorContainer->getObject(boardIndex)->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getNumberOfGroups()) continue;
-                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, fChannelGroupHandlerContainer.getObject(fDetectorContainer->at(boardIndex)->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber), fMaskChannelsFromOtherGroups, fTestPulse);
+                            if(groupNumber > fChannelGroupHandlerContainer->getObject(fDetectorContainer->getObject(boardIndex)->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getNumberOfGroups()) continue;
+                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, fChannelGroupHandlerContainer->getObject(fDetectorContainer->at(boardIndex)->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber), fMaskChannelsFromOtherGroups, fTestPulse);
                         }
                     }
                 }
@@ -1386,7 +1386,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
 
     if(fNormalize)
     {
-        auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, &fChannelGroupHandlerContainer, numberOfEvents);
+        auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, numberOfEvents);
         LOG(DEBUG) << BOLDYELLOW << cTmp << RESET;
     }
     fUseReadNEvents = cUseReadNEvents;
@@ -1443,7 +1443,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
     { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
-    for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, &fChannelGroupHandlerContainer, numberOfEvents);
+    for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, numberOfEvents);
 
     return;
 }

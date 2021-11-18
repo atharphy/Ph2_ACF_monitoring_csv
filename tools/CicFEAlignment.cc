@@ -10,55 +10,9 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-CicFEAlignment::CicFEAlignment() : Tool() { fRegMapContainer.reset(); }
+CicFEAlignment::CicFEAlignment() : OTTool() {}
 
 CicFEAlignment::~CicFEAlignment() {}
-void CicFEAlignment::Reset()
-{
-    // set everything back to original values .. like I wasn't here
-    bool cWithPS = false;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
-        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
-        cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
-        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
-                cWithPS       = cWithPS || cIsPS;
-                LOG(INFO) << BOLDBLUE << "CicFEAlignment::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-                for(auto cChip: *cHybrid)
-                {
-                    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
-                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    for(auto cMapItem: cModMap)
-                    {
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        LOG(DEBUG) << BOLDBLUE << "CicFEAlignment::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
-                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
-                    }
-                }
-            }
-        }
-    }
-    fReadoutChipInterface->ClearModifiedRegisterMap();
-    if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
-    resetPointers();
-}
 
 void CicFEAlignment::Initialise()
 {
@@ -73,7 +27,12 @@ void CicFEAlignment::Initialise()
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
+    // prepare common OTTool
+    Prepare();
+    SetName("CicFEAlignment");
 
+    // initialize containers holding data from this tool
     ContainerFactory::copyAndInitChip<AlignmentValues>(*fDetectorContainer, fPhaseAlignmentValues);
     ContainerFactory::copyAndInitChip<AlignmentValues>(*fDetectorContainer, fWordAlignmentValues);
     for(auto cBoard: *fDetectorContainer)
@@ -92,10 +51,6 @@ void CicFEAlignment::Initialise()
                 auto& cWordAlignmentThisHybrid  = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    // check chip type
-                    fWithMPA = fWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA);
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-
                     auto& cPhaseAlignmentThisChip = cPhaseAlignmentThisHybrid->at(cChip->getIndex());
                     auto& cWordAlignmentThisChip  = cWordAlignmentThisHybrid->at(cChip->getIndex());
 
@@ -109,37 +64,6 @@ void CicFEAlignment::Initialise()
             }
         }
     }
-
-    // retreive original settings for all chips and all back-end boards
-    ContainerFactory::copyAndInitChip<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
-    ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
-    for(auto cBoard: *fDetectorContainer)
-    {
-        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
-        const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
-        cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
-    }
-
-    // clear map of modified registers
-    fReadoutChipInterface->ClearModifiedRegisterMap();
-    bool cIsPS = false;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                if(cIsPS) continue;
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cIsPS         = (cWithSSA && cWithMPA) && cWithLpGBT;
-            }
-        }
-    }
-    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
 }
 
 void CicFEAlignment::writeObjects()
@@ -153,7 +77,7 @@ void CicFEAlignment::writeObjects()
 // State machine control functions
 void CicFEAlignment::AlignInputs()
 {
-    LOG (INFO) << BOLDMAGENTA << "CicFEAlignment::Aligning Inputs " << RESET;
+    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Aligning Inputs " << RESET;
     // align CIC inputs - first phase
     bool cPhaseAligned = this->PhaseAlignment();
     if(!cPhaseAligned)
@@ -484,23 +408,35 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(cOpticalGroup->getIndex());
+            std::vector<uint8_t> cWordAligned(0);
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
                 // configure word alignment pattern on CBCs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *cHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
+                bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
+                cWordAligned.push_back( cSuccessAlign ? 1 : 0 );
+            }//hybrid - configure word alignment patterns 
+            
+            cAligned=true;
+            size_t cIndx=0;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                if(cCic == NULL) continue;
 
                 // run automated word alignment
-                cAligned = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
+                //cAligned = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
+                std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
+                cAligned = cAligned && cWordAligned[cIndx];
                 // check status
-                if(cAligned)
+                if(cWordAligned[cIndx])
                 {
                     fCicInterface->SetStaticWordAlignment(cCic, 1);
-                    std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
                     for(auto cChip: *cHybrid)
                     {
@@ -519,7 +455,25 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                     }
                 }
                 else
-                    LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
+                {
+                    LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+
+                        auto& cWordAlignmentThisChip = cWordAlignmentThisHybrid->at(cChip->getIndex());
+                        auto& cWordAlignmentVals     = cWordAlignmentThisChip->getSummary<AlignmentValues>();
+
+                        std::stringstream cOutput;
+                        for(size_t cLine = 0; cLine < 5; cLine++)
+                        {
+                            cWordAlignmentVals[cLine] = cWordAlignmentValues[cChip->getId() % 8][cLine];
+                            cOutput << +cWordAlignmentVals[cLine] << " ";
+                        }
+                        LOG(INFO) << BOLDBLUE << "Word alignment values for FE#" << +cChip->getId() << " : " << cOutput.str() << RESET;
+                    }
+                }
+                cIndx++;
             }
         }
     }

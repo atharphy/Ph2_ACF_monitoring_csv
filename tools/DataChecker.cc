@@ -733,7 +733,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 auto&    cBrdLatency   = cStubLatencyPerBoard.at(cBoard->getIndex());
                 auto&    cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
                 auto&    cPackageDelay = cBrdDelay->getSummary<uint16_t>();
-                cPackageDelay          = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+                cPackageDelay          = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
                 auto cInitStubOffset   = cBoard->getStubOffset();
                 for(auto cOpticalReadout: *cBoard)
                 {
@@ -1177,7 +1177,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 auto&    cBrdLatency   = cStubLatencyPerBoard.at(cBoard->getIndex());
                 auto&    cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
                 auto&    cPackageDelay = cBrdDelay->getSummary<uint16_t>();
-                cPackageDelay          = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+                cPackageDelay          = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
                 auto cInitStubOffset   = cBoard->getStubOffset();
                 for(auto cOpticalReadout: *cBoard)
                 {
@@ -3028,7 +3028,7 @@ void DataChecker::PSTriggerTest()
                     auto& cStubLatency = cBrdLatency->getSummary<uint16_t>();
                     cStubLatency       = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue);
                     // cStubLatency = cDelay + cLatencyOffset - (cStubOffset + cReTimeValue) + cStubSel;
-                    auto cPackageDelay = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+                    auto cPackageDelay = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
                     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
                     LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << "... stub latency set to " << +cStubLatency << RESET;
                 }
@@ -3873,7 +3873,7 @@ void DataChecker::PSNominal()
         // read events
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
 
-        auto cPackageDelay = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+        auto cPackageDelay = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
         //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
     } // boards
@@ -6253,7 +6253,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         // LOG (INFO) << BOLDMAGENTA << "Setting stub package delay to " << +cPackageDelay << RESET;
-        // fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay",
+        // fBeBoardInterface->WriteBoardReg (cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay",
         // cPackageDelay); static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Bx0Alignment();
 
         uint16_t cBoardTriggerMult = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -6447,7 +6447,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
         for(int cAttempt = 0; cAttempt < this->findValueInSettings("StubAttempts"); cAttempt++)
         {
             LOG(INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << RESET;
-            auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+            auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
             LOG(INFO) << BOLDMAGENTA << "\t..Stub package delay set to " << +cOriginalDelay << RESET;
             int cPackageDelayStart = (cSweepPackageDelay == 0) ? cOriginalDelay : 0;
             int cPackageDelayStop  = (cSweepPackageDelay == 0) ? cOriginalDelay + 1 : 8;
@@ -6456,7 +6456,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
             {
                 if(cWithCIC)
                 {
-                    fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+                    fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                     (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
                 }
 
@@ -6508,7 +6508,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                 }     // latency loop
                 fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             } // package delay loop
-            if(cWithCIC) fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cOriginalDelay);
+            if(cWithCIC) fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cOriginalDelay);
         } // attempt loop
     }     // board loop
     LOG(INFO) << BOLDBLUE << "Done!" << RESET;
@@ -6555,7 +6555,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         // now want to see the CIC output
         (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
         auto cBeBoard       = static_cast<BeBoard*>(cBoard);
-        auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay");
+        auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDMAGENTA << "Stub package delay set to " << +cOriginalDelay << RESET;
         int cPackageDelayStart = (cSweepPackageDelay == 0) ? cOriginalDelay : 0;
         int cPackageDelayStop  = (cSweepPackageDelay == 0) ? cOriginalDelay + 1 : 8;
@@ -6564,7 +6564,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         {
             if(cWithCIC)
             {
-                fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.cic.stub_package_delay", cPackageDelay);
+                fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                 (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
             }
 

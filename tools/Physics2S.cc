@@ -230,7 +230,7 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
 
     for(auto event: eventList)
     {
-        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandlerContainer.at(cBoard->getIndex()), -1);
+        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandlerContainer->at(cBoard->getIndex()), -1);
         // ###################
         // # Fill containers #
         // ###################

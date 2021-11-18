@@ -316,7 +316,7 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, &fChannelGroupHandlerContainer, 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
 
         // ###############
         // # Save output #

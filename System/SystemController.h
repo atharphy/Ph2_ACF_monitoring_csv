@@ -170,7 +170,7 @@ class SystemController
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
-    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize=true);
+    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true);
     // IT + OT specific configurations
     /*!
      * \brief Configure the Hardware with XML file indicated values
@@ -313,8 +313,8 @@ class SystemController
     uint32_t                             fNCbc;
     FileParser                           fParser;
 
-  protected:
-    DetectorDataContainer                fChannelGroupHandlerContainer;
+  public:
+    DetectorDataContainer*               fChannelGroupHandlerContainer;
 
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*){return true;});
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
