@@ -104,6 +104,9 @@ class BeamTestCheck2S : public OTTool
     DetectorDataContainer fBendMap;
     // Event count 
     DetectorDataContainer fEventsWithSingleClusters, fEventsWithStubs;
+    // Stub + Hit count per 
+    DetectorDataContainer fEventSubSet, fStubSubSet; 
+    
     
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;

@@ -481,10 +481,12 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
     // find mode
     std::vector<uint8_t> cTapsHist(15, 0);
     for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
+    //return cTapsHist; 
     auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
     LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
     uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, cMode);
+    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cOptimalTaps[cIndx]); }
     return (cSuccess) ? cTapMode : 15;
 }
 

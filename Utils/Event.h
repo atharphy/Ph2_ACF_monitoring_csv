@@ -36,7 +36,7 @@ class Cluster
 {
   public:
     uint8_t fSensor;
-    uint8_t fFirstStrip;
+    uint16_t fFirstStrip;
     uint8_t fClusterWidth;
     float   getBaricentre();
 };

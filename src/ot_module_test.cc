@@ -412,7 +412,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
-
+        
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
@@ -914,7 +914,7 @@ int main(int argc, char* argv[])
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
-        cPedeNoise.Validate();
+        // cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();
@@ -1042,6 +1042,9 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1,cScanStubs);
+        PrintConfig cCng; 
+        cCng.fVerbose=1; cCng.fPrintEvery = 1; 
+        cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithInternal();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();

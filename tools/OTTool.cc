@@ -91,7 +91,7 @@ void OTTool::Reset()
     resetPointers();
 
     // for  now .. keep triggers running on all boards
-    for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
+    //for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
 }
 
 // Initialization function
@@ -558,6 +558,9 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
     cEvntHeader << "Event#" << +pEvent->GetEventCount(); 
     for(auto cOpticalGroup: *pBoard)
     {
+        std::vector<uint16_t> cBxIds(0);
+        std::vector<uint16_t> cL1Ids(0);
+        std::stringstream cOutOfSync; 
         for(auto cHybrid: *cOpticalGroup)
         {
             auto              cL1IdCIC  = static_cast<D19cCic2Event*>(pEvent)->L1Id(cHybrid->getId(), 0);
@@ -569,112 +572,131 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             std::stringstream cOutAna;
             std::stringstream cOutEvntHeader; 
             if(cStubStat != 0x00 || cL1Status != 0x00)
-                cOutEvntHeader << cEvntHeader.str() << BOLDRED << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
+                cOutEvntHeader << cEvntHeader.str() << BOLDRED 
+                     << " Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() 
+                     << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
                      << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId ;
             else
-                cOutEvntHeader << cEvntHeader.str() << BOLDGREEN << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
+                cOutEvntHeader << cEvntHeader.str() << BOLDGREEN 
+                     << " Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() 
+                     << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
                      << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId ;
             
-            bool cStubFound=false;
-            bool cClusterFound=false;
-            bool cAna=false;
-            for(auto cChip: *cHybrid)
+            if( cBxIds.size() == 0 )
             {
-                if(!cSparsified) break;
-                if(cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+                cBxIds.push_back( cBxId );
+                cL1Ids.push_back( cL1IdCIC );
+            }
+            else
+            {
+                if( std::find( cBxIds.begin(), cBxIds.end(), cBxId ) == cBxIds.end() ) cBxIds.push_back( cBxId );
+                if( std::find( cL1Ids.begin(), cL1Ids.end(), cL1IdCIC ) == cL1Ids.end() ) cL1Ids.push_back( cL1IdCIC );
+            }
 
-                auto  cStubs   = pEvent->StubVector(cHybrid->getId(), cChip->getId());
-                if(cChip->getFrontEndType() == FrontEndType::CBC3 )
-                {
-                    auto cClusters = (pEvent)->getClusters(cHybrid->getId(), cChip->getId());
-                    cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
-                }
-                else 
-                {
-                    auto cStripClusters = static_cast<D19cCic2Event*>(pEvent)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                    auto cPxlClusters = static_cast<D19cCic2Event*>(pEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                    if( cStubs.size() > 0 )
-                    {
-                        cStubFound=true;
-                        cOutStubs << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has " 
-                            << +cStubs.size() << " stubs" 
-                            << "\t : ";
-                        uint8_t cIndx=0;
-                        for(auto cStub : cStubs )
-                        {
-                            cOutStubs << " Stub#" << +cIndx << " : Seed " << +cStub.getPosition() 
-                                 << " Row " << +cStub.getRow() 
-                                 << " Bend " << +cStub.getBend()
-                                 << " \t";
-                            cIndx++;
-                        }
-                    }
-                    if( cStripClusters.size() > 0 &&  cPxlClusters.size() > 0 )
-                    {
-                        cClusterFound=true;
-                        cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " 
-                            << +cStripClusters.size() << " S-clusters and "
-                            << +cPxlClusters.size() << " P-clusters\t"; 
-                        for( auto cPxlCluster : cPxlClusters )
-                        {
-                            cOutL1 << BOLDMAGENTA << "\tP-Address " << +cPxlCluster.fAddress << " P-Position " << +cPxlCluster.fZpos << " P_Width " << +cPxlCluster.fWidth << ";";
-                        }
-                    
-                        for( auto cStripCluster : cStripClusters )
-                        {
-                            cOutL1 << BOLDGREEN << "\tS-Address " << +cStripCluster.fAddress << " S_Width " << +cStripCluster.fWidth << ";";
-                        }
-                    }
-                    if( cStripClusters.size() == 1 &&  cPxlClusters.size() == 1 )
-                    { 
-                        cAna = true;
-                        float cCenterOfMassP=0; 
-                        for( auto cPxlCluster : cPxlClusters )
-                        {
-                            cCenterOfMassP += cPxlCluster.fAddress + cPxlCluster.fWidth; 
-                        }
-                        cCenterOfMassP /= cPxlClusters.size();
+            //LOG (INFO) << BOLDYELLOW << cOutEvntHeader.str() << RESET;
 
-                        float cCenterOfMassS=0; 
-                        for( auto cStripCluster : cStripClusters )
-                        {
-                            cCenterOfMassS += cStripCluster.fAddress + cStripCluster.fWidth; 
-                        }
-                        cCenterOfMassS /= cStripClusters.size();
+            // bool cStubFound=false;
+            // bool cClusterFound=false;
+            // bool cAna=false;
+            // for(auto cChip: *cHybrid)
+            // {
+            //     if(!cSparsified) break;
+            //     if(cChip->getFrontEndType() == FrontEndType::SSA ) continue;
+
+            //     auto  cStubs   = pEvent->StubVector(cHybrid->getId(), cChip->getId());
+            //     if(cChip->getFrontEndType() == FrontEndType::CBC3 )
+            //     {
+            //         auto cClusters = (pEvent)->getClusters(cHybrid->getId(), cChip->getId());
+            //         cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
+            //     }
+            //     else 
+            //     {
+            //         auto cStripClusters = static_cast<D19cCic2Event*>(pEvent)->GetStripClusters(cHybrid->getId(), cChip->getId());
+            //         auto cPxlClusters = static_cast<D19cCic2Event*>(pEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+            //         if( cStubs.size() > 0 )
+            //         {
+            //             cStubFound=true;
+            //             cOutStubs << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has " 
+            //                 << +cStubs.size() << " stubs" 
+            //                 << "\t : ";
+            //             uint8_t cIndx=0;
+            //             for(auto cStub : cStubs )
+            //             {
+            //                 cOutStubs << " Stub#" << +cIndx << " : Seed " << +cStub.getPosition() 
+            //                      << " Row " << +cStub.getRow() 
+            //                      << " Bend " << +cStub.getBend()
+            //                      << " \t";
+            //                 cIndx++;
+            //             }
+            //         }
+            //         if( cStripClusters.size() > 0 &&  cPxlClusters.size() > 0 )
+            //         {
+            //             cClusterFound=true;
+            //             cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " 
+            //                 << +cStripClusters.size() << " S-clusters and "
+            //                 << +cPxlClusters.size() << " P-clusters\t"; 
+            //             for( auto cPxlCluster : cPxlClusters )
+            //             {
+            //                 cOutL1 << BOLDMAGENTA << "\tP-Address " << +cPxlCluster.fAddress << " P-Position " << +cPxlCluster.fZpos << " P_Width " << +cPxlCluster.fWidth << ";";
+            //             }
                     
-                        cOutAna << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has " 
-                            << +cStripClusters.size() << " S-clusters and "
-                            << +cPxlClusters.size() << " P-clusters\t"
-                            << "..Center of mass P : " << cCenterOfMassP << " Center of mass S : " << cCenterOfMassS 
-                            << " # of stubs is " << cStubs.size()
-                            << "\n";
-                    }
-                }
-            }
-            if( (cClusterFound || cStubFound) && pEvent->GetEventCount() < 10  ) 
-                LOG (INFO) << cOutEvntHeader.str() << RESET; 
-            if( (cClusterFound && cStubFound) && pEvent->GetEventCount() < 10 )
-            {
-                LOG(INFO) << BOLDGREEN << " Clusters and stubs in the same event " << RESET;
-                LOG(INFO) << cOutStubs.str() << RESET;
-                LOG(INFO) << cOutL1.str() << RESET;
-            }
-            if( (cClusterFound && !cStubFound) && pEvent->GetEventCount() < 10 )
-            {
-                LOG(INFO) << BOLDRED << " Clusters and no stubs in the same event " << RESET;
-                LOG(INFO) << cOutL1.str() << RESET;
-            }
-            if( (!cClusterFound && cStubFound) && pEvent->GetEventCount() < 10 )
-            {
-                LOG(INFO) << BOLDRED << " Stubs but no Clusters in the same event " << RESET;
-                LOG(INFO) << cOutStubs.str() << RESET;
-            }
-            if( cAna && pEvent->GetEventCount() < 10 ) 
-            {
-                LOG(INFO) << BOLDYELLOW << " Event with exactly one cluster in both sensors " << RESET;
-                LOG(INFO) << cOutAna.str() << RESET;
-            }
+            //             for( auto cStripCluster : cStripClusters )
+            //             {
+            //                 cOutL1 << BOLDGREEN << "\tS-Address " << +cStripCluster.fAddress << " S_Width " << +cStripCluster.fWidth << ";";
+            //             }
+            //         }
+            //         if( cStripClusters.size() == 1 &&  cPxlClusters.size() == 1 )
+            //         { 
+            //             cAna = true;
+            //             float cCenterOfMassP=0; 
+            //             for( auto cPxlCluster : cPxlClusters )
+            //             {
+            //                 cCenterOfMassP += cPxlCluster.fAddress + cPxlCluster.fWidth; 
+            //             }
+            //             cCenterOfMassP /= cPxlClusters.size();
+
+            //             float cCenterOfMassS=0; 
+            //             for( auto cStripCluster : cStripClusters )
+            //             {
+            //                 cCenterOfMassS += cStripCluster.fAddress + cStripCluster.fWidth; 
+            //             }
+            //             cCenterOfMassS /= cStripClusters.size();
+                    
+            //             cOutAna << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has " 
+            //                 << +cStripClusters.size() << " S-clusters and "
+            //                 << +cPxlClusters.size() << " P-clusters\t"
+            //                 << "..Center of mass P : " << cCenterOfMassP << " Center of mass S : " << cCenterOfMassS 
+            //                 << " # of stubs is " << cStubs.size()
+            //                 << "\n";
+            //         }
+            //     }
+            // }
+            // if( (cClusterFound || cStubFound) && pEvent->GetEventCount() < 10  ) 
+            //     LOG (INFO) << cOutEvntHeader.str() << RESET; 
+            // if( (cClusterFound && cStubFound) && pEvent->GetEventCount() < 10 )
+            // {
+            //     LOG(INFO) << BOLDGREEN << " Clusters and stubs in the same event " << RESET;
+            //     LOG(INFO) << cOutStubs.str() << RESET;
+            //     LOG(INFO) << cOutL1.str() << RESET;
+            // }
+            // if( (cClusterFound && !cStubFound) && pEvent->GetEventCount() < 10 )
+            // {
+            //     LOG(INFO) << BOLDRED << " Clusters and no stubs in the same event " << RESET;
+            //     LOG(INFO) << cOutL1.str() << RESET;
+            // }
+            // if( (!cClusterFound && cStubFound) && pEvent->GetEventCount() < 10 )
+            // {
+            //     LOG(INFO) << BOLDRED << " Stubs but no Clusters in the same event " << RESET;
+            //     LOG(INFO) << cOutStubs.str() << RESET;
+            // }
+            // if( cAna && pEvent->GetEventCount() < 10 ) 
+            // {
+            //     LOG(INFO) << BOLDYELLOW << " Event with exactly one cluster in both sensors " << RESET;
+            //     LOG(INFO) << cOutAna.str() << RESET;
+            // }
         }
+        if( cBxIds.size() > 1 ) LOG (INFO) << BOLDRED << cEvntHeader << " ... OUT OF SYNC " << RESET;
+        else LOG (DEBUG) << BOLDGREEN << cEvntHeader << " ... IN SYNC " << RESET;
     }
 }
 
@@ -863,8 +885,9 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 }
                 else if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
                 {
-                    //To-Do fill 
-                    //cRegName = "MiscTestPulseCtrl&AnalogMux";
+                    auto     cRegValueFirst  = cChip->getReg("FeCtrl&TrgLat2");
+                    auto     cRegValueSecond = cChip->getReg( "TriggerLatency1");
+                    cLatency        = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
                 }
                 LOG (INFO) << BOLDYELLOW << "Setting latency on ROC#" << +cChip->getId() << " to " << cLatency << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency" , cLatency);
@@ -964,4 +987,26 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             }
         }
     }
+
+
+    // make sure all CBC logic registers are re-configured
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+
+                std::vector<std::string> cRegNames{"HIP&TestMode","Pipe&StubInpSel&Ptwidth","CoincWind&Offset34","CoincWind&Offset12","LayerSwap&CluWidth","40MhzClk&Or254"};
+                for(auto cRegName : cRegNames)
+                {
+                    auto cValueInMemory = cChip->getReg(cRegName);
+                    fReadoutChipInterface->WriteChipReg(cChip,cRegName, cValueInMemory);
+                    LOG (INFO) << BOLDMAGENTA << "Configuring CBC#" << +cChip->getId() << " register " << cRegName << " to 0x" << std::hex << +cValueInMemory << std::dec << RESET;
+                }
+            }
+        }
+    }
+
 }

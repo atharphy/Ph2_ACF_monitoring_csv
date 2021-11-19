@@ -144,6 +144,7 @@ void Eudaq2Producer::DoConfigure()
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled    = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
 
     /*
       //uDTC settings
