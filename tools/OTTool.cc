@@ -556,6 +556,8 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
     if(pEvent->GetEventCount() % fPrintConfig.fPrintEvery != 0) return;
     std::stringstream cEvntHeader;
     cEvntHeader << "Event#" << +pEvent->GetEventCount(); 
+    std::stringstream cHeader;
+    
     for(auto cOpticalGroup: *pBoard)
     {
         std::vector<uint16_t> cBxIds(0);
@@ -572,16 +574,29 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             std::stringstream cOutAna;
             std::stringstream cOutEvntHeader; 
             if(cStubStat != 0x00 || cL1Status != 0x00)
+            {
                 cOutEvntHeader << cEvntHeader.str() << BOLDRED 
                      << " Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() 
                      << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
                      << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId ;
+                cHeader << BOLDRED << "\t\t.. " << " Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() 
+                     << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
+                     << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId 
+                     << "\n" << RESET ;
+            }
             else
+            {    
                 cOutEvntHeader << cEvntHeader.str() << BOLDGREEN 
                      << " Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() 
                      << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
                      << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId ;
+                cHeader << BOLDGREEN << "\t\t.. " << " Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() 
+                     << " L1Id " << +cL1IdCIC << " Stub status is " << std::bitset<8>(cStubStat) << " L1 status [FEs] is " << std::bitset<8>(cL1Status)
+                     << " L1 status [CIC] is " << std::bitset<1>(cL1Status & 0x1) << " BxId is " << +cBxId 
+                     << "\n" << RESET ;
             
+            }
+
             if( cBxIds.size() == 0 )
             {
                 cBxIds.push_back( cBxId );
@@ -695,8 +710,14 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             //     LOG(INFO) << cOutAna.str() << RESET;
             // }
         }
-        if( cBxIds.size() > 1 ) LOG (INFO) << BOLDRED << cEvntHeader << " ... OUT OF SYNC " << RESET;
-        else LOG (DEBUG) << BOLDGREEN << cEvntHeader << " ... IN SYNC " << RESET;
+        if( cBxIds.size() > 1 ){ 
+            LOG (INFO) << BOLDRED << cEvntHeader.str() << " ... OUT OF SYNC " << RESET;
+            LOG (INFO) << cHeader.str() << RESET;
+        }
+        else{ 
+            LOG (DEBUG) << BOLDGREEN << cEvntHeader.str() << " ... IN SYNC " << RESET;
+            LOG (DEBUG) << cHeader.str() << RESET;
+        }
     }
 }
 

@@ -178,7 +178,7 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fCorrelationStubS0Histograms, hStubCorrS0);
     HistContainer<TH2F> hStubCorrS1("StubCorrelationsS1", "Stub [S0]; Channel [S1]", cNChannelsS0, 0, cNChannelsS0,  cNChannelsS1 , 0 , cNChannelsS1 );
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fCorrelationStubS1Histograms, hStubCorrS1);
-    HistContainer<TH2F> hStubCorrLinksS0("StubCorrelationsLinksS0", "Stubs [S0]; Stubs [S0]", cNChannelsS0*cNLinks*2, 0, cNChannelsS0*cNLinks*2,  cNChannelsS0*cNLinks*2 , 0 , cNChannelsS0*cNLinks*2 );
+    HistContainer<TH2F> hStubCorrLinksS0("StubCorrelationsLinksS0", "Stubs [S0]; Stubs [S0]", cNChannelsS0*1, 0, cNChannelsS0*1,  cNChannelsS0*2 , 0 , cNChannelsS0*2 );
     RootContainerFactory::bookBoardHistograms(theOutputFile, theDetectorStructure, fCorrelationLinksS0Histogram, hStubCorrLinksS0);
     
 }
@@ -1026,7 +1026,9 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                         if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNRows - cRow) ;
                         if( channel.fOccupancy > 0 )
                         {
-                            uint32_t cLinkOffset = opticalGroup->getIndex()*(2*cNChannels*8) + (hybrid->getId()%2)*(cNChannels*8) ;
+                            uint32_t cLinkOffset = 0;
+                            // uint32_t cLinkOffset = (hybrid->getId()%2)*(cNChannels*8) ;
+                            //uint32_t cLinkOffset = opticalGroup->getIndex()*(2*cNChannels*8) + (hybrid->getId()%2)*(cNChannels*8) ;
                             LOG(DEBUG) << BOLDYELLOW << " Correlation plot Stubs:HitsS1 " 
                                                 << " Link#" << +opticalGroup->getId()
                                                 << " Hybrid#" << +hybrid->getId()
@@ -1050,7 +1052,9 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                         uint32_t cChnlIndxOthers         = 0;
                                         for(auto cOthers: *cOtherStubOcc->getChannelContainer<Occupancy>())
                                         {
-                                            uint32_t cLinkOffsetOther = otherOGs->getIndex()*(2*cNChannels*8) + (otherHybrids->getId()%2)*(cNChannels*8) ;
+                                            uint32_t cLinkOffsetOther = (otherHybrids->getId() == hybrid->getId() )*(cNChannels*8); 
+                                            //uint32_t cLinkOffsetOther = (otherHybrids->getId()%2)*(cNChannels*8) ;
+                                            // uint32_t cLinkOffsetOther = otherOGs->getIndex()*(2*cNChannels*8) + (otherHybrids->getId()%2)*(cNChannels*8) ;
                                             uint32_t cRowOther   = (otherChips->size() == NCHANNELS) ? cChnlIndxOthers/cDivider : cChnlIndxOthers % cNRows;
                                             uint16_t cXOffsetOther = (otherHybrids->getId() % 2 == 0) ? (7 - otherChips->getId() % 8) * cNChannels  : (otherChips->getId() % 8) * cNChannels ;
                                             uint16_t cLocalXOther  = cXOffsetOther + cRowOther ;
