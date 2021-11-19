@@ -1052,7 +1052,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                         uint32_t cChnlIndxOthers         = 0;
                                         for(auto cOthers: *cOtherStubOcc->getChannelContainer<Occupancy>())
                                         {
-                                            uint32_t cLinkOffsetOther = (otherHybrids->getId() == hybrid->getId() )*(cNChannels*8); 
+                                            uint32_t cLinkOffsetOther = (otherHybrids->getId() != hybrid->getId() )*(cNChannels*8); 
                                             //uint32_t cLinkOffsetOther = (otherHybrids->getId()%2)*(cNChannels*8) ;
                                             // uint32_t cLinkOffsetOther = otherOGs->getIndex()*(2*cNChannels*8) + (otherHybrids->getId()%2)*(cNChannels*8) ;
                                             uint32_t cRowOther   = (otherChips->size() == NCHANNELS) ? cChnlIndxOthers/cDivider : cChnlIndxOthers % cNRows;

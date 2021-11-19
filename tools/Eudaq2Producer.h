@@ -12,7 +12,7 @@
 #define Eudaq2Producer_h__
 
 #include "CommonVisitors.h"
-#include "Tool.h"
+#include "OTTool.h"
 #include "Visitor.h"
 
 #include <cmath>
@@ -45,7 +45,7 @@
 
 #ifdef __EUDAQ__
 class Eudaq2Producer
-    : public Tool
+    : public OTTool
     , public eudaq::Producer
 {
   public:
