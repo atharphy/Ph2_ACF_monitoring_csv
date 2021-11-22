@@ -77,7 +77,6 @@ void Eudaq2Producer::DoInitialise()
         cPSAlignment.Inherit(this);
         cPSAlignment.Initialise();
         cPSAlignment.MapMPAOutputs();
-        cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
         LinkAlignmentOT cLinkAlignment;
@@ -122,8 +121,9 @@ void Eudaq2Producer::DoInitialise()
             cPSAlignment.Align();
         }
 
-        //Update critical registers to correct value
+        // Update critical registers to correct value
         //#FIXME some registers like threshold might be overwritten later on (ie: in the DoConfigure function)
+        for(auto cBoard: *fDetectorContainer) { UpdateFromRegMap(cBoard); }
     }
 
     fInitialised = true;
@@ -147,37 +147,13 @@ void Eudaq2Producer::DoConfigure()
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled    = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
-    this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
 
     fEnableInjection = (cEudaqConf->Get("EnableInjection", "false") == "true") ? true : false;
     if(fIsPS && fEnableInjection)
     {
         uint8_t cPulseAmplitude = std::stoi(cEudaqConf->Get("PulseAmplitude", "120"));
         EnableDigitalInjection(cPulseAmplitude, fThresholdMPA, fThresholdSSA);
-    }
-    for(auto cBoard: *fDetectorContainer){ 
-	UpdateFromRegMap(cBoard); 
-        uint8_t cCommonStubDelay = std::stoi(cEudaqConf->Get("CommonStubDelay", "39"));
-        this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cCommonStubDelay);
-        LOG(INFO) << "stub common delay : " << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay") << RESET;
-
-	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 4);
-	uint16_t cTriggerSource = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-	LOG(INFO) << "Trigger source : " << +cTriggerSource << RESET;
-
-	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.handshake_mode", 2);
-	uint8_t cHandshakeMode = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.handshake_mode");	
-	LOG(INFO) << "Handshake Mode : " << +cHandshakeMode << RESET;
-
-	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 1);
-	uint8_t cTLUEnabled = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");	
-	LOG(INFO) << "TLU Enabled : " << +cTLUEnabled << RESET;
-
-        // send a Resync to this board
-        this->fBeBoardInterface->ChipReSync(cBoard);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     fConfigured = true;
@@ -412,7 +388,6 @@ void Eudaq2Producer::DoStopRun()
             }
         }
     }
-    fFirstEvent = true;
     LOG(INFO) << "[CMS-OT Producer] Stopped Run" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Stopped Run");
 }
@@ -435,7 +410,6 @@ void Eudaq2Producer::DoReset()
     }
 
     fExitRun = true, fConfigured = false;
-    fFirstEvent = true;
     // Stop the running data thread
     if(fThreadRun.joinable()) fThreadRun.join();
     // fThreadRun = std::thread();
@@ -580,10 +554,10 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
         // module map dimenstions
         uint8_t  cMaxNChip      = 8;
         uint8_t  cMaxNHybrid    = 2;
-        uint16_t cNPixelColumns    = (NMPACHANNELS / 16) * cMaxNChip;
-        uint16_t cNPixelRows = NMPACOLS * cMaxNHybrid;
-        uint16_t cNStripColumns    = NSSACHANNELS * cMaxNChip;
-        uint16_t cNStripRows = cMaxNHybrid;
+        uint16_t cNPixelColumns = (NMPACHANNELS / 16) * cMaxNChip;
+        uint16_t cNPixelRows    = NMPACOLS * cMaxNHybrid;
+        uint16_t cNStripColumns = NSSACHANNELS * cMaxNChip;
+        uint16_t cNStripRows    = cMaxNHybrid;
         // Loop over optical groups
         for(auto cOpticalGroup: *pBoard)
         {
@@ -619,12 +593,12 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             // LOG(INFO) << BOLDRED << "Pixel Data size : " << +cPixelData.size() << RESET;
                             // tranform pixel hit Address (row) according to hybrid to build pixel map
                             uint16_t cHitPosition = cCluster.fAddress + cHitId + (NMPACHANNELS / 16) * (cChipId % 8);
-                            uint16_t cHitAddress  = (cHybridId % 2 == 0) ? (960 - cHitPosition) : (cHitPosition - 1);
+                            uint16_t cHitAddress  = (cHybridId % 2 != 0) ? (960 - cHitPosition) : (cHitPosition - 1);
                             // push pixel hit address (column) in 16bits word
                             cPixelData[cPixelDataOffset + 0] = (cHitAddress >> 0) & 0xFF;
                             cPixelData[cPixelDataOffset + 1] = (cHitAddress >> 8) & 0xFF;
                             // transform pixel hit Zpos (row) according to hybrid to build pixel map
-                            uint16_t cHitZpos = (cHybridId % 2 != 0) ? (31 - cCluster.fZpos) : (cCluster.fZpos);
+                            uint16_t cHitZpos = (cHybridId % 2 == 0) ? (32 - cCluster.fZpos) : (cCluster.fZpos - 1);
                             // push pixel hit Zpos in 16bits word
                             cPixelData[cPixelDataOffset + 2] = (cHitZpos >> 0) & 0xFF;
                             cPixelData[cPixelDataOffset + 3] = (cHitZpos >> 8) & 0xFF;
@@ -657,12 +631,12 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             cStripData.resize(cStripDataOffset + 6);
                             // transform strip cluster Address (column) according to hybrid to build strip map
                             uint16_t cHitPosition = cCluster.fAddress + cHitId + NSSACHANNELS * (cChipId % 8);
-                            uint16_t cHitAddress  = (cHybridId % 2 == 0) ? (960 - cHitPosition) : (cHitPosition - 1);
+                            uint16_t cHitAddress  = (cHybridId % 2 != 0) ? (960 - cHitPosition) : (cHitPosition - 1);
                             // push strip cluster Address in 16bits word
                             cStripData[cStripDataOffset + 0] = (cHitAddress >> 0) & 0xFF;
                             cStripData[cStripDataOffset + 1] = (cHitAddress >> 8) & 0xFF;
                             // transform strip cluster Zpos (row) according to hybrid to build pixel map
-                            uint16_t cHitZpos = (cHybridId % 2 != 0) ? 1 : 0;
+                            uint16_t cHitZpos = (cHybridId % 2 == 0) ? 1 : 0;
                             // push strip cluster Zpos in 16bits word
                             cStripData[cStripDataOffset + 2] = (cHitZpos >> 0) & 0xFF;
                             cStripData[cStripDataOffset + 3] = (cHitZpos >> 8) & 0xFF;
@@ -672,14 +646,14 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             // shift offset by 6 elements
                             cStripDataOffset += 6;
                             cNStripHit++;
-/*
-                            LOG(INFO) << "Hybrid Id              : " << +cHybridId << RESET;
-                            LOG(INFO) << "Chip Id                : " << +(cChipId % 8) << RESET;
-                            LOG(INFO) << "Pixel Initial position : " << +cCluster.fAddress << RESET;
-                            LOG(INFO) << "Pixel Final position   : " << +cHitAddress << RESET;
-                            LOG(INFO) << "Pixel Final Zpos       : " << +cHitZpos << RESET;
-                            LOG(INFO) << BOLDYELLOW << "  ----- " << RESET;
-*/
+                            /*
+                                                        LOG(INFO) << "Hybrid Id              : " << +cHybridId << RESET;
+                                                        LOG(INFO) << "Chip Id                : " << +(cChipId % 8) << RESET;
+                                                        LOG(INFO) << "Pixel Initial position : " << +cCluster.fAddress << RESET;
+                                                        LOG(INFO) << "Pixel Final position   : " << +cHitAddress << RESET;
+                                                        LOG(INFO) << "Pixel Final Zpos       : " << +cHitZpos << RESET;
+                                                        LOG(INFO) << BOLDYELLOW << "  ----- " << RESET;
+                            */
 
                         } // end of hit loop
                     }     // end of SCluster loop
@@ -725,7 +699,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
     else
     {
         uint32_t cMaxNChip = 8;
-        uint32_t cNColumns    = (NCHANNELS / 2) * cMaxNChip;
+        uint32_t cNColumns = (NCHANNELS / 2) * cMaxNChip;
         // Extract hit information
         for(auto cOpticalGroup: *pBoard)
         {
@@ -796,8 +770,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 }     // end of chip loop
             }         // end of hybrid loop
             // Fill final Top data container
-            cTopDataFinal[0]   = (cNColumns >> 0) & 0xFF;    // First 8bits of cNColumns
-            cTopDataFinal[1]   = (cNColumns >> 8) & 0xFF;    // Second 8bits of cNColumns
+            cTopDataFinal[0]   = (cNColumns >> 0) & 0xFF; // First 8bits of cNColumns
+            cTopDataFinal[1]   = (cNColumns >> 8) & 0xFF; // Second 8bits of cNColumns
             cTopDataFinal[2]   = 2;                       // First 8bits of cNRows. Always 2 (two half sensors)
             cTopDataFinal[3]   = 0;                       // Second 8bits of cNRows
             uint32_t cTopNHits = (cTopData.size()) / 6;   // Divide by 6 as each hit information is stored over 6 elements
@@ -809,8 +783,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             pEudaqSubEvent->AddBlock(cTopSensorId, cTopDataFinal);
             //
             // Fill final Bottom data container
-            cBottomDataFinal[0]   = (cNColumns >> 0) & 0xFF;       // First 8bits of cNColumns
-            cBottomDataFinal[1]   = (cNColumns >> 8) & 0xFF;       // Second 8bits of cNColums
+            cBottomDataFinal[0]   = (cNColumns >> 0) & 0xFF;    // First 8bits of cNColumns
+            cBottomDataFinal[1]   = (cNColumns >> 8) & 0xFF;    // Second 8bits of cNColums
             cBottomDataFinal[2]   = 2;                          // First 8bits of cNRows. Always 2 (two half sensors)
             cBottomDataFinal[3]   = 0;                          // Second 8bits of cNRows
             uint32_t cBottomNHits = (cBottomData.size()) / 6;   // Divide by 6 as each hit information is stored over 6 elements
@@ -825,7 +799,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
 
     // Extract Stubs and common information and store them in dedicated tags
     // Loop over optical groups
-    for(auto cOpticalGroup: *pBoard)
+    for(auto cOpticalGroup: *fDetectorContainer)
     {
         // Loop over hybrids
         for(auto cHybrid: *cOpticalGroup)
@@ -843,24 +817,18 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             // Loop over chips
             for(auto cChip: *cHybrid)
             {
-		if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
                 uint32_t cChipId = cChip->getId();
                 // Extract pipeline address
                 char cTagName[100];
                 std::sprintf(cTagName, "pipeline_address_%02d_%02d", cHybridId, cChipId);
                 pEudaqSubEvent->SetTag(cTagName, (uint32_t)pPh2Event->PipelineAddress(cHybridId, cChipId));
-                // Extract L1 packet error address
+                // Extract error address
                 std::sprintf(cTagName, "error_%02d_%02d", cHybridId, cChipId);
                 pEudaqSubEvent->SetTag(cTagName, (uint32_t)pPh2Event->Error(cHybridId, cChipId));
                 // Extract Stubs
                 uint32_t cStubId = 0;
-                if(pPh2Event->StubVector(cHybridId, cChipId).size() > 0)
-		{
-		  LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
-		}
-                for(auto cStub : pPh2Event->StubVector(cHybridId, cChipId))
+                for(auto cStub: pPh2Event->StubVector(cHybridId, cChipId))
                 {
-		    //LOG(INFO) << BLUE << "\t\tPosition " << +cStub.getPosition() << " , Row " << +cStub.getRow() << ", Bend " << +cStub.getBend() << RESET;
                     std::sprintf(cTagName, "stub_pos_%02d_%02d_%02d", cHybridId, cChipId, cStubId);
                     pEudaqSubEvent->SetTag(cTagName, (uint32_t)cStub.getPosition());
                     std::sprintf(cTagName, "stub_bend_%02d_%02d_%02d", cHybridId, cChipId, cStubId);

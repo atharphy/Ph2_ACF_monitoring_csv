@@ -177,15 +177,15 @@ std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip, uint8_t pMode)
 {
     std::vector<uint8_t> cBendCodes(0); // bend registers are 0 -- 14. Each register encodes 2 codes
 
-    float cStartValue = -7.0 / 2.;
-    std::vector<std::string> cRegNames{"CodeM76","CodeM54","CodeM32","CodeM10","CodeP12","CodeP34","CodeP56","CodeP78"};
+    float                    cStartValue = -7.0 / 2.;
+    std::vector<std::string> cRegNames{"CodeM76", "CodeM54", "CodeM32", "CodeM10", "CodeP12", "CodeP34", "CodeP56", "CodeP78"};
     for(size_t cIndex = 0; cIndex < 8; cIndex++) // 9 registers
     {
         uint16_t cRegAddress = 6 + cIndex; // each register controls two codes
         // code starts from dummy
         // cRegAddress = this->regPeri(pChip, cRegAddress);
         std::vector<float> cTheseBends{cStartValue, (float)(cStartValue + 0.5)};
-        uint8_t            cCode = (pMode == 0 ) ? ReadChipReg(pChip,cRegNames[cIndex]) : pChip->getReg(cRegNames[cIndex]); //MPAInterface::ReadReg(pChip, cRegAddress);
+        uint8_t            cCode = (pMode == 0) ? ReadChipReg(pChip, cRegNames[cIndex]) : pChip->getReg(cRegNames[cIndex]); // MPAInterface::ReadReg(pChip, cRegAddress);
         std::stringstream  cOut;
         cOut << "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  ";
         if(cTheseBends[0] == -9)
@@ -590,7 +590,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint8_t                  cEnableDigi = (pValue == 0) ? 0 : 1;
         std::vector<uint8_t>     cPixelVals{cFEEnable, cEnableDigi};
         uint8_t                  cRegMask = 0x00;
-        for(auto cPixelReg: cPixelRegs) cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second) ;
+        for(auto cPixelReg: cPixelRegs) cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second);
         cRegMask       = ~(cRegMask);
         uint8_t cValue = 0x00;
         size_t  cIndx  = 0;
@@ -612,7 +612,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         }
         auto cRegValue = (cReadValue & cRegMask) | cValue;
         LOG(INFO) << BOLDBLUE << "Register mask " << pRegName << " 0x" << std::hex << +cRegMask << std::dec << " readback value is 0x" << std::hex << +cReadValue << std::dec << " will write value 0x"
-                   << std::hex << +cValue << std::dec << " register value is 0x" << std::hex << +cRegValue << std::dec << RESET;
+                  << std::hex << +cValue << std::dec << " register value is 0x" << std::hex << +cRegValue << std::dec << RESET;
 
         bool cEnableDigital = this->configPixel(pMPA, "ENFLAGS", cPixelNumber, cRegValue, pVerifLoop);
         // configure pattern
@@ -878,11 +878,11 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     cRegs.clear();
     std::vector<std::string> cRegsToConfig;
     cRegsToConfig.push_back("TrimDAC");
-    cConfigLocalRegs = cConfigLocalRegs && (cRegsToConfig.size()>0);
+    cConfigLocalRegs = cConfigLocalRegs && (cRegsToConfig.size() > 0);
     for(auto& cMapItem: fMap)
     {
         bool cIsLocal = (cMapItem.second.find("_P") != std::string::npos);
-        // if local and we are not configuring local then skip 
+        // if local and we are not configuring local then skip
         bool cSkip = (cIsLocal && !cConfigLocalRegs);
         if(cRegsToConfig.size() > 0 && cConfigLocalRegs && cIsLocal)
         {
@@ -892,7 +892,7 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
             do
             {
                 cRegFound = cMapItem.second.find(*cIter) != std::string::npos;
-                if( cRegFound ) LOG (DEBUG) << BOLDMAGENTA << " Found " <<  cMapItem.second << RESET;
+                if(cRegFound) LOG(DEBUG) << BOLDMAGENTA << " Found " << cMapItem.second << RESET;
 
                 cIter++;
             } while(cIter < cRegsToConfig.end() && !cRegFound);
@@ -904,7 +904,6 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         else
             LOG(DEBUG) << BOLDBLUE << "Configuring global register " << cMapItem.second << RESET;
 
-        
         // create a register
         ChipRegItem&                  cItem = cMPARegMap[cMapItem.second];
         std::pair<uint16_t, uint16_t> cReg;
