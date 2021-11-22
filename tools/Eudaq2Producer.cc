@@ -147,7 +147,9 @@ void Eudaq2Producer::DoConfigure()
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled    = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
+    this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
 
     fEnableInjection = (cEudaqConf->Get("EnableInjection", "false") == "true") ? true : false;
     if(fIsPS && fEnableInjection)
@@ -160,6 +162,19 @@ void Eudaq2Producer::DoConfigure()
         uint8_t cCommonStubDelay = std::stoi(cEudaqConf->Get("CommonStubDelay", "39"));
         this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cCommonStubDelay);
         LOG(INFO) << "stub common delay : " << +this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay") << RESET;
+
+	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 4);
+	uint16_t cTriggerSource = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+	LOG(INFO) << "Trigger source : " << +cTriggerSource << RESET;
+
+	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.handshake_mode", 2);
+	uint8_t cHandshakeMode = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.handshake_mode");	
+	LOG(INFO) << "Handshake Mode : " << +cHandshakeMode << RESET;
+
+	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 1);
+	uint8_t cTLUEnabled = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");	
+	LOG(INFO) << "TLU Enabled : " << +cTLUEnabled << RESET;
+
         // send a Resync to this board
         this->fBeBoardInterface->ChipReSync(cBoard);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
