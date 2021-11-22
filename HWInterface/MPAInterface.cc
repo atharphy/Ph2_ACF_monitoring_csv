@@ -185,8 +185,8 @@ std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip, uint8_t pMode)
         // code starts from dummy
         // cRegAddress = this->regPeri(pChip, cRegAddress);
         std::vector<float> cTheseBends{cStartValue, (float)(cStartValue + 0.5)};
-        uint8_t cCode = (pMode == 0) ? ReadChipReg(pChip, cRegNames[cIndex]) : pChip->getReg(cRegNames[cIndex]); // MPAInterface::ReadReg(pChip, cRegAddress);
-        std::stringstream cOut;
+        uint8_t            cCode = (pMode == 0) ? ReadChipReg(pChip, cRegNames[cIndex]) : pChip->getReg(cRegNames[cIndex]); // MPAInterface::ReadReg(pChip, cRegAddress);
+        std::stringstream  cOut;
         cOut << "Reading bend code register 0x" << std::hex << +cRegAddress << std::dec << " this contains the bends for  ";
         if(cTheseBends[0] == -9)
             cOut << " dummy code and ";
