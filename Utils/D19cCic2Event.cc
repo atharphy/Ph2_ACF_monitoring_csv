@@ -920,13 +920,13 @@ std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pFeId, uint8_t pRea
             uint8_t cFirstChannel = 2 * cStrip + cLayerId;
 
             LOG(INFO) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
-                       << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
+                      << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
 
-            //Cluster cCluster;
-            //cCluster.fSensor       = cLayerId;
-            //cCluster.fFirstStrip   = pReadoutChipId * 127 + cStrip;
-            //cCluster.fClusterWidth = cWidth;
-            //cClusterId++;
+            // Cluster cCluster;
+            // cCluster.fSensor       = cLayerId;
+            // cCluster.fFirstStrip   = pReadoutChipId * 127 + cStrip;
+            // cCluster.fClusterWidth = cWidth;
+            // cClusterId++;
 
             // uint8_t cChipId = ((cClusterWord & (0x7 << 11)) >> 11);
             // // auto    cChipIdMapped = cFeMapping[cChipId];
@@ -1087,19 +1087,15 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pFeId, uint8_t pReadoutChip
     {
         if(fIs2S)
         {
-            for(auto cCluster: getClusters(pFeId, pReadoutChipId) )
+            for(auto cCluster: getClusters(pFeId, pReadoutChipId))
             {
-                uint8_t cFirstChannel = 2 * (cCluster.fFirstStrip  - 127*pReadoutChipId) + cCluster.fSensor;
-                LOG (DEBUG) << BOLDMAGENTA 
-                    << "Hybid#" << +pFeId << " ROC#" << +pReadoutChipId 
-                    << " Cluster in sensor " << +cCluster.fSensor << " in strip# " << +cCluster.fFirstStrip
-                    << " actual strip "
-                    << +(cCluster.fFirstStrip  - 127*pReadoutChipId) 
-                    <<  " of width " << +cCluster.fClusterWidth << RESET;
+                uint8_t cFirstChannel = 2 * (cCluster.fFirstStrip - 127 * pReadoutChipId) + cCluster.fSensor;
+                LOG(DEBUG) << BOLDMAGENTA << "Hybid#" << +pFeId << " ROC#" << +pReadoutChipId << " Cluster in sensor " << +cCluster.fSensor << " in strip# " << +cCluster.fFirstStrip
+                           << " actual strip " << +(cCluster.fFirstStrip - 127 * pReadoutChipId) << " of width " << +cCluster.fClusterWidth << RESET;
                 for(int cId = 0; cId <= cCluster.fClusterWidth; cId++)
                 {
-                    LOG (DEBUG) << BOLDMAGENTA << "\t\t.. hit in channel " << +cFirstChannel+2*cId << RESET;
-                    cHits.push_back(cFirstChannel+cId*2);
+                    LOG(DEBUG) << BOLDMAGENTA << "\t\t.. hit in channel " << +cFirstChannel + 2 * cId << RESET;
+                    cHits.push_back(cFirstChannel + cId * 2);
                 }
             }
             // auto cDataBitset = this->decodeClusters(pFeId, pReadoutChipId);
@@ -1268,7 +1264,7 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pFeId, uint8_t pReadoutC
     {
         uint8_t cChipId       = (cClusterWord & (0x3 << 11)) >> 11;
         auto    cChipIdMapped = this->getChipIdMapped(pFeId, cChipId);
-        LOG (DEBUG) << BOLDYELLOW << "Cluster in ROC#" << +pReadoutChipId << " which is " << +cChipIdMapped << RESET;
+        LOG(DEBUG) << BOLDYELLOW << "Cluster in ROC#" << +pReadoutChipId << " which is " << +cChipIdMapped << RESET;
         // auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
         if(cChipIdMapped != pReadoutChipId) continue;
 

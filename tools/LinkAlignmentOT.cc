@@ -62,7 +62,7 @@ void LinkAlignmentOT::Initialise()
     {
         auto& cBeSamplingDelay = fBeSamplingDelay.at(cBoard->getIndex());
         auto& cBeBitSlip       = fBeBitSlip.at(cBoard->getIndex());
-        auto& cLinkSampling       = fLpGBTSamplingDelay.at(cBoard->getIndex());
+        auto& cLinkSampling    = fLpGBTSamplingDelay.at(cBoard->getIndex());
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -76,8 +76,8 @@ void LinkAlignmentOT::Initialise()
                 auto& cBeBitSlipHybrd       = cBeBitSlipOG->at(cHybrid->getIndex());
                 auto& cThisBeSamplingDelay  = cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>();
                 auto& cThisBeBitSlip        = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
-                auto&  cLinkDelay           = cLinkDelayOG->at(cHybrid->getIndex())->getSummary<uint8_t>(); 
-                cLinkDelay=0;
+                auto& cLinkDelay            = cLinkDelayOG->at(cHybrid->getIndex())->getSummary<uint8_t>();
+                cLinkDelay                  = 0;
                 for(size_t cLineId = 0; cLineId < cNlines; cLineId++)
                 {
                     cThisBeSamplingDelay.push_back(0);
@@ -148,7 +148,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
     }
     auto cMode = flpGBTInterface->AutoPhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
     cAligned   = cAligned && (cMode != 15);
-    //cMode      = ( cMode > 8 ) ? 5 : cMode; 
+    // cMode      = ( cMode > 8 ) ? 5 : cMode;
     for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }
 
     // configure CICs to NOT output alignment pattern on stub lines
@@ -161,8 +161,8 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
 
-        auto& cLinkSampling       = fLpGBTSamplingDelay.at((*cBoardIter)->getIndex())->at(pOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<uint8_t>();
-        cLinkSampling = cMode;
+        auto& cLinkSampling = fLpGBTSamplingDelay.at((*cBoardIter)->getIndex())->at(pOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<uint8_t>();
+        cLinkSampling       = cMode;
     }
     return cAligned;
 }
@@ -645,8 +645,8 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
 // }
 bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
 {
-    size_t cTriggerMult=0; 
-    size_t cDelayAfterTP = 300; 
+    size_t cTriggerMult  = 0;
+    size_t cDelayAfterTP = 300;
     // set board and get interface
     fBeBoardInterface->setBoard(pBoard->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
@@ -680,9 +680,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
     uint16_t cOriginalTriggerSrc = cTriggerSrc;
     uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
-    
+
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cTriggerSrc                  = (cTriggerSrc == 6) ? cTriggerSrc : 6;
+    cTriggerSrc = (cTriggerSrc == 6) ? cTriggerSrc : 6;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult});
@@ -692,23 +692,23 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
-    // first lets figure out how many hybrids are enabled 
+    // first lets figure out how many hybrids are enabled
     auto cEnableMask = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.global.hybrid_enable");
-    // and select one hybrid from each link 
-    uint32_t cNewMask = 0x00; 
+    // and select one hybrid from each link
+    uint32_t cNewMask = 0x00;
     for(auto cOpticalGroup: *pBoard)
     {
-        bool cFirstOnLink=true;
+        bool cFirstOnLink = true;
         for(auto cHybrid: *cOpticalGroup)
         {
             if(!cFirstOnLink) continue;
-            LOG (INFO) << BOLDMAGENTA << "\t\t..Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() << RESET;
-            cNewMask = cNewMask | ( 1 << cHybrid->getId() ); 
+            LOG(INFO) << BOLDMAGENTA << "\t\t..Hybrid#" << +cHybrid->getId() << " on Link#" << +cOpticalGroup->getId() << RESET;
+            cNewMask     = cNewMask | (1 << cHybrid->getId());
             cFirstOnLink = false;
         }
     }
-    LOG (INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
-    
+    LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
+
     bool    cSkip         = false;
     uint8_t cPackageDelay = 7;
     uint8_t cFinalDelay   = cPackageDelay;
@@ -727,7 +727,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                 cHybridIdsMap[cOpticalGroup->getId()] = cDummy;
                 cIter                                 = cHybridIdsMap.find(cOpticalGroup->getId());
             }
-            bool cFirstOnLink=true;
+            bool cFirstOnLink = true;
             for(auto cHybrid: *cOpticalGroup)
             {
                 if(!cFirstOnLink) continue;
@@ -775,7 +775,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                             cIter       = cBxIds.find(cId);
                         }
                         cIter->second.push_back(cEvent->BxId(cId));
-                        LOG (INFO) << BOLDYELLOW << "Event#" << +cEvent->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is " << cEvent->BxId(cId) << RESET;
+                        LOG(INFO) << BOLDYELLOW << "Event#" << +cEvent->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is " << cEvent->BxId(cId) << RESET;
                     }
                 }
 
@@ -849,37 +849,36 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                             std::vector<int> cBxDifferences(0);
                             size_t           cNRollOvers = 0;
                             size_t           cCounter    = 0;
-                            uint8_t          cGoodBxIds  = 0; 
+                            uint8_t          cGoodBxIds  = 0;
                             for(auto cBxId: cBxIds[cIdToCheck])
                             {
-                                if( cBxId > 8) cGoodBxIds++;
+                                if(cBxId > 8) cGoodBxIds++;
                                 if(cCounter > 0)
                                 {
                                     auto cPreviousBxId = cBxIds[cIdToCheck][cCounter - 1];
                                     int  cBxDifference = (cNRollOvers)*cMaxBxCounter + (cPreviousBxId % cMaxBxCounter);
                                     cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
                                     cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
-                                    if( cBxId > (int)cDelayAfterTP ){ 
-                                        LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
-                                    }
-                                    else LOG(INFO) << BOLDRED << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
+                                    if(cBxId > (int)cDelayAfterTP)
+                                    { LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET; }
+                                    else
+                                        LOG(INFO) << BOLDRED << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
                                     cBxDifferences.push_back(cBxDifference);
                                 }
                                 cCounter++;
                             }
                             if(std::adjacent_find(cBxDifferences.begin(), cBxDifferences.end(), std::not_equal_to<int>()) == cBxDifferences.end())
                             {
-                                if( cGoodBxIds == cBxIds[cIdToCheck].size() )
+                                if(cGoodBxIds == cBxIds[cIdToCheck].size())
                                 {
                                     LOG(INFO) << BOLDGREEN << "\t\t\t..Constant BxId difference of " << +cBxDifferences[0] << " 40 MHz clks on Hybrid#" << +cIdToCheck << RESET;
                                     cNFound++;
                                 }
-                                else LOG(INFO) << BOLDRED << "\t\t\t..Constant BxId difference of " << +cBxDifferences[0] << " 40 MHz clks on Hybrid#" << +cIdToCheck << RESET;
-                                     
+                                else
+                                    LOG(INFO) << BOLDRED << "\t\t\t..Constant BxId difference of " << +cBxDifferences[0] << " 40 MHz clks on Hybrid#" << +cIdToCheck << RESET;
                             }
                         }
                         cFoundDelays.push_back((cNFound == cIdsToCheck.size()) ? 1 : 0);
-
                     }
                     auto cNFound = std::accumulate(cFoundDelays.begin(), cFoundDelays.end(), 0);
                     if((size_t)cNFound == cMatchesFound.size() && cNFound != 0)
@@ -924,8 +923,8 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
             cIndx++;
         }
     }
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.global.hybrid_enable" , cEnableMask);
-    // and check 
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.global.hybrid_enable", cEnableMask);
+    // and check
     ReadNEvents(pBoard, 10);
     const std::vector<Event*>& cEvents = this->GetEvents();
     for(auto& cEvent: cEvents)
@@ -935,7 +934,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto cBx = (int)cEvent->BxId(cHybrid->getId());
-                LOG (INFO) << BOLDGREEN << "Link#" << +cOpticalGroup->getId() << " Hybrid#" << +cHybrid->getId() << " BxId " << cBx << RESET;
+                LOG(INFO) << BOLDGREEN << "Link#" << +cOpticalGroup->getId() << " Hybrid#" << +cHybrid->getId() << " BxId " << cBx << RESET;
             }
         }
     }

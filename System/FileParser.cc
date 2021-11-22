@@ -573,105 +573,97 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
     if(cGlobalSettingsNode != nullptr)
     {
         os << BOLDCYAN << "|\t|\t|----Global SSA Settings: " << RESET << std::endl;
-        // first.. thresholds 
+        // first.. thresholds
         pugi::xml_node cThresholdNode = cGlobalSettingsNode.child("Thresholds");
-        if(cThresholdNode != nullptr) 
+        if(cThresholdNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
-                int cThresholdStrps   = convertAnyInt(cThresholdNode.attribute("stripThreshold").value())/250. ;
-                cThresholdStrps = (cThresholdStrps > 0xFF ) ? 0xFF : cThresholdStrps; 
-                
+                if(cROC->getFrontEndType() != FrontEndType::SSA) continue;
+                int cThresholdStrps = convertAnyInt(cThresholdNode.attribute("stripThreshold").value()) / 250.;
+                cThresholdStrps     = (cThresholdStrps > 0xFF) ? 0xFF : cThresholdStrps;
+
                 cROC->setReg("Bias_THDAC", cThresholdStrps);
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA Settings to SSA# " << +cROC->getId() << RESET << std::endl
-                   << GREEN << "|\t|\t|\t|---- Threshold: Strips 0x" << std::hex << +cThresholdStrps << std::dec << RESET << std::endl;    
+                   << GREEN << "|\t|\t|\t|---- Threshold: Strips 0x" << std::hex << +cThresholdStrps << std::dec << RESET << std::endl;
             }
         }
 
-        // then hit logic mode 
+        // then hit logic mode
         pugi::xml_node cHitLogicNode = cGlobalSettingsNode.child("HitLogic");
-        if(cHitLogicNode != nullptr) 
+        if(cHitLogicNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
-                uint8_t cMode   = static_cast<uint8_t>(  convertAnyInt(cHitLogicNode.attribute("stripMode").value()) ) ;
+                if(cROC->getFrontEndType() != FrontEndType::SSA) continue;
+                uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("stripMode").value()));
                 cROC->setReg("SAMPLINGMODE_ALL", cMode);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec 
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec
                    << RESET << std::endl;
             }
-        } 
+        }
 
-        // then charge injection 
+        // then charge injection
         pugi::xml_node cInjectionNode = cGlobalSettingsNode.child("InjectedCharge");
-        if(cInjectionNode != nullptr) 
+        if(cInjectionNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
-                int cInjStrps   = convertAnyInt(cInjectionNode.attribute("stripCharge").value())/243.;
-                cInjStrps = (cInjStrps > 0xFF ) ? 0xFF : cInjStrps; 
+                if(cROC->getFrontEndType() != FrontEndType::SSA) continue;
+                int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()) / 243.;
+                cInjStrps     = (cInjStrps > 0xFF) ? 0xFF : cInjStrps;
                 cROC->setReg("Bias_CALDAC", cInjStrps);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps << std::dec 
-                   << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps
+                   << std::dec << RESET << std::endl;
             }
-        } 
+        }
 
-        // latencies 
+        // latencies
         pugi::xml_node cLatencyNode = cGlobalSettingsNode.child("Latencies");
-        if(cLatencyNode != nullptr) 
+        if(cLatencyNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
-                int cLatency  = convertAnyInt(cLatencyNode.attribute("stripLatency").value()) ;
-                cROC->setReg("L1-Latency_LSB", cLatency & 0xFF );
-                cROC->setReg("L1-Latency_MSB", (cLatency >> 8) & 0xFF );
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency << std::dec 
-                   << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF)  << std::dec 
-                   << GREEN << " LSB is 0x" <<  std::hex << (cLatency & 0xFF)  << std::dec 
-                   << RESET << std::endl;
+                if(cROC->getFrontEndType() != FrontEndType::SSA) continue;
+                int cLatency = convertAnyInt(cLatencyNode.attribute("stripLatency").value());
+                cROC->setReg("L1-Latency_LSB", cLatency & 0xFF);
+                cROC->setReg("L1-Latency_MSB", (cLatency >> 8) & 0xFF);
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency << std::dec
+                   << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
         }
 
-        // hip cut 
+        // hip cut
         pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
-        if(cHIPmode != nullptr) 
+        if(cHIPmode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
-                int cCut  = convertAnyInt(cHIPmode.attribute("stripCut").value()) ;
-                cROC->setReg("HIPCUT_ALL", cCut );
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec 
+                if(cROC->getFrontEndType() != FrontEndType::SSA) continue;
+                int cCut = convertAnyInt(cHIPmode.attribute("stripCut").value());
+                cROC->setReg("HIPCUT_ALL", cCut);
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
                    << RESET << std::endl;
             }
         }
 
-        // timing 
+        // timing
         pugi::xml_node cSamplingDelay = cGlobalSettingsNode.child("SamplingDelay");
-        if(cSamplingDelay != nullptr) 
+        if(cSamplingDelay != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::SSA ) continue;
-                int cCoarse  = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value()) ;
-                int cFine  = convertAnyInt(cSamplingDelay.attribute("stripFine").value()) ;
-                cROC->setReg("PhaseShiftClock", cCoarse );
+                if(cROC->getFrontEndType() != FrontEndType::SSA) continue;
+                int cCoarse = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value());
+                int cFine   = convertAnyInt(cSamplingDelay.attribute("stripFine").value());
+                cROC->setReg("PhaseShiftClock", cCoarse);
                 ChipRegMask cMask;
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 0;
                 cROC->setRegBits("ClockDeskewing", cMask, cFine);
-                
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Coarse delay will be set to " << cCoarse*3.125 << " ns "
-                   << GREEN << " Fine delay will be set to " <<  cFine*0.2 << " ns." 
-                   << RESET << std::endl;
+
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
+                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
             }
         }
     }
@@ -729,7 +721,7 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
     cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
     cMPA->setClockFrequency(320);
     cMPA->setMasterId(pHybrid->getMasterId());
-    
+
     os << BOLDCYAN << "|"
        << "  "
        << "|"
@@ -750,134 +742,123 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
     if(cGlobalSettingsNode != nullptr)
     {
         os << BOLDCYAN << "|\t|\t|----Global MPA Settings: " << RESET << std::endl;
-        // first.. thresholds 
+        // first.. thresholds
         pugi::xml_node cThresholdNode = cGlobalSettingsNode.child("Thresholds");
-        if(cThresholdNode != nullptr) 
+        if(cThresholdNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
-                int cThresholdPxls   = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value())/94.;
-                cThresholdPxls = (cThresholdPxls > 0xFF ) ? 0xFF : cThresholdPxls; 
-                for(size_t cIndx=0; cIndx < 7 ; cIndx++)
+                if(cROC->getFrontEndType() != FrontEndType::MPA) continue;
+                int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value()) / 94.;
+                cThresholdPxls     = (cThresholdPxls > 0xFF) ? 0xFF : cThresholdPxls;
+                for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
-                    std::stringstream cRegName; 
-                    cRegName << "ThDAC" << +cIndx; 
+                    std::stringstream cRegName;
+                    cRegName << "ThDAC" << +cIndx;
                     cROC->setReg(cRegName.str(), cThresholdPxls);
                 }
-                os << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex << +cThresholdPxls << std::dec 
-                   << RESET << std::endl;       
+                os << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex << +cThresholdPxls
+                   << std::dec << RESET << std::endl;
             }
         }
 
-        // now stub mode 
+        // now stub mode
         pugi::xml_node cStubLogicNode = cGlobalSettingsNode.child("StubLogic");
-        if(cStubLogicNode != nullptr) 
+        if(cStubLogicNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
-                uint8_t cMode   = static_cast<uint8_t>(  convertAnyInt(cStubLogicNode.attribute("mode").value()) ) ;
-                uint8_t cWindow = static_cast<uint8_t>(  convertAnyInt(cStubLogicNode.attribute("window").value()) ) ;
-                uint8_t cRegVal = (cMode << 6) | cWindow; 
+                if(cROC->getFrontEndType() != FrontEndType::MPA) continue;
+                uint8_t cMode   = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("mode").value()));
+                uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
+                uint8_t cRegVal = (cMode << 6) | cWindow;
                 cROC->setReg("ECM", cRegVal);
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode << std::dec << RESET 
-                   << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow/2. <<  " half-pixels " << RESET
-                   << GREEN << "|\t|\t|\t|---- register value [ECM] is 0x" << std::hex << +cRegVal << std::dec << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode << std::dec
+                   << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN << "|\t|\t|\t|---- register value [ECM] is 0x" << std::hex
+                   << +cRegVal << std::dec << RESET << std::endl;
             }
         }
 
-        // then hit logic mode 
+        // then hit logic mode
         pugi::xml_node cHitLogicNode = cGlobalSettingsNode.child("HitLogic");
-        if(cHitLogicNode != nullptr) 
+        if(cHitLogicNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
-                uint8_t cMode   = static_cast<uint8_t>(  convertAnyInt(cHitLogicNode.attribute("pixelMode").value()) ) ;
+                if(cROC->getFrontEndType() != FrontEndType::MPA) continue;
+                uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("pixelMode").value()));
                 cROC->setReg("ModeSel_ALL", cMode);
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec 
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec
                    << RESET << std::endl;
             }
-        }  
+        }
 
-        // then charge injection 
+        // then charge injection
         pugi::xml_node cInjectionNode = cGlobalSettingsNode.child("InjectedCharge");
-        if(cInjectionNode != nullptr) 
+        if(cInjectionNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
-                int cInjPxls   =  convertAnyInt(cInjectionNode.attribute("pixelCharge").value())/220.;
-                cInjPxls = (cInjPxls > 0xFF ) ? 0xFF : cInjPxls; 
-                for(size_t cIndx=0; cIndx < 7 ; cIndx++)
+                if(cROC->getFrontEndType() != FrontEndType::MPA) continue;
+                int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()) / 220.;
+                cInjPxls     = (cInjPxls > 0xFF) ? 0xFF : cInjPxls;
+                for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
-                    std::stringstream cRegName; 
-                    cRegName << "CalDAC" << +cIndx; 
+                    std::stringstream cRegName;
+                    cRegName << "CalDAC" << +cIndx;
                     cROC->setReg(cRegName.str(), cInjPxls);
                 }
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls << std::dec 
-                   << RESET << std::endl;
-                // 
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls
+                   << std::dec << RESET << std::endl;
+                //
             }
-        } 
+        }
 
-        // latencies 
+        // latencies
         pugi::xml_node cLatencyNode = cGlobalSettingsNode.child("Latencies");
-        if(cLatencyNode != nullptr) 
+        if(cLatencyNode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
-                int cLatency  = convertAnyInt(cLatencyNode.attribute("pixelLatency").value()) ;
-                cROC->setReg("L1Offset_1_ALL", cLatency & 0xFF );
-                cROC->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF );
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency << std::dec 
-                   << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF)  << std::dec 
-                   << GREEN << " LSB is 0x" <<  std::hex << (cLatency & 0xFF)  << std::dec 
-                   << RESET << std::endl;
+                if(cROC->getFrontEndType() != FrontEndType::MPA) continue;
+                int cLatency = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
+                cROC->setReg("L1Offset_1_ALL", cLatency & 0xFF);
+                cROC->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF);
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency << std::dec
+                   << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
         }
 
-        // hip cut 
+        // hip cut
         pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
-        if(cHIPmode != nullptr) 
+        if(cHIPmode != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
-                int cCut  = convertAnyInt(cHIPmode.attribute("pixelCut").value()) ;
-                cROC->setReg("HipCut_ALL", cCut );
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec 
+                if(cROC->getFrontEndType() != FrontEndType::MPA) continue;
+                int cCut = convertAnyInt(cHIPmode.attribute("pixelCut").value());
+                cROC->setReg("HipCut_ALL", cCut);
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
                    << RESET << std::endl;
             }
         }
 
-        // timing 
+        // timing
         pugi::xml_node cSamplingDelay = cGlobalSettingsNode.child("SamplingDelay");
-        if(cSamplingDelay != nullptr) 
+        if(cSamplingDelay != nullptr)
         {
             for(auto cROC: *pHybrid)
             {
-                if( cROC->getFrontEndType() != FrontEndType::MPA ) continue;
-                int cCoarse  = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value()) ;
-                int cFine  = convertAnyInt(cSamplingDelay.attribute("pixelFine").value()) ;
-                cROC->setReg("PhaseShift", cCoarse );
-                cROC->setReg("ConfDLL", cFine );
-                
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cROC->getId() << RESET 
-                   << GREEN << "|\t|\t|\t|---- Coarse delay will be set to " << cCoarse*3.125 << " ns "
-                   << GREEN << " Fine delay will be set to " <<  cFine*0.2 << " ns." 
-                   << RESET << std::endl;
-            }
-        }      
+                if(cROC->getFrontEndType() != FrontEndType::MPA) continue;
+                int cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
+                int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
+                cROC->setReg("PhaseShift", cCoarse);
+                cROC->setReg("ConfDLL", cFine);
 
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cROC->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
+                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
+            }
+        }
     }
 
     // THRESHOLD & LATENCY
@@ -888,13 +869,12 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
     //     uint8_t cThresholdPxls   = static_cast<uint8_t>(  convertAnyInt(cThresholdNode.attribute("pixelThreshold").value())/94. ) ;
     //     for(size_t cIndx=0; cIndx < 7 ; cIndx++)
     //     {
-    //         std::stringstream cRegName; 
-    //         cRegName << "ThDAC" << +cIndx; 
+    //         std::stringstream cRegName;
+    //         cRegName << "ThDAC" << +cIndx;
     //         pROC->setReg(cRegName.str(), cThresholdPxls);
-    //     }    
+    //     }
     //     os << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << RED << std::hex << +cThresholdPxls << std::dec << RESET << std::endl;
     // }
-                    
 }
 
 void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
@@ -1067,7 +1047,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         this->parseMPAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) this->parseMPASettings(pHybridNode, cHybrid, os);
                     }
-                    
                 }
             }
         }
@@ -1127,18 +1106,18 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                 }
                 else if(cAttrName.find("Rows") != std::string::npos)
                 {
-                    auto cFeId = cFeIds[cFeIds.size()-1]; 
-                    cMapOfMaks[cFeId].push_back( cItem + 1 ); // registers for masking start from 1 
-                    //auto cPos = cMapOfMaks[cFeId].size();
-                    //os << YELLOW << "FeId " << +cFeIds[cFeIds.size()-1] << " mask contained " << +cPos << " channels and have just added " <<  +cItem <<  ", ";
+                    auto cFeId = cFeIds[cFeIds.size() - 1];
+                    cMapOfMaks[cFeId].push_back(cItem + 1); // registers for masking start from 1
+                    // auto cPos = cMapOfMaks[cFeId].size();
+                    // os << YELLOW << "FeId " << +cFeIds[cFeIds.size()-1] << " mask contained " << +cPos << " channels and have just added " <<  +cItem <<  ", ";
                 }
-                // fix me 
+                // fix me
                 // else if(cAttrName.find("Columns") != std::string::npos)
                 // {
                 //     uint16_t cPixelId                  = 120 * cItem + cMapOfMaks[cFeIds[cIndex]][cIndex];
                 //     cMapOfMaks[cFeIds[cIndex]][cIndex] = cPixelId;
                 // }
-                //os << GREEN << +cItem << ", ";
+                // os << GREEN << +cItem << ", ";
                 cIndex++;
             }
             os << "\n";
@@ -1326,7 +1305,7 @@ void FileParser::parseGlobalCbcSettings(pugi::xml_node pHybridNode, Hybrid* pHyb
 // void FileParser::parseGlobalPSSettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 // {
 //     LOG(INFO) << BOLDBLUE << "Now I'm parsing global PS settings " << RESET;
-    
+
 //     // THRESHOLD & LATENCY
 //     pugi::xml_node cThresholdNode = pCbcNode.child("Settings");
 
@@ -1345,17 +1324,17 @@ void FileParser::parseGlobalCbcSettings(pugi::xml_node pHybridNode, Hybrid* pHyb
 //             {
 //                 for(size_t cIndx=0; cIndx < 7 ; cIndx++)
 //                 {
-//                     std::stringstream cRegName; 
-//                     cRegName << "ThDAC" << +cIndx; 
+//                     std::stringstream cRegName;
+//                     cRegName << "ThDAC" << +cIndx;
 //                     pROC->setReg(cRegName.str(), cThresholdPxls);
-//                 }    
+//                 }
 //             }
-//             os << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << RED << std::hex << +cThresholdPxls << std::dec << " Strips 0x" <<  YELLOW << std::hex << +cThresholdStrips << std::dec << RESET << std::endl;
+//             os << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << RED << std::hex << +cThresholdPxls << std::dec << " Strips 0x" <<  YELLOW << std::hex << +cThresholdStrips << std::dec << RESET <<
+//             std::endl;
 //         }
 //     }
 
 // }
-
 
 void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, std::ostream& os)
 {

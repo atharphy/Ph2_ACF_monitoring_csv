@@ -121,9 +121,9 @@ void Eudaq2Producer::DoInitialise()
             cPSAlignment.Align();
         }
 
-        //Update critical registers to correct value
+        // Update critical registers to correct value
         //#FIXME some registers like threshold might be overwritten later on (ie: in the DoConfigure function)
-        for(auto cBoard: *fDetectorContainer){ UpdateFromRegMap(cBoard); }
+        for(auto cBoard: *fDetectorContainer) { UpdateFromRegMap(cBoard); }
     }
 
     fInitialised = true;
@@ -554,10 +554,10 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
         // module map dimenstions
         uint8_t  cMaxNChip      = 8;
         uint8_t  cMaxNHybrid    = 2;
-        uint16_t cNPixelColumns    = (NMPACHANNELS / 16) * cMaxNChip;
-        uint16_t cNPixelRows = NMPACOLS * cMaxNHybrid;
-        uint16_t cNStripColumns    = NSSACHANNELS * cMaxNChip;
-        uint16_t cNStripRows = cMaxNHybrid;
+        uint16_t cNPixelColumns = (NMPACHANNELS / 16) * cMaxNChip;
+        uint16_t cNPixelRows    = NMPACOLS * cMaxNHybrid;
+        uint16_t cNStripColumns = NSSACHANNELS * cMaxNChip;
+        uint16_t cNStripRows    = cMaxNHybrid;
         // Loop over optical groups
         for(auto cOpticalGroup: *pBoard)
         {
@@ -646,14 +646,14 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             // shift offset by 6 elements
                             cStripDataOffset += 6;
                             cNStripHit++;
-/*
-                            LOG(INFO) << "Hybrid Id              : " << +cHybridId << RESET;
-                            LOG(INFO) << "Chip Id                : " << +(cChipId % 8) << RESET;
-                            LOG(INFO) << "Pixel Initial position : " << +cCluster.fAddress << RESET;
-                            LOG(INFO) << "Pixel Final position   : " << +cHitAddress << RESET;
-                            LOG(INFO) << "Pixel Final Zpos       : " << +cHitZpos << RESET;
-                            LOG(INFO) << BOLDYELLOW << "  ----- " << RESET;
-*/
+                            /*
+                                                        LOG(INFO) << "Hybrid Id              : " << +cHybridId << RESET;
+                                                        LOG(INFO) << "Chip Id                : " << +(cChipId % 8) << RESET;
+                                                        LOG(INFO) << "Pixel Initial position : " << +cCluster.fAddress << RESET;
+                                                        LOG(INFO) << "Pixel Final position   : " << +cHitAddress << RESET;
+                                                        LOG(INFO) << "Pixel Final Zpos       : " << +cHitZpos << RESET;
+                                                        LOG(INFO) << BOLDYELLOW << "  ----- " << RESET;
+                            */
 
                         } // end of hit loop
                     }     // end of SCluster loop
@@ -699,7 +699,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
     else
     {
         uint32_t cMaxNChip = 8;
-        uint32_t cNColumns    = (NCHANNELS / 2) * cMaxNChip;
+        uint32_t cNColumns = (NCHANNELS / 2) * cMaxNChip;
         // Extract hit information
         for(auto cOpticalGroup: *pBoard)
         {
@@ -770,8 +770,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 }     // end of chip loop
             }         // end of hybrid loop
             // Fill final Top data container
-            cTopDataFinal[0]   = (cNColumns >> 0) & 0xFF;    // First 8bits of cNColumns
-            cTopDataFinal[1]   = (cNColumns >> 8) & 0xFF;    // Second 8bits of cNColumns
+            cTopDataFinal[0]   = (cNColumns >> 0) & 0xFF; // First 8bits of cNColumns
+            cTopDataFinal[1]   = (cNColumns >> 8) & 0xFF; // Second 8bits of cNColumns
             cTopDataFinal[2]   = 2;                       // First 8bits of cNRows. Always 2 (two half sensors)
             cTopDataFinal[3]   = 0;                       // Second 8bits of cNRows
             uint32_t cTopNHits = (cTopData.size()) / 6;   // Divide by 6 as each hit information is stored over 6 elements
@@ -783,8 +783,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             pEudaqSubEvent->AddBlock(cTopSensorId, cTopDataFinal);
             //
             // Fill final Bottom data container
-            cBottomDataFinal[0]   = (cNColumns >> 0) & 0xFF;       // First 8bits of cNColumns
-            cBottomDataFinal[1]   = (cNColumns >> 8) & 0xFF;       // Second 8bits of cNColums
+            cBottomDataFinal[0]   = (cNColumns >> 0) & 0xFF;    // First 8bits of cNColumns
+            cBottomDataFinal[1]   = (cNColumns >> 8) & 0xFF;    // Second 8bits of cNColums
             cBottomDataFinal[2]   = 2;                          // First 8bits of cNRows. Always 2 (two half sensors)
             cBottomDataFinal[3]   = 0;                          // Second 8bits of cNRows
             uint32_t cBottomNHits = (cBottomData.size()) / 6;   // Divide by 6 as each hit information is stored over 6 elements

@@ -35,10 +35,10 @@ using EventDataMap = std::map<uint16_t, std::vector<uint32_t>>;
 class Cluster
 {
   public:
-    uint8_t fSensor;
+    uint8_t  fSensor;
     uint16_t fFirstStrip;
-    uint8_t fClusterWidth;
-    float   getBaricentre();
+    uint8_t  fClusterWidth;
+    float    getBaricentre();
 };
 
 class PSCluster

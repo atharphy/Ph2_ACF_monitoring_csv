@@ -1416,7 +1416,7 @@ void D19cFWInterface::Start()
         this->TriggerConfiguration();
         cTriggerState = GetTriggerState();
         LOG(INFO) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
-        
+
         // now check if I should try and start again
         if(cHandshake)
         {
@@ -4655,7 +4655,6 @@ void D19cFWInterface::Trigger(uint8_t pDuration)
 
 bool D19cFWInterface::Bx0Alignment()
 {
-
     bool     cSuccess   = false;
     auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
@@ -4668,14 +4667,14 @@ bool D19cFWInterface::Bx0Alignment()
     bool    cWait     = true;
     uint8_t cAttempts = 0;
     cSuccess          = false;
-    // reset the readout 
+    // reset the readout
     // this->ResetReadout();
     // reset decoder
     size_t cMaxAttempts = 20;
     size_t cWaitTime    = fWait_us * 100; // was 100
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
-    // number of triggers to accept 
+    // number of triggers to accept
     do
     {
         if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
@@ -4691,13 +4690,13 @@ bool D19cFWInterface::Bx0Alignment()
             LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!"
                        << "\t... Stub package delay set to : " << +cPkgDelay << RESET;
             cSuccess = true;
-            
+
             // // definitely works with
             // // figure out which one of these is needed
             // // resync after bx0 alignment worked
             // this->ChipReSync();
             // if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
-            
+
             // // reset the readout as well
             // this->ResetReadout();
             // if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
@@ -4711,7 +4710,7 @@ bool D19cFWInterface::Bx0Alignment()
         cAttempts++;
     } while(cAttempts < cMaxAttempts && !cSuccess);
     if(!cSuccess) LOG(INFO) << BOLDRED << "Could not re-set decoder ..." << RESET;
-    
+
     return cSuccess;
 }
 
@@ -6251,7 +6250,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
     {
-        // reset I2C 
+        // reset I2C
         // std::vector<uint8_t> cBitPosition = {2, 1, 0};
         // uint8_t cResetMask = (1 << cBitPosition[pMasterId]);
         // LOG (INFO) << BOLDYELLOW << "Writing 0x00 to I2C reset " << RESET;
