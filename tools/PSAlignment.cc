@@ -30,7 +30,7 @@ void PSAlignment::Initialise()
     cRegsMod.clear();
     cRegsMod.push_back("ReadoutMode");
     SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
-    
+
     // data containers to hold alignment parameters
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fAlParsContainer);
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fL1AlParsContainer);
@@ -67,7 +67,7 @@ void PSAlignment::Initialise()
         }
     }
 
-    //make sure ReadoutMode is set correctly 
+    // make sure ReadoutMode is set correctly
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -76,13 +76,12 @@ void PSAlignment::Initialise()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) continue;
-                    fReadoutChipInterface->WriteChipReg(cChip,"ReadoutMode",0x00);
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3) continue;
+                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", 0x00);
                 }
             }
         }
     }
-
 }
 void PSAlignment::MapMPAOutputs(std::string pSetupType)
 {
@@ -157,7 +156,6 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
     cRegsMod.clear();
     cRegsMod.push_back("ReadoutMode");
     SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
-
 }
 bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
 {

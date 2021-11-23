@@ -59,11 +59,12 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1);
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
-    void fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap);
+    void fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap, DetectorDataContainer& theTDCMap);
     void fillCorrelations(DetectorDataContainer& theHitMapS0, DetectorDataContainer& theHitMapS1, DetectorDataContainer& theStubMap);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
     void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
     void fillBendPlots(DetectorDataContainer& theBendMap);
+    void fillCountPlots(DetectorDataContainer& theEventCount, DetectorDataContainer& theStubCount);
 
   private:
     void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
@@ -86,10 +87,13 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     DetectorDataContainer fHitMapS1Histograms;
     // Bend distributions
     DetectorDataContainer fBendHistrograms;
-    // Correlation plots 
+    DetectorDataContainer fStubCountHistrograms;
+    DetectorDataContainer fEventCountHistrograms;
+    // Correlation plots
     DetectorDataContainer fCorrelationS0S1Histograms;
-    DetectorDataContainer fCorrelationStubS0Histograms; 
-    DetectorDataContainer fCorrelationStubS1Histograms; 
+    DetectorDataContainer fCorrelationStubS0Histograms;
+    DetectorDataContainer fCorrelationStubS1Histograms;
+    DetectorDataContainer fCorrelationLinksS0Histogram;
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;

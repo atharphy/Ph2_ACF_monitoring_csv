@@ -304,8 +304,8 @@ void PedeNoise::sweepSCurves()
     cStartValue = this->findPedestal(fPulseAmplitude == 0);
     if(fDisableStubLogic) disableStubLogic();
     LOG(INFO) << BLUE << "Sweep of S-curves will start at an average threshold of " << cStartValue << RESET;
-    // measureSCurves(cStartValue);
-    scanScurves();
+    measureSCurves(cStartValue);
+    // scanScurves();
 
     // if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);
@@ -425,9 +425,12 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                                 std::string cRegName = "TrimDAC_P" + (boost::format("%|04|") % (iChan + 1)).str();
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
-                            LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " Channel " << iChan << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF
-                                      << RESET;
+                            LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() << " Channel " << iChan << " with an occupancy of "
+                                      << occupancy * 1e6 << "; threshold is " << pNoiseStripThreshold * 1e6 << " setting offset to " << +0xFF << RESET;
                         }
+                        else
+                            LOG(INFO) << BOLDGREEN << "ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() << " Channel " << iChan << " with an occupancy of " << occupancy * 1e6
+                                      << " number of hits is " << fEventsPerPoint * pMultiple * occupancy << "; threshold is " << pNoiseStripThreshold * 1e6 << " setting offset to " << +0xFF << RESET;
                     }
 
                     fReadoutChipInterface->WriteChipMultReg(cROC, cRegVec);
