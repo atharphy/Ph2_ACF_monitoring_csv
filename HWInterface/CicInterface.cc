@@ -279,7 +279,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot configure patterns on CIC.." << RESET;
-        exit(0);
+        exit(3);
     }
 
     std::string cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
@@ -291,7 +291,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot disable external word alignment value on CIC.." << RESET;
-        exit(0);
+        exit(3);
     }
 
     cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "AUTO_WA_REQUEST" : "MISC_CTRL";
@@ -302,7 +302,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot send external word alignment request to CIC.." << RESET;
-        exit(0);
+        exit(3);
     }
     LOG(INFO) << BOLDBLUE << "Running automated word alignment .... " << RESET;
     // check if word alingment is done
@@ -321,7 +321,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         {
             LOG(INFO) << BOLDBLUE << "Readback failed.." << RESET;
             cDone = false;
-            exit(0);
+            exit(3);
         }
         cDone = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cReadBack.second == 1) : ((cReadBack.second & 0x01) == 1);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -337,7 +337,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot disable automated Word alignment request.." << RESET;
-        exit(0);
+        exit(3);
     }
 
     return cSuccess;
@@ -358,7 +358,7 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC DLL reset" << RESET;
-            exit(0);
+            exit(3);
         }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
@@ -373,7 +373,7 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC DLL reset" << RESET;
-            exit(0);
+            exit(3);
         }
     }
     return cSuccess;
@@ -413,7 +413,7 @@ bool CicInterface::SetAutomaticPhaseAlignment(Chip* pChip, bool pAuto)
     if(!cSuccess)
     {
         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-        exit(0);
+        exit(3);
     }
     return cSuccess;
 }
@@ -434,7 +434,7 @@ bool CicInterface::PhaseAlignerPorts(Chip* pChip, uint8_t pState)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error conifguring CIC" << RESET;
-            exit(0);
+            exit(3);
         }
     }
     return cSuccess;
@@ -455,7 +455,7 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC phase aligner reset" << RESET;
-            exit(0);
+            exit(3);
         }
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
@@ -471,7 +471,7 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
         if(!cSuccess)
         {
             LOG(ERROR) << BOLDRED << "Error setting CIC phase aligner reset" << RESET;
-            exit(0);
+            exit(3);
         }
     }
     return cSuccess;
@@ -510,7 +510,7 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, uint8_t pReadoutChipId, 
     if(!cSuccess)
     {
         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-        exit(0);
+        exit(3);
     }
     return cSuccess;
 }
@@ -540,7 +540,7 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip, std::vector<std::vector<
     if(!cSuccess)
     {
         LOG(ERROR) << BOLDRED << "Error configuring CIC" << RESET;
-        exit(0);
+        exit(3);
     }
     return cSuccess;
 }
@@ -859,7 +859,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
         if(!cSuccess)
         {
             LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " configure drive strength on CIC output pads." << RESET;
-            exit(0);
+            exit(3);
         }
         cRegValue = this->ReadChipReg(pChip, cRegName);
         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << RESET;
@@ -870,14 +870,14 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " Reset DLL in CIC " << RESET;
-        exit(0);
+        exit(3);
     }
     // checking DLL lock
     cSuccess = this->CheckDLL(pChip);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " LOCK DLL in CIC  " << RESET;
-        exit(0);
+        exit(3);
     }
     LOG(INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET;
 
@@ -885,7 +885,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " set automatic phase aligner in CIC... " << RESET;
-        exit(0);
+        exit(3);
     }
     this->EnableFEs(pChip, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     this->ResetPhaseAligner(pChip, 200);
@@ -904,7 +904,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " select FC edge in CIC  " << RESET;
-        exit(0);
+        exit(4);
     }
 
     // check fast command lock
@@ -912,7 +912,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " lock FC decoder in CIC  " << RESET;
-        exit(0);
+        exit(4);
     }
     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured fast command block in CIC." << RESET;
 
@@ -920,7 +920,7 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     if(!cSuccess)
     {
         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear ReSync request in CIC  " << RESET;
-        exit(0);
+        exit(4);
     }
 
     LOG(INFO) << BOLDGREEN << ".... Completed CIC start-up ........ " << RESET;

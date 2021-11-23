@@ -211,7 +211,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
         if(fThreshold > 1023)
         {
             LOG(ERROR) << "Error, Threshold value can be 10 bit max (1023)! - quitting";
-            exit(1);
+            exit(10);
         }
     }
     // Read constructor

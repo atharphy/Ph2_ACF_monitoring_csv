@@ -363,7 +363,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c)
                         if(!cSuccess)
                         {
                             LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-                            exit(EXIT_FAILURE);
+                            exit(5);
                         }
                         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << ((cModeSelect == 0) ? "2S" : "PS") << " readout." << RESET;
                         // CIC start-up sequence
