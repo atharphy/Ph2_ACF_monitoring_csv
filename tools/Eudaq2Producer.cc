@@ -151,6 +151,9 @@ void Eudaq2Producer::DoConfigure()
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
 
+    // check if first event needs to be skipped (was necessary at several beam tests at DESY to get correlations)
+    fSkipFirstEvent = (cEudaqIni->Get("SkipFirstEvent", "true") == "true") ? true : false;
+
     fEnableInjection = (cEudaqConf->Get("EnableInjection", "false") == "true") ? true : false;
     if(fIsPS && fEnableInjection)
     {
@@ -413,7 +416,6 @@ void Eudaq2Producer::DoStopRun()
             }
         }
     }
-    fFirstEvent = true;
     LOG(INFO) << "[CMS-OT Producer] Stopped Run" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Stopped Run");
 }
@@ -436,7 +438,6 @@ void Eudaq2Producer::DoReset()
     }
 
     fExitRun = true, fConfigured = false;
-    fFirstEvent = true;
     // Stop the running data thread
     if(fThreadRun.joinable()) fThreadRun.join();
     // fThreadRun = std::thread();
@@ -503,8 +504,8 @@ void Eudaq2Producer::ReadoutLoop()
                     cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin() + fTriggerMultiplicity + 1);
                     //#FIXME check if you want to keep the lines bellow
                     // skip first event
-                    if(!fFirstEvent) SendEvent(std::move(cEudaqEvent));
-                    fFirstEvent = false;
+                    if(!fSkipFirstEvent) SendEvent(std::move(cEudaqEvent));
+                    fSkipFirstEvent = false;
                 }
             } // end of cBoard loop
         }     // end of if fEnableInjection
@@ -559,13 +560,13 @@ void Eudaq2Producer::ReadoutLoop()
                     cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin() + fTriggerMultiplicity + 1);
                     //#FIXME check if you want to keep the lines bellow
                     // skip first event
-                    if(!fFirstEvent) SendEvent(std::move(cEudaqEvent));
-                    fFirstEvent = false;
+                    if(!fSkipFirstEvent) SendEvent(std::move(cEudaqEvent));
+                    fSkipFirstEvent = false;
                 }
             } // end of cBoard loop
         }     // end of if enable injection
-
     } // end of !fExitRun loop
+    fSkipFirstEvent = true; // Reset skipping of first event
 }
 
 void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2Event, eudaq::EventSP pEudaqSubEvent)
@@ -856,9 +857,9 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 // Extract Stubs
                 uint32_t cStubId = 0;
                 if(pPh2Event->StubVector(cHybridId, cChipId).size() > 0)
-		{
-		  LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
-		}
+                {
+                    LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
+                }
                 for(auto cStub : pPh2Event->StubVector(cHybridId, cChipId))
                 {
 		    //LOG(INFO) << BLUE << "\t\tPosition " << +cStub.getPosition() << " , Row " << +cStub.getRow() << ", Bend " << +cStub.getBend() << RESET;
