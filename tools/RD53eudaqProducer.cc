@@ -47,6 +47,7 @@ void RD53eudaqProducer::OnInitialise(const eudaq::Configuration& param)
         std::stringstream outp;
         RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
         RD53sysCntrPhys.InitializeSettings(configFile, outp);
+        nTRIGxEvent = RD53sysCntrPhys.findValueInSettings<double>("nTRIGxEvent");
 
         this->SetConnectionState(eudaq::ConnectionState::STATE_UNCONF, "RD53eudaqProducer::Unconfigured");
     }
@@ -186,7 +187,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             eudaq::RawDataEvent eudaqEvent(EUDAQ::EVENT, eudaqProducer->theRunNumber, eudaqProducer->evCounter);
 
             auto                      tluTrigId = RD53EvtList[it].tlu_trigger_id;
-            CMSITEventData::EventData theEvent{std::time(nullptr), RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
+            CMSITEventData::EventData theEvent{std::time(nullptr), eudaqProducer->nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
 
             // ##################################################
             // # Collect all hits that have same TLU trigger ID #
