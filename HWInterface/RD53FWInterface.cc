@@ -171,8 +171,10 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
+    if(fabs(inputClk / 1000. - 40) > 1) LOG(ERROR) << BOLDRED << "Input clock frequency not nominal" << std::endl;
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
+    if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1))) LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << std::endl;
 
     // @TMP@
     RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
