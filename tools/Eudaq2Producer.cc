@@ -152,7 +152,7 @@ void Eudaq2Producer::DoConfigure()
     LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
 
     // check if first event needs to be skipped (was necessary at several beam tests at DESY to get correlations)
-    fSkipFirstEvent = (cEudaqIni->Get("SkipFirstEvent", "true") == "true") ? true : false;
+    fSkipFirstEvent = (cEudaqConf->Get("SkipFirstEvent", "true") == "true") ? true : false;
 
     fEnableInjection = (cEudaqConf->Get("EnableInjection", "false") == "true") ? true : false;
     if(fIsPS && fEnableInjection)
