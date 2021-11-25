@@ -56,7 +56,7 @@ class RD53eudaqProducer : public eudaq::Producer
 
     Physics RD53sysCntrPhys;
 
-  static const uint32_t m_id_factory = eudaq::cstr2hash("RD53eudaqProducer");
+    static const uint32_t m_id_factory = eudaq::cstr2hash("RD53eudaqProducer");
 
   private:
     std::condition_variable wakeUp;
