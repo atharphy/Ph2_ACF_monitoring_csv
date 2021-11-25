@@ -56,10 +56,12 @@ class BeamTestCheck2S : public OTTool
     void ScanStubLatency(uint8_t pContinousReadout);
     void ScanL1Latency(uint8_t pContinousReadout);
 
-    void ConfigureScans(uint8_t pStatusL1, uint8_t pStatusStubs ){
-        fScanL1Latency = pStatusL1;
+    void ConfigureScans(uint8_t pStatusL1, uint8_t pStatusStubs)
+    {
+        fScanL1Latency   = pStatusL1;
         fScanStubLatency = pStatusStubs;
     }
+
   protected:
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
     void cleanContainerMap()
@@ -102,9 +104,11 @@ class BeamTestCheck2S : public OTTool
     DetectorDataContainer fHitMap, fStubMap;
     // Bend Maps
     DetectorDataContainer fBendMap;
-    // Event count 
+    // Event count
     DetectorDataContainer fEventsWithSingleClusters, fEventsWithStubs;
-    
+    // Stub + Hit count per
+    DetectorDataContainer fEventSubSet, fStubSubSet;
+
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 
@@ -123,7 +127,7 @@ class BeamTestCheck2S : public OTTool
     void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
-    void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations = 0 , uint8_t pPrintOut = 0);
+    void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations = 0, uint8_t pPrintOut = 0);
     void Validate();
 
     size_t fThStep{0};

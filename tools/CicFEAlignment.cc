@@ -396,22 +396,22 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
         auto& cWordAlignmentThisBoard = fWordAlignmentValues.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(cOpticalGroup->getIndex());
+            auto&                cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->at(cOpticalGroup->getIndex());
             std::vector<uint8_t> cWordAligned(0);
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
                 // configure word alignment pattern on CBCs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *cHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
                 bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
-                cWordAligned.push_back( cSuccessAlign ? 1 : 0 );
-            }//hybrid - configure word alignment patterns 
-            
-            cAligned=true;
-            size_t cIndx=0;
+                cWordAligned.push_back(cSuccessAlign ? 1 : 0);
+            } // hybrid - configure word alignment patterns
+
+            cAligned     = true;
+            size_t cIndx = 0;
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->at(cHybrid->getIndex());
@@ -419,9 +419,9 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                 if(cCic == NULL) continue;
 
                 // run automated word alignment
-                //cAligned = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
+                // cAligned = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
                 std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
-                cAligned = cAligned && cWordAligned[cIndx];
+                cAligned                                               = cAligned && cWordAligned[cIndx];
                 // check status
                 if(cWordAligned[cIndx])
                 {

@@ -59,7 +59,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1);
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
-    void fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap);
+    void fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap, DetectorDataContainer& theTDCMap);
     void fillCorrelations(DetectorDataContainer& theHitMapS0, DetectorDataContainer& theHitMapS1, DetectorDataContainer& theStubMap);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
     void fillTriggerTDCPlots(DetectorDataContainer& theTriggerTDC);
@@ -89,10 +89,11 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     DetectorDataContainer fBendHistrograms;
     DetectorDataContainer fStubCountHistrograms;
     DetectorDataContainer fEventCountHistrograms;
-    // Correlation plots 
+    // Correlation plots
     DetectorDataContainer fCorrelationS0S1Histograms;
-    DetectorDataContainer fCorrelationStubS0Histograms; 
-    DetectorDataContainer fCorrelationStubS1Histograms; 
+    DetectorDataContainer fCorrelationStubS0Histograms;
+    DetectorDataContainer fCorrelationStubS1Histograms;
+    DetectorDataContainer fCorrelationLinksS0Histogram;
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;

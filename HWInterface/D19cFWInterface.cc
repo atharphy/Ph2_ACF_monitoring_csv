@@ -1415,15 +1415,15 @@ void D19cFWInterface::Start()
         // prints to debug and also checks that things are ok
         this->TriggerConfiguration();
         cTriggerState = GetTriggerState();
-        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
-        
+        LOG(INFO) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+
         // now check if I should try and start again
         if(cHandshake)
         {
             auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             cBreak           = (cReadoutReq == 1);
             if(cBreak)
-                LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
         }
         else
             cBreak = (cTriggerState != 0);
@@ -4667,17 +4667,21 @@ bool D19cFWInterface::Bx0Alignment()
     bool    cWait     = true;
     uint8_t cAttempts = 0;
     cSuccess          = false;
+    // reset the readout
+    // this->ResetReadout();
     // reset decoder
     size_t cMaxAttempts = 20;
-    size_t cWaitTime    = fWait_us * 1; // was 100
+    size_t cWaitTime    = fWait_us * 100; // was 100
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
+    // number of triggers to accept
     do
     {
         if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // pause after reset
         // send a resync then wait
-        this->ChipReSync();
+        this->Compose_fast_command(0, 1, 0, 0, 0);
+        // this->ChipReSync();
         if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // check state of bx0 alignment block
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
@@ -4686,13 +4690,13 @@ bool D19cFWInterface::Bx0Alignment()
             LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!"
                        << "\t... Stub package delay set to : " << +cPkgDelay << RESET;
             cSuccess = true;
-            /*
-            // definitely works with
-            // figure out which one of these is needed
-            // resync after bx0 alignment worked
-            this->ChipReSync();
-            if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
-            */
+
+            // // definitely works with
+            // // figure out which one of these is needed
+            // // resync after bx0 alignment worked
+            // this->ChipReSync();
+            // if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
+
             // // reset the readout as well
             // this->ResetReadout();
             // if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
@@ -4706,7 +4710,6 @@ bool D19cFWInterface::Bx0Alignment()
         cAttempts++;
     } while(cAttempts < cMaxAttempts && !cSuccess);
     if(!cSuccess) LOG(INFO) << BOLDRED << "Could not re-set decoder ..." << RESET;
-    this->ResetReadout();
 
     return cSuccess;
 }
@@ -6247,6 +6250,17 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
     {
+        // reset I2C
+        // std::vector<uint8_t> cBitPosition = {2, 1, 0};
+        // uint8_t cResetMask = (1 << cBitPosition[pMasterId]);
+        // LOG (INFO) << BOLDYELLOW << "Writing 0x00 to I2C reset " << RESET;
+        // WriteLpGBTRegister( pLinkId, 0x12c, 0 );
+        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+        // WriteLpGBTRegister( pLinkId, 0x12c, cResetMask );
+        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+        // WriteLpGBTRegister( pLinkId, 0x12c, 0 );
+        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
+
         if(fI2Cstatus != 4)
             LOG(DEBUG) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
                        << " transaction was to write " << +pNBytes << " to slave address " << +pSlaveAddress << " with data 0x" << std::hex << pSlaveData << std::dec << RESET;
@@ -6338,6 +6352,7 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
     uint8_t  cNbytes    = 3;
     if(pChip->getFrontEndType() != FrontEndType::CBC3)
     {
+        // LOG (INFO) << BOLDYELLOW << "Writing to ... something else " << RESET;
         uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
         cSlaveData                 = (pRegisterValue << 16) | cInvertedRegister;
     }
@@ -6360,7 +6375,7 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
     if(pVerify && cSuccess)
     {
         uint8_t cReadBack = ReadFERegister(pChip, pRegisterAddress);
-        uint8_t cIter = 0, cMaxIter = 100;
+        uint8_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
             if(cIter == cMaxIter - 1)
@@ -6369,11 +6384,11 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
                           << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
             }
             // dont re-write  - just try and read again
-            cReadBack = ReadFERegister(pChip, pRegisterAddress);
+            // cReadBack = ReadFERegister(pChip, pRegisterAddress);
 
             // this was repeating both the write and the read
-            // cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-            // if(cSuccess) { cReadBack = ReadFERegister(pChip, pRegisterAddress); }
+            cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
+            if(cSuccess) { cReadBack = ReadFERegister(pChip, pRegisterAddress); }
             fI2CReadMismatches++;
             cIter++;
         }

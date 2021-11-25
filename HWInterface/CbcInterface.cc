@@ -305,7 +305,7 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc, uint8_t pMode)
         sprintf(cBuffer, "Bend%d", static_cast<int>(cIndex));
         std::string cRegName(cBuffer, cLength);
         // LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
-        uint16_t cValue            = (pMode == 0 ) ? this->ReadChipReg(pCbc, cRegName) : pCbc->getReg(cRegName);
+        uint16_t cValue            = (pMode == 0) ? this->ReadChipReg(pCbc, cRegName) : pCbc->getReg(cRegName);
         cBendCodes[cIndex * 2]     = (cValue & 0x0F);
         cBendCodes[cIndex * 2 + 1] = (cValue & 0xF0) >> 4;
     }
