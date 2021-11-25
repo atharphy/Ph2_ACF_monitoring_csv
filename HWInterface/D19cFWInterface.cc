@@ -1428,9 +1428,9 @@ void D19cFWInterface::L1ADebug(uint8_t pWait_ms)
 
     this->ResetReadout();
 }
-void D19cFWInterface::L1ADebug(uint8_t pWait_ms, std::string& pReadLine, bool pPrintScoped)
+void D19cFWInterface::L1ADebug(uint8_t pWait_ms, std::string& pReadLine, bool pPrintScoped, bool pUseInternalConfig)
 {
-    this->ConfigureTriggerFSM(0, 10, 3);
+    if(pUseInternalConfig) this->ConfigureTriggerFSM(0, 10, 3);
     // disable back-pressure
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     this->Start();
@@ -1530,7 +1530,7 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
     this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
     this->ResetReadout();
 }
-void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, std::vector<std::vector<std::string>>& cReadLines)
+void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, std::vector<std::vector<std::string>>& cReadLines, bool pPrintScoped)
 {
     // enable stub debug - allows you to 'scope' the stub output
     this->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
@@ -1561,7 +1561,8 @@ void D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, std::vecto
             cOutput_wSpace += *cIt + " ";
             cOutput += *cIt;
         }
-        LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+        if (pPrintScoped)
+            LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
         cLines.push_back(cOutput);
         // cStrLength = cOutput.length();
         cLine++;
