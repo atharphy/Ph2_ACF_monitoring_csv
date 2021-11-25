@@ -138,7 +138,14 @@ int main(int argc, char* argv[])
     cmd.defineOption("readIDs", "Read chip ids....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+    
+    cmd.defineOption("registerTestWrite", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestRead", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("sortOrder","Sort order for CBC registers  : 0 - no sort other than page; 1 - page then increasing addresss; 2 - page then decreasing addresss", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("bitToFlip","Bit to flip when testing register write", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("testAttempts","Number of attempts", ArgvParser::OptionRequiresValue);
     cmd.defineOption("manualScan", "Manual scan of threshold", ArgvParser::NoOptionAttribute);
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
     //
@@ -363,7 +370,9 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        auto cFusedId = cTool.fReadoutChipInterface->ReadChipReg(cChip, "ChipId");
+                        if( cChip->getFrontEndType() != FrontEndType::CBC3 ) continue;
+
+                        auto cFusedId = static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
                         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
                     }
                 }
@@ -371,11 +380,79 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(cmd.foundOption("registerTest"))
+    if(cmd.foundOption("registerTestWrite"))
     {
+        uint8_t         cNregistersToCheck = (cmd.foundOption("registerTestWrite")) ? convertAnyInt(cmd.optionValue("registerTestWrite").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
+        uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t         cBitToFlip = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
+        uint8_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
-        cRegTester.RegisterTest();
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetBitToFlip(cBitToFlip);
+        cRegTester.Initialise();
+        for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
+            LOG (INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
+            cRegTester.CheckWriteRegisters(1, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+    
+    if(cmd.foundOption("registerTestWriteAndToggle"))
+    {
+        uint8_t         cNregistersToCheck = (cmd.foundOption("registerTestWriteAndToggle")) ? convertAnyInt(cmd.optionValue("registerTestWriteAndToggle").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
+        uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t         cBitToFlip = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
+        uint8_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetBitToFlip(cBitToFlip);
+        cRegTester.Initialise();
+        for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
+            LOG (INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;   
+            cRegTester.CheckPageSwitchWrite(1,cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+
+    if(cmd.foundOption("registerTestRead"))
+    {
+        uint8_t         cNregistersToCheck = (cmd.foundOption("registerTestRead")) ? convertAnyInt(cmd.optionValue("registerTestRead").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
+        uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.Initialise();
+        for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
+            LOG (INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
+            cRegTester.CheckReadRegisters(1, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+    if(cmd.foundOption("registerTestReadAndToggle"))
+    {
+        uint8_t         cNregistersToCheck = (cmd.foundOption("registerTestReadAndToggle")) ? convertAnyInt(cmd.optionValue("registerTestReadAndToggle").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
+        uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.Initialise();
+        for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
+            LOG (INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;   
+            cRegTester.CheckPageSwitchRead(1,cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
     }
 
     // align CIC-lpGBT-BE

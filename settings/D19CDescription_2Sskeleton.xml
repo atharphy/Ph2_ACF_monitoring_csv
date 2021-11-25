@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="0" boardReset="0">
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://192.168.21.201:10203?target=192.168.21.203:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
     <!-- skeleton --> 
@@ -204,7 +204,7 @@
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
     		<Register name="trigger_source"> 3 </Register>
-    		<Register name="user_trigger_frequency"> 100 </Register>
+    		<Register name="user_trigger_frequency"> 10 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 0 </Register>
