@@ -490,11 +490,14 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                                 }
                                 // cToggles[ cItem.second.fPage << 8 | cItem.second.fAddress ] = cNPageToggles;
                                 // set back default page 
-                                static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cDefPage , false); 
-                                cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
-                                if( cNewPage != cCurrentPage ){ 
-                                    LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cNewPage << " to " << +cCurrentPage << RESET;
-                                    cNPageToggles++;
+                                if( fReturnToDefPage )
+                                {
+                                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cDefPage , false); 
+                                    cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                    if( cNewPage != cCurrentPage ){ 
+                                        LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cNewPage << " to " << +cCurrentPage << RESET;
+                                        cNPageToggles++;
+                                    }
                                 }
                             }
                             cIndex++;
@@ -581,12 +584,12 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                     uint8_t           cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7;
 
                     // set page that you want to check 
-                    // static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, pPageToSelect , false); 
-                    // cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
-                    // if( cCurrentPage != cDefPage ){ 
-                    //     LOG (INFO) << BOLDYELLOW << "Toggle page from " << +cDefPage << " to " << +cCurrentPage << RESET;
-                    //     cNPageToggles++;
-                    // }
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, pPageToSelect , false); 
+                    cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                    if( cCurrentPage != cDefPage ){ 
+                        LOG (INFO) << BOLDYELLOW << "Toggle page from " << +cDefPage << " to " << +cCurrentPage << RESET;
+                        cNPageToggles++;
+                    }
 
                     for( auto& cItem : cRegList )
                     {
@@ -650,11 +653,14 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                                     }
                                 }
                                 // set back default page 
-                                static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cDefPage , false); 
-                                cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
-                                if( cNewPage != cCurrentPage ){ 
-                                    LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cNewPage << " to " << +cCurrentPage << RESET;
-                                    cNPageToggles++;
+                                if( fReturnToDefPage )
+                                {
+                                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cDefPage , false); 
+                                    cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                    if( cNewPage != cCurrentPage ){ 
+                                        LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cNewPage << " to " << +cCurrentPage << RESET;
+                                        cNPageToggles++;
+                                    }
                                 }
                             }
                             cNWrites++;

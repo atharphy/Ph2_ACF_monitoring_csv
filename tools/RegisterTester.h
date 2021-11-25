@@ -72,6 +72,7 @@ class RegisterTester : public Tool
     void CheckPageSwitchWrite(uint8_t pPageToSelect=0, uint8_t pNRegisters=1);
     void SetSortOrder(uint8_t pSortOrder){ fSortOrder = pSortOrder; };
     void SetBitToFlip(uint8_t pBit){ fBitToFlip = pBit; };
+    void SetReturnToDefPage(uint8_t pReturn){fReturnToDefPage =pReturn;};
   private:
     // timing
     std::chrono::seconds::rep fStartTime;
@@ -90,6 +91,9 @@ class RegisterTester : public Tool
 
     // bit to flip during register write test 
     uint8_t  fBitToFlip{0};
+
+    // set page back to default after a write 
+    uint8_t  fReturnToDefPage{0};
 
     // HardReset
     void SendHardReset(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, const Ph2_HwDescription::Chip* pFrontEndChip);

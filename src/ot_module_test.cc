@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("sortOrder","Sort order for CBC registers  : 0 - no sort other than page; 1 - page then increasing addresss; 2 - page then decreasing addresss", ArgvParser::OptionRequiresValue);
     cmd.defineOption("bitToFlip","Bit to flip when testing register write", ArgvParser::OptionRequiresValue);
     cmd.defineOption("testAttempts","Number of attempts", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("returnToDefPage","Return to Def Page", ArgvParser::OptionRequiresValue);
     cmd.defineOption("manualScan", "Manual scan of threshold", ArgvParser::NoOptionAttribute);
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
     //
@@ -406,12 +407,14 @@ int main(int argc, char* argv[])
         // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
         uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
         uint8_t         cBitToFlip = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
+        uint8_t         cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
         uint8_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
         
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
         cRegTester.SetSortOrder(cSortOder);
         cRegTester.SetBitToFlip(cBitToFlip);
+        cRegTester.SetReturnToDefPage(cReturnToDefPage);
         cRegTester.Initialise();
         for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
             LOG (INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;   
