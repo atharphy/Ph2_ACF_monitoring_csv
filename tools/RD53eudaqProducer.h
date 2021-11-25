@@ -11,9 +11,9 @@
 #define RD53eudaqProducer_H
 
 #include "RD53Physics.h"
-#include "eudaq/CMSITEventData.hh"
+#include "../user/CMSIT/module/include/CMSITEventData.hh"
 #include "eudaq/Producer.hh"
-#include "eudaq/RawDataEvent.hh"
+#include "eudaq/RawEvent.hh"
 
 #include "boost/archive/binary_oarchive.hpp"
 #include "boost/serialization/vector.hpp"
@@ -40,15 +40,15 @@ class RD53eudaqProducer : public eudaq::Producer
   public:
     RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string& configFile, const std::string& producerName, const std::string& runControl);
 
-    void OnReset() override;
-    void OnInitialise(const eudaq::Configuration& param) override;
-    void OnConfigure(const eudaq::Configuration& param) override;
-    void OnStartRun(unsigned runNumber) override;
-    void OnStopRun() override;
-    void OnTerminate() override;
+    void DoReset() override;
+    void DoInitialise() override;
+    void DoConfigure() override;
+    void DoStartRun() override;
+    void DoStopRun() override;
+    void DoTerminate() override;
 
-    void MainLoop();
-    void MySendEvent(eudaq::Event& theEvent);
+    void RunLoop();
+    void MySendEvent(eudaq::EventSP theEvent);
 
     int      theRunNumber;
     int      evCounter;

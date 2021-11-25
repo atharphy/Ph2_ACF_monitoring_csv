@@ -44,8 +44,8 @@
 #include "eudaq/Logger.hh"
 #include "eudaq/OptionParser.hh"
 #include "eudaq/Producer.hh"
-//#include "eudaq/RawEvent.hh"
-#include "eudaq/RawDataEvent.hh"
+#include "eudaq/RawEvent.hh"
+// #include "eudaq/RawDataEvent.hh"
 #include "eudaq/Time.hh"
 #include "eudaq/Utils.hh"
 #endif

@@ -685,7 +685,7 @@ int main(int argc, char** argv)
             gROOT->SetBatch(true);
 
             RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
-            theEUDAQproducer.MainLoop();
+            theEUDAQproducer.RunLoop();
             runNumber = theEUDAQproducer.theRunNumber;
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
