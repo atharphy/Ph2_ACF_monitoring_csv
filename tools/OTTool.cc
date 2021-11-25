@@ -798,6 +798,17 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
 }
 void OTTool::UpdateFromRegMap(BeBoard* pBoard)
 {
+    // important registers for beBoard
+    std::vector<std::string> cBoardRegs{"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity","fc7_daq_cnfg.readout_block.global.common_stubdata_delay","fc7_daq_cnfg.fast_command_block.trigger_source"};
+    cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.trigger_id_delay");
+    cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.tlu_enabled");
+    cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.data_handshake_enable");
+    BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
+    for(auto cReg : cBoardRegs )
+    {
+      fBeBoardInterface->WriteBoardReg(pBoard, cReg , cRegMap[cReg]);
+    }
+    
     // set thresholds
     for(auto cOpticalGroup: *pBoard)
     {
