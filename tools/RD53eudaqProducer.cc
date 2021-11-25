@@ -164,3 +164,8 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
         }
     }
 }
+
+namespace
+{
+  auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Ph2_System::SystemController&, const std::string&, const std::string&, const std::string&>(RD53eudaqProducer::m_id_factory);
+}
