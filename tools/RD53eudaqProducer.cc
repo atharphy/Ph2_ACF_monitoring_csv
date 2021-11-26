@@ -115,7 +115,8 @@ void RD53eudaqProducer::MainLoop()
 
 void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
 {
-    do
+    const auto MAXATTEMPTS = 2;
+    for(auto i = 0; i < MAXATTEMPTS; i++)
     {
         try
         {
@@ -124,10 +125,10 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
         }
         catch(...)
         {
-            std::cout << "[RD53eudaqProducer::MySendEvent] Resource unavailable" << std::endl;
+            std::cout << "[RD53eudaqProducer::MySendEvent] Resource unavailable, attempt " << i + 1 << "/" << MAXATTEMPTS << std::endl;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
-    } while(doExit == false);
+    }
 }
 
 void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
