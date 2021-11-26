@@ -11,8 +11,8 @@
 
 void RD53eudaqProducer::DoReset()
 {
-  RD53sysCntrPhys.Stop();
-  RD53eudaqProducer::DoTerminate();
+    RD53sysCntrPhys.Stop();
+    RD53eudaqProducer::DoTerminate();
 }
 
 void RD53eudaqProducer::DoInitialise()
