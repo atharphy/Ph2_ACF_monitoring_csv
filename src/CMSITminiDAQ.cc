@@ -683,26 +683,26 @@ int main(int argc, char** argv)
             LOG(INFO) << BOLDMAGENTA << "@@@ Performing EUDAQ data taking @@@" << RESET;
 
             gROOT->SetBatch(true);
-	    
-	    auto theEUDAQproducer = eudaq::Producer::Make(EUDAQ::EUDAQproducerNAME, EUDAQ::EUDAQproducerNAME, eudaqRunCtr);
 
-	    if(!theEUDAQproducer)
-	      {
-		LOG(ERROR) << BOLDRED << "Unknown Producer: " << EUDAQ::EUDAQproducerNAME << std::endl;
-		exit(EXIT_FAILURE);
-	      }
-	    
-	    static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->Creator(mySysCntr, configFile);
-	    
-	    try
-	      {
-		theEUDAQproducer->Connect();
-	      }
-	    catch (...)
-	      {
-		LOG(ERROR) << BOLDRED << "Could not connect to RunControl: " << eudaqRunCtr << std::endl;
-		exit(EXIT_FAILURE);
-	      }
+            auto theEUDAQproducer = eudaq::Producer::Make(EUDAQ::EUDAQproducerNAME, EUDAQ::EUDAQproducerNAME, eudaqRunCtr);
+
+            if(!theEUDAQproducer)
+            {
+                LOG(ERROR) << BOLDRED << "Unknown Producer: " << EUDAQ::EUDAQproducerNAME << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->Creator(mySysCntr, configFile);
+
+            try
+            {
+                theEUDAQproducer->Connect();
+            }
+            catch(...)
+            {
+                LOG(ERROR) << BOLDRED << "Could not connect to RunControl: " << eudaqRunCtr << std::endl;
+                exit(EXIT_FAILURE);
+            }
 
             static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->MainLoop();
             runNumber = static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->theRunNumber;

@@ -95,15 +95,14 @@ void RD53eudaqProducer::RunLoop()
 void RD53eudaqProducer::Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName)
 {
     configFile = fileName;
-    doExit = false;
+    doExit     = false;
     RD53sysCntrPhys.Inherit(&RD53SysCntr);
     RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
 }
 
 void RD53eudaqProducer::MainLoop()
 {
-  while(this->IsConnected() == true)
-    std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
+    while(this->IsConnected() == true) std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
 }
 
 void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
