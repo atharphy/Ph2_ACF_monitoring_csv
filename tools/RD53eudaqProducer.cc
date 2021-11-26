@@ -9,14 +9,6 @@
 
 #include "RD53eudaqProducer.h"
 
-RD53eudaqProducer::RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string& configFile, const std::string& producerName, const std::string& runControl)
-    : Producer(producerName, runControl), configFile(configFile)
-{
-    doExit = false;
-    RD53sysCntrPhys.Inherit(&RD53SysCntr);
-    RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
-}
-
 void RD53eudaqProducer::DoReset() { RD53sysCntrPhys.Stop(); }
 
 void RD53eudaqProducer::DoInitialise()
@@ -100,6 +92,20 @@ void RD53eudaqProducer::RunLoop()
     wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
+void RD53eudaqProducer::Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName)
+{
+    configFile = fileName;
+    doExit = false;
+    RD53sysCntrPhys.Inherit(&RD53SysCntr);
+    RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
+}
+
+void RD53eudaqProducer::MainLoop()
+{
+  while(this->IsConnected() == true)
+    std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
+}
+
 void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
 {
     while(true)
@@ -167,5 +173,5 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
 
 namespace
 {
-auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Ph2_System::SystemController&, const std::string&, const std::string&, const std::string&>(RD53eudaqProducer::m_id_factory);
+auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, const std::string&, const std::string&>(RD53eudaqProducer::m_id_factory);
 }

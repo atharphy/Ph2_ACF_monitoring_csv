@@ -23,6 +23,7 @@ namespace EUDAQ
 const std::string EVENT = "CMSIT";
 const int         WAIT  = 5000; // [ms]
 const std::string FILERUNNUMBER("./RunNumber.txt");
+constexpr char EUDAQproducerNAME[] = "RD53eudaqProducer";
 } // namespace EUDAQ
 
 class RD53eudaqProducer : public eudaq::Producer
@@ -38,7 +39,7 @@ class RD53eudaqProducer : public eudaq::Producer
     };
 
   public:
-    RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string& configFile, const std::string& producerName, const std::string& runControl);
+  RD53eudaqProducer(const std::string& appName, const std::string& address): Producer(appName, address) {}
 
     void DoReset() override;
     void DoInitialise() override;
@@ -46,8 +47,10 @@ class RD53eudaqProducer : public eudaq::Producer
     void DoStartRun() override;
     void DoStopRun() override;
     void DoTerminate() override;
-
-    void RunLoop();
+    void RunLoop() override;
+  
+    void Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName);
+    void MainLoop();
     void MySendEvent(eudaq::EventSP theEvent);
 
     int      theRunNumber;
@@ -56,7 +59,7 @@ class RD53eudaqProducer : public eudaq::Producer
 
     Physics RD53sysCntrPhys;
 
-    static const uint32_t m_id_factory = eudaq::cstr2hash("RD53eudaqProducer");
+  static const uint32_t m_id_factory = eudaq::cstr2hash(EUDAQ::EUDAQproducerNAME);
 
   private:
     std::condition_variable wakeUp;
