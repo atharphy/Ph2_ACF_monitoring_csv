@@ -54,7 +54,7 @@ void BackEndAlignment::Initialise()
     fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
     // pair select for PS-FEHs
-    fPairSelect = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
+    fPairSelect = std::to_string(findValueInSettings<double>("EnablePairSelect", 0));
 
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitChip<ChipRegMap>(*fDetectorContainer, fRegMapContainer);
@@ -74,7 +74,7 @@ void BackEndAlignment::Initialise()
     }
 }
 
-bool BackEndAlignment::PSAlignment(BeBoard* pBoard, uint8_t pSSAPair)
+bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
 {
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
@@ -92,19 +92,22 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, uint8_t pSSAPair)
                 ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
                 if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA)
                 {
+                    if( cReadoutChip->getId()!=(int)(pSSAPair[0]-'0') && cReadoutChip->getId()!=(int)(pSSAPair[1]-'0') )
+                        continue;
                     auto cDriveStrength = fReadoutChipInterface->ReadChipReg(cChip, "SLVS_pad_current_L1");
-                    LOG(INFO) << BOLDBLUE << "SSA[#" << +cChip->getId() << " Alignment for L1 and stub lines.. L1 drive set to " << +cDriveStrength << RESET;
+                    LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << " Alignment for L1 and stub lines.. L1 drive set to " << +cDriveStrength << RESET;
 
                     std::vector<uint8_t> cAlVals(8, 0);
                     uint8_t              cPairId = (cChip->getId() % 2 == 0) ? 1 : 0;
-                    uint8_t              cChipId = (pSSAPair) ? cPairId : cChip->getId();
-                    cPairId                      = (pSSAPair) ? cPairId : 0;
+                    uint8_t              cChipId = (pSSAPair != "") ? cPairId : cChip->getId();
+                    cPairId                      = (pSSAPair != "") ? cPairId : 0;
 
                     // select SSA pair
-                    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", 0x4);
+                    if(pSSAPair == "")
+                        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", 0x4);
                     cWordAlignmentPattern = (cPairId == 0) ? 0xCA : 0xF0;
-                    if(pSSAPair)
-                        LOG(INFO) << BOLDBLUE << "Backend alignment for SSA pair#" << +cPairId << " [ChipId in BE is  " << +cChipId << " ]" << RESET;
+                    if(pSSAPair != "")
+                        LOG(INFO) << BOLDBLUE << "Backend alignment for SSA " << +cPairId << " in pair [ChipId in BE is  " << +cChip->getId() << " ]" << RESET;
                     else
                         LOG(INFO) << BOLDBLUE << "Backend alignment for SSA#" << +cChipId << RESET;
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x1);
@@ -144,9 +147,9 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, uint8_t pSSAPair)
                     // back to readout mode 0 to look at the L1 data
                     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
                     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
-                    cInterface->StubDebug(true, 8);
+                    // cInterface->StubDebug(true, 8);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x0, false);
-                    cInterface->L1ADebug();
+                    // cInterface->L1ADebug();
 
                     // Reset to original values
                     for(uint8_t cLineId = 0; cLineId < 8; cLineId++) // stub lines
