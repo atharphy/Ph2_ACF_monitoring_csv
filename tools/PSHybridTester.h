@@ -78,7 +78,7 @@ class PSHybridTester : public Tool
     void                           SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void                           SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBoard, const std::string& pSSAPairSel, bool pSweepPhaseSelector);
     void                           SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
-    void                           SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
+    void                           FillSSATree(std::string, std::string);
     void                           MPATest(Ph2_HwDescription::BeBoard* pBoard);
     std::map<std::string, uint8_t> fInputDebugMap = {{"sda_out", 0},      {"rtn_clk320", 1},   {"cic_out_6", 2},    {"cic_out_5", 3},    {"cic_out_4", 4},    {"cic_out_3", 5},    {"cic_out_2", 6},
                                                      {"cic_out_1", 7},    {"cic_out_0", 8},    {"sda_out", 9},      {"ssa1_clk320", 10}, {"ssa1_fcmd", 11},   {"ssa1_l1", 12},     {"ssa1_trig_7", 13},
@@ -157,7 +157,11 @@ class PSHybridTester : public Tool
     // fDACsCalibrationTargetMap = {<DAC to be calibrated>, <Target ADC value>}
     std::map<std::string, float> fDACsCalibrationTargetMap = {{"BoosterFeedback", 82.0}, {"PreampBias", 82.0}, {"VoltageBias", 82.0}, {"CurrentBias", 82.0}, {"DAC", 86.0}};
 #endif
-
+#ifdef __USE_ROOT__
+    TTree* fSSATree = nullptr;
+    std::string fSSATreeParameter = "";
+    std::string fSSATreeValue = "";
+#endif
     int                     fVoltageMeasurementWait_ms = 100;
     int                     fNreadings                 = 3;
     std::pair<float, float> fVoltageMeasurement;

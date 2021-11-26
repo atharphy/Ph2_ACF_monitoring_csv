@@ -662,12 +662,14 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
             {
                 cParameter = "";
                 if((((int)cSSAPairSel.at(0) - '0') % 2 == 0))
-                { // Check this
-                    cParameter = "FE" + std::to_string((int)cSSAPairSel.at(1 - a) - '0') + "_" + std::to_string(b);
+                {
+                    // cParameter = "FE" + std::to_string((int)cSSAPairSel.at(1 - a) - '0') + "_" + std::to_string(b);
+                    cParameter = "stub_" + std::to_string(b) + "_FE" + std::to_string((int)cSSAPairSel.at(1 - a) - '0');
                 }
                 else
                 {
-                    cParameter = "FE" + std::to_string((int)cSSAPairSel.at(a) - '0') + "_" + std::to_string(b);
+                    // cParameter = "FE" + std::to_string((int)cSSAPairSel.at(a) - '0') + "_" + std::to_string(b);
+                    cParameter = "stub_" + std::to_string(b) + "_FE" + std::to_string((int)cSSAPairSel.at(a) - '0');
                 }
                 cValue = cLine;
                 LOG(INFO) << cParameter << "  " << cValue << RESET;
@@ -844,17 +846,22 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
         if(cLinesInPairOK[cPairId])
         {
             LOG(INFO) << "L1 line in SSA#" << +cChipId << " (chip " << +cPairId << " in pair) is " << BOLDGREEN << "OK." << RESET; 
-            fillSummaryTree("SSA"+std::to_string(cChipId)+"_L1", 0);
+#ifdef __USE_ROOT__            
+            fillSummaryTree("SSA"+std::to_string(cChipId)+"_L1", 0.0);
+#endif
         }
         else
         {
             LOG(INFO) << "L1 line in SSA#" << +cChipId << " (chip " << +cPairId << " in pair) is " << BOLDRED << "BAD." << RESET;
-            fillSummaryTree("SSA"+std::to_string(cChipId)+"_L1", 1);
+#ifdef __USE_ROOT__            
+            fillSummaryTree("SSA"+std::to_string(cChipId)+"_L1", 1.0);
             cParameter = " ";
-            cParameter = "FE"+std::to_string(cChipId)+"_L1";
+            // cParameter = "FE"+std::to_string(cChipId)+"_L1";
+            cParameter = "L1_FE"+std::to_string(cChipId);
             cValue = "  ";
             // SSATree->Fill();
             FillSSATree(cParameter, cValue);
+#endif
         }
     }
 
