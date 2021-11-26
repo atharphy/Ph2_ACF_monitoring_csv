@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
     // cHybridTester.CheckHybridVoltages();
-    cHybridTester.RunHybridETest();
+    if (cSSAPair.empty() ) { cHybridTester.RunHybridETest(); } 
     LOG(INFO) << outp.str() << RESET;
     // select CIC readout
     // cHybridTester.SelectCIC(true);
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
     // cHybridTester.ReadSSABias("MonitorCurrentBias");
 
-    cHybridTester.CalibrateSSABias();
+    if (cSSAPair.empty() ) { cHybridTester.CalibrateSSABias(); } 
 
     if(cGui)
     {
@@ -472,17 +472,54 @@ int main(int argc, char* argv[])
             gui::progress(5 / 10.0);
         }
 
+        BackEndAlignment cBackendAlignment;
+        cBackendAlignment.Inherit(&cHybridTester);
+
         LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
         // configure SSA to output something on stub lines
-        if(cSSAPair != "ALL") { cHybridTester.SSATestStubOutput(cSSAPair); }
-        else
+        if(!cSSAPair.empty())
         {
-            std::string current_pair;
-            for(int i = 0; i < 7; i += 2)
+
+            BackEndAlignment cBackendAlignment;
+            cBackendAlignment.Inherit(&cHybridTester);
+
+            LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
+            // configure SSA to output something on stub lines
+            if(cSSAPair != "ALL") {
+                cHybridTester.SSAPairSelect(cSSAPair);
+                for(auto cBoard : *cHybridTester.fDetectorContainer)
+                {
+                    cBackendAlignment.PSAlignment(cBoard, cSSAPair);
+                }
+                cHybridTester.SSATestStubOutput(cSSAPair); 
+                cHybridTester.SSATestL1Output(cSSAPair);
+                cHybridTester.SSATestLateralCommunication(cSSAPair);
+            }
+            else
             {
-                current_pair = std::to_string(i) + std::to_string(i + 1);
-                cHybridTester.SSATestStubOutput(current_pair);
-                // cHybridTester.SSATestL1Output(current_pair);
+                std::string cCurrentSSAPair;
+                for(int i = 0; i < 7; i += 2)
+                {
+                    cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                    cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                    for(auto cBoard : *cHybridTester.fDetectorContainer)
+                    {
+                        cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair);
+                    }
+                    cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                    cHybridTester.SSATestL1Output(cCurrentSSAPair);
+                }
+                
+                for(int i = 0; i < 7; i ++)
+                {
+                    cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                    cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                    for(auto cBoard : *cHybridTester.fDetectorContainer)
+                    {
+                        cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair);
+                    }
+                    cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
+                }
             }
         }
         // configure SSA to output something on L1 lines
