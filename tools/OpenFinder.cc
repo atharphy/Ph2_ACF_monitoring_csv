@@ -297,7 +297,7 @@ void OpenFinder::Print()
             auto& cOpensThisOpticalGroup = cOpens->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cOpensThisHybrid = cOpensThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cOpensThisHybrid = cOpensThisOpticalGroup->at(cOpticalGroup->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
@@ -463,25 +463,25 @@ void OpenFinder::FindOpensPS()
     {
         // make sure async mode is enabled
         setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
-        // first .. set injection amplitude to 0 and find pedestal
+        // first .. set injection amplitude to 0
         setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", 0);
-        // std::vector<std::pair<std::string, uint32_t> > cRegVec;
-        // cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-        // cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
-        // cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
+        std::vector<std::pair<std::string, uint32_t> > cRegVec;
+        cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+        cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
+        cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
         for(auto cOpticalGroup: *cBoard)
         {
-            std::vector<std::pair<std::string, uint32_t>> cRegVec;
-            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
-            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
+            // std::vector<std::pair<std::string, uint32_t>> cRegVec;
+            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
+            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                         {
                             double cPedeMean   = getSummaryParameter(Form("AvgPedeSSA%d", cChip->getId()));
                             double cPedeStdDev = getSummaryParameter(Form("StDvPedeSSA%d", cChip->getId()));
@@ -625,11 +625,13 @@ void OpenFinder::FindOpensPS()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         std::vector<uint8_t> cPositions{0, 1};
-                        for(auto cPosition: cPositions)
+                        for(auto cPosition_index: cPositions)
                         {
+                            // uint8_t cPosition = 1-cPosition_index;
+                            uint8_t cPosition = cPosition_index;
                             antenna_set = false;
                             for(int i = 0; i < 2 && !antenna_set; i++)
                             {
