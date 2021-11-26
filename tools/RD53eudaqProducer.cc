@@ -9,7 +9,11 @@
 
 #include "RD53eudaqProducer.h"
 
-void RD53eudaqProducer::DoReset() { RD53sysCntrPhys.Stop(); }
+void RD53eudaqProducer::DoReset()
+{
+  RD53sysCntrPhys.Stop();
+  RD53eudaqProducer::DoTerminate();
+}
 
 void RD53eudaqProducer::DoInitialise()
 {
@@ -48,6 +52,8 @@ void RD53eudaqProducer::DoStartRun()
     std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
     RD53sysCntrPhys.initializeFiles(fileName);
     RD53sysCntrPhys.Start(theRunNumber);
+
+    doExit = false;
 }
 
 void RD53eudaqProducer::DoStopRun()
@@ -76,6 +82,8 @@ void RD53eudaqProducer::DoStopRun()
     fileRunNumberOut.open(EUDAQ::FILERUNNUMBER, std::ios::out);
     if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(theRunNumber) << std::endl;
     fileRunNumberOut.close();
+
+    RD53eudaqProducer::DoTerminate();
 }
 
 void RD53eudaqProducer::DoTerminate()
@@ -107,7 +115,7 @@ void RD53eudaqProducer::MainLoop()
 
 void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
 {
-    while(true)
+    while(doExit == false)
     {
         try
         {
@@ -116,7 +124,7 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
         }
         catch(...)
         {
-            std::cout << "Resource unavailable" << std::endl;
+            std::cout << "[RD53eudaqProducer::MySendEvent] Resource unavailable" << std::endl;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
     }
