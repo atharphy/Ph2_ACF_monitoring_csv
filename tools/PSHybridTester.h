@@ -42,6 +42,8 @@ class PSHybridTester : public Tool
     void SetTrim(std::string pTrimRegister, uint16_t pTrimValue);
     void SSATestStubOutput(const std::string& cSSAPairSel);
     void SSATestL1Output(const std::string& cSSAPairSel);
+    void SSATestLateralCommunication(const std::string& cSSAPairSel, bool pSweepPhaseSelector = false);
+    void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, bool pTrigger = false, bool pPrintScoped = true);
     void SetHybridVoltage(uint32_t pUsbBus, uint8_t pUsbDev);
     void MPATest();
     void SelectCIC(bool pSelect);
@@ -61,6 +63,8 @@ class PSHybridTester : public Tool
     void TrimSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
     void CalibrateSSABias(Ph2_HwDescription::BeBoard* pBoard);
     void CalibrateGainTrim(Ph2_HwDescription::BeBoard* pBoard);
+    std::vector<double> DecodeSSACentroids(std::vector<std::string>);
+    std::vector<std::string> DecodeSSAL1Packet(int, std::string);
     void SetTrim(Ph2_HwDescription::BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue);
     void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
@@ -72,6 +76,7 @@ class PSHybridTester : public Tool
     void                           SSAOutputsPogoDebug(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
     void                           SSATestStubOutput(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void                           SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
+    void                           SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBoard, const std::string& pSSAPairSel, bool pSweepPhaseSelector);
     void                           SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
     void                           SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
     void                           MPATest(Ph2_HwDescription::BeBoard* pBoard);
