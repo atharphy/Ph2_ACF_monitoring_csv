@@ -45,6 +45,7 @@ class PSHybridTester : public Tool
     void SSATestLateralCommunication(const std::string& cSSAPairSel, bool pSweepPhaseSelector = false);
     void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, bool pTrigger = false, bool pPrintScoped = true);
     void SetHybridVoltage(uint32_t pUsbBus, uint8_t pUsbDev);
+    void SSAPairSelect(const std::string& SSAPairSel);
     void MPATest();
     void SelectCIC(bool pSelect);
     void AlignCICout(uint8_t pPattern = 0xAA);
@@ -78,6 +79,7 @@ class PSHybridTester : public Tool
     void                           SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
     void                           SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBoard, const std::string& pSSAPairSel, bool pSweepPhaseSelector);
     void                           SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
+    void                           SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false, bool pPrintScoped = true);
     void                           FillSSATree(std::string, std::string);
     void                           MPATest(Ph2_HwDescription::BeBoard* pBoard);
     std::map<std::string, uint8_t> fInputDebugMap = {{"sda_out", 0},      {"rtn_clk320", 1},   {"cic_out_6", 2},    {"cic_out_5", 3},    {"cic_out_4", 4},    {"cic_out_3", 5},    {"cic_out_2", 6},

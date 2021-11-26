@@ -211,10 +211,19 @@ void PSHybridTester::SSAPairSelect(BeBoard* pBoard, const std::string& SSAPairSe
     try
     {
         auto BitPattern = fSSAPairSelMap.at(SSAPairSel);
-        this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", BitPattern);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         auto cRegister = this->fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select");
-        LOG(INFO) << BLUE << "SSA pair " << SSAPairSel << " is selected register value is " << std::bitset<4>(cRegister) << RESET;
+        if ( cRegister != BitPattern )
+        {
+            this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", BitPattern);
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            cRegister = this->fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select");
+            LOG(INFO) << BLUE << "SSA pair " << SSAPairSel << " is selected register value is " << std::bitset<4>(cRegister) << RESET;
+        }
+        else
+        {
+            LOG(INFO) << BLUE << "SSA pair " << SSAPairSel << " already selected. Register value is " << std::bitset<4>(cRegister) << RESET;
+        }
+        
     }
     catch(const std::out_of_range& e)
     {
@@ -712,24 +721,11 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
 {
     std::string cParameter = "";
     std::string cValue = "";
-    // fResultFile->cd();
 
-    // TTree* SSATree = nullptr;
-    // if(gROOT->FindObject("SSATree") != nullptr) 
-    // { 
-    //     SSATree = static_cast<TTree*>(gROOT->FindObject("SSATree")); 
-        // TBranch* cParameterBranch = SSATree->GetBranch("Parameter");
-        // TBranch* cValueBranch = SSATree->GetBranch("Value");
-
-        // cParameterBranch->SetAddress(&cParameter);
-        // cValueBranch->SetAddress(&cValue);
-    // }
-    // else
-    // {
-    //     SSATree = new TTree("SSATree", "Bad Lines in the SSA test");
-    //     SSATree->Branch("Parameter", &cParameter);
-    //     SSATree->Branch("Value", &cValue);
-    // }
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // select SSA pair
     this->SSAPairSelect(pBoard, cSSAPairSel);
