@@ -21,7 +21,7 @@
 namespace EUDAQ
 {
 const std::string EVENT = "CMSIT";
-const int         WAIT  = 5000; // [ms]
+const int         WAIT  = 1000; // [ms]
 const std::string FILERUNNUMBER("./RunNumber.txt");
 constexpr char    EUDAQproducerNAME[] = "RD53eudaqProducer";
 } // namespace EUDAQ
