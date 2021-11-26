@@ -137,9 +137,9 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
         size_t it = 0;
         while(it < RD53EvtList.size())
         {
-            auto eudaqEvent = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-
-            auto                      tluTrigId = RD53EvtList[it].tlu_trigger_id;
+            auto                      ev         = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+            auto                      eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
+            auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
             CMSITEventData::EventData theEvent{std::time(nullptr), eudaqProducer->nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
 
             // ##################################################
@@ -171,7 +171,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             const std::string& theStream = theSerialized.str();
 
             eudaqEvent->AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
-            eudaqProducer->MySendEvent(std::move(eudaqEvent));
+            eudaqProducer->MySendEvent(std::move(ev));
 
             eudaqProducer->evCounter++;
         }
