@@ -19,7 +19,7 @@ const float THRESHOLD_SHORT = 0.1;
 typedef std::vector<uint8_t> ChannelList;
 
 // add exit codes here
-const uint8_t FAILED_INJECTION = 1;
+const uint8_t FAILED_INJECTION = 6;
 
 class ShortFinder : public Tool
 {
