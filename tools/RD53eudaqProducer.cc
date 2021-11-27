@@ -37,7 +37,6 @@ void RD53eudaqProducer::DoStartRun()
                 for(const auto cChip: *cHybrid) static_cast<Ph2_HwInterface::RD53Interface*>(RD53sysCntrPhys.fReadoutChipInterface)->ConfigureChip(cChip);
 
     theRunNumber = GetRunNumber();
-    evCounter    = 0;
 
     // #####################
     // # Send a BORE event #
@@ -171,10 +170,8 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             theArchive << theEvent;
             const std::string& theStream = theSerialized.str();
 
-            eudaqEvent->AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
+            eudaqEvent->AddBlock(0, theStream.c_str(), theStream.size());
             eudaqProducer->MySendEvent(std::move(ev));
-
-            eudaqProducer->evCounter++;
         }
     }
 }

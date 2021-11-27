@@ -54,7 +54,6 @@ class RD53eudaqProducer : public eudaq::Producer
     void MySendEvent(eudaq::EventSP theEvent);
 
     int      theRunNumber;
-    int      evCounter;
     uint32_t nTRIGxEvent;
 
     Physics RD53sysCntrPhys;
