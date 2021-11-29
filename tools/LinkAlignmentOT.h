@@ -48,11 +48,18 @@ class LinkAlignmentOT : public OTTool
         auto& cBeBitSlipHybrd = cBeBitSlipOG->at(pHybridIndx);
         return cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
     }
-    void AlignStubPackage();
+    void    AlignStubPackage();
+    uint8_t GetLpGBTDelay(const OpticalGroup* pOpticalGroup) const
+    {
+        auto cBoardId   = pOpticalGroup->getBeBoardId();
+        auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+        return fLpGBTSamplingDelay.at((*cBoardIter)->getIndex())->at(pOpticalGroup->getIndex())->at(0)->getSummary<uint8_t>();
+    }
 
   protected:
   private:
     // Alignment parameters
+    DetectorDataContainer fLpGBTSamplingDelay;
     DetectorDataContainer fBeSamplingDelay; // one per line per data line from hybrid
     DetectorDataContainer fBeBitSlip;       // one per line per data line from hybrid
     bool                  fStubDebug{false};

@@ -421,23 +421,12 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                                 std::string cRegName = "TrimDAC_P" + (boost::format("%|04|") % (iChan + 1)).str();
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
-                            LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() 
-                                << " Channel " << iChan 
-                                << " with an occupancy of " << occupancy*1e6 << "; threshold is " 
-                                << pNoiseStripThreshold * 1e6 
-                                << " setting offset to " << +0xFF
-                                << RESET;
+                            LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() << " Channel " << iChan << " with an occupancy of "
+                                      << occupancy * 1e6 << "; threshold is " << pNoiseStripThreshold * 1e6 << " setting offset to " << +0xFF << RESET;
                         }
                         else
-                            LOG(INFO) << BOLDGREEN << "ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() 
-                                << " Channel " << iChan 
-                                << " with an occupancy of " << occupancy*1e6 
-                                << " number of hits is " << fEventsPerPoint * pMultiple* occupancy
-                                << "; threshold is " 
-                                << pNoiseStripThreshold * 1e6 
-                                << " setting offset to " << +0xFF
-                                << RESET;
-                            
+                            LOG(INFO) << BOLDGREEN << "ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() << " Channel " << iChan << " with an occupancy of " << occupancy * 1e6
+                                      << " number of hits is " << fEventsPerPoint * pMultiple * occupancy << "; threshold is " << pNoiseStripThreshold * 1e6 << " setting offset to " << +0xFF << RESET;
                     }
 
                     fReadoutChipInterface->WriteChipMultReg(cROC, cRegVec);

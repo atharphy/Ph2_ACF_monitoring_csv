@@ -687,9 +687,9 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
     auto& clpGBT = pOpticalGroup->flpGBT;
     if(clpGBT != nullptr)
     {
-        uint8_t                    cHybridClockDrive = 4;
-        uint8_t                    cPreEmphMode      = 3; // 3
-        uint8_t                    cPreEmphStr       = 7; // 7
+        uint8_t                    cHybridClockDrive = 7;
+        uint8_t                    cPreEmphMode      = 0; // 3
+        uint8_t                    cPreEmphStr       = 0; // 7
         const std::vector<uint8_t> cGroupsExamples   = {0, 1};
         static_cast<D19clpGBTInterface*>(flpGBTInterface)->Configure2SSEH(clpGBT);
         for(auto cHybrid: *pOpticalGroup)

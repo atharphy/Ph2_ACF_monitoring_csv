@@ -92,7 +92,7 @@ class Eudaq2Producer
     // Run status variables
     bool        fExitRun, fConfigured, fInitialised;
     std::thread fThreadRun;
-    bool        fFirstEvent = true;
+    bool        fSkipFirstEvent = true;
 
     // Handlers gor Ph2ACF Raw data and SLink data
     std::string  fPathToHWFile;
