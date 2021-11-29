@@ -37,6 +37,7 @@ void RD53eudaqProducer::DoStartRun()
                 for(const auto cChip: *cHybrid) static_cast<Ph2_HwInterface::RD53Interface*>(RD53sysCntrPhys.fReadoutChipInterface)->ConfigureChip(cChip);
 
     theRunNumber = GetRunNumber();
+    swTrigCnt    = 0;
 
     // #####################
     // # Send a BORE event #
@@ -44,6 +45,16 @@ void RD53eudaqProducer::DoStartRun()
     auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     ev->SetBORE();
     RD53eudaqProducer::MySendEvent(std::move(ev));
+
+    // #################################################
+    // # Add extra event for synchronization with TLU2 #
+    // #################################################
+    ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    ev->SetTriggerN(swTrigCnt++);
+    this->MySendEvent(std::move(ev));
+    // auto eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
+    // eudaqEvent->AddBlock(0, "", 0);
+    this->MySendEvent(std::move(ev));
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
@@ -141,8 +152,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             auto                      eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
             auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
             CMSITEventData::EventData theEvent{std::time(nullptr), eudaqProducer->nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
-            ev->SetTriggerN(tluTrigId);
-            std::cout << "AAAAAA tluTrigId " << tluTrigId << std::endl; // @TMP@
+            ev->SetTriggerN(eudaqProducer->swTrigCnt++);
 
             // ##################################################
             // # Collect all hits that have same TLU trigger ID #

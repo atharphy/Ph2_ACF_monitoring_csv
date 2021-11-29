@@ -55,6 +55,7 @@ class RD53eudaqProducer : public eudaq::Producer
 
     int      theRunNumber;
     uint32_t nTRIGxEvent;
+    size_t   swTrigCnt;
 
     Physics RD53sysCntrPhys;
 
