@@ -39,6 +39,12 @@ int main(int argc, char* argv[])
   cmd.defineOption("test-i2c-write", "Test lpGBT I2C Write");
   cmd.defineOptionAlternative("test-i2c-write", "ti2cw");
 
+  cmd.defineOption("test-fe-read", "Test Front-End read");
+  cmd.defineOptionAlternative("test-fe-read", "tfer");
+
+  cmd.defineOption("test-fe-write", "Test Front-End Write");
+  cmd.defineOptionAlternative("test-fe-write", "tfew");
+
   int result = cmd.parse(argc, argv);
 
   if(result != ArgvParser::NoParserError)
@@ -69,10 +75,12 @@ int main(int argc, char* argv[])
 
   cWorkerTester.PrepareForTests();
 
-  if(cmd.foundOption("test-ic-read")) cWorkerTester.TestICRead();
   if(cmd.foundOption("test-ic-write")) cWorkerTester.TestICWrite();
-  if(cmd.foundOption("test-i2c-read")) cWorkerTester.TestI2CRead();
+  if(cmd.foundOption("test-ic-read")) cWorkerTester.TestICRead();
   if(cmd.foundOption("test-i2c-write")) cWorkerTester.TestI2CWrite();
+  if(cmd.foundOption("test-i2c-read")) cWorkerTester.TestI2CRead();
+  if(cmd.foundOption("test-fe-read")) cWorkerTester.TestFERead();
+  if(cmd.foundOption("test-fe-write")) cWorkerTester.TestFEWrite();
 
   return 0;
 }
