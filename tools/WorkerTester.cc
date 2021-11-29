@@ -189,7 +189,7 @@ bool WorkerTester::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pReg
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pVerify << 7 | cHybridId << 6 | cChipCode << 3 | cChipId << 0);
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pVerify << 8 | cHybridId << 6 | cChipCode << 3 | cChipId << 0);
     cCommandVector.push_back(pRegisterValue << 16 | pRegisterAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
