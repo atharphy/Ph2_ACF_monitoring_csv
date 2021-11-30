@@ -29,3 +29,6 @@ core.*
 FEH_PS*/
 *.cc
 *.bin
+.vscode/*
+*.py
+*.txt
