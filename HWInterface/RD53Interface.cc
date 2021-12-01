@@ -320,6 +320,26 @@ std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::strin
                                                      (RD53Shared::setBits(Reg.fBitSize) << (pRD53RegMap["CML_CONFIG_EN_LANE"].fBitSize + pRD53RegMap["CML_CONFIG_SER_EN_TAP"].fBitSize))));
         regName = "CML_CONFIG";
     }
+    else if(regName == "SER_SEL_OUT_0")
+    {
+        value   = Reg.fValue + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xFC);
+        regName = "SER_SEL_OUT";
+    }
+    else if(regName == "SER_SEL_OUT_1")
+    {
+        value   = (Reg.fValue << pRD53RegMap["SER_SEL_OUT_0"].fBitSize) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xF3);
+        regName = "SER_SEL_OUT";
+    }
+    else if(regName == "SER_SEL_OUT_2")
+    {
+        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xCF);
+        regName = "SER_SEL_OUT";
+    }
+    else if(regName == "SER_SEL_OUT_3")
+    {
+        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize + pRD53RegMap["SER_SEL_OUT_2"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0x3C);
+        regName = "SER_SEL_OUT";
+    }
 
     return std::pair<std::string, uint16_t>(regName, value);
 }
@@ -478,7 +498,12 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 // # PRBS generator #
 // ##################
 
-void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
+void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip)
+{
+    auto regValue = RD53Constants::PATTERN_PRBS;
+    if(pChip->getRegItem("SER_SEL_OUT").fPrmptCfg == true) regValue = pChip->getRegItem("SER_SEL_OUT").fValue;
+    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", regValue, false);
+}
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
 void RD53Interface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType)
