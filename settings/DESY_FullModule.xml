@@ -22,7 +22,7 @@
           />
         </lpGBT>
 
-        <!-- <Hybrid Id="0" Status="1" LinkId="0" reset="1">
+        <Hybrid Id="0" Status="1" LinkId="0" reset="1">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
@@ -52,7 +52,7 @@
 
 
 
-        <Hybrid Id="1" Status="1" LinkId="0" i2cMaster="1">
+        <!-- <Hybrid Id="1" Status="1" LinkId="0" i2cMaster="1">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>

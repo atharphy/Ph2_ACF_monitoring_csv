@@ -119,7 +119,6 @@ uint8_t WorkerTester::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlave
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | cMasterConfig << 6);
     cCommandVector.push_back(pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
     uint8_t cReadBack = cReplyVector[0] & 0xFF;
     if(pVerbose) 
@@ -140,7 +139,6 @@ bool WorkerTester::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAd
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | cMasterConfig << 6);
     cCommandVector.push_back(pSlaveData << 8 | pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
     uint8_t cI2CStatus = cReplyVector[0] & 0xFF;
     if(pVerbose) 
@@ -148,7 +146,12 @@ bool WorkerTester::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAd
         LOG(INFO) << BOLDMAGENTA << "I2CWrite from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
         PrintFSMState(pLinkId);
     }
-    return (cI2CStatus == 4);
+    if(cI2CStatus != 4)
+    {
+        LOG(INFO) << RED << "I2CWrite : Wrong I2C status read back ... I2C status " << +cI2CStatus << RESET;
+        return false;
+    }
+    return true;
 }
 
 uint8_t WorkerTester::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pVerbose)
@@ -166,7 +169,7 @@ uint8_t WorkerTester::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pR
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | cHybridId << 6 | cChipCode << 3 | cChipId << 0);
     cCommandVector.push_back(pRegisterAddress << 0);
     WriteCommandCPB(cCommandVector, true);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(50));
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, true);
     uint8_t  cReadBack = cReplyVector[0] & 0xFF;
     if(pVerbose) 
@@ -174,6 +177,7 @@ uint8_t WorkerTester::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pR
         LOG(INFO) << BOLDMAGENTA << "FERead from Link#" << +cLinkId << " -- workerId is " << +cWorkerId << RESET;
         PrintFSMState(cLinkId);
     }
+    LOG(DEBUG) << GREEN << "ReadFERegister : successfully read 0x" << std::hex << +cReadBack << std::dec << " from register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
     return cReadBack;
 }
 
@@ -192,7 +196,7 @@ bool WorkerTester::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pReg
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pVerify << 8 | cHybridId << 6 | cChipCode << 3 | cChipId << 0);
     cCommandVector.push_back(pRegisterValue << 16 | pRegisterAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(50));
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
     if(pVerbose) 
     {
@@ -202,12 +206,24 @@ bool WorkerTester::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pReg
     if(pVerify)
     {
         uint8_t  cReadBack = cReplyVector[0] & 0xFF;
-        return (cReadBack == pRegisterValue);
+        if(cReadBack != pRegisterValue)
+        {
+            LOG(INFO) << RED << "WriteFERegister with Verification : Wrong value read back" << RESET;
+            return false;
+        }
+        LOG(DEBUG) << GREEN << "WriteFERegister with Verification : successfully written 0x" << std::hex << +cReadBack << std::dec << " to register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+        return true;
     }
     else
     {
         uint8_t cI2CStatus = cReplyVector[0] & 0xFF;
-        return (cI2CStatus == 4);
+        if(cI2CStatus != 4)
+        {
+            LOG(INFO) << RED << "WrireFERegister without verificaiton : Wrong I2C status read back ... I2C status " << +cI2CStatus << RESET;
+            return false;
+        }
+        LOG(DEBUG) << GREEN << "WriteFERegister without verification : successfully written 0x" << std::hex << +pRegisterValue << std::dec << " to register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+        return true;
     }
 }
 
@@ -369,13 +385,13 @@ bool WorkerTester::TestI2CRead(OpticalGroup* cOpticalGroup)
         
         uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
         uint32_t cSlaveData                 = (cRegisterValue << 16) | cInvertedRegister;
-        LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
-        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveData, 3, true);
+        // LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveData, 3);
 
         cSlaveData                 = cInvertedRegister;
-        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveData, 2, true);
-        cRegisterReadBack = I2CRead(cOpticalGroup->getId(), cMaster, cSlaveAddress, 1, true);
-        LOG(INFO) << MAGENTA << "Reading value = 0x" << std::hex << +cRegisterReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveData, 2);
+        cRegisterReadBack = I2CRead(cOpticalGroup->getId(), cMaster, cSlaveAddress, 1);
+        // LOG(INFO) << MAGENTA << "Reading value = 0x" << std::hex << +cRegisterReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
     }
     return (cRegisterValue == cRegisterReadBack);
 }
@@ -406,7 +422,7 @@ bool WorkerTester::TestI2CWrite(OpticalGroup* cOpticalGroup)
     {
         uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
         uint32_t cSlaveData                 = (cRegisterValue << 16) | cInvertedRegister;
-        LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+        // LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
         cSuccess = I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveData, 3);
         if(cSuccess){ LOG(INFO) << GREEN << "I2C Write status is SUCCESS" << RESET;}
         else{ LOG(INFO) << RED << "I2C Write status is FAILURE" << RESET; }
@@ -541,6 +557,56 @@ bool WorkerTester::TestFEWrite()
     return true;
 }
 
+void WorkerTester::Benchmark()
+{
+    for(auto cBoard : *fDetectorContainer)
+    {
+        for(auto cOpticalGroup : *cBoard)
+        {
+            for(auto cHybrid : *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                if(cCic != nullptr)
+                {
+                    ChipRegMap cChipRegMap = cCic->getRegMap();
+
+                    uint16_t cRegisterAddress = cChipRegMap["CALIB_PATTERN0"].fAddress;
+                    uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
+                    uint32_t cSlaveDataRead                 = cInvertedRegister;
+                    uint8_t cMaster = (cCic->getHybridId() == 0) ? 2 : 0;
+                    uint8_t cSlaveAddress = fChipAddressMap[cCic->getFrontEndType()];
+                    auto cStart = std::chrono::system_clock::now();
+                    for(uint8_t cValue = 0; cValue < 255; cValue++)
+                    {
+                        WriteFERegister(cCic, cRegisterAddress, cValue, true);
+                    }
+                    auto cEnd = std::chrono::system_clock::now();
+                    auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
+                    LOG(INFO) << "One FE register write with verification using FE functions takes in average " << (cDuration.count() / 255) << " us" << RESET;
+
+                    cStart = std::chrono::system_clock::now();
+                    for(uint8_t cValue = 0; cValue < 255; cValue++)
+                    {
+                        //Write
+                        uint32_t cSlaveDataWrite                 = (cValue << 16) | cInvertedRegister;
+                        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveDataWrite, 3);
+                        //Read
+                        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveDataRead, 2);
+                        uint8_t cReadBack = I2CRead(cOpticalGroup->getId(), cMaster, cSlaveAddress, 1);
+                        if(cReadBack != cValue)
+                        {
+                            LOG(INFO) << RED << "Benchmarking : read wrong value using I2C functions" << RESET;
+                        }
+                        LOG(DEBUG) << BLUE << "Read using I2C functions value 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+                    }
+                    cEnd = std::chrono::system_clock::now();
+                    cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
+                    LOG(INFO) << "One FE register write with verification using I2C functions takes in average " << (cDuration.count() / 255) << " us" << RESET;
+                }
+            }
+        }
+    }
+}
 
 
 

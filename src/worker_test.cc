@@ -45,6 +45,9 @@ int main(int argc, char* argv[])
   cmd.defineOption("test-fe-write", "Test Front-End Write");
   cmd.defineOptionAlternative("test-fe-write", "tfew");
 
+  cmd.defineOption("benchmark", "Benchmark FE register write using FE functions against using I2C functions");
+  cmd.defineOptionAlternative("benchmark", "bm");
+
   int result = cmd.parse(argc, argv);
 
   if(result != ArgvParser::NoParserError)
@@ -81,6 +84,7 @@ int main(int argc, char* argv[])
   if(cmd.foundOption("test-i2c-read")) cWorkerTester.TestI2CRead();
   if(cmd.foundOption("test-fe-read")) cWorkerTester.TestFERead();
   if(cmd.foundOption("test-fe-write")) cWorkerTester.TestFEWrite();
+  if(cmd.foundOption("benchmark")) cWorkerTester.Benchmark();
 
   return 0;
 }
