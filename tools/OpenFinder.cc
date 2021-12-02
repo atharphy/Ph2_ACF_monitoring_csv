@@ -845,7 +845,7 @@ void OpenFinder::FindOpensPS()
                                 } // chnl
 
                                 tmpParameter = "";
-                                tmpParameter = "opens" + std::to_string(cChip->getId()) + "_" + Channels;
+                                tmpParameter = "opens_" + std::to_string(cChip->getId()) + "_" + Channels;
 #ifdef __USE_ROOT__
                                 fillSummaryTree(tmpParameter, opens.size());
                                 if(true)

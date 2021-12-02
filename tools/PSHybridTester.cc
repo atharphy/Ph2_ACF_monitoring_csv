@@ -1373,7 +1373,7 @@ void PSHybridTester::RunHybridETest()
         auto& cMeasurement  = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
-        std::string cMeasurementName = (cMapIterator.first);
+        std::string cMeasurementName = "EM_" + (cMapIterator.first);
 #ifdef __USE_ROOT__
         fillSummaryTree(cMeasurementName, result);
 #endif
@@ -1382,7 +1382,7 @@ void PSHybridTester::RunHybridETest()
             if(cNominalValue->second != 0 && cNominalValue->second != 1)
             {
 #ifdef __USE_ROOT__
-                fillSummaryTree(cMeasurementName + "dev", cNominalValue->second - result);
+                fillSummaryTree(cMeasurementName + "_dev", cNominalValue->second - result);
 #endif
                 if(cAcceptancePercentage != 0)
                 {

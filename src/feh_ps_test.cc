@@ -426,7 +426,7 @@ int main(int argc, char* argv[])
     {
         if(cGui)
         {
-            gui::status("Starting MPA input test");
+            gui::status("Starting CIC input lines test");
             gui::message("");
             gui::progress(7.5 / 10.0);
         }
