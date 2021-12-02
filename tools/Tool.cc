@@ -880,7 +880,7 @@ uint16_t Tool::getMaxNumberOfGroups()
                 for(const auto chip : *hybrid)
                 {
                     uint16_t numberOfGroups = fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getNumberOfGroups();
-                    if(numberOfGroups > maxNumberOfGroups) maxNumberOfGroups = maxNumberOfGroups;
+                    if(numberOfGroups > maxNumberOfGroups) maxNumberOfGroups = numberOfGroups;
                 }
             }
         }
@@ -1266,8 +1266,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     if(!fAllChan)
     {
         uint16_t maxNumberOfGroups = getMaxNumberOfGroups();
-
-        for(uint16_t groupNumber = 0; groupNumber<maxNumberOfGroups; ++maxNumberOfGroups)
+        for(uint16_t groupNumber = 0; groupNumber<maxNumberOfGroups; ++groupNumber)
         {
             if(fMaskChannelsFromOtherGroups || fTestPulse)
             {

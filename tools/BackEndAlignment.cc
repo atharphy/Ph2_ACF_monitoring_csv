@@ -210,7 +210,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getId());
                 // original mask
-                const ChannelGroup<NCHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NCHANNELS>*>(cReadoutChip->getChipOriginalMask());
+                auto cOriginalMask = std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cReadoutChip->getChipOriginalMask());
                 // original threshold
                 uint16_t cThreshold = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theReadoutChip, "VCth");
                 // original HIT OR setting
@@ -280,7 +280,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
 
                 // now unmask all channels and set threshold and hit or logic back to their original values
-                fReadoutChipInterface->maskChannelsGroup(theReadoutChip, cOriginalMask);
+                fReadoutChipInterface->maskChannelGroup(theReadoutChip, cOriginalMask);
                 LOG(INFO) << BOLDBLUE << "Setting threshold and HitOR back to orginal value [ " << +cThreshold << " ] DAC units." << RESET;
                 fReadoutChipInterface->WriteChipReg(theReadoutChip, "VCth", cThreshold);
                 fReadoutChipInterface->WriteChipReg(theReadoutChip, "HitOr", cHitOR);

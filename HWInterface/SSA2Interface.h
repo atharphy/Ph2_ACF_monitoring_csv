@@ -30,11 +30,11 @@ class SSA2Interface : public ReadoutChipInterface
     void DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                   // FIXME
 
     void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
-    bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;                                        // FIXME
+    bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;                                        // FIXME
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;                                                             // FIXME
     bool     setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;                                        // FIXME
-    bool     maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;                                         // FIXME
-    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = true) override; // FIXME
+    bool     maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;                                         // FIXME
+    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = true) override; // FIXME
     bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pSSA2, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;                                     // FIXME
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pSSA2, bool mask, bool pVerifLoop = true) override;                                                               // FIXME
     bool     WriteChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;                                      // FIXME

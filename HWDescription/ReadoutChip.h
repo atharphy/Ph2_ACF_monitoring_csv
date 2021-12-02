@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <string>
 #include <utility>
+#include <memory>
 
 /*!
  * \namespace Ph2_HwDescription
@@ -66,7 +67,7 @@ class ReadoutChip
 
     virtual bool isDACLocal(const std::string& dacName) = 0;
 
-    const ChannelGroupBase* getChipOriginalMask() const override { return fChipOriginalMask; }
+    const std::shared_ptr<ChannelGroupBase> getChipOriginalMask() const override { return fChipOriginalMask; }
     // channels are encoded as columnNumber*Nrows + rowNumber
     void setChipOriginalMask(std::vector<uint16_t> pChannels)
     {
@@ -87,7 +88,7 @@ class ReadoutChip
     }
 
   protected:
-    ChannelGroupBase* fChipOriginalMask;
+    std::shared_ptr<ChannelGroupBase> fChipOriginalMask {nullptr};
 };
 } // namespace Ph2_HwDescription
 

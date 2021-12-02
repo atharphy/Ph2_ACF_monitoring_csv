@@ -142,11 +142,11 @@ class MPAInterface : public ReadoutChipInterface
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = VERIFY_MPA);
 
-    bool maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pMPA, const ChannelGroupBase* group, bool pVerifLoop = VERIFY_MPA);
+    bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pMPA, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = VERIFY_MPA);
     //
-    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = VERIFY_MPA);
+    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = VERIFY_MPA);
 
-    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop = VERIFY_MPA);
+    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = VERIFY_MPA);
 
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pMPA, bool pVerifLoop, uint32_t pBlockSize);
     //

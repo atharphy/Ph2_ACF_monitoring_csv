@@ -53,7 +53,6 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     // auto cMaxNChannels = std::max_element(std::begin(cNChanls), std::end(cNChanls));
     // auto cMinNChannels = std::min_element(std::begin(cNChanls), std::end(cNChanls));
     NCH = *std::max_element(std::begin(cNChanls), std::end(cNChanls)); // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
-    std::cout << __PRETTY_FUNCTION__ << " " << NCH << std::endl;
     // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
     // if
     // (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType()

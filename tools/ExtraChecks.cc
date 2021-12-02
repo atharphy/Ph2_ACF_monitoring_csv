@@ -1950,7 +1950,7 @@ void ExtraChecks::FindShorts(uint16_t pThreshold, uint16_t pTPamplitude)
         {
             setSameGlobalDac("TestPulseGroup", cTestGroup);
             // bitset for this group
-            std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(cGroup)->getBitset());
+            std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cGroup)->getBitset());
             LOG(INFO) << "Injecting charge into front-end object using test capacitor " << +cTestGroup << " : L1A latency set to " << +cDelay << RESET;
             this->ReadNEvents(theBoard, cEventsPerAttempt);
             const std::vector<Event*>& cEvents = this->GetEvents();

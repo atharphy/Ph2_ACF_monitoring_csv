@@ -37,7 +37,7 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
   private:
     class RD53ChannelGroupAll : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
     {
-        void makeTestGroup(ChannelGroupBase* currentChannelGroup,
+        void makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
                            uint32_t          groupNumber,
                            uint32_t          numberOfClustersPerGroup,
                            uint16_t          numberOfRowsPerCluster,
@@ -50,7 +50,7 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
         RD53ChannelGroupPattern(uint8_t hitPerCol) : hitPerCol(hitPerCol){};
 
       private:
-        void    makeTestGroup(ChannelGroupBase* currentChannelGroup,
+        void    makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
                               uint32_t          groupNumber,
                               uint32_t          numberOfClustersPerGroup,
                               uint16_t          numberOfRowsPerCluster,

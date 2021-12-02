@@ -106,7 +106,7 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
             {
                 if(chip->size() != 16 * 120) continue;
                 auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                if(cTestChannelGroup == nullptr) continue;
+                if(!cTestChannelGroup) continue;
 
                 std::vector<uint32_t> cHits = GetHits(hybrid->getId(), chip->getId());
                 float                 cOcc  = 0;

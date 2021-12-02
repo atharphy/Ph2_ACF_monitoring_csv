@@ -1259,31 +1259,20 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 {
     auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     for(const auto board : *fDetectorContainer)
     {
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
         for(const auto opticalGroup : *board)
         {
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
             for(const auto hybrid : *opticalGroup)
             {
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
                 for(const auto chip : *hybrid)
                 {
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
-                    std::cout << +board->getIndex() << " - " << +opticalGroup->getIndex() << " - " << +hybrid->getIndex() << " - " << +chip->getIndex() << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
                     fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
                 }
             }
         }
     }
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     fDetectorContainer->resetReadoutChipQueryFunction();
-    std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
-
     return;
 }
 

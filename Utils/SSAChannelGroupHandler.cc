@@ -3,12 +3,16 @@
 
 SSAChannelGroupHandler::SSAChannelGroupHandler()
 {
-    allChannelGroup_     = new ChannelGroup<NSSACHANNELS, 1>();
-    currentChannelGroup_ = new ChannelGroup<NSSACHANNELS, 1>();
+    allChannelGroup_     = std::make_shared<ChannelGroup<NSSACHANNELS, 1>>();
+    currentChannelGroup_ = std::make_shared<ChannelGroup<NSSACHANNELS, 1>>();
+}
+
+SSAChannelGroupHandler::SSAChannelGroupHandler(std::bitset<NSSACHANNELS>&& inputChannelsBitset)
+{
+    allChannelGroup_     = std::make_shared<ChannelGroup<NSSACHANNELS, 1>>(std::move(inputChannelsBitset));
+    currentChannelGroup_ = std::make_shared<ChannelGroup<NSSACHANNELS, 1>>(std::move(inputChannelsBitset));
 }
 
 SSAChannelGroupHandler::~SSAChannelGroupHandler()
 {
-    delete allChannelGroup_;
-    delete currentChannelGroup_;
 }

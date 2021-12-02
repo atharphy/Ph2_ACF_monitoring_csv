@@ -24,7 +24,7 @@ class ThresholdAndNoise
     void print(void) { std::cout << fThreshold << "\t" << fNoise << std::endl; }
 
     template <typename T>
-    void makeChannelAverage(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
+    void makeChannelAverage(const ChipContainer* theChipContainer, const std::shared_ptr<ChannelGroupBase> chipOriginalMask, const std::shared_ptr<ChannelGroupBase> cTestChannelGroup, const uint32_t numberOfEvents)
     {
     }
     void makeSummaryAverage(const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
@@ -39,8 +39,8 @@ class ThresholdAndNoise
 
 template <>
 inline void ThresholdAndNoise::makeChannelAverage<ThresholdAndNoise>(const ChipContainer*    theChipContainer,
-                                                                     const ChannelGroupBase* chipOriginalMask,
-                                                                     const ChannelGroupBase* cTestChannelGroup,
+                                                                     const std::shared_ptr<ChannelGroupBase> chipOriginalMask,
+                                                                     const std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
                                                                      const uint32_t          numberOfEvents)
 {
     fThreshold      = 0;

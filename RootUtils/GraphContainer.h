@@ -67,15 +67,6 @@ class GraphContainer : public PlotContainer
 
     void print(void) { std::cout << "GraphContainer " << fTheGraph->GetName() << std::endl; }
 
-    // template<typename T>
-    //   void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const
-    //   ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
-
-    // void makeSummaryAverage (const std::vector<GraphContainer<Graph>>* theTH1FContainerVector, const
-    // std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-
-    // void normalize (const uint32_t numberOfEvents) {}
-
     void setNameTitle(std::string GraphogramName, std::string GraphogramTitle) override { fTheGraph->SetNameTitle(GraphogramName.data(), GraphogramTitle.data()); }
 
     std::string getName() const override { return fTheGraph->GetName(); }

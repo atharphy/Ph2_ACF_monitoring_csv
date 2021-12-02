@@ -176,8 +176,8 @@ class ChipContainer : public BaseContainer
         nOfRows_ = numberOfRows;
         nOfCols_ = numberOfCols;
     }
-    virtual const ChannelGroupBase* getChipOriginalMask() const { return nullptr; };
-    virtual const ChannelGroupBase* getChipCurrentMask() const { return nullptr; };
+    virtual const std::shared_ptr<ChannelGroupBase> getChipOriginalMask() const { return nullptr; };
+    virtual const std::shared_ptr<ChannelGroupBase> getChipCurrentMask() const { return nullptr; };
 
     unsigned int size(void) const { return nOfRows_ * nOfCols_; }
     unsigned int getNumberOfRows() const { return nOfRows_; }
@@ -437,12 +437,12 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                         HybridContainer::QueryFunction theQueryFunctor;
                         if(theQueryFunctor(theChip))
                         {
-                            std::cout << "Matched... index " << chipIndex << " new index " << theNewChipIndex << "\n";
+                            // std::cout << "Matched... index " << chipIndex << " new index " << theNewChipIndex << "\n";
                             theChip->setIndex(theNewChipIndex++);
                         }
                         else
                         {
-                            std::cout << "Did not match...\n";
+                            // std::cout << "Did not match...\n";
                             theChip->setIndex(0xFFFF);
                         }
                     }

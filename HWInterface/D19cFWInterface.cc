@@ -1415,20 +1415,19 @@ void D19cFWInterface::Start()
         // prints to debug and also checks that things are ok
         this->TriggerConfiguration();
         cTriggerState = GetTriggerState();
-        LOG(INFO) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
 
         // now check if I should try and start again
         if(cHandshake)
         {
             auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            cBreak           = (cReadoutReq == 1);
+            cBreak           = (cReadoutReq == 1) || (cTriggerState != 0 );
             if(cBreak)
-                LOG(INFO) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
         }
         else
             cBreak = (cTriggerState != 0);
         if(!cBreak) LOG(INFO) << BOLDRED << "Triggers failed to START - trying again" << RESET;
-        else LOG(INFO) << BOLDBLUE << "Triggers started" << RESET;
     } while(!cBreak);
     LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state at the end of start is " << +cTriggerState << RESET;
 }

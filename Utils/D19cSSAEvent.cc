@@ -23,7 +23,7 @@ void D19cSSAEvent::fillDataContainer(BoardDataContainer* boardContainer, const B
             for(auto chip: *hybrid)
             {
                 auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                if(cTestChannelGroup == nullptr) continue;
+                if(!cTestChannelGroup) continue;
                 
                 unsigned int i = 0;
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)

@@ -16,6 +16,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <memory>
 
 class ChannelGroupHandler;
 
@@ -26,12 +27,11 @@ class ChannelGroupBase
     ChannelGroupBase(uint16_t numberOfRows, uint16_t numberOfCols)
         : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols), customPatternSet_(false){};
     virtual ~ChannelGroupBase() { ; }
-    virtual void
-                     makeTestGroup(ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const = 0;
+    virtual void     makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const = 0;
     uint32_t         getNumberOfRows(void) const { return numberOfRows_; }
     uint32_t         getNumberOfCols(void) const { return numberOfCols_; }
     uint32_t         getNumberOfEnabledChannels(void) const { return numberOfEnabledChannels_; }
-    virtual uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const = 0;
+    virtual uint32_t getNumberOfEnabledChannels(const std::shared_ptr<ChannelGroupBase> mask) const = 0;
     virtual bool     isChannelEnabled(uint16_t row, uint16_t col = 0) const         = 0;
     virtual void     enableChannel(uint16_t row, uint16_t col = 0)                  = 0;
     virtual void     disableChannel(uint16_t row, uint16_t col = 0)                 = 0;
@@ -41,6 +41,7 @@ class ChannelGroupBase
     virtual bool     areAllChannelsEnabled(void) const                              = 0;
 
   protected:
+    virtual uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const = 0;
     uint16_t numberOfRows_;
     uint16_t numberOfCols_;
     uint32_t numberOfEnabledChannels_;
@@ -64,7 +65,7 @@ class ChannelGroup : public ChannelGroupBase
     ChannelGroup(const ChannelGroup& theChannelGroup) : ChannelGroupBase(R, C)
     {
         channelsBitset_          = theChannelGroup.channelsBitset_;
-        numberOfEnabledChannels_ = getNumberOfEnabledChannels(theChannelGroup);
+        numberOfEnabledChannels_ = getNumberOfEnabledChannels(&theChannelGroup);
     }
 
     virtual ~ChannelGroup() { ; }
@@ -98,13 +99,9 @@ class ChannelGroup : public ChannelGroupBase
     }
     inline bool areAllChannelsEnabled(void) const override { return channelsBitset_.all(); }
 
-    inline uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const
+    inline uint32_t getNumberOfEnabledChannels(const std::shared_ptr<ChannelGroupBase> mask = std::make_shared<ChannelGroup<R,C>>()) const
     {
-        std::bitset<R * C> tmpBitset;
-        tmpBitset = this->channelsBitset_ & static_cast<const ChannelGroup<R, C>*>(mask)->channelsBitset_;
-        // std::cout << tmpBitset << "\n";
-        // throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
-        return tmpBitset.count();
+        return getNumberOfEnabledChannels(mask.get());
     }
 
     inline std::bitset<R * C> getBitset(void) const { return channelsBitset_; }
@@ -120,17 +117,17 @@ class ChannelGroup : public ChannelGroupBase
     }
 
     virtual void
-    makeTestGroup(ChannelGroupBase* currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const override
+    makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup, uint32_t groupNumber, uint32_t numberOfClustersPerGroup, uint16_t numberOfRowsPerCluster, uint16_t numberOfColsPerCluster = 1) const override
     {
         // if(customPatternSet_ && (numberOfRowsPerCluster>1 || numberOfColsPerCluster>1))
         //     std::cout << __PRETTY_FUNCTION__ << " Warning, automatic group creation may not work when a custom
         //     pattern is set" << std::endl;
         if(numberOfClustersPerGroup * numberOfRowsPerCluster * numberOfColsPerCluster >= numberOfEnabledChannels_)
         {
-            static_cast<ChannelGroup<R, C>*>(currentChannelGroup)->setCustomPattern(*this);
+            static_cast<ChannelGroup<R, C>*>(currentChannelGroup.get())->setCustomPattern(*this);
             return;
         }
-        static_cast<ChannelGroup*>(currentChannelGroup)->disableAllChannels();
+        static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
 
         uint32_t numberOfClusterToSkip = numberOfEnabledChannels_ / (numberOfRowsPerCluster * numberOfColsPerCluster * numberOfClustersPerGroup) - 1;
         if(numberOfEnabledChannels_ % (numberOfRowsPerCluster * numberOfColsPerCluster * numberOfClustersPerGroup) > 0) ++numberOfClusterToSkip;
@@ -156,7 +153,7 @@ class ChannelGroup : public ChannelGroupBase
                     for(uint16_t clusterRow = 0; clusterRow < numberOfRowsPerCluster; ++clusterRow)
                     {
                         for(uint16_t clusterCol = 0; clusterCol < numberOfColsPerCluster; ++clusterCol)
-                        { static_cast<ChannelGroup<R, C>*>(currentChannelGroup)->enableChannel(row + clusterRow, col + clusterCol); }
+                        { static_cast<ChannelGroup<R, C>*>(currentChannelGroup.get())->enableChannel(row + clusterRow, col + clusterCol); }
                     }
                 }
             }
@@ -164,6 +161,15 @@ class ChannelGroup : public ChannelGroupBase
     }
 
   private:
+    inline uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const
+    {
+        std::bitset<R * C> tmpBitset;
+        tmpBitset = this->channelsBitset_ & static_cast<const ChannelGroup<R, C>*>(mask)->channelsBitset_;
+        // std::cout << tmpBitset << "\n";
+        // throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
+        return tmpBitset.count();
+    }
+
     std::bitset<R * C> channelsBitset_;
 };
 
@@ -174,7 +180,7 @@ class ChannelGroupHandler
     {
       public:
         explicit ChannelGroupIterator(ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber) : channelGroupHandler_(channelGroupHandler), groupNumber_(groupNumber) { ; }
-        const ChannelGroupBase* operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
+        const std::shared_ptr<ChannelGroupBase>& operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
         ChannelGroupIterator&   operator++()
         {
             ++groupNumber_;
@@ -190,6 +196,8 @@ class ChannelGroupHandler
     };
 
     ChannelGroupHandler(){};
+    ChannelGroupHandler(const ChannelGroupHandler&) = delete;
+    ChannelGroupHandler(ChannelGroupHandler&&)      = default;
     virtual ~ChannelGroupHandler(){};
 
     virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster = 1);
@@ -197,16 +205,16 @@ class ChannelGroupHandler
     template <size_t R, size_t C>
     void setCustomChannelGroup(ChannelGroup<R, C>& customChannelGroup)
     {
-        static_cast<ChannelGroup<R, C>*>(allChannelGroup_)->setCustomPattern(customChannelGroup);
+        static_cast<ChannelGroup<R, C>*>(allChannelGroup_.get())->setCustomPattern(customChannelGroup);
     }
 
     virtual ChannelGroupIterator begin() { return ChannelGroupIterator(*this, 0); }
 
     virtual ChannelGroupIterator end() { return ChannelGroupIterator(*this, numberOfGroups_); }
 
-    const ChannelGroupBase* allChannelGroup() const { return allChannelGroup_; }
+    const std::shared_ptr<ChannelGroupBase>& allChannelGroup() const { return allChannelGroup_; }
 
-    virtual const ChannelGroupBase* getTestGroup(int groupNumber) const
+    virtual const std::shared_ptr<ChannelGroupBase>& getTestGroup(int groupNumber)
     {
         if(groupNumber<0) return allChannelGroup();
         allChannelGroup_->makeTestGroup(currentChannelGroup_, groupNumber, numberOfClustersPerGroup_, numberOfRowsPerCluster_, numberOfColsPerCluster_);
@@ -220,8 +228,8 @@ class ChannelGroupHandler
     uint32_t          numberOfClustersPerGroup_;
     uint32_t          numberOfRowsPerCluster_;
     uint32_t          numberOfColsPerCluster_;
-    ChannelGroupBase* allChannelGroup_;
-    ChannelGroupBase* currentChannelGroup_;
+    std::shared_ptr<ChannelGroupBase> allChannelGroup_;
+    std::shared_ptr<ChannelGroupBase> currentChannelGroup_;
 };
 
 #endif

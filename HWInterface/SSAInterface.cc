@@ -147,10 +147,10 @@ bool SSAInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAm
 //
 
 //
-bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    const ChannelGroup<NSSACHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
-    const ChannelGroup<NSSACHANNELS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
@@ -183,10 +183,10 @@ bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase
 }
 //
 
-bool SSAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+bool SSAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    const ChannelGroup<NSSACHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
-    const ChannelGroup<NSSACHANNELS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
@@ -219,10 +219,10 @@ bool SSAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase*
     return this->WriteChipMultReg(cChip, pVecReq);
 }
 //
-bool SSAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool SSAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     bool success = true;
-    if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
+    if(mask) success &= maskChannelGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
 
     return success;

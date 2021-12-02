@@ -114,7 +114,7 @@ void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const Boar
                 if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
                 {
                     auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
-                    if(cTestChannelGroup == nullptr) continue;
+                    if(!cTestChannelGroup) continue;
                     
                     if(vectorRequired == true)
                     {

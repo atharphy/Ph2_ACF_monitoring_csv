@@ -6744,17 +6744,18 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                     if(cChannels.size() > 0)
                     {
                         // channel mask
-                        ChannelGroup<NCHNLS, 1> cChannelMask;
-                        cChannelMask.disableAllChannels();
-                        for(auto cChannel: cChannels) cChannelMask.enableChannel(cChannel);
+                        auto cChannelMask = std::make_shared<ChannelGroup<NCHNLS, 1>>();
 
-                        std::bitset<NCHNLS> cBitset = std::bitset<NCHNLS>(cChannelMask.getBitset());
+                        cChannelMask->disableAllChannels();
+                        for(auto cChannel: cChannels) cChannelMask->enableChannel(cChannel);
+
+                        std::bitset<NCHNLS> cBitset = std::bitset<NCHNLS>(cChannelMask->getBitset());
                         LOG(DEBUG) << BOLDBLUE << "Injecting stubs in chip " << +cChip->getId() << " channel mask is " << cBitset << RESET;
 
                         // lower threshold + apply mask
                         auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", 900);
-                        fReadoutChipInterface->maskChannelsGroup(cReadoutChip, &cChannelMask);
+                        fReadoutChipInterface->maskChannelGroup(cReadoutChip, cChannelMask);
                     }
                 }
             }
@@ -6862,9 +6863,9 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                         auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cThThisChip->getSummary<uint16_t>());
 
-                        ChannelGroup<NCHNLS, 1> cChannelMask;
-                        cChannelMask.enableAllChannels();
-                        fReadoutChipInterface->maskChannelsGroup(cReadoutChip, &cChannelMask);
+                        auto cChannelMask = std::make_shared<ChannelGroup<NCHNLS, 1>>();
+                        cChannelMask->enableAllChannels();
+                        fReadoutChipInterface->maskChannelGroup(cReadoutChip, cChannelMask);
                     }
                     cChannels.clear();
                 }
@@ -6911,8 +6912,8 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
 {
     // prepare mask
     // just for CBCs for now
-    fCBCMask.disableAllChannels();
-    for(auto cChannel: pChannels) fCBCMask.enableChannel(cChannel);
+    fCBCMask->disableAllChannels();
+    for(auto cChannel: pChannels) fCBCMask->enableChannel(cChannel);
 
     auto     cSetting = fSettingsMap.find("Nevents");
     uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
@@ -6930,7 +6931,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
                 {
                     LOG(INFO) << BOLDBLUE << "Masking channels in chip" << +cChip->getId() << RESET;
                     static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(cChip, "VCth", 1000);
-                    fReadoutChipInterface->maskChannelsGroup(cChip, &fCBCMask);
+                    fReadoutChipInterface->maskChannelGroup(cChip, fCBCMask);
                 }
                 this->ReadNEvents(cBoard, cNevents);
                 const std::vector<Event*>& cEvents = this->GetEvents();

@@ -40,7 +40,7 @@ void D19cMPAEvent::fillDataContainer(BoardDataContainer* boardContainer, const B
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
                     auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                    if(cTestChannelGroup == nullptr) continue;
+                    if(!cTestChannelGroup) continue;
                     
                     if(cTestChannelGroup->isChannelEnabled(i))
                     {
