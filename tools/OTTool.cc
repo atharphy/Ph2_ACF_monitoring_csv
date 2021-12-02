@@ -371,68 +371,75 @@ void OTTool::CatchStop()
 }
 // poll board from data
 // one thread per BeBoard connected to this computer
-void OTTool::ContinousReadout()
+void OTTool::ContinousReadoutTh(uint8_t cBrdId)
 {
-    // temporary thread object representing a new thread
-    // there will be one readout thread per board
-    std::thread* cReadoutThreads = new std::thread[fDetectorContainer->size()];
-    for(auto cBoard: *fDetectorContainer)
-    {
-        // launch threads for continuous readout
-        cReadoutThreads[cBoard->getIndex()] = std::thread(&OTTool::ContinousReadoutTh, this, cBoard->getIndex());
-    }
-
-    std::vector<uint32_t> cBrdEvntCntrs(fDetectorContainer->size(), 0);
-    // reset all event counters
-    for(auto cBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        cInterface->ResetEventCounter();
-        cBrdEvntCntrs[cBoard->getIndex()] = cInterface->GetEventCounter();
-    }
-
-    // start triggers on all boards
-    for(auto cBoard: *fDetectorContainer) { fBeBoardInterface->Start(cBoard); }
-
-    // wait until you have all events from all boards
-    // exit condition for this run
-    bool   cAllFinished = false;
+    LOG(DEBUG) << BOLDBLUE << fMyName << ":Starting continuous readout thread for BeBoard#" << +cBrdId << RESET;
+    // get D19cFW Interface
+    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    // wait until triggers have started
     size_t cWaitCounter = 0;
-    LOG(DEBUG) << BOLDBLUE << fMyName << ":Main thread - starting to wait for events to be readout.." << RESET;
+    size_t cMaxWait     = 10000;
     do
     {
-        size_t cNFinished = 0;
-        for(auto cBoard: *fDetectorContainer)
+        std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
+        if(cWaitCounter % 100 == 0) LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
+        cWaitCounter++;
+    } while(cInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
+
+    if(cWaitCounter == cMaxWait)
+    {
+        LOG(INFO) << BOLDRED << "Triggers not started on this board.. start them myself!" << RESET;
+        cInterface->Start();
+        do
         {
-            fBeBoardInterface->setBoard(cBoard->getId());
-            auto cInterface                   = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            cBrdEvntCntrs[cBoard->getIndex()] = cInterface->GetEventCounter();
-            if(cWaitCounter % 1000 == 0)
-                LOG(DEBUG) << BOLDBLUE << fMyName << ":Main thread ... read-back " << cBrdEvntCntrs[cBoard->getIndex()] << " events from BeBoard#" << +cBoard->getId() << RESET;
-            // finished if I've received all events or if someone else has stopped triggers for me
-            if(cBrdEvntCntrs[cBoard->getIndex()] >= fNevents || cInterface->GetTriggerState() == 0)
-            {
-                LOG(DEBUG) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBoard->getId() << RESET;
-                cNFinished++;
-            }
+            std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
+            LOG(INFO) << BOLDRED << " ... waiting  for triggers to start... " << RESET;
+        } while(cInterface->GetTriggerState() == 0);
+    }
+
+    LOG(DEBUG) << BOLDBLUE << fMyName << ":Triggers started .. now polling readout.." << RESET;
+    std::vector<uint32_t> cCompleteData(0);
+    bool                  cWait = false;
+    std::vector<size_t>   cTriggerCounters(0);
+    // repeat until triggers have stopped
+    cWaitCounter        = 0;
+    size_t cLclEvntCntr = 0;
+    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime=cStartTime;
+    size_t cAccumulatedWaits=0; 
+    do
+    {
+        cAccumulatedWaits += fReadoutPause;
+        std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
+        auto                  cTriggerState   = cInterface->GetTriggerState();
+        auto                  cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
+        auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+        std::vector<uint32_t> cData(0);
+        cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
+        if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+        cTriggerCounters.push_back(cTriggerCounter);
+        if(cWaitCounter % 100 == 0 && cWaitCounter > 0)
+        {
+            LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to be stopped on BeBoard#" << +cBrdId << " continuousReadout loop ... "
+                       << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received"
+                       << " trigger source is " << +cTriggerSource << " trigger state is " << +cTriggerState << " and " << cLclEvntCntr << " events in the readout so far ... " << RESET;
         }
         cWaitCounter++;
-        cAllFinished = (cNFinished == fDetectorContainer->size());
-    } while(!cAllFinished);
-
-    // make double sure that all triggers have
-    // been stopped here
-    // stop triggers on all boards
-    for(auto cBoard: *fDetectorContainer) { fBeBoardInterface->Stop(cBoard); }
-
-    // wait for all threads to finish
-    // this will just do in sequence for all boards
-    for(auto cBoard: *fDetectorContainer)
-    {
-        // launch threads for continuous readout
-        cReadoutThreads[cBoard->getIndex()].join(); // pauses until first finishes
-    }
+    } while(cInterface->GetTriggerState() == 1);
+    // now decode data
+    cAccumulatedWaits += 100*1e3;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::vector<uint32_t> cData(0);
+    cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
+    cEndTime = std::chrono::high_resolution_clock::now();
+    auto cDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cEndTime - cStartTime).count();
+    if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+    LOG (DEBUG) << BOLDYELLOW << "Accumulated " << cAccumulatedWaits*1e-3 << " ms of waits.. read-out " << cCompleteData.size() << " 32-bit words in " << cDuration << " ms." << RESET;
+    
+    DecodeData((*cBoardIter), cCompleteData, cLclEvntCntr, fBeBoardInterface->getBoardType((*cBoardIter)));
+    LOG(DEBUG) << BOLDYELLOW << fMyName << " : Mean trigger rate is " << cTriggerCounters[cTriggerCounters.size() - 1] / (cWaitCounter * fReadoutPause * 1e-6) << " Hz"
+               << " .... readout " << cLclEvntCntr << " events from the FC7" << RESET;
 }
 // continuous readout
 // this will continue to read data until the stop triggers command

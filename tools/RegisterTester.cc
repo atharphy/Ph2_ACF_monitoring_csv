@@ -40,6 +40,35 @@ void RegisterTester::Initialise()
         }
     }
     if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
+
+    ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, fRegList);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    const ChipRegMap& cOriginalMap = cChip->getRegMap();
+                    for(auto cMapItem: cOriginalMap)
+                    {
+                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second));
+                    }
+                    // registers sorted by ... all on page 0 then all on page 1
+                    std::sort(cRegList.begin(), cRegList.end(), customLessThanPage);    // all to page0 then page 1
+                    // sort by address 
+                    if( fSortOrder == 1 ) std::sort(cRegList.begin(), cRegList.end(), customLessThanAddress); 
+                    if( fSortOrder == 2 ) std::sort(cRegList.begin(), cRegList.end(), customGreaterThanAddress); 
+                }
+            }
+        }
+    } // board loop to save record of registers
+
+    #ifdef __USE_ROOT__
+        fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
 }
 
 void RegisterTester::SendHardReset(const OpticalGroup* pOpticalGroup, const Chip* pFrontEndChip)
@@ -58,6 +87,618 @@ void RegisterTester::SendHardReset(const OpticalGroup* pOpticalGroup, const Chip
         else
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, pFrontEndChip->getHybridId() % 2);
     }
+}
+void RegisterTester::CheckReadRegisters( uint8_t pPageToSelect, uint8_t pNRegisters )
+{
+    // first just test page toggle
+    LOG(INFO) << BOLDMAGENTA << "Test of I2C registers in CBCs on page 0.... READ test" << RESET;
+
+    // Container to hold mismatches per chip
+    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues;
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cMismatches);
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cPageToggles);
+    ContainerFactory::copyAndInitChip<std::map<uint8_t,uint8_t>>(*fDetectorContainer, cMismatchValues);
+    
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            // here .. I need to send a hard reset to the ROCs
+            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+        }
+    } // board loop to save record of registers
+
+    // now .. try and change page after config and look for mis-matches
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                    
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    uint8_t           cDefPageRegValue = 0 ; 
+                    for( auto cItem : cRegList )
+                    {
+                        if( cItem.first == "FeCtrl&TrgLat2") cDefPageRegValue = cItem.second.fDefValue;  
+                    }
+                    // reset page map control
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap();
+                    uint8_t           cDefPage     = cDefPageRegValue >> 7;  
+                    LOG (INFO) << BOLDBLUE << " After a hard reset default page " << +cDefPage << ".. running READ test on Chip#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
+                    // set page that you want to check 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, pPageToSelect , false); 
+                    uint8_t           cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                    uint8_t           cNPageToggles = 0; 
+                    if( cCurrentPage != cDefPage ){ 
+                        LOG (INFO) << BOLDYELLOW << "Toggle page from " << +cDefPage << " to " << +cCurrentPage << RESET;
+                        cNPageToggles++;
+                    }
+
+                    size_t cNReads=0;
+                    size_t cIndex=0;
+                    // read from register on a given page 
+                    auto&  cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cToggles = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t,uint8_t>>();
+                    for( auto cItem : cRegList )
+                    {
+                        if( cItem.second.fPage == pPageToSelect )
+                        {
+                            if( cIndex < pNRegisters )
+                            {
+                                uint8_t cCurrentPage  = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                uint8_t cValue = fReadoutChipInterface->ReadChipReg(cChip, cItem.first) & 0xFF; 
+                                uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
+                                if( cNewPage != cCurrentPage ){ 
+                                    LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
+                                    cNPageToggles++;
+                                }
+                                LOG (DEBUG) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
+                                    << " ... have toggled page " << +cNPageToggles << " time(s) and read from " 
+                                    << +cNReads << " registers so far.... "
+                                    << RESET;
+                                // check if any other registers on this page have values that have changed 
+                                for( auto cItemToCheck : cRegList )
+                                {
+                                    if( cItemToCheck.second.fPage == cNewPage )
+                                    {
+                                        uint32_t cAddress = cItemToCheck.second.fPage << 8 | cItemToCheck.second.fAddress;
+                                        uint8_t cValue = fReadoutChipInterface->ReadChipReg(cChip, cItemToCheck.first) & 0xFF; 
+                                        if( cItemToCheck.second.fDefValue != cValue ) 
+                                        {
+                                            auto cIter = cComparisons.find(cAddress);
+                                            if( cIter == cComparisons.end() ) LOG (INFO) << BOLDRED << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << +cNPageToggles << " page toggles... "
+                                                << " and " << +cNReads
+                                                << " register reads - read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                            if( cIter == cComparisons.end() ){
+                                                cComparisons[ cAddress ] = cNReads; 
+                                                cToggles[ cAddress ] = cNPageToggles;
+                                                cMismatches[ cItemToCheck.second.fDefValue ] = cValue; 
+                                            }
+                                        }
+                                        else
+                                        {
+                                            LOG (DEBUG) << BOLDGREEN << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << cNPageToggles << " page toggles... "
+                                                << " read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                        }
+                                        cNReads++;
+                                    }
+                                }//registers to check 
+                            }
+                            cIndex++;
+                        }
+                    }//loop over registers 
+                }//chips
+            }//hyrbids 
+        }//optical group
+    }//boards
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillRegisterReadMismatches(cMismatches, cPageToggles, cMismatchValues);
+#endif
+}
+void RegisterTester::CheckWriteRegisters(uint8_t pPageToSelect, uint8_t pNRegisters) 
+{
+    std::vector<std::string> cRegsToSkip{"BandgapFuse", "ChipIDFuse1", "ChipIDFuse2", "ChipIDFuse3" };
+    // first just test page toggle
+    LOG(INFO) << BOLDMAGENTA << "Test of I2C registers in CBCs .... going to toggle the page with a write command..." << RESET;
+    
+    // Container to hold mismatches per chip
+    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues;
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cMismatches);
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cPageToggles);
+    ContainerFactory::copyAndInitChip<std::map<uint8_t,uint8_t>>(*fDetectorContainer, cMismatchValues);
+    
+    // first I want to record the register map for this map
+    // retreive original settings for all chips and all back-end boards
+    DetectorDataContainer cOriginalList;
+    ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cOriginalList);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            // here .. I need to send a hard reset to the ROCs
+            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers&        cOrigRegList     = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    for(auto cMapItem: cRegList)
+                    {
+                        cOrigRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second));
+                    }
+                }
+            }
+        }
+    } // board loop to save record of registers
+
+    // now .. try and change page after config and look for mis-matches
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                    
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    uint8_t           cDefPageRegValue = 0 ; 
+                    for( auto cItem : cRegList )
+                    {
+                        if( cItem.first == "FeCtrl&TrgLat2") cDefPageRegValue = cItem.second.fDefValue;  
+                    }
+                    // reset page map control
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap();
+                    uint8_t           cDefPage     = cDefPageRegValue >> 7;  
+                    LOG (INFO) << BOLDBLUE << " After a hard reset default page " << +cDefPage << ".. running WRITE test on Chip#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
+                    // set page that you want to check 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, pPageToSelect , false); 
+                    uint8_t           cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                    uint8_t           cNPageToggles = 0; 
+                    if( cCurrentPage != cDefPage ){ 
+                        LOG (INFO) << BOLDYELLOW << "Toggle page from " << +cDefPage << " to " << +cCurrentPage << RESET;
+                        cNPageToggles++;
+                    }
+
+                    // write something to page 0 
+                    uint32_t cNWrites = 0; 
+                    // uint8_t cCurrentValue  = cChip->getReg("MaskChannel-008-to-001");
+                    // uint8_t cThisMask  =  0x1; 
+                    // cCurrentValue ^= cThisMask;
+                    // fReadoutChipInterface->WriteChipReg(cChip, "MaskChannel-008-to-001", cCurrentValue, false);
+                    // cNWrites++;
+                                
+                    // read from register on a given page 
+                    auto&  cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cToggles = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t,uint8_t>>();
+                    // std::map<uint32_t,uint8_t> cComparisons; 
+                    uint32_t cNReads  = 0;
+                    for( auto& cItem : cRegList )
+                    {
+                        if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cItem.first ) != cRegsToSkip.end() ) continue;
+
+                        if( cItem.second.fPage == pPageToSelect )
+                        {
+                            if( cNWrites < pNRegisters )
+                            {
+                                uint8_t cCurrentPage  = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                // flip the LSB 
+                                uint8_t cWriteVal =  cChip->getReg(cItem.first);
+                                uint8_t cOrigVal  = cWriteVal; 
+                                uint8_t cMask  =  (fBitToFlip > 0 ) ? (1  << (fBitToFlip-1)) : 0 ;
+                                cWriteVal ^= cMask;
+                                // write the new value  
+                                fReadoutChipInterface->WriteChipReg(cChip, cItem.first, cWriteVal, false);
+                                // update default value 
+                                cItem.second.fDefValue = cWriteVal;
+                                uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
+                                if( cNewPage != cCurrentPage ){ 
+                                    LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
+                                    cNPageToggles++;
+                                }
+                                LOG (INFO) << BOLDBLUE << "After writing 0x" << std::hex << +cWriteVal << std::dec << " to register " << cItem.first 
+                                    << " [ change from " << std::hex << +cOrigVal << std::dec 
+                                    << " ] ... have toggled page " << +cNPageToggles << " time(s) and written to " 
+                                    << +cNWrites << " registers so far.... "
+                                    << " and read from " << +cNReads
+                                    << RESET;
+                                // check if any other registers on this page have values that have changed 
+                                for( auto cItemToCheck : cRegList )
+                                {
+                                    if( cItemToCheck.second.fPage == cNewPage )
+                                    {
+                                        uint32_t cAddress = cItemToCheck.second.fPage << 8 | cItemToCheck.second.fAddress;
+                                        uint8_t cValue = fReadoutChipInterface->ReadChipReg(cChip, cItemToCheck.first) & 0xFF; 
+                                        cNReads++;
+                                        if( cItemToCheck.second.fDefValue != cValue ) 
+                                        {
+                                            auto cIter = cComparisons.find(cAddress);
+                                            if( cIter == cComparisons.end() ) LOG (INFO) << BOLDRED << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << +cNPageToggles << " page toggles... "
+                                                << " read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                            if( cIter == cComparisons.end() ){ 
+                                                cComparisons[ cAddress ] = cNWrites; 
+                                                cToggles[cAddress] = cNPageToggles;
+                                                cMismatches[ cItemToCheck.second.fDefValue ] = cValue; 
+                                            }
+                                        }
+                                        else
+                                        {
+                                            LOG (DEBUG) << BOLDGREEN << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << cNPageToggles << " page toggles... "
+                                                << " read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                        }
+                                    }
+                                }
+                            }
+                            cNWrites++;
+                        }
+                    }//loop over registers 
+                }//chips
+            }//hyrbids 
+        }//optical group
+    }//boards
+
+    // make sure that original default values are put back 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    Registers&        cOrigRegList = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    for(auto& cMapItem: cRegList)
+                    {
+                        for( auto cItem : cOrigRegList )
+                        {
+                            if( cItem.first == cMapItem.first && cMapItem.second.fDefValue != cItem.second.fDefValue) {
+                                LOG (DEBUG) << BOLDYELLOW << "Setting " << cItem.first 
+                                    << " from 0x" << std::hex << +cMapItem.second.fDefValue << std::dec 
+                                    << " to 0x" << std::hex << +cItem.second.fDefValue << std::dec 
+                                    << RESET;
+                                cMapItem.second.fDefValue = cItem.second.fDefValue;
+                                cChip->setReg(cItem.first, cMapItem.second.fDefValue);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } // board loop to save record of registers
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillRegisterWriteMismatches(cMismatches, cPageToggles, cMismatchValues);
+#endif
+}
+void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegisters) 
+{
+    // first just test page toggle
+    LOG(INFO) << BOLDMAGENTA << "Test of I2C registers in CBCs .... going to toggle the page with a read command..." << RESET;
+    
+    // Container to hold mismatches per chip
+    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues;
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cMismatches);
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cPageToggles);
+    ContainerFactory::copyAndInitChip<std::map<uint8_t,uint8_t>>(*fDetectorContainer, cMismatchValues);
+    
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            // here .. I need to send a hard reset to the ROCs
+            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+        }
+    } // board loop to save record of registers
+
+    // now .. try and change page after config and look for mis-matches
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                    
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    uint8_t           cDefPageRegValue = 0 ; 
+                    for( auto cItem : cRegList )
+                    {
+                        if( cItem.first == "FeCtrl&TrgLat2") cDefPageRegValue = cItem.second.fDefValue;  
+                    }
+                    // reset page map control
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap();
+                    uint8_t           cDefPage     = cDefPageRegValue >> 7;  
+                    LOG (INFO) << BOLDYELLOW << " After a hard reset default page " << +cDefPage << ".. running READ test on Chip#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
+                    size_t cNReads=0;
+                    size_t cIndex=0;
+                    // read from register on a given page 
+                    auto&  cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cToggles = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t,uint8_t>>();
+                    size_t cNPageToggles=0; 
+                    for( auto cItem : cRegList )
+                    {
+                        if( cItem.second.fPage == pPageToSelect )
+                        {
+                            if( cIndex < pNRegisters )
+                            {
+                                uint8_t cCurrentPage  = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                uint8_t cValue = fReadoutChipInterface->ReadChipReg(cChip, cItem.first) & 0xFF; 
+                                uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
+                                if( cNewPage != cCurrentPage ){ 
+                                    LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
+                                    cNPageToggles++;
+                                }
+                                cNReads++;
+                                LOG (DEBUG) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
+                                    << " ... have toggled page " << cNPageToggles << " time(s) and read from " 
+                                    << +cNReads << " registers so far.... "
+                                    << RESET;
+                                // check if any other registers on this page have values that have changed 
+                                for( auto cItemToCheck : cRegList )
+                                {
+                                    if( cItemToCheck.second.fPage == cNewPage )
+                                    {
+                                        uint32_t cAddress = cItemToCheck.second.fPage << 8 | cItemToCheck.second.fAddress;
+                                        uint8_t cValue = fReadoutChipInterface->ReadChipReg(cChip, cItemToCheck.first) & 0xFF; 
+                                        if( cItemToCheck.second.fDefValue != cValue ) 
+                                        {
+                                            auto cIter = cComparisons.find(cAddress);
+                                            if( cIter == cComparisons.end() ) LOG (INFO) << BOLDRED << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << cNPageToggles << " page toggles... "
+                                                << " read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                            if( cIter == cComparisons.end() ){
+                                                cComparisons[ cAddress ] = cNReads; 
+                                                cToggles[ cAddress ] = cNPageToggles;
+                                                cMismatches[ cItemToCheck.second.fDefValue ] = cValue; 
+                                            }
+                                        }
+                                        else
+                                        {
+                                            LOG (DEBUG) << BOLDGREEN << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << cNPageToggles << " page toggles... "
+                                                << " read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                        }
+                                        cNReads++;
+                                    }
+                                }
+                                // cToggles[ cItem.second.fPage << 8 | cItem.second.fAddress ] = cNPageToggles;
+                                // set back default page 
+                                if( fReturnToDefPage )
+                                {
+                                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cDefPage , false); 
+                                    cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                    if( cNewPage != cCurrentPage ){ 
+                                        LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cNewPage << " to " << +cCurrentPage << RESET;
+                                        cNPageToggles++;
+                                    }
+                                }
+                            }
+                            cIndex++;
+                        }
+                    }//loop over registers 
+                    LOG (INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " ROC#" << +cChip->getId() 
+                        << " found " << +cMismatches.size() << " mismatches in " 
+                        << +cNReads  << " reads and " << +cNPageToggles << " page toggles." 
+                        << RESET;
+                }//chips
+            }//hyrbids 
+        }//optical group
+    }//boards
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillRegisterReadMismatches(cMismatches, cPageToggles, cMismatchValues);
+#endif
+}
+void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegisters ) 
+{
+    std::vector<std::string> cRegsToSkip{"BandgapFuse", "ChipIDFuse1", "ChipIDFuse2", "ChipIDFuse3" };
+    // first just test page toggle
+    LOG(INFO) << BOLDMAGENTA << "Test of I2C registers in CBCs .... going to toggle the page with a write command..." << RESET;
+    
+    // Container to hold mismatches per chip
+    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues;
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cMismatches);
+    ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cPageToggles);
+    ContainerFactory::copyAndInitChip<std::map<uint8_t,uint8_t>>(*fDetectorContainer, cMismatchValues);
+    
+    // first I want to record the register map for this map
+    // retreive original settings for all chips and all back-end boards
+    DetectorDataContainer cOriginalList;
+    ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, cOriginalList);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            // here .. I need to send a hard reset to the ROCs
+            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers&        cOrigRegList     = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    for(auto cMapItem: cRegList)
+                    {
+                        cOrigRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second));
+                    }
+                }
+            }
+        }
+    } // board loop to save record of registers
+
+    // now .. try and change page after config and look for mis-matches
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+                    
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    uint8_t           cDefPageRegValue = 0 ; 
+                    for( auto cItem : cRegList )
+                    {
+                        if( cItem.first == "FeCtrl&TrgLat2") cDefPageRegValue = cItem.second.fDefValue;  
+                    }
+                    // reset page map control
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap();
+                    uint8_t           cDefPage     = cDefPageRegValue >> 7;  
+                    LOG (INFO) << BOLDYELLOW << " After a hard reset default page " << +cDefPage << ".. running WRITE test on Chip#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
+                    // read from register on a given page 
+                    auto&  cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cToggles = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
+                    auto&  cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t,uint8_t>>();
+                    // std::map<uint32_t,uint8_t> cComparisons; 
+                    uint32_t cNPageToggles=0; 
+                    uint32_t cNWrites = 0;
+                    uint32_t cNReads  = 0; 
+                    uint8_t           cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7;
+
+                    // set page that you want to check 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, pPageToSelect , false); 
+                    cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                    if( cCurrentPage != cDefPage ){ 
+                        LOG (INFO) << BOLDYELLOW << "Toggle page from " << +cDefPage << " to " << +cCurrentPage << RESET;
+                        cNPageToggles++;
+                    }
+
+                    for( auto& cItem : cRegList )
+                    {
+                        if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cItem.first ) != cRegsToSkip.end() ) continue;
+
+                        if( cItem.second.fPage == pPageToSelect )
+                        {
+                            if( cNWrites < pNRegisters )
+                            {
+                                cCurrentPage  = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                // flip the LSB 
+                                uint8_t cWriteVal =  cChip->getReg(cItem.first);
+                                uint8_t cOrigVal  = cWriteVal; 
+                                uint8_t cMask  =  (fBitToFlip > 0 ) ? (1  << (fBitToFlip-1)) : 0 ;
+                                cWriteVal ^= cMask;
+                                // write the new value  
+                                fReadoutChipInterface->WriteChipReg(cChip, cItem.first, cWriteVal, false);
+                                // update default value 
+                                cItem.second.fDefValue = cWriteVal;
+                                uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
+                                if( cNewPage != cCurrentPage ){ 
+                                    LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
+                                    cNPageToggles++;
+                                }
+                                LOG (INFO) << BOLDBLUE << "After writing 0x" << std::hex << +cWriteVal << std::dec << " to register " << cItem.first 
+                                    << " [ change from " << std::hex << +cOrigVal << std::dec 
+                                    << " ] ... have toggled page " << +cNPageToggles << " time(s) and written to " 
+                                    << +cNWrites << " registers so far.... "
+                                    << " and read from " << +cNReads
+                                    << RESET;
+                                // check if any other registers on this page have values that have changed 
+                                for( auto cItemToCheck : cRegList )
+                                {
+                                    if( cItemToCheck.second.fPage == cNewPage )
+                                    {
+                                        uint32_t cAddress = cItemToCheck.second.fPage << 8 | cItemToCheck.second.fAddress;
+                                        uint8_t cValue = fReadoutChipInterface->ReadChipReg(cChip, cItemToCheck.first) & 0xFF; 
+                                        cNReads++;
+                                        if( cItemToCheck.second.fDefValue != cValue ) 
+                                        {
+                                            auto cIter = cComparisons.find(cAddress);
+                                            if( cIter == cComparisons.end() ) LOG (INFO) << BOLDRED << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << cNPageToggles << " page toggles... "
+                                                << " read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                            if( cIter == cComparisons.end() ){ 
+                                                cComparisons[ cAddress ] = cNWrites; 
+                                                cToggles[cAddress] = cNPageToggles;
+                                                cMismatches[ cItemToCheck.second.fDefValue ] = cValue; 
+                                            }
+                                        }
+                                        else
+                                        {
+                                            LOG (DEBUG) << BOLDGREEN << "\t...Read-back value from register " << cItemToCheck.first 
+                                                << " after " << cNPageToggles << " page toggles... "
+                                                << " read back 0x" << std::hex << +cValue << std::dec 
+                                                << " expected 0x" << std::hex << +cItemToCheck.second.fDefValue << std::dec 
+                                                << RESET;
+                                        }
+                                    }
+                                }
+                                // set back default page 
+                                if( fReturnToDefPage )
+                                {
+                                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, cDefPage , false); 
+                                    cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
+                                    if( cNewPage != cCurrentPage ){ 
+                                        LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cNewPage << " to " << +cCurrentPage << RESET;
+                                        cNPageToggles++;
+                                    }
+                                }
+                            }
+                            cNWrites++;
+                        }
+                    }//loop over registers 
+                }//chips
+            }//hyrbids 
+        }//optical group
+    }//boards
+
+    // make sure that original default values are put back 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    Registers&        cOrigRegList = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    for(auto& cMapItem: cRegList)
+                    {
+                        for( auto cItem : cOrigRegList )
+                        {
+                            if( cItem.first == cMapItem.first ) {
+                                cMapItem.second.fDefValue = cItem.second.fDefValue;
+                                cChip->setReg(cItem.first, cMapItem.second.fDefValue);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } // board loop to save record of registers
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillRegisterWriteMismatches(cMismatches, cPageToggles, cMismatchValues);
+#endif
 }
 void RegisterTester::RegisterTest()
 {
@@ -578,9 +1219,9 @@ bool RegisterTester::PassedTest()
 //
 void RegisterTester::writeObjects()
 {
-    this->SaveResults();
 #ifdef __USE_ROOT__
-    fResultFile->Flush();
+        this->SaveResults();
+        fDQMHistogrammer.process();
 #endif
 }
 // State machine control functions
