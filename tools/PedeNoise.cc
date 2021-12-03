@@ -966,7 +966,7 @@ void PedeNoise::extractPedeNoise()
 void PedeNoise::producePedeNoisePlots()
 {
 #ifdef __USE_ROOT__
-    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
+    fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
 #else
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)

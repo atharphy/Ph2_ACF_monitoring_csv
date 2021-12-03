@@ -102,8 +102,8 @@ export EuDaqFlag='-D__EUDAQ__'
 ################
 
 # Stand-alone application, without data streaming
-export CompileForHerd=false
-export CompileForShep=false
+export CompileForHerd=true
+export CompileForShep=true
 
 # Stand-alone application, with data streaming
 # export CompileForHerd=true

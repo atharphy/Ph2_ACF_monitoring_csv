@@ -267,7 +267,7 @@
 
 
 <MonitoringSettings>
-<Monitoring type="2S" enable="1">
+<Monitoring type="2S" enable="0">
     <MonitoringSleepTime> 500 </MonitoringSleepTime>
     <MonitoringElements
     CBCThreshold  = "0"
