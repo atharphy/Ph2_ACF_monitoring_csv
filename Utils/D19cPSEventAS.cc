@@ -131,7 +131,6 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
-
     // LOG (INFO) << cTestChannelGroup->getNumberOfRows() << " : " << cTestChannelGroup->getNumberOfCols() << RESET;
     for(auto opticalGroup: *boardContainer)
     {
@@ -141,7 +140,7 @@ void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const 
             {
                 auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
                 if(!cTestChannelGroup) continue;
-                
+
                 std::vector<uint32_t> cHits = GetHits(hybrid->getId(), chip->getId());
                 float                 cOcc  = 0;
                 size_t                cChnl = 0;

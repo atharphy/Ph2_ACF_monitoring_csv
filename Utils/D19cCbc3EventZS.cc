@@ -28,7 +28,7 @@ void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, cons
             {
                 auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
                 if(!cTestChannelGroup) continue;
-                
+
                 unsigned int i = 0;
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {

@@ -250,7 +250,7 @@ void MemoryCheck2S::Initialise()
                 auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip                                         = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cMasksThisChip                                                   = cMasksThisHybrid->at(cChip->getIndex());
                     cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cChip->getChipOriginalMask());
                     // cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)

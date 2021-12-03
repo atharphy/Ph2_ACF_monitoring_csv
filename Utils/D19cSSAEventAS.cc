@@ -105,7 +105,7 @@ void D19cSSAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
             {
                 auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
                 if(!cTestChannelGroup) continue;
-                
+
                 std::vector<uint32_t> hVec = GetHits(hybrid->getId(), chip->getId());
                 unsigned int          i    = 0;
 

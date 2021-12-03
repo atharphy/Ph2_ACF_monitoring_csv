@@ -32,8 +32,7 @@ void CBCPulseShape::Initialise(void)
 
     if(fChannelGroup >= 8) throw Exception(std::string(__PRETTY_FUNCTION__) + " fChannelGroup cannot be grater than 7");
     CBCChannelGroupHandler theChannelGroupHandler;
-    if(fChannelGroup > 0)
-        CBCChannelGroupHandler theChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << (fChannelGroup * 2));
+    if(fChannelGroup > 0) CBCChannelGroupHandler theChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << (fChannelGroup * 2));
 
     theChannelGroupHandler.setChannelGroupParameters(16, 2);
     setChannelGroupHandler(theChannelGroupHandler);

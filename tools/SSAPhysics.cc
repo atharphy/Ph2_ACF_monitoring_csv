@@ -30,7 +30,6 @@ void SSAPhysics::ConfigureCalibration()
     SSAChannelGroupHandler theChannelGroupHandler;
     theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
     setChannelGroupHandler(theChannelGroupHandler);
-
 }
 
 void SSAPhysics::Running()

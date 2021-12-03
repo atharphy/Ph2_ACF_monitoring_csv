@@ -1814,7 +1814,7 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     bool   cInject                      = true;
     bool   cWith2S                      = false;
     // inject in one of each CBCs
-    for(auto cGroup : *fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
+    for(auto cGroup: *fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         if(cNgroups > 0) continue;
         for(auto cOpticalGroup: *pBoard)

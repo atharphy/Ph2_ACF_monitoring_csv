@@ -9,13 +9,13 @@
 
 #include "PSPhysics.h"
 #include "../Utils/GenericDataArray.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/PSSync.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 #include "BackEndAlignment.h"
 #include "CicFEAlignment.h"
 #include "PSAlignment.h"
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/SSAChannelGroupHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -106,7 +106,6 @@ void PSPhysics::ConfigureCalibration()
     theMPAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA);
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
-
 }
 
 void PSPhysics::Running()

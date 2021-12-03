@@ -314,11 +314,10 @@ class SystemController
     FileParser                           fParser;
 
   public:
-    DetectorDataContainer*               fChannelGroupHandlerContainer;
+    DetectorDataContainer* fChannelGroupHandlerContainer;
 
-    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*){return true;});
+    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
-
 };
 } // namespace Ph2_System
 

@@ -41,7 +41,7 @@ void D19cMPAEvent::fillDataContainer(BoardDataContainer* boardContainer, const B
                 {
                     auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
                     if(!cTestChannelGroup) continue;
-                    
+
                     if(cTestChannelGroup->isChannelEnabled(i))
                     {
                         // TOFIX

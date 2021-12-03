@@ -368,7 +368,7 @@ void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
             {
                 auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
                 if(!cTestChannelGroup) continue;
-                
+
                 std::vector<uint32_t> cHits = this->GetHits(hybrid->getId(), chip->getId());
                 // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
                 //     << " at index " << +chip->getIndex()

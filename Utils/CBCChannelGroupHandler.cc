@@ -12,6 +12,4 @@ CBCChannelGroupHandler::CBCChannelGroupHandler(std::bitset<NCHANNELS>&& inputCha
     allChannelGroup_     = std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(inputChannelsBitset));
     currentChannelGroup_ = std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(inputChannelsBitset));
 }
-CBCChannelGroupHandler::~CBCChannelGroupHandler()
-{
-}
+CBCChannelGroupHandler::~CBCChannelGroupHandler() {}

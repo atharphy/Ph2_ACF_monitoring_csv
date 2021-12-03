@@ -11,8 +11,8 @@
 #include "../MonitorUtils/CBCMonitor.h"
 #include "../MonitorUtils/DetectorMonitor.h"
 #include "../MonitorUtils/RD53Monitor.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -140,7 +140,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     fChannelGroupHandlerContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
-    
+
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
@@ -1259,15 +1259,19 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 {
     auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
-    for(const auto board : *fDetectorContainer)
+    for(const auto board: *fDetectorContainer)
     {
-        for(const auto opticalGroup : *board)
+        for(const auto opticalGroup: *board)
         {
-            for(const auto hybrid : *opticalGroup)
+            for(const auto hybrid: *opticalGroup)
             {
-                for(const auto chip : *hybrid)
+                for(const auto chip: *hybrid)
                 {
-                    fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
+                    fChannelGroupHandlerContainer->getObject(board->getId())
+                        ->getObject(opticalGroup->getId())
+                        ->getObject(hybrid->getId())
+                        ->getObject(chip->getId())
+                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
                 }
             }
         }

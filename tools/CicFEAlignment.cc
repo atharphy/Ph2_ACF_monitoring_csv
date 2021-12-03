@@ -16,7 +16,7 @@ CicFEAlignment::~CicFEAlignment() {}
 
 void CicFEAlignment::Initialise()
 {
-    LOG (INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
     fSuccess = false;
     fWithMPA = false;
     // this is needed if you're going to use groups anywhere

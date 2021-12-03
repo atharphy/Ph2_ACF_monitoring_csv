@@ -25,6 +25,4 @@ MPAChannelGroupHandler::MPAChannelGroupHandler(std::bitset<NSSACHANNELS * NMPACO
     currentChannelGroup_ = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>(std::move(inputChannelsBitset));
 }
 
-MPAChannelGroupHandler::~MPAChannelGroupHandler()
-{
-}
+MPAChannelGroupHandler::~MPAChannelGroupHandler() {}

@@ -22,12 +22,12 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <stdint.h>
 #include <string>
 #include <utility>
-#include <memory>
 
 /*!
  * \namespace Ph2_HwDescription
@@ -88,7 +88,7 @@ class ReadoutChip
     }
 
   protected:
-    std::shared_ptr<ChannelGroupBase> fChipOriginalMask {nullptr};
+    std::shared_ptr<ChannelGroupBase> fChipOriginalMask{nullptr};
 };
 } // namespace Ph2_HwDescription
 

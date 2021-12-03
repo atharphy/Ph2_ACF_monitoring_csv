@@ -24,7 +24,10 @@ class Occupancy //: public streammable
     void print(void) { std::cout << fOccupancy << std::endl; }
 
     template <typename T>
-    void makeChannelAverage(const ChipContainer* theChipContainer, const std::shared_ptr<ChannelGroupBase> chipOriginalMask, const std::shared_ptr<ChannelGroupBase> cTestChannelGroup, const uint32_t numberOfEvents)
+    void makeChannelAverage(const ChipContainer*                    theChipContainer,
+                            const std::shared_ptr<ChannelGroupBase> chipOriginalMask,
+                            const std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
+                            const uint32_t                          numberOfEvents)
     {
         ;
     }
@@ -43,8 +46,10 @@ class Occupancy //: public streammable
 };
 
 template <>
-inline void
-Occupancy::makeChannelAverage<Occupancy>(const ChipContainer* theChipContainer, const std::shared_ptr<ChannelGroupBase> chipOriginalMask, const std::shared_ptr<ChannelGroupBase> cTestChannelGroup, const uint32_t numberOfEvents)
+inline void Occupancy::makeChannelAverage<Occupancy>(const ChipContainer*                    theChipContainer,
+                                                     const std::shared_ptr<ChannelGroupBase> chipOriginalMask,
+                                                     const std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
+                                                     const uint32_t                          numberOfEvents)
 {
     for(const auto occupancy: *theChipContainer->getChannelContainer<Occupancy>()) { fOccupancy += std::min(float(1.0), occupancy.fOccupancy); }
     // fOccupancy += occupancy.fOccupancy; }

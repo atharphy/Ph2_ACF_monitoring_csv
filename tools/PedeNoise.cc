@@ -100,7 +100,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     }
 
     initializeRecycleBin();
-    
+
     fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -832,7 +832,14 @@ void PedeNoise::extractPedeNoise()
                     {
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                            if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                                    ->getObject(opticalGroup->getId())
+                                    ->getObject(hybrid->getId())
+                                    ->getObject(chip->getId())
+                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                    ->allChannelGroup()
+                                    ->isChannelEnabled(iChannel))
+                                continue;
                             float previousOccupancy = (previousIterator)
                                                           ->second->at(board->getIndex())
                                                           ->at(opticalGroup->getIndex())
@@ -893,7 +900,14 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                        if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                                ->getObject(opticalGroup->getId())
+                                ->getObject(hybrid->getId())
+                                ->getObject(chip->getId())
+                                ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                ->allChannelGroup()
+                                ->isChannelEnabled(iChannel))
+                            continue;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *

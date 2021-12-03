@@ -138,9 +138,7 @@ void Tool::Inherit(const Tool* pTool)
 
 void Tool::Inherit(const SystemController* pSystemController) { SystemController::Inherit(pSystemController); }
 
-void Tool::resetPointers()
-{
-}
+void Tool::resetPointers() {}
 
 void Tool::Destroy()
 {
@@ -871,15 +869,20 @@ void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
 uint16_t Tool::getMaxNumberOfGroups()
 {
     uint16_t maxNumberOfGroups = 0;
-    for(const auto board : *fDetectorContainer)
+    for(const auto board: *fDetectorContainer)
     {
-        for(const auto opticalGroup : *board)
+        for(const auto opticalGroup: *board)
         {
-            for(const auto hybrid : *opticalGroup)
+            for(const auto hybrid: *opticalGroup)
             {
-                for(const auto chip : *hybrid)
+                for(const auto chip: *hybrid)
                 {
-                    uint16_t numberOfGroups = fChannelGroupHandlerContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getNumberOfGroups();
+                    uint16_t numberOfGroups = fChannelGroupHandlerContainer->getObject(board->getId())
+                                                  ->getObject(opticalGroup->getId())
+                                                  ->getObject(hybrid->getId())
+                                                  ->getObject(chip->getId())
+                                                  ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                  ->getNumberOfGroups();
                     if(numberOfGroups > maxNumberOfGroups) maxNumberOfGroups = numberOfGroups;
                 }
             }
@@ -1237,9 +1240,9 @@ class ScanBase
     void         setGroupHandlerContainer(const DetectorDataContainer* theChannelHandlerContainer) { fChannelHandlerContainer = theChannelHandlerContainer; }
     void         setGroup(int groupNumber) { fGroupNumber = groupNumber; }
     // void         setGroup(const ChannelGroupBase* cTestChannelGroup) { fTestChannelGroup = cTestChannelGroup; }
-    void         setBoardId(uint16_t boardIndex) { fBoardIndex = boardIndex; }
-    void         setNumberOfEvents(uint32_t numberOfEvents) { fNumberOfEvents = numberOfEvents; }
-    void         setNumberOfEventsPerBurst(int32_t numberOfEventsPerBurst) { fNumberOfEventsPerBurst = numberOfEventsPerBurst; }
+    void setBoardId(uint16_t boardIndex) { fBoardIndex = boardIndex; }
+    void setNumberOfEvents(uint32_t numberOfEvents) { fNumberOfEvents = numberOfEvents; }
+    void setNumberOfEventsPerBurst(int32_t numberOfEventsPerBurst) { fNumberOfEventsPerBurst = numberOfEventsPerBurst; }
 
     void setDetectorContainer(DetectorContainer* detectorContainer) { fDetectorContainer = detectorContainer; }
 
@@ -1250,9 +1253,9 @@ class ScanBase
     uint32_t                     fBoardIndex;
     const DetectorDataContainer* fChannelHandlerContainer;
     // const ChannelGroupBase* fTestChannelGroup;
-    uint                         fGroupNumber;    
-    Tool*                        fTool;
-    DetectorContainer*           fDetectorContainer;
+    uint               fGroupNumber;
+    Tool*              fTool;
+    DetectorContainer* fDetectorContainer;
 };
 
 void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* groupScan)
@@ -1266,7 +1269,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     if(!fAllChan)
     {
         uint16_t maxNumberOfGroups = getMaxNumberOfGroups();
-        for(uint16_t groupNumber = 0; groupNumber<maxNumberOfGroups; ++groupNumber)
+        for(uint16_t groupNumber = 0; groupNumber < maxNumberOfGroups; ++groupNumber)
         {
             if(fMaskChannelsFromOtherGroups || fTestPulse)
             {
@@ -1274,10 +1277,24 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        for(auto cChip: *cHybrid) 
+                        for(auto cChip: *cHybrid)
                         {
-                            if(groupNumber > fChannelGroupHandlerContainer->getObject(fDetectorContainer->getObject(boardIndex)->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getNumberOfGroups()) continue;
-                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, fChannelGroupHandlerContainer->getObject(fDetectorContainer->at(boardIndex)->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber), fMaskChannelsFromOtherGroups, fTestPulse);
+                            if(groupNumber > fChannelGroupHandlerContainer->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                 ->getNumberOfGroups())
+                                continue;
+                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
+                                                                                     fChannelGroupHandlerContainer->getObject(fDetectorContainer->at(boardIndex)->getId())
+                                                                                         ->getObject(cOpticalGroup->getId())
+                                                                                         ->getObject(cHybrid->getId())
+                                                                                         ->getObject(cChip->getId())
+                                                                                         ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                         ->getTestGroup(groupNumber),
+                                                                                     fMaskChannelsFromOtherGroups,
+                                                                                     fTestPulse);
                         }
                     }
                 }

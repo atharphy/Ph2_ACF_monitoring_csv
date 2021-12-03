@@ -10,10 +10,10 @@
 #include "RD53ChannelGroupHandler.h"
 
 void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                                                                 uint32_t          groupNumber,
-                                                                 uint32_t          numberOfClustersPerGroup,
-                                                                 uint16_t          numberOfRowsPerCluster,
-                                                                 uint16_t          numberOfColsPerCluster) const
+                                                                 uint32_t                           groupNumber,
+                                                                 uint32_t                           numberOfClustersPerGroup,
+                                                                 uint16_t                           numberOfRowsPerCluster,
+                                                                 uint16_t                           numberOfColsPerCluster) const
 {
     static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
 
@@ -23,10 +23,10 @@ void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup(std::shared_ptr
 }
 
 void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                                                                     uint32_t          groupNumber,
-                                                                     uint32_t          numberOfClustersPerGroup,
-                                                                     uint16_t          numberOfRowsPerCluster,
-                                                                     uint16_t          numberOfColsPerCluster) const
+                                                                     uint32_t                           groupNumber,
+                                                                     uint32_t                           numberOfClustersPerGroup,
+                                                                     uint16_t                           numberOfRowsPerCluster,
+                                                                     uint16_t                           numberOfColsPerCluster) const
 {
     static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
 
@@ -72,6 +72,4 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription:
     }
 }
 
-RD53ChannelGroupHandler::~RD53ChannelGroupHandler()
-{
-}
+RD53ChannelGroupHandler::~RD53ChannelGroupHandler() {}

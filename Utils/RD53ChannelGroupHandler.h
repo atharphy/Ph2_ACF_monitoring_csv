@@ -38,10 +38,10 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
     class RD53ChannelGroupAll : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
     {
         void makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                           uint32_t          groupNumber,
-                           uint32_t          numberOfClustersPerGroup,
-                           uint16_t          numberOfRowsPerCluster,
-                           uint16_t          numberOfColsPerCluster = 1) const override;
+                           uint32_t                           groupNumber,
+                           uint32_t                           numberOfClustersPerGroup,
+                           uint16_t                           numberOfRowsPerCluster,
+                           uint16_t                           numberOfColsPerCluster = 1) const override;
     };
 
     class RD53ChannelGroupPattern : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
@@ -51,10 +51,10 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
 
       private:
         void    makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                              uint32_t          groupNumber,
-                              uint32_t          numberOfClustersPerGroup,
-                              uint16_t          numberOfRowsPerCluster,
-                              uint16_t          numberOfColsPerCluster = 1) const override;
+                              uint32_t                           groupNumber,
+                              uint32_t                           numberOfClustersPerGroup,
+                              uint16_t                           numberOfRowsPerCluster,
+                              uint16_t                           numberOfColsPerCluster = 1) const override;
         uint8_t hitPerCol;
     };
 };

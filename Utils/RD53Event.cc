@@ -115,7 +115,7 @@ void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const Boar
                 {
                     auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
                     if(!cTestChannelGroup) continue;
-                    
+
                     if(vectorRequired == true)
                     {
                         cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);

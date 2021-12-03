@@ -105,7 +105,6 @@ void ShortFinder::Initialise()
     //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     // }
 
-
     // now read the settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
     fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
