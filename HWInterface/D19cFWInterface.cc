@@ -4348,7 +4348,7 @@ bool D19cFWInterface::ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pReplie
 bool D19cFWInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast)
 {
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    bool                        cFailed(false);
+    bool cFailed(false);
     if(fOptical)
     {
         // LOG (INFO) << BOLDBLUE << "D19cFWInterface::WriteI2C GBTx" << RESET;
@@ -4560,10 +4560,10 @@ void D19cFWInterface::ReadChipBlockReg(std::vector<uint32_t>& pVecReg)
     pVecReg = cReplies;
 }
 
-void D19cFWInterface::ChipI2CRefresh() 
+void D19cFWInterface::ChipI2CRefresh()
 {
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1); 
+    WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1);
 }
 
 void D19cFWInterface::ReadoutChipReset()
@@ -4632,17 +4632,17 @@ void D19cFWInterface::Compose_fast_command(uint32_t duration, uint32_t resync_en
 }
 void D19cFWInterface::ChipReSync()
 {
-    uint8_t cReSync   = 1;
-    uint8_t cCalPulse = 0;
-    uint8_t cL1A      = 0;
+    uint8_t  cReSync   = 1;
+    uint8_t  cCalPulse = 0;
+    uint8_t  cL1A      = 0;
     uint32_t cFrontEndTypeCode;
     // in CIC case always send fast reset with an orbit reset
     {
         // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
         cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     }
-    bool     cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
-    uint8_t  cBC0              = (cWithCIC && fIs2S) ? 1 : 0;
+    bool    cWithCIC = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+    uint8_t cBC0     = (cWithCIC && fIs2S) ? 1 : 0;
     this->Compose_fast_command(fFastCommandDuration, cReSync, cL1A, cCalPulse, cBC0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
@@ -6131,14 +6131,13 @@ std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords)
     return cReplyVector;
 }
 
-std::vector<uint32_t>  D19cFWInterface::WriteCommandCPBandReadReply(const std::vector<uint32_t>& pCommandVector, uint8_t pNWords)
+std::vector<uint32_t> D19cFWInterface::WriteCommandCPBandReadReply(const std::vector<uint32_t>& pCommandVector, uint8_t pNWords)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     WriteCommandCPB(pCommandVector);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     return ReadReplyCPB(pNWords);
 }
-
 
 // ##########################################
 // # Read/Write lpGBT registers with CPB #
@@ -6262,7 +6261,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
-    std::vector<uint32_t> cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, 10);
+    std::vector<uint32_t> cReplyVector = WriteCommandCPBandReadReply(cCommandVector, 10);
     fI2Cstatus                         = cReplyVector[7] & 0xFF;
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
@@ -6285,8 +6284,8 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
         ResetCPB();
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : Received corrupted reply from command processor block ... retrying" << RESET;
         cReplyVector.clear();
-        std::vector<uint32_t> cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, 10);
-        fI2Cstatus   = cReplyVector[7] & 0xFF;
+        std::vector<uint32_t> cReplyVector = WriteCommandCPBandReadReply(cCommandVector, 10);
+        fI2Cstatus                         = cReplyVector[7] & 0xFF;
         cIter++;
     }
     fI2CWriteCount += (1 + cIter);
@@ -6330,7 +6329,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
         ResetCPB();
         std::this_thread::sleep_for(std::chrono::microseconds(50));
         cReplyVector.clear();
-        std::vector<uint32_t> cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, 10);
+        std::vector<uint32_t> cReplyVector = WriteCommandCPBandReadReply(cCommandVector, 10);
         // std::this_thread::sleep_for(std::chrono::microseconds(10));
         cReadBack        = cReplyVector[7] & 0xFF;
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));

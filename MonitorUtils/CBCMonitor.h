@@ -16,17 +16,17 @@ class CBCMonitor : public DetectorMonitor
     void runMonitor() override;
 
   private:
-    void runCBCRegisterMonitor  (std::string registerName);
+    void runCBCRegisterMonitor(std::string registerName);
     void runLpGBTRegisterMonitor(std::string registerName);
 
-    bool fDoMonitorThreshold  {false};
-    bool fDoMonitorLpGBT_ADC1 {false};
-    bool fDoMonitorLpGBT_VDD  {false};
-    bool fDoMonitorLpGBT_VDDA {false};
-    bool fDoMonitorLpGBT_TEMP {false};
+    bool fDoMonitorThreshold{false};
+    bool fDoMonitorLpGBT_ADC1{false};
+    bool fDoMonitorLpGBT_VDD{false};
+    bool fDoMonitorLpGBT_VDDA{false};
+    bool fDoMonitorLpGBT_TEMP{false};
 
 #ifdef __USE_ROOT__
-    MonitorDQMPlotCBC *fMonitorDQMPlotCBC;
+    MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
 #endif
 };
 

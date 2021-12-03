@@ -1,8 +1,8 @@
 #include "CBCMonitor.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
-#include "../Utils/ContainerFactory.h"
 #include "../HWDescription/Definition.h"
+#include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWInterface/D19clpGBTInterface.h"
+#include "../Utils/ContainerFactory.h"
 #ifdef __USE_ROOT__
 #include "TFile.h"
 #endif
@@ -12,13 +12,13 @@ using namespace Ph2_HwInterface;
 CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
     fDoMonitorThreshold  = fDetectorMonitorConfig.isElementToMonitor("CBCThreshold");
-    fDoMonitorLpGBT_ADC1 = fDetectorMonitorConfig.isElementToMonitor("LpGBT_ADC1"  );
-    fDoMonitorLpGBT_VDD  = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDD"   );
-    fDoMonitorLpGBT_VDDA = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDDA"  );
-    fDoMonitorLpGBT_TEMP = fDetectorMonitorConfig.isElementToMonitor("LpGBT_TEMP"  );
+    fDoMonitorLpGBT_ADC1 = fDetectorMonitorConfig.isElementToMonitor("LpGBT_ADC1");
+    fDoMonitorLpGBT_VDD  = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDD");
+    fDoMonitorLpGBT_VDDA = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDDA");
+    fDoMonitorLpGBT_TEMP = fDetectorMonitorConfig.isElementToMonitor("LpGBT_TEMP");
 
 #ifdef __USE_ROOT__
-    fMonitorPlotDQM = new MonitorDQMPlotCBC();
+    fMonitorPlotDQM    = new MonitorDQMPlotCBC();
     fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
     fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
@@ -26,9 +26,9 @@ CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, 
 
 void CBCMonitor::runMonitor()
 {
-    if(fDoMonitorThreshold)  runCBCRegisterMonitor  ("VCth");
+    if(fDoMonitorThreshold) runCBCRegisterMonitor("VCth");
     if(fDoMonitorLpGBT_ADC1) runLpGBTRegisterMonitor("ADC1");
-    if(fDoMonitorLpGBT_VDD ) runLpGBTRegisterMonitor("VDD" );
+    if(fDoMonitorLpGBT_VDD) runLpGBTRegisterMonitor("VDD");
     if(fDoMonitorLpGBT_VDDA) runLpGBTRegisterMonitor("VDDA");
     if(fDoMonitorLpGBT_TEMP) runLpGBTRegisterMonitor("TEMP");
 }
@@ -36,7 +36,7 @@ void CBCMonitor::runMonitor()
 void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 {
     DetectorDataContainer theCBCRegisterContainer;
-    ContainerFactory::copyAndInitChip<std::tuple<time_t,uint16_t>>(*fTheSystemController->fDetectorContainer, theCBCRegisterContainer);
+    ContainerFactory::copyAndInitChip<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theCBCRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -48,7 +48,8 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
                 {
                     uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(chip, registerName); // just to read something
                     LOG(DEBUG) << BOLDMAGENTA << "CBC " << hybrid->getId() << " - " << registerName << " = " << registerValue << RESET;
-                    theCBCRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<std::tuple<time_t,uint16_t>>() =  std::make_tuple(getTimeStamp(), registerValue);
+                    theCBCRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() =
+                        std::make_tuple(getTimeStamp(), registerValue);
                 }
             }
         }
@@ -66,11 +67,10 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 #endif
 }
 
-
 void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 {
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<std::tuple<time_t,uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -78,7 +78,7 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t,uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
         }
     }
 

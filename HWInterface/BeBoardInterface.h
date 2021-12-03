@@ -65,9 +65,9 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class BeBoardInterface
 {
   private:
-    BeBoardFWMap         fBoardMap;
-    BeBoardFWInterface*  fBoardFW;
-    uint16_t             fPrevBoardIdentifier;
+    BeBoardFWMap        fBoardMap;
+    BeBoardFWInterface* fBoardFW;
+    uint16_t            fPrevBoardIdentifier;
     // std::recursive_mutex theMtx;
 
   public:

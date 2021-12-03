@@ -12,10 +12,10 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+#include "TAxis.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
-#include "TAxis.h"
 
 //========================================================================================================================
 MonitorDQMPlotCBC::MonitorDQMPlotCBC() {}
@@ -34,14 +34,14 @@ void MonitorDQMPlotCBC::book(TFile* theOutputFile, const DetectorContainer& theD
     // SoC utilities only - END
 
     fDoMonitorThreshold  = detectorMonitorConfig.isElementToMonitor("CBCThreshold");
-    fDoMonitorLpGBT_ADC1 = detectorMonitorConfig.isElementToMonitor("LpGBT_ADC1"  );
-    fDoMonitorLpGBT_VDD  = detectorMonitorConfig.isElementToMonitor("LpGBT_VDD"   );
-    fDoMonitorLpGBT_VDDA = detectorMonitorConfig.isElementToMonitor("LpGBT_VDDA"  );
-    fDoMonitorLpGBT_TEMP = detectorMonitorConfig.isElementToMonitor("LpGBT_TEMP"  );
+    fDoMonitorLpGBT_ADC1 = detectorMonitorConfig.isElementToMonitor("LpGBT_ADC1");
+    fDoMonitorLpGBT_VDD  = detectorMonitorConfig.isElementToMonitor("LpGBT_VDD");
+    fDoMonitorLpGBT_VDDA = detectorMonitorConfig.isElementToMonitor("LpGBT_VDDA");
+    fDoMonitorLpGBT_TEMP = detectorMonitorConfig.isElementToMonitor("LpGBT_TEMP");
 
-    if(fDoMonitorThreshold ) bookCBCPlots  (theOutputFile, theDetectorStructure, "VCth");
+    if(fDoMonitorThreshold) bookCBCPlots(theOutputFile, theDetectorStructure, "VCth");
     if(fDoMonitorLpGBT_ADC1) bookLpGBTPlots(theOutputFile, theDetectorStructure, "ADC1");
-    if(fDoMonitorLpGBT_VDD ) bookLpGBTPlots(theOutputFile, theDetectorStructure, "VDD" );
+    if(fDoMonitorLpGBT_VDD) bookLpGBTPlots(theOutputFile, theDetectorStructure, "VDD");
     if(fDoMonitorLpGBT_VDDA) bookLpGBTPlots(theOutputFile, theDetectorStructure, "VDDA");
     if(fDoMonitorLpGBT_TEMP) bookLpGBTPlots(theOutputFile, theDetectorStructure, "TEMP");
 }
@@ -57,7 +57,7 @@ void MonitorDQMPlotCBC::bookCBCPlots(TFile* theOutputFile, const DetectorContain
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0,"gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle(registerName.c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
@@ -78,8 +78,8 @@ void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorConta
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0,"gmt");
-        theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName + " [V]").c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
     theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);
@@ -93,8 +93,8 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
 {
     if(!fCBCRegisterMonitorPlotMap.count(registerName))
     {
-        LOG(ERROR) << BOLDRED  << "No plots for CBC register " <<  registerName << RESET;
-        LOG(ERROR) << BOLDRED  << "Check that DQM and Monitor register names matches" << RESET;
+        LOG(ERROR) << BOLDRED << "No plots for CBC register " << registerName << RESET;
+        LOG(ERROR) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
         abort();
     }
 
@@ -111,28 +111,30 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
                 {
                     size_t chipIndex = chip->getIndex();
                     // Retreive the corresponging chip histogram:
-                    TGraph* chipDQMPlot = fCBCRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+                    TGraph* chipDQMPlot =
+                        fCBCRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
 
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(!chip->hasSummary()) continue;
                     // // Get channel data and fill the histogram
                     // for(auto channel: *chip->getChannelContainer<uint32_t>())   // for on channel - begin
-                    chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(std::get<0>(chip->getSummary<std::tuple<time_t,uint16_t>>())), std::get<1>(chip->getSummary<std::tuple<time_t,uint16_t>>())); // for on channel - end
-                }                                                                                               // for on chip - end
-            }                                                                                                   // for on hybrid - end
-        }                                                                                                       // for on opticalGroup - end
-    }                                                                                                           // for on boards - end
+                    chipDQMPlot->SetPoint(chipDQMPlot->GetN(),
+                                          getTimeStampForRoot(std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>())),
+                                          std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>())); // for on channel - end
+                }                                                                                         // for on chip - end
+            }                                                                                             // for on hybrid - end
+        }                                                                                                 // for on opticalGroup - end
+    }                                                                                                     // for on boards - end
 }
-
 
 //========================================================================================================================
 void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, std::string registerName)
 {
     if(!fLpGBTRegisterMonitorPlotMap.count(registerName))
     {
-        LOG(FATAL) << BOLDRED  << "No plots for LpGBT register " <<  registerName << RESET;
-        LOG(FATAL) << BOLDRED  << "Check that DQM and Monitor register names matches" << RESET;
+        LOG(FATAL) << BOLDRED << "No plots for LpGBT register " << registerName << RESET;
+        LOG(FATAL) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
         abort();
     }
 
@@ -142,9 +144,11 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
             if(!opticalGroup->hasSummary()) continue;
-            size_t opticalGroupIndex = opticalGroup->getIndex();
-            TGraph* LpGBTDQMPlot = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-            LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t,uint16_t>>())), std::get<1>(opticalGroup->getSummary<std::tuple<time_t,uint16_t>>()) * CONVERSION_FACTOR); 
+            size_t  opticalGroupIndex = opticalGroup->getIndex();
+            TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+            LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(),
+                                   getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>())),
+                                   std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR);
         } // for on opticalGroup - end
     }     // for on boards - end
 }

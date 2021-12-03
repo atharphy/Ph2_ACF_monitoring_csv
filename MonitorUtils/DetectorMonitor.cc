@@ -4,13 +4,11 @@
 #include <TFile.h>
 #endif
 
-DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig)
-    : fDetectorMonitorConfig(theDetectorMonitorConfig)
+DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : fDetectorMonitorConfig(theDetectorMonitorConfig)
 {
-        
 #ifdef __USE_ROOT__
     std::string monitorOutputDir = "MonitorResults";
-    std::string cCommand = "mkdir -p " + monitorOutputDir;
+    std::string cCommand         = "mkdir -p " + monitorOutputDir;
     try
     {
         system(cCommand.c_str());
@@ -21,7 +19,7 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
     }
 
     std::string monitorOutputFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";
-    fOutputFile = new TFile(monitorOutputFileName.c_str(), "RECREATE");
+    fOutputFile                       = new TFile(monitorOutputFileName.c_str(), "RECREATE");
 #endif
 
     fTheSystemController = theSystemController;
@@ -34,9 +32,7 @@ DetectorMonitor::~DetectorMonitor()
     LOG(INFO) << BOLDRED << "\t--> Destroying monitoring" << RESET;
     DetectorMonitor::stopRunning();
     while(fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready)
-    {
-        LOG(INFO) << GREEN << "\t-->Waiting for monitoring to be completed..." << RESET;
-    }
+    { LOG(INFO) << GREEN << "\t-->Waiting for monitoring to be completed..." << RESET; }
 #ifdef __USE_ROOT__
     fOutputFile->Write();
     // fOutputFile->Close();
