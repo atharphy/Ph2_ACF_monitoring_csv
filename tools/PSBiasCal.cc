@@ -81,8 +81,6 @@ void PSBiasCal::CalibrateADC()
     // Need to port this line to hybrid loop instead
     std::string cMonitor = "right";
 
-    float VREF_LPGBT        = 1.0;
-    float cConversionFactor = VREF_LPGBT / 1024.;
     for(const auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -112,9 +110,9 @@ void PSBiasCal::CalibrateADC()
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
                 for(size_t cM = 0; cM < cVals.size(); cM++)
                 {
-                    cVals[cM] = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor;
+                    cVals[cM] = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR;
                     // LOG (INFO) << BOLDBLUE << "EXP " <<cADCs_Refs[cIndx] << RESET;
-                    // LOG (INFO) << BOLDBLUE << "ADCVAL " << static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) << " cConversionFactor " <<cConversionFactor<< RESET;
+                    // LOG (INFO) << BOLDBLUE << "ADCVAL " << static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) << " CONVERSION_FACTOR " <<CONVERSION_FACTOR<< RESET;
                 }
                 float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                 float cDifference_V = (cADCs_Refs[cIndx] - cMean);
@@ -138,11 +136,11 @@ void PSBiasCal::CalibrateADC()
             float cIntcpt    = cMeasurements[0];
             int   cCorr      = std::min(std::floor(-1.0 * cIntcpt / cMeanSlope), 63.);
             LOG(DEBUG) << BOLDBLUE << "Mean slope is " << cMeanSlope << " , intercept is " << cIntcpt << " correction is " << cCorr << RESET;
-            LOG(INFO) << BOLDBLUE << "cConversionFactor " << cConversionFactor << RESET;
+            LOG(INFO) << BOLDBLUE << "CONVERSION_FACTOR " << CONVERSION_FACTOR << RESET;
 
             // apply correction and check
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
-            for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+            for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
             // turn off ADC mon
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->WriteChipReg(clpGBT, "ADCMon", 0x00);
 
@@ -157,7 +155,7 @@ void PSBiasCal::CalibrateADC()
                 std::string cADCsel = cADCs_VoltageMonitors[cIndx];
                 if(cModuleSide[cIndx].find(cMonitor) == std::string::npos) continue;
 
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                 float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                 // float cStartUpMontior = cMean;
                 LOG(INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT " << +cMean * 1e3 << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
@@ -171,8 +169,6 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 {
     std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
 
-    float VREF_LPGBT        = 1.0;
-    float cConversionFactor = VREF_LPGBT / 1024.;
     fReadoutChipInterface->WriteChipReg(cChip, "TESTMUX", 0x1 << block);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     fReadoutChipInterface->WriteChipReg(cChip, "TEST" + std::to_string(block), 0x1 << point);
@@ -187,7 +183,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     uint32_t act_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
 
     float    LSB          = (float(act_val) - float(off_val)) / float(DAC_val);
-    float    exp_val_conv = exp_val / cConversionFactor;
+    float    exp_val_conv = exp_val / CONVERSION_FACTOR;
     uint32_t offsetval    = 0;
     uint32_t DAC_new_val  = DAC_val - uint32_t(std::round(((float(act_val) - float(exp_val_conv) - float(gnd_corr)) / LSB))) + offsetval;
     // LOG(INFO) << BOLDRED <<"DAC name:"<<DAC<<" ADC name:"<<dac_str<<" DAC_val "<<DAC_val<<" point:"<<point<<", block:"<<block<< RESET;

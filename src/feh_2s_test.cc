@@ -41,10 +41,6 @@
 #include "Antenna.h"
 #endif
 
-// reference volage for lpgBT
-float VREF_LPGBT        = 1.0;
-float cConversionFactor = VREF_LPGBT / 1024.;
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -357,7 +353,7 @@ int main(int argc, char* argv[])
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
                     // wait until Vref is stable
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                     float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     float cDifference_V = (cADCs_Refs[cIndx] - cMean);
                     // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
@@ -391,7 +387,7 @@ int main(int argc, char* argv[])
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
                 // wait until Vref is stable
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                 float cMeanValue = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                 LOG(INFO) << BOLDMAGENTA << "Measured V_min after correction is " << std::setprecision(2) << std::fixed << cMeanValue * 1e3 << " mV , expected value is " << cADCs_Refs[cIndx] * 1e3
                           << " difference is " << std::fabs(cMeanValue - cADCs_Refs[cIndx]) * 1e3 << " mV, correction needed to acheive this was  " << +cCorr << RESET;
@@ -419,7 +415,7 @@ int main(int argc, char* argv[])
                     // char               cADC[4];
                     std::string cADC = "ADC" + (boost::format("%|01|") % cADCsels[cIndx]).str();
                     // sprintf(cADC, "ADC%.1d", cADCsels[cIndx]);
-                    for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * cConversionFactor;
+                    for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * CONVERSION_FACTOR;
                     float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     LOG(INFO) << BOLDMAGENTA << "\t...ADC#" << +cADCsels[cIndx] << " " << cADCNames[cIndx] << " reading from lpGBT "
                               << " is " << +cMean * 1e3 << " milli-volts. " << RESET;
@@ -494,7 +490,7 @@ int main(int argc, char* argv[])
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "AmuxOutput", cMuxSel);
                             } // all FEs set to floating, except 0
                             std::vector<float> cVals(10);
-                            for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * cConversionFactor;
+                            for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * CONVERSION_FACTOR;
                             float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                             LOG(INFO) << BOLDMAGENTA << "\t...CBC#" << +cChipId << " " << cADC << " reading from lpGBT "
                                       << " while monitoring AMUX#" << +cMuxSel << " is " << +cMean * 1e3 << " milli-volts. " << RESET;

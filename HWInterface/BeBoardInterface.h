@@ -65,10 +65,10 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class BeBoardInterface
 {
   private:
-    BeBoardFWMap        fBoardMap;
-    BeBoardFWInterface* fBoardFW;
-    uint16_t            fPrevBoardIdentifier;
-    std::mutex          theMtx;
+    BeBoardFWMap         fBoardMap;
+    BeBoardFWInterface*  fBoardFW;
+    uint16_t             fPrevBoardIdentifier;
+    // std::recursive_mutex theMtx;
 
   public:
     /*!
@@ -235,7 +235,7 @@ class BeBoardInterface
      */
     void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
     {
-        std::lock_guard<std::mutex> theGuard(theMtx);
+        // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
         pReadoutChipInterface->ReadHybridVoltage(pChip);
         pReadoutChipInterface->ReadHybridTemperature(pChip);

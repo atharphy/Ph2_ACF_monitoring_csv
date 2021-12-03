@@ -522,9 +522,9 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     auto                               cADCsMapIterator = cADCsMap.begin();
     int                                cADCValue;
     int                                cBinCount         = 1;
-    float                              cConversionFactor = 1. / 1024.;
+    float                              CONVERSION_FACTOR = 1. / 1024.;
     std::vector<int>                   cADCValueVect;
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr)
@@ -551,21 +551,21 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
                 }
                 // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
 
-                fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
+                fillSummaryTree(cADCsMapIterator->first, cADCValue * CONVERSION_FACTOR);
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
-                float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - mean * cConversionFactor);
+                float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - mean * CONVERSION_FACTOR);
 
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
-                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * CONVERSION_FACTOR << " V, nominal value is "
                               << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
                     cReturn = false;
                 }
                 else
                 {
-                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * CONVERSION_FACTOR << " V, nominal value is "
                               << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
                 }
 
@@ -604,9 +604,9 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
     auto                               cADCsMapIterator = cADCsMap.begin();
     float                                cADCValue;
     int cBinCount=1;
-    float                              cConversionFactor = 1. / 1024.;
+    float                              CONVERSION_FACTOR = 1. / 1024.;
     std::vector<float> cADCValueVect;
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     auto gRandom = new TRandom3();
         do
             {
@@ -621,19 +621,19 @@ void SEHTester::TestEfficency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, ui
                 }
                     // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
 
-                    fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
-                    float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - cADCValue * cConversionFactor);
+                    fillSummaryTree(cADCsMapIterator->first, cADCValue * CONVERSION_FACTOR);
+                    float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - cADCValue * CONVERSION_FACTOR);
 
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
-                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * CONVERSION_FACTOR << " V, nominal value is "
                               << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
                     cReturn = false;
                 }
                 else
                 {
-                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * CONVERSION_FACTOR << " V, nominal value is "
                               << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
                 }
 
