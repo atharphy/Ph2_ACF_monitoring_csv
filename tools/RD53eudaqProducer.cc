@@ -42,19 +42,16 @@ void RD53eudaqProducer::DoStartRun()
     // #####################
     // # Send a BORE event #
     // #####################
-    auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    ev->SetBORE();
-    RD53eudaqProducer::MySendEvent(std::move(ev));
+    // auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    // ev->SetBORE();
+    // RD53eudaqProducer::MySendEvent(std::move(ev));
 
-    // #################################################
-    // # Add extra event for synchronization with TLU2 #
-    // #################################################
-    ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    ev->SetTriggerN(swTrigCnt++);
-    this->MySendEvent(std::move(ev));
-    // auto eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
-    // eudaqEvent->AddBlock(0, "", 0);
-    this->MySendEvent(std::move(ev));
+    // #############################
+    // # Add extra event if needed #
+    // #############################
+    // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    // ev->SetTriggerN(swTrigCnt++);
+    // this->MySendEvent(std::move(ev));
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
