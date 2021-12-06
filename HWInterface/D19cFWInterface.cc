@@ -1400,7 +1400,7 @@ void D19cFWInterface::Start()
         LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
         // this stops triggers  + resets
         this->ResetTriggerFSM();
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
         this->TriggerConfiguration();
 
         // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
@@ -6132,6 +6132,8 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     if(fCPBConfig.fResetEn) ResetCPB();
     // Use new Command Processor Block
+    // uint8_t cWorkerId = 1 , cFunctionId = 3;
+    // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 3;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
 
@@ -6184,6 +6186,8 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAd
     size_t cExpectedReplySize = 10 * 1;
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     if(fCPBConfig.fResetEn) ResetCPB();
+    // uint8_t cWorkerId = 1, cFunctionId = 2;
+    // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 2;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
@@ -6239,6 +6243,8 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
 {
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     if(fCPBConfig.fResetEn) ResetCPB();
+    // uint8_t cWorkerId = 1 , cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
+    // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C write to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
@@ -6289,6 +6295,8 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
 {
     this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     if(fCPBConfig.fResetEn) ResetCPB();
+    // uint8_t cWorkerId = 1 , cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
+    // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C Read to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;

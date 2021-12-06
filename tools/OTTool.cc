@@ -230,7 +230,8 @@ void OTTool::PrintData(BeBoard* pBoard)
 {
     const std::vector<Event*>& cEvents = GetEvents();
     LOG(INFO) << BOLDBLUE << "Printing events from FC7.. collected : " << +cEvents.size() << " events." << RESET;
-    for(auto& cEvent: cEvents) { EventPrintout(pBoard, cEvent); }
+    fEventCountInt=0;
+    for(auto& cEvent: cEvents) { EventPrintout(pBoard, cEvent); fEventCountInt++; }
 }
 
 // wait for triggers
@@ -515,14 +516,17 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     // repeat until triggers have stopped
     cWaitCounter        = 0;
     size_t cLclEvntCntr = 0;
+    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime=cStartTime;
+    size_t cAccumulatedWaits=0; 
     do
     {
+        cAccumulatedWaits += fReadoutPause;
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
         auto                  cTriggerState   = cInterface->GetTriggerState();
         auto                  cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
         auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
         std::vector<uint32_t> cData(0);
-        cLclEvntCntr += ReadData((*cBoardIter), cData, cWait);
+        cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
         if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
         cTriggerCounters.push_back(cTriggerCounter);
         if(cWaitCounter % 100 == 0 && cWaitCounter > 0)
@@ -534,10 +538,15 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         cWaitCounter++;
     } while(cInterface->GetTriggerState() == 1);
     // now decode data
+    cAccumulatedWaits += 100*1e3;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::vector<uint32_t> cData(0);
-    cLclEvntCntr += ReadData((*cBoardIter), cData, cWait);
+    cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
+    cEndTime = std::chrono::high_resolution_clock::now();
+    auto cDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cEndTime - cStartTime).count();
     if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
+    LOG (INFO) << BOLDYELLOW << "Accumulated " << cAccumulatedWaits*1e-3 << " ms of waits.. read-out " << cCompleteData.size() << " 32-bit words in " << cDuration << " ms." << RESET;
+    
     DecodeData((*cBoardIter), cCompleteData, cLclEvntCntr, fBeBoardInterface->getBoardType((*cBoardIter)));
     LOG(DEBUG) << BOLDYELLOW << fMyName << " : Mean trigger rate is " << cTriggerCounters[cTriggerCounters.size() - 1] / (cWaitCounter * fReadoutPause * 1e-6) << " Hz"
                << " .... readout " << cLclEvntCntr << " events from the FC7" << RESET;
@@ -554,7 +563,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 
     if(pEvent->GetEventCount() % fPrintConfig.fPrintEvery != 0) return;
     std::stringstream cEvntHeader;
-    cEvntHeader << "Event#" << +pEvent->GetEventCount();
+    cEvntHeader << "Event#" << +pEvent->GetEventCount() << " -- " << +fEventCountInt << " in readout..." << RESET ; 
     std::stringstream cHeader;
 
     for(auto cOpticalGroup: *pBoard)
@@ -604,6 +613,8 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                 if(std::find(cL1Ids.begin(), cL1Ids.end(), cL1IdCIC) == cL1Ids.end()) cL1Ids.push_back(cL1IdCIC);
             }
 
+            if( cL1IdCIC == 511 ) LOG (INFO) << BOLDYELLOW << "OVERFLOW " << cOutEvntHeader.str() << RESET;
+             if( pEvent->GetEventCount() != fEventCountInt ) LOG (INFO) << BOLDRED << " Mismatch in event counter " << cOutEvntHeader.str() << RESET;
             // LOG (INFO) << BOLDYELLOW << cOutEvntHeader.str() << RESET;
 
             // bool cStubFound=false;
@@ -706,16 +717,19 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             //     LOG(INFO) << cOutAna.str() << RESET;
             // }
         }
-        if(cBxIds.size() > 1)
-        {
-            LOG(INFO) << BOLDRED << cEvntHeader.str() << " ... OUT OF SYNC " << RESET;
-            LOG(INFO) << cHeader.str() << RESET;
-        }
-        else
-        {
-            LOG(DEBUG) << BOLDGREEN << cEvntHeader.str() << " ... IN SYNC " << RESET;
-            LOG(DEBUG) << cHeader.str() << RESET;
-        }
+        // if(cBxIds.size() > 1)
+        // {
+        //     LOG(INFO) << BOLDRED << cEvntHeader.str() << " ... OUT OF SYNC " << RESET;
+        //     LOG(INFO) << cHeader.str() << RESET;
+        // }
+        // else
+        // {
+        //     if( pEvent->GetEventCount() != fEventCountInt )
+        //     {
+        //         LOG(INFO) << BOLDGREEN << cEvntHeader.str() << " ... IN SYNC " << RESET;
+        //         LOG(INFO) << "Event#" << +fEventCountInt << " in readout..." << cHeader.str() << RESET;
+        //     }
+        // }   
     }
 }
 

@@ -452,7 +452,7 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                                     cNPageToggles++;
                                 }
                                 cNReads++;
-                                LOG (DEBUG) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
+                                LOG (INFO) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
                                     << " ... have toggled page " << cNPageToggles << " time(s) and read from " 
                                     << +cNReads << " registers so far.... "
                                     << RESET;

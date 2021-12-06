@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
         uint8_t         cNregistersToCheck = (cmd.foundOption("registerTestRead")) ? convertAnyInt(cmd.optionValue("registerTestRead").c_str()) : 1;
         // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
         uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
-        uint8_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint32_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
         
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
@@ -446,11 +446,13 @@ int main(int argc, char* argv[])
         uint8_t         cNregistersToCheck = (cmd.foundOption("registerTestReadAndToggle")) ? convertAnyInt(cmd.optionValue("registerTestReadAndToggle").c_str()) : 1;
         // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
         uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
-        uint8_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint8_t         cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
+        uint32_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
         
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
         cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetReturnToDefPage(cReturnToDefPage);
         cRegTester.Initialise();
         for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
             LOG (INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;   

@@ -154,9 +154,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             std::pair<uint16_t, uint16_t> cL1Information;
                             cL1Information.first  = (*(cIterator + 2) & 0x7FC000) >> 14;
                             cL1Information.second = (*(cIterator + 2) & 0xFF800000) >> 23;
-                            LOG(DEBUG) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
+                            LOG(DEBUG) << BOLDBLUE << "\t\t..L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
                                        << std::bitset<9>(cL1Information.second) << RESET;
                             int cL1Offset = cOffset + 2 + int(cWithCIC2);
+                            // for( size_t cLOff=0; cLOff <cHitInfoSize; cLOff++)
+                            // {
+                            //     LOG (INFO) << BOLDYELLOW << "\t\t\t.." << std::bitset<32>(  (*(cIterator + cLOff) ) ) << RESET;
+                            // }
+                                
                             if(fIsSparsified)
                             {
                                 // LOG (DEBUG) << BOLDBLUE << "sparsified data" << RESET;
