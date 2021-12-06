@@ -357,7 +357,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         cNEvents++;
     } while(cEventIterator < pData.end());
 }
-void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -366,6 +366,9 @@ void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
             // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
             for(auto chip: *hybrid)
             {
+                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                if(!cTestChannelGroup) continue;
+
                 std::vector<uint32_t> cHits = this->GetHits(hybrid->getId(), chip->getId());
                 // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
                 //     << " at index " << +chip->getIndex()

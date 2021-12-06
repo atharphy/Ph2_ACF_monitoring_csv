@@ -55,8 +55,9 @@ void OpenFinder::Reset()
 }
 void OpenFinder::Initialise(Parameters pParameters)
 {
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     // Read some settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");

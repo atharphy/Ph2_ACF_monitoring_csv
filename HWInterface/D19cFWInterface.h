@@ -102,7 +102,7 @@ typedef std::map<uint32_t, PSCounterData>        PSModuleCounterData;
 class D19cFWInterface : public BeBoardFWInterface
 {
   private:
-    std::mutex                               fMutex;
+    // std::recursive_mutex                     fMutex;
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
@@ -845,6 +845,8 @@ class D19cFWInterface : public BeBoardFWInterface
     void                  ResetCPB() override;
     void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
+    std::vector<uint32_t> WriteCommandCPBandReadReply(const std::vector<uint32_t>& pCommandVector, uint8_t pNWords);
+
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;

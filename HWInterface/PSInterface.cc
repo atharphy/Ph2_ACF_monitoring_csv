@@ -30,25 +30,25 @@ std::vector<uint8_t> PSInterface::readLUT(ReadoutChip* pPS, uint8_t pMode)
     if(pPS->getFrontEndType() == FrontEndType::MPA) { cLUT = theMPAInterface->readLUT(pPS, pMode); }
     return cLUT;
 }
-bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
+bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
     bool toreturn = false;
     if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn = theMPAInterface->setInjectionSchema(pPS, group, pVerifLoop); }
     if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn = theSSAInterface->setInjectionSchema(pPS, group, pVerifLoop); }
     return toreturn;
 }
-bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pPS, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     bool toreturn = false;
     if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn = theMPAInterface->maskChannelsAndSetInjectionSchema(pPS, group, mask, inject, pVerifLoop); }
     if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn = theSSAInterface->maskChannelsAndSetInjectionSchema(pPS, group, mask, inject, pVerifLoop); }
     return toreturn;
 }
-bool PSInterface::maskChannelsGroup(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
+bool PSInterface::maskChannelGroup(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
     bool toreturn = false;
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn = theMPAInterface->maskChannelsGroup(pPS, group, pVerifLoop); }
-    if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn = theSSAInterface->maskChannelsGroup(pPS, group, pVerifLoop); }
+    if(pPS->getFrontEndType() == FrontEndType::MPA) { toreturn = theMPAInterface->maskChannelGroup(pPS, group, pVerifLoop); }
+    if(pPS->getFrontEndType() == FrontEndType::SSA) { toreturn = theSSAInterface->maskChannelGroup(pPS, group, pVerifLoop); }
     return toreturn;
 }
 

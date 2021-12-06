@@ -59,6 +59,7 @@
 #endif
 
 class DetectorMonitor;
+class ChannelGroupHandler;
 
 /*!
  * \namespace Ph2_System
@@ -311,6 +312,12 @@ class SystemController
     uint32_t                             fEventSize;
     uint32_t                             fNCbc;
     FileParser                           fParser;
+
+  public:
+    DetectorDataContainer* fChannelGroupHandlerContainer;
+
+    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
 };
 } // namespace Ph2_System
 

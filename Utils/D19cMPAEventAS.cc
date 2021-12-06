@@ -96,7 +96,7 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
     }     // opticalGroup
 }
 // required by event but not sure if makes sense for AS
-void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -105,6 +105,8 @@ void D19cMPAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
             for(auto chip: *hybrid)
             {
                 if(chip->size() != 16 * 120) continue;
+                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                if(!cTestChannelGroup) continue;
 
                 std::vector<uint32_t> cHits = GetHits(hybrid->getId(), chip->getId());
                 float                 cOcc  = 0;

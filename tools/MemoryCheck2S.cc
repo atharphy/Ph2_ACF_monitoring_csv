@@ -146,7 +146,7 @@ void MemoryCheck2S::Reconfigure()
                 for(auto cChip: *cHybrid)
                 {
                     auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
-                    auto& cOriginalMask  = cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>();
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>();
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
                     // {
                     //     bool cEnabled = cOriginalMask->isChannelEnabled(cChnl);
@@ -159,7 +159,7 @@ void MemoryCheck2S::Reconfigure()
                     //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDBLUE << "Reconfig Chnl#" << +cChnl << " disabled." << RESET;
                     //     }
                     // }
-                    fReadoutChipInterface->maskChannelsGroup(cChip, cOriginalMask);
+                    fReadoutChipInterface->maskChannelGroup(cChip, cOriginalMask);
                 }
             } // hybrids
         }     // OG
@@ -198,8 +198,9 @@ void MemoryCheck2S::Initialise()
 {
     // this is needed if you're going to use groups anywhere
     initializeRecycleBin();
-    fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     ContainerFactory::copyAndInitStructure<ChannelList>(*fDetectorContainer, fInjections);
     ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fDataMismatches);
@@ -237,7 +238,7 @@ void MemoryCheck2S::Initialise()
     }
 
     // read back original masks
-    ContainerFactory::copyAndInitChip<const ChannelGroup<NCHANNELS>*>(*fDetectorContainer, fChipMasks);
+    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroup<NCHANNELS>>>(*fDetectorContainer, fChipMasks);
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
@@ -249,8 +250,8 @@ void MemoryCheck2S::Initialise()
                 auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip                                         = cMasksThisHybrid->at(cChip->getIndex());
-                    cMasksThisChip->getSummary<const ChannelGroup<NCHANNELS>*>() = static_cast<const ChannelGroup<NCHANNELS>*>(cChip->getChipOriginalMask());
+                    auto& cMasksThisChip                                                   = cMasksThisHybrid->at(cChip->getIndex());
+                    cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cChip->getChipOriginalMask());
                     // cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
                     // {

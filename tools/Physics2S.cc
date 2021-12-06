@@ -34,8 +34,9 @@ void Physics2S::ConfigureCalibration()
     ContainerFactory::copyAndInitChannel<Occupancy>(*fDetectorContainer, fOccupancyContainer);
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
@@ -229,7 +230,7 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
 
     for(auto event: eventList)
     {
-        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup());
+        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandlerContainer->at(cBoard->getIndex()), -1);
         // ###################
         // # Fill containers #
         // ###################

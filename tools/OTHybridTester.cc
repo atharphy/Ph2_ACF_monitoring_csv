@@ -418,9 +418,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto  cADCsMapIterator = cADCsMap.begin();
     int   cADCValue;
     int   cBinCount         = 1;
-    float cConversionFactor = 1. / 1024.;
+    float CONVERSION_FACTOR = 1. / 1024.;
 
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr)
@@ -449,18 +449,18 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
-                float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
-                fillSummaryTree(cADCsMapIterator->first.c_str(), mean * cConversionFactor);
+                float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * CONVERSION_FACTOR);
+                fillSummaryTree(cADCsMapIterator->first.c_str(), mean * CONVERSION_FACTOR);
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
-                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * CONVERSION_FACTOR << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
                     cReturn = false;
                 }
                 else
                 {
-                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * CONVERSION_FACTOR << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
                 }
                 cFixedADCsTree->Fill();

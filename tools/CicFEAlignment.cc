@@ -17,6 +17,17 @@ CicFEAlignment::~CicFEAlignment() {}
 void CicFEAlignment::Initialise()
 {
     LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
+    fSuccess = false;
+    fWithMPA = false;
+    // this is needed if you're going to use groups anywhere
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
+
+    DetectorDataContainer theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
     // prepare common OTTool
     Prepare();
     SetName("CicFEAlignment");

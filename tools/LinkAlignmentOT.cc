@@ -927,7 +927,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         }
     }
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
-    
+
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
     LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;

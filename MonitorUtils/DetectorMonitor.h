@@ -10,6 +10,7 @@
 
 #ifdef __USE_ROOT__
 class TFile;
+#include "MonitorDQM/MonitorDQMPlotBase.h"
 #endif
 
 class DetectorMonitor
@@ -28,7 +29,8 @@ class DetectorMonitor
     const Ph2_System::SystemController* fTheSystemController{nullptr};
     DetectorMonitorConfig               fDetectorMonitorConfig;
 #ifdef __USE_ROOT__
-    TFile* fOutputFile;
+    TFile*              fOutputFile;
+    MonitorDQMPlotBase* fMonitorPlotDQM;
 #endif
     time_t      getTimeStamp();
     std::string getMonitorName();

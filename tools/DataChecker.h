@@ -145,7 +145,7 @@ class DataChecker : public Tool
     //
     PSEvent fPSevent;
     // masks
-    ChannelGroup<254, 1> fCBCMask;
+    std::shared_ptr<ChannelGroup<254, 1>> fCBCMask;
 
     // Containers
     DetectorDataContainer fRegMapContainer;

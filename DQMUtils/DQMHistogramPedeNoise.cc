@@ -53,7 +53,6 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     // auto cMaxNChannels = std::max_element(std::begin(cNChanls), std::end(cNChanls));
     // auto cMinNChannels = std::min_element(std::begin(cNChanls), std::end(cNChanls));
     NCH = *std::max_element(std::begin(cNChanls), std::end(cNChanls)); // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
-    std::cout << __PRETTY_FUNCTION__ << " " << NCH << std::endl;
     // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
     // if
     // (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType()
@@ -605,32 +604,24 @@ void DQMHistogramPedeNoise::fitSCurves()
                     {
                         TH1F* channelSCurve = chip->getChannel<HistContainer<TH1F>>(cChannel).fTheHistogram;
 
-                        float cFirstNon0(0);
-                        float cFirst1(0);
+                        float channelNoise = fDetectorStripNoiseHistograms.at(board->getIndex())
+                                    ->at(opticalGroup->getIndex())
+                                    ->at(hybrid->getIndex())
+                                    ->at(chip->getIndex())
+                                    ->getSummary<HistContainer<TH1F>>()
+                                    .fTheHistogram->GetBinContent(cChannel+1);
 
-                        for(Int_t cBin = 1; cBin < channelSCurve->GetNbinsX() - 1; cBin++)
-                        {
-                            double cContent = channelSCurve->GetBinContent(cBin);
+                        float channelPedestal = fDetectorStripPedestalHistograms.at(board->getIndex())
+                                    ->at(opticalGroup->getIndex())
+                                    ->at(hybrid->getIndex())
+                                    ->at(chip->getIndex())
+                                    ->getSummary<HistContainer<TH1F>>()
+                                    .fTheHistogram->GetBinContent(cChannel+1);
 
-                            if(!cFirstNon0)
-                            {
-                                if(cContent) cFirstNon0 = channelSCurve->GetBinCenter(cBin);
-                            }
-                            else if(cContent > 0.85)
-                            {
-                                cFirst1 = channelSCurve->GetBinCenter(cBin);
-                                break;
-                            }
-                        }
+                        TF1* cFit = new TF1("SCurveFit", MyErf, channelPedestal - (channelNoise * 5), channelPedestal + (channelNoise * 5), 2);
 
-                        TF1* cFit = new TF1("SCurveFit", MyErf, cFirstNon0 - 10, cFirst1 + 10, 2);
-
-                        // Get rough midpoint & width
-                        double cMid   = (cFirst1 + cFirstNon0) * 0.5;
-                        double cWidth = (cFirst1 - cFirstNon0) * 0.5;
-
-                        cFit->SetParameter(0, cMid);
-                        cFit->SetParameter(1, cWidth);
+                        cFit->SetParameter(0, channelPedestal);
+                        cFit->SetParameter(1, channelNoise);
 
                         // Fit
                         channelSCurve->Fit(cFit, "RQ+0");
